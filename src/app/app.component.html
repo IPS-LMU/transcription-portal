@@ -1,0 +1,54 @@
+<div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
+    <div style="position:absolute; right:0; top:0; margin:15px;cursor:pointer;" title="Desktop Notifications">
+        Desktop Notifications
+        <i class="fa fa-bell fa-2x" aria-hidden="true" *ngIf="notification.permissionGranted"
+           (click)="notification.permissionGranted = false"></i>
+        <i class="fa fa-bell-slash fa-2x" aria-hidden="true" *ngIf="!notification.permissionGranted"
+           (click)="notification.permissionGranted = true"></i>
+    </div>
+    <h1>OH-Portal v{{AppInfo.version}}</h1>
+    <p>
+        This portal enables to easily process audio files using ASR, G2P, Chunker, OCTRA and MAUS from BASWebservices.
+    </p>
+
+    <p>You can delete entries if you select rows and uses the context menu in the table area.</p>
+    <div class="row">
+        <div *ngIf="sidebarstate !== 'hidden'" class="col-xs-3" id="sidebar">
+            <app-proceedings></app-proceedings>
+        </div>
+        <div [ngClass]="{
+        'col-xs-9': sidebarstate !== 'hidden',
+        'col-xs-12': sidebarstate === 'hidden'
+    }" id="main">
+            <ng-container *ngIf="false; else showProceedings">
+                <app-tool-loader [url]="'https://www.phonetik.uni-muenchen.de/apps/octra/octra/'"></app-tool-loader>
+            </ng-container>
+            <ng-template #showProceedings>
+                <div class='btn-nav' style="text-align: right">
+                    <button class="btn btn-primary" (click)="onUploadButtonClick()">UPLOAD & PROCESS FILES</button>
+                </div>
+                <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
+                                 [operations]="taskService.operations"
+                                 (afterdrop)="onAfterDrop($event)" #proceedings></app-proceedings>
+                <div id="protocol-table">
+                    <div class="protocol-header">
+                        <div class="info">
+                            <table>
+                                <tbody>
+                                <tr>
+                                    <td>0 Errors</td>
+                                    <td>0 Warnings</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tag"><i class="fa fa-chevron-down" aria-hidden="true"></i></div>
+                    </div>
+                    <div class="protocol-body">
+
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+</div>

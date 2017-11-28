@@ -1,0 +1,29 @@
+.inner {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    overflow: scroll;
+}
+
+.datatable {
+    width: 100%;
+    font-size: 0.8em;
+}
+
+.datatable tr {
+    border-bottom: 1px solid gray;
+}
+
+.glyphicon.glyphicon-menu-down,
+.glyphicon.glyphicon-menu-up {
+    cursor: pointer;
+}
+
+:host {
+    border: 1px solid gray;
+    display: flex;
+}
+
+.table-striped > tbody > tr.selected {
+    background-color: #cbffe7;
+}

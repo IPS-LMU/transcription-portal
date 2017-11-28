@@ -1,0 +1,66 @@
+#sidebar {
+    height: 100%;
+    border-right: 1px solid gray;
+}
+
+#app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+}
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    height: 100%;
+}
+
+.row,
+#main {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+}
+
+.btn-nav {
+    border: 1px solid lightgray;
+    padding: 5px;
+}
+
+#protocol-table {
+    background-color: whitesmoke;
+    border: 1px solid gray;
+    max-height: 200px;
+}
+
+#protocol-table .protocol-header {
+    background-color: floralwhite;
+    padding: 3px;
+    height: 25px;
+}
+
+#protocol-table .protocol-header .info {
+    position: absolute;
+}
+
+#protocol-table .protocol-header .info table tr td {
+    padding-right: 10px;
+}
+
+#protocol-table .protocol-header .tag {
+    position: absolute;
+    right: 0;
+    margin-right: 10px;
+    width: 25px;
+}
+
+#protocol-table .protocol-body {
+    display: none;
+    padding: 10px;
+}
+
+.glyphicon.glyphicon-arrow-up {
+    color: orange;
+}

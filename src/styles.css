@@ -1,0 +1,14 @@
+body {
+    padding: 2px 15px;
+}
+html, body {
+    height:100%;
+}
+
+.glyphicon.glyphicon-ok{
+    color: forestgreen;
+}
+
+.glyphicon.glyphicon-remove{
+    color: red;
+}
