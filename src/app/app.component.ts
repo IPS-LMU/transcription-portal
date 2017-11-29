@@ -29,11 +29,6 @@ export class AppComponent {
     if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
       const task = new Task(files, this.taskService.operations);
 
-      for (let i = 2; i < task.operations.length; i++) {
-        task.operations[ i ].start = () => {
-          console.log('operation ' + i);
-        };
-      }
       this.taskService.addTask(task);
     }
   }

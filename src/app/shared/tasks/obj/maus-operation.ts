@@ -4,7 +4,7 @@ import { FileInfo } from './fileInfo';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
-export class ASROperation extends Operation {
+export class MAUSOperation extends Operation {
 
   public constructor(name: string, icon?: string, state?: TaskState) {
     super(name, icon, state);
@@ -13,17 +13,12 @@ export class ASROperation extends Operation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
-    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
-      ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
-      'SIGNAL=' + inputs[ 0 ].url + '&' +
-      'PIPE=ASR_G2P_CHUNKER&LANGUAGE=deu-DE&' +
-      'MAUSVARIANT=runPipeline&OUTFORMAT=bpf';
+    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
+      'BPF=' + inputs[ 1 ].url +
+      '&SIGNAL=' + inputs[ 0 ].url +
+      '&MAUSVARIANT=runMAUS&OUTFORMAT=emuDB';
 
     httpclient.post(url, {}, {
-      headers     : {
-        'Content-Type': 'multipart/form-data'
-      },
-      responseType: 'text'
     }).subscribe((result: string) => {
         // convert result to json
         const x2js = new X2JS();
@@ -33,7 +28,7 @@ export class ASROperation extends Operation {
 
         if (json.success === 'true') {
           this.changeState(TaskState.FINISHED);
-          console.log('FINISHED');
+          console.log('FINISHED MAUS');
           console.log(this.state);
           this._time.end = Date.now();
           this.results.push(FileInfo.fromURL(json.downloadLink));
@@ -49,7 +44,7 @@ export class ASROperation extends Operation {
       });
   };
 
-  public clone(): ASROperation {
-    return new ASROperation(this.name, this.icon, this.state);
+  public clone(): MAUSOperation {
+    return new MAUSOperation(this.name, this.icon, this.state);
   }
 }

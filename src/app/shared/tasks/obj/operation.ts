@@ -10,6 +10,7 @@ import { TaskState } from './task';
 export class Operation {
   static counter = 0;
   public estimated_end: number;
+  public results: FileInfo[] = [];
 
   get time(): { start: number; end: number } {
     return this._time;
@@ -101,11 +102,11 @@ export class Operation {
     }
 
     return sanitizer.sanitize(SecurityContext.HTML, result);
-  }
+  };
 
-  public start = (files: FileInfo[], httpclient: HttpClient) => {
+  public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     console.log('start not implemented');
-  }
+  };
 
   public changeState(state: TaskState) {
     const oldstate = this._state;

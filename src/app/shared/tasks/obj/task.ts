@@ -117,7 +117,7 @@ export class Task {
       } else {
         this._state = TaskState.PROCESSING;
       }
-      this.operations[ nextoperation ].start(this.files, httpclient);
+      this.operations[ nextoperation ].start(this.files, this.operations, httpclient);
       this.operations[ nextoperation ].statechange.subscribe(
         (event) => {
           if (event.newState === TaskState.FINISHED) {

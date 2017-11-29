@@ -8,6 +8,7 @@ import { ASROperation } from './obj/asr-operation';
 import { Operation } from './obj/operation';
 import { ToolOperation } from './obj/tool-operation';
 import { UploadOperation } from './obj/upload-operation';
+import { MAUSOperation } from './obj/maus-operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -20,9 +21,9 @@ export class TaskService implements OnDestroy {
   constructor(private httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
       new UploadOperation('Upload', '<span class="glyphicon glyphicon-upload"></span>'),
+      new MAUSOperation('MAUS', null),
       new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
       new ToolOperation('OCTRA', null),
-      new Operation('MAUS', null),
       new Operation('Download', '<span class="glyphicon glyphicon-download"></span>')
     ];
 

@@ -24,9 +24,9 @@ export class UploadOperation extends Operation {
     } else {
       this.estimated_end = 0;
     }
-  }
+  };
 
-  public start = (files: FileInfo[], httpclient: HttpClient) => {
+  public start = (files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
 
@@ -85,7 +85,7 @@ export class UploadOperation extends Operation {
       console.log(json.warnings);
     };
     xhr.send(form);
-  }
+  };
   public getStateIcon = (sanitizer): SafeHtml => {
     let result = '';
     switch (this._state) {
@@ -119,7 +119,7 @@ export class UploadOperation extends Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  }
+  };
 
   public clone(): UploadOperation {
     return new UploadOperation(this.name, this.icon, this.state);

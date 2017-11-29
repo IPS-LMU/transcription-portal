@@ -6,6 +6,7 @@ export class FileInfo {
   set url(value: string) {
     this._url = value;
   }
+
   get file(): File {
     return this._file;
   }
@@ -66,5 +67,11 @@ export class FileInfo {
         throw new Error('invalid fullname. Fullname must contain the file extension');
       }
     }
+  }
+
+  public static fromURL(url: string) {
+    const result = new FileInfo(url.substr(url.lastIndexOf('/') + 1), 'audio-wav', 0);
+    result.url = url;
+    return result;
   }
 }

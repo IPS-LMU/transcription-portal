@@ -1,4 +1,6 @@
+import { HttpClient } from '@angular/common/http';
 import { SafeHtml } from '@angular/platform-browser';
+import { FileInfo } from './fileInfo';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
@@ -10,12 +12,20 @@ export class ToolOperation extends Operation {
 
   private active = true;
 
+  public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this.changeState(TaskState.PROCESSING);
+
+    setTimeout(() => {
+      this.changeState(TaskState.FINISHED);
+    }, 3000);
+  };
+
   public getStateIcon = (sanitizer): SafeHtml => {
     let result = '';
 
     switch (this.state) {
       case(TaskState.PENDING):
-        result = `<input type="checkbox" value="active"/>`;
+        result = ``;
         break;
       case(TaskState.UPLOADING):
         result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
@@ -37,7 +47,7 @@ export class ToolOperation extends Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  }
+  };
 
   public clone(): ToolOperation {
     return new ToolOperation(this.name, this.icon, this.state);
