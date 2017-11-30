@@ -55,6 +55,10 @@ export class Task {
       const operation = operations[ i ].clone();
       this.subscrmanager.add(operation.statechange.subscribe(
         (event) => {
+          if (event.newState === TaskState.ERROR) {
+            this._state = TaskState.ERROR;
+          }
+
           this.statesubj.next({
             opID    : operation.id,
             oldState: event.oldState,
@@ -131,5 +135,9 @@ export class Task {
     return this.operations.find((a) => {
       return (a.id === id);
     });
+  }
+
+  public destroy() {
+    this.subscrmanager.destroy();
   }
 }

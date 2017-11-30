@@ -1,22 +1,39 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy } from '@angular/core';
+import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
 import { isNullOrUndefined } from 'util';
 import { NotificationService } from '../notification.service';
 import { SubscriptionManager } from '../subscription-manager';
 import { Task, TaskState } from './obj';
 import { ASROperation } from './obj/asr-operation';
+import { MAUSOperation } from './obj/maus-operation';
 import { Operation } from './obj/operation';
 import { ToolOperation } from './obj/tool-operation';
 import { UploadOperation } from './obj/upload-operation';
-import { MAUSOperation } from './obj/maus-operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {
+  get protocol_array(): any[] {
+    return this._protocol_array;
+  }
+
+  get warnings_count(): number {
+    return this._warnings_count;
+  }
+
+  get errors_count(): number {
+    return this._errors_count;
+  }
 
   private options = {
     max_running_tasks: 3
   };
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  private _errors_count = 0;
+  private _warnings_count = 0;
+  private _protocol_array = [];
+
+  public errorscountchange = new EventEmitter<number>();
 
   constructor(private httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
@@ -26,10 +43,6 @@ export class TaskService implements OnDestroy {
       new ToolOperation('OCTRA', null),
       new Operation('Download', '<span class="glyphicon glyphicon-download"></span>')
     ];
-
-    setInterval(() => {
-      this.updateTimes();
-    });
   }
 
   private _tasks: Task[] = [];
@@ -42,41 +55,6 @@ export class TaskService implements OnDestroy {
 
   get operations(): Operation[] {
     return this._operations;
-  }
-
-  getUploadSpeed() {
-    if (this.tasks.length > 0) {
-      let mid_speed = 0;
-      for (let j = 0; j < this.tasks.length; j++) {
-        if (this.tasks[ j ].operations[ 0 ].state === TaskState.FINISHED) {
-          const duration = this.tasks[ j ].operations[ 0 ].time.end - this.tasks[ j ].operations[ 0 ].time.start;
-          let size = 0;
-
-          if (duration > 0) {
-            for (let i = 0; i < this.tasks[ j ].files.length; i++) {
-              size += this.tasks[ j ].files[ i ].size;
-            }
-
-            mid_speed += ((duration / 1000) / (size / 1000 / 1000));
-          }
-        }
-      }
-
-      // count tasks with upload state  FINISHED
-      const finished_tasks = this.tasks.filter((a) => {
-        return a.operations[ 0 ].state === TaskState.FINISHED;
-      }).length;
-
-      mid_speed = Math.round(mid_speed / finished_tasks * 10) / 10;
-
-      if (mid_speed <= 0) {
-        return -1;
-      }
-
-      return mid_speed;
-
-    }
-    return -1;
   }
 
   public addTask(task: Task) {
@@ -111,6 +89,8 @@ export class TaskService implements OnDestroy {
           } else if (event.newState === TaskState.ERROR) {
             this.notification.showNotification(opName + ' Operation failed', 'Please have a look at the error log');
           }
+
+          this.updateProtocolArray();
         }));
         task.start(this.httpclient);
       }
@@ -128,7 +108,7 @@ export class TaskService implements OnDestroy {
     for (let i = 0; i < this._tasks.length; i++) {
       const task = this._tasks[ i ];
 
-      if (task.state !== TaskState.PENDING && task.operations[ 1 ].state !== TaskState.FINISHED) {
+      if (task.state !== TaskState.PENDING && task.state !== TaskState.FINISHED && task.state !== TaskState.ERROR) {
         result++;
       }
     }
@@ -137,23 +117,45 @@ export class TaskService implements OnDestroy {
   }
 
   ngOnDestroy() {
+    for (let i = 0; i < this.tasks.length; i++) {
+      this.tasks[ i ].destroy();
+    }
     this.subscrmanager.destroy();
   }
 
-  private updateTimes() {
+  public updateProtocolArray() {
+    const result = [];
+    let errors_count = 0;
+    let warnings_count = 0;
+
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[ i ];
-      let new_end = 0;
 
-      let size = 0;
+      for (let j = 0; j < task.operations.length; j++) {
+        const operation = task.operations[ j ];
 
-      for (let j = 0; j < this.tasks[ i ].files.length; j++) {
-        size += this.tasks[ i ].files[ j ].size;
+        if ((operation.state === TaskState.FINISHED || operation.state === TaskState.ERROR) && operation.protocol !== '') {
+          if (operation.state === TaskState.ERROR) {
+            errors_count++;
+          } else {
+            warnings_count++;
+          }
+
+          result.push(
+            {
+              state   : operation.state,
+              protocol: operation.protocol
+            }
+          );
+        }
       }
-
-      new_end = ((size / 1000 / 1000) * this.getUploadSpeed()) * 1000 + task.operations[ 0 ].time.start;
-
-      task.operations[ 0 ].estimated_end = new_end;
     }
+
+    if (this.errors_count !== errors_count) {
+      this.errorscountchange.emit(this.errors_count);
+    }
+    this._errors_count = errors_count;
+    this._warnings_count = warnings_count;
+    this._protocol_array = result;
   }
 }

@@ -15,5 +15,32 @@ export const ANIMATIONS = [
     })),
     transition('* => opened', animate('300ms ease-in')),
     transition('opened => closed', animate('300ms ease-in'))
+  ]),
+
+  trigger('expandToggle', [
+    state('closed', style({
+      height: '35px'
+    })),
+    state('opened', style({
+      height: '200px'
+    })),
+    state('*', style({
+      height: '35px'
+    })),
+    transition('* => opened', animate('300ms ease-in')),
+    transition('opened => closed', animate('300ms ease-in'))
+  ]),
+
+  trigger('blop', [
+    state('blopped', style({
+      height   : '40px',
+      width    : '40px',
+      transform: 'translate(-5px, -10px)'
+    })),
+    state('*', style({
+      transform: 'translateX(0)'
+    })),
+    transition('* => blopped', animate('300ms ease-in')),
+    transition('blopped => *', animate('300ms ease-in'))
   ])
 ];

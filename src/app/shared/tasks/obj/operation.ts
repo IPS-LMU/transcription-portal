@@ -8,9 +8,20 @@ import { FileInfo } from './fileInfo';
 import { TaskState } from './task';
 
 export class Operation {
-  static counter = 0;
-  public estimated_end: number;
-  public results: FileInfo[] = [];
+  get protocol(): string {
+    return this._protocol;
+  }
+  set estimated_end(value: number) {
+    this._estimated_end = value;
+  }
+
+  get estimated_end(): number {
+    return this._estimated_end;
+  }
+
+  get results(): FileInfo[] {
+    return this._results;
+  }
 
   get time(): { start: number; end: number } {
     return this._time;
@@ -32,9 +43,14 @@ export class Operation {
     return this.state === TaskState.FINISHED;
   }
 
+  static counter = 0;
+  private _estimated_end: number;
+  protected _results: FileInfo[] = [];
+
   protected _state: TaskState;
   protected _name: string;
   protected _icon = '';
+  protected _protocol = '';
   protected _time: {
     start: number;
     end: number;

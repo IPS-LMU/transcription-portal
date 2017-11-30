@@ -12,6 +12,7 @@ import { FilesizePipe } from './shared/filesize.pipe';
 import { NotificationService } from './shared/notification.service';
 import { TaskService } from './shared/tasks/task.service';
 import { TimePipe } from './shared/time.pipe';
+import { ExpandDirective } from './expand.directive';
 
 
 @NgModule({
@@ -22,7 +23,8 @@ import { TimePipe } from './shared/time.pipe';
     TimePipe,
     ExpandRowDirective,
     FilesizePipe,
-    ContextMenuComponent
+    ContextMenuComponent,
+    ExpandDirective
   ],
   imports     : [
     BrowserModule,

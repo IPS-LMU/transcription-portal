@@ -37,8 +37,26 @@
 
 #protocol-table .protocol-header {
     background-color: floralwhite;
-    padding: 3px;
-    height: 25px;
+    padding: 5px;
+    min-height: 35px;
+    border-bottom: 1px solid gray;
+}
+
+.rounded-num {
+    display: inline-block;
+    padding:5px;
+    border-radius:20px;
+    min-width:24px;
+    background-color:red;
+    font-size:0.8em;
+    text-align:center;
+    color:white;
+    border:1px solid white;
+    vertical-align: middle;
+}
+
+.rounded-num.warning{
+    background-color: #ffc33b;
 }
 
 #protocol-table .protocol-header .info {
@@ -57,8 +75,15 @@
 }
 
 #protocol-table .protocol-body {
-    display: none;
     padding: 10px;
+    overflow:scroll;
+    height:160px;
+}
+
+#protocol-table .protocol-body table tr{
+    background-color: white;
+    border: 1px solid gray;
+    margin-bottom:5px;
 }
 
 .glyphicon.glyphicon-arrow-up {

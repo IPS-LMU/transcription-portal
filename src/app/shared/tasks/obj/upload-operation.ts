@@ -53,6 +53,9 @@ export class UploadOperation extends Operation {
 
     xhr.onerror = (e) => {
       console.error(e);
+      // add messages to protocol
+      this._protocol = e.message;
+
       this.changeState(TaskState.ERROR);
     };
 
@@ -71,18 +74,17 @@ export class UploadOperation extends Operation {
           }
         } else {
           // json attribute entry is an object
-          console.log('not array');
-          console.log(json.fileList.entry[ 'value' ]);
-          console.log(files);
           files[ 0 ].url = json.fileList.entry[ 'value' ];
         }
-
         this.changeState(TaskState.FINISHED);
       } else {
         this.changeState(TaskState.ERROR);
         console.error(json[ 'message' ]);
       }
-      console.log(json.warnings);
+      // add messages to protocol
+      if (json.warnings !== '') {
+        this._protocol = json.warnings;
+      }
     };
     xhr.send(form);
   };

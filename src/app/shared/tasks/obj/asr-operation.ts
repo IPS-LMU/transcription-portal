@@ -42,6 +42,11 @@ export class ASROperation extends Operation {
           console.error(json.output);
           this.changeState(TaskState.ERROR);
         }
+
+        // add messages to protocol
+        if (json.warnings !== '') {
+          this._protocol = json.warnings;
+        }
       },
       (error) => {
         this.changeState(TaskState.ERROR);
