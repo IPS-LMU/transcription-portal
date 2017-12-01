@@ -27,7 +27,7 @@
                     <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"><span class="glyphicon glyphicon-plus"></span> ADD FILES</button>
                     <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;" #fileinput
                            (change)="onFileChange($event)"/>
-                    <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()" style="margin-right:0px;">UPLOAD & PROCESS FILES</button>
+                    <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()" style="margin-right:0;">UPLOAD & PROCESS FILES</button>
                 </div>
                 <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
                                  [operations]="taskService.operations"
