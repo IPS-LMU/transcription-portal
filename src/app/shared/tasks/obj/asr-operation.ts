@@ -25,6 +25,8 @@ export class ASROperation extends Operation {
       },
       responseType: 'text'
     }).subscribe((result: string) => {
+        this._time.end = Date.now();
+
         // convert result to json
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
@@ -32,8 +34,8 @@ export class ASROperation extends Operation {
         console.log(json);
 
         if (json.success === 'true') {
-          this._time.end = Date.now();
           this.results.push(FileInfo.fromURL(json.downloadLink));
+          console.log(this.results);
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);

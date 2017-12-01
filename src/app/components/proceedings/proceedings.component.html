@@ -4,6 +4,23 @@
         'margin-left': contextmenu.x + 'px',
         'display': (contextmenu.hidden) ? 'none' : 'inherit'
     }" [hid]="contextmenu.hidden" [selected_tasks]="selected_tasks" (deletetasks)="onDeleteTasks()"></app-context-menu>
+    <app-popover [@fadeToggle]="popover.state" [ngStyle]="{
+        'width': popover.width + 'px',
+        'margin-top': popover.y + 'px',
+        'margin-left': popover.x + 'px'
+    }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';">
+        <ng-container *ngIf="popover.operation !== null">
+            <ng-container *ngIf="popover.operation.time.start > 0">
+                Duration: {{calculateDuration(popover.operation.time.start, popover.operation.time.end) |
+                time}}<br/><br/>
+            </ng-container>
+            <ng-container *ngIf="popover.operation.results.length > 0">
+                Results:<br/>
+                <a *ngFor="let result of popover.operation.results" [href]="result.url" [download]="result.fullname"
+                   [title]="'Download ' + result.fullname"><span class="glyphicon glyphicon-save"></span> </a>
+            </ng-container>
+        </ng-container>
+    </app-popover>
     <table class="table table-striped table-responsive">
         <thead>
         <tr>
@@ -34,7 +51,8 @@
                     </tbody>
                 </table>
             </td>
-            <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id)">
+            <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id)"
+                (mouseenter)="onOperationMouseEnter($event, operation)" (mouseleave)="onOperationMouseLeave($event)">
                 <div [innerHTML]="getStateIcon(operation)"></div>
             </td>
         </tr>

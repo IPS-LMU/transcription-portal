@@ -1,0 +1,16 @@
+:host {
+    height: 300px;
+    width:200px;
+    position:absolute;
+    z-index:30;
+}
+
+svg{
+    z-index:1;
+}
+
+.inner{
+    padding:15px 25px;
+    position:absolute;
+    z-index: 10;
+}

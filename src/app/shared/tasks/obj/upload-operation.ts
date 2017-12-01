@@ -61,6 +61,7 @@ export class UploadOperation extends Operation {
 
     xhr.onloadend = (e) => {
       console.log('loadend');
+      this.time.end = Date.now();
       const result = e.currentTarget[ 'responseText' ];
       const x2js = new X2JS();
       let json: any = x2js.xml2js(result);
@@ -68,13 +69,16 @@ export class UploadOperation extends Operation {
       console.log(json);
 
       if (json.success === 'true') {
+        // TODO set urls to results only
         if (isArray(json.fileList.entry)) {
           for (let i = 0; i < files.length; i++) {
             files[ i ].url = json.fileList.entry[ i ].value;
+            this.results.push(FileInfo.fromURL(files[ i ].url));
           }
         } else {
           // json attribute entry is an object
           files[ 0 ].url = json.fileList.entry[ 'value' ];
+          this.results.push(FileInfo.fromURL(json.fileList.entry[ 'value' ]));
         }
         this.changeState(TaskState.FINISHED);
       } else {

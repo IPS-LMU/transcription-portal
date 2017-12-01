@@ -27,3 +27,7 @@
 .table-striped > tbody > tr.selected {
     background-color: #cbffe7;
 }
+
+.glyphicon.glyphicon-save{
+    font-size: 32px;
+}

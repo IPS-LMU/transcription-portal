@@ -13,10 +13,12 @@ export class ToolOperation extends Operation {
   private active = true;
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 
     setTimeout(() => {
       this.changeState(TaskState.FINISHED);
+      this.time.end = Date.now();
     }, 2000);
   };
 

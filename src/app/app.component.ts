@@ -20,6 +20,7 @@ export class AppComponent implements OnDestroy {
   protected showtool = false;
   public sidebarstate = 'hidden';
 
+
   public test = 'insactive';
   private subscrmanager = new SubscriptionManager();
   @ViewChild('fileinput') fileinput: ElementRef;

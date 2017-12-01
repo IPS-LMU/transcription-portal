@@ -8,6 +8,7 @@ import {
   Output
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { isNullOrUndefined } from 'util';
 import { ANIMATIONS } from '../../shared/Animations';
 
 import { Operation, Task } from '../../shared/tasks/obj';
@@ -29,6 +30,14 @@ export class ProceedingsComponent implements OnInit {
     x     : 0,
     y     : 0,
     hidden: true
+  };
+
+  public popover = {
+    x        : 0,
+    y        : 0,
+    state    : 'closed',
+    width    : 200,
+    operation: null
   };
 
   @Input() tasks: Task[] = [];
@@ -133,5 +142,33 @@ export class ProceedingsComponent implements OnInit {
     }
 
     return false;
+  }
+
+  togglePopover() {
+    if (this.popover.state === 'closed') {
+      this.popover.state = 'opened';
+    } else {
+      this.popover.state = 'closed';
+    }
+  }
+
+  onOperationMouseEnter($event, operation: Operation) {
+    console.log($event);
+    this.popover.operation = operation;
+    this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2) - (this.popover.width / 2);
+    this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
+    this.togglePopover();
+  }
+
+  onOperationMouseLeave($event) {
+    this.togglePopover();
+  }
+
+  calculateDuration(start: number, end?: number) {
+    if (isNullOrUndefined(end) || end === 0) {
+      return (Date.now() - start);
+    } else {
+      return (end - start);
+    }
   }
 }

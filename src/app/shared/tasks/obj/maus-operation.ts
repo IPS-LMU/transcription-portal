@@ -38,6 +38,7 @@ export class MAUSOperation extends Operation {
       };
 
       xhr.onloadend = (e) => {
+        this.time.end = Date.now();
         const result = e.currentTarget[ 'responseText' ];
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
@@ -47,6 +48,7 @@ export class MAUSOperation extends Operation {
 
         if (json.success === 'true') {
           this.time.end = Date.now();
+          this.results.push(FileInfo.fromURL(json.downloadLink));
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);

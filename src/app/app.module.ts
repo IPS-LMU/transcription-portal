@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
+import { PopoverComponent } from './components/popover/popover.component';
 import { ContextMenuComponent } from './components/proceedings/context-menu/context-menu.component';
 import { ExpandRowDirective } from './components/proceedings/expand-row.directive';
 import { ProceedingsComponent } from './components/proceedings/proceedings.component';
@@ -11,7 +12,7 @@ import { ToolLoaderComponent } from './components/tool-loader/tool-loader.compon
 import { ExpandDirective } from './expand.directive';
 import { FilesizePipe } from './shared/filesize.pipe';
 import { NotificationService } from './shared/notification.service';
-import { TaskService } from './shared/tasks/task.service';
+import { TaskService } from './shared/tasks';
 import { TimePipe } from './shared/time.pipe';
 
 
@@ -24,7 +25,8 @@ import { TimePipe } from './shared/time.pipe';
     ExpandRowDirective,
     FilesizePipe,
     ContextMenuComponent,
-    ExpandDirective
+    ExpandDirective,
+    PopoverComponent
   ],
   imports     : [
     BrowserModule,
