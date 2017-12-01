@@ -38,9 +38,9 @@ export class TaskService implements OnDestroy {
   constructor(private httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
       new UploadOperation('Upload', '<span class="glyphicon glyphicon-upload"></span>'),
-      new MAUSOperation('MAUS', null),
       new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
       new ToolOperation('OCTRA', null),
+      new MAUSOperation('MAUS', null),
       new Operation('Download', '<span class="glyphicon glyphicon-download"></span>')
     ];
   }

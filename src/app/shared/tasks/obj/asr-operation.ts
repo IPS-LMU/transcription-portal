@@ -32,14 +32,10 @@ export class ASROperation extends Operation {
         console.log(json);
 
         if (json.success === 'true') {
-          this.changeState(TaskState.FINISHED);
-          console.log('FINISHED');
-          console.log(this.state);
           this._time.end = Date.now();
           this.results.push(FileInfo.fromURL(json.downloadLink));
-          console.log(this.results);
+          this.changeState(TaskState.FINISHED);
         } else {
-          console.error(json.output);
           this.changeState(TaskState.ERROR);
         }
 

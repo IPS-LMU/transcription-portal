@@ -17,7 +17,7 @@ export class ToolOperation extends Operation {
 
     setTimeout(() => {
       this.changeState(TaskState.FINISHED);
-    }, 3000);
+    }, 2000);
   };
 
   public getStateIcon = (sanitizer): SafeHtml => {

@@ -103,7 +103,7 @@ export class Operation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.PROCESSING):
-        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
+        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):

@@ -14,45 +14,50 @@ export class MAUSOperation extends Operation {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
     try {
+      console.log('results');
+      console.log(operations[ 1 ].results);
       const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
-        'BPF=' + inputs[ 1 ].url +
+        'BPF=' + operations[ 1 ].results[ 0 ].url +
         '&SIGNAL=' + inputs[ 0 ].url +
-        '&MAUSVARIANT=runMAUS&OUTFORMAT=emuDB';
+        '&LANGUAGE=deu-DE' +
+        '&OUTFORMAT=emuDB&MAUSVARIANT=runMAUS';
 
-      httpclient.post(url, {}, {
-        headers     : {
-          'Content-Type': 'multipart/form-data'
-        },
-        responseType: 'text'
-      }).subscribe((result: string) => {
-          // convert result to json
-          const x2js = new X2JS();
-          let json: any = x2js.xml2js(result);
-          json = json.WebServiceResponseLink;
-          console.log(json);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
 
-          if (json.success === 'true') {
-            this.changeState(TaskState.FINISHED);
-            console.log('FINISHED MAUS');
-            console.log(this.state);
-            this._time.end = Date.now();
-            this.results.push(FileInfo.fromURL(json.downloadLink));
-            console.log(this.results);
-          } else {
-            console.error(json.output);
-            this.changeState(TaskState.ERROR);
-          }
+      xhr.onloadstart = (e) => {
+        console.log('start');
+      };
 
-          // add messages to protocol
-          if (json.warnings !== '') {
-            this._protocol = json.warnings;
-          }
-        },
-        (error) => {
-          this._protocol = error.message;
+      xhr.onerror = (e) => {
+        console.error(e);
+        // add messages to protocol
+        this._protocol = e.message;
+
+        this.changeState(TaskState.ERROR);
+      };
+
+      xhr.onloadend = (e) => {
+        const result = e.currentTarget[ 'responseText' ];
+        const x2js = new X2JS();
+        let json: any = x2js.xml2js(result);
+        json = json.WebServiceResponseLink;
+        console.log(json);
+
+
+        if (json.success === 'true') {
+          this.time.end = Date.now();
+          this.changeState(TaskState.FINISHED);
+        } else {
           this.changeState(TaskState.ERROR);
-          console.error(error);
-        });
+          console.error(json[ 'message' ]);
+        }
+        // add messages to protocol
+        if (json.warnings !== '') {
+          this._protocol = json.warnings;
+        }
+      };
+      xhr.send();
     } catch (e) {
       this._protocol = e.message;
       this.changeState(TaskState.ERROR);
