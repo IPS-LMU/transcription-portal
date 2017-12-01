@@ -24,7 +24,10 @@
             </ng-container>
             <ng-template #showProceedings>
                 <div class='btn-nav' style="text-align: right">
-                    <button class="btn btn-primary" (click)="onUploadButtonClick()">UPLOAD & PROCESS FILES</button>
+                    <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"><span class="glyphicon glyphicon-plus"></span> ADD FILES</button>
+                    <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;" #fileinput
+                           (change)="onFileChange($event)"/>
+                    <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()" style="margin-right:0px;">UPLOAD & PROCESS FILES</button>
                 </div>
                 <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
                                  [operations]="taskService.operations"
@@ -35,8 +38,18 @@
                             <table>
                                 <tbody>
                                 <tr>
-                                    <td (click)="tag.setAttribute('data-state', 'opened')"><div class="rounded-num" [@blop]="test">{{taskService.errors_count}}</div> Errors</td>
-                                    <td (click)="tag.setAttribute('data-state', 'opened')"><div class="rounded-num warning">{{taskService.warnings_count}}</div> Warnings</td>
+                                    <td (click)="onProtoclLabelClick(tag)">
+                                        <div class="errors-td">
+                                            <div class="rounded-num" [@blop]="test">{{taskService.errors_count}}</div>
+                                            Errors
+                                        </div>
+                                    </td>
+                                    <td (click)="onProtoclLabelClick(tag)">
+                                        <div class="warnings-td">
+                                            <div class="rounded-num warning">{{taskService.warnings_count}}</div>
+                                            Warnings
+                                        </div>
+                                    </td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -44,13 +57,17 @@
                         <div class="tag"><span class="glyphicon glyphicon-menu-down" style="cursor:pointer;" appExpand
                                                #tag></span></div>
                     </div>
-                    <div class="protocol-body">
+                    <div class="protocol-body" [ngStyle]="{
+                        display: ((tag.getAttribute('data-state') !== 'opened') ? 'none': 'flex')
+                    }">
                         <table class="table table-bordered">
                             <tbody>
                             <tr *ngFor="let elem of taskService.protocol_array">
                                 <td>
-                                    <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign" style="color:red"></span>
-                                    <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign" style="color:orange"></span>
+                                    <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign"
+                                          style="color:red"></span>
+                                    <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign"
+                                          style="color:orange"></span>
                                 </td>
                                 <td>{{elem.protocol}}</td>
                             </tr>

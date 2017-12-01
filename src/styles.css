@@ -1,5 +1,6 @@
 body {
-    padding: 2px 15px;
+    padding: 0;
+    overflow: hidden;
 }
 html, body {
     height:100%;
