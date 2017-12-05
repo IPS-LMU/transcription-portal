@@ -11,71 +11,90 @@
         This portal enables to easily process audio files using ASR, G2P, Chunker, OCTRA and MAUS from BASWebservices.
     </p>
     <p>You can delete entries if you select rows and uses the context menu in the table area.</p>
-    <div class="row">
-        <div *ngIf="sidebarstate !== 'hidden'" class="col-xs-3" id="sidebar">
-            <app-proceedings></app-proceedings>
+    <div class="row" style="display:inherit; height:100%;
+    -webkit-box-orient: unset;
+    -webkit-box-direction: unset;
+    -ms-flex-direction: unset;
+    flex-direction: unset;
+    -webkit-box-flex: unset;
+    -ms-flex: none;">
+        <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
+            'col-xs-3': sidebarstate !== 'hidden'
+        }" id="sidebar">
+            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';">BACK</button>
         </div>
         <div [ngClass]="{
         'col-xs-9': sidebarstate !== 'hidden',
         'col-xs-12': sidebarstate === 'hidden'
-    }" id="main">
-            <ng-container *ngIf="false; else showProceedings">
-                <app-tool-loader [url]="'https://www.phonetik.uni-muenchen.de/apps/octra/octra/'"></app-tool-loader>
-            </ng-container>
-            <ng-template #showProceedings>
-                <div class='btn-nav' style="text-align: right">
-                    <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"><span class="glyphicon glyphicon-plus"></span> ADD FILES</button>
-                    <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;" #fileinput
-                           (change)="onFileChange($event)"/>
-                    <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()" style="margin-right:0;">UPLOAD & PROCESS FILES</button>
-                </div>
-                <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
-                                 [operations]="taskService.operations"
-                                 (afterdrop)="onAfterDrop($event)" #proceedings></app-proceedings>
-                <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
-                    <div class="protocol-header">
-                        <div class="info">
-                            <table>
+    }" style="height:100%;">
+            <div id="main">
+                <ng-container *ngIf="showtool; else showProceedings">
+                    <app-tool-loader [url]="tool_url" style="height:100%;"></app-tool-loader>
+                </ng-container>
+                <ng-template #showProceedings>
+                    <div class='btn-nav' style="text-align: right">
+                        <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"><span
+                                class="glyphicon glyphicon-plus"></span> ADD FILES
+                        </button>
+                        <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;"
+                               #fileinput
+                               (change)="onFileChange($event)"/>
+                        <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()"
+                                style="margin-right:0;">UPLOAD & PROCESS FILES
+                        </button>
+                    </div>
+                    <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
+                                     [operations]="taskService.operations"
+                                     (afterdrop)="onAfterDrop($event)" #proceedings
+                                     (operationclick)="onOperationClick($event)"
+                    ></app-proceedings>
+                    <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
+                        <div class="protocol-header">
+                            <div class="info">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <td (click)="onProtoclLabelClick(tag)">
+                                            <div class="errors-td">
+                                                <div class="rounded-num" [@blop]="test">{{taskService.errors_count}}
+                                                </div>
+                                                Errors
+                                            </div>
+                                        </td>
+                                        <td (click)="onProtoclLabelClick(tag)">
+                                            <div class="warnings-td">
+                                                <div class="rounded-num warning">{{taskService.warnings_count}}</div>
+                                                Warnings
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tag"><span class="glyphicon glyphicon-menu-down" style="cursor:pointer;"
+                                                   appExpand
+                                                   #tag></span></div>
+                        </div>
+                        <div class="protocol-body" [ngStyle]="{
+                        display: ((tag.getAttribute('data-state') !== 'opened') ? 'none': 'flex')
+                    }">
+                            <table class="table table-bordered">
                                 <tbody>
-                                <tr>
-                                    <td (click)="onProtoclLabelClick(tag)">
-                                        <div class="errors-td">
-                                            <div class="rounded-num" [@blop]="test">{{taskService.errors_count}}</div>
-                                            Errors
-                                        </div>
+                                <tr *ngFor="let elem of taskService.protocol_array">
+                                    <td>
+                                    <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign"
+                                          style="color:red"></span>
+                                        <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign"
+                                              style="color:orange"></span>
                                     </td>
-                                    <td (click)="onProtoclLabelClick(tag)">
-                                        <div class="warnings-td">
-                                            <div class="rounded-num warning">{{taskService.warnings_count}}</div>
-                                            Warnings
-                                        </div>
-                                    </td>
+                                    <td>{{elem.protocol}}</td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="tag"><span class="glyphicon glyphicon-menu-down" style="cursor:pointer;" appExpand
-                                               #tag></span></div>
                     </div>
-                    <div class="protocol-body" [ngStyle]="{
-                        display: ((tag.getAttribute('data-state') !== 'opened') ? 'none': 'flex')
-                    }">
-                        <table class="table table-bordered">
-                            <tbody>
-                            <tr *ngFor="let elem of taskService.protocol_array">
-                                <td>
-                                    <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign"
-                                          style="color:red"></span>
-                                    <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign"
-                                          style="color:orange"></span>
-                                </td>
-                                <td>{{elem.protocol}}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </ng-template>
+                </ng-template>
+            </div>
         </div>
     </div>
 </div>

@@ -51,7 +51,7 @@
                     </tbody>
                 </table>
             </td>
-            <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id)"
+            <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id, operation)"
                 (mouseenter)="onOperationMouseEnter($event, operation)" (mouseleave)="onOperationMouseLeave($event)">
                 <div [innerHTML]="getStateIcon(operation)"></div>
             </td>

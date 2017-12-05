@@ -1,16 +1,16 @@
 import { HttpClient } from '@angular/common/http';
-import { SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { FileInfo } from './fileInfo';
 import { Operation } from './operation';
 import { TaskState } from './task';
+import { ToolOperation } from './tool-operation';
 
-export class ToolOperation extends Operation {
+export class EmuOperation extends ToolOperation {
+  private operations: Operation[];
 
   public constructor(name: string, icon?: string, state?: TaskState) {
     super(name, icon, state);
   }
-
-  private active = true;
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._time.start = Date.now();
@@ -19,10 +19,11 @@ export class ToolOperation extends Operation {
     setTimeout(() => {
       this.changeState(TaskState.FINISHED);
       this.time.end = Date.now();
-    }, 2000);
+      this.operations = operations;
+    }, 1000);
   };
 
-  public getStateIcon = (sanitizer): SafeHtml => {
+  public getStateIcon = (sanitizer: DomSanitizer): String => {
     let result = '';
 
     switch (this.state) {
@@ -38,7 +39,7 @@ export class ToolOperation extends Operation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<span class="glyphicon glyphicon-ok"></span>';
+        result = '<span class="link">Open</span>';
         break;
       case(TaskState.READY):
         result = '<a href="#"><span class="glyphicon glyphicon-edit"></span></a>';
@@ -48,14 +49,15 @@ export class ToolOperation extends Operation {
         break;
     }
 
-    return sanitizer.bypassSecurityTrustHtml(result);
+    return result;
   };
 
   public getToolURL(): string {
-    return '';
+    return 'https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=' + this.operations[ 0 ].results[ 0 ].url
+      + '&labelGetUrl=' + this.operations[ 3 ].results[ 0 ].url + '&labelType=annotJSON';
   }
 
-  public clone(): ToolOperation {
-    return new ToolOperation(this.name, this.icon, this.state);
+  public clone(): EmuOperation {
+    return new EmuOperation(this.name, this.icon, this.state);
   }
 }

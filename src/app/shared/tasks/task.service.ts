@@ -3,11 +3,7 @@ import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
 import { isNullOrUndefined } from 'util';
 import { NotificationService } from '../notification.service';
 import { SubscriptionManager } from '../subscription-manager';
-import { Task, TaskState } from './obj';
-import { ASROperation } from './obj/asr-operation';
-import { MAUSOperation } from './obj/maus-operation';
-import { Operation } from './obj/operation';
-import { ToolOperation } from './obj/tool-operation';
+import { ASROperation, EmuOperation, MAUSOperation, Operation, Task, TaskState, ToolOperation } from './obj';
 import { UploadOperation } from './obj/upload-operation';
 
 @Injectable()
@@ -39,9 +35,9 @@ export class TaskService implements OnDestroy {
     this._operations = [
       new UploadOperation('Upload', '<span class="glyphicon glyphicon-upload"></span>'),
       new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
-      new ToolOperation('OCTRA', null),
-      new MAUSOperation('MAUS', null),
-      new Operation('Download', '<span class="glyphicon glyphicon-download"></span>')
+      new ToolOperation('OCTRA'),
+      new MAUSOperation('MAUS'),
+      new EmuOperation('Emu WebApp')
     ];
   }
 

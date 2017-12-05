@@ -4,6 +4,7 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnDestroy,
   OnInit,
   Output
 } from '@angular/core';
@@ -11,7 +12,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { ANIMATIONS } from '../../shared/Animations';
 
-import { Operation, Task } from '../../shared/tasks/obj';
+import { Operation, Task, ToolOperation } from '../../shared/tasks/obj';
 import { FileInfo } from '../../shared/tasks/obj/fileInfo';
 import { TaskService } from '../../shared/tasks/task.service';
 
@@ -24,7 +25,7 @@ declare var window: any;
   animations     : ANIMATIONS,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProceedingsComponent implements OnInit {
+export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public contextmenu = {
     x     : 0,
@@ -46,6 +47,7 @@ export class ProceedingsComponent implements OnInit {
   public selected_tasks = [];
 
   @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
+  @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService) {
     // Check for the various FileInfo API support.
@@ -62,6 +64,10 @@ export class ProceedingsComponent implements OnInit {
     setInterval(() => {
       this.cd.detectChanges();
     }, 500);
+  }
+
+  ngOnDestroy() {
+    this.cd.detach();
   }
 
   onDragOver($event) {
@@ -111,14 +117,18 @@ export class ProceedingsComponent implements OnInit {
     this.contextmenu.hidden = true;
   }
 
-  onRowSelected(taskID: number) {
-    const search = this.selected_tasks.indexOf(taskID);
-    if (search > -1) {
-      this.selected_tasks.splice(search, 1);
-    } else {
-      this.selected_tasks.push(taskID);
+  onRowSelected(taskID: number, operation: Operation) {
+    if (!(operation instanceof ToolOperation)) {
+      const search = this.selected_tasks.indexOf(taskID);
+      if (search > -1) {
+        this.selected_tasks.splice(search, 1);
+      } else {
+        this.selected_tasks.push(taskID);
+      }
     }
+    this.operationclick.emit(operation);
   }
+
 
   onDeleteTasks() {
     for (let i = 0; i < this.selected_tasks.length; i++) {

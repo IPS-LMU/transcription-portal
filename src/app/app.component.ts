@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, SecurityContext, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { AppInfo } from './app.info';
 import { ANIMATIONS } from './shared/Animations';
 import { NotificationService } from './shared/notification.service';
 import { SubscriptionManager } from './shared/subscription-manager';
-import { FileInfo } from './shared/tasks/obj/fileInfo';
-import { Task } from './shared/tasks/obj/task';
-import { TaskService } from './shared/tasks/task.service';
+import { TaskService } from './shared/tasks';
+import { FileInfo, Operation, Task, ToolOperation } from './shared/tasks/obj';
 
 @Component({
   selector   : 'app-root',
@@ -19,13 +19,15 @@ import { TaskService } from './shared/tasks/task.service';
 export class AppComponent implements OnDestroy {
   protected showtool = false;
   public sidebarstate = 'hidden';
+  public tool_url: SafeResourceUrl;
 
 
   public test = 'insactive';
   private subscrmanager = new SubscriptionManager();
   @ViewChild('fileinput') fileinput: ElementRef;
 
-  constructor(public taskService: TaskService, private httpclient: HttpClient, public notification: NotificationService) {
+  constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
+              private httpclient: HttpClient, public notification: NotificationService) {
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
         console.log('ERROR! HERE');
@@ -92,6 +94,15 @@ export class AppComponent implements OnDestroy {
       const task = new Task(file_infos, this.taskService.operations);
 
       this.taskService.addTask(task);
+    }
+  }
+
+  onOperationClick(operation: Operation) {
+    if (operation instanceof ToolOperation) {
+      const tool = <ToolOperation> operation;
+      this.tool_url = tool.getToolURL();
+      this.sidebarstate = 'opened';
+      this.showtool = true;
     }
   }
 }
