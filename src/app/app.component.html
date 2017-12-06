@@ -21,8 +21,15 @@
         <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
             'col-xs-3': sidebarstate !== 'hidden'
         }" id="sidebar">
-            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';">BACK</button>
-        </div>
+            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';" style="width:100%">BACK</button>
+                <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
+                                 [tasks]="taskService.tasks"
+                                 [operations]="taskService.operations"
+                                 [shortstyle]="true"
+                                 (afterdrop)="onAfterDrop($event)" #proceedings
+                                 (operationclick)="onOperationClick($event)"
+                ></app-proceedings>
+            </div>
         <div [ngClass]="{
         'col-xs-9': sidebarstate !== 'hidden',
         'col-xs-12': sidebarstate === 'hidden'
@@ -32,13 +39,21 @@
                     <app-tool-loader [url]="tool_url" style="height:100%;"></app-tool-loader>
                 </ng-container>
                 <ng-template #showProceedings>
-                    <div class='btn-nav' style="text-align: right">
+                    <div class='btn-nav proceedings-header'>
                         <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"><span
                                 class="glyphicon glyphicon-plus"></span> ADD FILES
                         </button>
                         <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;"
                                #fileinput
                                (change)="onFileChange($event)"/>
+                        <div class="status">
+                            <ng-container  *ngIf="taskService.countRunningTasks() > 0">
+                            {{taskService.countRunningTasks()}}/{{taskService.tasks.length}} Tasks running...
+                            </ng-container>
+                            <ng-container  *ngIf="taskService.countRunningTasks() < 1">
+                                Ready for processing
+                            </ng-container>
+                        </div>
                         <button class="navbar-right btn btn-primary" (click)="onUploadButtonClick()"
                                 style="margin-right:0;">UPLOAD & PROCESS FILES
                         </button>

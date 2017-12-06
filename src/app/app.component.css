@@ -106,3 +106,19 @@
 .glyphicon.glyphicon-arrow-up {
     color: orange;
 }
+
+.proceedings-header{
+    background-color: ghostwhite;
+    position: relative;
+    text-align: center;
+}
+
+.proceedings-header .status{
+    background-color: floralwhite;
+    padding:5px;
+    display: inline-block;
+    margin:0 auto;
+    border: 1px dotted gray;
+    border-radius: 5px;
+    width: 30%;
+}

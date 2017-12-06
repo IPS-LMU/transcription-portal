@@ -21,13 +21,20 @@
             </ng-container>
         </ng-container>
     </app-popover>
-    <table class="table table-striped table-responsive">
+    <table class="table table-striped">
         <thead>
         <tr>
             <th></th>
             <th>File</th>
             <th *ngFor="let operation of operations" style="text-align: center;">
-                <span *ngIf="operation.icon === ''; else showIcon">{{operation.name}}</span>
+                <span *ngIf="operation.icon === ''; else showIcon">
+                    <ng-container *ngIf="shortstyle">
+                        {{operation.name.charAt(0)}}
+                    </ng-container>
+                    <ng-container *ngIf="!shortstyle">
+                        {{operation.name}}
+                    </ng-container>
+                </span>
                 <ng-template #showIcon>
                     <div [innerHTML]="operation.icon"></div>
                 </ng-template>
@@ -39,7 +46,9 @@
             [ngClass]="{'selected': (isTaskSelected(task.id))}">
             <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
                       (contextmenu)="onContextMenu($event)"></span></td>
-            <td (click)="onRowSelected(task.id)"><span>{{task.files[0].fullname}}</span> <span
+            <td (click)="onRowSelected(task.id)" [ngClass]="{
+                            'shorten': shortstyle
+                        }"><span>{{task.files[0].fullname}}</span> <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <table [@fadeToggle]="tag.getAttribute('data-state')" class="datatable">
                     <tbody>

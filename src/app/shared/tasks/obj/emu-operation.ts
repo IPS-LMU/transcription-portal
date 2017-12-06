@@ -39,7 +39,7 @@ export class EmuOperation extends ToolOperation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<span class="link">Open</span>';
+        result = '<span class="glyphicon glyphicon-edit link"></span>';
         break;
       case(TaskState.READY):
         result = '<a href="#"><span class="glyphicon glyphicon-edit"></span></a>';

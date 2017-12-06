@@ -31,3 +31,15 @@
 .glyphicon.glyphicon-save{
     font-size: 32px;
 }
+
+.shorten{
+    text-overflow: ellipsis;
+    overflow: hidden;
+    text-wrap: none;
+    max-width: 100px;
+    white-space: nowrap;
+}
+
+span.glyphicon.glyphicon-edit.link{
+    color: cornflowerblue;
+}

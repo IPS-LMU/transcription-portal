@@ -7,6 +7,7 @@ export const ANIMATIONS = [
       opacity: '0.0'
     })),
     state('opened', style({
+      display: 'inherit',
       opacity: '1.0'
     })),
     state('*', style({

@@ -44,6 +44,8 @@ export class ASROperation extends Operation {
         // add messages to protocol
         if (json.warnings !== '') {
           this._protocol = json.warnings;
+        } else if (json.output !== '') {
+          this._protocol = json.output;
         }
       },
       (error) => {

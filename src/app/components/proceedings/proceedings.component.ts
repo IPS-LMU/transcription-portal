@@ -46,6 +46,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private fileAPIsupported = false;
   public selected_tasks = [];
 
+  @Input() shortstyle = false;
+
   @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
 
@@ -61,12 +63,20 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    setInterval(() => {
+    this.cd.detach();
+    if (!this.cd['destroyed']) {
       this.cd.detectChanges();
+    }
+
+    setInterval(() => {
+      if (!this.cd['destroyed']) {
+        this.cd.detectChanges();
+      }
     }, 500);
   }
 
   ngOnDestroy() {
+    console.log('destroy proceedings');
     this.cd.detach();
   }
 
