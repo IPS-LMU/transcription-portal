@@ -48,9 +48,9 @@
                       (contextmenu)="onContextMenu($event)"></span></td>
             <td (click)="onRowSelected(task.id)" [ngClass]="{
                             'shorten': shortstyle
-                        }"><span>{{task.files[0].fullname}}</span> <span
+                        }"><span title="{{task.files[0].fullname}}">{{task.files[0].fullname}}</span> <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
-                <table [@fadeToggle]="tag.getAttribute('data-state')" class="datatable">
+                <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
                     <tbody>
                     <tr *ngFor="let file of task.files;">
                         <td>{{file.fullname}}</td>
@@ -61,7 +61,8 @@
                 </table>
             </td>
             <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id, operation)"
-                (mouseenter)="onOperationMouseEnter($event, operation)" (mouseleave)="onOperationMouseLeave($event)">
+                (mouseenter)="onOperationMouseEnter($event, operation)"
+                (mouseleave)="onOperationMouseLeave($event, operation)">
                 <div [innerHTML]="getStateIcon(operation)"></div>
             </td>
         </tr>

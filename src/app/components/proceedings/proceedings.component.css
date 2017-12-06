@@ -28,11 +28,11 @@
     background-color: #cbffe7;
 }
 
-.glyphicon.glyphicon-save{
+.glyphicon.glyphicon-save {
     font-size: 32px;
 }
 
-.shorten{
+.shorten {
     text-overflow: ellipsis;
     overflow: hidden;
     text-wrap: none;
@@ -40,6 +40,14 @@
     white-space: nowrap;
 }
 
-span.glyphicon.glyphicon-edit.link{
+span.glyphicon.glyphicon-edit.link {
     color: cornflowerblue;
+}
+
+.col-xs-9 {
+    padding-left: 0px;
+}
+
+.col-xs-3 {
+    padding-right: 0;
 }

@@ -1,4 +1,5 @@
 import { HttpClient } from '@angular/common/http';
+import { SecurityContext } from '@angular/core';
 import { SafeHtml } from '@angular/platform-browser';
 import { isArray } from 'util';
 import * as X2JS from 'x2js';
@@ -124,7 +125,7 @@ export class UploadOperation extends Operation {
         break;
     }
 
-    return sanitizer.bypassSecurityTrustHtml(result);
+    return sanitizer.sanitize(SecurityContext.HTML, result);
   };
 
   public clone(): UploadOperation {

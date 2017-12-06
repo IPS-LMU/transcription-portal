@@ -12,7 +12,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { ANIMATIONS } from '../../shared/Animations';
 
-import { Operation, Task, ToolOperation } from '../../shared/tasks/obj';
+import { Operation, Task, TaskState, ToolOperation } from '../../shared/tasks/obj';
 import { FileInfo } from '../../shared/tasks/obj/fileInfo';
 import { TaskService } from '../../shared/tasks/task.service';
 
@@ -64,12 +64,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cd.detach();
-    if (!this.cd['destroyed']) {
+    if (!this.cd[ 'destroyed' ]) {
       this.cd.detectChanges();
     }
 
     setInterval(() => {
-      if (!this.cd['destroyed']) {
+      if (!this.cd[ 'destroyed' ]) {
         this.cd.detectChanges();
       }
     }, 500);
@@ -164,8 +164,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  togglePopover() {
-    if (this.popover.state === 'closed') {
+  togglePopover(show: boolean) {
+    if (show) {
       this.popover.state = 'opened';
     } else {
       this.popover.state = 'closed';
@@ -173,15 +173,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   onOperationMouseEnter($event, operation: Operation) {
-    console.log($event);
-    this.popover.operation = operation;
-    this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2) - (this.popover.width / 2);
-    this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
-    this.togglePopover();
+    // show Popover for normal operations only
+    if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
+      this.popover.operation = operation;
+      this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2) - (this.popover.width / 2);
+      this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
+      this.togglePopover(true);
+    }
   }
 
-  onOperationMouseLeave($event) {
-    this.togglePopover();
+  onOperationMouseLeave($event, operation: Operation) {
+    if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
+      this.togglePopover(false);
+    }
   }
 
   calculateDuration(start: number, end?: number) {

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnDestroy, SecurityContext, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { AppInfo } from './app.info';
@@ -47,9 +47,14 @@ export class AppComponent implements OnDestroy {
   onAfterDrop(files: FileInfo[]) {
     console.log('dropped');
     if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
-      const task = new Task(files, this.taskService.operations);
+      for (let i = 0; i < files.length; i++) {
+        const file: FileInfo = files[ i ];
 
-      this.taskService.addTask(task);
+        if (file.type.indexOf('wav') > -1) {
+          const task = new Task([ file ], this.taskService.operations);
+          this.taskService.addTask(task);
+        }
+      }
     }
   }
 
@@ -84,16 +89,18 @@ export class AppComponent implements OnDestroy {
 
   onFileChange($event) {
     const files: FileList = $event.target.files;
-    const file_infos: FileInfo[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file: File = files[ i ];
-      file_infos.push(new FileInfo(file.name, file.type, file.size, file));
-    }
-    if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
-      const task = new Task(file_infos, this.taskService.operations);
+      const file_infos: FileInfo[] = [];
 
-      this.taskService.addTask(task);
+      if (file.type.indexOf('wav') > -1) {
+        file_infos.push(new FileInfo(file.name, file.type, file.size, file));
+
+        const task = new Task(file_infos, this.taskService.operations);
+
+        this.taskService.addTask(task);
+      }
     }
   }
 
