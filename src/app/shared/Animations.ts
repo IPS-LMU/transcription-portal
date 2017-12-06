@@ -43,5 +43,32 @@ export const ANIMATIONS = [
     })),
     transition('* => blopped', animate('300ms ease-in')),
     transition('blopped => *', animate('300ms ease-in'))
-  ])
+  ]),
+
+  trigger('expandLeft', [
+    state('opened', style({
+      width: '100%'
+    })),
+    state('closed', style({
+      width: '30%'
+    })),
+    state('*', style({
+      width: '100%'
+    })),
+    transition('* => closed', animate('600ms ease-in')),
+    transition('opened => closed', animate('600ms ease-in'))
+  ]),
+
+  trigger('comeIn', [
+    state('hidden', style({
+      display: 'none',
+      transform: 'translate(2500px, 0px)'
+    })),
+    state('*', style({
+      transform: 'translateX(0)',
+      display: 'flex'
+    })),
+    transition('hidden => *', animate('1000ms ease-in')),
+    transition('opened => hidden', animate('1000ms ease-out'))
+  ]),
 ];
