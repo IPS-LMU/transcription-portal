@@ -13,3 +13,11 @@ html, body {
 .glyphicon.glyphicon-remove{
     color: red;
 }
+
+.glyphicon.glyphicon-arrow-up {
+    color: cornflowerblue;
+}
+
+.glyphicon.glyphicon-edit {
+    color: cornflowerblue;
+}

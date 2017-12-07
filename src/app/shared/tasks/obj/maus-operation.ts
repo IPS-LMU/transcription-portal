@@ -13,6 +13,8 @@ export class MAUSOperation extends Operation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
+    this._time.end = 0;
+
     try {
       console.log('results');
       console.log(operations[ 1 ].results);
@@ -33,7 +35,6 @@ export class MAUSOperation extends Operation {
         console.error(e);
         // add messages to protocol
         this._protocol = e.message;
-
         this.changeState(TaskState.ERROR);
       };
 

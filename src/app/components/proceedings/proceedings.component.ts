@@ -186,6 +186,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
       this.togglePopover(false);
     }
+    operation.mouseover = false;
+  }
+
+  onOperationMouseOver($event, operation: Operation) {
+    operation.mouseover = true;
   }
 
   calculateDuration(start: number, end?: number) {

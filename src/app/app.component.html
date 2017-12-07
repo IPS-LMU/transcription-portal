@@ -7,25 +7,21 @@
            (click)="notification.permissionGranted = true"></i>
     </div>
     <h1>OH-Portal v{{AppInfo.version}}</h1>
-    <div class="row" style="display:inherit; height:100%;
-    -webkit-box-orient: unset;
-    -webkit-box-direction: unset;
-    -ms-flex-direction: unset;
-    flex-direction: unset;
-    -webkit-box-flex: unset;
-    -ms-flex: none;">
+    <div class="row main-row">
         <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
             'col-xs-3': sidebarstate !== 'hidden'
         }" id="sidebar">
-            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';" style="width:100%">BACK</button>
-                <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
-                                 [tasks]="taskService.tasks"
-                                 [operations]="taskService.operations"
-                                 [shortstyle]="true"
-                                 (afterdrop)="onAfterDrop($event)" #proceedings
-                                 (operationclick)="onOperationClick($event)"
-                ></app-proceedings>
-            </div>
+            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';" style="width:100%">
+                BACK
+            </button>
+            <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
+                             [tasks]="taskService.tasks"
+                             [operations]="taskService.operations"
+                             [shortstyle]="true"
+                             (afterdrop)="onAfterDrop($event)" #proceedings
+                             (operationclick)="onOperationClick($event)"
+            ></app-proceedings>
+        </div>
         <div [ngClass]="{
         'col-xs-9': sidebarstate !== 'hidden',
         'col-xs-12': sidebarstate === 'hidden'
@@ -36,17 +32,18 @@
                 </ng-container>
                 <ng-template #showProceedings>
                     <div class='btn-nav proceedings-header'>
-                        <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()" style="width:25%"><span
+                        <button class="navbar-left btn btn-primary" (click)="onFilesAddButtonClicked()"
+                                style="width:25%"><span
                                 class="glyphicon glyphicon-plus"></span> ADD FILES
                         </button>
                         <input type="file" multiple class="fileinput" value="Select audio file" style="display:none;"
                                #fileinput
                                (change)="onFileChange($event)"/>
                         <div class="status">
-                            <ng-container  *ngIf="taskService.countRunningTasks() > 0">
-                            {{taskService.countRunningTasks()}} Task(s) running...
+                            <ng-container *ngIf="taskService.countRunningTasks() > 0">
+                                {{taskService.countRunningTasks()}} Task(s) running...
                             </ng-container>
-                            <ng-container  *ngIf="taskService.countRunningTasks() < 1">
+                            <ng-container *ngIf="taskService.countRunningTasks() < 1">
                                 Ready for processing
                             </ng-container>
                         </div>
@@ -92,12 +89,14 @@
                             <table class="table table-bordered">
                                 <tbody>
                                 <tr *ngFor="let elem of taskService.protocol_array">
+                                    <td>{{elem.task_id}}</td>
                                     <td>
                                     <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign"
                                           style="color:red"></span>
                                         <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign"
                                               style="color:orange"></span>
                                     </td>
+                                    <td>{{elem.op_name}}</td>
                                     <td>{{elem.protocol}}</td>
                                 </tr>
                                 </tbody>

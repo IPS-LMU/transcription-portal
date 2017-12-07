@@ -44,13 +44,14 @@
         <tbody (contextmenu)="onContextMenu($event)">
         <tr style="cursor:pointer;" *ngFor="let task of tasks; let i = index;"
             [ngClass]="{'selected': (isTaskSelected(task.id))}">
-            <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
-                      (contextmenu)="onContextMenu($event)"></span></td>
+            <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
+                      (contextmenu)="onContextMenu($event)"></span></td> -->
+            <td>{{task.id}}</td>
             <td (click)="onRowSelected(task.id)" [ngClass]="{
                             'shorten': shortstyle
                         }"><span title="{{task.files[0].fullname}}">{{task.files[0].fullname}}</span> <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
-                <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
+                <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
                     <tbody>
                     <tr *ngFor="let file of task.files;">
                         <td>{{file.fullname}}</td>
@@ -58,12 +59,19 @@
                         <td>{{file.size | filesize}}</td>
                     </tr>
                     </tbody>
-                </table>
+                </table> -->
             </td>
-            <td *ngFor="let operation of task.operations" style="text-align: center;" (click)="onRowSelected(task.id, operation)"
+            <td *ngFor="let operation of task.operations" style="text-align: center;"
                 (mouseenter)="onOperationMouseEnter($event, operation)"
-                (mouseleave)="onOperationMouseLeave($event, operation)">
-                <div [innerHTML]="getStateIcon(operation)"></div>
+                (mouseleave)="onOperationMouseLeave($event, operation)"
+                (mouseover)="onOperationMouseOver($event, operation)"
+            >
+                <div *ngIf="!(operation.mouseover && operation.state === 5)" [innerHTML]="getStateIcon(operation)"
+                     (click)="onRowSelected(task.id, operation)"></div>
+                <div *ngIf="operation.mouseover && operation.state === 5">
+                    <span class="glyphicon glyphicon-repeat"
+                          (click)="task.restartFailedOperation(taskService.httpclient)"></span>
+                </div>
             </td>
         </tr>
         </tbody>

@@ -30,6 +30,7 @@ export class UploadOperation extends Operation {
   public start = (files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
+    this._time.end = 0;
 
     const form: FormData = new FormData();
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti';

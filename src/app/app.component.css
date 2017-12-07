@@ -107,10 +107,6 @@ h1{
     margin-bottom: 5px;
 }
 
-.glyphicon.glyphicon-arrow-up {
-    color: orange;
-}
-
 .proceedings-header {
     background-color: ghostwhite;
     position: relative;
@@ -136,4 +132,12 @@ h1{
     flex-direction: unset;
     -webkit-box-flex: unset;
     -ms-flex: none;
+}
+
+.main-row .col-xs-9 {
+    padding-left: 0;
+}
+
+.main-row .col-xs-3 {
+    padding-right: 0;
 }

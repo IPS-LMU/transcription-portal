@@ -131,6 +131,19 @@ export class Task {
     }
   }
 
+  public restartFailedOperation(httpclient) {
+    for (let i = 0; i < this.operations.length; i++) {
+      const operation = this.operations[ i ];
+
+      if (operation.state === TaskState.ERROR) {
+        // restart failed operation
+        operation.changeState(TaskState.READY);
+        this._state = TaskState.PENDING;
+        break;
+      }
+    }
+  }
+
   public getOperationByID(id: number) {
     return this.operations.find((a) => {
       return (a.id === id);

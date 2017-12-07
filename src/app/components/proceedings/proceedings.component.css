@@ -40,7 +40,11 @@
     white-space: nowrap;
 }
 
-span.glyphicon.glyphicon-edit.link {
+.glyphicon.glyphicon-edit.link {
+    color: cornflowerblue;
+}
+
+.glyphicon-arrow-up {
     color: cornflowerblue;
 }
 

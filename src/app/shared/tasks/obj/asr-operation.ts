@@ -13,6 +13,7 @@ export class ASROperation extends Operation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
+    this._time.end = 0;
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
       ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
       'SIGNAL=' + inputs[ 0 ].url + '&' +

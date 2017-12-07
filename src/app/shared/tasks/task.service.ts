@@ -31,13 +31,13 @@ export class TaskService implements OnDestroy {
 
   public errorscountchange = new EventEmitter<number>();
 
-  constructor(private httpclient: HttpClient, private notification: NotificationService) {
+  constructor(public httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
       new UploadOperation('Upload', '<span class="glyphicon glyphicon-upload"></span>'),
       new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
       new ToolOperation('OCTRA'),
       new MAUSOperation('MAUS'),
-      new EmuOperation('Emu WebApp')
+      new EmuOperation('Emu WebApp', null, TaskState.FINISHED)
     ];
   }
 
@@ -120,7 +120,7 @@ export class TaskService implements OnDestroy {
   }
 
   public updateProtocolArray() {
-    const result = [];
+    let result = [];
     let errors_count = 0;
     let warnings_count = 0;
 
@@ -139,6 +139,8 @@ export class TaskService implements OnDestroy {
 
           result.push(
             {
+              task_id : task.id,
+              op_name : operation.name,
               state   : operation.state,
               protocol: operation.protocol
             }
@@ -152,6 +154,17 @@ export class TaskService implements OnDestroy {
     }
     this._errors_count = errors_count;
     this._warnings_count = warnings_count;
+
+    // sort protocol_array by task id
+    result = result.sort((a, b) => {
+      if (a.task_id > b.task_id) {
+        return 1;
+      } else if (a.task_id < b.task_id) {
+        return -1;
+      }
+      return 0;
+    });
+
     this._protocol_array = result;
   }
 }

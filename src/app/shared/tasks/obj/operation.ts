@@ -47,6 +47,8 @@ export class Operation {
   private _estimated_end: number;
   protected _results: FileInfo[] = [];
 
+  public mouseover = false;
+
   protected _state: TaskState;
   protected _name: string;
   protected _icon = '';
@@ -104,13 +106,13 @@ export class Operation {
         break;
       case(TaskState.PROCESSING):
         result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Loading...</span>';
+          '<span class="sr-only">Processing...</span>';
         break;
       case(TaskState.FINISHED):
         result = '<span class="glyphicon glyphicon-ok"></span>';
         break;
       case(TaskState.READY):
-        result = '<span class="glyphicon glyphicon-info-sign"></span>';
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
         break;
       case(TaskState.ERROR):
         result = '<span class="glyphicon glyphicon-remove"></span>';
