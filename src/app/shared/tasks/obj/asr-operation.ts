@@ -1,13 +1,15 @@
 import { HttpClient } from '@angular/common/http';
+import { isNullOrUndefined } from 'util';
 import * as X2JS from 'x2js';
 import { FileInfo } from './fileInfo';
+import { Task } from './index';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
 export class ASROperation extends Operation {
 
-  public constructor(name: string, icon?: string, state?: TaskState) {
-    super(name, icon, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
+    super(name, icon, task, state);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -17,7 +19,7 @@ export class ASROperation extends Operation {
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
       ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
       'SIGNAL=' + inputs[ 0 ].url + '&' +
-      'PIPE=ASR_G2P_CHUNKER&ASRType=callHavenOnDemandASR&LANGUAGE=deu-DE&' +
+      'PIPE=ASR_G2P_CHUNKER&ASRType=callEMLASR&LANGUAGE=deu-DE&' +
       'MAUSVARIANT=runPipeline&OUTFORMAT=bpf';
 
     httpclient.post(url, {}, {
@@ -55,7 +57,8 @@ export class ASROperation extends Operation {
       });
   };
 
-  public clone(): ASROperation {
-    return new ASROperation(this.name, this.icon, this.state);
+  public clone(task?: Task): ASROperation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    return new ASROperation(this.name, this.icon, selected_task, this.state);
   }
 }

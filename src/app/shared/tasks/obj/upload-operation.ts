@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { SecurityContext } from '@angular/core';
 import { SafeHtml } from '@angular/platform-browser';
-import { isArray } from 'util';
+import { isArray, isNullOrUndefined } from 'util';
 import * as X2JS from 'x2js';
 import { TimePipe } from '../../time.pipe';
 import { FileInfo } from './fileInfo';
+import { Task } from './index';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
@@ -12,8 +13,8 @@ export class UploadOperation extends Operation {
 
   private progress = 0;
 
-  constructor(name: string, icon?: string, state?: TaskState) {
-    super(name, icon, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
+    super(name, icon, task, state);
   }
 
   public updateEstimatedEnd = () => {
@@ -129,7 +130,8 @@ export class UploadOperation extends Operation {
     return sanitizer.sanitize(SecurityContext.HTML, result);
   };
 
-  public clone(): UploadOperation {
-    return new UploadOperation(this.name, this.icon, this.state);
+  public clone(task?: Task): UploadOperation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    return new UploadOperation(this.name, this.icon, selected_task, this.state);
   }
 }

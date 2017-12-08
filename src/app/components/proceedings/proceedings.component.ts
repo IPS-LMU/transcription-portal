@@ -12,7 +12,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { ANIMATIONS } from '../../shared/Animations';
 
-import { Operation, Task, TaskState, ToolOperation } from '../../shared/tasks/obj';
+import { EmuOperation, Operation, Task, TaskState, ToolOperation } from '../../shared/tasks/obj';
 import { FileInfo } from '../../shared/tasks/obj/fileInfo';
 import { TaskService } from '../../shared/tasks/task.service';
 
@@ -38,7 +38,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     y        : 0,
     state    : 'closed',
     width    : 200,
-    operation: null
+    operation: null,
+    task     : null
   };
 
   @Input() tasks: Task[] = [];
@@ -76,7 +77,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    console.log('destroy proceedings');
     this.cd.detach();
   }
 
@@ -116,7 +116,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onContextMenu(event) {
     event.preventDefault();
-    console.log(event);
 
     this.contextmenu.x = event.layerX - 20;
     this.contextmenu.y = event.layerY;
@@ -180,6 +179,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
       this.togglePopover(true);
     }
+    this.popover.task = null;
   }
 
   onOperationMouseLeave($event, operation: Operation) {
@@ -193,11 +193,45 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     operation.mouseover = true;
   }
 
+  onTaskMouseEnter($event, task: Task) {
+    // show Popover for normal operations only
+    this.popover.task = task;
+    this.popover.x = $event.target.offsetLeft + (this.popover.width / 2);
+    this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
+    this.togglePopover(true);
+    this.popover.operation = null;
+  }
+
+  onTaskMouseLeave($event, task: Task) {
+    this.togglePopover(false);
+    task.mouseover = false;
+  }
+
+  onTaskMouseOver($event, task: Task) {
+    task.mouseover = true;
+  }
+
   calculateDuration(start: number, end?: number) {
     if (isNullOrUndefined(end) || end === 0) {
       return (Date.now() - start);
     } else {
       return (end - start);
     }
+  }
+
+  getMailToLink(task: Task) {
+    if (task.state === TaskState.FINISHED) {
+      const tool_url = (<EmuOperation> task.operations[ 4 ]).getToolURL();
+      let subject = 'OH-Portal Links';
+      let body = '' +
+        'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[ 1 ].results[ 0 ].url + '\n\n' +
+        'MAUS:\n' + task.operations[ 3 ].results[ 0 ].url + '\n\n' +
+        'EMU WebApp:\n' + tool_url;
+      subject = encodeURI(subject);
+      body = encodeURIComponent(body);
+
+      return `mailto:?subject=${subject}&body=${body}`;
+    }
+    return '';
   }
 }

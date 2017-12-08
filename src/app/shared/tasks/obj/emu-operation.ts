@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { isNullOrUndefined } from 'util';
 import { FileInfo } from './fileInfo';
+import { Task } from './index';
 import { Operation } from './operation';
 import { TaskState } from './task';
 import { ToolOperation } from './tool-operation';
@@ -8,8 +10,8 @@ import { ToolOperation } from './tool-operation';
 export class EmuOperation extends ToolOperation {
   private operations: Operation[];
 
-  public constructor(name: string, icon?: string, state?: TaskState) {
-    super(name, icon, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
+    super(name, icon, task, state);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -57,7 +59,8 @@ export class EmuOperation extends ToolOperation {
       + '&labelGetUrl=' + this.operations[ 3 ].results[ 0 ].url + '&labelType=annotJSON';
   }
 
-  public clone(): EmuOperation {
-    return new EmuOperation(this.name, this.icon, this.state);
+  public clone(task?: Task): EmuOperation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    return new EmuOperation(this.name, this.icon, selected_task, this.state);
   }
 }

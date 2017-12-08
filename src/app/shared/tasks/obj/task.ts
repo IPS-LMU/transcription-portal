@@ -45,6 +45,8 @@ export class Task {
   private _operations: Operation[] = [];
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
+  public mouseover = false;
+
   constructor(files: FileInfo[], operations: Operation[]) {
     this._id = ++Task.counter;
     this._files = files;
@@ -52,7 +54,7 @@ export class Task {
 
     // clone operations param
     for (let i = 0; i < operations.length; i++) {
-      const operation = operations[ i ].clone();
+      const operation = operations[ i ].clone(this);
       this.subscrmanager.add(operation.statechange.subscribe(
         (event) => {
           if (event.newState === TaskState.ERROR) {

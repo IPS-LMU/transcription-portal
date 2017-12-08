@@ -5,12 +5,18 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { isNullOrUndefined } from 'util';
 import { FileInfo } from './fileInfo';
+import { Task } from './index';
 import { TaskState } from './task';
 
 export class Operation {
+  get task(): Task {
+    return this._task;
+  }
+
   get protocol(): string {
     return this._protocol;
   }
+
   set estimated_end(value: number) {
     this._estimated_end = value;
   }
@@ -49,6 +55,7 @@ export class Operation {
 
   public mouseover = false;
 
+  private _task: Task = null;
   protected _state: TaskState;
   protected _name: string;
   protected _icon = '';
@@ -72,9 +79,10 @@ export class Operation {
     newState: TaskState
   }> = this.statesubj.asObservable();
 
-  public constructor(name: string, icon?: string, state?: TaskState) {
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
     this._id = ++Operation.counter;
     this._name = name;
+    this._task = task;
 
     if (!isNullOrUndefined(icon)) {
       this._icon = icon;
@@ -138,9 +146,9 @@ export class Operation {
     }
   }
 
-  public clone(): Operation {
-    const result = new Operation(this.name, this.icon, this.state);
-    result.start = this.start;
+  public clone(task?: Task): Operation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const result = new Operation(this.name, this.icon, selected_task, this.state);
     return result;
   }
 }

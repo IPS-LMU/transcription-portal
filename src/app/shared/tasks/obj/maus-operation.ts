@@ -1,13 +1,15 @@
 import { HttpClient } from '@angular/common/http';
+import { isNullOrUndefined } from 'util';
 import * as X2JS from 'x2js';
 import { FileInfo } from './fileInfo';
+import { Task } from './index';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
 export class MAUSOperation extends Operation {
 
-  public constructor(name: string, icon?: string, state?: TaskState) {
-    super(name, icon, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
+    super(name, icon, task, state);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -69,7 +71,8 @@ export class MAUSOperation extends Operation {
     }
   };
 
-  public clone(): MAUSOperation {
-    return new MAUSOperation(this.name, this.icon, this.state);
+  public clone(task?: Task): MAUSOperation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    return new MAUSOperation(this.name, this.icon, selected_task, this.state);
   }
 }

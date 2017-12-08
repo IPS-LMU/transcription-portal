@@ -1,13 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { SafeHtml } from '@angular/platform-browser';
+import { isNullOrUndefined } from 'util';
+import { Task } from './';
 import { FileInfo } from './fileInfo';
 import { Operation } from './operation';
 import { TaskState } from './task';
 
 export class ToolOperation extends Operation {
 
-  public constructor(name: string, icon?: string, state?: TaskState) {
-    super(name, icon, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
+    super(name, icon, task, state);
   }
 
   private active = true;
@@ -55,7 +57,8 @@ export class ToolOperation extends Operation {
     return '';
   }
 
-  public clone(): ToolOperation {
-    return new ToolOperation(this.name, this.icon, this.state);
+  public clone(task?: Task): ToolOperation {
+    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    return new ToolOperation(this.name, this.icon, selected_task, this.state);
   }
 }
