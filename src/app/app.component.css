@@ -64,10 +64,10 @@ h1{
     border-radius: 20px;
     min-width: 24px;
     background-color: red;
-    font-size: 0.7em;
+    font-size: 0.8em;
     text-align: center;
     color: white;
-    border: 1px solid white;
+    border: 1px solid navajowhite;
     vertical-align: middle;
 }
 

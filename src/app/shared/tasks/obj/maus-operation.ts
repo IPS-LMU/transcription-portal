@@ -46,6 +46,12 @@ export class MAUSOperation extends Operation {
         json = json.WebServiceResponseLink;
         console.log(json);
 
+        // add messages to protocol
+        if (json.warnings !== '') {
+          this._protocol = json.warnings;
+        } else if (json.output !== '') {
+          this._protocol = json.output;
+        }
 
         if (json.success === 'true') {
           this.time.end = Date.now();
@@ -54,10 +60,6 @@ export class MAUSOperation extends Operation {
         } else {
           this.changeState(TaskState.ERROR);
           console.error(json[ 'message' ]);
-        }
-        // add messages to protocol
-        if (json.warnings !== '') {
-          this._protocol = json.warnings;
         }
       };
       xhr.send();

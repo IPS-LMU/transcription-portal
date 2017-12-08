@@ -37,7 +37,7 @@ export class TaskService implements OnDestroy {
       new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
       new ToolOperation('OCTRA'),
       new MAUSOperation('MAUS'),
-      new EmuOperation('Emu WebApp', null, TaskState.FINISHED)
+      new EmuOperation('Emu WebApp')
     ];
   }
 

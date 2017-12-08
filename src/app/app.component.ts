@@ -17,7 +17,7 @@ import { FileInfo, Operation, Task, ToolOperation } from './shared/tasks/obj';
   animations : [ ANIMATIONS ]
 })
 export class AppComponent implements OnDestroy {
-  protected showtool = false;
+  public showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
 

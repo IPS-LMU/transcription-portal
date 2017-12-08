@@ -17,7 +17,7 @@ export class ASROperation extends Operation {
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
       ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
       'SIGNAL=' + inputs[ 0 ].url + '&' +
-      'PIPE=ASR_G2P_CHUNKER&LANGUAGE=deu-DE&' +
+      'PIPE=ASR_G2P_CHUNKER&ASRType=callHavenOnDemandASR&LANGUAGE=deu-DE&' +
       'MAUSVARIANT=runPipeline&OUTFORMAT=bpf';
 
     httpclient.post(url, {}, {
