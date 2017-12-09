@@ -195,10 +195,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onTaskMouseEnter($event, task: Task) {
     // show Popover for normal operations only
-    this.popover.task = task;
-    this.popover.x = $event.target.offsetLeft + (this.popover.width / 2);
-    this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
-    this.togglePopover(true);
+    if (!(task.state === TaskState.PENDING || task.state === TaskState.READY)) {
+      this.popover.task = task;
+      this.popover.x = $event.target.offsetLeft + (this.popover.width / 2);
+      this.popover.y = $event.target.parentElement.offsetTop + $event.target.parentElement.offsetHeight;
+      this.togglePopover(true);
+    }
     this.popover.operation = null;
   }
 

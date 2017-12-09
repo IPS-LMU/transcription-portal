@@ -52,12 +52,12 @@
                       (contextmenu)="onContextMenu($event)"></span></td> -->
             <td>{{task.id}}</td>
             <td (click)="onRowSelected(task.id)"
-                (mouseenter)="onTaskMouseEnter($event, task)"
-                (mouseleave)="onTaskMouseLeave($event, task)"
-                (mouseover)="onTaskMouseOver($event, task)"
                 [ngClass]="{
                             'shorten': shortstyle
-                        }"><span title="{{task.files[0].fullname}}">{{task.files[0].fullname}}</span> <span
+                        }"><span title="{{task.files[0].fullname}}"
+                                 (mouseenter)="onTaskMouseEnter($event, task)"
+                                 (mouseleave)="onTaskMouseLeave($event, task)"
+                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}}</span> <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
                     <tbody>
