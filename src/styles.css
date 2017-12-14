@@ -21,3 +21,10 @@ html, body {
 .glyphicon.glyphicon-edit {
     color: cornflowerblue;
 }
+
+.fa.fa-angle-down,
+.fa.fa-angle-up {
+    font-size: 1.5em;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}

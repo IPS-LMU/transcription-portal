@@ -21,7 +21,6 @@ h1{
     height: 100%;
 }
 
-.row,
 #main {
     display: flex;
     flex-direction: column;
@@ -111,6 +110,7 @@ h1{
     background-color: ghostwhite;
     position: relative;
     text-align: center;
+    padding: 5px;
 }
 
 .proceedings-header .status {
@@ -120,7 +120,7 @@ h1{
     margin: 0 auto;
     border: 1px dotted gray;
     border-radius: 5px;
-    width: 30%;
+    width: 100%;
 }
 
 .main-row {
@@ -140,4 +140,9 @@ h1{
 
 .main-row .col-xs-3 {
     padding-right: 0;
+}
+
+.fa-bell-o,
+.fa-bell-slash-o {
+    float: right;
 }
