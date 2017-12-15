@@ -23,9 +23,9 @@ export class ExpandRowDirective implements OnInit {
       }
 
       if (native.getAttribute('data-state') === 'closed') {
-        this.renderer.setAttribute(native, 'class', 'glyphicon glyphicon-menu-down');
+        this.renderer.setAttribute(native, 'class', 'fa fa-angle-down');
       } else {
-        this.renderer.setAttribute(native, 'class', 'glyphicon glyphicon-menu-up');
+        this.renderer.setAttribute(native, 'class', 'fa fa-angle-up');
       }
     });
   }

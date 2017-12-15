@@ -117,13 +117,13 @@ export class Operation {
           '<span class="sr-only">Processing...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<span class="glyphicon glyphicon-ok"></span>';
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
         result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
         break;
       case(TaskState.ERROR):
-        result = '<span class="glyphicon glyphicon-remove"></span>';
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
         break;
     }
 

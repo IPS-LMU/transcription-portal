@@ -41,7 +41,7 @@ h1{
 
 #protocol-table .protocol-header {
     background-color: floralwhite;
-    min-height: 35px;
+    min-height: 40px;
     border-bottom: 1px solid gray;
 }
 
@@ -145,4 +145,10 @@ h1{
 .fa-bell-o,
 .fa-bell-slash-o {
     float: right;
+    font-size: 1.5em;
+}
+
+.navbar.navbar-expand-md.navbar-light {
+    border: 1px solid gray;
+    border-radius: 3px;
 }

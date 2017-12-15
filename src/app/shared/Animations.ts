@@ -20,13 +20,13 @@ export const ANIMATIONS = [
 
   trigger('expandToggle', [
     state('closed', style({
-      height: '35px'
+      height: '40px'
     })),
     state('opened', style({
       height: '200px'
     })),
     state('*', style({
-      height: '35px'
+      height: '40px'
     })),
     transition('* => opened', animate('300ms ease-in')),
     transition('opened => closed', animate('300ms ease-in'))

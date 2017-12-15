@@ -105,7 +105,7 @@ export class UploadOperation extends Operation {
         if (this.progress > 0) {
           this.updateEstimatedEnd();
           const time = this.estimated_end - Date.now();
-          result = '<span style="color:dodgerblue;" class="glyphicon glyphicon-arrow-up"></span> ' +
+          result = '<i class="fa fa-arrow-up" aria-hidden="true" style="color: cornflowerblue"></i> ' +
             '<span>' + new TimePipe().transform(time) + '</span>';
         } else {
           result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
@@ -117,13 +117,13 @@ export class UploadOperation extends Operation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<span class="glyphicon glyphicon-ok"></span>';
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
-        result = '<a href="#"><span class="glyphicon glyphicon-edit"></span></a>';
+        result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
         break;
       case(TaskState.ERROR):
-        result = '<span class="glyphicon glyphicon-remove"></span>';
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
         break;
     }
 

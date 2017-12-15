@@ -1,6 +1,9 @@
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
-    <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top">
-        <a class="navbar-brand" href="#">OH-Portal</a>
+    <nav class="navbar navbar-expand-md navbar-light">
+        <a class="navbar-brand" href="#">OH-Portal v{{AppInfo.version}}</a>
+        <span *ngIf="isdevelopment" style="color:red;">
+        in Developement
+         </span>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
                 aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -8,18 +11,17 @@
 
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
             <div class="mr-auto bg-info" style="display:flex; flex:auto">
-
             </div>
             <div class="my-2 my-lg-0" title="Desktop Notifications">
                 <span style="vertical-align: middle"> Desktop Notifications</span>
-                <i class="fa fa-bell-o fa-2x" aria-hidden="true" *ngIf="notification.permissionGranted"
+                <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
                    (click)="notification.permissionGranted = false"></i>
-                <i class="fa fa-bell-slash-o fa-2x" aria-hidden="true" *ngIf="!notification.permissionGranted"
+                <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
                    (click)="notification.permissionGranted = true"></i>
             </div>
         </div>
     </nav>
-    <div class="row main-row" style="margin-top: 60px;">
+    <div class="row main-row">
         <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
             'col-3': sidebarstate !== 'hidden'
         }" id="sidebar">
@@ -47,7 +49,7 @@
                         <div class="col-3">
                             <button class="btn btn-primary" style="width: 100%;display: block"
                                     (click)="onFilesAddButtonClicked()">
-                                <span class="glyphicon glyphicon-plus"></span> ADD FILES
+                                <i class="fa fa-plus"></i> ADD FILES
                             </button>
                             <input type="file" multiple class="fileinput" value="Select audio file"
                                    style="display:none;"
@@ -111,10 +113,10 @@
                                 <tr *ngFor="let elem of taskService.protocol_array">
                                     <td>{{elem.task_id}}</td>
                                     <td>
-                                    <span *ngIf="elem.state === 5" class="glyphicon glyphicon-exclamation-sign"
-                                          style="color:red"></span>
-                                        <span *ngIf="elem.state === 4" class="glyphicon glyphicon-warning-sign"
-                                              style="color:orange"></span>
+                                        <i *ngIf="elem.state === 5" class="fa fa-exclamation"
+                                           style="color:red"></i>
+                                        <i *ngIf="elem.state === 4" class="fa fa-warning"
+                                           style="color:orange"></i>
                                     </td>
                                     <td>{{elem.op_name}}</td>
                                     <td>{{elem.protocol}}</td>

@@ -40,13 +40,13 @@ export class ToolOperation extends Operation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<span class="glyphicon glyphicon-ok"></span>';
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
-        result = '<a href="#"><span class="glyphicon glyphicon-edit"></span></a>';
+        result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
         break;
       case(TaskState.ERROR):
-        result = '<span class="glyphicon glyphicon-remove"></span>';
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
         break;
     }
 

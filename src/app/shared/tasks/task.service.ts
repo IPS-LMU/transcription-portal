@@ -33,8 +33,8 @@ export class TaskService implements OnDestroy {
 
   constructor(public httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
-      new UploadOperation('Upload', '<span class="glyphicon glyphicon-upload"></span>'),
-      new ASROperation('ASR', '<span class="glyphicon glyphicon-forward"></span>'),
+      new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
+      new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
       new ToolOperation('OCTRA'),
       new MAUSOperation('MAUS'),
       new EmuOperation('Emu WebApp')

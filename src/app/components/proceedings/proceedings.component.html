@@ -17,12 +17,12 @@
             <ng-container *ngIf="popover.operation.results.length > 0">
                 Results:<br/>
                 <a *ngFor="let result of popover.operation.results" [href]="result.url" [download]="result.fullname"
-                   [title]="'Download ' + result.fullname"><span class="glyphicon glyphicon-save"></span> </a>
+                   [title]="'Download ' + result.fullname"><i class="fa fa-file-text" aria-hidden="true"></i> </a>
             </ng-container>
         </ng-container>
         <ng-container *ngIf="popover.task !== null && popover.task !== undefined && popover.task.state === 4">
-            <a [href]="getMailToLink(popover.task)">Share results <span class="glyphicon glyphicon-envelope"
-                                                                        style="color:cornflowerblue;"></span></a>
+            <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
+                                                                     style="color:cornflowerblue;"></i></a>
         </ng-container>
     </app-popover>
     <table class="table table-striped">
@@ -77,8 +77,8 @@
                 <div *ngIf="!(operation.mouseover && operation.state === 5)" [innerHTML]="getStateIcon(operation)"
                      (click)="onRowSelected(task.id, operation)"></div>
                 <div *ngIf="operation.mouseover && operation.state === 5">
-                    <span class="glyphicon glyphicon-repeat"
-                          (click)="task.restartFailedOperation(taskService.httpclient)"></span>
+                    <i class="fa fa-repeat" aria-hidden="true"
+                       (click)="task.restartFailedOperation(taskService.httpclient)"></i>
                 </div>
             </td>
         </tr>

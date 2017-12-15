@@ -14,11 +14,6 @@
     border-bottom: 1px solid gray;
 }
 
-.glyphicon.glyphicon-menu-down,
-.glyphicon.glyphicon-menu-up {
-    cursor: pointer;
-}
-
 :host {
     border: 1px solid gray;
     display: flex;
@@ -28,7 +23,7 @@
     background-color: #cbffe7;
 }
 
-.glyphicon.glyphicon-save {
+.fa.fa.file-text {
     font-size: 32px;
 }
 
@@ -40,11 +35,7 @@
     white-space: nowrap;
 }
 
-.glyphicon.glyphicon-edit.link {
-    color: cornflowerblue;
-}
-
-.glyphicon-arrow-up {
+.fa.fa-arrow-up {
     color: cornflowerblue;
 }
 

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
+import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
 import { ANIMATIONS } from './shared/Animations';
 import { NotificationService } from './shared/notification.service';
@@ -21,6 +22,9 @@ export class AppComponent implements OnDestroy {
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
 
+  public get isdevelopment(): boolean {
+    return environment.development;
+  }
 
   public test = 'insactive';
   private subscrmanager = new SubscriptionManager();
