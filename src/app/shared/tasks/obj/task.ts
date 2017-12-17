@@ -16,6 +16,13 @@ export enum TaskState {
 }
 
 export class Task {
+  get language(): any {
+    return this._language;
+  }
+
+  set language(value: any) {
+    this._language = value;
+  }
   static counter = 0;
   private statesubj: ReplaySubject<{
     opID: number;
@@ -39,6 +46,8 @@ export class Task {
   get files(): FileInfo[] {
     return this._files;
   }
+
+  private _language = null;
 
   private _files: FileInfo[];
   // operations that have to be done

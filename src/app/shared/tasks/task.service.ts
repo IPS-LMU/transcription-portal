@@ -81,9 +81,11 @@ export class TaskService implements OnDestroy {
 
           const opName = task.getOperationByID(event.opID).name;
           if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-            this.notification.showNotification('ASR Operation successful', 'You can now transcibe it with OCTRA');
+            this.notification.showNotification('ASR Operation successful', 'You can now edit it with OCTRA');
           } else if (event.newState === TaskState.ERROR) {
-            this.notification.showNotification(opName + ' Operation failed', 'Please have a look at the error log');
+            this.notification.showNotification(opName + ' Operation failed', 'Please click on "Errors" on the status bar');
+          } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+            this.notification.showNotification('MAUS Operation successful', 'You can now edit it with EMU WebApp');
           }
 
           this.updateProtocolArray();

@@ -1,20 +1,12 @@
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  OnDestroy,
-  OnInit,
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit,
   Output
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { isNullOrUndefined } from 'util';
 import { ANIMATIONS } from '../../shared/Animations';
 
-import { EmuOperation, Operation, Task, TaskState, ToolOperation } from '../../shared/tasks/obj';
-import { FileInfo } from '../../shared/tasks/obj/fileInfo';
-import { TaskService } from '../../shared/tasks/task.service';
+import { EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation } from '../../shared/tasks';
 
 declare var window: any;
 
@@ -104,13 +96,30 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
       for (let i = 0; i < droppedfiles.length; i++) {
         const file = droppedfiles[ i ];
-        files.push(FileInfo.fromFileObject(file));
+
+        const newName = FileInfo.escapeFileName(file.name);
+
+        if (newName !== file.name) {
+          // no valid name, replace
+          FileInfo.renameFile(file, newName, {
+            type        : file.type,
+            lastModified: file.lastModifiedDate
+          }).then((newfile: File) => {
+            files.push(FileInfo.fromFileObject(newfile));
+            files[ i ].fullname = file.name;
+
+            this.afterdrop.emit(files);
+            this.cd.markForCheck();
+            this.cd.detectChanges();
+          });
+        } else {
+          files.push(FileInfo.fromFileObject(file));
+
+          this.afterdrop.emit(files);
+          this.cd.markForCheck();
+          this.cd.detectChanges();
+        }
       }
-
-      this.afterdrop.emit(files);
-
-      this.cd.markForCheck();
-      this.cd.detectChanges();
     }
   }
 

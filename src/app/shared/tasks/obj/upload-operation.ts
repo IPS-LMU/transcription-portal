@@ -37,6 +37,7 @@ export class UploadOperation extends Operation {
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti';
 
     for (let i = 0; i < files.length; i++) {
+      console.log('new filename is ' + files[ i ].file.name);
       form.append('file' + i, files[ i ].file);
     }
 
@@ -58,7 +59,6 @@ export class UploadOperation extends Operation {
       console.error(e);
       // add messages to protocol
       this._protocol = e.message;
-
       this.changeState(TaskState.ERROR);
     };
 
@@ -85,8 +85,8 @@ export class UploadOperation extends Operation {
         }
         this.changeState(TaskState.FINISHED);
       } else {
+        this._protocol = json[ 'message' ];
         this.changeState(TaskState.ERROR);
-        console.error(json[ 'message' ]);
       }
       // add messages to protocol
       if (json.warnings !== '') {

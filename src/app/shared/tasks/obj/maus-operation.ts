@@ -23,7 +23,7 @@ export class MAUSOperation extends Operation {
       const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
         'BPF=' + operations[ 1 ].results[ 0 ].url +
         '&SIGNAL=' + inputs[ 0 ].url +
-        '&LANGUAGE=deu-DE' +
+        '&LANGUAGE=' + this.task.language +
         '&OUTFORMAT=emuDB&MAUSVARIANT=runMAUS';
 
       const xhr = new XMLHttpRequest();
@@ -57,7 +57,7 @@ export class MAUSOperation extends Operation {
 
         if (json.success === 'true') {
           this.time.end = Date.now();
-          this.results.push(FileInfo.fromURL(json.downloadLink));
+          this.results.push(FileInfo.fromURL(json.downloadLink, inputs[ 0 ].name));
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);

@@ -8,7 +8,7 @@ import { ANIMATIONS } from './shared/Animations';
 import { NotificationService } from './shared/notification.service';
 import { SubscriptionManager } from './shared/subscription-manager';
 import { TaskService } from './shared/tasks';
-import { FileInfo, Operation, Task, ToolOperation } from './shared/tasks/obj';
+import { FileInfo, Operation, Task, TaskState, ToolOperation } from './shared/tasks/obj';
 
 @Component({
   selector   : 'app-root',
@@ -21,6 +21,9 @@ export class AppComponent implements OnDestroy {
   public showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
+  public selectedlanguage = AppInfo.languages[ 0 ];
+
+  public newfiles = false;
 
   public get isdevelopment(): boolean {
     return environment.development;
@@ -56,7 +59,11 @@ export class AppComponent implements OnDestroy {
 
         if (file.type.indexOf('wav') > -1) {
           const task = new Task([ file ], this.taskService.operations);
+          task.language = this.selectedlanguage.code;
+          this.newfiles = true;
           this.taskService.addTask(task);
+        } else {
+          console.log('no wav');
         }
       }
     }
@@ -103,6 +110,20 @@ export class AppComponent implements OnDestroy {
 
         const task = new Task(file_infos, this.taskService.operations);
 
+        const newName = FileInfo.escapeFileName(file.name);
+
+        if (newName !== file.name) {
+          // no valid name, replace
+          FileInfo.renameFile(file, newName, {
+            type        : file.type,
+            lastModified: file.lastModifiedDate
+          }).then((newfile: File) => {
+            file_infos[ i ].file = newfile;
+          });
+        }
+
+        task.language = this.selectedlanguage.code;
+        this.newfiles = true;
         this.taskService.addTask(task);
       }
     }
@@ -115,5 +136,25 @@ export class AppComponent implements OnDestroy {
       this.sidebarstate = 'opened';
       this.showtool = true;
     }
+  }
+
+  onASRLangCHanged(lang) {
+    if (lang.code !== this.selectedlanguage.code) {
+      this.selectedlanguage = lang;
+      this.changeLanguageforAllPendingTasks();
+    }
+  }
+
+  changeLanguageforAllPendingTasks() {
+    for (let i = 0; i < this.taskService.tasks.length; i++) {
+      const task = this.taskService.tasks[ i ];
+      if (task.state === TaskState.PENDING) {
+        task.language = this.selectedlanguage.code;
+      }
+    }
+  }
+
+  getShortCode(code) {
+    return code.substring(code.length - 2);
   }
 }
