@@ -1,10 +1,11 @@
-import { HttpClient } from '@angular/common/http';
-import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
-import { isNullOrUndefined } from 'util';
-import { NotificationService } from '../notification.service';
-import { SubscriptionManager } from '../subscription-manager';
-import { ASROperation, EmuOperation, MAUSOperation, Operation, Task, TaskState, ToolOperation } from './obj';
-import { UploadOperation } from './obj/upload-operation';
+import {HttpClient} from '@angular/common/http';
+import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
+import {isNullOrUndefined} from 'util';
+import {NotificationService} from '../notification.service';
+import {SubscriptionManager} from '../subscription-manager';
+import {ASROperation, EmuOperation, MAUSOperation, Operation, Task, TaskState} from './obj';
+import {OCTRAOperation} from './obj/octra-operation';
+import {UploadOperation} from './obj/upload-operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -35,7 +36,8 @@ export class TaskService implements OnDestroy {
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
       new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
-      new ToolOperation('OCTRA'),
+      // new ToolOperation('OCTRA'),
+      new OCTRAOperation('OCTRA'),
       new MAUSOperation('MAUS'),
       new EmuOperation('Emu WebApp')
     ];

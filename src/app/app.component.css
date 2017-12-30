@@ -1,10 +1,10 @@
-h1{
+h1 {
     padding-left: 10px;
 }
 
 #sidebar {
     height: 100%;
-    border-right: 1px solid gray;
+    padding-right: 0;
 }
 
 #app {
@@ -151,4 +151,8 @@ h1{
 .navbar.navbar-expand-md.navbar-light {
     border: 1px solid gray;
     border-radius: 3px;
+}
+
+#upper-main.col-9 {
+    padding-left: 0;
 }

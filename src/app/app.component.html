@@ -39,7 +39,7 @@
         <div [ngClass]="{
         'col-9': sidebarstate !== 'hidden',
         'col-12': sidebarstate === 'hidden'
-    }" style="height:100%;">
+    }" style="height:100%;" id="upper-main">
             <div id="main">
                 <ng-container *ngIf="showtool; else showProceedings">
                     <app-tool-loader [url]="tool_url" style="height:100%;"></app-tool-loader>

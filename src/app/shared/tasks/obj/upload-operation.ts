@@ -1,13 +1,12 @@
-import { HttpClient } from '@angular/common/http';
-import { SecurityContext } from '@angular/core';
-import { SafeHtml } from '@angular/platform-browser';
-import { isArray, isNullOrUndefined } from 'util';
+import {HttpClient} from '@angular/common/http';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import {isArray, isNullOrUndefined} from 'util';
 import * as X2JS from 'x2js';
-import { TimePipe } from '../../time.pipe';
-import { FileInfo } from './fileInfo';
-import { Task } from './index';
-import { Operation } from './operation';
-import { TaskState } from './task';
+import {TimePipe} from '../../time.pipe';
+import {FileInfo} from './fileInfo';
+import {Task} from './index';
+import {Operation} from './operation';
+import {TaskState} from './task';
 
 export class UploadOperation extends Operation {
 
@@ -95,7 +94,7 @@ export class UploadOperation extends Operation {
     };
     xhr.send(form);
   };
-  public getStateIcon = (sanitizer): SafeHtml => {
+  public getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
     let result = '';
     switch (this._state) {
       case(TaskState.PENDING):
@@ -127,7 +126,7 @@ export class UploadOperation extends Operation {
         break;
     }
 
-    return sanitizer.sanitize(SecurityContext.HTML, result);
+    return sanitizer.bypassSecurityTrustHtml(result);
   };
 
   public clone(task?: Task): UploadOperation {

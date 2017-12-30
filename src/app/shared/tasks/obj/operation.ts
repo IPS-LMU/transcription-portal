@@ -1,12 +1,11 @@
-import { HttpClient } from '@angular/common/http';
-import { SecurityContext } from '@angular/core';
-import { SafeHtml } from '@angular/platform-browser';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { isNullOrUndefined } from 'util';
-import { FileInfo } from './fileInfo';
-import { Task } from './index';
-import { TaskState } from './task';
+import {HttpClient} from '@angular/common/http';
+import {SafeHtml} from '@angular/platform-browser';
+import {Observable} from 'rxjs/Observable';
+import {ReplaySubject} from 'rxjs/ReplaySubject';
+import {isNullOrUndefined} from 'util';
+import {FileInfo} from './fileInfo';
+import {Task} from './index';
+import {TaskState} from './task';
 
 export class Operation {
   get task(): Task {
@@ -127,7 +126,7 @@ export class Operation {
         break;
     }
 
-    return sanitizer.sanitize(SecurityContext.HTML, result);
+    return sanitizer.bypassSecurityTrustHtml(result);
   };
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
