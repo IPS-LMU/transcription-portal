@@ -1,3 +1,7 @@
+div {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
 h1 {
     padding-left: 10px;
 }
@@ -155,4 +159,21 @@ h1 {
 
 #upper-main.col-9 {
     padding-left: 0;
+}
+
+.tool-nav {
+    height: 50px;
+}
+
+.tool-nav .title {
+    display: table;
+    height: 100%;
+}
+
+.tool-nav .title .inner {
+    display: table-cell;
+    vertical-align: middle;
+    text-decoration: underline;
+    font-weight: bold;
+    font-size: 1.2em;
 }

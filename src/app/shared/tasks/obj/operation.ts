@@ -1,11 +1,11 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
-import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from './fileInfo';
 import {Task} from './index';
 import {TaskState} from './task';
+import {Subject} from 'rxjs/Subject';
 
 export class Operation {
   get task(): Task {
@@ -48,6 +48,36 @@ export class Operation {
     return this.state === TaskState.FINISHED;
   }
 
+  public get previousOperation(): Operation {
+    const index = this.task.operations.findIndex((op) => {
+        if (op.id === this.id) {
+          return true;
+        }
+      }
+    );
+
+    if (index > 0) {
+      return this.task.operations[index - 1];
+    }
+
+    return null;
+  }
+
+  public get nextOperation(): Operation {
+    const index = this.task.operations.findIndex((op) => {
+        if (op.id === this.id) {
+          return true;
+        }
+      }
+    );
+
+    if (index < this.task.operations.length - 1) {
+      return this.task.operations[index + 1];
+    }
+
+    return null;
+  }
+
   static counter = 0;
   private _estimated_end: number;
   protected _results: FileInfo[] = [];
@@ -64,16 +94,19 @@ export class Operation {
     end: number;
   } = {
     start: 0,
-    end  : 0
+    end: 0
   };
-  private statesubj: ReplaySubject<{
+  private statesubj: Subject<{
+    opID: number;
     oldState: TaskState;
     newState: TaskState
-  }> = new ReplaySubject<{
+  }> = new Subject<{
+    opID: number;
     oldState: TaskState;
     newState: TaskState
   }>();
   public statechange: Observable<{
+    opID: number,
     oldState: TaskState;
     newState: TaskState
   }> = this.statesubj.asObservable();
@@ -130,24 +163,33 @@ export class Operation {
   };
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    console.log('start not implemented');
+    console.error('start not implemented');
   };
 
   public changeState(state: TaskState) {
     const oldstate = this._state;
     this._state = state;
-    this.statesubj.next({
-      oldState: oldstate,
-      newState: state
-    });
-    if (state === TaskState.FINISHED) {
-      this.statesubj.complete();
+
+    if (oldstate !== state) {
+      this.statesubj.next({
+        opID: this.id,
+        oldState: oldstate,
+        newState: state
+      });
     }
   }
 
   public clone(task?: Task): Operation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;
-    const result = new Operation(this.name, this.icon, selected_task, this.state);
-    return result;
+    return new Operation(this.name, this.icon, selected_task, this.state);
+  }
+
+  onMouseOver() {
+  }
+
+  onMouseEnter() {
+  }
+
+  onMouseLeave() {
   }
 }

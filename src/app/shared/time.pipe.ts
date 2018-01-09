@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { isNullOrUndefined } from 'util';
+import {Pipe, PipeTransform} from '@angular/core';
+import {isNullOrUndefined} from 'util';
 
 @Pipe({
   name: 'time'
@@ -39,8 +39,6 @@ export class TimePipe implements PipeTransform {
         }
         return `${hour_leading_null}${hours}:${secs_leading_null}${minutes}:${secs_leading_null}${seconds}`;
       }
-
-      console.log('value ' + value);
     }
     return null;
   }

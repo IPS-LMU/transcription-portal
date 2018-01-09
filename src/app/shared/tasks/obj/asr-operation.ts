@@ -1,10 +1,10 @@
-import { HttpClient } from '@angular/common/http';
-import { isNullOrUndefined } from 'util';
+import {HttpClient} from '@angular/common/http';
+import {isNullOrUndefined} from 'util';
+import {FileInfo} from './fileInfo';
+import {Operation} from './operation';
+import {Task, TaskState} from './task';
+import {AppInfo} from '../../../app.info';
 import * as X2JS from 'x2js';
-import { AppInfo } from '../../../app.info';
-import { FileInfo } from './fileInfo';
-import { Operation } from './operation';
-import { Task, TaskState } from './task';
 
 export class ASROperation extends Operation {
 
@@ -16,6 +16,7 @@ export class ASROperation extends Operation {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
     this._time.end = 0;
+
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
       ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
       'SIGNAL=' + inputs[ 0 ].url + '&' +
@@ -56,6 +57,16 @@ export class ASROperation extends Operation {
         console.log(error);
         this.changeState(TaskState.ERROR);
       });
+
+    /*
+    // simulate upload
+    setTimeout(() => {
+      this.time.end = Date.now();
+      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test.par';
+      this.results.push(FileInfo.fromURL(url));
+      this.changeState(TaskState.FINISHED);
+    }, 20000);
+    */
   };
 
   public clone(task?: Task): ASROperation {

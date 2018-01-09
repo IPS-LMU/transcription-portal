@@ -17,7 +17,7 @@ export class OCTRAOperation extends ToolOperation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._time.start = Date.now();
     this.operations = operations;
-    this.changeState(TaskState.PROCESSING);
+    this.changeState(TaskState.READY);
   };
 
   public getStateIcon = (sanitizer: DomSanitizer) => {
@@ -32,13 +32,13 @@ export class OCTRAOperation extends ToolOperation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.PROCESSING):
-        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+        result = '<i class="fa fa-cog fa-spin link" aria-hidden="true"></i>';
         break;
       case(TaskState.FINISHED):
         result = '<i class="fa fa-check" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
-        result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
+        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
         break;
       case(TaskState.ERROR):
         result = '<i class="fa fa-times" aria-hidden="true"></i>';
@@ -50,9 +50,15 @@ export class OCTRAOperation extends ToolOperation {
 
   public getToolURL(): string {
     const audio = encodeURIComponent(this.operations[0].results[0].url);
-    const transcript = encodeURIComponent(this.operations[1].results[0].url);
+    let url = this.operations[1].results[0].url;
 
-    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra-dev/user/load?` +
+    if (this.results.length === 1) {
+      url = this.results[0].url;
+    }
+
+    const transcript = encodeURIComponent(url);
+
+    return `http://localhost:5321/user/load?` +
       `audio=${audio}&` +
       `transcript=${transcript}&` +
       `embedded=1`;

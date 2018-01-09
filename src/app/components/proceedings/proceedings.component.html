@@ -21,7 +21,7 @@
                    [title]="'Download ' + result.fullname"><i class="fa fa-file-text" aria-hidden="true"></i> </a>
             </ng-container>
         </ng-container>
-        <ng-container *ngIf="popover.task !== null && popover.task !== undefined && popover.task.state === 4">
+        <ng-container *ngIf="popover.task !== null && popover.task !== undefined && popover.task.state === 'FINISHED'">
             <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
                                                                      style="color:cornflowerblue;"></i></a>
         </ng-container>
@@ -51,14 +51,19 @@
             [ngClass]="{'selected': (isTaskSelected(task.id))}">
             <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
                       (contextmenu)="onContextMenu($event)"></span></td> -->
-            <td>{{task.id}}</td>
+            <td style="width:25px;"><i class="fa fa-circle" aria-hidden="true" [ngClass]="{
+            green: (task.state === 'FINISHED'),
+            red: (task.state === 'ERROR'),
+            blue: (task.state === 'PENDING' || task.state === 'READY'),
+            yellow: (task.state === 'PROCESSING')
+            }"></i></td>
             <td (click)="onRowSelected(task.id)"
                 [ngClass]="{
                             'shorten': shortstyle
                         }"><span title="{{task.files[0].fullname}}"
                                  (mouseenter)="onTaskMouseEnter($event, task)"
                                  (mouseleave)="onTaskMouseLeave($event, task)"
-                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}} ({{task.language | uppercase}})</span>
+                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}}</span>
                 <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
@@ -76,9 +81,9 @@
                 (mouseleave)="onOperationMouseLeave($event, operation)"
                 (mouseover)="onOperationMouseOver($event, operation)"
             >
-                <div *ngIf="!(operation.mouseover && operation.state === 5)" [innerHTML]="getStateIcon(operation)"
+                <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')" [innerHTML]="getStateIcon(operation)"
                      (click)="onRowSelected(task.id, operation)"></div>
-                <div *ngIf="operation.mouseover && operation.state === 5">
+                <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
                     <i class="fa fa-repeat" aria-hidden="true"
                        (click)="task.restartFailedOperation(taskService.httpclient)"></i>
                 </div>

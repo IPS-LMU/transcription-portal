@@ -6,7 +6,7 @@ import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
 
-export class MAUSOperation extends Operation {
+export class G2pMausOperation extends Operation {
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
     super(name, icon, task, state);
@@ -17,26 +17,21 @@ export class MAUSOperation extends Operation {
     this._time.start = Date.now();
     this._time.end = 0;
 
-    try {
-      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
-        'BPF=https://clarin.phonetik.uni-muenchen.de:443/BASWebServices/data/2018.01.07_17.44.52_27621602A906DD83E24AB16392205B15/02-1-AC-JC-16b_1___.175232_346379__1_.par' +
-        '&SIGNAL=' + inputs[0].url +
-        '&LANGUAGE=' + this.task.language +
-        '&OUTFORMAT=emuDB&MAUSVARIANT=runMAUS';
+    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
+      'TEXT=' + operations[2].results[0].url +
+      '&SIGNAL=' + inputs[0].url + '&' +
+      'PIPE=G2P_MAUS&LANGUAGE=' + this.task.language + '&' +
+      'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
+    httpclient.post(url, {}, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'text'
+    }).subscribe((result: string) => {
+        this._time.end = Date.now();
 
-      xhr.onerror = (e) => {
-        console.error(e);
-        // add messages to protocol
-        this._protocol = e.message;
-        this.changeState(TaskState.ERROR);
-      };
-
-      xhr.onloadend = (e) => {
-        this.time.end = Date.now();
-        const result = e.currentTarget['responseText'];
+        // convert result to json
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.WebServiceResponseLink;
@@ -49,23 +44,30 @@ export class MAUSOperation extends Operation {
         }
 
         if (json.success === 'true') {
-          this.time.end = Date.now();
           this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);
-          console.error(json['message']);
         }
-      };
-      xhr.send();
-    } catch (e) {
-      this._protocol = e.message;
-      this.changeState(TaskState.ERROR);
-    }
+      },
+      (error) => {
+        this._protocol = error.message;
+        this.changeState(TaskState.ERROR);
+      });
+
+    /*
+        // simulate upload
+        setTimeout(() => {
+          this.time.end = Date.now();
+          const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test_annot.json';
+          this.results.push(FileInfo.fromURL(url));
+          this.changeState(TaskState.FINISHED);
+        }, 2000);
+      */
   };
 
-  public clone(task?: Task): MAUSOperation {
+  public clone(task?: Task): G2pMausOperation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;
-    return new MAUSOperation(this.name, this.icon, selected_task, this.state);
+    return new G2pMausOperation(this.name, this.icon, selected_task, this.state);
   }
 }

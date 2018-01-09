@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { isNullOrUndefined } from 'util';
+import {Pipe, PipeTransform} from '@angular/core';
+import {isNullOrUndefined} from 'util';
 
 @Pipe({
   name: 'filesize'
@@ -33,8 +33,6 @@ export class FilesizePipe implements PipeTransform {
 
         return `${bytes} B`;
       }
-
-      console.log('value ' + value);
     }
     return null;
   }

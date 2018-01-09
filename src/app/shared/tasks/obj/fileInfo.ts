@@ -84,8 +84,6 @@ export class FileInfo {
         const reader = new FileReader();
 
         reader.onload = (result: any) => {
-          console.log('RESULT');
-          console.log(result);
           resolve(new File([ result.target.result ], new_name, attributes));
         };
         reader.onerror = (error) => {
@@ -110,7 +108,6 @@ export class FileInfo {
         // split name and extension
         this._name = fullname.substr(0, extension_begin);
         this._extension = fullname.substr(extension_begin + 1);
-        console.log(this.extension);
       } else {
         throw new Error('invalid fullname. Fullname must contain the file extension');
       }

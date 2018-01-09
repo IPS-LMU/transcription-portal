@@ -21,13 +21,24 @@
             </div>
         </div>
     </nav>
+    <div *ngIf="showtool" class="row tool-nav">
+        <div class="col-3" style="padding:0;">
+            <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
+                <i class="fa fa-angle-double-left fa-2x" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="col-9" style="border-right: 1px solid gray">
+            <div class="title">
+                <div class="inner">{{selectedOperation.name}}:
+                    {{selectedOperation.previousOperation.results[0].fullname}}
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row main-row">
         <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
             'col-3': sidebarstate !== 'hidden'
         }" id="sidebar">
-            <button class="btn btn-primary" (click)="showtool = false; sidebarstate = 'hidden';" style="width:100%">
-                BACK
-            </button>
             <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
                              [tasks]="taskService.tasks"
                              [operations]="taskService.operations"
@@ -42,7 +53,8 @@
     }" style="height:100%;" id="upper-main">
             <div id="main">
                 <ng-container *ngIf="showtool; else showProceedings">
-                    <app-tool-loader [url]="tool_url" style="height:100%;"></app-tool-loader>
+                    <app-tool-loader [url]="tool_url" style="height:100%;" [operation]="selectedOperation"
+                                     (datareceived)="onToolDataReceived($event)"></app-tool-loader>
                 </ng-container>
                 <ng-template #showProceedings>
                     <div class='row proceedings-header'>
@@ -102,6 +114,7 @@
                                      [operations]="taskService.operations"
                                      (afterdrop)="onAfterDrop($event)" #proceedings
                                      (operationclick)="onOperationClick($event)"
+                                     (operationhover)="onOperationHover($event)"
                     ></app-proceedings>
                     <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
                         <div class="protocol-header">
@@ -139,9 +152,9 @@
                                 <tr *ngFor="let elem of taskService.protocol_array">
                                     <td>{{elem.task_id}}</td>
                                     <td>
-                                        <i *ngIf="elem.state === 5" class="fa fa-exclamation"
+                                        <i *ngIf="elem.state === 'ERROR'" class="fa fa-exclamation"
                                            style="color:red"></i>
-                                        <i *ngIf="elem.state === 4" class="fa fa-warning"
+                                        <i *ngIf="elem.state === 'FINISHED'" class="fa fa-warning"
                                            style="color:orange"></i>
                                     </td>
                                     <td>{{elem.op_name}}</td>

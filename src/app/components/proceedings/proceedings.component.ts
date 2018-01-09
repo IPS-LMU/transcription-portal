@@ -2,36 +2,36 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit,
   Output
 } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { isNullOrUndefined } from 'util';
-import { ANIMATIONS } from '../../shared/Animations';
+import {DomSanitizer} from '@angular/platform-browser';
+import {isNullOrUndefined} from 'util';
+import {ANIMATIONS} from '../../shared/Animations';
 
-import { EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation } from '../../shared/tasks';
+import {EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation} from '../../shared/tasks';
 
 declare var window: any;
 
 @Component({
-  selector       : 'app-proceedings',
-  templateUrl    : './proceedings.component.html',
-  styleUrls      : [ './proceedings.component.css' ],
-  animations     : ANIMATIONS,
+  selector: 'app-proceedings',
+  templateUrl: './proceedings.component.html',
+  styleUrls: ['./proceedings.component.css'],
+  animations: ANIMATIONS,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public contextmenu = {
-    x     : 0,
-    y     : 0,
+    x: 0,
+    y: 0,
     hidden: true
   };
 
   public popover = {
-    x        : 0,
-    y        : 0,
-    state    : 'closed',
-    width    : 200,
+    x: 0,
+    y: 0,
+    state: 'closed',
+    width: 200,
     operation: null,
-    task     : null
+    task: null
   };
 
   @Input() tasks: Task[] = [];
@@ -43,6 +43,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
+  @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService) {
     // Check for the various FileInfo API support.
@@ -57,12 +58,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.cd.detach();
-    if (!this.cd[ 'destroyed' ]) {
+    if (!this.cd['destroyed']) {
       this.cd.detectChanges();
     }
 
     setInterval(() => {
-      if (!this.cd[ 'destroyed' ]) {
+      if (!this.cd['destroyed']) {
         this.cd.detectChanges();
       }
     }, 500);
@@ -95,31 +96,27 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       const files: FileInfo[] = [];
 
       for (let i = 0; i < droppedfiles.length; i++) {
-        const file = droppedfiles[ i ];
+        const file = droppedfiles[i];
 
         const newName = FileInfo.escapeFileName(file.name);
 
         if (newName !== file.name) {
           // no valid name, replace
           FileInfo.renameFile(file, newName, {
-            type        : file.type,
+            type: file.type,
             lastModified: file.lastModifiedDate
           }).then((newfile: File) => {
-            files.push(FileInfo.fromFileObject(newfile));
-            files[ i ].fullname = file.name;
-
-            this.afterdrop.emit(files);
+            files.push(FileInfo.fromFileObject(file));
             this.cd.markForCheck();
             this.cd.detectChanges();
           });
         } else {
           files.push(FileInfo.fromFileObject(file));
-
-          this.afterdrop.emit(files);
           this.cd.markForCheck();
           this.cd.detectChanges();
         }
       }
+      this.afterdrop.emit(files);
     }
   }
 
@@ -151,7 +148,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onDeleteTasks() {
     for (let i = 0; i < this.selected_tasks.length; i++) {
       const task_index = this.tasks.findIndex((a) => {
-        if (a.id === this.selected_tasks[ i ]) {
+        if (a.id === this.selected_tasks[i]) {
           return true;
         }
       });
@@ -189,6 +186,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.togglePopover(true);
     }
     this.popover.task = null;
+    operation.onMouseEnter();
   }
 
   onOperationMouseLeave($event, operation: Operation) {
@@ -196,10 +194,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.togglePopover(false);
     }
     operation.mouseover = false;
+    operation.onMouseLeave();
   }
 
   onOperationMouseOver($event, operation: Operation) {
     operation.mouseover = true;
+    operation.onMouseOver();
+    this.operationhover.emit();
   }
 
   onTaskMouseEnter($event, task: Task) {
@@ -232,11 +233,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   getMailToLink(task: Task) {
     if (task.state === TaskState.FINISHED) {
-      const tool_url = (<EmuOperation> task.operations[ 4 ]).getToolURL();
+      const tool_url = (<EmuOperation> task.operations[4]).getToolURL();
       let subject = 'OH-Portal Links';
       let body = '' +
-        'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[ 1 ].results[ 0 ].url + '\n\n' +
-        'MAUS:\n' + task.operations[ 3 ].results[ 0 ].url + '\n\n' +
+        'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[1].results[0].url + '\n\n' +
+        'MAUS:\n' + task.operations[3].results[0].url + '\n\n' +
         'EMU WebApp:\n' + tool_url;
       subject = encodeURI(subject);
       body = encodeURIComponent(body);

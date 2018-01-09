@@ -3,9 +3,10 @@ import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
 import {NotificationService} from '../notification.service';
 import {SubscriptionManager} from '../subscription-manager';
-import {ASROperation, EmuOperation, MAUSOperation, Operation, Task, TaskState} from './obj';
+import {ASROperation, EmuOperation, Operation, Task, TaskState} from './obj';
 import {OCTRAOperation} from './obj/octra-operation';
 import {UploadOperation} from './obj/upload-operation';
+import {G2pMausOperation} from './obj/g2p-maus-operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -32,13 +33,15 @@ export class TaskService implements OnDestroy {
 
   public errorscountchange = new EventEmitter<number>();
 
+  private state: TaskState = TaskState.READY;
+
   constructor(public httpclient: HttpClient, private notification: NotificationService) {
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
       new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
       // new ToolOperation('OCTRA'),
       new OCTRAOperation('OCTRA'),
-      new MAUSOperation('MAUS'),
+      new G2pMausOperation('MAUS'),
       new EmuOperation('Emu WebApp')
     ];
   }
@@ -62,7 +65,7 @@ export class TaskService implements OnDestroy {
   public start() {
     // look for pending tasks
 
-    const running_tasks = this.countRunningTasks();
+    let running_tasks = this.countRunningTasks();
     if (running_tasks < this.options.max_running_tasks) {
       let task: Task;
 
@@ -73,15 +76,20 @@ export class TaskService implements OnDestroy {
         }
       });
 
-      if (!isNullOrUndefined(task)) {
-        this.subscrmanager.add(task.statechange.subscribe((event) => {
+      if (!isNullOrUndefined(task) && this.countPendingTasks() > 0) {
+        if (this.state !== TaskState.PROCESSING) {
+          this.state = TaskState.READY;
+        }
+
+        this.subscrmanager.add(task.opstatechange.subscribe((event) => {
           if (event.oldState === TaskState.UPLOADING) {
             setTimeout(() => {
               this.start();
             }, 500);
           }
 
-          const opName = task.getOperationByID(event.opID).name;
+          const operation = task.getOperationByID(event.opID);
+          const opName = operation.name;
           if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
             this.notification.showNotification('ASR Operation successful', 'You can now edit it with OCTRA');
           } else if (event.newState === TaskState.ERROR) {
@@ -91,6 +99,13 @@ export class TaskService implements OnDestroy {
           }
 
           this.updateProtocolArray();
+          running_tasks = this.countRunningTasks();
+          const lastOp = task.operations[task.operations.length - 1];
+          if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
+            this.state = TaskState.PROCESSING;
+          } else {
+            this.state = TaskState.READY;
+          }
         }));
         task.start(this.httpclient);
       }
@@ -106,9 +121,23 @@ export class TaskService implements OnDestroy {
     let result = 0;
 
     for (let i = 0; i < this._tasks.length; i++) {
-      const task = this._tasks[ i ];
+      const task = this._tasks[i];
 
-      if (task.state !== TaskState.PENDING && task.state !== TaskState.FINISHED && task.state !== TaskState.ERROR) {
+      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
+        result++;
+      }
+    }
+
+    return result;
+  }
+
+  public countPendingTasks() {
+    let result = 0;
+
+    for (let i = 0; i < this._tasks.length; i++) {
+      const task = this._tasks[i];
+
+      if (task.state === TaskState.PENDING) {
         result++;
       }
     }
@@ -118,7 +147,7 @@ export class TaskService implements OnDestroy {
 
   ngOnDestroy() {
     for (let i = 0; i < this.tasks.length; i++) {
-      this.tasks[ i ].destroy();
+      this.tasks[i].destroy();
     }
     this.subscrmanager.destroy();
   }
@@ -129,10 +158,10 @@ export class TaskService implements OnDestroy {
     let warnings_count = 0;
 
     for (let i = 0; i < this.tasks.length; i++) {
-      const task = this.tasks[ i ];
+      const task = this.tasks[i];
 
       for (let j = 0; j < task.operations.length; j++) {
-        const operation = task.operations[ j ];
+        const operation = task.operations[j];
 
         if ((operation.state === TaskState.FINISHED || operation.state === TaskState.ERROR) && operation.protocol !== '') {
           if (operation.state === TaskState.ERROR) {
@@ -143,9 +172,9 @@ export class TaskService implements OnDestroy {
 
           result.push(
             {
-              task_id : task.id,
-              op_name : operation.name,
-              state   : operation.state,
+              task_id: task.id,
+              op_name: operation.name,
+              state: operation.state,
               protocol: operation.protocol
             }
           );

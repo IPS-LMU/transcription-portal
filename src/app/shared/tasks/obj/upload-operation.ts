@@ -1,12 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {isArray, isNullOrUndefined} from 'util';
-import * as X2JS from 'x2js';
 import {TimePipe} from '../../time.pipe';
 import {FileInfo} from './fileInfo';
 import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
+import * as X2JS from 'x2js';
 
 export class UploadOperation extends Operation {
 
@@ -93,7 +93,21 @@ export class UploadOperation extends Operation {
       }
     };
     xhr.send(form);
+
+    /*
+    // simulate upload
+    const random = (Math.max(1, Math.random() % 11)) * 1000;
+
+    setTimeout(() => {
+      this.time.end = Date.now();
+      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test.wav';
+      files[ 0 ].url = url;
+      this.results.push(FileInfo.fromURL(url));
+      this.changeState(TaskState.FINISHED);
+    }, random);
+    */
   };
+
   public getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
     let result = '';
     switch (this._state) {

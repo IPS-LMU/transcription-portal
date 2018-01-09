@@ -1,27 +1,28 @@
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { isNullOrUndefined } from 'util';
-import { environment } from '../environments/environment';
-import { AppInfo } from './app.info';
-import { ANIMATIONS } from './shared/Animations';
-import { NotificationService } from './shared/notification.service';
-import { SubscriptionManager } from './shared/subscription-manager';
-import { TaskService } from './shared/tasks';
-import { FileInfo, Operation, Task, TaskState, ToolOperation } from './shared/tasks/obj';
+import {HttpClient} from '@angular/common/http';
+import {Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {isNullOrUndefined} from 'util';
+import {environment} from '../environments/environment';
+import {AppInfo} from './app.info';
+import {ANIMATIONS} from './shared/Animations';
+import {NotificationService} from './shared/notification.service';
+import {SubscriptionManager} from './shared/subscription-manager';
+import {TaskService} from './shared/tasks';
+import {FileInfo, Operation, Task, TaskState, ToolOperation} from './shared/tasks/obj';
 
 @Component({
-  selector   : 'app-root',
+  selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls  : [ './app.component.css' ],
-  providers  : [],
-  animations : [ ANIMATIONS ]
+  styleUrls: ['./app.component.css'],
+  providers: [],
+  animations: [ANIMATIONS]
 })
 export class AppComponent implements OnDestroy {
   public showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
-  public selectedlanguage = AppInfo.languages[ 0 ];
+  public selectedOperation: Operation = null;
+  public selectedlanguage = AppInfo.languages[0];
 
   public newfiles = false;
 
@@ -37,7 +38,6 @@ export class AppComponent implements OnDestroy {
               private httpclient: HttpClient, public notification: NotificationService) {
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
-        console.log('ERROR! HERE');
         this.blop();
       }
     ));
@@ -52,13 +52,12 @@ export class AppComponent implements OnDestroy {
   }
 
   onAfterDrop(files: FileInfo[]) {
-    console.log('dropped');
     if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
       for (let i = 0; i < files.length; i++) {
-        const file: FileInfo = files[ i ];
+        const file: FileInfo = files[i];
 
         if (file.type.indexOf('wav') > -1) {
-          const task = new Task([ file ], this.taskService.operations);
+          const task = new Task([file], this.taskService.operations);
           task.language = this.selectedlanguage.code;
           this.newfiles = true;
           this.taskService.addTask(task);
@@ -102,7 +101,7 @@ export class AppComponent implements OnDestroy {
     const files: FileList = $event.target.files;
 
     for (let i = 0; i < files.length; i++) {
-      const file: File = files[ i ];
+      const file: File = files[i];
       const file_infos: FileInfo[] = [];
 
       if (file.type.indexOf('wav') > -1) {
@@ -115,10 +114,10 @@ export class AppComponent implements OnDestroy {
         if (newName !== file.name) {
           // no valid name, replace
           FileInfo.renameFile(file, newName, {
-            type        : file.type,
+            type: file.type,
             lastModified: file.lastModifiedDate
           }).then((newfile: File) => {
-            file_infos[ i ].file = newfile;
+            file_infos[i].file = newfile;
           });
         }
 
@@ -132,10 +131,32 @@ export class AppComponent implements OnDestroy {
   onOperationClick(operation: Operation) {
     if (operation instanceof ToolOperation) {
       const tool = <ToolOperation> operation;
+      const index = tool.task.operations.findIndex((op) => {
+        if (op.id === tool.id) {
+          return true;
+        }
+      });
+
+      if (index < tool.task.operations.length - 1) {
+        // start processing
+        tool.changeState(TaskState.PROCESSING);
+      }
+
       this.tool_url = tool.getToolURL();
+
+      if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
+        // some operation already initialized
+        this.leaveToolOption();
+      }
+
+      this.selectedOperation = operation;
       this.sidebarstate = 'opened';
+
       this.showtool = true;
     }
+  }
+
+  onOperationHover(operation: Operation) {
   }
 
   onASRLangCHanged(lang) {
@@ -147,7 +168,7 @@ export class AppComponent implements OnDestroy {
 
   changeLanguageforAllPendingTasks() {
     for (let i = 0; i < this.taskService.tasks.length; i++) {
-      const task = this.taskService.tasks[ i ];
+      const task = this.taskService.tasks[i];
       if (task.state === TaskState.PENDING) {
         task.language = this.selectedlanguage.code;
       }
@@ -156,5 +177,51 @@ export class AppComponent implements OnDestroy {
 
   getShortCode(code) {
     return code.substring(code.length - 2);
+  }
+
+  onToolDataReceived($event) {
+    const result: string = $event.data.data.transcript_url;
+    if (this.selectedOperation.results.length < 1) {
+      this.selectedOperation.results.push(FileInfo.fromURL(result));
+    } else {
+      this.selectedOperation.results[0] = FileInfo.fromURL(result);
+    }
+
+    const index = this.selectedOperation.task.operations.findIndex((op) => {
+      if (op.id === this.selectedOperation.id) {
+        return true;
+      }
+    });
+
+    // reset next operations
+    if (index > -1) {
+      for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
+        const operation = this.selectedOperation.task.operations[i];
+        operation.changeState(TaskState.PENDING);
+      }
+    } else {
+      console.error(`index is ${index}`);
+    }
+
+    this.selectedOperation.changeState(TaskState.FINISHED);
+
+    setTimeout(() => {
+      this.selectedOperation.task.restart(this.httpclient);
+    }, 1000);
+  }
+
+  onBackButtonClicked() {
+    this.showtool = false;
+    this.sidebarstate = 'hidden';
+    this.leaveToolOption();
+  }
+
+  leaveToolOption() {
+    if (!isNullOrUndefined(this.selectedOperation.nextOperation) &&
+      this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
+      this.selectedOperation.changeState(TaskState.FINISHED);
+    } else {
+      this.selectedOperation.changeState(TaskState.READY);
+    }
   }
 }

@@ -1,10 +1,11 @@
-import {Component, ElementRef, HostListener, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {Operation} from '../../shared/tasks/obj';
 
 @Component({
-  selector   : 'app-tool-loader',
+  selector: 'app-tool-loader',
   templateUrl: './tool-loader.component.html',
-  styleUrls  : [ './tool-loader.component.css' ]
+  styleUrls: ['./tool-loader.component.css']
 })
 export class ToolLoaderComponent implements OnInit {
   @ViewChild('iframe') iframe: ElementRef;
@@ -20,6 +21,10 @@ export class ToolLoaderComponent implements OnInit {
     this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
+  @Input() public operation: Operation = null;
+
+  @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
+
   constructor(private sanitizer: DomSanitizer) {
   }
 
@@ -28,14 +33,10 @@ export class ToolLoaderComponent implements OnInit {
   }
 
   onIframeLoaded() {
-    const win = this.iframe.nativeElement.contentWindow || this.iframe.nativeElement;
-    console.log(this.iframe);
-    console.log(win);
   }
 
   @HostListener('window:message', ['$event'])
   onMessage(e) {
-    console.log('DATA RECEIVED!!!');
-    console.log(e);
+    this.datareceived.emit(e);
   }
 }

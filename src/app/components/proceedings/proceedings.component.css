@@ -46,3 +46,19 @@
 .col-xs-3 {
     padding-right: 0;
 }
+
+.green {
+    color: forestgreen;
+}
+
+.red {
+    color: firebrick;
+}
+
+.blue {
+    color: cornflowerblue;
+}
+
+.yellow {
+    color: #ffc33b;
+}
