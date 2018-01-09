@@ -1,11 +1,15 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 
 declare var Notify: any;
 
 @Injectable()
 export class NotificationService {
   set permissionGranted(value: boolean) {
-    this._permissionGranted = value;
+    if (value) {
+      this.allowNotifications();
+    } else {
+      this._permissionGranted = false;
+    }
   }
 
   get permissionGranted(): boolean {
@@ -29,12 +33,13 @@ export class NotificationService {
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {
+      console.log('requestPermission');
       Notify.requestPermission(this.onPermissionGranted, this.onPermissionDenied);
+    } else {
+      console.log(`no permissions needed`);
     }
 
-    if (!Notify.needsPermission) {
-      this._permissionGranted = true;
-    }
+    this._permissionGranted = !Notify.needsPermission;
   }
 
   public showNotification(title: string, body: string) {
