@@ -31,7 +31,7 @@
         <tr>
             <th></th>
             <th>File</th>
-            <th *ngFor="let operation of operations" style="text-align: center;">
+            <th *ngFor="let operation of operations; let i = index" style="text-align: center;">
                 <span *ngIf="operation.icon === ''; else showIcon">
                     <ng-container *ngIf="shortstyle">
                         {{operation.name.charAt(0)}}
@@ -43,6 +43,9 @@
                 <ng-template #showIcon>
                     <div [innerHTML]="operation.icon"></div>
                 </ng-template>
+                <br/>
+                <input *ngIf="operation.name === 'OCTRA'" type="checkbox" class="header-checkbox"
+                       [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
             </th>
         </tr>
         </thead>
@@ -63,7 +66,7 @@
                         }"><span title="{{task.files[0].fullname}}"
                                  (mouseenter)="onTaskMouseEnter($event, task)"
                                  (mouseleave)="onTaskMouseLeave($event, task)"
-                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}}</span>
+                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}} {{task.state}}</span>
                 <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
@@ -76,7 +79,9 @@
                     </tbody>
                 </table> -->
             </td>
-            <td *ngFor="let operation of task.operations" style="text-align: center;"
+            <td *ngFor="let operation of task.operations" style="text-align: center;" [ngClass]="{
+                'op-deactivated': !operation.enabled
+            }"
                 (mouseenter)="onOperationMouseEnter($event, operation)"
                 (mouseleave)="onOperationMouseLeave($event, operation)"
                 (mouseover)="onOperationMouseOver($event, operation)"
@@ -86,6 +91,9 @@
                 <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
                     <i class="fa fa-repeat" aria-hidden="true"
                        (click)="task.restartFailedOperation(taskService.httpclient)"></i>
+                </div>
+                <div *ngIf="!operation.enabled">
+                    <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
                 </div>
             </td>
         </tr>

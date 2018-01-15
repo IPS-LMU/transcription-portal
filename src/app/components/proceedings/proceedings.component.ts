@@ -246,4 +246,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
     return '';
   }
+
+  deactivateOperation(operation, index) {
+    operation.enabled = !operation.enabled;
+    for (let i = 0; i < this.tasks.length; i++) {
+      const task = this.tasks[i];
+      const task_operation = task.operations[index];
+
+      if (task_operation.state === TaskState.PENDING) {
+        task_operation.enabled = operation.enabled;
+      }
+    }
+  }
 }

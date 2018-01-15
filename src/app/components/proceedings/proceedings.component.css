@@ -62,3 +62,11 @@
 .yellow {
     color: #ffc33b;
 }
+
+.table.table-striped th {
+    vertical-align: top;
+}
+
+.op-deactivated {
+    background-color: darkgray;
+}

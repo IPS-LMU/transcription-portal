@@ -8,6 +8,13 @@ import {TaskState} from './task';
 import {Subject} from 'rxjs/Subject';
 
 export class Operation {
+  get enabled(): boolean {
+    return this._enabled;
+  }
+
+  set enabled(value: boolean) {
+    this._enabled = value;
+  }
   get task(): Task {
     return this._task;
   }
@@ -85,7 +92,7 @@ export class Operation {
   public mouseover = false;
 
   private _task: Task = null;
-  protected _state: TaskState;
+  protected _state: TaskState = TaskState.PENDING;
   protected _name: string;
   protected _icon = '';
   protected _protocol = '';
@@ -96,6 +103,8 @@ export class Operation {
     start: 0,
     end: 0
   };
+  private _enabled = true;
+
   private statesubj: Subject<{
     opID: number;
     oldState: TaskState;

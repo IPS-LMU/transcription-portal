@@ -15,13 +15,14 @@ export class EmuOperation extends ToolOperation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    console.log(`in emu start!`);
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 
     setTimeout(() => {
-      this.changeState(TaskState.FINISHED);
       this.time.end = Date.now();
       this.operations = operations;
+      this.changeState(TaskState.FINISHED);
     }, 1000);
   };
 

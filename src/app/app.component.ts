@@ -106,9 +106,7 @@ export class AppComponent implements OnDestroy {
 
       if (file.type.indexOf('wav') > -1) {
         file_infos.push(new FileInfo(file.name, file.type, file.size, file));
-
-        const task = new Task(file_infos, this.taskService.operations);
-
+        const index = file_infos.length - 1;
         const newName = FileInfo.escapeFileName(file.name);
 
         if (newName !== file.name) {
@@ -117,9 +115,12 @@ export class AppComponent implements OnDestroy {
             type: file.type,
             lastModified: file.lastModifiedDate
           }).then((newfile: File) => {
-            file_infos[i].file = newfile;
+            file_infos[index] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
           });
+        } else {
         }
+
+        const task = new Task(file_infos, this.taskService.operations);
 
         task.language = this.selectedlanguage.code;
         this.newfiles = true;
@@ -180,34 +181,39 @@ export class AppComponent implements OnDestroy {
   }
 
   onToolDataReceived($event) {
-    const result: string = $event.data.data.transcript_url;
-    if (this.selectedOperation.results.length < 1) {
-      this.selectedOperation.results.push(FileInfo.fromURL(result));
-    } else {
-      this.selectedOperation.results[0] = FileInfo.fromURL(result);
-    }
+    console.log(`data received by tool!`);
+    console.log($event);
+    if ($event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
+      const result: string = $event.data.data.transcript_url;
 
-    const index = this.selectedOperation.task.operations.findIndex((op) => {
-      if (op.id === this.selectedOperation.id) {
-        return true;
+      if (this.selectedOperation.results.length < 1) {
+        this.selectedOperation.results.push(FileInfo.fromURL(result));
+      } else {
+        this.selectedOperation.results[0] = FileInfo.fromURL(result);
       }
-    });
 
-    // reset next operations
-    if (index > -1) {
-      for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
-        const operation = this.selectedOperation.task.operations[i];
-        operation.changeState(TaskState.PENDING);
+      const index = this.selectedOperation.task.operations.findIndex((op) => {
+        if (op.id === this.selectedOperation.id) {
+          return true;
+        }
+      });
+
+      // reset next operations
+      if (index > -1) {
+        for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
+          const operation = this.selectedOperation.task.operations[i];
+          operation.changeState(TaskState.PENDING);
+        }
+      } else {
+        console.error(`index is ${index}`);
       }
-    } else {
-      console.error(`index is ${index}`);
+
+      this.selectedOperation.changeState(TaskState.FINISHED);
+
+      setTimeout(() => {
+        this.selectedOperation.task.restart(this.httpclient);
+      }, 1000);
     }
-
-    this.selectedOperation.changeState(TaskState.FINISHED);
-
-    setTimeout(() => {
-      this.selectedOperation.task.restart(this.httpclient);
-    }, 1000);
   }
 
   onBackButtonClicked() {

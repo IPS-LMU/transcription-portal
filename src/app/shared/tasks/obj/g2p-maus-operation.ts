@@ -17,11 +17,21 @@ export class G2pMausOperation extends Operation {
     this._time.start = Date.now();
     this._time.end = 0;
 
-    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
-      'TEXT=' + operations[2].results[0].url +
-      '&SIGNAL=' + inputs[0].url + '&' +
-      'PIPE=G2P_MAUS&LANGUAGE=' + this.task.language + '&' +
-      'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
+    let url = '';
+    if (operations[2].enabled) {
+      // use G2P -> MAUS Pipe
+      url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
+        'TEXT=' + operations[2].results[0].url +
+        '&SIGNAL=' + inputs[0].url + '&' +
+        'PIPE=G2P_MAUS&LANGUAGE=' + this.task.language + '&' +
+        'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
+    } else {
+      url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
+        'BPF=' + operations[1].results[0].url +
+        '&SIGNAL=' + inputs[0].url +
+        '&LANGUAGE=' + this.task.language +
+        '&OUTFORMAT=emuDB&MAUSVARIANT=runMAUS';
+    }
 
     httpclient.post(url, {}, {
       headers: {
@@ -59,11 +69,12 @@ export class G2pMausOperation extends Operation {
         // simulate upload
         setTimeout(() => {
           this.time.end = Date.now();
-          const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test_annot.json';
+          const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.15_09.40.12_40979BA89ADE5D8E1B72EA4CA03C9C73/test_annot.json';
           this.results.push(FileInfo.fromURL(url));
           this.changeState(TaskState.FINISHED);
         }, 2000);
-      */
+
+        */
   };
 
   public clone(task?: Task): G2pMausOperation {

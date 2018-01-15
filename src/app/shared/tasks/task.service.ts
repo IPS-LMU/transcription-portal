@@ -63,6 +63,7 @@ export class TaskService implements OnDestroy {
   }
 
   public start() {
+    console.log(`Start service!`);
     // look for pending tasks
 
     let running_tasks = this.countRunningTasks();
@@ -82,12 +83,6 @@ export class TaskService implements OnDestroy {
         }
 
         this.subscrmanager.add(task.opstatechange.subscribe((event) => {
-          if (event.oldState === TaskState.UPLOADING) {
-            setTimeout(() => {
-              this.start();
-            }, 500);
-          }
-
           const operation = task.getOperationByID(event.opID);
           const opName = operation.name;
           if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
@@ -98,16 +93,25 @@ export class TaskService implements OnDestroy {
             this.notification.showNotification('MAUS Operation successful', 'You can now edit it with EMU WebApp');
           }
 
+          if (event.oldState === TaskState.UPLOADING && event.newState === TaskState.FINISHED) {
+            this.start();
+          }
           this.updateProtocolArray();
           running_tasks = this.countRunningTasks();
           const lastOp = task.operations[task.operations.length - 1];
           if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
-            this.state = TaskState.PROCESSING;
+            if (operation.state === TaskState.UPLOADING) {
+              this.state = TaskState.UPLOADING;
+            } else {
+              this.state = TaskState.PROCESSING;
+            }
           } else {
             this.state = TaskState.READY;
           }
         }));
         task.start(this.httpclient);
+
+        console.log(`${this.state.valueOf()} === ${TaskState.UPLOADING.valueOf()}`);
       }
     } else {
       console.log(running_tasks + ' running tasks');

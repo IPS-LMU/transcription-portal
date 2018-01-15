@@ -12,6 +12,7 @@ export enum TaskState {
   PROCESSING = 'PROCESSING',
   UPLOADING = 'UPLOADING',
   READY = 'READY',
+  SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
   ERROR = 'ERROR'
 }
@@ -128,32 +129,45 @@ export class Task {
 
   public start(httpclient: HttpClient, test = false) {
     if (this.state !== TaskState.FINISHED) {
+      console.log(`start task by start`);
       this.startNextOperation(httpclient, test);
     }
   }
 
   private startNextOperation(httpclient: HttpClient, test = false) {
+    console.log(`start next`);
     let nextoperation = -1;
 
     for (let i = 0; i < this.operations.length; i++) {
-      if (this.operations[i].state !== TaskState.FINISHED) {
+      const operation = this.operations[i];
+      if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
+        operation.changeState(TaskState.SKIPPED);
+      }
+      if (operation.enabled && this.operations[i].state !== TaskState.FINISHED) {
         nextoperation = i;
         break;
       }
     }
 
+    console.log(`next Operation = ${nextoperation}`);
     if (nextoperation === -1) {
       // all finished
       this.changeState(TaskState.FINISHED);
     } else {
       const operation = this.operations[nextoperation];
       if (operation.state !== TaskState.FINISHED) {
-        this.changeState(operation.state);
+        this.changeState(TaskState.PROCESSING);
         const subscription = this.operations[nextoperation].statechange.subscribe(
           (event) => {
             if (event.newState === TaskState.FINISHED) {
               subscription.unsubscribe();
+              console.log(`call start next in subscr by ${nextoperation}`);
               this.startNextOperation(httpclient);
+            } else {
+              if (event.newState === TaskState.READY) {
+                console.log(`OKOK`);
+                this.changeState(TaskState.READY);
+              }
             }
           },
           (error) => {
@@ -162,6 +176,7 @@ export class Task {
           () => {
           });
 
+        console.log(`call start next normal`);
         this.operations[nextoperation].start(this.files, this.operations, httpclient);
       }
     }

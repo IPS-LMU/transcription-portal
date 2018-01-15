@@ -62,10 +62,10 @@ export class ASROperation extends Operation {
     // simulate upload
     setTimeout(() => {
       this.time.end = Date.now();
-      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test.par';
+      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.15_09.40.12_40979BA89ADE5D8E1B72EA4CA03C9C73/test.par';
       this.results.push(FileInfo.fromURL(url));
       this.changeState(TaskState.FINISHED);
-    }, 20000);
+    }, 10000);
     */
   };
 
