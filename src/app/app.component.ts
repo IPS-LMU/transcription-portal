@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {environment} from '../environments/environment';
@@ -9,6 +9,8 @@ import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
 import {TaskService} from './shared/tasks';
 import {FileInfo, Operation, Task, TaskState, ToolOperation} from './shared/tasks/obj';
+
+declare var window: any;
 
 @Component({
   selector: 'app-root',
@@ -41,6 +43,11 @@ export class AppComponent implements OnDestroy {
         this.blop();
       }
     ));
+
+    window.onunload = function () {
+      alert('You are trying to leave.');
+      return false;
+    }
   }
 
   public get AppInfo() {
@@ -229,5 +236,10 @@ export class AppComponent implements OnDestroy {
     } else {
       this.selectedOperation.changeState(TaskState.READY);
     }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  doSomething($event) {
+    $event.returnValue = true;
   }
 }
