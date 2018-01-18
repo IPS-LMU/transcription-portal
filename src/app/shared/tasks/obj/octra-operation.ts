@@ -15,7 +15,6 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    this._time.start = Date.now();
     this.operations = operations;
     this.changeState(TaskState.READY);
   };

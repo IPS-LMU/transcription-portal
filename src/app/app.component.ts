@@ -205,10 +205,14 @@ export class AppComponent implements OnDestroy {
         }
       });
 
+      let startedBefore = false;
       // reset next operations
       if (index > -1) {
         for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
           const operation = this.selectedOperation.task.operations[i];
+          if (operation.state !== TaskState.PENDING) {
+            startedBefore = true;
+          }
           operation.changeState(TaskState.PENDING);
         }
       } else {
@@ -217,9 +221,11 @@ export class AppComponent implements OnDestroy {
 
       this.selectedOperation.changeState(TaskState.FINISHED);
 
-      setTimeout(() => {
-        this.selectedOperation.task.restart(this.httpclient);
-      }, 1000);
+      if (startedBefore) {
+        setTimeout(() => {
+          this.selectedOperation.task.restart(this.httpclient);
+        }, 1000);
+      }
     }
   }
 

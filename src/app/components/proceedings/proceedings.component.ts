@@ -180,7 +180,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onOperationMouseEnter($event, operation: Operation) {
     // show Popover for normal operations only
-    if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
+    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING)) {
       this.popover.operation = operation;
       if (operation.protocol !== '') {
         this.popover.width = 500;
@@ -204,7 +204,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   onOperationMouseLeave($event, operation: Operation) {
-    if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
+    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING)) {
       this.togglePopover(false);
     }
     operation.mouseover = false;

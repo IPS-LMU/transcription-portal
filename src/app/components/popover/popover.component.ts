@@ -33,7 +33,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
     right: 20,
     bottom: 20
   };
-  private lineWidth = 4;
+  private lineWidth = 2;
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   constructor() {
