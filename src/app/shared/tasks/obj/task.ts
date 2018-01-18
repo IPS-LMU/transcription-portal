@@ -195,6 +195,7 @@ export class Task {
         // restart failed operation
         operation.changeState(TaskState.READY);
         this.changeState(TaskState.PENDING);
+        this.restart(httpclient);
         break;
       }
     }

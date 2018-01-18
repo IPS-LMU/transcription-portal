@@ -13,7 +13,7 @@ export class G2pMausOperation extends Operation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    console.log('START MAUS!');
+    this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
     this._time.end = 0;

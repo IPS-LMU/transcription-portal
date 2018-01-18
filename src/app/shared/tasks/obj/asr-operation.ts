@@ -13,6 +13,7 @@ export class ASROperation extends Operation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
     this._time.end = 0;

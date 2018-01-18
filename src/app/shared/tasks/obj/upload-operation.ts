@@ -28,6 +28,7 @@ export class UploadOperation extends Operation {
   };
 
   public start = (files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this._protocol = '';
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
     this._time.end = 0;
