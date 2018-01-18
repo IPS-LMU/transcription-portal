@@ -94,13 +94,13 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
       this.canvasContext.fillStyle = 'white';
       this.canvasContext.moveTo(x, y);
       if (this.pointer === 'left') {
-        this.canvasContext.lineTo(10 + x + 2, y + this.margin.top);
-        this.canvasContext.lineTo(10 + x + 2, 35 + this.lineWidth / 2);
-        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+        this.canvasContext.lineTo(10 + x + 2, y + this.margin.top - this.lineWidth);
+        this.canvasContext.lineTo(10 + x + 2, 38 + this.lineWidth * 2);
+        this.canvasContext.lineTo(x, y);
       } else if (this.pointer === 'right') {
-        this.canvasContext.lineTo(x - 10 - 2, y + this.margin.top);
-        this.canvasContext.lineTo(x - 10 - 2, 35 + this.lineWidth / 2);
-        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+        this.canvasContext.lineTo(x - 10 - 2, y + this.margin.top - this.lineWidth);
+        this.canvasContext.lineTo(x - 10 - 2, 38 + this.lineWidth * 2);
+        this.canvasContext.lineTo(x, y);
       }
       this.canvasContext.fill();
       this.canvasContext.closePath();
