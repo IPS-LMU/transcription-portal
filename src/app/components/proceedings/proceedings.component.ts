@@ -31,7 +31,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     state: 'closed',
     width: 200,
     operation: null,
-    task: null
+    task: null,
+    pointer: 'left'
   };
 
   @Input() tasks: Task[] = [];
@@ -181,15 +182,22 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     // show Popover for normal operations only
     if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
       this.popover.operation = operation;
-      this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
-      this.popover.y = $event.target.offsetTop + ($event.target.offsetHeight / 2) + 5;
       if (operation.protocol !== '') {
         this.popover.width = 500;
       } else {
         this.popover.width = 200;
       }
+      if (($event.target.offsetLeft + this.popover.width) < window.innerWidth) {
+        this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
+        this.popover.pointer = 'left';
+      } else {
+        this.popover.x = $event.target.offsetLeft - this.popover.width + ($event.target.offsetWidth / 2);
+        this.popover.pointer = 'right';
+      }
 
+      this.popover.y = $event.target.offsetTop + ($event.target.offsetHeight / 2) + 5;
       this.togglePopover(true);
+
     }
     this.popover.task = null;
     operation.onMouseEnter();
@@ -211,6 +219,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onTaskMouseEnter($event, task: Task) {
     // show Popover for normal operations only
+    console.log($event);
     if (!(task.state === TaskState.PENDING || task.state === TaskState.READY)) {
       this.popover.task = task;
       this.popover.x = $event.target.offsetLeft + (this.popover.width / 2);

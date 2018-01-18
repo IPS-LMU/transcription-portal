@@ -9,7 +9,7 @@
         'margin-top': popover.y + 'px',
         'margin-left': (popover.x + 4) + 'px'
     }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';"
-                 [borderColor]="getPopoverColor(popover.operation)">
+                 [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer">
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
                 Duration: {{calculateDuration(popover.operation.time.start, popover.operation.time.end) |

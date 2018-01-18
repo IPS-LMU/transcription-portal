@@ -18,6 +18,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   private canvasContext: CanvasRenderingContext2D;
 
   @Input() borderColor: string = '#3a70dd';
+  @Input() pointer: 'left' | 'right' = 'left';
 
   public width = 200;
   public height = 300;
@@ -83,23 +84,41 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
       // draw triangle
 
-      const middle = (this.width - this.margin.left - this.margin.right) / 2;
+      let x = this.lineWidth / 2;
+      let y = 5;
 
+      if (this.pointer === 'right') {
+        x = this.width - x;
+      }
       this.canvasContext.beginPath();
       this.canvasContext.fillStyle = 'white';
-      this.canvasContext.moveTo(0 + this.lineWidth / 2, 5);
-      this.canvasContext.lineTo(10 + this.lineWidth / 2 + 2, 5 + this.margin.top);
-      this.canvasContext.lineTo(10 + this.lineWidth / 2 + 2, 35 + this.lineWidth / 2);
-      this.canvasContext.lineTo(0 + this.lineWidth / 2, 5 + this.lineWidth / 2);
+      this.canvasContext.moveTo(x, y);
+      if (this.pointer === 'left') {
+        this.canvasContext.lineTo(10 + x + 2, y + this.margin.top);
+        this.canvasContext.lineTo(10 + x + 2, 35 + this.lineWidth / 2);
+        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+      } else if (this.pointer === 'right') {
+        this.canvasContext.lineTo(x - 10 - 2, y + this.margin.top);
+        this.canvasContext.lineTo(x - 10 - 2, 35 + this.lineWidth / 2);
+        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+      }
       this.canvasContext.fill();
       this.canvasContext.closePath();
 
       this.canvasContext.beginPath();
-      this.canvasContext.moveTo(0 + this.lineWidth / 2, 5 + this.lineWidth / 2);
-      this.canvasContext.lineTo(10 + this.lineWidth / 2 + 2, this.margin.top + this.lineWidth / 2);
-      this.canvasContext.moveTo(10 + this.lineWidth / 2, this.margin.top + 30 + this.lineWidth / 2);
-      this.canvasContext.lineTo(0 + this.lineWidth / 2, 5 + this.lineWidth / 2);
-      this.canvasContext.stroke();
+      if (this.pointer === 'left') {
+        this.canvasContext.moveTo(x, y + this.lineWidth / 2);
+        this.canvasContext.lineTo(x + 10 + 2, this.margin.top + this.lineWidth / 2);
+        this.canvasContext.moveTo(x + 10, this.margin.top + 30 + this.lineWidth / 2);
+        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+        this.canvasContext.stroke();
+      } else if (this.pointer === 'right') {
+        this.canvasContext.moveTo(x, y + this.lineWidth / 2);
+        this.canvasContext.lineTo(x - 10 - 2, this.margin.top + this.lineWidth / 2);
+        this.canvasContext.moveTo(x - 10, this.margin.top + 30 + this.lineWidth / 2);
+        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+        this.canvasContext.stroke();
+      }
       this.canvasContext.closePath();
     }
   }
