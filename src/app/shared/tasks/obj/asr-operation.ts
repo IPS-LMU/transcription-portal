@@ -18,17 +18,18 @@ export class ASROperation extends Operation {
     this._time.end = 0;
 
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
-      ((inputs.length > 1) ? 'TEXT=' + inputs[ 1 ].url + '&' : '') +
-      'SIGNAL=' + inputs[ 0 ].url + '&' +
+      ((inputs.length > 1) ? 'TEXT=' + inputs[1].url + '&' : '') +
+      'SIGNAL=' + inputs[0].url + '&' +
       'PIPE=ASR_G2P_CHUNKER&ASRType=call' + AppInfo.getLanguageByCode(this.task.language).asr + 'ASR&LANGUAGE=' + this.task.language + '&' +
       'MAUSVARIANT=runPipeline&OUTFORMAT=bpf';
 
     httpclient.post(url, {}, {
-      headers     : {
+      headers: {
         'Content-Type': 'multipart/form-data'
       },
       responseType: 'text'
     }).subscribe((result: string) => {
+        console.log(result);
         this._time.end = Date.now();
 
         // convert result to json
@@ -37,19 +38,19 @@ export class ASROperation extends Operation {
         json = json.WebServiceResponseLink;
         console.log(json);
 
-        if (json.success === 'true') {
-          this.results.push(FileInfo.fromURL(json.downloadLink, inputs[ 0 ].name));
-          console.log(this.results);
-          this.changeState(TaskState.FINISHED);
-        } else {
-          this.changeState(TaskState.ERROR);
-        }
-
         // add messages to protocol
         if (json.warnings !== '') {
           this._protocol = json.warnings;
         } else if (json.output !== '') {
           this._protocol = json.output;
+        }
+
+        if (json.success === 'true') {
+          this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
+          console.log(this.results);
+          this.changeState(TaskState.FINISHED);
+        } else {
+          this.changeState(TaskState.ERROR);
         }
       },
       (error) => {

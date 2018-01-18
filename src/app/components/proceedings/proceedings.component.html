@@ -7,8 +7,9 @@
     <app-popover [@fadeToggle]="popover.state" [ngStyle]="{
         'width': popover.width + 'px',
         'margin-top': popover.y + 'px',
-        'margin-left': popover.x + 'px'
-    }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';">
+        'margin-left': (popover.x + 4) + 'px'
+    }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';"
+                 [borderColor]="getPopoverColor(popover.operation)">
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
                 Duration: {{calculateDuration(popover.operation.time.start, popover.operation.time.end) |
@@ -18,7 +19,14 @@
                 Results:<br/>
                 <a *ngFor="let result of popover.operation.results" [href]="result.url" download="{{result.fullname}}"
                    target="_blank"
-                   [title]="'Download ' + result.fullname"><i class="fa fa-file-text" aria-hidden="true"></i> </a>
+                   [title]="'Download ' + result.fullname"><i class="fa fa-file-text" aria-hidden="true"></i></a>
+            </ng-container>
+            <ng-container>
+                <p style="font-size:12px;" [ngStyle]="{
+                    color: getPopoverColor(popover.operation)
+                }">
+                    {{popover.operation.protocol}}
+                </p>
             </ng-container>
         </ng-container>
         <ng-container *ngIf="popover.task !== null && popover.task !== undefined && popover.task.state === 'FINISHED'">
@@ -66,7 +74,7 @@
                         }"><span title="{{task.files[0].fullname}}"
                                  (mouseenter)="onTaskMouseEnter($event, task)"
                                  (mouseleave)="onTaskMouseLeave($event, task)"
-                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}} {{task.state}}</span>
+                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}}</span>
                 <span
                     *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">

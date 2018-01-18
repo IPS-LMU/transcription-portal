@@ -181,8 +181,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     // show Popover for normal operations only
     if (!(operation instanceof ToolOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.READY)) {
       this.popover.operation = operation;
-      this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2) - (this.popover.width / 2);
-      this.popover.y = $event.target.offsetTop + $event.target.offsetHeight;
+      this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
+      this.popover.y = $event.target.offsetTop + ($event.target.offsetHeight / 2) + 5;
+      if (operation.protocol !== '') {
+        this.popover.width = 500;
+      } else {
+        this.popover.width = 200;
+      }
+
       this.togglePopover(true);
     }
     this.popover.task = null;
@@ -257,5 +263,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         task_operation.enabled = operation.enabled;
       }
     }
+  }
+
+  public getPopoverColor(operation): string {
+    if (!isNullOrUndefined(operation)) {
+      if (operation.state == TaskState.ERROR) {
+        return 'red';
+      } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
+        return 'yellow';
+      }
+    }
+    return '#3a70dd'
   }
 }

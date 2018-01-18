@@ -96,8 +96,8 @@ export class TaskService implements OnDestroy {
           if (event.oldState === TaskState.UPLOADING && event.newState === TaskState.FINISHED) {
             this.start();
           }
-          this.updateProtocolArray();
           running_tasks = this.countRunningTasks();
+          this.updateProtocolArray();
           const lastOp = task.operations[task.operations.length - 1];
           if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
             if (operation.state === TaskState.UPLOADING) {
@@ -161,6 +161,7 @@ export class TaskService implements OnDestroy {
     let errors_count = 0;
     let warnings_count = 0;
 
+    console.log(`check states`);
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[i];
 

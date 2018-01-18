@@ -37,6 +37,7 @@ export class MAUSOperation extends Operation {
       xhr.onloadend = (e) => {
         this.time.end = Date.now();
         const result = e.currentTarget['responseText'];
+        console.log(result);
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.WebServiceResponseLink;

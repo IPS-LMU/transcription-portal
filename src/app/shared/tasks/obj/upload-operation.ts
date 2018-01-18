@@ -36,8 +36,8 @@ export class UploadOperation extends Operation {
     const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti';
 
     for (let i = 0; i < files.length; i++) {
-      console.log('new filename is ' + files[ i ].file.name);
-      form.append('file' + i, files[ i ].file);
+      console.log('new filename is ' + files[i].file.name);
+      form.append('file' + i, files[i].file);
     }
 
     const xhr = new XMLHttpRequest();
@@ -64,32 +64,34 @@ export class UploadOperation extends Operation {
     xhr.onloadend = (e) => {
       console.log('loadend');
       this.time.end = Date.now();
-      const result = e.currentTarget[ 'responseText' ];
+      const result = e.currentTarget['responseText'];
+      console.log(result);
       const x2js = new X2JS();
       let json: any = x2js.xml2js(result);
       json = json.UploadFileMultiResponse;
       console.log(json);
 
+      // add messages to protocol
+      if (json.warnings !== '') {
+        this._protocol = json.warnings;
+      }
+
       if (json.success === 'true') {
         // TODO set urls to results only
         if (isArray(json.fileList.entry)) {
           for (let i = 0; i < files.length; i++) {
-            files[ i ].url = json.fileList.entry[ i ].value;
-            this.results.push(FileInfo.fromURL(files[ i ].url));
+            files[i].url = json.fileList.entry[i].value;
+            this.results.push(FileInfo.fromURL(files[i].url));
           }
         } else {
           // json attribute entry is an object
-          files[ 0 ].url = json.fileList.entry[ 'value' ];
-          this.results.push(FileInfo.fromURL(json.fileList.entry[ 'value' ]));
+          files[0].url = json.fileList.entry['value'];
+          this.results.push(FileInfo.fromURL(json.fileList.entry['value']));
         }
         this.changeState(TaskState.FINISHED);
       } else {
-        this._protocol = json[ 'message' ];
+        this._protocol = json['message'];
         this.changeState(TaskState.ERROR);
-      }
-      // add messages to protocol
-      if (json.warnings !== '') {
-        this._protocol = json.warnings;
       }
     };
     xhr.send(form);

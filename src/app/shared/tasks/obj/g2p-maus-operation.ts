@@ -40,6 +40,7 @@ export class G2pMausOperation extends Operation {
       responseType: 'text'
     }).subscribe((result: string) => {
         this._time.end = Date.now();
+        console.log(result);
 
         // convert result to json
         const x2js = new X2JS();

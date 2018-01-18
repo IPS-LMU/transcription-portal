@@ -58,7 +58,7 @@ export class OCTRAOperation extends ToolOperation {
 
     const transcript = encodeURIComponent(url);
 
-    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra-dev2/user/load?` +
+    return `http://localhost:5321/user/load?` +
       `audio=${audio}&` +
       `transcript=${transcript}&` +
       `embedded=1`;
