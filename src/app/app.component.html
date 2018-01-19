@@ -61,27 +61,26 @@
                         <div class="col-2">
                             <button class="btn btn-primary" style="width: 100%;display: block"
                                     (click)="onFilesAddButtonClicked()">
-                                <i class="fa fa-plus"></i> ADD FILES
+                                <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
                             </button>
                             <input type="file" multiple class="fileinput" value="Select audio file"
                                    style="display:none;"
                                    #fileinput
                                    (change)="onFileChange($event)"/>
                         </div>
-                        <div class="col-2">
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <ng-container *ngIf="selectedlanguage === null">
-                                        {{AppInfo.languages[0].code | uppercase}}
-                                        ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
-                                    </ng-container>
-                                    <ng-container *ngIf="selectedlanguage !== null">
-                                        {{selectedlanguage.name}} ({{getShortCode(selectedlanguage.code)}})
-                                        [{{selectedlanguage.asr}}]
-                                    </ng-container>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <div class="dropdown col-2">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <ng-container *ngIf="selectedlanguage === null">
+                                    {{AppInfo.languages[0].code | uppercase}}
+                                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
+                                </ng-container>
+                                <ng-container *ngIf="selectedlanguage !== null">
+                                    {{selectedlanguage.name}} ({{getShortCode(selectedlanguage.code)}})
+                                    [{{selectedlanguage.asr}}]
+                                </ng-container>
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                     <span class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
                                           (click)="onASRLangCHanged(lang)">
                                         <ng-container
@@ -89,7 +88,6 @@
                                             {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
                                         </ng-container>
                                     </span>
-                                </div>
                             </div>
                         </div>
                         <div class="col-4">
@@ -106,7 +104,8 @@
                         <div class="col-3">
                             <button class="btn btn-primary" style="width:100%;" (click)="onUploadButtonClick()"
                                     [disabled]="!newfiles">
-                                UPLOAD & PROCESS FILES
+                                <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
+                                    class="d-none d-lg-inline d-xl-inline">UPLOAD & PROCESS FILES</span>
                             </button>
                         </div>
                     </div>

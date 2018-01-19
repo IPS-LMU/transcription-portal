@@ -63,13 +63,30 @@ export class AppComponent implements OnDestroy {
   onAfterDrop(files: FileInfo[]) {
     if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
       for (let i = 0; i < files.length; i++) {
+        console.log(`HERE`);
+        console.log(files);
         const file: FileInfo = files[i];
 
         if (file.type.indexOf('wav') > -1) {
 
+          const newName = FileInfo.escapeFileName(file.name);
+
+          if (newName !== file.name) {
+            // no valid name, replace
+            FileInfo.renameFile(file.file, newName, {
+              type: file.type,
+              lastModified: file.file.lastModifiedDate
+            }).then((newfile: File) => {
+              task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
+            });
+          }
+
           const task = new Task([file], this.taskService.operations);
           task.language = this.selectedlanguage.code;
           this.newfiles = true;
+
+          console.log(`task`);
+          console.log(task);
 
           setTimeout(() => {
             let reader = new FileReader();

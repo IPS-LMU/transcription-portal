@@ -104,7 +104,7 @@ export class FileInfo {
       }
 
       let extension_begin;
-      if ((extension_begin = fullname.indexOf('.')) > -1) {
+      if ((extension_begin = fullname.lastIndexOf('.')) > -1) {
         // split name and extension
         this._name = fullname.substr(0, extension_begin);
         this._extension = fullname.substr(extension_begin + 1);

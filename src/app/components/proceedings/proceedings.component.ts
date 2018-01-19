@@ -94,6 +94,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     $event.stopPropagation();
     $event.preventDefault();
 
+    const promises: Promise<void>[] = [];
+
     if (this.fileAPIsupported) {
 
       const droppedfiles: FileList = $event.dataTransfer.files;
@@ -106,21 +108,31 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
         if (newName !== file.name) {
           // no valid name, replace
-          FileInfo.renameFile(file, newName, {
+          promises.push(FileInfo.renameFile(file, newName, {
             type: file.type,
             lastModified: file.lastModifiedDate
           }).then((newfile: File) => {
-            files.push(FileInfo.fromFileObject(file));
-            this.cd.markForCheck();
-            this.cd.detectChanges();
-          });
+            files.push(FileInfo.fromFileObject(newfile));
+          }));
         } else {
           files.push(FileInfo.fromFileObject(file));
           this.cd.markForCheck();
           this.cd.detectChanges();
         }
       }
-      this.afterdrop.emit(files);
+
+      if (promises.length > 0) {
+        Promise.all(promises).then(() => {
+          console.log('ALL ended');
+          this.afterdrop.emit(files);
+          this.cd.markForCheck();
+          this.cd.detectChanges();
+        });
+      } else {
+        this.afterdrop.emit(files);
+      }
+    } else {
+      console.error(`file api not supported`);
     }
   }
 
