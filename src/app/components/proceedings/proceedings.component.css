@@ -47,26 +47,14 @@
     padding-right: 0;
 }
 
-.green {
-    color: forestgreen;
-}
-
-.red {
-    color: red;
-}
-
-.blue {
-    color: cornflowerblue;
-}
-
-.yellow {
-    color: #ffc33b;
-}
-
 .table.table-striped th {
     vertical-align: top;
 }
 
 .op-deactivated {
     background-color: darkgray;
+}
+
+.op-50 {
+    opacity: 0.5;
 }

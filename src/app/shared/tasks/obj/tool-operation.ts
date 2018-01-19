@@ -1,10 +1,10 @@
-import { HttpClient } from '@angular/common/http';
-import { SafeHtml } from '@angular/platform-browser';
-import { isNullOrUndefined } from 'util';
-import { Task } from './';
-import { FileInfo } from './fileInfo';
-import { Operation } from './operation';
-import { TaskState } from './task';
+import {HttpClient} from '@angular/common/http';
+import {SafeHtml} from '@angular/platform-browser';
+import {isNullOrUndefined} from 'util';
+import {Task} from './';
+import {FileInfo} from '../../fileInfo';
+import {Operation} from './operation';
+import {TaskState} from './task';
 
 export class ToolOperation extends Operation {
 

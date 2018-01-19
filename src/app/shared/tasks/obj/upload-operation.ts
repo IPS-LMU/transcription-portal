@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {isArray, isNullOrUndefined} from 'util';
 import {TimePipe} from '../../time.pipe';
-import {FileInfo} from './fileInfo';
+import {FileInfo} from '../../fileInfo';
 import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';

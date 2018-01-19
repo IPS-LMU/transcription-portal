@@ -9,6 +9,8 @@ import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
 import {TaskService} from './shared/tasks';
 import {FileInfo, Operation, Task, TaskState, ToolOperation} from './shared/tasks/obj';
+import {AudioManager} from './shared/audio';
+import {WavFormat} from './shared/audio/AudioFormats';
 
 declare var window: any;
 
@@ -64,9 +66,22 @@ export class AppComponent implements OnDestroy {
         const file: FileInfo = files[i];
 
         if (file.type.indexOf('wav') > -1) {
+
           const task = new Task([file], this.taskService.operations);
           task.language = this.selectedlanguage.code;
           this.newfiles = true;
+
+          setTimeout(() => {
+            let reader = new FileReader();
+            reader.onload = (event: any) => {
+              AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
+                task.files[0] = manager.ressource.info;
+                task.files[0].file = file.file;
+              })
+            };
+            reader.readAsArrayBuffer(file.file);
+          }, 1000);
+
           this.taskService.addTask(task);
         } else {
           console.log('no wav');
@@ -124,8 +139,16 @@ export class AppComponent implements OnDestroy {
           }).then((newfile: File) => {
             file_infos[index] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
           });
-        } else {
         }
+
+        let reader = new FileReader();
+        reader.onload = (event: any) => {
+          AudioManager.decodeAudio(file.name, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
+            file_infos[index] = manager.ressource.info;
+            task.files[index].file = file;
+          })
+        };
+        reader.readAsArrayBuffer(file);
 
         const task = new Task(file_infos, this.taskService.operations);
 

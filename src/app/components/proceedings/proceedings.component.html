@@ -9,7 +9,7 @@
         'margin-top': popover.y + 'px',
         'margin-left': (popover.x + 4) + 'px'
     }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';"
-                 [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer">
+                 [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer" #popoverRef>
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
                 Duration: {{calculateDuration(popover.operation.time.start, popover.operation.time.end) |
@@ -29,9 +29,14 @@
                 </p>
             </ng-container>
         </ng-container>
-        <ng-container *ngIf="popover.task !== null && popover.task !== undefined && popover.task.state === 'FINISHED'">
-            <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
-                                                                     style="color:cornflowerblue;"></i></a>
+        <ng-container *ngIf="popover.operation === null && popover.task !== null && popover.task !== undefined">
+
+            <ng-container *ngIf="popover.task.state === 'FINISHED'">
+                <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
+                                                                         style="color:cornflowerblue;"></i></a>
+            </ng-container>
+
+            <app-file-info-table [fileinfo]="popover.task.files[0]"></app-file-info-table>
         </ng-container>
     </app-popover>
     <table class="table table-striped">
@@ -71,12 +76,18 @@
             <td (click)="onRowSelected(task.id)"
                 [ngClass]="{
                             'shorten': shortstyle
-                        }"><span title="{{task.files[0].fullname}}"
-                                 (mouseenter)="onTaskMouseEnter($event, task)"
-                                 (mouseleave)="onTaskMouseLeave($event, task)"
-                                 (mouseover)="onTaskMouseOver($event, task)">{{task.files[0].fullname}}</span>
+                        }">
+                <span [ngClass]="{
+                    'op-50': task.files[0].samplerate === undefined,
+                    'red': task.files[0].channels !== undefined && task.files[0].channels > 1
+                }" title="{{task.files[0].fullname}}"
+                      (mouseenter)="onTaskMouseEnter($event, task)"
+                      (mouseleave)="onTaskMouseLeave($event, task)"
+                      (mouseover)="onTaskMouseOver($event, task)">
+                {{task.files[0].fullname}}
+                </span>
                 <span
-                    *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
+                        *ngIf="task.files.length > 1">(+ {{task.files.length - 1}})</span>
                 <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
                     <tbody>
                     <tr *ngFor="let file of task.files;">

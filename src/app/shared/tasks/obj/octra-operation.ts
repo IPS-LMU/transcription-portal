@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {Task} from './';
-import {FileInfo} from './fileInfo';
+import {FileInfo} from '../../fileInfo';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
@@ -58,7 +58,7 @@ export class OCTRAOperation extends ToolOperation {
 
     const transcript = encodeURIComponent(url);
 
-    return `http://localhost:5321/user/load?` +
+    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra-dev2/user/load?` +
       `audio=${audio}&` +
       `transcript=${transcript}&` +
       `embedded=1`;

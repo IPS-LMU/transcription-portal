@@ -18,7 +18,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   private canvasContext: CanvasRenderingContext2D;
 
   @Input() borderColor: string = '#3a70dd';
-  @Input() pointer: 'left' | 'right' = 'left';
+  @Input() pointer: 'left' | 'right' | 'bottom-left' = 'left';
 
   public width = 200;
   public height = 300;
@@ -89,7 +89,10 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
       if (this.pointer === 'right') {
         x = this.width - x;
+      } else if (this.pointer === 'bottom-left') {
+        y = this.height;
       }
+
       this.canvasContext.beginPath();
       this.canvasContext.fillStyle = 'white';
       this.canvasContext.moveTo(x, y);
@@ -101,7 +104,12 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
         this.canvasContext.lineTo(x - 10 - 2, y + this.margin.top - this.lineWidth);
         this.canvasContext.lineTo(x - 10 - 2, 38 + this.lineWidth * 2);
         this.canvasContext.lineTo(x, y);
+      } else if (this.pointer === 'bottom-left') {
+        this.canvasContext.lineTo(10 + x + 2, y - this.margin.bottom - this.lineWidth);
+        this.canvasContext.lineTo(30 + x + 2, y - this.margin.bottom + this.lineWidth * 2);
+        this.canvasContext.lineTo(x, y);
       }
+
       this.canvasContext.fill();
       this.canvasContext.closePath();
 
@@ -118,7 +126,14 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
         this.canvasContext.moveTo(x - 10, this.margin.top + 30 + this.lineWidth / 2);
         this.canvasContext.lineTo(x, y + this.lineWidth / 2);
         this.canvasContext.stroke();
+      } else if (this.pointer === 'bottom-left') {
+        this.canvasContext.moveTo(x, y + this.lineWidth / 2);
+        this.canvasContext.lineTo(x + 10, y - this.margin.bottom - this.lineWidth);
+        this.canvasContext.moveTo(30 + x, y - this.margin.bottom + this.lineWidth * 2 + 5);
+        this.canvasContext.lineTo(x, y + this.lineWidth / 2);
+        this.canvasContext.stroke();
       }
+
       this.canvasContext.closePath();
     }
   }

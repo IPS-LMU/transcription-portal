@@ -115,6 +115,7 @@ h1 {
     position: relative;
     text-align: center;
     padding: 5px;
+    display: -webkit-box;
 }
 
 .proceedings-header .status {

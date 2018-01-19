@@ -1,0 +1,34 @@
+{
+  "indexedb": {
+    "options": [
+      {
+        "name": "notifications",
+        "enabled": false,
+        "desktop": {
+          "enabled": false
+        }
+      }
+    ],
+    "tasks": [
+      {
+        "id": 1,
+        "state": 0,
+        "operations": [
+          {
+            "id": 4,
+            "state": 3,
+            "duration": 12312,
+            "name": "OCTRA",
+            "results": [
+              {
+                "url": "asuhdoiashdi",
+                "name": "test.par",
+                "duartion": 231421
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

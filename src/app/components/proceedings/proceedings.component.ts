@@ -1,12 +1,13 @@
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit,
-  Output
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output,
+  ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation} from '../../shared/tasks';
+import {PopoverComponent} from '../popover/popover.component';
 
 declare var window: any;
 
@@ -45,6 +46,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
+
+  @ViewChild('popoverRef') public popoverRef: PopoverComponent;
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService) {
     // Check for the various FileInfo API support.
@@ -220,12 +223,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onTaskMouseEnter($event, task: Task) {
     // show Popover for normal operations only
     console.log($event);
-    if (!(task.state === TaskState.PENDING || task.state === TaskState.READY)) {
-      this.popover.task = task;
-      this.popover.x = $event.target.offsetLeft + (this.popover.width / 2);
-      this.popover.y = $event.target.parentElement.offsetTop + $event.target.parentElement.offsetHeight;
-      this.togglePopover(true);
-    }
+    this.popover.task = task;
+    this.popover.x = $event.offsetX + 60;
+    this.popover.width = 600;
+    this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
+    this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;
+    this.togglePopover(true);
+
     this.popover.operation = null;
   }
 

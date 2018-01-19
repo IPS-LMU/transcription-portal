@@ -31,12 +31,12 @@ export class FileInfo {
     return this._extension;
   }
 
-  private _type: string;
-  private _extension: string;
-  private _name: string;
-  private _size: number;
-  private _file: File;
-  private _url: string;
+  protected _type: string;
+  protected _extension: string;
+  protected _name: string;
+  protected _size: number;
+  protected _file: File;
+  protected _url: string;
 
   public get fullname(): string {
     return `${this._name}.${this._extension}`;
