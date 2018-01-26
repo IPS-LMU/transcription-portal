@@ -50,17 +50,23 @@ export class OCTRAOperation extends ToolOperation {
 
   public getToolURL(): string {
     const audio = encodeURIComponent(this.operations[0].results[0].url);
-    let url = this.operations[1].results[0].url;
+    if (this.operations[1].results.length > 0) {
+      let url = this.operations[1].results[0].url;
 
-    if (this.results.length === 1) {
-      url = this.results[0].url;
+      if (this.results.length === 1) {
+        url = this.results[0].url;
+      }
+
+      const transcript = encodeURIComponent(url);
+
+      return `http://localhost:5321/user/load?` +
+        `audio=${audio}&` +
+        `transcript=${transcript}&` +
+        `embedded=1`;
     }
 
-    const transcript = encodeURIComponent(url);
-
-    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra-dev2/user/load?` +
+    return `http://localhost:5321/user/load?` +
       `audio=${audio}&` +
-      `transcript=${transcript}&` +
       `embedded=1`;
   }
 

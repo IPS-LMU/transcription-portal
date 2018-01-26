@@ -280,6 +280,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   deactivateOperation(operation, index) {
     operation.enabled = !operation.enabled;
+
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[i];
       const task_operation = task.operations[index];

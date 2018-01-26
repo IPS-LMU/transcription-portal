@@ -57,7 +57,8 @@
                     <div [innerHTML]="operation.icon"></div>
                 </ng-template>
                 <br/>
-                <input *ngIf="operation.name === 'OCTRA'" type="checkbox" class="header-checkbox"
+                <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
+                       class="header-checkbox"
                        [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
             </th>
         </tr>

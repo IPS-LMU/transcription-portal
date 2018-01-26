@@ -30,7 +30,12 @@
         <div class="col-9" style="border-right: 1px solid gray">
             <div class="title">
                 <div class="inner">{{selectedOperation.name}}:
-                    {{selectedOperation.previousOperation.results[0].fullname}}
+                    <ng-container *ngIf="selectedOperation.previousOperation.results.length > 0">
+                        {{selectedOperation.previousOperation.results[0].fullname}}
+                    </ng-container>
+                    <ng-container *ngIf="selectedOperation.previousOperation.results.length < 1">
+                        {{selectedOperation.previousOperation.previousOperation.results[0].fullname}}
+                    </ng-container>
                 </div>
             </div>
         </div>
