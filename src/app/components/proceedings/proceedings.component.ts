@@ -8,6 +8,8 @@ import {ANIMATIONS} from '../../shared/Animations';
 
 import {EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation} from '../../shared/tasks';
 import {PopoverComponent} from '../popover/popover.component';
+import {OCTRAOperation} from '../../shared/tasks/obj/octra-operation';
+import {ASROperation} from '../../shared/tasks/obj';
 
 declare var window: any;
 
@@ -278,8 +280,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  deactivateOperation(operation, index) {
+  deactivateOperation(operation: Operation, index: number) {
     operation.enabled = !operation.enabled;
+    const previous = this.taskService.operations[index - 1];
+    const next = this.taskService.operations[index + 1];
+    if (operation instanceof OCTRAOperation) {
+      if (!previous.enabled && !operation.enabled) {
+        previous.enabled = true;
+      }
+    } else if (operation instanceof ASROperation) {
+      if (!next.enabled && !operation.enabled) {
+        next.enabled = true;
+      }
+    }
 
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[i];

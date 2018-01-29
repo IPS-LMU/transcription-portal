@@ -45,7 +45,7 @@
             <th></th>
             <th>File</th>
             <th *ngFor="let operation of operations; let i = index" style="text-align: center;">
-                <span *ngIf="operation.icon === ''; else showIcon">
+                <span *ngIf="operation.icon === ''; else showIcon" style="display:block;">
                     <ng-container *ngIf="shortstyle">
                         {{operation.name.charAt(0)}}
                     </ng-container>
@@ -56,7 +56,6 @@
                 <ng-template #showIcon>
                     <div [innerHTML]="operation.icon"></div>
                 </ng-template>
-                <br/>
                 <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
                        class="header-checkbox"
                        [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
