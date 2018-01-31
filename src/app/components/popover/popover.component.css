@@ -10,8 +10,13 @@ canvas {
 }
 
 .inner{
-    padding: 30px 30px;
+    padding: 20px;
     position:absolute;
     width: 100%;
     z-index: 10;
+}
+
+.content {
+    padding: 20px;
+    overflow: auto;
 }

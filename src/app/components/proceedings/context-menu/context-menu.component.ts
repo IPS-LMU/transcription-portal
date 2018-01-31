@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Operation} from '../../../shared/tasks/obj';
 
 @Component({
   selector   : 'app-context-menu',
@@ -8,7 +9,8 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 export class ContextMenuComponent implements OnInit {
 
   @Input() selected_tasks: number[] = [];
-  @Output() deletetasks: EventEmitter<void> = new EventEmitter<void>();
+  @Input() selectedOperationType: Operation;
+  @Output() optionselected: EventEmitter<string> = new EventEmitter<string>();
 
   @Input() hid = true;
 
@@ -19,7 +21,12 @@ export class ContextMenuComponent implements OnInit {
   }
 
   onDeleteTasks() {
-    this.deletetasks.emit();
+    this.optionselected.emit('delete');
     this.hid = true;
+  }
+
+  onCompress() {
+    this.optionselected.emit('compress');
+    this.hid = false;
   }
 }

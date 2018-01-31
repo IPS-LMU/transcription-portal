@@ -7,6 +7,7 @@ import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import * as X2JS from 'x2js';
+import {AppInfo} from '../../../app.info';
 
 export class UploadOperation extends Operation {
 
@@ -34,7 +35,8 @@ export class UploadOperation extends Operation {
     this._time.end = 0;
 
     const form: FormData = new FormData();
-    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti';
+    const langObj = AppInfo.getLanguageByCode(this.task.language);
+    const url = `${langObj.host}uploadFileMulti`;
 
     for (let i = 0; i < files.length; i++) {
       console.log('new filename is ' + files[i].file.name);

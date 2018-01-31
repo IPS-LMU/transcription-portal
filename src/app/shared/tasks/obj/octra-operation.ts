@@ -6,6 +6,7 @@ import {FileInfo} from '../../fileInfo';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
+import {AppInfo} from '../../../app.info';
 
 export class OCTRAOperation extends ToolOperation {
   private operations: Operation[];
@@ -49,25 +50,29 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const audio = encodeURIComponent(this.operations[0].results[0].url);
-    if (this.operations[1].results.length > 0) {
-      let url = this.operations[1].results[0].url;
+    let audio = `audio=${encodeURIComponent(this.operations[0].results[0].url)}`;
+    let transcript = `transcript=`;
+    let embedded = `embedded=1`;
+    let host = `host=${encodeURIComponent(AppInfo.getLanguageByCode(this.task.language).host)}`;
 
-      if (this.results.length === 1) {
-        url = this.results[0].url;
+
+    if (this.results.length < 1) {
+      if (this.operations[1].results.length > 0) {
+        let url = this.operations[1].results[0].url;
+        transcript += encodeURIComponent(url);
+      } else {
+        transcript = '';
       }
-
-      const transcript = encodeURIComponent(url);
-
-      return `http://localhost:5321/user/load?` +
-        `audio=${audio}&` +
-        `transcript=${transcript}&` +
-        `embedded=1`;
+    } else {
+      let url = this.results[0].url;
+      transcript += encodeURIComponent(url);
     }
 
-    return `http://localhost:5321/user/load?` +
-      `audio=${audio}&` +
-      `embedded=1`;
+    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra/user/load?` +
+      `${audio}&` +
+      `${transcript}&` +
+      `${host}&` +
+      `${embedded}`;
   }
 
   public clone(task?: Task): OCTRAOperation {

@@ -174,7 +174,5 @@ h1 {
 .tool-nav .title .inner {
     display: table-cell;
     vertical-align: middle;
-    text-decoration: underline;
-    font-weight: bold;
     font-size: 1.2em;
 }

@@ -9,8 +9,9 @@ import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
 import {TaskService} from './shared/tasks';
 import {FileInfo, Operation, Task, TaskState, ToolOperation} from './shared/tasks/obj';
-import {AudioManager} from './shared/audio';
+import {AudioInfo, AudioManager} from './shared/audio';
 import {WavFormat} from './shared/audio/AudioFormats';
+import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 
 declare var window: any;
 
@@ -35,11 +36,14 @@ export class AppComponent implements OnDestroy {
   }
 
   public test = 'insactive';
+  private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
   @ViewChild('fileinput') fileinput: ElementRef;
+  @ViewChild('proceedings') proceedings: ProceedingsComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService) {
+
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
         this.blop();
@@ -61,6 +65,10 @@ export class AppComponent implements OnDestroy {
   }
 
   onAfterDrop(files: FileInfo[]) {
+    this.readNewFiles(files)
+  }
+
+  private readNewFiles(files: FileInfo[]) {
     if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
       for (let i = 0; i < files.length; i++) {
         console.log(`HERE`);
@@ -69,37 +77,61 @@ export class AppComponent implements OnDestroy {
 
         if (file.type.indexOf('wav') > -1) {
 
-          const newName = FileInfo.escapeFileName(file.name);
-
-          if (newName !== file.name) {
-            // no valid name, replace
-            FileInfo.renameFile(file.file, newName, {
-              type: file.type,
-              lastModified: file.file.lastModifiedDate
-            }).then((newfile: File) => {
-              task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
-            });
-          }
+          const newName = FileInfo.escapeFileName(file.fullname);
+          let newFile: File = null;
 
           const task = new Task([file], this.taskService.operations);
-          task.language = this.selectedlanguage.code;
-          this.newfiles = true;
 
-          console.log(`task`);
-          console.log(task);
+          new Promise<void>((resolve, reject) => {
+              if (newName !== file.name) {
+                // no valid name, replace
+                FileInfo.renameFile(file.file, newName, {
+                  type: file.type,
+                  lastModified: file.file.lastModifiedDate
+                }).then((newfile: File) => {
+                  task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
+                  newFile = newfile;
+                  console.log(`renamed to ${newfile.name}`);
+                  resolve()
+                });
+              } else {
+                resolve()
+              }
+            }
+          ).then(() => {
+            task.language = this.selectedlanguage.code;
+            this.newfiles = true;
 
-          setTimeout(() => {
-            let reader = new FileReader();
-            reader.onload = (event: any) => {
-              AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
-                task.files[0] = manager.ressource.info;
-                task.files[0].file = file.file;
-              })
-            };
-            reader.readAsArrayBuffer(file.file);
-          }, 1000);
+            console.log(`task`);
+            console.log(task);
 
-          this.taskService.addTask(task);
+            setTimeout(() => {
+              let reader = new FileReader();
+              reader.onload = (event: any) => {
+                AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
+                  task.files[0] = manager.ressource.info;
+                  task.files[0].fullname = newName;
+
+                  if (isNullOrUndefined(newFile)) {
+                    task.files[0].file = file.file;
+                  } else {
+                    task.files[0].file = newFile;
+                  }
+                })
+              };
+              reader.readAsArrayBuffer(file.file);
+            }, 1000);
+
+            // set state
+            for (let i = 0; i < this.taskService.operations.length; i++) {
+              const operation = this.taskService.operations[i];
+
+              task.operations[i].enabled = operation.enabled;
+            }
+            this.taskService.addTask(task);
+          })
+
+
         } else {
           console.log('no wav');
         }
@@ -138,42 +170,14 @@ export class AppComponent implements OnDestroy {
 
   onFileChange($event) {
     const files: FileList = $event.target.files;
+    const file_infos: FileInfo[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file: File = files[i];
-      const file_infos: FileInfo[] = [];
-
-      if (file.type.indexOf('wav') > -1) {
-        file_infos.push(new FileInfo(file.name, file.type, file.size, file));
-        const index = file_infos.length - 1;
-        const newName = FileInfo.escapeFileName(file.name);
-
-        if (newName !== file.name) {
-          // no valid name, replace
-          FileInfo.renameFile(file, newName, {
-            type: file.type,
-            lastModified: file.lastModifiedDate
-          }).then((newfile: File) => {
-            file_infos[index] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
-          });
-        }
-
-        let reader = new FileReader();
-        reader.onload = (event: any) => {
-          AudioManager.decodeAudio(file.name, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
-            file_infos[index] = manager.ressource.info;
-            task.files[index].file = file;
-          })
-        };
-        reader.readAsArrayBuffer(file);
-
-        const task = new Task(file_infos, this.taskService.operations);
-
-        task.language = this.selectedlanguage.code;
-        this.newfiles = true;
-        this.taskService.addTask(task);
-      }
+      file_infos.push(new FileInfo(file.name, file.type, file.size, file));
     }
+
+    this.readNewFiles(file_infos);
   }
 
   onOperationClick(operation: Operation) {
@@ -286,6 +290,16 @@ export class AppComponent implements OnDestroy {
 
   @HostListener('window:beforeunload', ['$event'])
   doSomething($event) {
-    $event.returnValue = true;
+    $event.returnValue = this.blockLeaving;
+  }
+
+  public getTime(): number {
+    let elem: AudioInfo = <AudioInfo> this.selectedOperation.task.files[0];
+
+    if (!isNullOrUndefined(elem.duration)) {
+      return elem.duration.unix;
+    }
+
+    return 0;
   }
 }

@@ -18,6 +18,7 @@ export class MAUSOperation extends Operation {
     this._time.end = 0;
 
     try {
+      console.log(`HÄÄ??`);
       const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
         'BPF=https://clarin.phonetik.uni-muenchen.de:443/BASWebServices/data/2018.01.07_17.44.52_27621602A906DD83E24AB16392205B15/02-1-AC-JC-16b_1___.175232_346379__1_.par' +
         '&SIGNAL=' + inputs[0].url +

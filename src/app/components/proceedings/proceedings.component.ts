@@ -1,5 +1,12 @@
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
   ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -10,6 +17,10 @@ import {EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOpe
 import {PopoverComponent} from '../popover/popover.component';
 import {OCTRAOperation} from '../../shared/tasks/obj/octra-operation';
 import {ASROperation} from '../../shared/tasks/obj';
+import {UploadOperation} from '../../shared/tasks/obj/upload-operation';
+import {HttpClient} from '@angular/common/http';
+import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import * as moment from 'moment';
 
 declare var window: any;
 
@@ -42,16 +53,22 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
   public selected_tasks = [];
+  public archiveURL = '';
+  public closeResult = '';
 
   @Input() shortstyle = false;
 
   @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
+  @ViewChild('content') content;
 
   @ViewChild('popoverRef') public popoverRef: PopoverComponent;
 
-  constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService) {
+  public selectedOperation: Operation;
+
+  constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
+              private modalService: NgbModal) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
@@ -163,17 +180,70 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
 
-  onDeleteTasks() {
-    for (let i = 0; i < this.selected_tasks.length; i++) {
-      const task_index = this.tasks.findIndex((a) => {
-        if (a.id === this.selected_tasks[i]) {
-          return true;
-        }
-      });
+  onContextMenuOptionSelected(option: String) {
+    if (option === 'delete') {
+      for (let i = 0; i < this.selected_tasks.length; i++) {
+        const task_index = this.tasks.findIndex((a) => {
+          if (a.id === this.selected_tasks[i]) {
+            return true;
+          }
+        });
 
-      this.tasks.splice(task_index, 1);
-      this.selected_tasks.splice(i, 1);
-      i--; // because length changed
+        this.tasks.splice(task_index, 1);
+        this.selected_tasks.splice(i, 1);
+        i--; // because length changed
+      }
+    } else if (option === 'compress') {
+      this.contextmenu.hidden = false;
+      // prepare package
+      let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+      let requestPackage = {
+        requestType: 'createArchieve',
+        data: {
+          archieveName: `${this.selectedOperation.name}Results_${dateStr}`,
+          files: []
+        }
+      };
+      for (let i = 0; i < this.taskService.tasks.length; i++) {
+        const task = this.taskService.tasks[i];
+
+        for (let i = 0; i < task.operations.length; i++) {
+          const operation = task.operations[i];
+
+          // TODO improve code!
+          if (operation.name === this.selectedOperation.name
+            && operation.results.length > 0
+          ) {
+            for (let i = 0; i < operation.results.length; i++) {
+              const result: FileInfo = operation.results[i];
+
+              if (i > 0) {
+                requestPackage.data.files.push({
+                  name: result.name + `_${i + 1}.${result.extension}`,
+                  url: result.url
+                })
+              } else {
+                requestPackage.data.files.push({
+                  name: result.fullname,
+                  url: result.url
+                })
+              }
+            }
+          }
+        }
+      }
+      console.log(requestPackage);
+
+      this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
+        (response: any) => {
+          console.log(response);
+          this.archiveURL = response.result;
+          this.openArchiveDownlaod(this.content);
+        },
+        (error) => {
+          console.error(error);
+        }
+      );
     }
     this.contextmenu.hidden = true;
   }
@@ -287,19 +357,54 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (operation instanceof OCTRAOperation) {
       if (!previous.enabled && !operation.enabled) {
         previous.enabled = true;
+
+        for (let i = 0; i < this.tasks.length; i++) {
+          const task = this.tasks[i];
+          const task_operation = task.operations[index - 1];
+          const currOperation = task.operations[index];
+
+          if (task_operation.state === TaskState.PENDING) {
+            task_operation.enabled = previous.enabled;
+          }
+
+          if (currOperation.state === TaskState.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
+        }
       }
     } else if (operation instanceof ASROperation) {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
+
+        for (let i = 0; i < this.tasks.length; i++) {
+          const task = this.tasks[i];
+          const task_operation = task.operations[index + 1];
+          const currOperation = task.operations[index];
+
+          if (task_operation.state === TaskState.PENDING) {
+            task_operation.enabled = next.enabled;
+          }
+          if (currOperation.state === TaskState.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
+        }
       }
     }
 
-    for (let i = 0; i < this.tasks.length; i++) {
-      const task = this.tasks[i];
-      const task_operation = task.operations[index];
+    this.updateEnableState();
+  }
 
-      if (task_operation.state === TaskState.PENDING) {
-        task_operation.enabled = operation.enabled;
+  public updateEnableState() {
+    for (let j = 0; j < this.taskService.operations.length; j++) {
+      const operation = this.taskService.operations[j];
+
+      for (let i = 0; i < this.tasks.length; i++) {
+        const task = this.tasks[i];
+        const currOperation = task.operations[j];
+
+        if (currOperation.state === TaskState.PENDING) {
+          currOperation.enabled = operation.enabled;
+        }
       }
     }
   }
@@ -313,5 +418,31 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       }
     }
     return '#3a70dd'
+  }
+
+  public onOperationClick($event, operation: Operation) {
+    if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
+      this.selectedOperation = undefined;
+    } else {
+      this.selectedOperation = operation;
+    }
+  }
+
+  openArchiveDownlaod(content) {
+    this.modalService.open(content).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  }
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return `with: ${reason}`;
+    }
   }
 }

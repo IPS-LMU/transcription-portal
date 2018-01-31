@@ -4,5 +4,10 @@
         <td><i class="fa fa-times"></i></td>
         <td>Delete {{selected_tasks.length}} tasks</td>
     </tr>
+    <tr *ngIf="selectedOperationType != undefined" (click)="onCompress()">
+        <td><i class="fa fa-file-archive-o"></i></td>
+        <td>Save all {{selectedOperationType.name}} results</td>
+    </tr>
+    <ng-content></ng-content>
     </tbody>
 </table>

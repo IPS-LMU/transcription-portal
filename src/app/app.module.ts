@@ -15,6 +15,7 @@ import {NotificationService} from './shared/notification.service';
 import {TaskService} from './shared/tasks';
 import {TimePipe} from './shared/time.pipe';
 import {FileInfoTableComponent} from './components/file-info-table/file-info-table.component';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import {FileInfoTableComponent} from './components/file-info-table/file-info-tab
   imports     : [
     BrowserModule,
     BrowserAnimationsModule,
-    HttpClientModule
+    HttpClientModule,
+    NgbModule.forRoot()
   ],
   providers   : [ TaskService, NotificationService ],
   bootstrap   : [ AppComponent ]

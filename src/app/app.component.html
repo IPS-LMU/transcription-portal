@@ -29,12 +29,22 @@
         </div>
         <div class="col-9" style="border-right: 1px solid gray">
             <div class="title">
-                <div class="inner">{{selectedOperation.name}}:
+                <div class="row inner">
                     <ng-container *ngIf="selectedOperation.previousOperation.results.length > 0">
-                        {{selectedOperation.previousOperation.results[0].fullname}}
+                        {{selectedOperation.name}}: {{selectedOperation.previousOperation.results[0].fullname}}
+
+                        , Language: {{selectedOperation.task.language}}
+
+                        , Audio duration: {{getTime() |time}}
+
                     </ng-container>
                     <ng-container *ngIf="selectedOperation.previousOperation.results.length < 1">
+                        {{selectedOperation.name}}:
                         {{selectedOperation.previousOperation.previousOperation.results[0].fullname}}
+
+                        , Language: {{selectedOperation.task.language}}
+
+                        , Audio duration: {{getTime() | time}}
                     </ng-container>
                 </div>
             </div>
@@ -119,6 +129,7 @@
                                      (afterdrop)="onAfterDrop($event)" #proceedings
                                      (operationclick)="onOperationClick($event)"
                                      (operationhover)="onOperationHover($event)"
+                                     #proceedings
                     ></app-proceedings>
                     <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
                         <div class="protocol-header">

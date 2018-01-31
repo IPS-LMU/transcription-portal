@@ -18,11 +18,15 @@ export class ASROperation extends Operation {
     this._time.start = Date.now();
     this._time.end = 0;
 
-    const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
+    const langObj = AppInfo.getLanguageByCode(this.task.language);
+
+    const url = `${langObj.host}runPipelineWebLink?` +
       ((inputs.length > 1) ? 'TEXT=' + inputs[1].url + '&' : '') +
-      'SIGNAL=' + inputs[0].url + '&' +
-      'PIPE=ASR_G2P_CHUNKER&ASRType=call' + AppInfo.getLanguageByCode(this.task.language).asr + 'ASR&LANGUAGE=' + this.task.language + '&' +
-      'MAUSVARIANT=runPipeline&OUTFORMAT=bpf';
+      `SIGNAL=${inputs[0].url}&` +
+      `PIPE=ASR_G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
+      `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+
+    console.log(url);
 
     httpclient.post(url, {}, {
       headers: {

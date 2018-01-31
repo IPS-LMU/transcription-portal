@@ -1,4 +1,6 @@
 <div class="inner" #inner (resize)="drawPopover()">
-    <ng-content></ng-content>
+    <div class="content">
+        <ng-content></ng-content>
+    </div>
 </div>
 <canvas #canvas></canvas>

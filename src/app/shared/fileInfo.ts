@@ -75,7 +75,7 @@ export class FileInfo {
   }
 
   public static escapeFileName(name: string) {
-    return name.replace(/[\s\\/\?\!%\*(){}&:=+#'<>^;,Ââ°]/g, '_');
+    return name.replace(/[\s\/\?\!%\*\(\)\{}&:=\+#'<>\^;,Ââ°]/g, '_');
   }
 
   public static renameFile(file: File, new_name: string, attributes: any): Promise<File> {

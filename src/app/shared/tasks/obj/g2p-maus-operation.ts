@@ -5,6 +5,7 @@ import {FileInfo} from '../../fileInfo';
 import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
+import {AppInfo} from '../../../app.info';
 
 export class G2pMausOperation extends Operation {
 
@@ -19,19 +20,23 @@ export class G2pMausOperation extends Operation {
     this._time.end = 0;
 
     let url = '';
+    let language = (isNullOrUndefined(AppInfo.getLanguageByCode(this.task.language).mausLanguage))
+      ? this.task.language :
+      AppInfo.getLanguageByCode(this.task.language).mausLanguage;
+    console.log(`language:${language}`);
     if (operations[2].enabled) {
       // use G2P -> MAUS Pipe
-      url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runPipelineWebLink?' +
+      url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
         'TEXT=' + operations[2].results[0].url +
         '&SIGNAL=' + inputs[0].url + '&' +
-        'PIPE=G2P_MAUS&LANGUAGE=' + this.task.language + '&' +
+        'PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
         'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
     } else {
-      url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
-        'BPF=' + operations[1].results[0].url +
+      url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
+        'TEXT=' + operations[1].results[0].url +
         '&SIGNAL=' + inputs[0].url +
-        '&LANGUAGE=' + this.task.language +
-        '&OUTFORMAT=emuDB&MAUSVARIANT=runMAUS';
+        '&PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
+        'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
     }
 
     httpclient.post(url, {}, {
