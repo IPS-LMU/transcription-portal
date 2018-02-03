@@ -1,9 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {isNullOrUndefined} from 'util';
-import {FileInfo} from '../../fileInfo';
+import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from './task';
-import {AppInfo} from '../../../app.info';
+import {AppInfo} from '../../app.info';
 import * as X2JS from 'x2js';
 
 export class ASROperation extends Operation {

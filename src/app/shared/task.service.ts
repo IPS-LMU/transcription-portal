@@ -1,12 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
-import {NotificationService} from '../notification.service';
-import {SubscriptionManager} from '../subscription-manager';
-import {ASROperation, EmuOperation, Operation, Task, TaskState} from './obj';
-import {OCTRAOperation} from './obj/octra-operation';
-import {UploadOperation} from './obj/upload-operation';
-import {G2pMausOperation} from './obj/g2p-maus-operation';
+import {NotificationService} from './notification.service';
+import {SubscriptionManager} from './subscription-manager';
+import {ASROperation, EmuOperation, Operation, Task, TaskState} from '../obj/tasks/index';
+import {OCTRAOperation} from '../obj/tasks/octra-operation';
+import {UploadOperation} from '../obj/tasks/upload-operation';
+import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {

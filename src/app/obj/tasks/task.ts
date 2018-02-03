@@ -2,8 +2,8 @@ import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {isNullOrUndefined} from 'util';
-import {SubscriptionManager} from '../../subscription-manager';
-import {FileInfo} from '../../fileInfo';
+import {SubscriptionManager} from '../../shared/subscription-manager';
+import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Subject} from 'rxjs/Subject';
 

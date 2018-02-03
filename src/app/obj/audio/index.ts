@@ -33,7 +33,7 @@ export function getPlayBackString(state: PlayBackState) {
   }
 }
 
-export * from './AudioFormats';
+export * from './AudioFormats/index';
 export * from './AudioChunk';
 export * from './AudioInfo';
 export * from './AudioManager';

@@ -1,30 +1,32 @@
 import {HttpClient} from '@angular/common/http';
-import {SafeHtml} from '@angular/platform-browser';
+import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
-import {Task} from './';
-import {FileInfo} from '../../fileInfo';
+import {FileInfo} from '../fileInfo';
+import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
+import {ToolOperation} from './tool-operation';
 
-export class ToolOperation extends Operation {
+export class EmuOperation extends ToolOperation {
+  private operations: Operation[];
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
     super(name, icon, task, state);
   }
 
-  private active = true;
-
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    console.log(`in emu start!`);
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 
     setTimeout(() => {
-      this.changeState(TaskState.FINISHED);
       this.time.end = Date.now();
-    }, 2000);
+      this.operations = operations;
+      this.changeState(TaskState.FINISHED);
+    }, 1000);
   };
 
-  public getStateIcon = (sanitizer): SafeHtml => {
+  public getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
 
     switch (this.state) {
@@ -40,7 +42,7 @@ export class ToolOperation extends Operation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
         result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
@@ -54,11 +56,14 @@ export class ToolOperation extends Operation {
   };
 
   public getToolURL(): string {
-    return '';
+    const audio = encodeURIComponent(this.operations[0].results[0].url);
+    const transcript = encodeURIComponent(this.operations[3].results[0].url);
+
+    return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
   }
 
-  public clone(task?: Task): ToolOperation {
+  public clone(task?: Task): EmuOperation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;
-    return new ToolOperation(this.name, this.icon, selected_task, this.state);
+    return new EmuOperation(this.name, this.icon, selected_task, this.state);
   }
 }

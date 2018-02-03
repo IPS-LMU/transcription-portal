@@ -4,7 +4,7 @@ import {isNullOrUndefined} from 'util';
 import {AudioTime} from './AudioTime';
 import {EventEmitter} from '@angular/core';
 import {PlayBackState} from './index';
-import {SubscriptionManager} from '../subscription-manager';
+import {SubscriptionManager} from '../../shared/subscription-manager';
 
 interface Interval {
   start: number;

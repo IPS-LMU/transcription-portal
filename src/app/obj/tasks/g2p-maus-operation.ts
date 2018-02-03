@@ -1,11 +1,11 @@
 import {HttpClient} from '@angular/common/http';
 import {isNullOrUndefined} from 'util';
 import * as X2JS from 'x2js';
-import {FileInfo} from '../../fileInfo';
+import {FileInfo} from '../fileInfo';
 import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
-import {AppInfo} from '../../../app.info';
+import {AppInfo} from '../../app.info';
 
 export class G2pMausOperation extends Operation {
 

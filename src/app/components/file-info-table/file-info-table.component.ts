@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FileInfo} from '../../shared/tasks';
-import {AudioInfo} from '../../shared/audio';
+import {AudioInfo} from '../../obj/audio';
+import {FileInfo} from '../../obj/fileInfo';
 
 @Component({
   selector: 'app-file-info-table',

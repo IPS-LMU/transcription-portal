@@ -13,14 +13,15 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
-import {EmuOperation, FileInfo, Operation, Task, TaskService, TaskState, ToolOperation} from '../../shared/tasks';
 import {PopoverComponent} from '../popover/popover.component';
-import {OCTRAOperation} from '../../shared/tasks/obj/octra-operation';
-import {ASROperation} from '../../shared/tasks/obj';
-import {UploadOperation} from '../../shared/tasks/obj/upload-operation';
+import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import {ASROperation, EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
+import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
 import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import * as moment from 'moment';
+import {FileInfo} from '../../obj/fileInfo';
+import {TaskService} from '../../shared/task.service';
 
 declare var window: any;
 

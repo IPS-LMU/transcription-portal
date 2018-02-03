@@ -1,6 +1,6 @@
 import {Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Operation} from '../../shared/tasks/obj';
+import {Operation} from '../../obj/tasks/index';
 
 @Component({
   selector: 'app-tool-loader',

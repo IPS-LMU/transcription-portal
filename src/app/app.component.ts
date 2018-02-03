@@ -7,11 +7,11 @@ import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
 import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {TaskService} from './shared/tasks';
-import {FileInfo, Operation, Task, TaskState, ToolOperation} from './shared/tasks/obj';
-import {AudioInfo, AudioManager} from './shared/audio';
-import {WavFormat} from './shared/audio/AudioFormats';
+import {FileInfo, Operation, Task, TaskState, ToolOperation} from './obj/tasks/index';
+import {AudioInfo, AudioManager} from './obj/audio';
+import {WavFormat} from './obj/audio/AudioFormats';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
+import {TaskService} from './shared/task.service';
 
 declare var window: any;
 

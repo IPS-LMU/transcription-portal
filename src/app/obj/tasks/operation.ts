@@ -2,7 +2,7 @@ import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
 import {isNullOrUndefined} from 'util';
-import {FileInfo} from '../../fileInfo';
+import {FileInfo} from '../fileInfo';
 import {Task} from './index';
 import {TaskState} from './task';
 import {Subject} from 'rxjs/Subject';

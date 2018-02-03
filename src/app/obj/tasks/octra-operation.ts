@@ -1,12 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
-import {Task} from './';
-import {FileInfo} from '../../fileInfo';
+import {Task} from './index';
+import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
-import {AppInfo} from '../../../app.info';
+import {AppInfo} from '../../app.info';
 
 export class OCTRAOperation extends ToolOperation {
   private operations: Operation[];

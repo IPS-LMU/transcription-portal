@@ -12,10 +12,10 @@ import {ToolLoaderComponent} from './components/tool-loader/tool-loader.componen
 import {ExpandDirective} from './expand.directive';
 import {FilesizePipe} from './shared/filesize.pipe';
 import {NotificationService} from './shared/notification.service';
-import {TaskService} from './shared/tasks';
 import {TimePipe} from './shared/time.pipe';
 import {FileInfoTableComponent} from './components/file-info-table/file-info-table.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import {TaskService} from './shared/task.service';
 
 
 @NgModule({

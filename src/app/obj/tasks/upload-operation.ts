@@ -1,13 +1,13 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {isArray, isNullOrUndefined} from 'util';
-import {TimePipe} from '../../time.pipe';
-import {FileInfo} from '../../fileInfo';
+import {TimePipe} from '../../shared/time.pipe';
+import {FileInfo} from '../fileInfo';
 import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import * as X2JS from 'x2js';
-import {AppInfo} from '../../../app.info';
+import {AppInfo} from '../../app.info';
 
 export class UploadOperation extends Operation {
 
