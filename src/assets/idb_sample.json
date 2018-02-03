@@ -1,28 +1,50 @@
 {
   "indexedb": {
-    "options": [
-      {
-        "name": "notifications",
+    "options": {
+      "notifications": {
         "enabled": false,
-        "desktop": {
-          "enabled": false
-        }
+        "upload": false,
+        "asr": false,
+        "octra": false,
+        "maus": false,
+        "emuWebApp": false
       }
-    ],
+    },
+    "taskCounter": 1,
+    "operationCounter": 1,
     "tasks": [
       {
         "id": 1,
         "state": 0,
+        "folderPath": "test",
+        "folderName": "",
+        "language": "deu-DE",
+        "files": [
+          {
+            "id": 2,
+            "name": "filename",
+            "type": "audio/wav",
+            "sampleRate": "44100",
+            "bitsPerSecond": "",
+            "channels": 2,
+            "duration": 346873,
+            "size": 324234,
+            "state": 0
+          }
+        ],
         "operations": [
           {
             "id": 4,
             "state": 3,
             "duration": 12312,
             "name": "OCTRA",
+            "callURL": "",
+            "enabled": false,
             "results": [
               {
                 "url": "asuhdoiashdi",
                 "name": "test.par",
+                "started": 34234234,
                 "duartion": 231421
               }
             ]
