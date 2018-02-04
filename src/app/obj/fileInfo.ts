@@ -1,4 +1,7 @@
-export class FileInfo {
+import {DataInfo} from './dataInfo';
+import {isNullOrUndefined} from 'util';
+
+export class FileInfo extends DataInfo {
   set file(value: File) {
     this._file = value;
   }
@@ -15,26 +18,12 @@ export class FileInfo {
     return this._file;
   }
 
-  get size(): number {
-    return this._size;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get type(): string {
-    return this._type;
-  }
-
   get extension(): string {
     return this._extension;
   }
 
   protected _type: string;
   protected _extension: string;
-  protected _name: string;
-  protected _size: number;
   protected _file: File;
   protected _url: string;
 
@@ -51,10 +40,13 @@ export class FileInfo {
   }
 
   public constructor(fullname: string, type: string, size: number, file?: File) {
-    this.extractFileName(fullname);
-    this._type = type;
-    this._size = size;
-    this._file = file;
+    const extraction = FileInfo.extractFileName(fullname);
+    if (!isNullOrUndefined(extraction)) {
+      super(extraction.name, type, size);
+      this._file = file;
+    } else {
+      throw Error('could not extract file name.')
+    }
   }
 
   public static fromFileObject(file: File) {
@@ -95,7 +87,7 @@ export class FileInfo {
     );
   }
 
-  private extractFileName(fullname: string) {
+  public static extractFileName(fullname: string): { name: string, extension: string } {
     if (fullname !== '') {
       let lastslash;
       if ((lastslash = fullname.lastIndexOf('/')) > -1) {
@@ -106,11 +98,18 @@ export class FileInfo {
       let extension_begin;
       if ((extension_begin = fullname.lastIndexOf('.')) > -1) {
         // split name and extension
-        this._name = fullname.substr(0, extension_begin);
-        this._extension = fullname.substr(extension_begin + 1);
+        const name = fullname.substr(0, extension_begin);
+        const extension = fullname.substr(extension_begin + 1);
+
+        return {
+          name: name,
+          extension: extension
+        }
       } else {
         throw new Error('invalid fullname. Fullname must contain the file extension');
       }
     }
+
+    return null;
   }
 }

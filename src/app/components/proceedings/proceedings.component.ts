@@ -22,6 +22,7 @@ import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import * as moment from 'moment';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../shared/task.service';
+import {TaskDirectory} from '../../obj/taskDirectory';
 
 declare var window: any;
 
@@ -115,16 +116,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     $event.preventDefault();
     console.log($event);
 
-    var items = $event.dataTransfer.items;
-    for (var i = 0; i < items.length; i++) {
-      // webkitGetAsEntry is where the magic happens
-      var item = items[i].webkitGetAsEntry();
-      if (item) {
-        console.log(item);
-        this.traverseFileTree(item, '');
-      }
+    let items = $event.dataTransfer.items;
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i].webkitGetAsEntry();
+      TaskDirectory.fromFolderObject(item).then((dir) => {
+        console.log(dir);
+      }).catch((error) => {
+          console.error(error);
+        }
+      );
     }
-    console.log(items);
 
     const promises: Promise<void>[] = [];
 
@@ -165,29 +166,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       }
     } else {
       console.error(`file api not supported`);
-    }
-  }
-
-  traverseFileTree(item, path) {
-    path = path || '';
-    if (item.isFile) {
-      console.log(`is file`);
-      // Get file
-      item.file((file) => {
-        console.log(file);
-        console.log('File:', path + file.name);
-      });
-    } else if (item.isDirectory) {
-      // Get folder contents
-      console.log(`is dir`);
-      var dirReader = item.createReader();
-      dirReader.readEntries((entries) => {
-        for (var i = 0; i < entries.length; i++) {
-          console.log(`found item ${i}`);
-          console.log(entries[i]);
-          this.traverseFileTree(entries[i], path + item.name + '/');
-        }
-      });
     }
   }
 
