@@ -176,3 +176,12 @@ h1 {
     vertical-align: middle;
     font-size: 1.2em;
 }
+
+.status-div {
+    border-top: 1px solid cornflowerblue;
+    border-right: 1px solid cornflowerblue;
+    border-left: 1px solid cornflowerblue;
+    background-color: ghostwhite;
+    border-radius: 10px 10px 0px 0px;
+    padding: 10px;
+}

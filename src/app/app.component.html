@@ -1,26 +1,74 @@
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
-    <nav class="navbar navbar-expand-md navbar-light">
-        <a class="navbar-brand" href="#">OH-Portal v{{AppInfo.version}}</a>
-        <span *ngIf="isdevelopment" style="color:red;">
+    <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
+        <div class="col-4" style="text-align: left;">OH-Portal v{{AppInfo.version}} <span *ngIf="isdevelopment"
+                                                                                          style="color:red;">
         in Development
-         </span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-                aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <div class="mr-auto bg-info" style="display:flex; flex:auto">
+         </span></div>
+        <div class="col-4 status-div" style="background-color: ghostwhite;">
+            <div class="status">
+                <ng-container *ngIf="taskService.countRunningTasks() > 0">
+                    {{taskService.countRunningTasks()}} Task(s) running...
+                </ng-container>
+                <ng-container *ngIf="taskService.countRunningTasks() < 1">
+                    Ready for processing
+                </ng-container>
             </div>
+        </div>
+        <div class="col-4" style="text-align: right">
             <div class="my-2 my-lg-0" title="Desktop Notifications">
-                <span style="vertical-align: middle"> Desktop Notifications</span>
+                <span style="vertical-align: middle; margin-right: 5px;"> Desktop Notifications</span>
                 <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
                    (click)="notification.permissionGranted = false"></i>
                 <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
                    (click)="notification.permissionGranted = true"></i>
             </div>
         </div>
-    </nav>
+    </div>
+    <div class='row proceedings-header' style="padding-top:0px;">
+        <div class="col-4" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
+            <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
+                <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
+            </button>
+            <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
+                <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FOLDERS</span>
+            </button>
+            <!-- webkitdirectory directory multiple -->
+            <input type="file" multiple class="fileinput" value="Select audio file"
+                   style="display:none;"
+                   #fileinput
+                   (change)="onFileChange($event)"/>
+        </div>
+        <div class="dropdown col-4" style="text-align: center;padding-top:5px;">
+            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton"
+                    style="background-color: transparent;"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <ng-container *ngIf="selectedlanguage === null">
+                    {{AppInfo.languages[0].code | uppercase}}
+                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
+                </ng-container>
+                <ng-container *ngIf="selectedlanguage !== null">
+                    {{selectedlanguage.name}} ({{getShortCode(selectedlanguage.code)}})
+                    [{{selectedlanguage.asr}}]
+                </ng-container>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <span class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
+                                          (click)="onASRLangCHanged(lang)">
+                                        <ng-container
+                                                *ngIf="!(selectedlanguage === null && i === 0) && (selectedlanguage !== lang.code)">
+                                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                                        </ng-container>
+                                    </span>
+            </div>
+        </div>
+        <div class="col-4" style="text-align:right;border-top: 1px solid cornflowerblue;padding-top:5px;">
+            <button class="btn btn-primary" (click)="onUploadButtonClick()"
+                    [disabled]="!newfiles">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
+                    class="d-none d-lg-inline d-xl-inline">UPLOAD & PROCESS FILES</span>
+            </button>
+        </div>
+    </div>
     <div *ngIf="showtool" class="row tool-nav">
         <div class="col-3" style="padding:0;">
             <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
@@ -72,59 +120,6 @@
                                      (datareceived)="onToolDataReceived($event)"></app-tool-loader>
                 </ng-container>
                 <ng-template #showProceedings>
-                    <div class='row proceedings-header'>
-                        <div class="col-2">
-                            <button class="btn btn-primary" style="width: 100%;display: block"
-                                    (click)="onFilesAddButtonClicked()">
-                                <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
-                            </button>
-                            <!-- webkitdirectory directory multiple -->
-                            <input type="file" multiple class="fileinput" value="Select audio file"
-                                   style="display:none;"
-                                   #fileinput
-                                   (change)="onFileChange($event)"/>
-                        </div>
-                        <div class="dropdown col-2">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <ng-container *ngIf="selectedlanguage === null">
-                                    {{AppInfo.languages[0].code | uppercase}}
-                                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
-                                </ng-container>
-                                <ng-container *ngIf="selectedlanguage !== null">
-                                    {{selectedlanguage.name}} ({{getShortCode(selectedlanguage.code)}})
-                                    [{{selectedlanguage.asr}}]
-                                </ng-container>
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <span class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
-                                          (click)="onASRLangCHanged(lang)">
-                                        <ng-container
-                                                *ngIf="!(selectedlanguage === null && i === 0) && (selectedlanguage !== lang.code)">
-                                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                                        </ng-container>
-                                    </span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="status">
-                                <ng-container *ngIf="taskService.countRunningTasks() > 0">
-                                    {{taskService.countRunningTasks()}} Task(s) running...
-                                </ng-container>
-                                <ng-container *ngIf="taskService.countRunningTasks() < 1">
-                                    Ready for processing
-                                </ng-container>
-                            </div>
-                        </div>
-                        <div class="col-1"></div>
-                        <div class="col-3">
-                            <button class="btn btn-primary" style="width:100%;" (click)="onUploadButtonClick()"
-                                    [disabled]="!newfiles">
-                                <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
-                                    class="d-none d-lg-inline d-xl-inline">UPLOAD & PROCESS FILES</span>
-                            </button>
-                        </div>
-                    </div>
                     <app-proceedings style="display:flex; flex:auto;" [taskList]="taskService.taskList"
                                      [operations]="taskService.operations"
                                      (afterdrop)="onAfterDrop($event)" #proceedings
