@@ -15,11 +15,10 @@
 }
 
 :host {
-    border: 1px solid gray;
     display: flex;
 }
 
-.table-striped > tbody > tr.selected {
+.table-striped .selected {
     background-color: #cbffe7;
 }
 
@@ -69,6 +68,15 @@
 .placeholder .description {
     color: #007bff;
     opacity: 0.5;
+}
+
+.placeholder ul {
+    max-width: 625px;
+    margin: 0 auto;
+}
+
+.placeholder li {
+    text-align: left;
 }
 
 .placeholder i {

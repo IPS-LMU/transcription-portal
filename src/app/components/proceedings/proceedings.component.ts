@@ -14,7 +14,7 @@ import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
-import {EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
+import {ASROperation, EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
 import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -22,6 +22,8 @@ import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../shared/task.service';
 import {TaskList} from '../../obj/TaksList';
 import {DirectoryInfo} from '../../obj/directoryInfo';
+import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import moment = require('moment');
 
 declare var window: any;
 
@@ -53,7 +55,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Input() taskList: TaskList = new TaskList();
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
-  public selected_tasks = [];
+  public selected_tasks: Task[] = [];
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
@@ -145,19 +147,21 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           let file = droppedfiles[i].getAsFile();
           if (!isNullOrUndefined(file)) {
             // check file
-            const newName = FileInfo.escapeFileName(file.name);
-            if (newName !== file.name) {
-              // no valid name, replace
-              promises.push(FileInfo.renameFile(file, newName, {
-                type: file.type,
-                lastModified: file.lastModifiedDate
-              }).then((newfile: File) => {
-                files.push(FileInfo.fromFileObject(newfile));
-              }));
-            } else {
-              files.push(FileInfo.fromFileObject(file));
-              this.cd.markForCheck();
-              this.cd.detectChanges();
+            if (file.name.indexOf('.') > -1) {
+              const newName = FileInfo.escapeFileName(file.name);
+              if (newName !== file.name) {
+                // no valid name, replace
+                promises.push(FileInfo.renameFile(file, newName, {
+                  type: file.type,
+                  lastModified: file.lastModifiedDate
+                }).then((newfile: File) => {
+                  files.push(FileInfo.fromFileObject(newfile));
+                }));
+              } else {
+                files.push(FileInfo.fromFileObject(file));
+                this.cd.markForCheck();
+                this.cd.detectChanges();
+              }
             }
           } else {
             this.afterdrop.error(`could not read file from webKitFile`);
@@ -167,7 +171,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
       if (promises.length > 0) {
         Promise.all(promises).then(() => {
-          console.log('ALL ended');
           this.afterdrop.emit(files);
           this.cd.markForCheck();
           this.cd.detectChanges();
@@ -193,30 +196,35 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.contextmenu.hidden = true;
   }
 
-  onRowSelected(taskID: number, operation: Operation) {
-    if (!(operation instanceof ToolOperation)) {
-      const search = this.selected_tasks.indexOf(taskID);
+  onRowSelected(task: Task, operation: Operation) {
+    if (isNullOrUndefined(operation) || !(operation instanceof ToolOperation)) {
+      const search = this.selected_tasks.findIndex((a) => {
+        return a instanceof Task && (<Task> a).id === task.id;
+      });
       if (search > -1) {
         this.selected_tasks.splice(search, 1);
+        console.log('splice');
       } else {
-        this.selected_tasks.push(taskID);
+        this.selected_tasks.push(task);
+        console.log('added');
       }
+    } else {
+      console.log('not found');
     }
     this.operationclick.emit(operation);
   }
 
 
   onContextMenuOptionSelected(option: String) {
-    /**
-     if (option === 'delete') {
-      for (let i = 0; i < this.selected_tasks.length; i++) {
-        const task_index = this.tasks.findIndex((a) => {
-          if (a.id === this.selected_tasks[i]) {
-            return true;
-          }
-        });
 
-        this.tasks.splice(task_index, 1);
+    if (option === 'delete') {
+      for (let i = 0; i < this.selected_tasks.length; i++) {
+        this.taskList.removeTask(this.selected_tasks[i]);
+        if (!isNullOrUndefined(this.selected_tasks[i].directory)) {
+          if (this.selected_tasks[i].directory.entries.length == 0) {
+            this.taskList.removeDir(this.selected_tasks[i].directory);
+          }
+        }
         this.selected_tasks.splice(i, 1);
         i--; // because length changed
       }
@@ -231,8 +239,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           files: []
         }
       };
-      for (let i = 0; i < this.taskService.tasks.length; i++) {
-        const task = this.taskService.tasks[i];
+      let tasks = this.taskList.getAllTasks();
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
 
         for (let i = 0; i < task.operations.length; i++) {
           const operation = task.operations[i];
@@ -259,11 +268,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           }
         }
       }
-      console.log(requestPackage);
 
       this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
         (response: any) => {
-          console.log(response);
           this.archiveURL = response.result;
           this.openArchiveDownlaod(this.content);
         },
@@ -272,13 +279,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       );
     }
-     this.contextmenu.hidden = true;
-     */
+    this.contextmenu.hidden = true;
   }
 
   isTaskSelected(taskID: number) {
-    const search = this.selected_tasks.indexOf(taskID);
+    const search = this.selected_tasks.findIndex((a) => {
+      return a instanceof Task && (<Task> a).id === taskID
+    });
+
     if (search > -1) {
+      console.log(`found`);
       return true;
     }
 
@@ -334,7 +344,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onTaskMouseEnter($event, task: Task) {
     // show Popover for normal operations only
-    console.log($event);
     this.popover.task = task;
     this.popover.x = $event.offsetX + 60;
     this.popover.width = 600;
@@ -379,7 +388,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   deactivateOperation(operation: Operation, index: number) {
-    /*
     operation.enabled = !operation.enabled;
     const previous = this.taskService.operations[index - 1];
     const next = this.taskService.operations[index + 1];
@@ -387,8 +395,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (!previous.enabled && !operation.enabled) {
         previous.enabled = true;
 
-        for (let i = 0; i < this.tasks.length; i++) {
-          const task = this.tasks[i];
+        let tasks = this.taskList.getAllTasks();
+        for (let i = 0; i < tasks.length; i++) {
+          const task = tasks[i];
           const task_operation = task.operations[index - 1];
           const currOperation = task.operations[index];
 
@@ -405,8 +414,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
-        for (let i = 0; i < this.tasks.length; i++) {
-          const task = this.tasks[i];
+        let tasks = this.taskList.getAllTasks();
+        for (let i = 0; i < tasks.length; i++) {
+          const task = tasks[i];
           const task_operation = task.operations[index + 1];
           const currOperation = task.operations[index];
 
@@ -421,23 +431,22 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
 
     this.updateEnableState();
-    */
   }
 
   public updateEnableState() {
-    /*
     for (let j = 0; j < this.taskService.operations.length; j++) {
       const operation = this.taskService.operations[j];
 
-      for (let i = 0; i < this.tasks.length; i++) {
-        const task = this.tasks[i];
+      let tasks = this.taskList.getAllTasks();
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
         const currOperation = task.operations[j];
 
         if (currOperation.state === TaskState.PENDING) {
           currOperation.enabled = operation.enabled;
         }
       }
-    }*/
+    }
   }
 
   public getPopoverColor(operation): string {

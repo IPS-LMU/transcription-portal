@@ -62,8 +62,12 @@ export class DirectoryInfo extends DataInfo {
               let file = item.getAsFile();
 
               if (!isNullOrUndefined(file)) {
-                let fileInfo = new FileInfo(file.name, file.type, file.size, file);
-                resolve([fileInfo]);
+                if (file.name.indexOf('.') > -1) {
+                  let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                  resolve([fileInfo]);
+                } else {
+                  resolve([]);
+                }
               } else {
                 reject(`could not read file`);
               }
@@ -71,8 +75,12 @@ export class DirectoryInfo extends DataInfo {
               // item is FileEntry
 
               (<WebKitFileEntry> webKitEntry).file((file: any) => {
-                let fileInfo = new FileInfo(file.name, file.type, file.size, file);
-                resolve([fileInfo]);
+                if (file.name.indexOf('.') > -1) {
+                  let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                  resolve([fileInfo]);
+                } else {
+                  resolve([]);
+                }
               });
             }
           } else if (webKitEntry.isDirectory) {

@@ -41,6 +41,7 @@ export class AppComponent implements OnDestroy {
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
   @ViewChild('fileinput') fileinput: ElementRef;
+  @ViewChild('folderinput') folderinput: ElementRef;
   @ViewChild('proceedings') proceedings: ProceedingsComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
@@ -95,7 +96,6 @@ export class AppComponent implements OnDestroy {
                 }).then((newfile: File) => {
                   task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
                   newFile = newfile;
-                  console.log(`renamed to ${newfile.name}`);
                   resolve()
                 });
               } else {
@@ -105,9 +105,6 @@ export class AppComponent implements OnDestroy {
           ).then(() => {
             task.language = this.selectedlanguage.code;
             this.newfiles = true;
-
-            console.log(`task`);
-            console.log(task);
 
             setTimeout(() => {
               let reader = new FileReader();
@@ -148,7 +145,7 @@ export class AppComponent implements OnDestroy {
               const newName = FileInfo.escapeFileName(file.fullname);
               let newFile: File = null;
 
-              const task = new Task([file], this.taskService.operations);
+              const task = new Task([file], this.taskService.operations, dirTask);
 
               new Promise<void>((resolve, reject) => {
                   if (newName !== file.name) {
@@ -159,7 +156,6 @@ export class AppComponent implements OnDestroy {
                     }).then((newfile: File) => {
                       task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
                       newFile = newfile;
-                      console.log(`renamed to ${newfile.name}`);
                       resolve()
                     });
                   } else {
@@ -169,9 +165,6 @@ export class AppComponent implements OnDestroy {
               ).then(() => {
                 task.language = this.selectedlanguage.code;
                 this.newfiles = true;
-
-                console.log(`task`);
-                console.log(task);
 
                 setTimeout(() => {
                   let reader = new FileReader();
@@ -235,8 +228,13 @@ export class AppComponent implements OnDestroy {
     this.fileinput.nativeElement.click();
   }
 
+  onFoldersAddButtonClicked() {
+    this.folderinput.nativeElement.click();
+  }
+
   onFileChange($event) {
     const files: FileList = $event.target.files;
+    const test = $event.target.items;
     const file_infos: FileInfo[] = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -301,8 +299,6 @@ export class AppComponent implements OnDestroy {
   }
 
   onToolDataReceived($event) {
-    console.log(`data received by tool!`);
-    console.log($event);
     if ($event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
       const result: string = $event.data.data.transcript_url;
 

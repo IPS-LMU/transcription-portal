@@ -4,6 +4,18 @@ import {isNullOrUndefined} from 'util';
 import {FileInfo} from './fileInfo';
 
 export class TaskDirectory {
+  get type(): string {
+    return this._type;
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
+  get entries(): (Task | TaskDirectory)[] {
+    return this._entries;
+  }
+
   get size(): number {
     return this._size;
   }
@@ -12,10 +24,11 @@ export class TaskDirectory {
     return this._path;
   }
 
-  private entries: (Task | TaskDirectory)[] = [];
+  private _entries: (Task | TaskDirectory)[] = [];
   private _size: number;
   private _path: string;
   private _id: number;
+  private _type = 'folder';
   private static counter = 0;
 
   public constructor(path: string, size?: number) {
@@ -94,15 +107,15 @@ export class TaskDirectory {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
 
-      this.entries.push(entry);
+      this._entries.push(entry);
     }
   }
 
   public getAllTasks(): Task[] {
     let result: Task[] = [];
 
-    for (let i = 0; i < this.entries.length; i++) {
-      const elem = this.entries[i];
+    for (let i = 0; i < this._entries.length; i++) {
+      const elem = this._entries[i];
 
       if (elem instanceof Task) {
         result.push(elem);
@@ -112,5 +125,15 @@ export class TaskDirectory {
     }
 
     return result;
+  }
+
+  public removeTask(task: Task) {
+    const task_index = this.entries.findIndex((a) => {
+      if (a instanceof Task && (<Task> a).id === task.id) {
+        return true;
+      }
+    });
+    console.log('remove from dir ' + task_index);
+    this._entries.splice(task_index, 1);
   }
 }

@@ -39,14 +39,14 @@ h1 {
 
 #protocol-table {
     background-color: whitesmoke;
-    border: 1px solid gray;
+    border-top: 2px solid cornflowerblue;
     max-height: 200px;
 }
 
 #protocol-table .protocol-header {
-    background-color: floralwhite;
+    background-color: white;
     min-height: 40px;
-    border-bottom: 1px solid gray;
+    border-bottom: 1px solid cornflowerblue;
 }
 
 #protocol-table .protocol-header .errors-td,
@@ -149,8 +149,12 @@ h1 {
 
 .fa-bell-o,
 .fa-bell-slash-o {
-    float: right;
+    margin-top: 10px;
     font-size: 1.5em;
+}
+
+.fa-bell-slash-o {
+    color: gray;
 }
 
 .navbar.navbar-expand-md.navbar-light {
@@ -184,4 +188,12 @@ h1 {
     background-color: ghostwhite;
     border-radius: 10px 10px 0px 0px;
     padding: 10px;
+}
+
+.logo {
+    font-size: 30px;
+}
+
+.version {
+    color: gray;
 }

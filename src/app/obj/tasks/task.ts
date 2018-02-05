@@ -6,6 +6,7 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Subject} from 'rxjs/Subject';
+import {TaskDirectory} from '../taskDirectory';
 
 export enum TaskState {
   PENDING = 'PENDING',
@@ -18,6 +19,14 @@ export enum TaskState {
 }
 
 export class Task {
+  get type(): string {
+    return this._type;
+  }
+
+  get directory(): TaskDirectory {
+    return this._directory;
+  }
+
   get language(): any {
     return this._language;
   }
@@ -69,10 +78,12 @@ export class Task {
   // operations that have to be done
   private _operations: Operation[] = [];
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private _directory: TaskDirectory;
+  private _type = 'task';
 
   public mouseover = false;
 
-  constructor(files: FileInfo[], operations: Operation[]) {
+  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory) {
     this._id = ++Task.counter;
     this._files = files;
     this.sortFilesArray();
@@ -102,6 +113,7 @@ export class Task {
     }
 
     this.changeState(TaskState.PENDING);
+    this._directory = directory;
   }
 
   private _id: number;
