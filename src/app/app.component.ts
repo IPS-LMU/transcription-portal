@@ -12,6 +12,7 @@ import {AudioInfo, AudioManager} from './obj/audio';
 import {WavFormat} from './obj/audio/AudioFormats';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './shared/task.service';
+import {DirectoryInfo} from './obj/directoryInfo';
 
 declare var window: any;
 
@@ -64,18 +65,22 @@ export class AppComponent implements OnDestroy {
     this.subscrmanager.destroy();
   }
 
-  onAfterDrop(files: FileInfo[]) {
-    this.readNewFiles(files)
+  onAfterDrop(entries: (FileInfo | DirectoryInfo)[]) {
+    this.readNewFiles(entries)
   }
 
-  private readNewFiles(files: FileInfo[]) {
-    if (!isNullOrUndefined(files) && !isNullOrUndefined(this.taskService.operations)) {
-      for (let i = 0; i < files.length; i++) {
-        console.log(`HERE`);
-        console.log(files);
-        const file: FileInfo = files[i];
+  private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
+    if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
+      let filteredEntries: (FileInfo | DirectoryInfo)[] = [];
 
-        if (file.type.indexOf('wav') > -1) {
+      // filter and re-structure entries array to supported files and directories
+      filteredEntries = this.taskService.cleanUpInputArray(entries);
+
+      for (let i = 0; i < filteredEntries.length; i++) {
+        const entry = filteredEntries[i];
+
+        if (entry instanceof FileInfo) {
+          let file = <FileInfo> entry;
 
           const newName = FileInfo.escapeFileName(file.fullname);
           let newFile: File = null;
@@ -129,11 +134,7 @@ export class AppComponent implements OnDestroy {
               task.operations[i].enabled = operation.enabled;
             }
             this.taskService.addTask(task);
-          })
-
-
-        } else {
-          console.log('no wav');
+          });
         }
       }
     }
@@ -219,8 +220,10 @@ export class AppComponent implements OnDestroy {
   }
 
   changeLanguageforAllPendingTasks() {
-    for (let i = 0; i < this.taskService.tasks.length; i++) {
-      const task = this.taskService.tasks[i];
+    let tasks = this.taskService.taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
       if (task.state === TaskState.PENDING) {
         task.language = this.selectedlanguage.code;
       }

@@ -1,12 +1,27 @@
 import {DirectoryInfo} from './directoryInfo';
 import {Task} from './tasks';
 import {isNullOrUndefined} from 'util';
+import {FileInfo} from './fileInfo';
 
-export class TaskDirectory extends DirectoryInfo {
+export class TaskDirectory {
+  get size(): number {
+    return this._size;
+  }
+
+  get path(): string {
+    return this._path;
+  }
+
   private entries: (Task | TaskDirectory)[] = [];
+  private _size: number;
+  private _path: string;
+  private _id: number;
+  private static counter = 0;
 
   public constructor(path: string, size?: number) {
-    super(path, size);
+    this._size = size;
+    this._path = DirectoryInfo.extractFolderName(path);
+    this._id = ++TaskDirectory.counter;
   }
 
   public static fromFolderObject(folder: WebKitDirectoryEntry): Promise<TaskDirectory> {
@@ -35,7 +50,9 @@ export class TaskDirectory extends DirectoryInfo {
         //console.log(`isFile ${item.fullPath}`);
         // Get file
         item.file((file) => {
-          const task = new Task([file], []);
+          console.log(file);
+          let fileInfo = new FileInfo(file.fullName, file.type, 0, file);
+          const task = new Task([fileInfo], []);
           //console.log("get file");
           resolve([task]);
         });
@@ -79,5 +96,21 @@ export class TaskDirectory extends DirectoryInfo {
 
       this.entries.push(entry);
     }
+  }
+
+  public getAllTasks(): Task[] {
+    let result: Task[] = [];
+
+    for (let i = 0; i < this.entries.length; i++) {
+      const elem = this.entries[i];
+
+      if (elem instanceof Task) {
+        result.push(elem);
+      } else {
+        result.concat((<TaskDirectory> elem).getAllTasks());
+      }
+    }
+
+    return result;
   }
 }

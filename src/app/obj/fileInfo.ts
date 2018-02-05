@@ -43,6 +43,7 @@ export class FileInfo extends DataInfo {
     const extraction = FileInfo.extractFileName(fullname);
     if (!isNullOrUndefined(extraction)) {
       super(extraction.name, type, size);
+      this._extension = extraction.extension;
       this._file = file;
     } else {
       throw Error('could not extract file name.')
@@ -88,7 +89,7 @@ export class FileInfo extends DataInfo {
   }
 
   public static extractFileName(fullname: string): { name: string, extension: string } {
-    if (fullname !== '') {
+    if (!isNullOrUndefined(fullname) && fullname !== '') {
       let lastslash;
       if ((lastslash = fullname.lastIndexOf('/')) > -1) {
         // if path remove all but the filename
@@ -106,6 +107,7 @@ export class FileInfo extends DataInfo {
           extension: extension
         }
       } else {
+        console.log(fullname);
         throw new Error('invalid fullname. Fullname must contain the file extension');
       }
     }

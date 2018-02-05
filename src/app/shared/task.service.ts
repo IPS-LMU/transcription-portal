@@ -3,10 +3,13 @@ import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
 import {NotificationService} from './notification.service';
 import {SubscriptionManager} from './subscription-manager';
-import {ASROperation, EmuOperation, Operation, Task, TaskState} from '../obj/tasks/index';
+import {ASROperation, EmuOperation, Operation, Task, TaskState} from '../obj/tasks';
 import {OCTRAOperation} from '../obj/tasks/octra-operation';
 import {UploadOperation} from '../obj/tasks/upload-operation';
 import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
+import {TaskList} from '../obj/TaksList';
+import {FileInfo} from '../obj/fileInfo';
+import {DirectoryInfo} from '../obj/directoryInfo';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -46,10 +49,10 @@ export class TaskService implements OnDestroy {
     ];
   }
 
-  private _tasks: Task[] = [];
+  private _taskList: TaskList = new TaskList();
 
-  get tasks(): Task[] {
-    return this._tasks;
+  get taskList(): TaskList {
+    return this._taskList;
   }
 
   private _operations: Operation[] = [];
@@ -59,7 +62,7 @@ export class TaskService implements OnDestroy {
   }
 
   public addTask(task: Task) {
-    this.tasks.push(task);
+    this.taskList.addEntry(task);
   }
 
   public start() {
@@ -71,11 +74,7 @@ export class TaskService implements OnDestroy {
       let task: Task;
 
       // look for pending tasks
-      task = this.tasks.find((a) => {
-        if (a.state === TaskState.PENDING) {
-          return true;
-        }
-      });
+      task = this._taskList.findTaskByState(TaskState.PENDING);
 
       if (!isNullOrUndefined(task) && this.countPendingTasks() > 0) {
         if (this.state !== TaskState.PROCESSING) {
@@ -123,9 +122,10 @@ export class TaskService implements OnDestroy {
 
   public countRunningTasks() {
     let result = 0;
+    let tasks = this._taskList.getAllTasks();
 
-    for (let i = 0; i < this._tasks.length; i++) {
-      const task = this._tasks[i];
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
 
       if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
         result++;
@@ -137,9 +137,10 @@ export class TaskService implements OnDestroy {
 
   public countPendingTasks() {
     let result = 0;
+    let tasks = this._taskList.getAllTasks();
 
-    for (let i = 0; i < this._tasks.length; i++) {
-      const task = this._tasks[i];
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
 
       if (task.state === TaskState.PENDING) {
         result++;
@@ -150,8 +151,10 @@ export class TaskService implements OnDestroy {
   }
 
   ngOnDestroy() {
-    for (let i = 0; i < this.tasks.length; i++) {
-      this.tasks[i].destroy();
+    let tasks = this._taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      tasks[i].destroy();
     }
     this.subscrmanager.destroy();
   }
@@ -162,8 +165,11 @@ export class TaskService implements OnDestroy {
     let warnings_count = 0;
 
     console.log(`check states`);
-    for (let i = 0; i < this.tasks.length; i++) {
-      const task = this.tasks[i];
+    // TODO implement error and warning attributes in TaskList to improve performance
+    let tasks = this._taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
 
       for (let j = 0; j < task.operations.length; j++) {
         const operation = task.operations[j];
@@ -204,5 +210,38 @@ export class TaskService implements OnDestroy {
     });
 
     this._protocol_array = result;
+  }
+
+  public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
+    let result: (FileInfo | DirectoryInfo)[] = [];
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+
+      if (entry instanceof FileInfo) {
+        let file = <FileInfo> entry;
+        if (file.extension === 'wav') {
+          result.push(file);
+        }
+
+      } else if (entry instanceof DirectoryInfo) {
+        let directory = <DirectoryInfo> entry;
+
+        let dir = directory.clone();
+        dir.entries = dir.entries.filter((a) => {
+          return a instanceof FileInfo && a.extension === 'wav';
+        });
+        let rest = directory.entries.filter((a) => {
+          return a instanceof DirectoryInfo;
+        });
+
+        if (dir.entries.length > 0) {
+          result.push(dir);
+        }
+        result = result.concat(this.cleanUpInputArray(rest));
+      }
+    }
+
+    return result;
   }
 }

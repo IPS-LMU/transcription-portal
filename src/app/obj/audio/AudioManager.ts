@@ -162,20 +162,12 @@ export class AudioManager {
         console.error(err.message);
       }
 
-      let buffer_copy = null;
-
-      if (keepbuffer) {
-        buffer_copy = buffer.slice(0);
-      }
-
-      const buffer_length = buffer.byteLength;
-
       AudioManager.decodeAudioFile(buffer, audioinfo.samplerate).then(
         (audiobuffer: AudioBuffer) => {
           console.log('Audio decoded.');
 
           result.ressource = new AudioRessource(filename, SourceType.ArrayBuffer,
-            audioinfo, (buffer_copy === null) ? buffer : buffer_copy, audiobuffer, buffer_length);
+            audioinfo, new ArrayBuffer(0), null, 0);
 
           // set duration is very important
           result.ressource.info.duration.samples = audiobuffer.length;
@@ -185,6 +177,7 @@ export class AudioManager {
 
           result.state = PlayBackState.INITIALIZED;
           result.afterdecoded.emit(result.ressource);
+          audiobuffer = null;
           resolve(result);
         }).catch((error) => {
         reject(error);

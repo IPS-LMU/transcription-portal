@@ -55,7 +55,7 @@
             'col-3': sidebarstate !== 'hidden'
         }" id="sidebar">
             <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
-                             [tasks]="taskService.tasks"
+                             [taskList]="taskService.taskList"
                              [operations]="taskService.operations"
                              [shortstyle]="true"
                              (afterdrop)="onAfterDrop($event)" #proceedings
@@ -125,7 +125,7 @@
                             </button>
                         </div>
                     </div>
-                    <app-proceedings style="display:flex; flex:auto;" [tasks]="taskService.tasks"
+                    <app-proceedings style="display:flex; flex:auto;" [taskList]="taskService.taskList"
                                      [operations]="taskService.operations"
                                      (afterdrop)="onAfterDrop($event)" #proceedings
                                      (operationclick)="onOperationClick($event)"

@@ -14,15 +14,14 @@ import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
-import {OCTRAOperation} from '../../obj/tasks/octra-operation';
-import {ASROperation, EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
+import {EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
 import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import * as moment from 'moment';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../shared/task.service';
-import {TaskDirectory} from '../../obj/taskDirectory';
+import {TaskList} from '../../obj/TaksList';
+import {DirectoryInfo} from '../../obj/directoryInfo';
 
 declare var window: any;
 
@@ -51,16 +50,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     pointer: 'left'
   };
 
-  @Input() tasks: Task[] = [];
+  @Input() taskList: TaskList = new TaskList();
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
   public selected_tasks = [];
   public archiveURL = '';
   public closeResult = '';
+  public isDragging = false;
 
   @Input() shortstyle = false;
 
-  @Output() public afterdrop: EventEmitter<FileInfo[]> = new EventEmitter<FileInfo[]>();
+  @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
   @ViewChild('content') content;
@@ -102,6 +102,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     $event.stopPropagation();
     $event.preventDefault();
     $event.dataTransfer.dropEffect = 'copy';
+    this.isDragging = true;
 
     this.cd.markForCheck();
     this.cd.detectChanges();
@@ -114,43 +115,53 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onDrop($event) {
     $event.stopPropagation();
     $event.preventDefault();
-    console.log($event);
-
-    let items = $event.dataTransfer.items;
-    for (let i = 0; i < items.length; i++) {
-      let item = items[i].webkitGetAsEntry();
-      TaskDirectory.fromFolderObject(item).then((dir) => {
-        console.log(dir);
-      }).catch((error) => {
-          console.error(error);
-        }
-      );
-    }
+    this.isDragging = false;
 
     const promises: Promise<void>[] = [];
 
     if (this.fileAPIsupported) {
 
-      const droppedfiles: FileList = $event.dataTransfer.files;
-      const files: FileInfo[] = [];
+      // TODO check browser support
+      const droppedfiles = $event.dataTransfer.items;
+      const files: (FileInfo | DirectoryInfo)[] = [];
 
       for (let i = 0; i < droppedfiles.length; i++) {
-        const file = droppedfiles[i];
+        let item: WebKitEntry = droppedfiles[i].webkitGetAsEntry();
 
-        const newName = FileInfo.escapeFileName(file.name);
-
-        if (newName !== file.name) {
-          // no valid name, replace
-          promises.push(FileInfo.renameFile(file, newName, {
-            type: file.type,
-            lastModified: file.lastModifiedDate
-          }).then((newfile: File) => {
-            files.push(FileInfo.fromFileObject(newfile));
+        if (item.isDirectory) {
+          // TODO fix order!
+          promises.push(new Promise<void>((resolve, reject) => {
+            DirectoryInfo.fromFolderObject(droppedfiles[i]).then((dir) => {
+              // check added directory
+              files.push(dir);
+              resolve();
+            }).catch((error) => {
+              this.afterdrop.error(error);
+              reject();
+            });
           }));
         } else {
-          files.push(FileInfo.fromFileObject(file));
-          this.cd.markForCheck();
-          this.cd.detectChanges();
+          // check added file
+          let file = droppedfiles[i].getAsFile();
+          if (!isNullOrUndefined(file)) {
+            // check file
+            const newName = FileInfo.escapeFileName(file.name);
+            if (newName !== file.name) {
+              // no valid name, replace
+              promises.push(FileInfo.renameFile(file, newName, {
+                type: file.type,
+                lastModified: file.lastModifiedDate
+              }).then((newfile: File) => {
+                files.push(FileInfo.fromFileObject(newfile));
+              }));
+            } else {
+              files.push(FileInfo.fromFileObject(file));
+              this.cd.markForCheck();
+              this.cd.detectChanges();
+            }
+          } else {
+            this.afterdrop.error(`could not read file from webKitFile`);
+          }
         }
       }
 
@@ -164,8 +175,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       } else {
         this.afterdrop.emit(files);
       }
-    } else {
-      console.error(`file api not supported`);
+    }
+    else {
+      this.afterdrop.error(`file api not supported`);
     }
   }
 
@@ -195,7 +207,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
 
   onContextMenuOptionSelected(option: String) {
-    if (option === 'delete') {
+    /**
+     if (option === 'delete') {
       for (let i = 0; i < this.selected_tasks.length; i++) {
         const task_index = this.tasks.findIndex((a) => {
           if (a.id === this.selected_tasks[i]) {
@@ -259,7 +272,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       );
     }
-    this.contextmenu.hidden = true;
+     this.contextmenu.hidden = true;
+     */
   }
 
   isTaskSelected(taskID: number) {
@@ -340,7 +354,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     task.mouseover = true;
   }
 
-  calculateDuration(start: number, end?: number) {
+  calculateDuration(start: number, end ?: number) {
     if (isNullOrUndefined(end) || end === 0) {
       return (Date.now() - start);
     } else {
@@ -365,6 +379,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   deactivateOperation(operation: Operation, index: number) {
+    /*
     operation.enabled = !operation.enabled;
     const previous = this.taskService.operations[index - 1];
     const next = this.taskService.operations[index + 1];
@@ -406,9 +421,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
 
     this.updateEnableState();
+    */
   }
 
   public updateEnableState() {
+    /*
     for (let j = 0; j < this.taskService.operations.length; j++) {
       const operation = this.taskService.operations[j];
 
@@ -420,7 +437,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           currOperation.enabled = operation.enabled;
         }
       }
-    }
+    }*/
   }
 
   public getPopoverColor(operation): string {
