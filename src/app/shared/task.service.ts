@@ -10,6 +10,7 @@ import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
 import {TaskList} from '../obj/TaksList';
 import {FileInfo} from '../obj/fileInfo';
 import {DirectoryInfo} from '../obj/directoryInfo';
+import {TaskDirectory} from '../obj/taskDirectory';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -61,8 +62,13 @@ export class TaskService implements OnDestroy {
     return this._operations;
   }
 
-  public addTask(task: Task) {
-    this.taskList.addEntry(task);
+  public addEntry(entry: (Task | TaskDirectory)) {
+    if (entry instanceof Task || entry instanceof TaskDirectory) {
+      this.taskList.addEntry(entry);
+    } else {
+      console.error(`could not add Task or TaskDirectory. Invalid class instance`);
+    }
+    console.log(this.taskList);
   }
 
   public start() {

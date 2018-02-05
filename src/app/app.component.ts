@@ -13,6 +13,7 @@ import {WavFormat} from './obj/audio/AudioFormats';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './shared/task.service';
 import {DirectoryInfo} from './obj/directoryInfo';
+import {TaskDirectory} from './obj/taskDirectory';
 
 declare var window: any;
 
@@ -71,10 +72,8 @@ export class AppComponent implements OnDestroy {
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
     if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
-      let filteredEntries: (FileInfo | DirectoryInfo)[] = [];
-
       // filter and re-structure entries array to supported files and directories
-      filteredEntries = this.taskService.cleanUpInputArray(entries);
+      let filteredEntries = this.taskService.cleanUpInputArray(entries);
 
       for (let i = 0; i < filteredEntries.length; i++) {
         const entry = filteredEntries[i];
@@ -133,8 +132,75 @@ export class AppComponent implements OnDestroy {
 
               task.operations[i].enabled = operation.enabled;
             }
-            this.taskService.addTask(task);
+            this.taskService.addEntry(task);
           });
+        } else if (entry instanceof DirectoryInfo) {
+          let dir = <DirectoryInfo> entry;
+
+          let dirTask = new TaskDirectory(dir.path, dir.size);
+
+          for (let i = 0; i < dir.entries.length; i++) {
+            const dirEntry = dir.entries[i];
+
+            if (dirEntry instanceof FileInfo) {
+              const file = <FileInfo> dirEntry;
+
+              const newName = FileInfo.escapeFileName(file.fullname);
+              let newFile: File = null;
+
+              const task = new Task([file], this.taskService.operations);
+
+              new Promise<void>((resolve, reject) => {
+                  if (newName !== file.name) {
+                    // no valid name, replace
+                    FileInfo.renameFile(file.file, newName, {
+                      type: file.type,
+                      lastModified: file.file.lastModifiedDate
+                    }).then((newfile: File) => {
+                      task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
+                      newFile = newfile;
+                      console.log(`renamed to ${newfile.name}`);
+                      resolve()
+                    });
+                  } else {
+                    resolve()
+                  }
+                }
+              ).then(() => {
+                task.language = this.selectedlanguage.code;
+                this.newfiles = true;
+
+                console.log(`task`);
+                console.log(task);
+
+                setTimeout(() => {
+                  let reader = new FileReader();
+                  reader.onload = (event: any) => {
+                    AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
+                      task.files[0] = manager.ressource.info;
+                      task.files[0].fullname = newName;
+
+                      if (isNullOrUndefined(newFile)) {
+                        task.files[0].file = file.file;
+                      } else {
+                        task.files[0].file = newFile;
+                      }
+                    })
+                  };
+                  reader.readAsArrayBuffer(file.file);
+                }, 1000);
+
+                // set state
+                for (let i = 0; i < this.taskService.operations.length; i++) {
+                  const operation = this.taskService.operations[i];
+
+                  task.operations[i].enabled = operation.enabled;
+                }
+                dirTask.addEntries([task]);
+              });
+            }
+          }
+          this.taskService.addEntry(dirTask);
         }
       }
     }

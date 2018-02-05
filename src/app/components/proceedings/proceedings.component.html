@@ -90,18 +90,25 @@
         </tr>
         </thead>
         <tbody (contextmenu)="onContextMenu($event)">
-        <tr style="cursor:pointer;" *ngFor="let entry of taskList.entries; let i = index;"
-            [ngClass]="{'selected': (isTaskSelected(entry.id))}">
-            <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
-                      (contextmenu)="onContextMenu($event)"></span></td> -->
-            <td style="width:25px;"><i class="fa fa-circle" aria-hidden="true" [ngClass]="{
+        <ng-container *ngFor="let entry of taskList.entries; let i = index;">
+
+            <tr style="cursor:pointer;"
+                [ngClass]="{'selected': (isTaskSelected(entry.id))}">
+                <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
+                          (contextmenu)="onContextMenu($event)"></span></td> -->
+                <td *ngIf="entry.files !== undefined" style="width:25px;"><i class="fa fa-file-audio-o"
+                                                                             aria-hidden="true"
+                                                                             [ngClass]="{
             green: (entry.state === 'FINISHED'),
             red: (entry.state === 'ERROR'),
             blue: (entry.state === 'PENDING' || entry.state === 'READY'),
             yellow: (entry.state === 'PROCESSING')
             }"></i></td>
-            <td (click)="onRowSelected(entry.id)"
-                [ngClass]="{
+                <td *ngIf="entry.files === undefined" style="width:25px;"><i class="fa fa-folder-open blue"
+                                                                             aria-hidden="true"></i></td>
+
+                <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry.id)"
+                    [ngClass]="{
                             'shorten': shortstyle
                         }">
                 <span [ngClass]="{
@@ -113,37 +120,78 @@
                       (mouseover)="onTaskMouseOver($event, entry)">
                 {{entry.files[0].fullname}}
                 </span>
-                <span
-                        *ngIf="entry.files.length > 1">(+ {{entry.files.length - 1}})</span>
-                <!-- <table [@fadeToggle]="tag.getAttribute('data-state')" class="table datatable">
-                    <tbody>
-                    <tr *ngFor="let file of task.files;">
-                        <td>{{file.fullname}}</td>
-                        <td>{{file.type}}</td>
-                        <td>{{file.size | filesize}}</td>
-                    </tr>
-                    </tbody>
-                </table> -->
-            </td>
-            <td *ngFor="let operation of entry.operations" style="text-align: center;" [ngClass]="{
+                    <span *ngIf=" entry.files.length > 1">
+                    (+ {{entry.files.length - 1}})
+                </span>
+                </td>
+
+                <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1">
+                <span title="{{entry.path}}"
+                      (mouseenter)="onTaskMouseEnter($event, entry)"
+                      (mouseleave)="onTaskMouseLeave($event, entry)"
+                      (mouseover)="onTaskMouseOver($event, entry)">
+                {{entry.path}}
+                </span>
+                    <span *ngIf="entry.entries.length > 0">
+                    ({{entry.entries.length}})
+                </span>
+                </td>
+
+                <ng-container *ngIf="entry.files !== undefined">
+                    <td *ngFor="let operation of entry.operations" style="text-align: center;" [ngClass]="{
                 'op-deactivated': !operation.enabled
             }"
-                (mouseenter)="onOperationMouseEnter($event, operation)"
-                (mouseleave)="onOperationMouseLeave($event, operation)"
-                (mouseover)="onOperationMouseOver($event, operation)"
-                (mousedown)="onOperationClick($event, operation)"
-            >
-                <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')" [innerHTML]="getStateIcon(operation)"
-                     (click)="onRowSelected(entry.id, operation)"></div>
-                <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
-                    <i class="fa fa-repeat" aria-hidden="true"
-                       (click)="entry.restartFailedOperation(taskService.httpclient)"></i>
-                </div>
-                <div *ngIf="!operation.enabled">
-                    <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
-                </div>
-            </td>
-        </tr>
+                        (mouseenter)="onOperationMouseEnter($event, operation)"
+                        (mouseleave)="onOperationMouseLeave($event, operation)"
+                        (mouseover)="onOperationMouseOver($event, operation)"
+                        (mousedown)="onOperationClick($event, operation)"
+                    >
+                        <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"
+                             [innerHTML]="getStateIcon(operation)"
+                             (click)="onRowSelected(entry.id, operation)"></div>
+                        <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
+                            <i class="fa fa-repeat" aria-hidden="true"
+                               (click)="entry.restartFailedOperation(taskService.httpclient)"></i>
+                        </div>
+                        <div *ngIf="!operation.enabled">
+                            <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
+                        </div>
+                    </td>
+                </ng-container>
+            </tr>
+            <ng-container *ngIf="entry.files === undefined">
+                <tr *ngFor="let dirEntry of entry.entries">
+                    <td></td>
+                    <td><i class="fa fa-file-audio-o" aria-hidden="true"
+                           [ngClass]="{
+            green: (dirEntry.state === 'FINISHED'),
+            red: (dirEntry.state === 'ERROR'),
+            blue: (dirEntry.state === 'PENDING' || entry.state === 'READY'),
+            yellow: (dirEntry.state === 'PROCESSING')
+            }"></i> {{dirEntry.files[0].fullname}}
+                    </td>
+                    <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
+                'op-deactivated': !operation.enabled
+            }"
+                        (mouseenter)="onOperationMouseEnter($event, operation)"
+                        (mouseleave)="onOperationMouseLeave($event, operation)"
+                        (mouseover)="onOperationMouseOver($event, operation)"
+                        (mousedown)="onOperationClick($event, operation)"
+                    >
+                        <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"
+                             [innerHTML]="getStateIcon(operation)"
+                             (click)="onRowSelected(entry.id, operation)"></div>
+                        <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
+                            <i class="fa fa-repeat" aria-hidden="true"
+                               (click)="entry.restartFailedOperation(taskService.httpclient)"></i>
+                        </div>
+                        <div *ngIf="!operation.enabled">
+                            <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
+                        </div>
+                    </td>
+                </tr>
+            </ng-container>
+        </ng-container>
         </tbody>
     </table>
 </div>
