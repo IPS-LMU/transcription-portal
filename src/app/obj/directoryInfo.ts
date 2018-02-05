@@ -44,72 +44,91 @@ export class DirectoryInfo extends DataInfo {
   private static traverseFileTree(item: (DataTransferItem | WebKitFileEntry), path): Promise<(FileInfo | DirectoryInfo)[]> {
     //console.log(`search path: ${path}`);
     return new Promise<(FileInfo | DirectoryInfo)[]>((resolve, reject) => {
-      path = path || '';
-      if (!isNullOrUndefined(item)) {
-        let webKitEntry: WebKitEntry;
-
-        if (item instanceof DataTransferItem) {
-          webKitEntry = item.webkitGetAsEntry();
-        } else {
-          webKitEntry = <WebKitEntry> item;
-        }
-
-        if (webKitEntry.isFile) {
-          //console.log(`isFile ${item.fullPath}`);
-          // Get file
+        path = path || '';
+        if (!isNullOrUndefined(item)) {
+          let webKitEntry: WebKitEntry;
 
           if (item instanceof DataTransferItem) {
-            let file = item.getAsFile();
-
-            if (!isNullOrUndefined(file)) {
-              let fileInfo = new FileInfo(file.name, file.type, file.size, file);
-              resolve([fileInfo]);
-            } else {
-              reject(`could not read file`);
-            }
+            webKitEntry = item.webkitGetAsEntry();
           } else {
-            // item is FileEntry
+            webKitEntry = <WebKitEntry> item;
+          }
 
-            (<WebKitFileEntry> webKitEntry).file((file: any) => {
-              let fileInfo = new FileInfo(file.name, file.type, file.size, file);
-              resolve([fileInfo]);
+          if (webKitEntry.isFile) {
+            //console.log(`isFile ${item.fullPath}`);
+            // Get file
+
+            if (item instanceof DataTransferItem) {
+              let file = item.getAsFile();
+
+              if (!isNullOrUndefined(file)) {
+                let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                resolve([fileInfo]);
+              } else {
+                reject(`could not read file`);
+              }
+            } else {
+              // item is FileEntry
+
+              (<WebKitFileEntry> webKitEntry).file((file: any) => {
+                let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                resolve([fileInfo]);
+              });
+            }
+          } else if (webKitEntry.isDirectory) {
+            // Get folder contents
+            //console.log(`is dir ${item.fullPath}`);
+            let dirEntry: WebKitDirectoryEntry = <WebKitDirectoryEntry> webKitEntry;
+            let dirReader = dirEntry.createReader();
+            dirReader.readEntries((entries: any) => {
+              let promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
+              for (let i = 0; i < entries.length; i++) {
+                promises.push(this.traverseFileTree(entries[i], path + dirEntry.name + '/'));
+              }
+              Promise.all(promises).then((values: (FileInfo | DirectoryInfo)[][]) => {
+                const dir = new DirectoryInfo(path + dirEntry.name + '/');
+                let result: (FileInfo | DirectoryInfo)[] = [];
+
+                for (let i = 0; i < values.length; i++) {
+                  const value = values[i];
+
+                  for (let j = 0; j < value.length; j++) {
+                    const val = value[j];
+
+                    result.push(val);
+                  }
+                }
+
+                result = result.sort((a, b) => {
+                  if (a instanceof FileInfo && b instanceof FileInfo) {
+                    let a2 = <FileInfo> a;
+                    let b2 = <FileInfo> b;
+
+                    return a2.name.localeCompare(b2.name);
+                  }
+                  else if (a instanceof DirectoryInfo && b instanceof DirectoryInfo) {
+                    let a2 = <DirectoryInfo> a;
+                    let b2 = <DirectoryInfo> b;
+
+                    return a2.path.localeCompare(b2.path);
+                  }
+                  else {
+                    return 0;
+                  }
+                });
+
+                //console.log(result);
+                dir.addEntries(result);
+                //console.log(`dir with ${result.length} found`);
+                resolve([dir]);
+              });
             });
           }
-        } else if (webKitEntry.isDirectory) {
-          // Get folder contents
-          //console.log(`is dir ${item.fullPath}`);
-          let dirEntry: WebKitDirectoryEntry = <WebKitDirectoryEntry> webKitEntry;
-          let dirReader = dirEntry.createReader();
-          dirReader.readEntries((entries: any) => {
-            let promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
-            for (let i = 0; i < entries.length; i++) {
-              promises.push(this.traverseFileTree(entries[i], path + dirEntry.name + '/'));
-            }
-            Promise.all(promises).then((values: (FileInfo | DirectoryInfo)[][]) => {
-              const dir = new DirectoryInfo(path + dirEntry.name + '/');
-              let result = [];
-
-              for (let i = 0; i < values.length; i++) {
-                const value = values[i];
-
-                for (let j = 0; j < value.length; j++) {
-                  const val = value[j];
-
-                  result.push(val);
-                }
-              }
-
-              //console.log(result);
-              dir.addEntries(result);
-              //console.log(`dir with ${result.length} found`);
-              resolve([dir]);
-            });
-          });
+        } else {
+          reject(`item is null or undefined`);
         }
-      } else {
-        reject(`item is null or undefined`);
       }
-    });
+    );
   }
 
   public static extractFolderName(path: string): string {

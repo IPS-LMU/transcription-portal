@@ -126,10 +126,7 @@
                 </td>
 
                 <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1">
-                <span title="{{entry.path}}"
-                      (mouseenter)="onTaskMouseEnter($event, entry)"
-                      (mouseleave)="onTaskMouseLeave($event, entry)"
-                      (mouseover)="onTaskMouseOver($event, entry)">
+                <span title="{{entry.path}}">
                 {{entry.path}}
                 </span>
                     <span *ngIf="entry.entries.length > 0">
@@ -161,8 +158,12 @@
             </tr>
             <ng-container *ngIf="entry.files === undefined">
                 <tr *ngFor="let dirEntry of entry.entries">
-                    <td></td>
-                    <td><i class="fa fa-file-audio-o" aria-hidden="true"
+                    <td>
+                        <img style="height:20px;" src="./assets/directory.png">
+                    </td>
+                    <td (mouseenter)="onTaskMouseEnter($event, dirEntry)"
+                        (mouseleave)="onTaskMouseLeave($event, dirEntry)"
+                        (mouseover)="onTaskMouseOver($event, dirEntry)"><i class="fa fa-file-audio-o" aria-hidden="true"
                            [ngClass]="{
             green: (dirEntry.state === 'FINISHED'),
             red: (dirEntry.state === 'ERROR'),

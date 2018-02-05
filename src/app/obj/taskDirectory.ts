@@ -107,7 +107,7 @@ export class TaskDirectory {
       if (elem instanceof Task) {
         result.push(elem);
       } else {
-        result.concat((<TaskDirectory> elem).getAllTasks());
+        result = result.concat((<TaskDirectory> elem).getAllTasks());
       }
     }
 
