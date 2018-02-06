@@ -345,9 +345,10 @@ export class AppComponent implements OnDestroy {
   }
 
   leaveToolOption() {
-    if (!isNullOrUndefined(this.selectedOperation.nextOperation) &&
-      this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
-      this.selectedOperation.changeState(TaskState.FINISHED);
+    if (!isNullOrUndefined(this.selectedOperation.nextOperation)) {
+      if (this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
+        this.selectedOperation.changeState(TaskState.FINISHED);
+      }
     } else {
       this.selectedOperation.changeState(TaskState.READY);
     }

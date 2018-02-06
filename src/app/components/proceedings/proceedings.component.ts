@@ -473,7 +473,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (operation.state == TaskState.ERROR) {
         return 'red';
       } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
-        return 'yellow';
+        return '#ffc33b';
       }
     }
     return '#3a70dd'
