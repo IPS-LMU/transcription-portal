@@ -22,8 +22,8 @@
                (click)="notification.permissionGranted = true"></i>
         </div>
     </div>
-    <div class='row proceedings-header' style="padding-top:0px;">
-        <div class="col-4" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
+    <div class='row proceedings-header' style="padding-top:0px;" *ngIf="!showtool">
+        <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
                 <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
             </button>
@@ -32,8 +32,7 @@
                    style="display:none;"
                    #fileinput
                    (change)="onFileChange($event)"/>
-        </div>
-        <div class="dropdown col-4" style="text-align: center;padding-top:5px;">
+
             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton"
                     style="background-color: transparent;"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -64,33 +63,37 @@
             </button>
         </div>
     </div>
-    <div *ngIf="showtool" class="row tool-nav">
-        <div class="col-3" style="padding:0;">
+    <div class='row proceedings-header' style="padding-top:0px; border-top: 1px solid cornflowerblue; height:50px;"
+         *ngIf="showtool">
+        <div class="col-2" style="text-align: left;padding-top:5px;">
             <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
-                <i class="fa fa-angle-double-left fa-2x" aria-hidden="true"></i>
+                <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>
             </button>
         </div>
-        <div class="col-9" style="border-right: 1px solid gray">
-            <div class="title">
-                <div class="row inner">
-                    <ng-container *ngIf="selectedOperation.previousOperation.results.length > 0">
-                        {{selectedOperation.name}}: {{selectedOperation.previousOperation.results[0].fullname}}
+        <div class="col-8" style="text-align: center;">
+            <p style="margin:0px; margin-top:10px;">
+                <ng-container *ngIf="selectedOperation.previousOperation.results.length > 0">
+                    {{selectedOperation.name}}: {{selectedOperation.previousOperation.results[0].fullname}}
 
-                        , Language: {{selectedOperation.task.language}}
+                    , Language: {{selectedOperation.task.language}}
 
-                        , Audio duration: {{getTime() |time}}
+                    , Audio duration: {{getTime() |time}}
 
-                    </ng-container>
-                    <ng-container *ngIf="selectedOperation.previousOperation.results.length < 1">
-                        {{selectedOperation.name}}:
-                        {{selectedOperation.previousOperation.previousOperation.results[0].fullname}}
+                </ng-container>
+                <ng-container *ngIf="selectedOperation.previousOperation.results.length < 1">
+                    {{selectedOperation.name}}:
+                    {{selectedOperation.previousOperation.previousOperation.results[0].fullname}}
 
-                        , Language: {{selectedOperation.task.language}}
+                    , Language: {{selectedOperation.task.language}}
 
-                        , Audio duration: {{getTime() | time}}
-                    </ng-container>
-                </div>
-            </div>
+                    , Audio duration: {{getTime() | time}}
+                </ng-container>
+            </p>
+        </div>
+        <div class="col-2" style="text-align:right;padding-top:5px;">
+            <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
+                <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>
+            </button>
         </div>
     </div>
     <div class="row main-row">

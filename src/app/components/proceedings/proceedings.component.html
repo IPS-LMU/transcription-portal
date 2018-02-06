@@ -99,7 +99,7 @@
         <tbody (contextmenu)="onContextMenu($event)">
         <ng-container *ngFor="let entry of taskList.entries; let i = index;">
 
-            <tr style="cursor:pointer;" [ngClass]="{'selected': (isTaskSelected(entry.id) && entry.type !== 'folder')}">
+            <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
                 <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
                           (contextmenu)="onContextMenu($event)"></span></td> -->
                 <td *ngIf="entry.files !== undefined" style="width:25px;">
@@ -111,8 +111,9 @@
             blue: (entry.state === 'PENDING' || entry.state === 'READY'),
             yellow: (entry.state === 'PROCESSING')
             }"></i></td>
-                <td *ngIf="entry.files === undefined" style="width:25px;"><i class="fa fa-folder-open blue"
-                                                                             aria-hidden="true"></i></td>
+                <td *ngIf="entry.files === undefined" (click)="onRowSelected(entry)" style="width:25px;"><i
+                        class="fa fa-folder-open blue"
+                        aria-hidden="true"></i></td>
 
                 <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry)"
                     [ngClass]="{
@@ -132,7 +133,8 @@
                 </span>
                 </td>
 
-                <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1">
+                <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
+                    (click)="onRowSelected(entry)">
                 <span title="{{entry.path}}">
                 {{entry.path}}
                 </span>
@@ -164,7 +166,7 @@
                 </ng-container>
             </tr>
             <ng-container *ngIf="entry.files === undefined">
-                <tr *ngFor="let dirEntry of entry.entries" [ngClass]="{'selected': (isTaskSelected(dirEntry.id))}">
+                <tr *ngFor="let dirEntry of entry.entries" [ngClass]="{'selected': (isEntrySelected(dirEntry))}">
                     <td>
                         <img style="height:20px;" src="./assets/directory.png">
                     </td>

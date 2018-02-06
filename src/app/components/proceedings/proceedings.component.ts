@@ -23,6 +23,7 @@ import {TaskService} from '../../shared/task.service';
 import {TaskList} from '../../obj/TaksList';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import {TaskDirectory} from '../../obj/taskDirectory';
 import moment = require('moment');
 
 declare var window: any;
@@ -55,7 +56,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Input() taskList: TaskList = new TaskList();
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
-  public selected_tasks: Task[] = [];
+  public selected_tasks: (Task | TaskDirectory)[] = [];
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
@@ -196,20 +197,28 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.contextmenu.hidden = true;
   }
 
-  onRowSelected(task: Task, operation: Operation) {
+  onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
     if (isNullOrUndefined(operation) || !(operation instanceof ToolOperation)) {
-      const search = this.selected_tasks.findIndex((a) => {
-        return a instanceof Task && (<Task> a).id === task.id;
-      });
-      if (search > -1) {
-        this.selected_tasks.splice(search, 1);
-        console.log('splice');
-      } else {
-        this.selected_tasks.push(task);
-        console.log('added');
+      if (entry instanceof Task) {
+        const search = this.selected_tasks.findIndex((a) => {
+          return a instanceof Task && (<Task> a).id === entry.id;
+        });
+        if (search > -1) {
+          this.selected_tasks.splice(search, 1);
+        } else {
+          this.selected_tasks.push(entry);
+        }
+      } else if (entry instanceof TaskDirectory) {
+        console.log(`is DIR`);
+        const search = this.selected_tasks.findIndex((a) => {
+          return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id;
+        });
+        if (search > -1) {
+          this.selected_tasks.splice(search, 1);
+        } else {
+          this.selected_tasks.push(entry);
+        }
       }
-    } else {
-      console.log('not found');
     }
     this.operationclick.emit(operation);
   }
@@ -219,12 +228,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
     if (option === 'delete') {
       for (let i = 0; i < this.selected_tasks.length; i++) {
-        this.taskList.removeTask(this.selected_tasks[i]);
-        if (!isNullOrUndefined(this.selected_tasks[i].directory)) {
-          if (this.selected_tasks[i].directory.entries.length == 0) {
-            this.taskList.removeDir(this.selected_tasks[i].directory);
-          }
+        let entry = this.selected_tasks[i];
+        if (entry instanceof Task) {
+          this.taskList.removeEntry(this.selected_tasks[i]);
+        } else if (entry instanceof TaskDirectory) {
+          this.taskList.removeDir(entry);
         }
+
         this.selected_tasks.splice(i, 1);
         i--; // because length changed
       }
@@ -282,14 +292,23 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.contextmenu.hidden = true;
   }
 
-  isTaskSelected(taskID: number) {
-    const search = this.selected_tasks.findIndex((a) => {
-      return a instanceof Task && (<Task> a).id === taskID
-    });
+  isEntrySelected(entry: (Task | TaskDirectory)) {
+    if (entry instanceof Task) {
+      const search = this.selected_tasks.findIndex((a) => {
+        return a instanceof Task && (<Task> a).id === entry.id
+      });
 
-    if (search > -1) {
-      console.log(`found`);
-      return true;
+      if (search > -1) {
+        return true;
+      }
+    } else if (entry instanceof TaskDirectory) {
+      const search = this.selected_tasks.findIndex((a) => {
+        return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id
+      });
+
+      if (search > -1) {
+        return true;
+      }
     }
 
     return false;

@@ -53,18 +53,20 @@ export class TaskList {
     return result;
   }
 
-  public removeTask(task: Task) {
-    if (!isNullOrUndefined(task.directory)) {
-      task.directory.removeTask(task);
-    } else {
-      const task_index = this.entries.findIndex((a) => {
-        if (a instanceof Task && (<Task> a).id === task.id) {
-          return true;
-        }
-      });
+  public removeEntry(entry: (Task | TaskDirectory)) {
+    if (entry instanceof Task) {
+      if (!isNullOrUndefined(entry.directory)) {
+        entry.directory.removeTask(entry);
+      } else {
+        const task_index = this.entries.findIndex((a) => {
+          if (a instanceof Task && (<Task> a).id === entry.id) {
+            return true;
+          }
+        });
 
-      console.log('remove ' + task_index);
-      this._entries.splice(task_index, 1);
+        console.log('remove ' + task_index);
+        this._entries.splice(task_index, 1);
+      }
     }
   }
 

@@ -2,7 +2,7 @@
     <tbody>
     <tr (click)="onDeleteTasks()">
         <td><i class="fa fa-times"></i></td>
-        <td>Delete {{selected_tasks.length}} tasks</td>
+        <td>Delete {{filesCount}} Tasks<br/>{{dirCount}} Folders</td>
     </tr>
     <tr *ngIf="selectedOperationType != undefined" (click)="onCompress()">
         <td><i class="fa fa-file-archive-o"></i></td>
