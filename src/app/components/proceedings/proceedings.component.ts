@@ -24,7 +24,7 @@ import {TaskList} from '../../obj/TaksList';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
 import {TaskDirectory} from '../../obj/taskDirectory';
-import moment = require('moment');
+import * as moment from 'moment';
 
 declare var window: any;
 
