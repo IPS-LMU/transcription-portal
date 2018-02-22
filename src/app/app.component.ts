@@ -109,16 +109,40 @@ export class AppComponent implements OnDestroy {
             setTimeout(() => {
               let reader = new FileReader();
               reader.onload = (event: any) => {
-                AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
-                  task.files[0] = manager.ressource.info;
-                  task.files[0].fullname = newName;
+                const format = new WavFormat(event.target.result);
+                if (format.isValid(event.target.result) && format.channels > 1) {
+                  console.log(`OKOKOKOK`);
 
-                  if (isNullOrUndefined(newFile)) {
-                    task.files[0].file = file.file;
-                  } else {
-                    task.files[0].file = newFile;
+                  const directory = new DirectoryInfo(file.name + '_dir/');
+
+                  const files: File[] = format.splitChannelsToFiles(file.name, 'x-audio/wav', event.target.result);
+                  const fileInfos: FileInfo[] = [];
+
+                  for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileInfo = FileInfo.fromFileObject(file);
+
+                    fileInfos.push(fileInfo);
                   }
-                })
+                  directory.addEntries(fileInfos);
+                  this.readNewFiles([directory]);
+                  this.taskService.taskList.removeEntry(task);
+                  console.log(directory);
+                } else {
+                  AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat(event.target.result)], false).then((manager: AudioManager) => {
+                    task.files[0] = manager.ressource.info;
+                    task.files[0].fullname = newName;
+
+                    if (isNullOrUndefined(newFile)) {
+                      task.files[0].file = file.file;
+                    } else {
+                      task.files[0].file = newFile;
+                    }
+                  }).catch((error) => {
+                    this.taskService.taskList.removeEntry(task);
+                    console.error(error);
+                  });
+                }
               };
               reader.readAsArrayBuffer(file.file);
             }, 1000);
@@ -169,16 +193,40 @@ export class AppComponent implements OnDestroy {
                 setTimeout(() => {
                   let reader = new FileReader();
                   reader.onload = (event: any) => {
-                    AudioManager.decodeAudio(file.fullname, event.target.result, [new WavFormat()], false).then((manager: AudioManager) => {
-                      task.files[0] = manager.ressource.info;
-                      task.files[0].fullname = newName;
+                    const format = new WavFormat(event.target.result);
+                    if (format.isValid(event.target.result) && format.channels > 1) {
+                      console.log(`OKOKOKOK`);
+                      const directory = new DirectoryInfo(file.name + '_dir/');
 
-                      if (isNullOrUndefined(newFile)) {
-                        task.files[0].file = file.file;
-                      } else {
-                        task.files[0].file = newFile;
+                      const files: File[] = format.splitChannelsToFiles(file.name, 'x-audio/wav', event.target.result);
+                      const fileInfos: FileInfo[] = [];
+
+                      for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        const fileInfo = FileInfo.fromFileObject(file);
+
+                        fileInfos.push(fileInfo);
                       }
-                    })
+                      directory.addEntries(fileInfos);
+                      this.readNewFiles([directory]);
+                      this.taskService.taskList.removeEntry(task);
+                      console.log(directory);
+                    } else {
+                      const format = new WavFormat(event.target.result);
+                      AudioManager.decodeAudio(file.fullname, event.target.result, [format], false).then((manager: AudioManager) => {
+                        task.files[0] = manager.ressource.info;
+                        task.files[0].fullname = newName;
+
+                        if (isNullOrUndefined(newFile)) {
+                          task.files[0].file = file.file;
+                        } else {
+                          task.files[0].file = newFile;
+                        }
+                      }).catch((error) => {
+                        this.taskService.taskList.removeEntry(task);
+                        console.error(error);
+                      });
+                    }
                   };
                   reader.readAsArrayBuffer(file.file);
                 }, 1000);

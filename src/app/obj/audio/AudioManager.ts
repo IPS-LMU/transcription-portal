@@ -154,34 +154,47 @@ export class AudioManager {
 
       const audioformat: AudioFormat = AudioManager.getFileFormat(filename.substr(filename.lastIndexOf('.')), audioformats);
 
-      const result = new AudioManager(filename);
-      let audioinfo: AudioInfo = null;
-      try {
-        audioinfo = audioformat.getAudioInfo(filename, audioformat.extension, buffer);
-      } catch (err) {
-        console.error(err.message);
+      if (audioformat.isValid(buffer)) {
+        const result = new AudioManager(filename);
+        let audioinfo: AudioInfo = null;
+        try {
+          audioinfo = audioformat.getAudioInfo(filename, audioformat.extension, buffer);
+        } catch (err) {
+          console.error(err.message);
+        }
+        AudioManager.decodeAudioFile(buffer, audioinfo.samplerate).then(
+          (audiobuffer: AudioBuffer) => {
+            console.log('Audio decoded.');
+
+            result.ressource = new AudioRessource(filename, SourceType.ArrayBuffer,
+              audioinfo, new ArrayBuffer(0), null, 0);
+
+            // set duration is very important
+            result.ressource.info.duration.samples = audiobuffer.length;
+
+            const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate), new AudioTime(audiobuffer.length, audioinfo.samplerate));
+            result._mainchunk = new AudioChunk(selection, result);
+            console.log(result);
+
+
+            const test = audiobuffer.getChannelData(0);
+            console.log(`TEST`);
+            console.log(test);
+
+            const file = new File([test], 'testfile.wav');
+            const url = URL.createObjectURL(file);
+            console.log(url);
+
+            result.state = PlayBackState.INITIALIZED;
+            result.afterdecoded.emit(result.ressource);
+            audiobuffer = null;
+            resolve(result);
+          }).catch((error) => {
+          reject(error);
+        });
+      } else {
+        reject('no valid audio format!');
       }
-
-      AudioManager.decodeAudioFile(buffer, audioinfo.samplerate).then(
-        (audiobuffer: AudioBuffer) => {
-          console.log('Audio decoded.');
-
-          result.ressource = new AudioRessource(filename, SourceType.ArrayBuffer,
-            audioinfo, new ArrayBuffer(0), null, 0);
-
-          // set duration is very important
-          result.ressource.info.duration.samples = audiobuffer.length;
-
-          const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate), new AudioTime(audiobuffer.length, audioinfo.samplerate));
-          result._mainchunk = new AudioChunk(selection, result);
-
-          result.state = PlayBackState.INITIALIZED;
-          result.afterdecoded.emit(result.ressource);
-          audiobuffer = null;
-          resolve(result);
-        }).catch((error) => {
-        reject(error);
-      });
     });
   };
 
@@ -217,13 +230,15 @@ export class AudioManager {
         console.log('received');
         console.log(buffer.length / buffer.sampleRate);
         console.log(buffer);
-        var context = new OfflineAudioContext(1, Math.ceil(buffer.duration * sampleRate), sampleRate);
+
+        var context = new OfflineAudioContext(buffer.numberOfChannels, Math.ceil(buffer.duration * sampleRate), sampleRate);
         const source = context.createBufferSource();
         source.buffer = buffer;
         source.connect(context.destination);
         source.start();
         context.startRendering().then((rendered) => {
           context = null;
+
           resolve(rendered);
         }).catch((error) => {
           reject(error);
@@ -272,6 +287,7 @@ export class AudioManager {
 
     if (!this.audioplaying) {
       if (isNullOrUndefined(this._gainNode)) {
+        console.log(`HÄ`);
         this.prepareAudioPlayBack();
       }
       this._playonhover = playonhover;

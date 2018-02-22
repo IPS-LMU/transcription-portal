@@ -234,8 +234,9 @@ export class TaskService implements OnDestroy {
         let directory = <DirectoryInfo> entry;
 
         let dir = directory.clone();
+
         dir.entries = dir.entries.filter((a) => {
-          return a instanceof FileInfo && a.extension === 'wav';
+          return a instanceof FileInfo && (a.extension === 'wav');
         });
         let rest = directory.entries.filter((a) => {
           return a instanceof DirectoryInfo;
