@@ -1,7 +1,7 @@
-import {DirectoryInfo} from './directoryInfo';
-import {Task} from './tasks';
+import {DirectoryInfo} from '../directoryInfo';
+import {Task} from './task';
 import {isNullOrUndefined} from 'util';
-import {FileInfo} from './fileInfo';
+import {FileInfo} from '../fileInfo';
 
 export class TaskDirectory {
   get type(): string {
@@ -135,5 +135,14 @@ export class TaskDirectory {
     });
     console.log('remove from dir ' + task_index);
     this._entries.splice(task_index, 1);
+  }
+
+  public toAny(): any {
+    return {
+      id: this.id,
+      type: 'folder',
+      folderPath: this.path,
+      entries: []
+    };
   }
 }

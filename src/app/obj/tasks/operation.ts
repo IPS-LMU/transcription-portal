@@ -15,6 +15,7 @@ export class Operation {
   set enabled(value: boolean) {
     this._enabled = value;
   }
+
   get task(): Task {
     return this._task;
   }
@@ -35,7 +36,7 @@ export class Operation {
     return this._results;
   }
 
-  get time(): { start: number; end: number } {
+  get time(): { start: number; duration: number } {
     return this._time;
   }
 
@@ -98,10 +99,10 @@ export class Operation {
   protected _protocol = '';
   protected _time: {
     start: number;
-    end: number;
+    duration: number;
   } = {
     start: 0,
-    end: 0
+    duration: 0
   };
   private _enabled = true;
 
@@ -200,5 +201,25 @@ export class Operation {
   }
 
   onMouseLeave() {
+  }
+
+  toAny(): any {
+    let result = {
+      id: this.id,
+      name: this.name,
+      state: this.state,
+      protocol: this.protocol,
+      time: this.time,
+      enabled: this.enabled,
+      results: []
+    };
+
+    // result data
+    for (let i = 0; i < this.results.length; i++) {
+      const resultObj = this.results[i];
+      result.results.push(resultObj.toAny());
+    }
+
+    return result;
   }
 }

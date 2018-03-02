@@ -6,9 +6,11 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Subject} from 'rxjs/Subject';
-import {TaskDirectory} from '../taskDirectory';
+import {TaskDirectory} from './taskDirectory';
+import {AudioInfo} from '../audio';
 
 export enum TaskState {
+  INACTIVE = 'INACTIVE',
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   UPLOADING = 'UPLOADING',
@@ -73,7 +75,6 @@ export class Task {
   }
 
   private _language = null;
-
   private _files: FileInfo[];
   // operations that have to be done
   private _operations: Operation[] = [];
@@ -104,6 +105,9 @@ export class Task {
           });
 
           if (event.newState === TaskState.FINISHED) {
+            if (isNullOrUndefined(operation.nextOperation)) {
+              this.changeState(TaskState.FINISHED);
+            }
             subscription.unsubscribe();
           }
         }
@@ -233,5 +237,44 @@ export class Task {
 
   public destroy() {
     this.subscrmanager.destroy();
+  }
+
+  public toAny(): any {
+    const result = {
+      id: this.id,
+      type: 'task',
+      state: this.state,
+      folderPath: '',
+      language: this.language,
+      files: [],
+      operations: []
+    };
+
+    // read file data
+    for (let i = 0; i < this.files.length; i++) {
+      const file = this.files[i];
+
+      let fileObj = file.toAny();
+
+      if (file instanceof AudioInfo) {
+        const audioFile = <AudioInfo> file;
+
+        fileObj['sampleRate'] = audioFile.samplerate;
+        fileObj['bitsPerSecond'] = audioFile.bitrate;
+        fileObj['channels'] = audioFile.channels;
+        fileObj['duration'] = audioFile.duration.seconds;
+      }
+
+      result.files.push(fileObj);
+    }
+
+    // read operation data
+    for (let i = 0; i < this.operations.length; i++) {
+      const operation = this.operations[i];
+
+      result.operations.push(operation.toAny());
+    }
+
+    return result;
   }
 }

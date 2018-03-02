@@ -2,6 +2,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 import {AppComponent} from './app.component';
 import {PopoverComponent} from './components/popover/popover.component';
@@ -14,8 +15,8 @@ import {FilesizePipe} from './shared/filesize.pipe';
 import {NotificationService} from './shared/notification.service';
 import {TimePipe} from './shared/time.pipe';
 import {FileInfoTableComponent} from './components/file-info-table/file-info-table.component';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {TaskService} from './shared/task.service';
+import {StorageService} from './storage.service';
 
 
 @NgModule({
@@ -37,7 +38,7 @@ import {TaskService} from './shared/task.service';
     HttpClientModule,
     NgbModule.forRoot()
   ],
-  providers   : [ TaskService, NotificationService ],
+  providers: [TaskService, NotificationService, StorageService],
   bootstrap   : [ AppComponent ]
 })
 export class AppModule {

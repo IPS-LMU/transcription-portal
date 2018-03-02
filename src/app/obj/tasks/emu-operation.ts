@@ -20,7 +20,7 @@ export class EmuOperation extends ToolOperation {
     this.changeState(TaskState.PROCESSING);
 
     setTimeout(() => {
-      this.time.end = Date.now();
+      this.time.duration = 0;
       this.operations = operations;
       this.changeState(TaskState.FINISHED);
     }, 1000);

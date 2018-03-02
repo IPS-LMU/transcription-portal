@@ -147,7 +147,7 @@ export class AudioManager {
     return AudioManager.getFileFormat(filename.substr(filename.lastIndexOf('.')), audioformats) !== null;
   }
 
-  public static decodeAudio = (filename: string, buffer: ArrayBuffer,
+  public static decodeAudio = (filename: string, type: string, buffer: ArrayBuffer,
                                audioformats: AudioFormat[], keepbuffer = false): Promise<AudioManager> => {
     return new Promise<AudioManager>((resolve, reject) => {
       console.log('Decode audio... ' + filename);
@@ -158,7 +158,7 @@ export class AudioManager {
         const result = new AudioManager(filename);
         let audioinfo: AudioInfo = null;
         try {
-          audioinfo = audioformat.getAudioInfo(filename, audioformat.extension, buffer);
+          audioinfo = audioformat.getAudioInfo(filename, type, buffer);
         } catch (err) {
           console.error(err.message);
         }
@@ -175,15 +175,6 @@ export class AudioManager {
             const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate), new AudioTime(audiobuffer.length, audioinfo.samplerate));
             result._mainchunk = new AudioChunk(selection, result);
             console.log(result);
-
-
-            const test = audiobuffer.getChannelData(0);
-            console.log(`TEST`);
-            console.log(test);
-
-            const file = new File([test], 'testfile.wav');
-            const url = URL.createObjectURL(file);
-            console.log(url);
 
             result.state = PlayBackState.INITIALIZED;
             result.afterdecoded.emit(result.ressource);

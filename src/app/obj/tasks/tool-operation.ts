@@ -20,7 +20,7 @@ export class ToolOperation extends Operation {
 
     setTimeout(() => {
       this.changeState(TaskState.FINISHED);
-      this.time.end = Date.now();
+      this.time.duration = 0;
     }, 2000);
   };
 

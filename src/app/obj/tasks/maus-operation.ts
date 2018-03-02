@@ -15,7 +15,6 @@ export class MAUSOperation extends Operation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
-    this._time.end = 0;
 
     try {
       console.log(`HÄÄ??`);
@@ -36,7 +35,6 @@ export class MAUSOperation extends Operation {
       };
 
       xhr.onloadend = (e) => {
-        this.time.end = Date.now();
         const result = e.currentTarget['responseText'];
         console.log(result);
         const x2js = new X2JS();
@@ -51,7 +49,7 @@ export class MAUSOperation extends Operation {
         }
 
         if (json.success === 'true') {
-          this.time.end = Date.now();
+          this.time.duration = Date.now() - this.time.start;
           this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
           this.changeState(TaskState.FINISHED);
         } else {

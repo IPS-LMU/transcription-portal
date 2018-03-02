@@ -1,6 +1,7 @@
 import {TaskDirectory} from './taskDirectory';
-import {Task, TaskState} from './tasks';
 import {isNullOrUndefined} from 'util';
+import {Task} from './task';
+import {TaskState} from './';
 
 export class TaskList {
   get entries(): (Task | TaskDirectory)[] {

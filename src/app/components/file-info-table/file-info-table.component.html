@@ -11,7 +11,7 @@
         <td>Size:</td>
         <td>{{fileinfo.size | filesize}}</td>
     </tr>
-    <ng-container *ngIf="fileinfo.type === '.wav'">
+    <ng-container *ngIf="fileinfo.type === 'audio/wav'">
         <tr>
             <td>Sampling rate:</td>
             <td>{{fileinfo.samplerate}}</td>

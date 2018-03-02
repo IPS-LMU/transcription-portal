@@ -1,4 +1,12 @@
 export class DataInfo {
+  get attributes(): any {
+    return this._attributes;
+  }
+
+  set attributes(value: any) {
+    this._attributes = value;
+  }
+
   set size(value: number) {
     this._size = value;
   }
@@ -18,6 +26,7 @@ export class DataInfo {
   protected _type: string;
   protected _name: string;
   private _size: number;
+  private _attributes = {};
 
   public constructor(name: string, type: string, size?: any) {
     this._name = name;

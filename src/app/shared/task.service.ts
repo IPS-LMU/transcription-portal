@@ -7,10 +7,11 @@ import {ASROperation, EmuOperation, Operation, Task, TaskState} from '../obj/tas
 import {OCTRAOperation} from '../obj/tasks/octra-operation';
 import {UploadOperation} from '../obj/tasks/upload-operation';
 import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
-import {TaskList} from '../obj/TaksList';
+import {TaskList} from '../obj/tasks/TaksList';
 import {FileInfo} from '../obj/fileInfo';
 import {DirectoryInfo} from '../obj/directoryInfo';
-import {TaskDirectory} from '../obj/taskDirectory';
+import {TaskDirectory} from '../obj/tasks/taskDirectory';
+import {StorageService} from '../storage.service';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -39,7 +40,7 @@ export class TaskService implements OnDestroy {
 
   private state: TaskState = TaskState.READY;
 
-  constructor(public httpclient: HttpClient, private notification: NotificationService) {
+  constructor(public httpclient: HttpClient, private notification: NotificationService, private storage: StorageService) {
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
       new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
@@ -113,6 +114,7 @@ export class TaskService implements OnDestroy {
           } else {
             this.state = TaskState.READY;
           }
+          this.storage.saveTask(task);
         }));
         task.start(this.httpclient);
 

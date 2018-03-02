@@ -197,3 +197,8 @@ h1 {
 .version {
     color: gray;
 }
+
+.split-modal button {
+    width: 100%;
+    font-size: 0.9em;
+}

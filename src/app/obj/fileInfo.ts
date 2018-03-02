@@ -22,7 +22,6 @@ export class FileInfo extends DataInfo {
     return this._extension;
   }
 
-  protected _type: string;
   protected _extension: string;
   protected _file: File;
   protected _url: string;
@@ -62,7 +61,7 @@ export class FileInfo extends DataInfo {
     } else {
       fullname = url.substr(url.lastIndexOf('/') + 1);
     }
-    const result = new FileInfo(fullname, 'audio-wav', 0);
+    const result = new FileInfo(fullname, 'audio/wav', 0);
     result.url = url;
     return result;
   }
@@ -77,7 +76,7 @@ export class FileInfo extends DataInfo {
         const reader = new FileReader();
 
         reader.onload = (result: any) => {
-          resolve(new File([ result.target.result ], new_name, attributes));
+          resolve(new File([result.target.result], new_name, attributes));
         };
         reader.onerror = (error) => {
           reject(error);
@@ -113,5 +112,15 @@ export class FileInfo extends DataInfo {
     }
 
     return null;
+  }
+
+  public toAny() {
+    return {
+      fullname: this.fullname,
+      size: this.size,
+      type: this.type,
+      url: this.url,
+      attributes: this.attributes
+    };
   }
 }

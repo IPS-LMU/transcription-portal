@@ -17,7 +17,6 @@ export class G2pMausOperation extends Operation {
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
-    this._time.end = 0;
 
     let url = '';
     let language = (isNullOrUndefined(AppInfo.getLanguageByCode(this.task.language).mausLanguage))
@@ -45,7 +44,7 @@ export class G2pMausOperation extends Operation {
       },
       responseType: 'text'
     }).subscribe((result: string) => {
-        this._time.end = Date.now();
+        this.time.duration = Date.now() - this.time.start;
         console.log(result);
 
         // convert result to json

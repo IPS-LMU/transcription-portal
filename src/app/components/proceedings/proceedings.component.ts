@@ -20,10 +20,10 @@ import {HttpClient} from '@angular/common/http';
 import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../shared/task.service';
-import {TaskList} from '../../obj/TaksList';
+import {TaskList} from '../../obj/tasks/TaksList';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
-import {TaskDirectory} from '../../obj/taskDirectory';
+import {TaskDirectory} from '../../obj/tasks/taskDirectory';
 import * as moment from 'moment';
 
 declare var window: any;

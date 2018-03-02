@@ -16,7 +16,6 @@ export class ASROperation extends Operation {
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
-    this._time.end = 0;
 
     const langObj = AppInfo.getLanguageByCode(this.task.language);
 
@@ -35,7 +34,7 @@ export class ASROperation extends Operation {
       responseType: 'text'
     }).subscribe((result: string) => {
         console.log(result);
-        this._time.end = Date.now();
+        this.time.duration = Date.now() - this.time.start;
 
         // convert result to json
         const x2js = new X2JS();

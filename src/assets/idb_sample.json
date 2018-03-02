@@ -1,6 +1,6 @@
 {
   "indexedb": {
-    "options": {
+    "settings": {
       "notifications": {
         "enabled": false,
         "upload": false,
@@ -10,12 +10,14 @@
         "emuWebApp": false
       }
     },
-    "taskCounter": 1,
-    "operationCounter": 1,
+    "internal": {
+      "taskCounter": 1,
+      "operationCounter": 1
+    },
     "tasks": [
       {
         "id": 1,
-        "state": 0,
+        "state": "INACTIVE",
         "folderPath": "test",
         "folderName": "",
         "language": "deu-DE",
@@ -28,8 +30,7 @@
             "bitsPerSecond": "",
             "channels": 2,
             "duration": 346873,
-            "size": 324234,
-            "state": 0
+            "size": 324234
           }
         ],
         "operations": [

@@ -32,7 +32,6 @@ export class UploadOperation extends Operation {
     this._protocol = '';
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
-    this._time.end = 0;
 
     const form: FormData = new FormData();
     const langObj = AppInfo.getLanguageByCode(this.task.language);
@@ -66,7 +65,7 @@ export class UploadOperation extends Operation {
 
     xhr.onloadend = (e) => {
       console.log('loadend');
-      this.time.end = Date.now();
+      this.time.duration = Date.now() - this.time.start;
       const result = e.currentTarget['responseText'];
       console.log(result);
       const x2js = new X2JS();
