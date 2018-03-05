@@ -56,6 +56,10 @@ export class WavFormat extends AudioFormat {
     return buffer.slice(44, buffer.byteLength);
   }
 
+  protected setDuration(buffer: ArrayBuffer) {
+    this._duration = this.getDataChunkSize(buffer) / (this._channels * this._bitsPerSample) * 8;
+  }
+
   public isValid(buffer: ArrayBuffer): boolean {
     let bufferPart = buffer.slice(0, 4);
     let test1 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));

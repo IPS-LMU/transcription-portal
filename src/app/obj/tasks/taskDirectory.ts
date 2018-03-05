@@ -1,9 +1,12 @@
-import {DirectoryInfo} from '../directoryInfo';
 import {Task} from './task';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
+import {DirectoryInfo} from '../directoryInfo';
 
 export class TaskDirectory {
+  get foldername(): string {
+    return this._foldername;
+  }
   get type(): string {
     return this._type;
   }
@@ -28,13 +31,15 @@ export class TaskDirectory {
   private _size: number;
   private _path: string;
   private _id: number;
+  private _foldername: string;
   private _type = 'folder';
   private static counter = 0;
 
   public constructor(path: string, size?: number) {
     this._size = size;
-    this._path = DirectoryInfo.extractFolderName(path);
+    this._path = path;
     this._id = ++TaskDirectory.counter;
+    this._foldername = DirectoryInfo.extractFolderName(path);
   }
 
   public static fromFolderObject(folder: WebKitDirectoryEntry): Promise<TaskDirectory> {
@@ -63,7 +68,6 @@ export class TaskDirectory {
         //console.log(`isFile ${item.fullPath}`);
         // Get file
         item.file((file) => {
-          console.log(file);
           let fileInfo = new FileInfo(file.fullName, file.type, 0, file);
           const task = new Task([fileInfo], []);
           //console.log("get file");
@@ -133,7 +137,6 @@ export class TaskDirectory {
         return true;
       }
     });
-    console.log('remove from dir ' + task_index);
     this._entries.splice(task_index, 1);
   }
 

@@ -150,8 +150,6 @@ export class AudioManager {
   public static decodeAudio = (filename: string, type: string, buffer: ArrayBuffer,
                                audioformats: AudioFormat[], keepbuffer = false): Promise<AudioManager> => {
     return new Promise<AudioManager>((resolve, reject) => {
-      console.log('Decode audio... ' + filename);
-
       const audioformat: AudioFormat = AudioManager.getFileFormat(filename.substr(filename.lastIndexOf('.')), audioformats);
 
       if (audioformat.isValid(buffer)) {
@@ -164,7 +162,6 @@ export class AudioManager {
         }
         AudioManager.decodeAudioFile(buffer, audioinfo.samplerate).then(
           (audiobuffer: AudioBuffer) => {
-            console.log('Audio decoded.');
 
             result.ressource = new AudioRessource(filename, SourceType.ArrayBuffer,
               audioinfo, new ArrayBuffer(0), null, 0);
@@ -174,7 +171,6 @@ export class AudioManager {
 
             const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate), new AudioTime(audiobuffer.length, audioinfo.samplerate));
             result._mainchunk = new AudioChunk(selection, result);
-            console.log(result);
 
             result.state = PlayBackState.INITIALIZED;
             result.afterdecoded.emit(result.ressource);
@@ -212,15 +208,11 @@ export class AudioManager {
         || (<any>window).mozOfflineAudioContext
         || false;
 
-      console.log('decode Methode');
       if (OfflineAudioContext === false) {
         console.error(`OfflineAudioContext is not supported!`);
       }
 
       AudioManager.audiocontext.decodeAudioData(file, function (buffer) {
-        console.log('received');
-        console.log(buffer.length / buffer.sampleRate);
-        console.log(buffer);
 
         var context = new OfflineAudioContext(buffer.numberOfChannels, Math.ceil(buffer.duration * sampleRate), sampleRate);
         const source = context.createBufferSource();
@@ -278,7 +270,6 @@ export class AudioManager {
 
     if (!this.audioplaying) {
       if (isNullOrUndefined(this._gainNode)) {
-        console.log(`HÄ`);
         this.prepareAudioPlayBack();
       }
       this._playonhover = playonhover;

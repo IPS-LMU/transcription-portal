@@ -8,12 +8,11 @@ import {ANIMATIONS} from './shared/Animations';
 import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
 import {FileInfo, Operation, Task, TaskState, ToolOperation} from './obj/tasks/index';
-import {AudioInfo, AudioManager} from './obj/audio';
-import {WavFormat} from './obj/audio/AudioFormats';
+import {AudioInfo} from './obj/audio';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './shared/task.service';
 import {DirectoryInfo} from './obj/directoryInfo';
-import {TaskDirectory} from './obj/tasks/taskDirectory';
+import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
@@ -31,11 +30,8 @@ export class AppComponent implements OnDestroy {
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
   public selectedOperation: Operation = null;
-  public selectedlanguage = AppInfo.languages[0];
-  private splitPrompt = 'PENDING';
   private splitModalDismissedProperly = false;
 
-  public newfiles = false;
 
   public get isdevelopment(): boolean {
     return environment.development;
@@ -63,6 +59,8 @@ export class AppComponent implements OnDestroy {
       alert('You are trying to leave.');
       return false;
     }
+
+    this.taskService.openSplitModal = this.openSplitModal;
   }
 
   public get AppInfo() {
@@ -78,213 +76,16 @@ export class AppComponent implements OnDestroy {
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
+    console.log(`files dropped`);
+    console.log(entries);
     if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
       // filter and re-structure entries array to supported files and directories
       let filteredEntries = this.taskService.cleanUpInputArray(entries);
 
-      console.log(filteredEntries);
       for (let i = 0; i < filteredEntries.length; i++) {
         const entry = filteredEntries[i];
 
-        if (entry instanceof FileInfo) {
-          let file = <FileInfo> entry;
-
-          const newName = FileInfo.escapeFileName(file.fullname);
-          let newFile: File = null;
-
-          const task = new Task([file], this.taskService.operations);
-
-          new Promise<void>((resolve, reject) => {
-              if (newName !== file.name) {
-                // no valid name, replace
-                FileInfo.renameFile(file.file, newName, {
-                  type: file.type,
-                  lastModified: file.file.lastModifiedDate
-                }).then((newfile: File) => {
-                  console.log(`file type: ${newfile.type}`);
-                  task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
-                  newFile = newfile;
-                  task.files[0].attributes = entry.attributes;
-                  resolve()
-                });
-              } else {
-                resolve()
-              }
-            }
-          ).then(() => {
-            task.language = this.selectedlanguage.code;
-            this.newfiles = true;
-
-            setTimeout(() => {
-              let reader = new FileReader();
-              reader.onload = (event: any) => {
-                const format = new WavFormat(event.target.result);
-                if (format.isValid(event.target.result) && format.channels > 1) {
-                  console.log(`OKOKOKOK`);
-
-                  const directory = new DirectoryInfo(file.name + '_dir/');
-
-                  const files: File[] = format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result);
-                  console.log(this.splitPrompt);
-                  if (this.splitPrompt === 'PENDING') {
-                    this.openSplitModal();
-                    this.splitPrompt = 'ASKED';
-                  } else if (this.splitPrompt !== 'ASKED') {
-                    if (this.splitPrompt === 'FIRST') {
-                      files.splice(1, 1);
-                    } else if (this.splitPrompt === 'SECOND') {
-                      files.splice(0, 1);
-                    }
-                  }
-                  const fileInfos: FileInfo[] = [];
-
-                  for (let i = 0; i < files.length; i++) {
-                    const fileObj = files[i];
-                    const fileInfo = FileInfo.fromFileObject(fileObj);
-
-                    fileInfos.push(fileInfo);
-                  }
-                  directory.addEntries(fileInfos);
-                  this.readNewFiles([directory]);
-                  this.taskService.taskList.removeEntry(task);
-                  console.log(directory);
-                } else {
-                  AudioManager.decodeAudio(file.fullname, file.file.type, event.target.result, [new WavFormat(event.target.result)], false).then((manager: AudioManager) => {
-                    task.files[0] = manager.ressource.info;
-                    task.files[0].fullname = newName;
-
-                    if (isNullOrUndefined(newFile)) {
-                      task.files[0].file = file.file;
-                    } else {
-                      task.files[0].file = newFile;
-                    }
-
-                    task.files[0].attributes = file.attributes;
-                    console.log(`ATTRIBUTES`);
-                    console.log(file.attributes);
-                    this.storage.saveTask(task);
-                  }).catch((error) => {
-                    this.taskService.taskList.removeEntry(task);
-                    console.error(error);
-                  });
-                }
-              };
-              reader.readAsArrayBuffer(file.file);
-            }, 1000);
-
-            // set state
-            for (let i = 0; i < this.taskService.operations.length; i++) {
-              const operation = this.taskService.operations[i];
-
-              task.operations[i].enabled = operation.enabled;
-            }
-            this.taskService.addEntry(task);
-          });
-        } else if (entry instanceof DirectoryInfo) {
-          let dir = <DirectoryInfo> entry;
-
-          let dirTask = new TaskDirectory(dir.path, dir.size);
-
-          for (let i = 0; i < dir.entries.length; i++) {
-            const dirEntry = dir.entries[i];
-
-            if (dirEntry instanceof FileInfo) {
-              const file = <FileInfo> dirEntry;
-
-              const newName = FileInfo.escapeFileName(file.fullname);
-              let newFile: File = null;
-
-              const task = new Task([file], this.taskService.operations, dirTask);
-
-              new Promise<void>((resolve, reject) => {
-                  if (newName !== file.name) {
-                    // no valid name, replace
-                    FileInfo.renameFile(file.file, newName, {
-                      type: file.type,
-                      lastModified: file.file.lastModifiedDate
-                    }).then((newfile: File) => {
-                      console.log(`newfile type = ${file.type}`);
-                      task.files[0] = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
-                      newFile = newfile;
-                      resolve()
-                    });
-                  } else {
-                    resolve()
-                  }
-                }
-              ).then(() => {
-                task.language = this.selectedlanguage.code;
-                this.newfiles = true;
-
-                setTimeout(() => {
-                  let reader = new FileReader();
-                  reader.onload = (event: any) => {
-                    const format = new WavFormat(event.target.result);
-                    if (format.isValid(event.target.result) && format.channels > 1) {
-                      console.log(`OKOKOKOK`);
-                      const directory = new DirectoryInfo(file.name + '_dir/');
-                      const files: File[] = format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result);
-                      console.log(this.splitPrompt);
-                      if (this.splitPrompt === 'PENDING') {
-                        this.openSplitModal();
-                        this.splitPrompt = 'ASKED';
-                      } else if (this.splitPrompt !== 'ASKED') {
-                        if (this.splitPrompt === 'FIRST') {
-                          files.splice(1, 1);
-                        } else if (this.splitPrompt === 'SECOND') {
-                          files.splice(0, 1);
-                        }
-                      }
-
-                      const fileInfos: FileInfo[] = [];
-
-                      for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        const fileInfo = FileInfo.fromFileObject(file);
-
-                        fileInfos.push(fileInfo);
-                      }
-                      directory.addEntries(fileInfos);
-                      this.readNewFiles([directory]);
-                      this.taskService.taskList.removeEntry(task);
-                      console.log(directory);
-                    } else {
-                      const format = new WavFormat(event.target.result);
-                      AudioManager.decodeAudio(file.fullname, file.file.type, event.target.result, [format], false).then((manager: AudioManager) => {
-                        task.files[0] = manager.ressource.info;
-                        task.files[0].fullname = newName;
-
-                        if (isNullOrUndefined(newFile)) {
-                          task.files[0].file = file.file;
-                        } else {
-                          task.files[0].file = newFile;
-                        }
-
-                        task.files[0].attributes = file.attributes;
-                        console.log(`ATTRIBUTES`);
-                        console.log(file.attributes);
-                        this.storage.saveTask(task);
-                      }).catch((error) => {
-                        this.taskService.taskList.removeEntry(task);
-                        console.error(error);
-                      });
-                    }
-                  };
-                  reader.readAsArrayBuffer(file.file);
-                }, 1000);
-
-                // set state
-                for (let i = 0; i < this.taskService.operations.length; i++) {
-                  const operation = this.taskService.operations[i];
-
-                  task.operations[i].enabled = operation.enabled;
-                }
-                dirTask.addEntries([task]);
-              });
-            }
-          }
-          this.taskService.addEntry(dirTask);
-        }
+        this.taskService.preprocessor.addToQueue(entry);
       }
     }
   }
@@ -367,8 +168,8 @@ export class AppComponent implements OnDestroy {
   }
 
   onASRLangCHanged(lang) {
-    if (lang.code !== this.selectedlanguage.code) {
-      this.selectedlanguage = lang;
+    if (lang.code !== this.taskService.selectedlanguage.code) {
+      this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllPendingTasks();
     }
   }
@@ -379,7 +180,7 @@ export class AppComponent implements OnDestroy {
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
       if (task.state === TaskState.PENDING) {
-        task.language = this.selectedlanguage.code;
+        task.language = this.taskService.selectedlanguage.code;
       }
     }
   }
@@ -463,7 +264,7 @@ export class AppComponent implements OnDestroy {
     return 0;
   }
 
-  public openSplitModal() {
+  public openSplitModal = () => {
     this.modalService.open(this.splitModal, {
       beforeDismiss: () => {
         const old = this.splitModalDismissedProperly;
@@ -473,20 +274,20 @@ export class AppComponent implements OnDestroy {
     }).result.then(
       () => {
       }, (reason) => {
-        this.splitPrompt = reason;
+        this.taskService.splitPrompt = reason;
         this.onSplitModalDismissed();
       }
     );
-  }
+  };
 
-  public onSplitModalDismissed() {
+  public onSplitModalDismissed = () => {
     this.checkFiles();
-  }
+  };
 
   public checkFiles() {
-    if (this.splitPrompt !== 'BOTH') {
+    if (this.taskService.splitPrompt !== 'BOTH') {
       for (let i = 0; i < this.taskService.taskList.entries.length; i++) {
-        const entry = this.taskService.taskList.entries[i];
+        let entry = this.taskService.taskList.entries[i];
 
         if (entry instanceof TaskDirectory) {
           if (entry.path.indexOf('_dir') > -1) {
@@ -495,17 +296,23 @@ export class AppComponent implements OnDestroy {
             for (let j = 0; j < entry.entries.length; j++) {
               const dirEntry = <Task> entry.entries[j];
 
-              if (this.splitPrompt === 'FIRST') {
-                if (dirEntry.files[0].name.indexOf('_2') > -1) {
+              // TODO improve this code. Determine the channel file using another way
+              if (this.taskService.splitPrompt === 'FIRST') {
+                if (dirEntry.files[0].fullname.indexOf('_2.') > -1) {
                   entry.entries.splice(j, 1);
                   j--;
                 }
-              } else if (this.splitPrompt === 'SECOND') {
-                if (dirEntry.files[0].name.indexOf('_1') > -1) {
+              } else if (this.taskService.splitPrompt === 'SECOND') {
+                if (dirEntry.files[0].fullname.indexOf('_1.') > -1) {
                   entry.entries.splice(j, 1);
                   j--;
                 }
               }
+            }
+
+            if (entry.entries.length === 1) {
+              // only one item
+              this.taskService.taskList.entries[i] = entry.entries[0];
             }
           }
         }

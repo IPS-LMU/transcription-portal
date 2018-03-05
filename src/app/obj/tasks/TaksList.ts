@@ -19,7 +19,6 @@ export class TaskList {
 
   public findTaskByState(state: TaskState): Task {
     let tasks = this.getAllTasks();
-    console.log(tasks);
 
     return tasks.find((a) => {
       if (a.state === state) {
@@ -30,11 +29,23 @@ export class TaskList {
 
   public findTaskById(id: number): Task {
     let tasks = this.getAllTasks();
-    console.log(tasks);
 
     return tasks.find((a) => {
       if (a.id === id) {
         return true;
+      }
+    });
+  }
+
+  public findTaskDirByPath(path: string): TaskDirectory {
+    let tasks = this.getAllTaskDirectories();
+
+    console.log(tasks);
+    return tasks.find((a) => {
+      if (a.path === path) {
+        return true;
+      } else {
+        console.log(`${a.path} is not ${path}`);
       }
     });
   }
@@ -54,6 +65,19 @@ export class TaskList {
     return result;
   }
 
+  public getAllTaskDirectories(): TaskDirectory[] {
+    let result: TaskDirectory[] = [];
+
+    for (let i = 0; i < this._entries.length; i++) {
+      const entry = this._entries[i];
+      if (entry instanceof TaskDirectory) {
+        result.push(entry);
+      }
+    }
+
+    return result;
+  }
+
   public removeEntry(entry: (Task | TaskDirectory)) {
     if (entry instanceof Task) {
       if (!isNullOrUndefined(entry.directory)) {
@@ -65,7 +89,6 @@ export class TaskList {
           }
         });
 
-        console.log('remove ' + task_index);
         this._entries.splice(task_index, 1);
       }
     }
@@ -79,7 +102,6 @@ export class TaskList {
         }
       });
 
-      console.log('remove dir ' + task_index);
       this._entries.splice(task_index, 1);
     }
   }

@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {IndexedDBManager} from './obj/IndexedDBManager';
 import {SubscriptionManager} from './shared/subscription-manager';
 import {Task, TaskDirectory} from './obj/tasks';
+import {AppInfo} from './app.info';
 
 @Injectable()
 export class StorageService {
@@ -10,8 +11,8 @@ export class StorageService {
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   constructor() {
-    // this.idbm = new IndexedDBManager('oh-portal');
-    /* this.subscrmanager.add(this.idbm.open(1).subscribe(
+    this.idbm = new IndexedDBManager('oh-portal');
+    this.subscrmanager.add(this.idbm.open(1).subscribe(
       (result) => {
         console.log('open db');
         console.log(result.type);
@@ -45,7 +46,7 @@ export class StorageService {
       (error) => {
         console.error(error);
       }
-    ));*/
+    ));
   }
 
   public saveTask(taskEntry: Task | TaskDirectory) {

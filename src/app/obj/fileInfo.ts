@@ -106,7 +106,6 @@ export class FileInfo extends DataInfo {
           extension: extension
         }
       } else {
-        console.log(fullname);
         throw new Error('invalid fullname. Fullname must contain the file extension');
       }
     }

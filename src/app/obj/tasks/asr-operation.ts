@@ -25,22 +25,18 @@ export class ASROperation extends Operation {
       `PIPE=ASR_G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
       `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
 
-    console.log(url);
-
     httpclient.post(url, {}, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
       responseType: 'text'
     }).subscribe((result: string) => {
-        console.log(result);
         this.time.duration = Date.now() - this.time.start;
 
         // convert result to json
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.WebServiceResponseLink;
-        console.log(json);
 
         // add messages to protocol
         if (json.warnings !== '') {
@@ -51,7 +47,6 @@ export class ASROperation extends Operation {
 
         if (json.success === 'true') {
           this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
-          console.log(this.results);
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);
@@ -59,7 +54,7 @@ export class ASROperation extends Operation {
       },
       (error) => {
         this._protocol = error.message;
-        console.log(error);
+        console.error(error);
         this.changeState(TaskState.ERROR);
       });
 

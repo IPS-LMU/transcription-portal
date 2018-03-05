@@ -25,18 +25,24 @@ export abstract class AudioFormat {
     return this._extension;
   }
 
+  get duration(): number {
+    return this._duration;
+  }
+
   protected _extension: string;
   protected _filename: string;
   protected _sampleRate: number;
   protected _channels: number;
   protected _byteRate: number;
   protected _bitsPerSample: number;
+  protected _duration: number;
 
   constructor(buffer: ArrayBuffer) {
     this.setSampleRate(buffer);
     this.setChannels(buffer);
     this.setBitsPerSample(buffer);
     this.setByteRate(buffer);
+    this.setDuration(buffer);
   }
 
   public getAudioInfo(filename: string, type: string, buffer: ArrayBuffer): AudioInfo {
@@ -56,4 +62,6 @@ export abstract class AudioFormat {
   protected abstract setBitsPerSample(buffer: ArrayBuffer);
 
   protected abstract setByteRate(buffer: ArrayBuffer);
+
+  protected abstract setDuration(buffer: ArrayBuffer);
 }

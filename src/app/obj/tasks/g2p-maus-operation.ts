@@ -22,7 +22,6 @@ export class G2pMausOperation extends Operation {
     let language = (isNullOrUndefined(AppInfo.getLanguageByCode(this.task.language).mausLanguage))
       ? this.task.language :
       AppInfo.getLanguageByCode(this.task.language).mausLanguage;
-    console.log(`language:${language}`);
     if (operations[2].enabled) {
       // use G2P -> MAUS Pipe
       url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
@@ -45,7 +44,6 @@ export class G2pMausOperation extends Operation {
       responseType: 'text'
     }).subscribe((result: string) => {
         this.time.duration = Date.now() - this.time.start;
-        console.log(result);
 
         // convert result to json
         const x2js = new X2JS();

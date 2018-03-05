@@ -7,3 +7,4 @@ export * from './tool-operation';
 export * from './emu-operation';
 export * from './maus-operation';
 export * from './asr-operation';
+export * from '../preprocessor';

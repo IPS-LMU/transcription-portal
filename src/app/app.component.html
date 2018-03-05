@@ -3,8 +3,9 @@
         <h4 class="modal-title">Audio files with more than 2 Channels</h4>
     </div>
     <div class="modal-body split-modal">
-        <p>You have added audio files with more than two channels. In Order to continue the channels will be splitted
-            and each will be proceed separately.
+        <p>You have added audio files with more than two channels. In order to continue the channels will be split in
+            separate files
+            and each could be processed separately.
         </p>
         <p style="text-align: center;">
             What would you like to do?
@@ -67,20 +68,20 @@
             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton"
                     style="background-color: transparent;"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <ng-container *ngIf="selectedlanguage === null">
+                <ng-container *ngIf="taskService.selectedlanguage === null">
                     {{AppInfo.languages[0].code | uppercase}}
                     ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
                 </ng-container>
-                <ng-container *ngIf="selectedlanguage !== null">
-                    {{selectedlanguage.name}} ({{getShortCode(selectedlanguage.code)}})
-                    [{{selectedlanguage.asr}}]
+                <ng-container *ngIf="taskService.selectedlanguage !== null">
+                    {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
+                    [{{taskService.selectedlanguage.asr}}]
                 </ng-container>
             </button>
             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                     <span class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
                                           (click)="onASRLangCHanged(lang)">
                                         <ng-container
-                                                *ngIf="!(selectedlanguage === null && i === 0) && (selectedlanguage !== lang.code)">
+                                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
                                             {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
                                         </ng-container>
                                     </span>
@@ -88,7 +89,7 @@
         </div>
         <div class="col-4" style="text-align:right;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onUploadButtonClick()"
-                    [disabled]="!newfiles">
+                    [disabled]="!taskService.newfiles">
                 <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
                     class="d-none d-lg-inline d-xl-inline">UPLOAD & PROCESS FILES</span>
             </button>

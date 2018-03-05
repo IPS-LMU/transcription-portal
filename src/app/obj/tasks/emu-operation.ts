@@ -15,7 +15,6 @@ export class EmuOperation extends ToolOperation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    console.log(`in emu start!`);
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 

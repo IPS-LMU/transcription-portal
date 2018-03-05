@@ -145,13 +145,11 @@ export class Task {
 
   public start(httpclient: HttpClient, test = false) {
     if (this.state !== TaskState.FINISHED) {
-      console.log(`start task by start`);
       this.startNextOperation(httpclient, test);
     }
   }
 
   private startNextOperation(httpclient: HttpClient, test = false) {
-    console.log(`start next`);
     let nextoperation = -1;
 
     for (let i = 0; i < this.operations.length; i++) {
@@ -165,7 +163,6 @@ export class Task {
       }
     }
 
-    console.log(`next Operation = ${nextoperation}`);
     if (nextoperation === -1) {
       // all finished
       this.changeState(TaskState.FINISHED);
@@ -177,11 +174,9 @@ export class Task {
           (event) => {
             if (event.newState === TaskState.FINISHED) {
               subscription.unsubscribe();
-              console.log(`call start next in subscr by ${nextoperation}`);
               this.startNextOperation(httpclient);
             } else {
               if (event.newState === TaskState.READY) {
-                console.log(`OKOK`);
                 this.changeState(TaskState.READY);
               }
             }
@@ -192,7 +187,6 @@ export class Task {
           () => {
           });
 
-        console.log(`call start next normal`);
         this.operations[nextoperation].start(this.files, this.operations, httpclient);
       }
     }

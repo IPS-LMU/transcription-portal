@@ -209,7 +209,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           this.selected_tasks.push(entry);
         }
       } else if (entry instanceof TaskDirectory) {
-        console.log(`is DIR`);
         const search = this.selected_tasks.findIndex((a) => {
           return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id;
         });

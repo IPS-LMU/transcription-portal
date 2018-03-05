@@ -33,7 +33,6 @@ export class NotificationService {
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {
-      console.log('requestPermission');
       Notify.requestPermission(this.onPermissionGranted, this.onPermissionDenied);
     } else {
       console.log(`no permissions needed`);

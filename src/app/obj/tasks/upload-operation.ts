@@ -38,7 +38,6 @@ export class UploadOperation extends Operation {
     const url = `${langObj.host}uploadFileMulti`;
 
     for (let i = 0; i < files.length; i++) {
-      console.log('new filename is ' + files[i].file.name);
       form.append('file' + i, files[i].file);
     }
 
@@ -52,10 +51,6 @@ export class UploadOperation extends Operation {
       }
     }, false);
 
-    xhr.onloadstart = (e) => {
-      console.log('start');
-    };
-
     xhr.onerror = (e) => {
       console.error(e);
       // add messages to protocol
@@ -64,14 +59,11 @@ export class UploadOperation extends Operation {
     };
 
     xhr.onloadend = (e) => {
-      console.log('loadend');
       this.time.duration = Date.now() - this.time.start;
       const result = e.currentTarget['responseText'];
-      console.log(result);
       const x2js = new X2JS();
       let json: any = x2js.xml2js(result);
       json = json.UploadFileMultiResponse;
-      console.log(json);
 
       // add messages to protocol
       if (json.warnings !== '') {

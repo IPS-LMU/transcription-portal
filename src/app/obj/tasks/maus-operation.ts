@@ -17,7 +17,6 @@ export class MAUSOperation extends Operation {
     this._time.start = Date.now();
 
     try {
-      console.log(`HÄÄ??`);
       const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runMAUSWebLink?' +
         'BPF=https://clarin.phonetik.uni-muenchen.de:443/BASWebServices/data/2018.01.07_17.44.52_27621602A906DD83E24AB16392205B15/02-1-AC-JC-16b_1___.175232_346379__1_.par' +
         '&SIGNAL=' + inputs[0].url +
@@ -36,7 +35,6 @@ export class MAUSOperation extends Operation {
 
       xhr.onloadend = (e) => {
         const result = e.currentTarget['responseText'];
-        console.log(result);
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.WebServiceResponseLink;

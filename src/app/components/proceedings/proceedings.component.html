@@ -134,8 +134,8 @@
 
                 <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
                     (click)="onRowSelected(entry)">
-                <span title="{{entry.path}}">
-                {{entry.path}}
+                <span title="{{entry.foldername}}">
+                {{entry.foldername}}
                 </span>
                     <span *ngIf="entry.entries.length > 0">
                     ({{entry.entries.length}})
