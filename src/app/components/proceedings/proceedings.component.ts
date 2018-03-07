@@ -25,6 +25,7 @@ import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
 import {TaskDirectory} from '../../obj/tasks/taskDirectory';
 import * as moment from 'moment';
+import {StorageService} from '../../storage.service';
 
 declare var window: any;
 
@@ -73,7 +74,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public selectedOperation: Operation;
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
-              private modalService: NgbModal) {
+              private modalService: NgbModal, private storage: StorageService) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
@@ -228,11 +229,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (option === 'delete') {
       for (let i = 0; i < this.selected_tasks.length; i++) {
         let entry = this.selected_tasks[i];
-        if (entry instanceof Task) {
-          this.taskList.removeEntry(this.selected_tasks[i]);
-        } else if (entry instanceof TaskDirectory) {
-          this.taskList.removeDir(entry);
-        }
+        this.storage.removeFromDB(entry).then(() => {
+          if (entry instanceof Task) {
+            this.taskList.removeEntry(entry);
+          } else if (entry instanceof TaskDirectory) {
+            this.taskList.removeDir(entry);
+          }
+        }).catch((err) => {
+          console.error(err);
+        });
 
         this.selected_tasks.splice(i, 1);
         i--; // because length changed

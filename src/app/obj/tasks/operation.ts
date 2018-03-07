@@ -3,11 +3,10 @@ import {SafeHtml} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
-import {Task} from './index';
-import {TaskState} from './task';
 import {Subject} from 'rxjs/Subject';
+import {Task, TaskState} from './';
 
-export class Operation {
+export abstract class Operation {
   get enabled(): boolean {
     return this._enabled;
   }
@@ -121,8 +120,12 @@ export class Operation {
     newState: TaskState
   }> = this.statesubj.asObservable();
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    this._id = ++Operation.counter;
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    if (isNullOrUndefined(id)) {
+      this._id = ++Operation.counter;
+    } else {
+      this._id = id;
+    }
     this._name = name;
     this._task = task;
 
@@ -189,10 +192,9 @@ export class Operation {
     }
   }
 
-  public clone(task?: Task): Operation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
-    return new Operation(this.name, this.icon, selected_task, this.state);
-  }
+  public abstract clone(task?: Task): Operation;
+
+  public abstract fromAny(operationObj: any, task: Task): Operation;
 
   onMouseOver() {
   }

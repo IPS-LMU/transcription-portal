@@ -11,8 +11,8 @@ import {AppInfo} from '../../app.info';
 export class OCTRAOperation extends ToolOperation {
   private operations: Operation[];
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    super(name, icon, task, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, icon, task, state, id);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -73,6 +73,18 @@ export class OCTRAOperation extends ToolOperation {
       `${transcript}&` +
       `${host}&` +
       `${embedded}`;
+  }
+
+  public fromAny(operationObj: any, task: Task): OCTRAOperation {
+    const result = new OCTRAOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    for (let k = 0; k < operationObj.results.length; k++) {
+      const result = operationObj.results[k];
+      result.results.push(new FileInfo(result.fullname, result.type, result.size));
+      result.url = result;
+    }
+    result._time = operationObj.time;
+    result._protocol = operationObj._protocol;
+    return result;
   }
 
   public clone(task?: Task): OCTRAOperation {

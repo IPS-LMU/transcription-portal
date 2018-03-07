@@ -118,32 +118,28 @@ export class IndexedDBManager {
     );
   };
 
-  public getAll = (store_name: string | IDBObjectStore, key: string | number): Promise<any[]> => {
+  public getAll = (store_name: string | IDBObjectStore): Promise<any[]> => {
     return new Promise<any>(
       (resolve, reject) => {
         const result = [];
         const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READONLY);
-        if (key !== null && key !== undefined) {
-          const cursorRequest = store.openCursor();
+        const cursorRequest = store.openCursor();
 
-          cursorRequest.onsuccess = function (event: any) {
-            const cursor = event.target.result;
+        cursorRequest.onsuccess = function (event: any) {
+          const cursor = event.target.result;
 
-            if (cursor) {
-              const value = cursor.value;
-              result.push(value);
-              cursor.continue();
-            } else {
-              resolve(result);
-            }
-          };
+          if (cursor) {
+            const value = cursor.value;
+            result.push(value);
+            cursor.continue();
+          } else {
+            resolve(result);
+          }
+        };
 
-          cursorRequest.onerror = (error: any) => {
-            reject(error);
-          };
-        } else {
-          reject(new Error('key not defined'));
-        }
+        cursorRequest.onerror = (error: any) => {
+          reject(error);
+        };
       }
     );
   };
@@ -183,7 +179,9 @@ export class IndexedDBManager {
         const wrapper = (acc: number) => {
           if (acc < data.length) {
             if (data[acc].hasOwnProperty('key') && data[acc].hasOwnProperty('value')) {
-              return this.save(store_name, data[acc].key, data[acc].value).then(wrapper(++acc));
+              return this.save(store_name, data[acc].key, data[acc].value).then(() => {
+                wrapper(++acc)
+              });
             } else {
               reject(new Error('saveSync data parameter has invalid elements'));
             }

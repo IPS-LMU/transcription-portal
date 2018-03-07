@@ -10,8 +10,8 @@ import {ToolOperation} from './tool-operation';
 export class EmuOperation extends ToolOperation {
   private operations: Operation[];
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    super(name, icon, task, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, icon, task, state, id);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -59,6 +59,18 @@ export class EmuOperation extends ToolOperation {
     const transcript = encodeURIComponent(this.operations[3].results[0].url);
 
     return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+  }
+
+  public fromAny(operationObj: any, task: Task): Operation {
+    const result = new EmuOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    for (let k = 0; k < operationObj.results.length; k++) {
+      const result = operationObj.results[k];
+      result.results.push(new FileInfo(result.fullname, result.type, result.size));
+      result.url = result;
+    }
+    result._time = operationObj.time;
+    result._protocol = operationObj._protocol;
+    return result;
   }
 
   public clone(task?: Task): EmuOperation {

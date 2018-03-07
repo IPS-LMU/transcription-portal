@@ -3,23 +3,14 @@ import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
 import {NotificationService} from './notification.service';
 import {SubscriptionManager} from './subscription-manager';
-import {
-  ASROperation,
-  EmuOperation,
-  Operation,
-  Preprocessor,
-  Task,
-  TaskDirectory,
-  TaskList,
-  TaskState
-} from '../obj/tasks';
+import {ASROperation, EmuOperation, Operation, Task, TaskDirectory, TaskList, TaskState} from '../obj/tasks';
 import {OCTRAOperation} from '../obj/tasks/octra-operation';
 import {UploadOperation} from '../obj/tasks/upload-operation';
 import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
 import {FileInfo} from '../obj/fileInfo';
 import {DirectoryInfo} from '../obj/directoryInfo';
 import {StorageService} from '../storage.service';
-import {QueueItem} from '../obj/preprocessor';
+import {Preprocessor, QueueItem} from '../obj/preprocessor';
 import {WavFormat} from '../obj/audio/AudioFormats';
 import {AudioInfo} from '../obj/audio';
 import {AppInfo} from '../app.info';
@@ -87,6 +78,19 @@ export class TaskService implements OnDestroy {
         }
       }
     ));
+
+    this.subscrmanager.add(this.storage.allloaded.subscribe((IDBtasks) => {
+      if (!isNullOrUndefined(IDBtasks)) {
+        this.newfiles = IDBtasks.length > 0;
+
+        for (let i = 0; i < IDBtasks.length; i++) {
+          const taskObj = IDBtasks[i];
+          const task = Task.fromAny(taskObj, this.operations);
+          console.log(task);
+          this._taskList.addEntry(task);
+        }
+      }
+    }))
   }
 
   private _taskList: TaskList = new TaskList();
@@ -106,6 +110,9 @@ export class TaskService implements OnDestroy {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
       this.taskList.addEntry(entry);
       this.storage.saveTask(entry);
+      this.storage.saveCounter('taskCounter', Task.counter);
+      this.storage.saveCounter('taskDirectoryCounter', TaskDirectory.counter);
+      this.storage.saveCounter('operationCounter', Operation.counter);
     } else {
       console.error(`could not add Task or TaskDirectory. Invalid class instance`);
     }
@@ -294,14 +301,14 @@ export class TaskService implements OnDestroy {
 
     if (queueItem.file instanceof FileInfo) {
       let file = <FileInfo> queueItem.file;
-      return this.processFileInfo(file, queueItem);
+      return this.processFileInfo(file, '', queueItem);
     } else if (queueItem.file instanceof DirectoryInfo) {
       let dir = <DirectoryInfo> queueItem.file;
       return this.processDirectoryInfo(dir, queueItem);
     }
   };
 
-  private processFileInfo(file: FileInfo, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
+  private processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
       const newName = FileInfo.escapeFileName(file.fullname);
       let newFileInfo: FileInfo = null;
@@ -332,7 +339,7 @@ export class TaskService implements OnDestroy {
             if (isValidFormat && format.channels > 1) {
               console.log('more than one channels detected!');
 
-              const directory = new DirectoryInfo(file.name + '_dir/');
+              const directory = new DirectoryInfo(path + file.name + '_dir/');
 
               const files: File[] = format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result);
 
@@ -364,7 +371,7 @@ export class TaskService implements OnDestroy {
                   reject(err);
                 });
               } else {
-                this.processFileInfo(FileInfo.fromFileObject(files[0]), queueItem).then(resolve).catch(reject);
+                this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
               }
 
             } else if (isValidFormat) {
@@ -405,7 +412,7 @@ export class TaskService implements OnDestroy {
     return new Promise<TaskDirectory[]>((resolve, reject) => {
 
       let dirTask = new TaskDirectory(dir.path, dir.size);
-      const promises: Promise[] = [];
+      const promises: Promise<(Task | TaskDirectory)[]>[] = [];
 
       for (let i = 0; i < dir.entries.length; i++) {
         const dirEntry = dir.entries[i];
@@ -413,7 +420,7 @@ export class TaskService implements OnDestroy {
         if (dirEntry instanceof FileInfo) {
           const file = <FileInfo> dirEntry;
 
-          promises.push(this.processFileInfo(file, queueItem));
+          promises.push(this.processFileInfo(file, dir.path, queueItem));
 
         } else {
           console.error('file in dir is not a file!');

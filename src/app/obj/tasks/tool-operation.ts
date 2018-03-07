@@ -1,15 +1,14 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
-import {Task} from './index';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {TaskState} from './task';
+import {Task, TaskState} from './task';
 
 export class ToolOperation extends Operation {
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    super(name, icon, task, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, icon, task, state, id);
   }
 
   private active = true;
@@ -55,6 +54,18 @@ export class ToolOperation extends Operation {
 
   public getToolURL(): string {
     return '';
+  }
+
+  public fromAny(operationObj: any, task: Task): Operation {
+    const result = new ToolOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    for (let k = 0; k < operationObj.results.length; k++) {
+      const result = operationObj.results[k];
+      result.results.push(new FileInfo(result.fullname, result.type, result.size));
+      result.url = result;
+    }
+    result._time = operationObj.time;
+    result._protocol = operationObj._protocol;
+    return result;
   }
 
   public clone(task?: Task): ToolOperation {

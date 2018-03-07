@@ -1,14 +1,14 @@
-import {Injectable} from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 import {IndexedDBManager} from './obj/IndexedDBManager';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {Task, TaskDirectory} from './obj/tasks';
+import {Operation, Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
 
 @Injectable()
 export class StorageService {
-  public allloaded = false;
   private idbm: IndexedDBManager;
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  public allloaded: EventEmitter<any[]> = new EventEmitter<any[]>();
 
   constructor() {
     this.idbm = new IndexedDBManager('oh-portal');
@@ -20,6 +20,25 @@ export class StorageService {
           // database opened
           console.log('IDB opened');
           this.idbm.save('options', 'version', {value: AppInfo.version});
+          const promises = [];
+          promises.push(this.idbm.get('options', 'taskCounter'));
+          promises.push(this.idbm.get('options', 'taskDirectoryCounter'));
+          promises.push(this.idbm.get('options', 'operationCounter'));
+
+          promises.push(this.idbm.getAll('tasks'));
+
+          Promise.all(promises).then((results) => {
+            Task.counter = results[0].value;
+            TaskDirectory.counter = results[1].value;
+            Operation.counter = results[2].value;
+            console.log(`tasks:`);
+            console.log(results[3]);
+            this.allloaded.emit(results[3]);
+          }).catch((err) => {
+            console.error(err);
+            this.allloaded.emit(null);
+          });
+
         } else if (result.type === 'upgradeneeded') {
           // database opened and needs upgrade/installation
           console.log(`IDB needs upgrade from v${result.oldVersion} to v${result.newVersion}...`);
@@ -30,8 +49,15 @@ export class StorageService {
           // procedure
           new Promise<void>((resolve, reject) => {
             if (version === 0) {
+              const promises = [];
+
               const optionsStore = this.idbm.db.createObjectStore('options', {keyPath: 'name'});
-              this.idbm.save(optionsStore, 'version', {value: 1}).then(() => {
+              promises.push(this.idbm.save(optionsStore, 'version', {value: 0}));
+              promises.push(this.idbm.save(optionsStore, 'taskCounter', {value: 0}));
+              promises.push(this.idbm.save(optionsStore, 'taskDirectoryCounter', {value: 0}));
+              promises.push(this.idbm.save(optionsStore, 'operationCounter', {value: 0}));
+
+              Promise.all(promises).then(() => {
                 version++;
                 console.log(`IDB upgraded to v${version}`);
                 resolve();
@@ -50,10 +76,41 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory) {
-    /* console.log(`save Task`);
+    console.log(`save Task`);
     const data = taskEntry.toAny();
 
-    this.idbm.save('tasks', taskEntry.id, data);*/
+    this.idbm.save('tasks', taskEntry.id, data);
+  }
+
+  public saveCounter(name: string, value: number) {
+    this.idbm.save('options', name, {
+      value: value
+    });
+  }
+
+  public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      console.log(`remove task`);
+      if (entry instanceof Task) {
+        this.idbm.remove('tasks', entry.id).then(() => {
+          resolve();
+        }).catch((err) => {
+          reject(err);
+        });
+      } else if (entry instanceof TaskDirectory) {
+        const promises = [];
+
+        for (let i = 0; i < entry.entries.length; i++) {
+          const entr = entry.entries[i];
+          this.removeFromDB(entr);
+        }
+        Promise.all(promises).then(() => {
+          resolve();
+        }).catch((err) => {
+          reject(err);
+        })
+      }
+    });
   }
 
   public destroy() {

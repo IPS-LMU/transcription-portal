@@ -33,7 +33,7 @@ export class TaskDirectory {
   private _id: number;
   private _foldername: string;
   private _type = 'folder';
-  private static counter = 0;
+  public static counter = 0;
 
   public constructor(path: string, size?: number) {
     this._size = size;
@@ -100,6 +100,8 @@ export class TaskDirectory {
             //console.log(result);
             dir.addEntries(result);
             //console.log(`dir with ${result.length} found`);
+            console.log(`RESULT`);
+            console.log(dir);
             resolve([dir]);
           });
         });

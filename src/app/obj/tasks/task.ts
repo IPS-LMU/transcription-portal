@@ -4,10 +4,10 @@ import {ReplaySubject} from 'rxjs/ReplaySubject';
 import {isNullOrUndefined} from 'util';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
-import {Operation} from './operation';
 import {Subject} from 'rxjs/Subject';
 import {TaskDirectory} from './taskDirectory';
 import {AudioInfo} from '../audio';
+import {Operation} from './index';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -37,7 +37,7 @@ export class Task {
     this._language = value;
   }
 
-  static counter = 0;
+  public static counter = 0;
   private opstatesubj: Subject<{
     opID: number;
     oldState: TaskState;
@@ -84,8 +84,12 @@ export class Task {
 
   public mouseover = false;
 
-  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory) {
-    this._id = ++Task.counter;
+  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
+    if (isNullOrUndefined(id)) {
+      this._id = ++Task.counter;
+    } else {
+      this._id = id;
+    }
     this._files = files;
     this.sortFilesArray();
 
@@ -187,7 +191,14 @@ export class Task {
           () => {
           });
 
-        this.operations[nextoperation].start(this.files, this.operations, httpclient);
+        let files;
+        if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
+          files = this.files;
+        } else {
+          files = this.operations[0].results;
+        }
+
+        this.operations[nextoperation].start(files, this.operations, httpclient);
       }
     }
   }
@@ -233,6 +244,34 @@ export class Task {
     this.subscrmanager.destroy();
   }
 
+  public static fromAny(taskObj: any, defaultOperations: Operation[]): Task {
+    const task = new Task([], [], null, taskObj.id);
+    task.language = taskObj.language;
+
+    for (let i = 0; i < taskObj.files.length; i++) {
+      const file = taskObj.files[i];
+      const audioInfo = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
+      task.files.push(audioInfo);
+    }
+
+    for (let i = 0; i < taskObj.operations.length; i++) {
+      const operationObj = taskObj.operations[i];
+      for (let j = 0; j < defaultOperations.length; j++) {
+        const op = defaultOperations[j];
+        if (op.name === operationObj.name) {
+          const operation = op.fromAny(operationObj, task);
+          if (operation.state === TaskState.UPLOADING || operation.state === TaskState.PROCESSING) {
+            operation.changeState(TaskState.PENDING);
+          }
+          task.operations.push(operation);
+          break;
+        }
+      }
+    }
+
+    return task;
+  }
+
   public toAny(): any {
     const result = {
       id: this.id,
@@ -256,7 +295,7 @@ export class Task {
         fileObj['sampleRate'] = audioFile.samplerate;
         fileObj['bitsPerSecond'] = audioFile.bitrate;
         fileObj['channels'] = audioFile.channels;
-        fileObj['duration'] = audioFile.duration.seconds;
+        fileObj['duration'] = audioFile.duration.samples;
       }
 
       result.files.push(fileObj);
@@ -264,11 +303,14 @@ export class Task {
 
     // read operation data
     for (let i = 0; i < this.operations.length; i++) {
-      const operation = this.operations[i];
+      const operation = this.operations[i].toAny();
 
-      result.operations.push(operation.toAny());
+      result.operations.push(operation);
     }
 
+    result.folderPath = (this._directory === undefined) ? '' : this._directory.path;
+
+    console.log(result);
     return result;
   }
 }

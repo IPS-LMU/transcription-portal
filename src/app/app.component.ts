@@ -7,7 +7,7 @@ import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
 import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {FileInfo, Operation, Task, TaskState, ToolOperation} from './obj/tasks/index';
+import {Operation, Task, TaskState, ToolOperation} from './obj/tasks';
 import {AudioInfo} from './obj/audio';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './shared/task.service';
@@ -15,6 +15,7 @@ import {DirectoryInfo} from './obj/directoryInfo';
 import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {FileInfo} from './obj/fileInfo';
 
 declare var window: any;
 
@@ -309,9 +310,23 @@ export class AppComponent implements OnDestroy {
                 }
               }
             }
+          }
 
-            if (entry.entries.length === 1) {
-              // only one item
+          if (entry.entries.length === 1) {
+            // only one item
+            console.log(`entry path is ${entry.path}`);
+            let path = entry.path.substr(0, entry.path.lastIndexOf('/'));
+            path = path.substr(0, path.lastIndexOf('/')) + '/';
+            let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
+
+            if (!isNullOrUndefined(dirtemp)) {
+              dirtemp.entries.push(entry.entries[0]);
+              this.taskService.taskList.removeEntry(entry.entries[0]);
+            } else if (path !== '' && path != '/') {
+              dirtemp = new TaskDirectory(path);
+              dirtemp.addEntries(entry.entries);
+              this.taskService.taskList.addEntry(dirtemp);
+            } else {
               this.taskService.taskList.entries[i] = entry.entries[0];
             }
           }

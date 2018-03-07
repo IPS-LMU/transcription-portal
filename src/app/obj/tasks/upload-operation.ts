@@ -3,9 +3,8 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {isArray, isNullOrUndefined} from 'util';
 import {TimePipe} from '../../shared/time.pipe';
 import {FileInfo} from '../fileInfo';
-import {Task} from './index';
 import {Operation} from './operation';
-import {TaskState} from './task';
+import {Task, TaskState} from './task';
 import * as X2JS from 'x2js';
 import {AppInfo} from '../../app.info';
 
@@ -13,8 +12,8 @@ export class UploadOperation extends Operation {
 
   private progress = 0;
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    super(name, icon, task, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, icon, task, state, id);
   }
 
   public updateEstimatedEnd = () => {
@@ -138,6 +137,20 @@ export class UploadOperation extends Operation {
 
     return sanitizer.bypassSecurityTrustHtml(result);
   };
+
+  public fromAny(operationObj: any, task: Task): UploadOperation {
+    const result = new UploadOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    for (let k = 0; k < operationObj.results.length; k++) {
+      let fileObj = operationObj.results[k];
+      let fileInfo = new FileInfo(fileObj.fullname, fileObj.type, fileObj.size);
+      fileInfo.url = fileObj.url;
+      result.results.push(fileInfo);
+    }
+    result._time = operationObj.time;
+    result._protocol = operationObj.protocol;
+    console.log(result);
+    return result;
+  }
 
   public clone(task?: Task): UploadOperation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;

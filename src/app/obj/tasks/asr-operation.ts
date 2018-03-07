@@ -8,11 +8,12 @@ import * as X2JS from 'x2js';
 
 export class ASROperation extends Operation {
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState) {
-    super(name, icon, task, state);
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, icon, task, state, id);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    console.log(inputs);
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
@@ -68,6 +69,18 @@ export class ASROperation extends Operation {
     }, 10000);
     */
   };
+
+  public fromAny(operationObj: any, task: Task): Operation {
+    const result = new ASROperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    for (let k = 0; k < operationObj.results.length; k++) {
+      const result = operationObj.results[k];
+      result.results.push(new FileInfo(result.fullname, result.type, result.size));
+      result.url = result;
+    }
+    result._time = operationObj.time;
+    result._protocol = operationObj._protocol;
+    return result;
+  }
 
   public clone(task?: Task): ASROperation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;
