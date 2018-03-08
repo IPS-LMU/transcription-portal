@@ -9,7 +9,7 @@ import {ToolOperation} from './tool-operation';
 import {AppInfo} from '../../app.info';
 
 export class OCTRAOperation extends ToolOperation {
-  private operations: Operation[];
+  protected operations: Operation[];
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);
@@ -18,6 +18,8 @@ export class OCTRAOperation extends ToolOperation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._protocol = '';
     this.operations = operations;
+    console.log(`set operations!`);
+    console.log(operations);
     this.changeState(TaskState.READY);
   };
 
@@ -50,6 +52,7 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
+    console.log(this.operations);
     let audio = `audio=${encodeURIComponent(this.operations[0].results[0].url)}`;
     let transcript = `transcript=`;
     let embedded = `embedded=1`;
@@ -77,13 +80,17 @@ export class OCTRAOperation extends ToolOperation {
 
   public fromAny(operationObj: any, task: Task): OCTRAOperation {
     const result = new OCTRAOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    console.log(operationObj);
     for (let k = 0; k < operationObj.results.length; k++) {
-      const result = operationObj.results[k];
-      result.results.push(new FileInfo(result.fullname, result.type, result.size));
-      result.url = result;
+      const resultObj = operationObj.results[k];
+      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
+      resultClass.url = resultObj.url;
+      result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj._protocol;
+    result._protocol = operationObj.protocol;
+    result.operations = task.operations;
+    result.enabled = operationObj.enabled;
     return result;
   }
 

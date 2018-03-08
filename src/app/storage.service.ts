@@ -1,8 +1,11 @@
 import {EventEmitter, Injectable} from '@angular/core';
 import {IndexedDBManager} from './obj/IndexedDBManager';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {Operation, Task, TaskDirectory} from './obj/tasks';
+import {Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
+import {TaskEntry} from './obj/tasks/task-entry';
+import {isNullOrUndefined} from 'util';
+import {Operation} from './obj/tasks/operation';
 
 @Injectable()
 export class StorageService {
@@ -22,18 +25,16 @@ export class StorageService {
           this.idbm.save('options', 'version', {value: AppInfo.version});
           const promises = [];
           promises.push(this.idbm.get('options', 'taskCounter'));
-          promises.push(this.idbm.get('options', 'taskDirectoryCounter'));
           promises.push(this.idbm.get('options', 'operationCounter'));
 
           promises.push(this.idbm.getAll('tasks'));
 
           Promise.all(promises).then((results) => {
-            Task.counter = results[0].value;
-            TaskDirectory.counter = results[1].value;
-            Operation.counter = results[2].value;
+            TaskEntry.counter = results[0].value;
+            Operation.counter = results[1].value;
             console.log(`tasks:`);
-            console.log(results[3]);
-            this.allloaded.emit(results[3]);
+            console.log(results[2]);
+            this.allloaded.emit(results[2]);
           }).catch((err) => {
             console.error(err);
             this.allloaded.emit(null);
@@ -54,7 +55,6 @@ export class StorageService {
               const optionsStore = this.idbm.db.createObjectStore('options', {keyPath: 'name'});
               promises.push(this.idbm.save(optionsStore, 'version', {value: 0}));
               promises.push(this.idbm.save(optionsStore, 'taskCounter', {value: 0}));
-              promises.push(this.idbm.save(optionsStore, 'taskDirectoryCounter', {value: 0}));
               promises.push(this.idbm.save(optionsStore, 'operationCounter', {value: 0}));
 
               Promise.all(promises).then(() => {
@@ -75,11 +75,12 @@ export class StorageService {
     ));
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory) {
-    console.log(`save Task`);
+  public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
+    console.log(`SAVE TASK`);
     const data = taskEntry.toAny();
+    console.log(data);
 
-    this.idbm.save('tasks', taskEntry.id, data);
+    return this.idbm.save('tasks', taskEntry.id, data);
   }
 
   public saveCounter(name: string, value: number) {
@@ -89,26 +90,48 @@ export class StorageService {
   }
 
   public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
+    console.log(`remove `);
+    console.log(entry);
     return new Promise<void>((resolve, reject) => {
       console.log(`remove task`);
       if (entry instanceof Task) {
+        if (isNullOrUndefined(entry.directory)) {
+          this.idbm.remove('tasks', entry.id).then(() => {
+            resolve();
+          }).catch((err) => {
+            reject(err);
+          });
+        } else {
+          // file in directory
+          entry.directory.removeTask(entry);
+          if (entry.directory.entries.length > 1) {
+            console.log(`remove task ${entry.id} from directory ${entry.directory.id}`);
+            this.saveTask(entry.directory).then(() => {
+              resolve();
+            }).catch((err) => {
+              reject(err);
+            });
+          } else {
+            // remove empty folder
+            console.log(`remove folder ${entry.directory.id}`);
+            this.idbm.remove('tasks', entry.directory.id).then(() => {
+              resolve();
+            }).catch((err) => {
+              reject(err);
+            });
+
+            if (entry.directory.entries.length === 1) {
+              (<Task> entry.directory.entries[0]).directory = null;
+              this.saveTask(entry.directory.entries[0]);
+            }
+          }
+        }
+      } else if (entry instanceof TaskDirectory) {
         this.idbm.remove('tasks', entry.id).then(() => {
           resolve();
         }).catch((err) => {
           reject(err);
         });
-      } else if (entry instanceof TaskDirectory) {
-        const promises = [];
-
-        for (let i = 0; i < entry.entries.length; i++) {
-          const entr = entry.entries[i];
-          this.removeFromDB(entr);
-        }
-        Promise.all(promises).then(() => {
-          resolve();
-        }).catch((err) => {
-          reject(err);
-        })
       }
     });
   }

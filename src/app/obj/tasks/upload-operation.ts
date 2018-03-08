@@ -140,15 +140,16 @@ export class UploadOperation extends Operation {
 
   public fromAny(operationObj: any, task: Task): UploadOperation {
     const result = new UploadOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    console.log(operationObj);
     for (let k = 0; k < operationObj.results.length; k++) {
-      let fileObj = operationObj.results[k];
-      let fileInfo = new FileInfo(fileObj.fullname, fileObj.type, fileObj.size);
-      fileInfo.url = fileObj.url;
-      result.results.push(fileInfo);
+      const resultObj = operationObj.results[k];
+      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
+      resultClass.url = resultObj.url;
+      result.results.push(resultClass);
     }
     result._time = operationObj.time;
     result._protocol = operationObj.protocol;
-    console.log(result);
+    result.enabled = operationObj.enabled;
     return result;
   }
 

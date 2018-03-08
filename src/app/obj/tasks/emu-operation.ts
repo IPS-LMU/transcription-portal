@@ -8,7 +8,7 @@ import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
 
 export class EmuOperation extends ToolOperation {
-  private operations: Operation[];
+  protected operations: Operation[];
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);
@@ -55,6 +55,8 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
+    console.log(`here`);
+    console.log(this.operations[0]);
     const audio = encodeURIComponent(this.operations[0].results[0].url);
     const transcript = encodeURIComponent(this.operations[3].results[0].url);
 
@@ -69,7 +71,9 @@ export class EmuOperation extends ToolOperation {
       result.url = result;
     }
     result._time = operationObj.time;
-    result._protocol = operationObj._protocol;
+    result._protocol = operationObj.protocol;
+    result.operations = task.operations;
+    result.enabled = operationObj.enabled;
     return result;
   }
 

@@ -82,6 +82,7 @@ export class TaskList {
       if (!isNullOrUndefined(entry.directory)) {
         entry.directory.removeTask(entry);
       } else {
+        console.log(`remove one!`);
         const task_index = this.entries.findIndex((a) => {
           if (a instanceof Task && (<Task> a).id === entry.id) {
             return true;

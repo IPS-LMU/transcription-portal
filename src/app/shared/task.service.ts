@@ -3,7 +3,7 @@ import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
 import {NotificationService} from './notification.service';
 import {SubscriptionManager} from './subscription-manager';
-import {ASROperation, EmuOperation, Operation, Task, TaskDirectory, TaskList, TaskState} from '../obj/tasks';
+import {Task, TaskDirectory, TaskList, TaskState} from '../obj/tasks';
 import {OCTRAOperation} from '../obj/tasks/octra-operation';
 import {UploadOperation} from '../obj/tasks/upload-operation';
 import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
@@ -14,6 +14,10 @@ import {Preprocessor, QueueItem} from '../obj/preprocessor';
 import {WavFormat} from '../obj/audio/AudioFormats';
 import {AudioInfo} from '../obj/audio';
 import {AppInfo} from '../app.info';
+import {TaskEntry} from '../obj/tasks/task-entry';
+import {ASROperation} from '../obj/tasks/asr-operation';
+import {EmuOperation} from '../obj/tasks/emu-operation';
+import {Operation} from '../obj/tasks/operation';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -75,6 +79,8 @@ export class TaskService implements OnDestroy {
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
           this.addEntry(result);
+          console.log(`result`);
+          this.storage.saveTask(result);
         }
       }
     ));
@@ -85,9 +91,13 @@ export class TaskService implements OnDestroy {
 
         for (let i = 0; i < IDBtasks.length; i++) {
           const taskObj = IDBtasks[i];
-          const task = Task.fromAny(taskObj, this.operations);
-          console.log(task);
-          this._taskList.addEntry(task);
+          if (taskObj.type === 'task') {
+            const task = Task.fromAny(taskObj, this.operations);
+            this._taskList.addEntry(task);
+          } else {
+            const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
+            this._taskList.addEntry(taskDir);
+          }
         }
       }
     }))
@@ -109,9 +119,7 @@ export class TaskService implements OnDestroy {
   public addEntry(entry: (Task | TaskDirectory)) {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
       this.taskList.addEntry(entry);
-      this.storage.saveTask(entry);
-      this.storage.saveCounter('taskCounter', Task.counter);
-      this.storage.saveCounter('taskDirectoryCounter', TaskDirectory.counter);
+      this.storage.saveCounter('taskCounter', TaskEntry.counter);
       this.storage.saveCounter('operationCounter', Operation.counter);
     } else {
       console.error(`could not add Task or TaskDirectory. Invalid class instance`);
@@ -135,6 +143,7 @@ export class TaskService implements OnDestroy {
         }
 
         this.subscrmanager.add(task.opstatechange.subscribe((event) => {
+          console.log(`OPERATION CHANGED!`);
           const operation = task.getOperationByID(event.opID);
           const opName = operation.name;
           if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
@@ -145,9 +154,6 @@ export class TaskService implements OnDestroy {
             this.notification.showNotification('MAUS Operation successful', 'You can now edit it with EMU WebApp');
           }
 
-          if (event.oldState === TaskState.UPLOADING && event.newState === TaskState.FINISHED) {
-            this.start();
-          }
           running_tasks = this.countRunningTasks();
           this.updateProtocolArray();
           const lastOp = task.operations[task.operations.length - 1];
@@ -162,12 +168,18 @@ export class TaskService implements OnDestroy {
           }
           this.storage.saveTask(task);
         }));
+        console.log(`start task id ${task.id}`);
+        this.storage.saveTask(task);
         task.start(this.httpclient);
+        this.start();
+      } else {
+        console.log(`no free tasks found`);
       }
     } else {
       setTimeout(() => {
         this.start();
       }, 1000);
+      console.log(`wait`);
     }
   }
 

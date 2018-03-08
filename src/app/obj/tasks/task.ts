@@ -7,7 +7,8 @@ import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
 import {TaskDirectory} from './taskDirectory';
 import {AudioInfo} from '../audio';
-import {Operation} from './index';
+import {TaskEntry} from './task-entry';
+import {Operation} from './operation';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -21,6 +22,10 @@ export enum TaskState {
 }
 
 export class Task {
+  set directory(value: TaskDirectory) {
+    this._directory = value;
+  }
+
   get type(): string {
     return this._type;
   }
@@ -37,7 +42,6 @@ export class Task {
     this._language = value;
   }
 
-  public static counter = 0;
   private opstatesubj: Subject<{
     opID: number;
     oldState: TaskState;
@@ -86,7 +90,7 @@ export class Task {
 
   constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
     if (isNullOrUndefined(id)) {
-      this._id = ++Task.counter;
+      this._id = ++TaskEntry.counter;
     } else {
       this._id = id;
     }
@@ -96,6 +100,20 @@ export class Task {
     // clone operations param
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i].clone(this);
+      this.listenToOperationChanges();
+
+      this.operations.push(operation);
+    }
+
+    this.changeState(TaskState.PENDING);
+    this._directory = directory;
+  }
+
+  protected listenToOperationChanges() {
+    console.log(`set subscribe`);
+    for (let i = 0; i < this._operations.length; i++) {
+      const operation = this._operations[i];
+
       const subscription = operation.statechange.subscribe(
         (event) => {
           if (event.newState === TaskState.ERROR) {
@@ -116,12 +134,7 @@ export class Task {
           }
         }
       );
-
-      this.operations.push(operation);
     }
-
-    this.changeState(TaskState.PENDING);
-    this._directory = directory;
   }
 
   private _id: number;
@@ -173,7 +186,11 @@ export class Task {
     } else {
       const operation = this.operations[nextoperation];
       if (operation.state !== TaskState.FINISHED) {
-        this.changeState(TaskState.PROCESSING);
+        if (operation.name === 'OCTRA' && operation.state === TaskState.READY) {
+          this.changeState(TaskState.READY);
+        } else {
+          this.changeState(TaskState.PROCESSING);
+        }
         const subscription = this.operations[nextoperation].statechange.subscribe(
           (event) => {
             if (event.newState === TaskState.FINISHED) {
@@ -193,9 +210,11 @@ export class Task {
 
         let files;
         if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
+          console.log(`use task files`);
           files = this.files;
         } else {
           files = this.operations[0].results;
+          console.log(`use operation files`);
         }
 
         this.operations[nextoperation].start(files, this.operations, httpclient);
@@ -245,7 +264,9 @@ export class Task {
   }
 
   public static fromAny(taskObj: any, defaultOperations: Operation[]): Task {
-    const task = new Task([], [], null, taskObj.id);
+    const operations = [];
+
+    const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
 
     for (let i = 0; i < taskObj.files.length; i++) {
@@ -268,6 +289,7 @@ export class Task {
         }
       }
     }
+    task.listenToOperationChanges();
 
     return task;
   }
@@ -308,7 +330,7 @@ export class Task {
       result.operations.push(operation);
     }
 
-    result.folderPath = (this._directory === undefined) ? '' : this._directory.path;
+    result.folderPath = (isNullOrUndefined(this._directory)) ? '' : this._directory.path;
 
     console.log(result);
     return result;

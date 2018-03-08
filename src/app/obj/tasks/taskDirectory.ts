@@ -2,11 +2,14 @@ import {Task} from './task';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
+import {TaskEntry} from './task-entry';
+import {Operation} from './operation';
 
 export class TaskDirectory {
   get foldername(): string {
     return this._foldername;
   }
+
   get type(): string {
     return this._type;
   }
@@ -33,12 +36,16 @@ export class TaskDirectory {
   private _id: number;
   private _foldername: string;
   private _type = 'folder';
-  public static counter = 0;
 
-  public constructor(path: string, size?: number) {
+  public constructor(path: string, size?: number, id?: number) {
     this._size = size;
     this._path = path;
-    this._id = ++TaskDirectory.counter;
+    if (!isNullOrUndefined(id)) {
+      this._id = id;
+    } else {
+      this._id = ++TaskEntry.counter;
+    }
+    console.log(path);
     this._foldername = DirectoryInfo.extractFolderName(path);
   }
 
@@ -112,7 +119,9 @@ export class TaskDirectory {
   public addEntries(entries: (Task | TaskDirectory)[]) {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
-
+      if (entry instanceof Task) {
+        entry.directory = this;
+      }
       this._entries.push(entry);
     }
   }
@@ -143,11 +152,29 @@ export class TaskDirectory {
   }
 
   public toAny(): any {
-    return {
+    const result = {
       id: this.id,
       type: 'folder',
-      folderPath: this.path,
+      path: this.path,
       entries: []
     };
+
+    for (let i = 0; i < this.entries.length; i++) {
+      const entry = this.entries[i];
+      result.entries.push(entry.toAny());
+    }
+
+    return result;
+  }
+
+  public static fromAny(dirObj: any, defaultOperations: Operation[]): TaskDirectory {
+    const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
+
+    for (let i = 0; i < dirObj.entries.length; i++) {
+      const entry = dirObj.entries[i];
+      result.addEntries([Task.fromAny(entry, defaultOperations)]);
+    }
+
+    return result;
   }
 }

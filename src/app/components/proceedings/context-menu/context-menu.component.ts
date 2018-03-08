@@ -1,6 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import {Operation, Task} from '../../../obj/tasks';
-import {TaskDirectory} from '../../../obj/tasks/taskDirectory';
+import {Task, TaskDirectory} from '../../../obj/tasks';
+import {Operation} from '../../../obj/tasks/operation';
 
 @Component({
   selector: 'app-context-menu',

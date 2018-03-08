@@ -46,8 +46,7 @@
                  [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer" #popoverRef>
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
-                Duration: {{calculateDuration(popover.operation.time.start, popover.operation.time.end) |
-                time}}<br/><br/>
+                Duration: {{popover.operation.time.duration | time}}<br/><br/>
             </ng-container>
             <ng-container *ngIf="popover.operation.results.length > 0">
                 Results:<br/>
@@ -100,8 +99,6 @@
         <ng-container *ngFor="let entry of taskList.entries; let i = index;">
 
             <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
-                <!-- <td><span class="glyphicon glyphicon-menu-down" appExpandRow #tag
-                          (contextmenu)="onContextMenu($event)"></span></td> -->
                 <td *ngIf="entry.files !== undefined" style="width:25px;">
                     <i class="fa fa-file-audio-o"
                        aria-hidden="true"
@@ -120,7 +117,9 @@
                             'shorten': shortstyle
                         }">
                 <span [ngClass]="{
-                    'op-50': entry.files[0].samplerate === undefined
+                    'op-50': entry.files[0].samplerate === undefined,
+                    'green': entry.files[0].file !== undefined,
+                    'yellow': (entry.files[0].file === undefined && entry.operations[0].results.length === 0)
                 }" title="{{entry.files[0].fullname}}"
                       (mouseenter)="onTaskMouseEnter($event, entry)"
                       (mouseleave)="onTaskMouseLeave($event, entry)"

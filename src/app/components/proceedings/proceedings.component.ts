@@ -14,18 +14,20 @@ import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
-import {ASROperation, EmuOperation, Operation, Task, TaskState, ToolOperation} from '../../obj/tasks';
+import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
 import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../shared/task.service';
-import {TaskList} from '../../obj/tasks/TaksList';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
-import {TaskDirectory} from '../../obj/tasks/taskDirectory';
 import * as moment from 'moment';
 import {StorageService} from '../../storage.service';
+import {Operation} from '../../obj/tasks/operation';
+import {ToolOperation} from '../../obj/tasks/tool-operation';
+import {EmuOperation} from '../../obj/tasks/emu-operation';
+import {ASROperation} from '../../obj/tasks/asr-operation';
 
 declare var window: any;
 
@@ -229,10 +231,22 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (option === 'delete') {
       for (let i = 0; i < this.selected_tasks.length; i++) {
         let entry = this.selected_tasks[i];
+
         this.storage.removeFromDB(entry).then(() => {
+          console.log(`ok im here`);
+          console.log(entry);
           if (entry instanceof Task) {
-            this.taskList.removeEntry(entry);
+            if (isNullOrUndefined(entry.directory)) {
+              console.log(`REMOVE TASK!`);
+              this.taskList.removeEntry(entry);
+            } else if (entry.directory.entries.length === 1) {
+              console.log(`remove empty DIR!`);
+              this.taskList.removeDir(entry.directory);
+              (<Task> entry.directory.entries[0]).directory = null;
+              this.taskList.addEntry(entry.directory.entries[0]);
+            }
           } else if (entry instanceof TaskDirectory) {
+            console.log(`REMOVE TASKDIR!`);
             this.taskList.removeDir(entry);
           }
         }).catch((err) => {

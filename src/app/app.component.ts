@@ -7,7 +7,7 @@ import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
 import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {Operation, Task, TaskState, ToolOperation} from './obj/tasks';
+import {Task, TaskState} from './obj/tasks';
 import {AudioInfo} from './obj/audio';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './shared/task.service';
@@ -16,6 +16,8 @@ import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from './obj/fileInfo';
+import {ToolOperation} from './obj/tasks/tool-operation';
+import {Operation} from './obj/tasks/operation';
 
 declare var window: any;
 
@@ -221,7 +223,7 @@ export class AppComponent implements OnDestroy {
       }
 
       this.selectedOperation.changeState(TaskState.FINISHED);
-
+      this.storage.saveTask(this.selectedOperation.task);
       if (startedBefore) {
         setTimeout(() => {
           this.selectedOperation.task.restart(this.httpclient);
@@ -291,9 +293,8 @@ export class AppComponent implements OnDestroy {
         let entry = this.taskService.taskList.entries[i];
 
         if (entry instanceof TaskDirectory) {
+          entry = <TaskDirectory> entry;
           if (entry.path.indexOf('_dir') > -1) {
-
-
             for (let j = 0; j < entry.entries.length; j++) {
               const dirEntry = <Task> entry.entries[j];
 
@@ -320,14 +321,33 @@ export class AppComponent implements OnDestroy {
             let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
 
             if (!isNullOrUndefined(dirtemp)) {
+
               dirtemp.entries.push(entry.entries[0]);
-              this.taskService.taskList.removeEntry(entry.entries[0]);
+              const entr = entry.entries[0];
+              this.storage.removeFromDB(entr).then(() => {
+                this.taskService.taskList.removeEntry(entr);
+              }).catch((err) => {
+                console.error(err);
+              });
             } else if (path !== '' && path != '/') {
               dirtemp = new TaskDirectory(path);
               dirtemp.addEntries(entry.entries);
               this.taskService.taskList.addEntry(dirtemp);
+              // TODO save to DB
             } else {
-              this.taskService.taskList.entries[i] = entry.entries[0];
+              const entries = this.taskService.taskList.entries[i];
+              this.storage.removeFromDB(entries).then(() => {
+                this.taskService.taskList.entries[i] = (<TaskDirectory> entry).entries[0];
+
+                const entr = (<TaskDirectory> entry).entries[0];
+                this.storage.saveTask(entr).then(() => {
+                  this.taskService.taskList.removeEntry(entr);
+                }).catch((err) => {
+                  console.error(err);
+                });
+              }).catch((err) => {
+                console.error(err);
+              });
             }
           }
         }
