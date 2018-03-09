@@ -22,10 +22,10 @@ export class StorageService {
         if (result.type === 'success') {
           // database opened
           console.log('IDB opened');
-          this.idbm.save('options', 'version', {value: AppInfo.version});
+          this.idbm.save('intern', 'version', {value: AppInfo.version});
           const promises = [];
-          promises.push(this.idbm.get('options', 'taskCounter'));
-          promises.push(this.idbm.get('options', 'operationCounter'));
+          promises.push(this.idbm.get('intern', 'taskCounter'));
+          promises.push(this.idbm.get('intern', 'operationCounter'));
 
           promises.push(this.idbm.getAll('tasks'));
 
@@ -52,7 +52,7 @@ export class StorageService {
             if (version === 0) {
               const promises = [];
 
-              const optionsStore = this.idbm.db.createObjectStore('options', {keyPath: 'name'});
+              const optionsStore = this.idbm.db.createObjectStore('intern', {keyPath: 'name'});
               promises.push(this.idbm.save(optionsStore, 'version', {value: 0}));
               promises.push(this.idbm.save(optionsStore, 'taskCounter', {value: 0}));
               promises.push(this.idbm.save(optionsStore, 'operationCounter', {value: 0}));
@@ -82,7 +82,7 @@ export class StorageService {
   }
 
   public saveCounter(name: string, value: number) {
-    this.idbm.save('options', name, {
+    this.idbm.save('intern', name, {
       value: value
     });
   }

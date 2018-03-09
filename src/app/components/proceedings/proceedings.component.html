@@ -46,7 +46,7 @@
                  [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer" #popoverRef>
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
-                Duration: {{popover.operation.time.duration | time}}<br/><br/>
+                Duration: {{calculateDuration(popover.operation.time) | time}}<br/><br/>
             </ng-container>
             <ng-container *ngIf="popover.operation.results.length > 0">
                 Results:<br/>
@@ -68,7 +68,8 @@
                 <!-- <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
                                                                          style="color:cornflowerblue;"></i></a> -->
             </ng-container>
-
+            <span>Language: {{popover.task.language}}</span><br/><br/>
+            <span>File infromation:</span>
             <app-file-info-table [fileinfo]="popover.task.files[0]"></app-file-info-table>
         </ng-container>
     </app-popover>

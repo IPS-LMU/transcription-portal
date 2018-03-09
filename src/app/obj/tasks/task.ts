@@ -265,6 +265,12 @@ export class Task {
 
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
+    if (taskObj.state !== TaskState.PROCESSING) {
+      task.changeState(taskObj.state);
+    } else {
+      console.log(`SET TO READY`);
+      task.changeState(TaskState.READY);
+    }
 
     for (let i = 0; i < taskObj.files.length; i++) {
       const file = taskObj.files[i];

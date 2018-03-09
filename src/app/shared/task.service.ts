@@ -18,6 +18,8 @@ import {TaskEntry} from '../obj/tasks/task-entry';
 import {ASROperation} from '../obj/tasks/asr-operation';
 import {EmuOperation} from '../obj/tasks/emu-operation';
 import {Operation} from '../obj/tasks/operation';
+import * as moment from 'moment';
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -55,6 +57,9 @@ export class TaskService implements OnDestroy {
   private _protocol_array = [];
   private _splitPrompt = 'PENDING';
 
+  public protocolURL: SafeResourceUrl;
+  public protocolFileName = '';
+
   public errorscountchange = new EventEmitter<number>();
 
   public selectedlanguage = AppInfo.languages[0];
@@ -62,7 +67,7 @@ export class TaskService implements OnDestroy {
 
   private _preprocessor: Preprocessor = new Preprocessor();
 
-  constructor(public httpclient: HttpClient, private notification: NotificationService, private storage: StorageService) {
+  constructor(public httpclient: HttpClient, private notification: NotificationService, private storage: StorageService, private sanitizer: DomSanitizer) {
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
       new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
@@ -98,6 +103,7 @@ export class TaskService implements OnDestroy {
             this._taskList.addEntry(taskDir);
           }
         }
+        this.protocolURL = this.updateProtocolURL();
       }
     }))
   }
@@ -134,13 +140,20 @@ export class TaskService implements OnDestroy {
       let task: Task;
 
       // look for pending tasks
-      task = this._taskList.findTaskByState(TaskState.PENDING);
+      task = this.findNextWaitingTask();
 
-      if (!isNullOrUndefined(task) && this.countPendingTasks() > 0) {
+      if (!isNullOrUndefined(task)) {
         if (this.state !== TaskState.PROCESSING) {
           this.state = TaskState.READY;
         }
 
+        task.statechange.subscribe((obj) => {
+          console.log(`task change!`);
+          console.log(`from ${obj.oldState} to ${obj.newState}`);
+          this.storage.saveTask(task);
+          this.protocolURL = this.updateProtocolURL();
+        });
+        console.log(`found task with id ${task.id}`);
         this.subscrmanager.add(task.opstatechange.subscribe((event) => {
           const operation = task.getOperationByID(event.opID);
           const opName = operation.name;
@@ -165,10 +178,13 @@ export class TaskService implements OnDestroy {
             this.state = TaskState.READY;
           }
           this.storage.saveTask(task);
+          this.protocolURL = this.updateProtocolURL();
         }));
         this.storage.saveTask(task);
         task.start(this.httpclient);
-        this.start();
+        setTimeout(() => {
+          this.start();
+        }, 1000);
       } else {
         console.log(`no free tasks found`);
       }
@@ -178,6 +194,51 @@ export class TaskService implements OnDestroy {
       }, 1000);
     }
   }
+
+  public findNextWaitingTask(): Task {
+    const tasks = this.taskList.getAllTasks();
+    for (let i = 0; i < tasks.length; i++) {
+      const entry = tasks[i];
+      if (entry.state === TaskState.PENDING) {
+        return entry;
+      } else if (entry.state === TaskState.READY) {
+        for (let j = 0; j < entry.operations.length; j++) {
+          const operation = entry.operations[j];
+          if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
+            return entry;
+          } else if (operation.state !== TaskState.FINISHED && operation.name === 'OCTRA') {
+            break;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public updateProtocolURL() {
+    const results = [];
+
+    for (let i = 0; i < this.taskList.entries.length; i++) {
+      const entry = this.taskList.entries[i];
+      results.push(entry.toAny());
+    }
+
+    const json = {
+      version: '1.0.0',
+      encoding: 'UTF-8',
+      created: moment.defaultFormatUtc,
+      entries: results
+    };
+
+    this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
+    const file = new File([JSON.stringify(json)], this.protocolFileName, {
+      'type': 'text/plain'
+    });
+
+    return this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file));
+  }
+
 
   public countRunningTasks() {
     let result = 0;

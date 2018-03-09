@@ -35,7 +35,7 @@
         <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version">v{{AppInfo.version}}</span>
             <span *ngIf="isdevelopment"
                   style="color:red;">
-        in Development
+        in development
          </span></div>
         <div class="col-4 status-div" style="background-color: ghostwhite;">
             <div class="status">
@@ -48,13 +48,22 @@
             </div>
         </div>
         <div class="col-4" style="text-align: center; vertical-align: middle;">
-            <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
-               (click)="notification.permissionGranted = false"></i>
-            <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
-               (click)="notification.permissionGranted = true"></i>
+            <div class="row">
+                <div class="col-md-8" style="text-align: left; margin-top:10px;">
+                    <a style="text-align: left; vertical-align: middle;margin-top:20px;"
+                       [href]="taskService.protocolURL" [attr.download]="taskService.protocolFileName">Download
+                        statistics data</a>
+                </div>
+                <div class="col-md-4">
+                    <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
+                       (click)="notification.permissionGranted = false"></i>
+                    <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
+                       (click)="notification.permissionGranted = true"></i>
+                </div>
+            </div>
         </div>
     </div>
-    <div class='row proceedings-header' style="padding-top:0px;" *ngIf="!showtool">
+    <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
         <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
                 <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>

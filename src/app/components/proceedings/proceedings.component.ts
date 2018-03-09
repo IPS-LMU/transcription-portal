@@ -397,11 +397,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     task.mouseover = true;
   }
 
-  calculateDuration(start: number, end ?: number) {
-    if (isNullOrUndefined(end) || end === 0) {
-      return (Date.now() - start);
+  calculateDuration(time) {
+    if (time.duration > 0) {
+      return time.duration;
     } else {
-      return (end - start);
+      return Date.now() - time.start;
     }
   }
 

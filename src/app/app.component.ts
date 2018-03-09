@@ -43,6 +43,8 @@ export class AppComponent implements OnDestroy {
   public test = 'insactive';
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
+  public protocolURL = '';
+
   @ViewChild('fileinput') fileinput: ElementRef;
   @ViewChild('folderinput') folderinput: ElementRef;
   @ViewChild('proceedings') proceedings: ProceedingsComponent;
@@ -61,7 +63,7 @@ export class AppComponent implements OnDestroy {
     window.onunload = function () {
       alert('You are trying to leave.');
       return false;
-    }
+    };
 
     this.taskService.openSplitModal = this.openSplitModal;
   }
@@ -335,7 +337,7 @@ export class AppComponent implements OnDestroy {
             } else if (path !== '' && path != '/') {
               dirtemp = new TaskDirectory(path);
               this.storage.removeFromDB(entry).then(() => {
-                this.taskService.taskList.removeDir(entry);
+                this.taskService.taskList.removeDir(<TaskDirectory> entry);
               }).catch((error) => {
                   console.error(error);
                 }
