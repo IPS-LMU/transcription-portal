@@ -110,7 +110,6 @@ export class Task {
   }
 
   protected listenToOperationChanges() {
-    console.log(`set subscribe`);
     for (let i = 0; i < this._operations.length; i++) {
       const operation = this._operations[i];
 
@@ -210,11 +209,9 @@ export class Task {
 
         let files;
         if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
-          console.log(`use task files`);
           files = this.files;
         } else {
           files = this.operations[0].results;
-          console.log(`use operation files`);
         }
 
         this.operations[nextoperation].start(files, this.operations, httpclient);
@@ -331,8 +328,6 @@ export class Task {
     }
 
     result.folderPath = (isNullOrUndefined(this._directory)) ? '' : this._directory.path;
-
-    console.log(result);
     return result;
   }
 }

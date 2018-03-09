@@ -76,9 +76,7 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    console.log(`SAVE TASK`);
     const data = taskEntry.toAny();
-    console.log(data);
 
     return this.idbm.save('tasks', taskEntry.id, data);
   }
@@ -90,10 +88,7 @@ export class StorageService {
   }
 
   public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
-    console.log(`remove `);
-    console.log(entry);
     return new Promise<void>((resolve, reject) => {
-      console.log(`remove task`);
       if (entry instanceof Task) {
         if (isNullOrUndefined(entry.directory)) {
           this.idbm.remove('tasks', entry.id).then(() => {
@@ -105,7 +100,6 @@ export class StorageService {
           // file in directory
           entry.directory.removeTask(entry);
           if (entry.directory.entries.length > 1) {
-            console.log(`remove task ${entry.id} from directory ${entry.directory.id}`);
             this.saveTask(entry.directory).then(() => {
               resolve();
             }).catch((err) => {
@@ -113,7 +107,6 @@ export class StorageService {
             });
           } else {
             // remove empty folder
-            console.log(`remove folder ${entry.directory.id}`);
             this.idbm.remove('tasks', entry.directory.id).then(() => {
               resolve();
             }).catch((err) => {

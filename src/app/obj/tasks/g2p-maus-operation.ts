@@ -83,7 +83,6 @@ export class G2pMausOperation extends Operation {
 
   public fromAny(operationObj: any, task: Task): G2pMausOperation {
     const result = new G2pMausOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
-    console.log(operationObj);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);

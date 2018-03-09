@@ -157,8 +157,6 @@ export class IndexedDBManager {
           if (!data.hasOwnProperty(store.keyPath)) {
             data['' + store.keyPath + ''] = key;
           }
-          console.log(`SAVE`);
-          console.log(data);
           const request = key ? store.put(data) : store.add(data);
           request.onsuccess = (result: any) => {
             resolve(result);

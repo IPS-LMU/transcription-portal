@@ -39,12 +39,9 @@ export class TaskList {
   public findTaskDirByPath(path: string): TaskDirectory {
     let tasks = this.getAllTaskDirectories();
 
-    console.log(tasks);
     return tasks.find((a) => {
       if (a.path === path) {
         return true;
-      } else {
-        console.log(`${a.path} is not ${path}`);
       }
     });
   }
@@ -82,7 +79,6 @@ export class TaskList {
       if (!isNullOrUndefined(entry.directory)) {
         entry.directory.removeTask(entry);
       } else {
-        console.log(`remove one!`);
         const task_index = this.entries.findIndex((a) => {
           if (a instanceof Task && (<Task> a).id === entry.id) {
             return true;

@@ -55,8 +55,6 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    console.log(`here`);
-    console.log(this.operations[0]);
     const audio = encodeURIComponent(this.operations[0].results[0].url);
     const transcript = encodeURIComponent(this.operations[3].results[0].url);
 

@@ -117,7 +117,6 @@
                             'shorten': shortstyle
                         }">
                 <span [ngClass]="{
-                    'op-50': entry.files[0].samplerate === undefined,
                     'green': entry.files[0].file !== undefined,
                     'yellow': (entry.files[0].file === undefined && entry.operations[0].results.length === 0)
                 }" title="{{entry.files[0].fullname}}"
@@ -171,13 +170,17 @@
                     <td (mouseenter)="onTaskMouseEnter($event, dirEntry)"
                         (mouseleave)="onTaskMouseLeave($event, dirEntry)"
                         (click)="onRowSelected(dirEntry)"
-                        (mouseover)="onTaskMouseOver($event, dirEntry)"><i class="fa fa-file-audio-o" aria-hidden="true"
+                        (mouseover)="onTaskMouseOver($event, dirEntry)">
+                        <i class="fa fa-file-audio-o" aria-hidden="true"
                                                                            [ngClass]="{
             green: (dirEntry.state === 'FINISHED'),
             red: (dirEntry.state === 'ERROR'),
             blue: (dirEntry.state === 'PENDING' || dirEntry.state === 'READY'),
             yellow: (dirEntry.state === 'PROCESSING')
-            }"></i> {{dirEntry.files[0].fullname}}
+            }"></i> <span [ngClass]="{
+                    'green': dirEntry.files[0].file !== undefined,
+                    'yellow': (dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)
+                }">{{dirEntry.files[0].fullname}}</span>
                     </td>
                     <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
                 'op-deactivated': !operation.enabled
@@ -199,6 +202,48 @@
                             <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
                         </div>
                     </td>
+                </tr>
+            </ng-container>
+        </ng-container>
+        <ng-container *ngFor="let entry of queue; let i = index;">
+            <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
+                <td *ngIf="entry.file.entries === undefined" style="width:25px;">
+                    <i class="fa fa-file-audio-o op-50"
+                       aria-hidden="true">
+                    </i>
+                </td>
+                <td *ngIf="entry.file.entries !== undefined" style="width:25px;">
+                    <i class="fa fa-folder-open blue op-50" aria-hidden="true"></i>
+                </td>
+                <td *ngIf="entry.file.entries === undefined"
+                    [ngClass]="{'shorten': shortstyle}">
+                    <span class="op-50"
+                          title="{{entry.file.fullname}}"
+                    >
+                        {{entry.file.fullname}}
+                    </span>
+                </td>
+                <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 1">
+                    <span title="{{entry.file.name}}" class="op-50">{{entry.file.name}}
+                    </span>
+                    <span *ngIf="entry.file.entries.length > 0" class="op-50">
+                    ({{entry.file.entries.length}})
+                    </span>
+                </td>
+                <ng-container *ngIf="entry.file.entries === undefined">
+                    <td [attr.colspan]="taskService.operations.length + 1"></td>
+                </ng-container>
+            </tr>
+            <ng-container *ngIf="entry.file.entries !== undefined">
+                <tr *ngFor="let dirEntry of entry.file.entries">
+                    <td>
+                        <img style="height:20px;" src="./assets/directory.png" class="op-50">
+                    </td>
+                    <td>
+                        <i class="fa fa-file-audio-o op-50" aria-hidden="true"></i>
+                        <span class="op-50">{{dirEntry.fullname}}</span>
+                    </td>
+                    <td [attr.colspan]="taskService.operations.length + 1"></td>
                 </tr>
             </ng-container>
         </ng-container>

@@ -79,8 +79,6 @@ export class AppComponent implements OnDestroy {
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    console.log(`files dropped`);
-    console.log(entries);
     if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
       // filter and re-structure entries array to supported files and directories
       let filteredEntries = this.taskService.cleanUpInputArray(entries);
@@ -311,37 +309,49 @@ export class AppComponent implements OnDestroy {
                 }
               }
             }
+            this.storage.saveTask(entry).catch((err) => {
+              console.error(err);
+            })
           }
 
           if (entry.entries.length === 1) {
             // only one item
-            console.log(`entry path is ${entry.path}`);
             let path = entry.path.substr(0, entry.path.lastIndexOf('/'));
             path = path.substr(0, path.lastIndexOf('/')) + '/';
             let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
 
             if (!isNullOrUndefined(dirtemp)) {
-
               dirtemp.entries.push(entry.entries[0]);
               const entr = entry.entries[0];
-              this.storage.removeFromDB(entr).then(() => {
-                this.taskService.taskList.removeEntry(entr);
+              this.storage.saveTask(dirtemp).catch((err) => {
+                console.error(err);
+              });
+              this.storage.removeFromDB(entry).then(() => {
+                this.taskService.taskList.removeDir(entry);
+
               }).catch((err) => {
                 console.error(err);
               });
             } else if (path !== '' && path != '/') {
               dirtemp = new TaskDirectory(path);
+              this.storage.removeFromDB(entry).then(() => {
+                this.taskService.taskList.removeDir(entry);
+              }).catch((error) => {
+                  console.error(error);
+                }
+              );
               dirtemp.addEntries(entry.entries);
               this.taskService.taskList.addEntry(dirtemp);
-              // TODO save to DB
+              this.storage.saveTask(dirtemp).catch((err) => {
+                console.error(err);
+              });
             } else {
               const entries = this.taskService.taskList.entries[i];
               this.storage.removeFromDB(entries).then(() => {
-                this.taskService.taskList.entries[i] = (<TaskDirectory> entry).entries[0];
+                this.taskService.taskList.entries[i] = (<TaskDirectory> entries).entries[0];
 
-                const entr = (<TaskDirectory> entry).entries[0];
+                const entr = (<TaskDirectory> entries).entries[0];
                 this.storage.saveTask(entr).then(() => {
-                  this.taskService.taskList.removeEntry(entr);
                 }).catch((err) => {
                   console.error(err);
                 });

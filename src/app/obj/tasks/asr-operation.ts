@@ -13,7 +13,6 @@ export class ASROperation extends Operation {
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    console.log(inputs);
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
@@ -72,7 +71,6 @@ export class ASROperation extends Operation {
 
   public fromAny(operationObj: any, task: Task): Operation {
     const result = new ASROperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
-    console.log(operationObj);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);

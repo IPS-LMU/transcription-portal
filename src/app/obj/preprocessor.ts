@@ -104,8 +104,6 @@ export class Preprocessor {
   }
 
   private onItemAdded = (newItem: QueueItem) => {
-    console.log('ADDED works!');
-    console.log(newItem);
 
     this.changeState(newItem, State.PROCESSING);
     this.process(newItem).then((result) => {
@@ -114,7 +112,6 @@ export class Preprocessor {
           this.changeState(newItem, State.FINISHED);
           this._itemProcessed.next(newItem);
           this.removeFromQueue(newItem.id);
-          console.log(`rest queue: ${this.queue.length}`)
         }
       }
     ).catch((err) => {

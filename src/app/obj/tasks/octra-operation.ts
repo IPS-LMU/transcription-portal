@@ -18,8 +18,6 @@ export class OCTRAOperation extends ToolOperation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._protocol = '';
     this.operations = operations;
-    console.log(`set operations!`);
-    console.log(operations);
     this.changeState(TaskState.READY);
   };
 
@@ -52,7 +50,6 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    console.log(this.operations);
     let audio = `audio=${encodeURIComponent(this.operations[0].results[0].url)}`;
     let transcript = `transcript=`;
     let embedded = `embedded=1`;
@@ -80,7 +77,6 @@ export class OCTRAOperation extends ToolOperation {
 
   public fromAny(operationObj: any, task: Task): OCTRAOperation {
     const result = new OCTRAOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
-    console.log(operationObj);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);

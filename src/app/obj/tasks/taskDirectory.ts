@@ -45,7 +45,6 @@ export class TaskDirectory {
     } else {
       this._id = ++TaskEntry.counter;
     }
-    console.log(path);
     this._foldername = DirectoryInfo.extractFolderName(path);
   }
 
@@ -106,9 +105,6 @@ export class TaskDirectory {
 
             //console.log(result);
             dir.addEntries(result);
-            //console.log(`dir with ${result.length} found`);
-            console.log(`RESULT`);
-            console.log(dir);
             resolve([dir]);
           });
         });

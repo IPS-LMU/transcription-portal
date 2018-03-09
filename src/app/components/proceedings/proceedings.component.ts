@@ -28,6 +28,7 @@ import {Operation} from '../../obj/tasks/operation';
 import {ToolOperation} from '../../obj/tasks/tool-operation';
 import {EmuOperation} from '../../obj/tasks/emu-operation';
 import {ASROperation} from '../../obj/tasks/asr-operation';
+import {QueueItem} from '../../obj/preprocessor';
 
 declare var window: any;
 
@@ -57,6 +58,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   };
 
   @Input() taskList: TaskList = new TaskList();
+  @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
   public selected_tasks: (Task | TaskDirectory)[] = [];
@@ -233,20 +235,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         let entry = this.selected_tasks[i];
 
         this.storage.removeFromDB(entry).then(() => {
-          console.log(`ok im here`);
-          console.log(entry);
           if (entry instanceof Task) {
             if (isNullOrUndefined(entry.directory)) {
-              console.log(`REMOVE TASK!`);
               this.taskList.removeEntry(entry);
             } else if (entry.directory.entries.length === 1) {
-              console.log(`remove empty DIR!`);
               this.taskList.removeDir(entry.directory);
               (<Task> entry.directory.entries[0]).directory = null;
               this.taskList.addEntry(entry.directory.entries[0]);
             }
           } else if (entry instanceof TaskDirectory) {
-            console.log(`REMOVE TASKDIR!`);
             this.taskList.removeDir(entry);
           }
         }).catch((err) => {

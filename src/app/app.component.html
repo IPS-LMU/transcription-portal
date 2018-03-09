@@ -138,6 +138,7 @@
                              [shortstyle]="true"
                              (afterdrop)="onAfterDrop($event)" #proceedings
                              (operationclick)="onOperationClick($event)"
+                             [queue]="taskService.preprocessor.queue"
             ></app-proceedings>
         </div>
         <div [ngClass]="{
@@ -155,6 +156,7 @@
                                      (afterdrop)="onAfterDrop($event)" #proceedings
                                      (operationclick)="onOperationClick($event)"
                                      (operationhover)="onOperationHover($event)"
+                                     [queue]="taskService.preprocessor.queue"
                                      #proceedings
                     ></app-proceedings>
                     <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">

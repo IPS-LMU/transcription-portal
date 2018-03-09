@@ -79,7 +79,6 @@ export class TaskService implements OnDestroy {
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
           this.addEntry(result);
-          console.log(`result`);
           this.storage.saveTask(result);
         }
       }
@@ -143,7 +142,6 @@ export class TaskService implements OnDestroy {
         }
 
         this.subscrmanager.add(task.opstatechange.subscribe((event) => {
-          console.log(`OPERATION CHANGED!`);
           const operation = task.getOperationByID(event.opID);
           const opName = operation.name;
           if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
@@ -168,7 +166,6 @@ export class TaskService implements OnDestroy {
           }
           this.storage.saveTask(task);
         }));
-        console.log(`start task id ${task.id}`);
         this.storage.saveTask(task);
         task.start(this.httpclient);
         this.start();
@@ -179,7 +176,6 @@ export class TaskService implements OnDestroy {
       setTimeout(() => {
         this.start();
       }, 1000);
-      console.log(`wait`);
     }
   }
 
@@ -309,7 +305,6 @@ export class TaskService implements OnDestroy {
   }
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = (queueItem: QueueItem) => {
-    console.log(`process!`);
 
     if (queueItem.file instanceof FileInfo) {
       let file = <FileInfo> queueItem.file;
@@ -349,7 +344,6 @@ export class TaskService implements OnDestroy {
             const format = new WavFormat(event.target.result);
             const isValidFormat = format.isValid(event.target.result);
             if (isValidFormat && format.channels > 1) {
-              console.log('more than one channels detected!');
 
               const directory = new DirectoryInfo(path + file.name + '_dir/');
 
