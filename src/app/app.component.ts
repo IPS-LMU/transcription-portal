@@ -34,6 +34,7 @@ export class AppComponent implements OnDestroy {
   public tool_url: SafeResourceUrl;
   public selectedOperation: Operation = null;
   private splitModalDismissedProperly = false;
+  private firstModalShown = false;
 
 
   public get isdevelopment(): boolean {
@@ -49,6 +50,7 @@ export class AppComponent implements OnDestroy {
   @ViewChild('folderinput') folderinput: ElementRef;
   @ViewChild('proceedings') proceedings: ProceedingsComponent;
   @ViewChild('splitModal') splitModal: NgbModal;
+  @ViewChild('firstModal') firstModal: NgbModal;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -60,12 +62,44 @@ export class AppComponent implements OnDestroy {
       }
     ));
 
+    this.subscrmanager.add(this.storage.allloaded.subscribe(() => {
+      this.storage.getIntern('firstModalShown').then(
+        (result) => {
+          if (!isNullOrUndefined(result)) {
+            this.firstModalShown = result.value;
+          }
+          this.loadFirstModal();
+        }
+      ).catch((err) => {
+        console.error(err);
+        this.loadFirstModal();
+      })
+    }));
+
     window.onunload = function () {
       alert('You are trying to leave.');
       return false;
     };
 
     this.taskService.openSplitModal = this.openSplitModal;
+  }
+
+  private loadFirstModal() {
+    if (!this.firstModalShown) {
+
+      setTimeout(() => {
+        this.modalService.open(this.firstModal, {
+          beforeDismiss: () => {
+            return this.firstModalShown;
+          }
+        }).result.then(
+          () => {
+          }, (reason) => {
+            this.onfirstModalDismissed();
+          }
+        );
+      }, 1000);
+    }
   }
 
   public get AppInfo() {
@@ -286,6 +320,10 @@ export class AppComponent implements OnDestroy {
   public onSplitModalDismissed = () => {
     this.checkFiles();
   };
+
+  public onfirstModalDismissed() {
+    this.storage.saveIntern('firstModalShown', true);
+  }
 
   public checkFiles() {
     if (this.taskService.splitPrompt !== 'BOTH') {

@@ -87,6 +87,12 @@ export class StorageService {
     });
   }
 
+  public saveIntern(name: string, value: any) {
+    this.idbm.save('intern', name, {
+      value: value
+    });
+  }
+
   public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (entry instanceof Task) {
@@ -127,6 +133,10 @@ export class StorageService {
         });
       }
     });
+  }
+
+  public getIntern(name: string) {
+    return this.idbm.get('intern', name);
   }
 
   public destroy() {

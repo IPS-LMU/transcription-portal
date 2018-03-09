@@ -30,6 +30,32 @@
     </div>
 </ng-template>
 
+<ng-template #firstModal let-onfirstModalDismissed="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">Notice</h4>
+    </div>
+    <div class="modal-body split-modal">
+        <p> Please notice:</p>
+        <ol>
+            <li>
+                Your proceedings will be saved to your browser locally and automatically, but the results will be saved
+                to the server for approx. 1 - 2 days.
+                Please make sure to download your results in this time.
+            </li>
+            <li>After closing and re-opening this page you can only continue cancelled tasks from the last finished
+                step.
+            </li>
+        </ol>
+        <div class="row">
+            <div class="col-12">
+                <button class="btn btn-info" (click)="firstModalShown = true; onfirstModalDismissed();">
+                    I understand
+                </button>
+            </div>
+        </div>
+    </div>
+</ng-template>
+
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
         <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version">v{{AppInfo.version}}</span>

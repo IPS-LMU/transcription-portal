@@ -227,7 +227,7 @@ export class TaskService implements OnDestroy {
     const json = {
       version: '1.0.0',
       encoding: 'UTF-8',
-      created: moment.defaultFormatUtc,
+      created: moment().format(),
       entries: results
     };
 
