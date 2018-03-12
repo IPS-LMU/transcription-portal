@@ -97,6 +97,23 @@ export class TaskService implements OnDestroy {
           const taskObj = IDBtasks[i];
           if (taskObj.type === 'task') {
             const task = Task.fromAny(taskObj, this.operations);
+
+            console.log(`DO IT`);
+            for (let j = 0; j < task.operations.length; j++) {
+              const operation = task.operations[j];
+
+              for (let k = 0; k < operation.results.length; k++) {
+                const file = operation.results[k];
+
+                if (!isNullOrUndefined(file.url)) {
+                  this.existsFile(file.url).then(() => {
+                    file.online = true;
+                  }).catch(() => {
+                    file.online = false;
+                  })
+                }
+              }
+            }
             this._taskList.addEntry(task);
           } else {
             const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
@@ -537,5 +554,16 @@ export class TaskService implements OnDestroy {
 
   public openSplitModal = () => {
 
+  };
+
+  public existsFile(url: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.httpclient.head(url).subscribe(() => {
+          resolve();
+        },
+        (err) => {
+          reject(err);
+        });
+    });
   }
 }

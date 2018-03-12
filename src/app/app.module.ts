@@ -18,7 +18,6 @@ import {FileInfoTableComponent} from './components/file-info-table/file-info-tab
 import {TaskService} from './shared/task.service';
 import {StorageService} from './storage.service';
 
-
 @NgModule({
   declarations: [
     AppComponent,

@@ -7,12 +7,14 @@ import {AppInfo} from '../../app.info';
 import * as X2JS from 'x2js';
 
 export class ASROperation extends Operation {
+  public webService = '';
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
@@ -80,6 +82,28 @@ export class ASROperation extends Operation {
     result._time = operationObj.time;
     result._protocol = operationObj.protocol;
     result.enabled = operationObj.enabled;
+    result.webService = operationObj.webService;
+    return result;
+  }
+
+  toAny(): any {
+    let result = {
+      id: this.id,
+      name: this.name,
+      state: this.state,
+      protocol: this.protocol,
+      time: this.time,
+      enabled: this.enabled,
+      webService: this.webService,
+      results: []
+    };
+
+    // result data
+    for (let i = 0; i < this.results.length; i++) {
+      const resultObj = this.results[i];
+      result.results.push(resultObj.toAny());
+    }
+
     return result;
   }
 

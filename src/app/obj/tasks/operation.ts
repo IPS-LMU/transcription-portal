@@ -213,6 +213,7 @@ export abstract class Operation {
       protocol: this.protocol,
       time: this.time,
       enabled: this.enabled,
+      webService: '',
       results: []
     };
 

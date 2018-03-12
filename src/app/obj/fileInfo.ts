@@ -2,6 +2,13 @@ import {DataInfo} from './dataInfo';
 import {isNullOrUndefined} from 'util';
 
 export class FileInfo extends DataInfo {
+  get online(): boolean {
+    return this._online;
+  }
+
+  set online(value: boolean) {
+    this._online = value;
+  }
   set file(value: File) {
     this._file = value;
   }
@@ -25,6 +32,7 @@ export class FileInfo extends DataInfo {
   protected _extension: string;
   protected _file: File;
   protected _url: string;
+  private _online = true;
 
   public get fullname(): string {
     return `${this._name}.${this._extension}`;
@@ -39,9 +47,9 @@ export class FileInfo extends DataInfo {
   }
 
   public constructor(fullname: string, type: string, size: number, file?: File) {
+    super(FileInfo.extractFileName(fullname).name, type, size);
     const extraction = FileInfo.extractFileName(fullname);
     if (!isNullOrUndefined(extraction)) {
-      super(extraction.name, type, size);
       this._extension = extraction.extension;
       this._file = file;
     } else {

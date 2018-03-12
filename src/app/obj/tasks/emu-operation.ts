@@ -17,12 +17,9 @@ export class EmuOperation extends ToolOperation {
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
-
-    setTimeout(() => {
-      this.time.duration = 0;
-      this.operations = operations;
-      this.changeState(TaskState.FINISHED);
-    }, 1000);
+    this.time.duration = 0;
+    this.operations = operations;
+    this.changeState(TaskState.FINISHED);
   };
 
   public getStateIcon = (sanitizer: DomSanitizer) => {
@@ -41,7 +38,11 @@ export class EmuOperation extends ToolOperation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+        if (this.previousOperation.results.length > 0 && this.previousOperation.results[this.previousOperation.results.length - 1].online) {
+          result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+        } else {
+          result = '<i class="fa fa-chain-broken" style="color:red;" aria-hidden="true"></i>';
+        }
         break;
       case(TaskState.READY):
         result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';

@@ -367,7 +367,7 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
               this.storage.removeFromDB(entry).then(() => {
-                this.taskService.taskList.removeDir(entry);
+                this.taskService.taskList.removeDir(<TaskDirectory> entry);
 
               }).catch((err) => {
                 console.error(err);

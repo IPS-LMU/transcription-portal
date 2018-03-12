@@ -75,6 +75,9 @@ export class OCTRAOperation extends ToolOperation {
       `${embedded}`;
   }
 
+  public onMouseOver() {
+  }
+
   public fromAny(operationObj: any, task: Task): OCTRAOperation {
     const result = new OCTRAOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {

@@ -224,7 +224,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       }
     }
-    this.operationclick.emit(operation);
+    if (
+      (!isNullOrUndefined(operation.previousOperation) && operation.previousOperation.results[operation.previousOperation.results.length - 1].online)
+      || operation.results.length > 0 && operation.results[operation.results.length - 1].online
+    ) {
+      this.operationclick.emit(operation);
+    }
   }
 
 

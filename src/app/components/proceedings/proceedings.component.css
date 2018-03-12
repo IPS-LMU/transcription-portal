@@ -19,7 +19,7 @@
 }
 
 .table-striped .selected {
-    background-color: #cbffe7;
+    background-color: #bae5ff;
 }
 
 .fa.fa.file-text {
@@ -85,4 +85,8 @@
     font-weight: 100;
     text-align: center;
     opacity: 0.5;
+}
+
+.fa.fa-chain-broken {
+    color: red;
 }
