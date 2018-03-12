@@ -1,3 +1,12 @@
+.inner * {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none;
+}
+
 .inner {
     display: flex;
     flex-direction: column;
@@ -19,7 +28,7 @@
 }
 
 .table-striped .selected {
-    background-color: #bae5ff;
+    background-color: #007bff24;
 }
 
 .fa.fa.file-text {

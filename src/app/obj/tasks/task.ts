@@ -100,10 +100,11 @@ export class Task {
     // clone operations param
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i].clone(this);
-      this.listenToOperationChanges();
 
       this.operations.push(operation);
     }
+
+    this.listenToOperationChanges();
 
     this.changeState(TaskState.PENDING);
     this._directory = directory;
@@ -221,10 +222,12 @@ export class Task {
 
   public restart(http: HttpClient) {
     this.changeState(TaskState.PROCESSING);
+    this.listenToOperationChanges();
     this.start(http, true);
   }
 
   public restartFailedOperation(httpclient) {
+    console.log(`restart failed!`);
     for (let i = 0; i < this.operations.length; i++) {
       const operation = this.operations[i];
 
@@ -275,6 +278,7 @@ export class Task {
     for (let i = 0; i < taskObj.files.length; i++) {
       const file = taskObj.files[i];
       const audioInfo = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
+      audioInfo.attributes = file.attributes;
       task.files.push(audioInfo);
     }
 
@@ -322,6 +326,7 @@ export class Task {
         fileObj['channels'] = audioFile.channels;
         fileObj['duration'] = audioFile.duration.samples;
       }
+      fileObj['attributes'] = file.attributes;
 
       result.files.push(fileObj);
     }

@@ -1,23 +1,23 @@
 import {HttpClient} from '@angular/common/http';
 import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
-import {NotificationService} from './notification.service';
-import {SubscriptionManager} from './subscription-manager';
-import {Task, TaskDirectory, TaskList, TaskState} from '../obj/tasks';
-import {OCTRAOperation} from '../obj/tasks/octra-operation';
-import {UploadOperation} from '../obj/tasks/upload-operation';
-import {G2pMausOperation} from '../obj/tasks/g2p-maus-operation';
-import {FileInfo} from '../obj/fileInfo';
-import {DirectoryInfo} from '../obj/directoryInfo';
-import {StorageService} from '../storage.service';
-import {Preprocessor, QueueItem} from '../obj/preprocessor';
-import {WavFormat} from '../obj/audio/AudioFormats';
-import {AudioInfo} from '../obj/audio';
-import {AppInfo} from '../app.info';
-import {TaskEntry} from '../obj/tasks/task-entry';
-import {ASROperation} from '../obj/tasks/asr-operation';
-import {EmuOperation} from '../obj/tasks/emu-operation';
-import {Operation} from '../obj/tasks/operation';
+import {NotificationService} from '../../shared/notification.service';
+import {SubscriptionManager} from '../../shared/subscription-manager';
+import {Task, TaskDirectory, TaskList, TaskState} from './index';
+import {OCTRAOperation} from './octra-operation';
+import {UploadOperation} from './upload-operation';
+import {G2pMausOperation} from './g2p-maus-operation';
+import {FileInfo} from '../fileInfo';
+import {DirectoryInfo} from '../directoryInfo';
+import {StorageService} from '../../storage.service';
+import {Preprocessor, QueueItem} from '../preprocessor';
+import {WavFormat} from '../audio/AudioFormats/index';
+import {AudioInfo} from '../audio/index';
+import {AppInfo} from '../../app.info';
+import {TaskEntry} from './task-entry';
+import {ASROperation} from './asr-operation';
+import {EmuOperation} from './emu-operation';
+import {Operation} from './operation';
 import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 
@@ -115,6 +115,8 @@ export class TaskService implements OnDestroy {
               }
             }
             this._taskList.addEntry(task);
+            console.log(`ADDED`);
+            console.log(task);
           } else {
             const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
             this._taskList.addEntry(taskDir);
@@ -216,7 +218,9 @@ export class TaskService implements OnDestroy {
     const tasks = this.taskList.getAllTasks();
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
-      if (entry.state === TaskState.PENDING) {
+      if (entry.state === TaskState.PENDING &&
+        (!isNullOrUndefined(entry.files[0].file) || entry.operations[0].results.length > 0 && entry.operations[0].results[entry.operations[0].results.length - 1].online)
+      ) {
         return entry;
       } else if (entry.state === TaskState.READY) {
         for (let j = 0; j < entry.operations.length; j++) {
@@ -383,7 +387,6 @@ export class TaskService implements OnDestroy {
   }
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = (queueItem: QueueItem) => {
-
     if (queueItem.file instanceof FileInfo) {
       let file = <FileInfo> queueItem.file;
       return this.processFileInfo(file, '', queueItem);
@@ -397,6 +400,7 @@ export class TaskService implements OnDestroy {
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
       const newName = FileInfo.escapeFileName(file.fullname);
       let newFileInfo: FileInfo = null;
+      this.newfiles = true;
 
       new Promise<void>((res) => {
           if (newName !== file.name) {
@@ -407,6 +411,9 @@ export class TaskService implements OnDestroy {
             }).then((newfile: File) => {
               newFileInfo = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
+              newFileInfo.attributes['originalFileName'] = file.fullname;
+              file.attributes['originalFileName'] = file.fullname;
+              console.log(`SET ORIIGNAL!`);
               res();
             });
           } else {
@@ -414,7 +421,9 @@ export class TaskService implements OnDestroy {
           }
         }
       ).then(() => {
-        this.newfiles = true;
+        const hash = this.preprocessor.getHashString(file.fullname, file.size);
+        const foundOldFile = this.getTaskWithHash(hash);
+
 
         setTimeout(() => {
           let reader = new FileReader();
@@ -445,7 +454,7 @@ export class TaskService implements OnDestroy {
                 for (let i = 0; i < files.length; i++) {
                   const fileObj = files[i];
                   const fileInfo = FileInfo.fromFileObject(fileObj);
-
+                  fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
                   fileInfos.push(fileInfo);
                 }
                 directory.addEntries(fileInfos);
@@ -469,19 +478,28 @@ export class TaskService implements OnDestroy {
               }
 
               newFileInfo.attributes = file.attributes;
+              console.log(`HERE`);
+              console.log(newFileInfo.attributes);
               queueItem.file = newFileInfo;
 
-              const task = new Task([<FileInfo> queueItem.file], this.operations);
-              task.language = this.selectedlanguage.code;
+              console.log(`search with hash ${hash}`);
+              if (!isNullOrUndefined(foundOldFile)) {
+                console.log(`FOUND OLD FILE!`);
+                foundOldFile.files[0] = newFileInfo;
+                resolve([]);
+              } else {
+                const task = new Task([<FileInfo> queueItem.file], this.operations);
+                task.language = this.selectedlanguage.code;
 
-              // set state
-              for (let i = 0; i < this.operations.length; i++) {
-                const operation = this.operations[i];
+                // set state
+                for (let i = 0; i < this.operations.length; i++) {
+                  const operation = this.operations[i];
 
-                task.operations[i].enabled = operation.enabled;
+                  task.operations[i].enabled = operation.enabled;
+                }
+
+                resolve([task]);
               }
-
-              resolve([task]);
             } else {
               reject('no valid wave format!');
             }
@@ -517,6 +535,7 @@ export class TaskService implements OnDestroy {
         let content = [];
 
         values = [].concat.apply([], values);
+        console.log(values);
         for (let k = 0; k < values.length; k++) {
           const value = values[k];
 
@@ -555,6 +574,25 @@ export class TaskService implements OnDestroy {
   public openSplitModal = () => {
 
   };
+
+  private getTaskWithHash(hash: string): Task {
+    const tasks = this.taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      if (!isNullOrUndefined(task.files[0].attributes.originalFileName)) {
+        const cmpHash = this.preprocessor.getHashString(task.files[0].attributes.originalFileName, task.files[0].size);
+        console.log(`${cmpHash} === ${hash}`);
+        if (cmpHash === hash && (task.operations[0].state === TaskState.PENDING || task.operations[0].state == TaskState.ERROR)) {
+          return task;
+        }
+      } else {
+        console.log(`originalFilename is null`);
+      }
+    }
+
+    return null;
+  }
 
   public existsFile(url: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {

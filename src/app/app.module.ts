@@ -15,7 +15,7 @@ import {FilesizePipe} from './shared/filesize.pipe';
 import {NotificationService} from './shared/notification.service';
 import {TimePipe} from './shared/time.pipe';
 import {FileInfoTableComponent} from './components/file-info-table/file-info-table.component';
-import {TaskService} from './shared/task.service';
+import {TaskService} from './obj/tasks/task.service';
 import {StorageService} from './storage.service';
 
 @NgModule({

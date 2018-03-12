@@ -146,4 +146,8 @@ export class Preprocessor {
     this._itemAdded.complete();
     this._itemRemoved.complete();
   }
+
+  public getHashString(filename: string, size: number) {
+    return `${filename}_${size}`;
+  }
 }

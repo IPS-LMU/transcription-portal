@@ -10,7 +10,7 @@ import {SubscriptionManager} from './shared/subscription-manager';
 import {Task, TaskState} from './obj/tasks';
 import {AudioInfo} from './obj/audio';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
-import {TaskService} from './shared/task.service';
+import {TaskService} from './obj/tasks/task.service';
 import {DirectoryInfo} from './obj/directoryInfo';
 import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
@@ -187,6 +187,7 @@ export class AppComponent implements OnDestroy {
         tool.changeState(TaskState.PROCESSING);
       }
 
+      console.log(`SHOW TOOL!`);
       this.tool_url = tool.getToolURL();
 
       if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
@@ -284,6 +285,7 @@ export class AppComponent implements OnDestroy {
     } else {
       this.selectedOperation.changeState(TaskState.READY);
     }
+    this.taskService.start();
   }
 
   @HostListener('window:beforeunload', ['$event'])

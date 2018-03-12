@@ -1,3 +1,12 @@
+:host * {
+    -webkit-touch-callout: default; /* iOS Safari */
+    -webkit-user-select: auto; /* Safari */
+    -khtml-user-select: text; /* Konqueror HTML */
+    -moz-user-select: text; /* Firefox */
+    -ms-user-select: text; /* Internet Explorer/Edge */
+    user-select: text;
+}
+
 tr td {
     font-size: 11px;
     padding: 3px;

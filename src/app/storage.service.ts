@@ -76,9 +76,15 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    const data = taskEntry.toAny();
+    console.log(`SAVEEEE!`);
+    let data;
+    if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
+      data = taskEntry.directory.toAny();
+    } else {
+      data = taskEntry.toAny();
+    }
 
-    return this.idbm.save('tasks', taskEntry.id, data);
+    return this.idbm.save('tasks', data.id, data);
   }
 
   public saveCounter(name: string, value: number) {

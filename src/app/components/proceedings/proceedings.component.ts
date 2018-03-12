@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnDestroy,
   OnInit,
@@ -17,9 +18,9 @@ import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
-import {ModalDismissReasons, NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from '../../obj/fileInfo';
-import {TaskService} from '../../shared/task.service';
+import {TaskService} from '../../obj/tasks/task.service';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
 import * as moment from 'moment';
@@ -65,6 +66,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
+  private pressedKey = -1;
+  private shiftStart = -1;
 
   @Input() shortstyle = false;
 
@@ -154,20 +157,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           if (!isNullOrUndefined(file)) {
             // check file
             if (file.name.indexOf('.') > -1) {
-              const newName = FileInfo.escapeFileName(file.name);
-              if (newName !== file.name) {
-                // no valid name, replace
-                promises.push(FileInfo.renameFile(file, newName, {
-                  type: file.type,
-                  lastModified: file.lastModifiedDate
-                }).then((newfile: File) => {
-                  files.push(FileInfo.fromFileObject(newfile));
-                }));
-              } else {
-                files.push(FileInfo.fromFileObject(file));
-                this.cd.markForCheck();
-                this.cd.detectChanges();
-              }
+              files.push(FileInfo.fromFileObject(file));
+              this.cd.markForCheck();
+              this.cd.detectChanges();
             }
           } else {
             this.afterdrop.error(`could not read file from webKitFile`);
@@ -204,29 +196,37 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
     if (isNullOrUndefined(operation) || !(operation instanceof ToolOperation)) {
-      if (entry instanceof Task) {
-        const search = this.selected_tasks.findIndex((a) => {
-          return a instanceof Task && (<Task> a).id === entry.id;
-        });
-        if (search > -1) {
-          this.selected_tasks.splice(search, 1);
+
+      const search = this.selected_tasks.findIndex((a) => {
+        return a instanceof Task && a.id === entry.id;
+      });
+
+      if (search > -1) {
+        this.selected_tasks.splice(search, 1);
+      } else {
+        this.selected_tasks.push(entry);
+        /*
+        if (this.pressedKey === 16) {
+          // shift pressed
+          if (this.shiftStart < 0) {
+            this.shiftStart = entry.id;
+            this.selected_tasks.push(entry);
+          } else {
+            // select all between
+            // const start =
+          }
         } else {
           this.selected_tasks.push(entry);
-        }
-      } else if (entry instanceof TaskDirectory) {
-        const search = this.selected_tasks.findIndex((a) => {
-          return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id;
-        });
-        if (search > -1) {
-          this.selected_tasks.splice(search, 1);
-        } else {
-          this.selected_tasks.push(entry);
-        }
+        }*/
       }
     }
+
     if (
-      (!isNullOrUndefined(operation.previousOperation) && operation.previousOperation.results[operation.previousOperation.results.length - 1].online)
-      || operation.results.length > 0 && operation.results[operation.results.length - 1].online
+      (!isNullOrUndefined(operation) && !isNullOrUndefined(operation.previousOperation) && operation.previousOperation.results.length > 0 &&
+        operation.previousOperation.results[operation.previousOperation.results.length - 1].online
+      )
+      || (!isNullOrUndefined(operation) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
+      || (!isNullOrUndefined(operation) && operation.name === 'OCTRA' && operation.state !== TaskState.PENDING)
     ) {
       this.operationclick.emit(operation);
     }
@@ -236,28 +236,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onContextMenuOptionSelected(option: String) {
 
     if (option === 'delete') {
-      for (let i = 0; i < this.selected_tasks.length; i++) {
-        let entry = this.selected_tasks[i];
-
-        this.storage.removeFromDB(entry).then(() => {
-          if (entry instanceof Task) {
-            if (isNullOrUndefined(entry.directory)) {
-              this.taskList.removeEntry(entry);
-            } else if (entry.directory.entries.length === 1) {
-              this.taskList.removeDir(entry.directory);
-              (<Task> entry.directory.entries[0]).directory = null;
-              this.taskList.addEntry(entry.directory.entries[0]);
-            }
-          } else if (entry instanceof TaskDirectory) {
-            this.taskList.removeDir(entry);
-          }
-        }).catch((err) => {
-          console.error(err);
-        });
-
-        this.selected_tasks.splice(i, 1);
-        i--; // because length changed
-      }
+      this.deleteSelectedTasks();
     } else if (option === 'compress') {
       this.contextmenu.hidden = false;
       // prepare package
@@ -320,6 +299,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
       if (search > -1) {
         return true;
+      } else if (!isNullOrUndefined(entry.directory)) {
+        return this.isEntrySelected(entry.directory);
       }
     } else if (entry instanceof TaskDirectory) {
       const search = this.selected_tasks.findIndex((a) => {
@@ -510,18 +491,60 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   openArchiveDownlaod(content) {
     this.modalService.open(content).result.then((result) => {
       this.closeResult = `Closed with: ${result}`;
-    }, (reason) => {
-      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
   }
 
-  private getDismissReason(reason: any): string {
-    if (reason === ModalDismissReasons.ESC) {
-      return 'by pressing ESC';
-    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
-      return 'by clicking on a backdrop';
-    } else {
-      return `with: ${reason}`;
+  @HostListener('window:keydown', ['$event'])
+  @HostListener('window:keyup', ['$event'])
+  onKeyUp(event: KeyboardEvent) {
+    const keyMap = {
+      mac: {
+        cmd: 93
+      },
+      pc: {}
+    };
+
+    if (event.type === 'keydown') {
+      if (this.pressedKey < 0) {
+        console.log(`KEY DOWN`);
+        this.pressedKey = event.keyCode;
+      } else {
+        if (event.keyCode === 8 && this.pressedKey === 93) {
+          // CMD + Backspace on Mac
+          this.deleteSelectedTasks();
+        }
+      }
+    } else if (event.type === 'keyup') {
+      if (event.keyCode === this.pressedKey) {
+        this.pressedKey = -1;
+        console.log(`RELEASED KEY`);
+      }
+    }
+    console.log(event);
+  }
+
+  private deleteSelectedTasks() {
+    for (let i = 0; i < this.selected_tasks.length; i++) {
+      let entry = this.selected_tasks[i];
+
+      this.storage.removeFromDB(entry).then(() => {
+        if (entry instanceof Task) {
+          if (isNullOrUndefined(entry.directory)) {
+            this.taskList.removeEntry(entry);
+          } else if (entry.directory.entries.length === 1) {
+            this.taskList.removeDir(entry.directory);
+            (<Task> entry.directory.entries[0]).directory = null;
+            this.taskList.addEntry(entry.directory.entries[0]);
+          }
+        } else if (entry instanceof TaskDirectory) {
+          this.taskList.removeDir(entry);
+        }
+      }).catch((err) => {
+        console.error(err);
+      });
+
+      this.selected_tasks.splice(i, 1);
+      i--; // because length changed
     }
   }
 }
