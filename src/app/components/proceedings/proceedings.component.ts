@@ -199,10 +199,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (isNullOrUndefined(operation) || !(operation instanceof ToolOperation)) {
 
       const search = this.selected_tasks.findIndex((a) => {
-        return a instanceof Task && a.id === entry.id;
+        return a.id === entry.id;
       });
 
       if (search > -1) {
+        console.log(`REMOVE FROM SELECTED`);
         this.selected_tasks.splice(search, 1);
       } else {
         this.selected_tasks.push(entry);
