@@ -1,19 +1,25 @@
 import {TaskDirectory} from './taskDirectory';
 import {isNullOrUndefined} from 'util';
 import {Task, TaskState} from './task';
+import {Subject} from 'rxjs/Subject';
 
 export class TaskList {
+  get entryAdded(): Subject<(Task | TaskDirectory)> {
+    return this._entryAdded;
+  }
   get entries(): (Task | TaskDirectory)[] {
     return this._entries;
   }
 
   private _entries: (Task | TaskDirectory)[] = [];
+  private _entryAdded: Subject<(Task | TaskDirectory)> = new Subject<(Task | TaskDirectory)>();
 
   constructor() {
   }
 
   public addEntry(newEntry: (Task | TaskDirectory)) {
     this._entries.push(newEntry);
+    this._entryAdded.next(newEntry);
   }
 
   public findTaskByState(state: TaskState): Task {

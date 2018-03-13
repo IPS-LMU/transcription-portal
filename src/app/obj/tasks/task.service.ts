@@ -124,9 +124,49 @@ export class TaskService implements OnDestroy {
         }
         this.protocolURL = this.updateProtocolURL();
       }
-    }))
+    }));
+
+    this.subscrmanager.add(this.taskList.entryAdded.subscribe((entry: (Task | TaskDirectory)) => {
+      console.log(`listen to task... ${entry.id}`);
+      if (entry instanceof Task) {
+        this.listenToTaskEvents(entry);
+      } else {
+        for (let i = 0; i < entry.entries.length; i++) {
+          const task = <Task> entry.entries[i];
+          this.listenToTaskEvents(task);
+        }
+      }
+    }));
   }
 
+  private listenToTaskEvents(task: Task) {
+    this.subscrmanager.add(task.opstatechange.subscribe((event) => {
+      const operation = task.getOperationByID(event.opID);
+      const opName = operation.name;
+      if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
+        this.notification.showNotification('ASR Operation successful', 'You can now edit it with OCTRA');
+      } else if (event.newState === TaskState.ERROR) {
+        this.notification.showNotification(opName + ' Operation failed', 'Please click on "Errors" on the status bar');
+      } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+        this.notification.showNotification('MAUS Operation successful', 'You can now edit it with EMU WebApp');
+      }
+
+      const running_tasks = this.countRunningTasks();
+      this.updateProtocolArray();
+      const lastOp = task.operations[task.operations.length - 1];
+      if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
+        if (operation.state === TaskState.UPLOADING) {
+          this.state = TaskState.UPLOADING;
+        } else {
+          this.state = TaskState.PROCESSING;
+        }
+      } else {
+        this.state = TaskState.READY;
+      }
+      this.storage.saveTask(task);
+      this.protocolURL = this.updateProtocolURL();
+    }));
+  }
   private _taskList: TaskList = new TaskList();
 
   get taskList(): TaskList {
@@ -173,32 +213,6 @@ export class TaskService implements OnDestroy {
           this.protocolURL = this.updateProtocolURL();
         });
         console.log(`found task with id ${task.id}`);
-        this.subscrmanager.add(task.opstatechange.subscribe((event) => {
-          const operation = task.getOperationByID(event.opID);
-          const opName = operation.name;
-          if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-            this.notification.showNotification('ASR Operation successful', 'You can now edit it with OCTRA');
-          } else if (event.newState === TaskState.ERROR) {
-            this.notification.showNotification(opName + ' Operation failed', 'Please click on "Errors" on the status bar');
-          } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
-            this.notification.showNotification('MAUS Operation successful', 'You can now edit it with EMU WebApp');
-          }
-
-          running_tasks = this.countRunningTasks();
-          this.updateProtocolArray();
-          const lastOp = task.operations[task.operations.length - 1];
-          if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
-            if (operation.state === TaskState.UPLOADING) {
-              this.state = TaskState.UPLOADING;
-            } else {
-              this.state = TaskState.PROCESSING;
-            }
-          } else {
-            this.state = TaskState.READY;
-          }
-          this.storage.saveTask(task);
-          this.protocolURL = this.updateProtocolURL();
-        }));
         this.storage.saveTask(task);
         task.start(this.httpclient);
         setTimeout(() => {

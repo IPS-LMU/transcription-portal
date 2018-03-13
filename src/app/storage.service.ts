@@ -76,7 +76,7 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    console.log(`SAVEEEE!`);
+    console.log(`save ${taskEntry.type} ${taskEntry.id}!`);
     let data;
     if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
       data = taskEntry.directory.toAny();
