@@ -1,6 +1,20 @@
-<div class="inner" #inner (resize)="drawPopover()">
+<svg #svg [attr.height]="height" [attr.width]="width">
+    <defs>
+        <filter id="f3" x="0" y="0" width="300%" height="300%">
+            <feDropShadow dx="4" dy="4" flood-color="gray" stdDeviation="5"/>
+        </filter>
+    </defs>
+    <rect [attr.x]="margin.left" [attr.y]="margin.top" [attr.height]="height-margin.top - margin.bottom"
+          [attr.width]="width - margin.left -margin.right"
+          rx="5" ry="5" filter="url(#f3)" [style.stroke]="borderColor"></rect>
+    <polygon [attr.points]="getPolygonString()" style="fill:white;"/>
+    <line [attr.x1]="polygon.koord1.x" [attr.y1]="polygon.koord1.y" [attr.x2]="polygon.koord2.x"
+          [attr.y2]="polygon.koord2.y" style="stroke-width:1" [style.stroke]="borderColor"/>
+    <line [attr.x1]="polygon.koord1.x" [attr.y1]="polygon.koord1.y" [attr.x2]="polygon.koord3.x"
+          [attr.y2]="polygon.koord3.y" style="stroke-width:1" [style.stroke]="borderColor"/>
+</svg>
+<div class="inner" #inner>
     <div class="content">
         <ng-content></ng-content>
     </div>
 </div>
-<canvas #canvas></canvas>

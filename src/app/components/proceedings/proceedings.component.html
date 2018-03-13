@@ -38,8 +38,12 @@
     }" [hid]="contextmenu.hidden" [selected_tasks]="selected_tasks" [selectedOperationType]="selectedOperation"
                       (optionselected)="onContextMenuOptionSelected($event)">
     </app-context-menu>
-    <app-popover [@fadeToggle]="popover.state" [ngStyle]="{
+    <app-popover [@fadeToggle]="popover.state"
+                 [height]="popover.height"
+                 [width]="popover.width"
+                 [ngStyle]="{
         'width': popover.width + 'px',
+        'height': popover.height + 'px',
         'margin-top': popover.y + 'px',
         'margin-left': (popover.x + 4) + 'px'
     }" (mouseover)="popover.state = 'opened';" (mouseout)="popover.state = 'closed';"

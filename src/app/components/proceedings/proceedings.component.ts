@@ -53,6 +53,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     y: 0,
     state: 'closed',
     width: 200,
+    height: 320,
     operation: null,
     task: null,
     pointer: 'left'
@@ -471,7 +472,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public getPopoverColor(operation): string {
     if (!isNullOrUndefined(operation)) {
-      if (operation.state == TaskState.ERROR) {
+      if (operation.state == TaskState.ERROR || (operation.results.length > 0 && !operation.results[operation.results.length - 1].online)) {
         return 'red';
       } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
         return '#ffc33b';
