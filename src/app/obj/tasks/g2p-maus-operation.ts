@@ -8,6 +8,7 @@ import {TaskState} from './task';
 import {AppInfo} from '../../app.info';
 
 export class G2pMausOperation extends Operation {
+  public resultType = 'AnnotJSON';
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);

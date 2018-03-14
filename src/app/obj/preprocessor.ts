@@ -116,6 +116,7 @@ export class Preprocessor {
       }
     ).catch((err) => {
       console.error(err);
+      this.removeFromQueue(newItem.id);
     })
     ;
   };

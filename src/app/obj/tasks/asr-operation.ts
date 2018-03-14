@@ -8,6 +8,7 @@ import * as X2JS from 'x2js';
 
 export class ASROperation extends Operation {
   public webService = '';
+  public resultType = 'BAS Partitur Format';
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);

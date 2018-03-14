@@ -10,6 +10,7 @@ import {AppInfo} from '../../app.info';
 
 export class OCTRAOperation extends ToolOperation {
   protected operations: Operation[];
+  public resultType = 'BAS Partitur Format';
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);

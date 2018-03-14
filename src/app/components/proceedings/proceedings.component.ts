@@ -332,7 +332,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (operation.protocol !== '') {
         this.popover.width = 500;
       } else {
-        this.popover.width = 200;
+        this.popover.width = 400;
       }
       if (($event.target.offsetLeft + this.popover.width) < window.innerWidth) {
         this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
@@ -342,7 +342,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.popover.pointer = 'right';
       }
 
-      this.popover.y = $event.target.offsetTop + ($event.target.offsetHeight / 2) + 5;
+      this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;
       this.togglePopover(true);
 
     }

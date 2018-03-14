@@ -1,0 +1,14 @@
+table tr td,
+table tr th {
+    font-size: 11px;
+    padding: 3px;
+    text-align: center;
+}
+
+table thead tr:first-of-type th {
+    border: 1px solid lightgray;
+}
+
+table {
+    border: 1px solid lightgray;
+}

@@ -7,6 +7,8 @@ import {Subject} from 'rxjs/Subject';
 import {Task, TaskState} from './';
 
 export abstract class Operation {
+  public abstract resultType;
+
   get enabled(): boolean {
     return this._enabled;
   }

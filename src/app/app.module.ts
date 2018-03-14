@@ -17,6 +17,7 @@ import {TimePipe} from './shared/time.pipe';
 import {FileInfoTableComponent} from './components/file-info-table/file-info-table.component';
 import {TaskService} from './obj/tasks/task.service';
 import {StorageService} from './storage.service';
+import {ResultsTableComponent} from './components/results-table/results-table.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import {StorageService} from './storage.service';
     ContextMenuComponent,
     ExpandDirective,
     PopoverComponent,
-    FileInfoTableComponent
+    FileInfoTableComponent,
+    ResultsTableComponent
   ],
   imports     : [
     BrowserModule,

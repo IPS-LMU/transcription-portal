@@ -6,6 +6,7 @@ import {Operation} from './operation';
 import {Task, TaskState} from './task';
 
 export class ToolOperation extends Operation {
+  public resultType;
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, icon, task, state, id);

@@ -1,0 +1,33 @@
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th colspan="2">Result</th>
+        <ng-container *ngIf="conversionExtension !== 'wav'">
+            <th [attr.colspan]="AppInfo.converters.length">Conversions</th>
+        </ng-container>
+    </tr>
+    <tr>
+        <th>#</th>
+        <th>Original</th>
+        <ng-container *ngIf="conversionExtension !== 'wav'">
+            <ng-container *ngFor="let converter of AppInfo.converters">
+                <th *ngIf="converter.obj.name !== conversionExtension">*{{converter.obj.extension}}</th>
+            </ng-container>
+        </ng-container>
+    </tr>
+    </thead>
+    <tr *ngFor="let elem of convertedArray;let i = index">
+        <td># {{i+1}}</td>
+        <td><a [attr.href]="elem.input.url" [attr.download]="elem.input.fullname"><i class="fa fa-file-text"></i></a>
+        </td>
+        <ng-container *ngIf="elem.input.extension !== 'wav'">
+            <td *ngFor="let converter of elem.conversions">
+                <a [attr.href]="converter.result.url"
+                   [attr.download]="converter.result.fullname"
+                   target="_blank">
+                    <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
+                </a>
+            </td>
+        </ng-container>
+    </tr>
+</table>
