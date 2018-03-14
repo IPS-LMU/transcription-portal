@@ -24,7 +24,7 @@ export class ASROperation extends Operation {
 
     const url = `${langObj.host}runPipelineWebLink?` +
       ((inputs.length > 1) ? 'TEXT=' + inputs[1].url + '&' : '') +
-      `SIGNAL=${inputs[0].url}&` +
+      `SIGNAL=${this.previousOperation.lastResult.url}&` +
       `PIPE=ASR_G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
       `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
 

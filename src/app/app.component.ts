@@ -18,6 +18,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from './obj/fileInfo';
 import {ToolOperation} from './obj/tasks/tool-operation';
 import {Operation} from './obj/tasks/operation';
+import {OCTRAOperation} from './obj/tasks/octra-operation';
 
 declare var window: any;
 
@@ -199,6 +200,9 @@ export class AppComponent implements OnDestroy {
       this.sidebarstate = 'opened';
 
       this.showtool = true;
+      if (operation instanceof OCTRAOperation) {
+        operation.time.start = Date.now();
+      }
     }
   }
 
@@ -231,11 +235,7 @@ export class AppComponent implements OnDestroy {
     if ($event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
       const result: string = $event.data.data.transcript_url;
 
-      if (this.selectedOperation.results.length < 1) {
-        this.selectedOperation.results.push(FileInfo.fromURL(result));
-      } else {
-        this.selectedOperation.results[0] = FileInfo.fromURL(result);
-      }
+      this.selectedOperation.results.push(FileInfo.fromURL(result));
 
       const index = this.selectedOperation.task.operations.findIndex((op) => {
         if (op.id === this.selectedOperation.id) {
@@ -255,6 +255,10 @@ export class AppComponent implements OnDestroy {
         }
       } else {
         console.error(`index is ${index}`);
+      }
+
+      if (this.selectedOperation instanceof OCTRAOperation) {
+        this.selectedOperation.time.duration += Date.now() - this.selectedOperation.time.start;
       }
 
       this.selectedOperation.changeState(TaskState.FINISHED);

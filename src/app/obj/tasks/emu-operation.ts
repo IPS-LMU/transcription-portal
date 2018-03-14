@@ -56,8 +56,8 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const audio = encodeURIComponent(this.operations[0].results[0].url);
-    const transcript = encodeURIComponent(this.operations[3].results[0].url);
+    const audio = encodeURIComponent(this.operations[0].lastResult.url);
+    const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
 
     return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
   }

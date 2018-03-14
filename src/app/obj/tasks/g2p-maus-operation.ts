@@ -23,17 +23,17 @@ export class G2pMausOperation extends Operation {
     let language = (isNullOrUndefined(AppInfo.getLanguageByCode(this.task.language).mausLanguage))
       ? this.task.language :
       AppInfo.getLanguageByCode(this.task.language).mausLanguage;
-    if (operations[2].enabled) {
+    if (this.previousOperation.enabled) {
       // use G2P -> MAUS Pipe
       url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
-        'TEXT=' + operations[2].results[0].url +
-        '&SIGNAL=' + inputs[0].url + '&' +
+        'TEXT=' + this.previousOperation.lastResult.url +
+        '&SIGNAL=' + operations[0].lastResult.url + '&' +
         'PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
         'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
     } else {
       url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
-        'TEXT=' + operations[1].results[0].url +
-        '&SIGNAL=' + inputs[0].url +
+        'TEXT=' + operations[1].lastResult.url +
+        '&SIGNAL=' + operations[0].lastResult.url +
         '&PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
         'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
     }

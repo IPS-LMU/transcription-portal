@@ -58,14 +58,14 @@ export class OCTRAOperation extends ToolOperation {
 
 
     if (this.results.length < 1) {
-      if (this.operations[1].results.length > 0) {
-        let url = this.operations[1].results[0].url;
+      if (this.previousOperation.results.length > 0) {
+        let url = this.previousOperation.lastResult.url;
         transcript += encodeURIComponent(url);
       } else {
         transcript = '';
       }
     } else {
-      let url = this.results[0].url;
+      let url = this.lastResult.url;
       transcript += encodeURIComponent(url);
     }
 

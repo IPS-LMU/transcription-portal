@@ -57,6 +57,13 @@ export abstract class Operation {
     return this.state === TaskState.FINISHED;
   }
 
+  public get lastResult(): FileInfo {
+    if (this.results.length > 0) {
+      return this.results[this.results.length - 1];
+    }
+    return null;
+  }
+
   public get previousOperation(): Operation {
     const index = this.task.operations.findIndex((op) => {
         if (op.id === this.id) {
