@@ -51,8 +51,8 @@
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
 
-                <p style="color:red;" *ngIf="
-                !popover.operation.results[popover.operation.results.length - 1].online
+                <p style="color:red;" *ngIf="popover.operation.lastResult !== null &&
+                !popover.operation.lastResult.online
                 ">
                     The latest result does not exist anymore.
                 </p>
@@ -97,7 +97,9 @@
         <tr>
             <th></th>
             <th>File</th>
-            <th *ngFor="let operation of operations; let i = index" style="text-align: center;">
+            <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
+                <th>
+                    <div (click)="openContentModal(operation)">
                 <span *ngIf="operation.icon === ''; else showIcon" style="display:block;">
                     <ng-container *ngIf="shortstyle">
                         {{operation.name.charAt(0)}}
@@ -106,13 +108,15 @@
                         {{operation.name}}
                     </ng-container>
                 </span>
-                <ng-template #showIcon>
-                    <div [innerHTML]="operation.icon"></div>
-                </ng-template>
-                <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
-                       class="header-checkbox"
-                       [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
-            </th>
+                        <ng-template #showIcon>
+                            <div [innerHTML]="operation.icon"></div>
+                        </ng-template>
+                        <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
+                               class="header-checkbox"
+                               [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+                    </div>
+                </th>
+            </ng-container>
         </tr>
         </thead>
         <tbody (contextmenu)="onContextMenu($event)">
@@ -218,11 +222,11 @@
                 }">
                         <ng-container
                                 *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].fullname}}a
+                            {{dirEntry.files[0].fullname}}
                         </ng-container>
                         <ng-container
                                 *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].attributes?.originalFileName}}a
+                            {{dirEntry.files[0].attributes?.originalFileName}}
                         </ng-container>
                     </span>
                     </td>

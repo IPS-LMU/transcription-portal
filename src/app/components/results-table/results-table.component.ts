@@ -26,6 +26,7 @@ import {DomSanitizer} from '@angular/platform-browser';
 export class ResultsTableComponent implements OnInit, OnChanges {
 
   @Input() operation: Operation;
+  private from: any;
   public convertedArray: {
     input: FileInfo,
     conversions: {
@@ -59,16 +60,16 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   private generateTable() {
     this.convertedArray = [];
-    let from: Converter;
+    this.from = null;
     for (let i = 0; i < this.AppInfo.converters.length; i++) {
       const converter = this.AppInfo.converters[i];
       if (converter.obj.name === this.operation.resultType) {
-        from = converter.obj;
+        this.from = converter.obj;
       }
     }
 
-    if (!isNullOrUndefined(from)) {
-      this.conversionExtension = from.name;
+    if (!isNullOrUndefined(this.from)) {
+      this.conversionExtension = this.from.name;
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
         const file: IFile = {
@@ -105,8 +106,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
               let annotJSON;
 
-              if (from.name !== 'AnnotJSON') {
-                annotJSON = from.import(file, audio).annotjson;
+              if (this.from.name !== 'AnnotJSON') {
+                annotJSON = this.from.import(file, audio).annotjson;
               } else {
                 annotJSON = JSON.parse(text);
               }
@@ -133,7 +134,9 @@ export class ResultsTableComponent implements OnInit, OnChanges {
       }
     } else {
       this.conversionExtension = this.operation.resultType;
-
+      this.from = {
+        extension: 'wav'
+      };
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
         this.convertedArray.push({

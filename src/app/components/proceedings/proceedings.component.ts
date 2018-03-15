@@ -240,12 +240,20 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.deleteSelectedTasks();
     } else if (option === 'compress') {
       this.contextmenu.hidden = false;
+      this.openContentModal(this.selectedOperation);
+    }
+    this.contextmenu.hidden = true;
+  }
+
+  openContentModal(selectedOperation: Operation) {
+    console.log(`hä`);
+    if (!(selectedOperation instanceof UploadOperation || selectedOperation instanceof EmuOperation)) {
       // prepare package
       let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
       let requestPackage = {
         requestType: 'createArchieve',
         data: {
-          archieveName: `${this.selectedOperation.name}Results_${dateStr}`,
+          archieveName: `${selectedOperation.name}Results_${dateStr}`,
           files: []
         }
       };
@@ -257,28 +265,32 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           const operation = task.operations[i];
 
           // TODO improve code!
-          if (operation.name === this.selectedOperation.name
+          if (operation.name === selectedOperation.name
             && operation.results.length > 0
           ) {
             for (let i = 0; i < operation.results.length; i++) {
               const result: FileInfo = operation.results[i];
 
-              if (i > 0) {
-                requestPackage.data.files.push({
-                  name: result.name + `_${i + 1}.${result.extension}`,
-                  url: result.url
-                })
-              } else {
-                requestPackage.data.files.push({
-                  name: result.fullname,
-                  url: result.url
-                })
+              if (result.online) {
+                if (i > 0) {
+                  requestPackage.data.files.push({
+                    name: result.name + `_${i + 1}.${result.extension}`,
+                    url: result.url
+                  })
+                } else {
+                  requestPackage.data.files.push({
+                    name: result.fullname,
+                    url: result.url
+                  })
+                }
               }
             }
+            break;
           }
         }
       }
 
+      console.log(requestPackage);
       this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
         (response: any) => {
           this.archiveURL = response.result;
@@ -288,8 +300,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           console.error(error);
         }
       );
+    } else {
+      console.log(`UhaifsodjisduohO!`);
     }
-    this.contextmenu.hidden = true;
   }
 
   isEntrySelected(entry: (Task | TaskDirectory)) {

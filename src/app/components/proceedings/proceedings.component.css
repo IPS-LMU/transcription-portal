@@ -112,3 +112,11 @@
 
 .countdown {
 }
+
+table thead tr th {
+    text-align: center;
+}
+
+table thead tr th:hover {
+    background-color: whitesmoke;
+}

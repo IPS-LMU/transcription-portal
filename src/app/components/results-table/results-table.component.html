@@ -1,14 +1,14 @@
 <table class="table table-striped">
     <thead>
     <tr>
-        <th colspan="2">Result</th>
+        <th colspan="2">Results</th>
         <ng-container *ngIf="conversionExtension !== 'wav'">
             <th [attr.colspan]="AppInfo.converters.length">Conversions</th>
         </ng-container>
     </tr>
     <tr>
         <th>#</th>
-        <th>Original</th>
+        <th>.{{from?.extension}}</th>
         <ng-container *ngIf="conversionExtension !== 'wav'">
             <ng-container *ngFor="let converter of AppInfo.converters">
                 <th *ngIf="converter.obj.name !== conversionExtension">*{{converter.obj.extension}}</th>
@@ -23,7 +23,6 @@
                 class="fa fa-file-text"></i></a></td>
         <td *ngIf="!elem.input.online" style="border-right: 1px solid lightgray;"><i class="fa fa-unlink"
                                                                                      style="color:red;"></i>
-            {{elem.input.extension}}
         </td>
         <ng-container *ngIf="elem.input.extension !== 'wav'">
             <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
