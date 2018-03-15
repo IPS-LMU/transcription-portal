@@ -336,10 +336,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       }
       if (($event.target.offsetLeft + this.popover.width) < window.innerWidth) {
         this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
-        this.popover.pointer = 'left';
+        this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
       } else {
         this.popover.x = $event.target.offsetLeft - this.popover.width + ($event.target.offsetWidth / 2);
-        this.popover.pointer = 'right';
+        this.popover.pointer = ($event.layerY + this.popoverRef.height < window.innerHeight) ? 'right' : 'bottom-right';
       }
 
       this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;

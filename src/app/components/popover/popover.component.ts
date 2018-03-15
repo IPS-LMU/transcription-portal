@@ -32,50 +32,14 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   };
 
 
-  private leftTopPolygon = {
-    koord1: {
-      x: 0,
-      y: 0
-    },
-    koord2: {
-      x: 20,
-      y: this.margin.top
-    },
-    koord3: {
-      x: this.margin.left,
-      y: 20
-    }
-  };
+  private leftTopPolygon;
 
-  private leftBottomPolygon = {
-    koord1: {
-      x: 0,
-      y: this.height + this.margin.top
-    },
-    koord2: {
-      x: 20,
-      y: this.height
-    },
-    koord3: {
-      x: this.margin.left,
-      y: this.height - 20
-    }
-  };
+  private leftBottomPolygon;
 
-  private rightTopPolygon = {
-    koord1: {
-      x: this.width,
-      y: 0
-    },
-    koord2: {
-      x: this.width - 20,
-      y: this.margin.top
-    },
-    koord3: {
-      x: this.width - this.margin.right,
-      y: 20
-    }
-  };
+  private rightTopPolygon;
+
+  private rightBottomPolygon;
+  private arrowWidth = 20;
 
   public polygon = this.leftTopPolygon;
   private lineWidth = 2;
@@ -94,17 +58,85 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     if (changes.hasOwnProperty('pointer')) {
+      this.updatePolygins();
+
       if (changes.pointer.currentValue === 'left') {
         this.polygon = this.leftTopPolygon;
       } else if (changes.pointer.currentValue === 'bottom-left') {
         this.polygon = this.leftBottomPolygon;
       } else if (changes.pointer.currentValue === 'right') {
         this.polygon = this.rightTopPolygon;
+      } else if (changes.pointer.currentValue === 'bottom-right') {
+        this.polygon = this.rightBottomPolygon;
       }
     }
   }
 
   ngOnInit() {
+    console.log(`WIDTH = ${this.width}`);
+  }
+
+  updatePolygins() {
+
+    this.leftTopPolygon = {
+      koord1: {
+        x: 0,
+        y: 0
+      },
+      koord2: {
+        x: 20,
+        y: this.margin.top
+      },
+      koord3: {
+        x: this.margin.left,
+        y: 20
+      }
+    };
+
+    this.rightTopPolygon = {
+      koord1: {
+        x: this.width,
+        y: 0
+      },
+      koord2: {
+        x: this.width - 20,
+        y: this.margin.top
+      },
+      koord3: {
+        x: this.width - this.margin.right,
+        y: 20
+      }
+    };
+
+    this.leftBottomPolygon = {
+      koord1: {
+        x: 0,
+        y: this.height - 5
+      },
+      koord2: {
+        x: this.margin.left + 20,
+        y: this.height - this.margin.bottom - 1
+      },
+      koord3: {
+        x: this.margin.left,
+        y: this.height - this.margin.bottom - 10
+      }
+    };
+
+    this.rightBottomPolygon = {
+      koord1: {
+        x: this.width,
+        y: this.height - 10
+      },
+      koord2: {
+        x: this.width - this.margin.right - 20,
+        y: this.height - this.margin.bottom - 1
+      },
+      koord3: {
+        x: this.width - this.margin.right,
+        y: this.height - this.margin.bottom - 10
+      }
+    };
   }
 
   ngOnDestroy() {
