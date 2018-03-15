@@ -99,3 +99,16 @@
 .fa.fa-chain-broken {
     color: red;
 }
+
+.timer {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.timer tr td {
+    width: 50%;
+    text-align: center;
+}
+
+.countdown {
+}

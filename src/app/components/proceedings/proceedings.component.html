@@ -50,17 +50,28 @@
                  [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer" #popoverRef>
         <ng-container *ngIf="popover.operation !== null">
             <ng-container *ngIf="popover.operation.time.start > 0">
-                Duration: {{calculateDuration(popover.operation.time) | time}}<br/><br/>
-            </ng-container>
-            <ng-container *ngIf="popover.operation.results.length > 0">
-                Results:<br/>
 
                 <p style="color:red;" *ngIf="
                 !popover.operation.results[popover.operation.results.length - 1].online
                 ">
                     The latest result does not exist anymore.
                 </p>
-                <app-results-table [operation]="popover.operation"></app-results-table>
+
+                <table class="timer">
+                    <tr>
+                        <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i> {{popover.operation.time.start
+                            | date :"dd.MM.yyyy H:mm"}}
+                        </td>
+                        <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
+                            {{calculateDuration(popover.operation.time) | time}}
+                        </td>
+                    </tr>
+                </table>
+            </ng-container>
+            <ng-container *ngIf="popover.operation.results.length > 0">
+                <div>
+                    <app-results-table [operation]="popover.operation"></app-results-table>
+                </div>
             </ng-container>
             <ng-container>
                 <p style="font-size:12px;" [ngStyle]="{
@@ -192,7 +203,7 @@
                     </td>
                     <td (click)="onRowSelected(dirEntry)">
                         <i class="fa fa-file-audio-o" aria-hidden="true"
-                                                                           [ngClass]="{
+                           [ngClass]="{
             green: (dirEntry.state === 'FINISHED'),
             red: (dirEntry.state === 'ERROR'),
             blue: (dirEntry.state === 'PENDING' || dirEntry.state === 'READY'),
