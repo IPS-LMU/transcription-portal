@@ -271,7 +271,6 @@ export class Task {
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
     } else {
-      console.log(`SET TO READY`);
       task.changeState(TaskState.READY);
     }
 

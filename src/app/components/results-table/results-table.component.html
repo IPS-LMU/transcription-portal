@@ -18,16 +18,26 @@
     </thead>
     <tr *ngFor="let elem of convertedArray;let i = index">
         <td># {{i+1}}</td>
-        <td><a [attr.href]="elem.input.url" [attr.download]="elem.input.fullname"><i class="fa fa-file-text"></i></a>
+        <td *ngIf="elem.input.online" style="border-right: 1px solid lightgray;"><a [attr.href]="elem.input.url"
+                                                                                    [attr.download]="elem.input.fullname"><i
+                class="fa fa-file-text"></i></a></td>
+        <td *ngIf="!elem.input.online" style="border-right: 1px solid lightgray;"><i class="fa fa-unlink"
+                                                                                     style="color:red;"></i>
+            {{elem.input.extension}}
         </td>
         <ng-container *ngIf="elem.input.extension !== 'wav'">
-            <td *ngFor="let converter of elem.conversions">
+            <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
                 <a [attr.href]="converter.result.url"
                    [attr.download]="converter.result.fullname"
                    target="_blank">
                     <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
                 </a>
             </td>
+            <ng-container *ngIf="!elem.input.online">
+                <ng-container *ngFor="let converter of AppInfo.converters; let j = index">
+                    <td *ngIf="j < AppInfo.converters.length - 1" style="border-right: 1px solid lightgray;"></td>
+                </ng-container>
+            </ng-container>
         </ng-container>
     </tr>
 </table>

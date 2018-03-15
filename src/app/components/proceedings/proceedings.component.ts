@@ -203,7 +203,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       });
 
       if (search > -1) {
-        console.log(`REMOVE FROM SELECTED`);
         this.selected_tasks.splice(search, 1);
       } else {
         this.selected_tasks.push(entry);
@@ -519,7 +518,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     } else if (event.type === 'keyup') {
       if (event.keyCode === this.pressedKey) {
         this.pressedKey = -1;
-        console.log(`RELEASED KEY`);
       }
     }
     console.log(event);

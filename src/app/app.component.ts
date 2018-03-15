@@ -188,7 +188,6 @@ export class AppComponent implements OnDestroy {
         tool.changeState(TaskState.PROCESSING);
       }
 
-      console.log(`SHOW TOOL!`);
       this.tool_url = tool.getToolURL();
 
       if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
@@ -289,7 +288,6 @@ export class AppComponent implements OnDestroy {
     } else {
       this.selectedOperation.changeState(TaskState.READY);
     }
-    this.taskService.start();
   }
 
   @HostListener('window:beforeunload', ['$event'])

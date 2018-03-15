@@ -98,7 +98,6 @@ export class TaskService implements OnDestroy {
           if (taskObj.type === 'task') {
             const task = Task.fromAny(taskObj, this.operations);
 
-            console.log(`DO IT`);
             for (let j = 0; j < task.operations.length; j++) {
               const operation = task.operations[j];
 
@@ -115,10 +114,28 @@ export class TaskService implements OnDestroy {
               }
             }
             this._taskList.addEntry(task);
-            console.log(`ADDED`);
-            console.log(task);
           } else {
             const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
+
+            for (let l = 0; l < taskDir.entries.length; l++) {
+              const task = <Task> taskDir.entries[l];
+              for (let j = 0; j < task.operations.length; j++) {
+                const operation = task.operations[j];
+
+                for (let k = 0; k < operation.results.length; k++) {
+                  const file = operation.results[k];
+
+                  if (!isNullOrUndefined(file.url)) {
+                    this.existsFile(file.url).then(() => {
+                      file.online = true;
+                    }).catch(() => {
+                      file.online = false;
+                    })
+                  }
+                }
+              }
+            }
+
             this._taskList.addEntry(taskDir);
           }
         }
@@ -127,7 +144,6 @@ export class TaskService implements OnDestroy {
     }));
 
     this.subscrmanager.add(this.taskList.entryAdded.subscribe((entry: (Task | TaskDirectory)) => {
-      console.log(`listen to task... ${entry.id}`);
       if (entry instanceof Task) {
         this.listenToTaskEvents(entry);
       } else {
@@ -207,12 +223,9 @@ export class TaskService implements OnDestroy {
         }
 
         task.statechange.subscribe((obj) => {
-          console.log(`task change!`);
-          console.log(`from ${obj.oldState} to ${obj.newState}`);
           this.storage.saveTask(task);
           this.protocolURL = this.updateProtocolURL();
         });
-        console.log(`found task with id ${task.id}`);
         this.storage.saveTask(task);
         task.start(this.httpclient);
         setTimeout(() => {
@@ -426,8 +439,6 @@ export class TaskService implements OnDestroy {
               newFileInfo = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
               newFileInfo.attributes['originalFileName'] = file.fullname;
-              file.attributes['originalFileName'] = file.fullname;
-              console.log(`SET ORIIGNAL!`);
               res();
             });
           } else {
@@ -492,13 +503,10 @@ export class TaskService implements OnDestroy {
               }
 
               newFileInfo.attributes = file.attributes;
-              console.log(`HERE`);
-              console.log(newFileInfo.attributes);
               queueItem.file = newFileInfo;
 
               console.log(`search with hash ${hash}`);
               if (!isNullOrUndefined(foundOldFile)) {
-                console.log(`FOUND OLD FILE!`);
                 foundOldFile.files[0] = newFileInfo;
                 resolve([]);
               } else {
@@ -596,7 +604,6 @@ export class TaskService implements OnDestroy {
       const task = tasks[i];
       if (!isNullOrUndefined(task.files[0].attributes.originalFileName)) {
         const cmpHash = this.preprocessor.getHashString(task.files[0].attributes.originalFileName, task.files[0].size);
-        console.log(`${cmpHash} === ${hash}`);
         if (cmpHash === hash && (task.operations[0].state === TaskState.PENDING || task.operations[0].state == TaskState.ERROR)) {
           return task;
         }

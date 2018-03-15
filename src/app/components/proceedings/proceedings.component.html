@@ -119,8 +119,8 @@
             }"></i></td>
                 <td *ngIf="entry.files === undefined" (click)="onRowSelected(entry)" style="width:25px;"><i
                         class="fa fa-folder-open blue"
-                        aria-hidden="true"></i></td>
-
+                        aria-hidden="true"></i>
+                </td>
                 <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry)"
                     [ngClass]="{
                             'shorten': shortstyle
@@ -165,7 +165,7 @@
                         (mousedown)="onOperationClick($event, operation)"
                     >
                         <ng-container
-                                *ngIf="operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online; else elseBlock">
+                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online) || ((operation.name === 'OCTRA' || operation.name == 'EmuWebapp') && entry.operations[0].lastResult !== null && !entry.operations[0].lastResult.online); else elseBlock">
                             <i class="fa fa-chain-broken"
                                aria-hidden="true"></i>
                         </ng-container>
@@ -175,7 +175,7 @@
                                  (click)="onRowSelected(entry, operation)"></div>
                             <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
                                 <i class="fa fa-repeat" aria-hidden="true"
-                                   (click)="taskService.start();entry.restartFailedOperation(taskService.httpclient);"></i>
+                                   (click)="entry.restartFailedOperation(taskService.httpclient);"></i>
                             </div>
                             <div *ngIf="!operation.enabled">
                                 <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
@@ -207,11 +207,11 @@
                 }">
                         <ng-container
                                 *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].fullname}}
+                            {{dirEntry.files[0].fullname}}a
                         </ng-container>
                         <ng-container
                                 *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].attributes?.originalFileName}}
+                            {{dirEntry.files[0].attributes?.originalFileName}}a
                         </ng-container>
                     </span>
                     </td>
@@ -225,7 +225,7 @@
                         (mousedown)="onOperationClick($event, operation)"
                     >
                         <ng-container
-                                *ngIf="operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online; else elseBlock">
+                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online) || ((operation.name === 'OCTRA' || operation.name == 'Emu WebApp') && dirEntry.operations[0].lastResult !== null && !dirEntry.operations[0].lastResult.online); else elseBlock">
                             <i class="fa fa-chain-broken"
                                aria-hidden="true"></i>
                         </ng-container>
@@ -235,7 +235,7 @@
                                  (click)="onRowSelected(dirEntry, operation)"></div>
                             <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
                                 <i class="fa fa-repeat" aria-hidden="true"
-                                   (click)="taskService.start();dirEntry.restartFailedOperation(taskService.httpclient);"></i>
+                                   (click)="dirEntry.restartFailedOperation(taskService.httpclient);"></i>
                             </div>
                             <div *ngIf="!operation.enabled">
                                 <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>

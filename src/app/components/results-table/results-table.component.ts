@@ -1,4 +1,12 @@
-import {Component, Input, OnChanges, OnInit, SimpleChanges} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges
+} from '@angular/core';
 import {Operation} from '../../obj/tasks/operation';
 import {AppInfo} from '../../app.info';
 import {Converter, IFile} from '../../obj/Converters';
@@ -12,7 +20,8 @@ import {DomSanitizer} from '@angular/platform-browser';
 @Component({
   selector: 'app-results-table',
   templateUrl: './results-table.component.html',
-  styleUrls: ['./results-table.component.css']
+  styleUrls: ['./results-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ResultsTableComponent implements OnInit, OnChanges {
 
@@ -35,7 +44,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   public conversionExtension = '';
 
-  constructor(private http: HttpClient, private sanitizer: DomSanitizer) {
+  constructor(private http: HttpClient, private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -56,13 +65,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
       if (converter.obj.name === this.operation.resultType) {
         from = converter.obj;
       }
-      console.log(`${converter.obj.name} === ${this.operation.resultType}`);
     }
 
     if (!isNullOrUndefined(from)) {
       this.conversionExtension = from.name;
-      console.log(`converter is ${from.name}`);
-      console.log(`operation has ${this.operation.results.length} results!`);
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
         const file: IFile = {
@@ -79,8 +85,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         audio.size = (<AudioInfo> this.operation.task.files[0]).size;
 
         this.downloadResult(result).then((text) => {
-          console.log(`Import:`);
-          console.log(text);
           file.content = text;
 
           const convElem = {
@@ -112,13 +116,19 @@ export class ResultsTableComponent implements OnInit, OnChanges {
               });
               res.result = FileInfo.fromFileObject(expFile);
               res.result.url = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(expFile));
-              console.log(`exported!`);
               res.state = 'FINISHED';
-              console.log(exp.content);
             }
           }
+
+          this.cd.markForCheck();
+          this.cd.detectChanges();
         }).catch((err) => {
-          console.error(err);
+          this.convertedArray.push({
+            input: result,
+            conversions: []
+          });
+          this.cd.markForCheck();
+          this.cd.detectChanges();
         })
       }
     } else {
@@ -132,6 +142,9 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         })
       }
     }
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   private downloadResult(result: FileInfo): Promise<string> {

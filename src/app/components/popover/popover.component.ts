@@ -73,7 +73,6 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit() {
-    console.log(`WIDTH = ${this.width}`);
   }
 
   updatePolygins() {
