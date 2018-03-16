@@ -505,7 +505,6 @@ export class TaskService implements OnDestroy {
               newFileInfo.attributes = file.attributes;
               queueItem.file = newFileInfo;
 
-              console.log(`search with hash ${hash}`);
               if (!isNullOrUndefined(foundOldFile)) {
                 foundOldFile.files[0] = newFileInfo;
                 resolve([]);
@@ -557,7 +556,6 @@ export class TaskService implements OnDestroy {
         let content = [];
 
         values = [].concat.apply([], values);
-        console.log(values);
         for (let k = 0; k < values.length; k++) {
           const value = values[k];
 

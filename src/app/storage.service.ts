@@ -32,8 +32,6 @@ export class StorageService {
           Promise.all(promises).then((results) => {
             TaskEntry.counter = results[0].value;
             Operation.counter = results[1].value;
-            console.log(`tasks:`);
-            console.log(results[2]);
             this.allloaded.emit(results[2]);
           }).catch((err) => {
             console.error(err);
@@ -76,7 +74,6 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    console.log(`save ${taskEntry.type} ${taskEntry.id}!`);
     let data;
     if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
       data = taskEntry.directory.toAny();

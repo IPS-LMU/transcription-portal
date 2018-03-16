@@ -26,7 +26,7 @@ import {DomSanitizer} from '@angular/platform-browser';
 export class ResultsTableComponent implements OnInit, OnChanges {
 
   @Input() operation: Operation;
-  private from: any;
+  public from: any;
   public convertedArray: {
     input: FileInfo,
     conversions: {

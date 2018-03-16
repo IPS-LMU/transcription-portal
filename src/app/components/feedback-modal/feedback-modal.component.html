@@ -1,0 +1,51 @@
+<ng-template #content let-onClose="close" let-onDismiss="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">Feedback</h4>
+        <span class="green" style="margin-left:10px; margin-top:9px;" *ngIf="showThankYou">Thank you for your feedback! :)</span>
+        <button type="button" class="close" aria-label="Close" (click)="onDismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p>Did you find any bugs? Or do you have any suggestions or questions? Then don't hesitate to write us.</p>
+        <form>
+            <div class="form-group">
+                <label for="exampleFormControlInput1">Your email address:</label>
+                <input type="email" name="email" [(ngModel)]="formData.email" class="form-control"
+                       id="exampleFormControlInput1" placeholder="name@example.com">
+            </div>
+            <div class="form-group">
+                <label for="exampleFormControlTextarea1">Message:</label>
+                <textarea class="form-control" name="message" [(ngModel)]="formData.messsage"
+                          id="exampleFormControlTextarea1"
+                          placeholder="Type in a message"></textarea>
+            </div>
+            <div class="form-group">
+                <table>
+                    <tr>
+                        <td style="vertical-align: top"><input class="form-control-lg form-check-inline" type="checkbox"
+                                                               id="send-protocol" name="protocollCheckbox"
+                                                               [(ngModel)]="formData.protocol.append"
+                                                               [checked]="formData.protocol.append"/></td>
+                        <td>
+                            <label for="send-protocol" style="margin-bottom:0px;">Append protocol (optional)</label>
+                            <span style="color:gray; font-size: 12px;"><br/>If you have found some bugs or problems the protocol gives us additional technical information that help us to find a solution.</span>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div class="form-group" *ngIf="formData.protocol.append">
+                <label for="exampleFormControlTextarea1">Protocol:</label>
+                <textarea class="form-control" id="protocol" name="protocol"
+                          [innerHTML]="protocolAsText" readonly></textarea>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" (click)="onClose('Close click')">Cancel</button>
+        <button type="button" class="btn btn-outline-primary" (click)="onSubmit()" [disabled]="!allFilled">Send
+            Feedback
+        </button>
+    </div>
+</ng-template>

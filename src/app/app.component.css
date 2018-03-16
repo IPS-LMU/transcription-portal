@@ -147,10 +147,13 @@ h1 {
     padding-right: 0;
 }
 
-.fa-bell-o,
-.fa-bell-slash-o {
+.proceedings-header .fa-bell-o,
+.proceedings-header .fa-bell-slash-o,
+.proceedings-header .fa-cog,
+.proceedings-header .fa-question-circle-o {
     margin-top: 10px;
     font-size: 1.5em;
+    cursor: pointer;
 }
 
 .fa-bell-slash-o {
@@ -196,9 +199,4 @@ h1 {
 
 .version {
     color: gray;
-}
-
-.split-modal button {
-    width: 100%;
-    font-size: 0.9em;
 }

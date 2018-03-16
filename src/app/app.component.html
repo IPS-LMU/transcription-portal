@@ -1,65 +1,6 @@
-<ng-template #splitModal let-c="close" let-d="dismiss">
-    <div class="modal-header">
-        <h4 class="modal-title">Audio files with more than 2 Channels</h4>
-    </div>
-    <div class="modal-body split-modal">
-        <p>You have added audio files with more than two channels. In order to continue the channels will be split in
-            separate files
-            and each could be processed separately.
-        </p>
-        <p style="text-align: center;">
-            What would you like to do?
-        </p>
-        <div class="row">
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('FIRST');">Always<br/>use 1.
-                    channel
-                </button>
-            </div>
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('SECOND');">Always<br/>use
-                    2. channel
-                </button>
-            </div>
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('BOTH');">Always<br/>use
-                    both channels
-                </button>
-            </div>
-        </div>
-    </div>
-</ng-template>
-
-<ng-template #firstModal let-onfirstModalDismissed="dismiss">
-    <div class="modal-header">
-        <h4 class="modal-title">Notice</h4>
-    </div>
-    <div class="modal-body split-modal">
-        <p> Please notice:</p>
-        <ol>
-            <li>
-                Please do not close this tab or browser window. The processes are running only while this web
-                application is opened. If you use this app on a laptop you need to keep the laptop opened while
-                processing.
-            </li>
-            <li>After closing and re-opening this page you can only continue cancelled tasks from the last finished
-                step.
-            </li>
-            <li>
-                Your proceedings will be saved to your browser locally and automatically, but the results will be saved
-                to the server for 24 hours. Please make sure to download your results in this time.
-            </li>
-        </ol>
-        <div class="row">
-            <div class="col-12">
-                <button class="btn btn-info" (click)="firstModalShown = true; onfirstModalDismissed();">
-                    I understand
-                </button>
-            </div>
-        </div>
-    </div>
-</ng-template>
-
+<app-feedback #feedback></app-feedback>
+<app-first-modal #firstModal></app-first-modal>
+<app-split-modal #splitModal></app-split-modal>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
         <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version">v{{AppInfo.version}}</span>
@@ -79,16 +20,25 @@
         </div>
         <div class="col-4" style="text-align: center; vertical-align: middle;">
             <div class="row">
-                <div class="col-md-8" style="text-align: left; margin-top:14px;">
+                <div class="col-md-3" style="text-align: left; margin-top:10px;">
                     <a style="text-align: left; vertical-align: middle;margin-top:20px;"
                        [href]="taskService.protocolURL" [attr.download]="taskService.protocolFileName"><i
                             class="fa fa-file-code-o"></i> Data</a>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3" (click)="feedback.open()"><i
+                        class="fa fa-question-circle-o" [ngClass]="{
+                        'yellow': !bugService.hasErrors,
+                        'red': bugService.hasErrors
+                        }"></i>
+                </div>
+                <div class="col-md-3">
                     <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
                        (click)="notification.permissionGranted = false"></i>
                     <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
                        (click)="notification.permissionGranted = true"></i>
+                </div>
+                <div class="col-md-3"><i
+                        class="fa fa-cog"></i>
                 </div>
             </div>
         </div>
@@ -104,26 +54,26 @@
                    #fileinput
                    (change)="onFileChange($event)"/>
 
-            <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton"
-                    style="background-color: transparent;"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <ng-container *ngIf="taskService.selectedlanguage === null">
-                    {{AppInfo.languages[0].code | uppercase}}
-                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
-                </ng-container>
-                <ng-container *ngIf="taskService.selectedlanguage !== null">
-                    {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
-                    [{{taskService.selectedlanguage.asr}}]
-                </ng-container>
-            </button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <span class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
-                                          (click)="onASRLangCHanged(lang)">
-                                        <ng-container
-                                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
-                                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                                        </ng-container>
-                                    </span>
+            <div ngbDropdown class="d-inline-block">
+                <button class="btn btn-outline-primary" id="dropdownBasic1" ngbDropdownToggle>
+                    <ng-container *ngIf="taskService.selectedlanguage === null">
+                        {{AppInfo.languages[0].code | uppercase}}
+                        ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
+                    </ng-container>
+                    <ng-container *ngIf="taskService.selectedlanguage !== null">
+                        {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
+                        [{{taskService.selectedlanguage.asr}}]
+                    </ng-container>
+                </button>
+                <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+                    <button class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
+                            (click)="onASRLangCHanged(lang)">
+                        <ng-container
+                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
+                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                        </ng-container>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="col-4" style="text-align:right;border-top: 1px solid cornflowerblue;padding-top:5px;">

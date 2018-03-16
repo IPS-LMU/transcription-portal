@@ -14,11 +14,14 @@ import {TaskService} from './obj/tasks/task.service';
 import {DirectoryInfo} from './obj/directoryInfo';
 import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from './obj/fileInfo';
 import {ToolOperation} from './obj/tasks/tool-operation';
 import {Operation} from './obj/tasks/operation';
 import {OCTRAOperation} from './obj/tasks/octra-operation';
+import {FeedbackModalComponent} from './components/feedback-modal/feedback-modal.component';
+import {BugReportService, ConsoleType} from './shared/bug-report.service';
+import {SplitModalComponent} from './components/split-modal/split-modal.component';
+import {FirstModalComponent} from './components/first-modal/first-modal.component';
 
 declare var window: any;
 
@@ -34,7 +37,6 @@ export class AppComponent implements OnDestroy {
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
   public selectedOperation: Operation = null;
-  private splitModalDismissedProperly = false;
   private firstModalShown = false;
 
 
@@ -50,12 +52,51 @@ export class AppComponent implements OnDestroy {
   @ViewChild('fileinput') fileinput: ElementRef;
   @ViewChild('folderinput') folderinput: ElementRef;
   @ViewChild('proceedings') proceedings: ProceedingsComponent;
-  @ViewChild('splitModal') splitModal: NgbModal;
-  @ViewChild('firstModal') firstModal: NgbModal;
+  @ViewChild('splitModal') splitModal: SplitModalComponent;
+  @ViewChild('firstModal') firstModal: FirstModalComponent;
+  @ViewChild('feedback') feedback: FeedbackModalComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
-              private storage: StorageService, private modalService: NgbModal) {
+              private storage: StorageService,
+              public bugService: BugReportService) {
+
+    // overwrite console.log
+    const oldLog = console.log;
+    const serv = this.bugService;
+    (() => {
+      console.log = function (message) {
+        serv.addEntry(ConsoleType.LOG, message);
+        oldLog.apply(console, arguments);
+      };
+    })();
+
+    // overwrite console.err
+    const oldError = console.error;
+    (() => {
+      console.error = function (message) {
+        serv.addEntry(ConsoleType.ERROR, message);
+        oldError.apply(console, arguments);
+      };
+    })();
+
+    // overwrite console.info
+    const oldInfo = console.info;
+    (() => {
+      console.info = function (message) {
+        serv.addEntry(ConsoleType.INFO, message);
+        oldInfo.apply(console, arguments);
+      };
+    })();
+
+    // overwrite console.warn
+    const oldWarn = console.warn;
+    (() => {
+      console.warn = function (message) {
+        serv.addEntry(ConsoleType.WARN, message);
+        oldWarn.apply(console, arguments);
+      };
+    })();
 
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
@@ -85,20 +126,16 @@ export class AppComponent implements OnDestroy {
     this.taskService.openSplitModal = this.openSplitModal;
   }
 
+
   private loadFirstModal() {
     if (!this.firstModalShown) {
 
       setTimeout(() => {
-        this.modalService.open(this.firstModal, {
-          beforeDismiss: () => {
-            return this.firstModalShown;
-          }
-        }).result.then(
-          () => {
-          }, (reason) => {
-            this.onfirstModalDismissed();
-          }
-        );
+        this.firstModal.open(() => {
+          return this.firstModalShown;
+        }, () => {
+          this.storage.saveIntern('firstModalShown', true);
+        });
       }, 1000);
     }
   }
@@ -306,28 +343,11 @@ export class AppComponent implements OnDestroy {
   }
 
   public openSplitModal = () => {
-    this.modalService.open(this.splitModal, {
-      beforeDismiss: () => {
-        const old = this.splitModalDismissedProperly;
-        this.splitModalDismissedProperly = false;
-        return old;
-      }
-    }).result.then(
-      () => {
-      }, (reason) => {
-        this.taskService.splitPrompt = reason;
-        this.onSplitModalDismissed();
-      }
-    );
+    this.splitModal.open((reason) => {
+      this.taskService.splitPrompt = reason;
+      this.checkFiles();
+    });
   };
-
-  public onSplitModalDismissed = () => {
-    this.checkFiles();
-  };
-
-  public onfirstModalDismissed() {
-    this.storage.saveIntern('firstModalShown', true);
-  }
 
   public checkFiles() {
     if (this.taskService.splitPrompt !== 'BOTH') {

@@ -2,7 +2,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDropdown, NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 import {AppComponent} from './app.component';
 import {PopoverComponent} from './components/popover/popover.component';
@@ -18,6 +18,12 @@ import {FileInfoTableComponent} from './components/file-info-table/file-info-tab
 import {TaskService} from './obj/tasks/task.service';
 import {StorageService} from './storage.service';
 import {ResultsTableComponent} from './components/results-table/results-table.component';
+import {FeedbackModalComponent} from './components/feedback-modal/feedback-modal.component';
+import {BugReportService} from './shared/bug-report.service';
+import {SplitModalComponent} from './components/split-modal/split-modal.component';
+import {FirstModalComponent} from './components/first-modal/first-modal.component';
+import {NgbDropdownMenu} from '@ng-bootstrap/ng-bootstrap/dropdown/dropdown';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -31,16 +37,26 @@ import {ResultsTableComponent} from './components/results-table/results-table.co
     ExpandDirective,
     PopoverComponent,
     FileInfoTableComponent,
-    ResultsTableComponent
+    ResultsTableComponent,
+    FeedbackModalComponent,
+    SplitModalComponent,
+    FirstModalComponent
   ],
-  imports     : [
+  imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    NgbModule.forRoot()
+    NgbModule.forRoot(),
+    FormsModule,
+    ReactiveFormsModule
   ],
-  providers: [TaskService, NotificationService, StorageService],
-  bootstrap   : [ AppComponent ]
+  providers: [TaskService,
+    NotificationService,
+    StorageService,
+    BugReportService,
+    NgbDropdown,
+    NgbDropdownMenu],
+  bootstrap: [AppComponent]
 })
 export class AppModule {
 }

@@ -246,7 +246,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   openContentModal(selectedOperation: Operation) {
-    console.log(`hä`);
     if (!(selectedOperation instanceof UploadOperation || selectedOperation instanceof EmuOperation)) {
       // prepare package
       let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
@@ -301,7 +300,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       );
     } else {
-      console.log(`UhaifsodjisduohO!`);
     }
   }
 
@@ -520,7 +518,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
     if (event.type === 'keydown') {
       if (this.pressedKey < 0) {
-        console.log(`KEY DOWN`);
         this.pressedKey = event.keyCode;
       } else {
         if (event.keyCode === 8 && this.pressedKey === 93) {
@@ -533,7 +530,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.pressedKey = -1;
       }
     }
-    console.log(event);
   }
 
   private deleteSelectedTasks() {

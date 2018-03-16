@@ -63,10 +63,12 @@ export class G2pMausOperation extends Operation {
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);
+          console.error(this._protocol);
         }
       },
       (error) => {
         this._protocol = error.message;
+        console.error(error);
         this.changeState(TaskState.ERROR);
       });
 

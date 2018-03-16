@@ -53,6 +53,7 @@ export class ASROperation extends Operation {
           this.changeState(TaskState.FINISHED);
         } else {
           this.changeState(TaskState.ERROR);
+          console.error(this._protocol);
         }
       },
       (error) => {

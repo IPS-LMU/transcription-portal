@@ -99,8 +99,9 @@
             <th>File</th>
             <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
                 <th>
-                    <div (click)="openContentModal(operation)">
-                <span *ngIf="operation.icon === ''; else showIcon" style="display:block;">
+                    <div>
+                <span *ngIf="operation.icon === ''; else showIcon" style="display:block;"
+                      (click)="openContentModal(operation)">
                     <ng-container *ngIf="shortstyle">
                         {{operation.name.charAt(0)}}
                     </ng-container>
@@ -109,7 +110,7 @@
                     </ng-container>
                 </span>
                         <ng-template #showIcon>
-                            <div [innerHTML]="operation.icon"></div>
+                            <div [innerHTML]="operation.icon" (click)="openContentModal(operation)"></div>
                         </ng-template>
                         <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
                                class="header-checkbox"
