@@ -66,7 +66,6 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
         url: 'https://www.phonetik.uni-muenchen.de/apps/octra/oh-email/index.php'
       }).subscribe(
         (result) => {
-          console.log(result);
           this.showThankYou = true;
           setTimeout(() => {
             this.showThankYou = false;

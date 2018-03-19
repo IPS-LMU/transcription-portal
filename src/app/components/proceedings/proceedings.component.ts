@@ -289,7 +289,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       }
 
-      console.log(requestPackage);
       this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
         (response: any) => {
           this.archiveURL = response.result;

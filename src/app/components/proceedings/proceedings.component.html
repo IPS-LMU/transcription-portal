@@ -223,11 +223,11 @@
                 }">
                         <ng-container
                                 *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].fullname}}
+                            {{dirEntry.files[0].fullname}}a
                         </ng-container>
                         <ng-container
                                 *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].attributes?.originalFileName}}
+                            {{dirEntry.files[0].attributes?.originalFileName}}v
                         </ng-container>
                     </span>
                     </td>

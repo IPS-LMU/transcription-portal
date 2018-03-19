@@ -49,7 +49,6 @@ export class QueueModalComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(`submit click`);
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[i];
       if (task.files[0].file !== undefined) {
@@ -85,7 +84,6 @@ export class QueueModalComponent implements OnInit {
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
-        console.log(`set language`);
         task.language = this.taskService.selectedlanguage.code;
       }
     }

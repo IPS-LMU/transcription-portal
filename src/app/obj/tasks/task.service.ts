@@ -94,6 +94,8 @@ export class TaskService implements OnDestroy {
           }
 
           this.addEntry(result);
+          console.log(`add`);
+          console.log(result);
           this.storage.saveTask(result);
         }
       }
@@ -117,10 +119,8 @@ export class TaskService implements OnDestroy {
                 if (!isNullOrUndefined(file.url)) {
                   this.existsFile(file.url).then(() => {
                     file.online = true;
-                    console.log(`file exists!`);
                   }).catch(() => {
                     file.online = false;
-                    console.log(`file does not exist!`);
                   })
                 }
               }
@@ -156,6 +156,8 @@ export class TaskService implements OnDestroy {
     }));
 
     this.subscrmanager.add(this.taskList.entryAdded.subscribe((entry: (Task | TaskDirectory)) => {
+      console.log(`ITEM ADDED`);
+      console.log(entry);
       if (entry instanceof Task) {
         this.listenToTaskEvents(entry);
       } else {
@@ -220,7 +222,6 @@ export class TaskService implements OnDestroy {
   }
 
   public start() {
-    console.log(`Start service!`);
     // look for pending tasks
 
     let running_tasks = this.countRunningTasks();
@@ -452,9 +453,11 @@ export class TaskService implements OnDestroy {
               newFileInfo = new FileInfo(newfile.name, newfile.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
               newFileInfo.attributes['originalFileName'] = file.fullname;
+              file.attributes['originalFileName'] = file.fullname;
               res();
             });
           } else {
+            file.attributes['originalFileName'] = file.fullname;
             res();
           }
         }
@@ -469,11 +472,8 @@ export class TaskService implements OnDestroy {
             const format = new WavFormat(event.target.result);
             const isValidFormat = format.isValid(event.target.result);
             if (isValidFormat && format.channels > 1) {
-
               const directory = new DirectoryInfo(path + file.name + '_dir/');
-
               const files: File[] = format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result);
-
 
               if (this._splitPrompt === 'PENDING') {
                 this.openSplitModal();
@@ -489,6 +489,7 @@ export class TaskService implements OnDestroy {
               const fileInfos: FileInfo[] = [];
 
               if (files.length > 1) {
+                console.log(`greater than 1`);
                 for (let i = 0; i < files.length; i++) {
                   const fileObj = files[i];
                   const fileInfo = FileInfo.fromFileObject(fileObj);
@@ -496,12 +497,16 @@ export class TaskService implements OnDestroy {
                   fileInfos.push(fileInfo);
                 }
                 directory.addEntries(fileInfos);
+                console.log(`process dir`);
                 this.processDirectoryInfo(directory, queueItem).then((result) => {
                   resolve(result);
                 }).catch((err) => {
                   reject(err);
                 });
               } else {
+                // TODO ?
+                // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
+                console.log(`less`);
                 this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
               }
 
@@ -515,6 +520,7 @@ export class TaskService implements OnDestroy {
                 newFileInfo.file = file.file;
               }
 
+              console.log(`set`);
               newFileInfo.attributes = file.attributes;
               queueItem.file = newFileInfo;
 
@@ -528,7 +534,6 @@ export class TaskService implements OnDestroy {
                 // set state
                 for (let i = 0; i < this.operations.length; i++) {
                   const operation = this.operations[i];
-
                   task.operations[i].enabled = operation.enabled;
                 }
 
@@ -554,6 +559,7 @@ export class TaskService implements OnDestroy {
         const dirEntry = dir.entries[i];
 
         if (dirEntry instanceof FileInfo) {
+          console.log(`process dir file`);
           const file = <FileInfo> dirEntry;
 
           promises.push(this.processFileInfo(file, dir.path, queueItem));
@@ -582,9 +588,11 @@ export class TaskService implements OnDestroy {
           } else if (value instanceof TaskDirectory) {
             // is dir
             if (value.entries.length === 1) {
+              console.log(`only 1`);
               content.push(value.entries[0]);
             } else {
               if (content.length > 0) {
+                console.log(`greater 0`);
                 dirTask.addEntries(content);
                 result.push(dirTask);
                 content = [];
@@ -619,7 +627,6 @@ export class TaskService implements OnDestroy {
           return task;
         }
       } else {
-        console.log(`originalFilename is null`);
       }
     }
 

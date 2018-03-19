@@ -402,6 +402,7 @@ export class AppComponent implements OnDestroy {
             let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
 
             if (!isNullOrUndefined(dirtemp)) {
+              console.log(`C`);
               dirtemp.entries.push(entry.entries[0]);
               const entr = entry.entries[0];
               this.storage.saveTask(dirtemp).catch((err) => {
@@ -414,6 +415,7 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else if (path !== '' && path != '/') {
+              console.log(`A`);
               dirtemp = new TaskDirectory(path);
               this.storage.removeFromDB(entry).then(() => {
                 this.taskService.taskList.removeDir(<TaskDirectory> entry);
@@ -427,11 +429,16 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else {
+              console.log(`B`);
               const entries = this.taskService.taskList.entries[i];
               this.storage.removeFromDB(entries).then(() => {
+                console.log(`${entries.id} removed`);
                 this.taskService.taskList.entries[i] = (<TaskDirectory> entries).entries[0];
 
-                const entr = (<TaskDirectory> entries).entries[0];
+                const entr = <Task> this.taskService.taskList.entries[i];
+                entr.directory = null;
+                console.log(`save ${entr.id}`);
+                console.log(entr);
                 this.storage.saveTask(entr).then(() => {
                 }).catch((err) => {
                   console.error(err);
@@ -440,6 +447,14 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             }
+          } else if (entry.entries.length < 1) {
+            // empty dir
+            this.storage.removeFromDB(entry).then(() => {
+              this.taskService.taskList.removeDir(entry);
+            }).catch((error) => {
+                console.error(error);
+              }
+            );
           }
         }
       }
