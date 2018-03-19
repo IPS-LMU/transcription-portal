@@ -1,6 +1,8 @@
-<app-feedback #feedback></app-feedback>
+<app-feedback #feedbackModal></app-feedback>
 <app-first-modal #firstModal></app-first-modal>
 <app-split-modal #splitModal></app-split-modal>
+<app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
+                 [operations]="taskService.operations"></app-queue-modal>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
         <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version">v{{AppInfo.version}}</span>
@@ -25,7 +27,7 @@
                        [href]="taskService.protocolURL" [attr.download]="taskService.protocolFileName"><i
                             class="fa fa-file-code-o"></i> Data</a>
                 </div>
-                <div class="col-md-3" (click)="feedback.open()"><i
+                <div class="col-md-3" (click)="feedbackModal.open()"><i
                         class="fa fa-question-circle-o" [ngClass]="{
                         'yellow': !bugService.hasErrors,
                         'red': bugService.hasErrors

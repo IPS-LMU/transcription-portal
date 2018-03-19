@@ -83,6 +83,16 @@ export class TaskService implements OnDestroy {
       (item) => {
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
+
+          if (result instanceof Task) {
+            result.changeState(TaskState.QUEUED);
+          } else {
+            for (let j = 0; j < result.entries.length; j++) {
+              const entry = <Task> result.entries[j];
+              entry.changeState(TaskState.QUEUED);
+            }
+          }
+
           this.addEntry(result);
           this.storage.saveTask(result);
         }
@@ -107,8 +117,10 @@ export class TaskService implements OnDestroy {
                 if (!isNullOrUndefined(file.url)) {
                   this.existsFile(file.url).then(() => {
                     file.online = true;
+                    console.log(`file exists!`);
                   }).catch(() => {
                     file.online = false;
+                    console.log(`file does not exist!`);
                   })
                 }
               }
@@ -183,6 +195,7 @@ export class TaskService implements OnDestroy {
       this.protocolURL = this.updateProtocolURL();
     }));
   }
+
   private _taskList: TaskList = new TaskList();
 
   get taskList(): TaskList {

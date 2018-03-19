@@ -1,0 +1,14 @@
+table tr td,
+table tr th {
+    text-align: center;
+    font-size: 0.9em;
+}
+
+table tr td:first-of-type,
+table tr th:first-of-type {
+    text-align: left;
+}
+
+.table thead th {
+    vertical-align: top;
+}

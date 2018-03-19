@@ -18,10 +18,11 @@ import {FileInfo} from './obj/fileInfo';
 import {ToolOperation} from './obj/tasks/tool-operation';
 import {Operation} from './obj/tasks/operation';
 import {OCTRAOperation} from './obj/tasks/octra-operation';
-import {FeedbackModalComponent} from './components/feedback-modal/feedback-modal.component';
+import {FeedbackModalComponent} from './modals/feedback-modal/feedback-modal.component';
 import {BugReportService, ConsoleType} from './shared/bug-report.service';
-import {SplitModalComponent} from './components/split-modal/split-modal.component';
-import {FirstModalComponent} from './components/first-modal/first-modal.component';
+import {SplitModalComponent} from './modals/split-modal/split-modal.component';
+import {FirstModalComponent} from './modals/first-modal/first-modal.component';
+import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 
 declare var window: any;
 
@@ -54,7 +55,8 @@ export class AppComponent implements OnDestroy {
   @ViewChild('proceedings') proceedings: ProceedingsComponent;
   @ViewChild('splitModal') splitModal: SplitModalComponent;
   @ViewChild('firstModal') firstModal: FirstModalComponent;
-  @ViewChild('feedback') feedback: FeedbackModalComponent;
+  @ViewChild('feedbackModal') feedbackModal: FeedbackModalComponent;
+  @ViewChild('queueModal') queueModal: QueueModalComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -166,8 +168,23 @@ export class AppComponent implements OnDestroy {
   }
 
   onUploadButtonClick() {
-    // start first operation of this task
-    this.taskService.start();
+    new Promise<void>((resolve, reject) => {
+        const tasks = this.taskService.taskList.getAllTasks().filter((a) => {
+          return a.state === TaskState.QUEUED;
+        });
+
+        if (tasks.length > 0) {
+          this.queueModal.open(null, () => {
+            resolve();
+          });
+        } else {
+          resolve();
+        }
+      }
+    ).then(() => {
+      // start first operation of this task
+      this.taskService.start();
+    });
   }
 
   onMissedDrop(event) {
@@ -248,16 +265,16 @@ export class AppComponent implements OnDestroy {
   onASRLangCHanged(lang) {
     if (lang.code !== this.taskService.selectedlanguage.code) {
       this.taskService.selectedlanguage = lang;
-      this.changeLanguageforAllPendingTasks();
+      this.changeLanguageforAllQueuedTasks();
     }
   }
 
-  changeLanguageforAllPendingTasks() {
+  changeLanguageforAllQueuedTasks() {
     let tasks = this.taskService.taskList.getAllTasks();
 
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
-      if (task.state === TaskState.PENDING) {
+      if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
       }
     }

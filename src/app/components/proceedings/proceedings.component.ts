@@ -420,6 +420,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   deactivateOperation(operation: Operation, index: number) {
+    let tasks = this.taskList.getAllTasks().filter((a) => {
+      return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
+    });
+
     operation.enabled = !operation.enabled;
     const previous = this.taskService.operations[index - 1];
     const next = this.taskService.operations[index + 1];
@@ -427,7 +431,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (!previous.enabled && !operation.enabled) {
         previous.enabled = true;
 
-        let tasks = this.taskList.getAllTasks();
         for (let i = 0; i < tasks.length; i++) {
           const task = tasks[i];
           const task_operation = task.operations[index - 1];
@@ -446,7 +449,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
-        let tasks = this.taskList.getAllTasks();
         for (let i = 0; i < tasks.length; i++) {
           const task = tasks[i];
           const task_operation = task.operations[index + 1];
@@ -466,10 +468,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public updateEnableState() {
+    let tasks = this.taskList.getAllTasks().filter((a) => {
+      return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
+    });
+
     for (let j = 0; j < this.taskService.operations.length; j++) {
       const operation = this.taskService.operations[j];
 
-      let tasks = this.taskList.getAllTasks();
       for (let i = 0; i < tasks.length; i++) {
         const task = tasks[i];
         const currOperation = task.operations[j];

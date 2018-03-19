@@ -12,6 +12,7 @@ import {Operation} from './operation';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
+  QUEUED = 'QUEUED',
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   UPLOADING = 'UPLOADING',
@@ -241,7 +242,7 @@ export class Task {
     }
   }
 
-  private changeState(state: TaskState) {
+  public changeState(state: TaskState) {
     const oldstate = this._state;
     this._state = state;
 

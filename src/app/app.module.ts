@@ -18,12 +18,13 @@ import {FileInfoTableComponent} from './components/file-info-table/file-info-tab
 import {TaskService} from './obj/tasks/task.service';
 import {StorageService} from './storage.service';
 import {ResultsTableComponent} from './components/results-table/results-table.component';
-import {FeedbackModalComponent} from './components/feedback-modal/feedback-modal.component';
+import {FeedbackModalComponent} from './modals/feedback-modal/feedback-modal.component';
 import {BugReportService} from './shared/bug-report.service';
-import {SplitModalComponent} from './components/split-modal/split-modal.component';
-import {FirstModalComponent} from './components/first-modal/first-modal.component';
+import {SplitModalComponent} from './modals/split-modal/split-modal.component';
+import {FirstModalComponent} from './modals/first-modal/first-modal.component';
 import {NgbDropdownMenu} from '@ng-bootstrap/ng-bootstrap/dropdown/dropdown';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 
 @NgModule({
   declarations: [
@@ -40,7 +41,8 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
     ResultsTableComponent,
     FeedbackModalComponent,
     SplitModalComponent,
-    FirstModalComponent
+    FirstModalComponent,
+    QueueModalComponent
   ],
   imports: [
     BrowserModule,

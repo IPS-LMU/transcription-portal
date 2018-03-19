@@ -1,0 +1,93 @@
+<ng-template #content let-onClose="close" let-onDismiss="dismiss">
+    <div class="modal-header" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <h4 class="modal-title">Queue</h4>
+        <button type="button" class="btn btn-outline-primary" (click)="onSubmit()" style="margin-left:20px;">
+            UPLOAD and & PROCESS FILES
+        </button>
+        <button type="button" class="close" aria-label="Close" (click)="onDismiss()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <p>
+            The following files are going to be processed one after the other. Please check if all options are set as
+            you wish.
+            If all options are well click on "UPLOAD and & PROCESS FILES".
+        </p>
+        <p *ngIf="orangeCount > 0" class="yellow" style="text-align: center;">
+            Please add the files with orange file names again. Otherwise these files can not be uploaded and will be
+            skipped.
+        </p>
+
+        <div ngbDropdown class="d-inline-block">
+            <label for="dropdownBasic1">Language: </label>
+            <button class="btn btn-outline-secondary" id="dropdownBasic1" ngbDropdownToggle>
+                <ng-container *ngIf="taskService.selectedlanguage === null">
+                    {{AppInfo.languages[0].code | uppercase}}
+                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
+                </ng-container>
+                <ng-container *ngIf="taskService.selectedlanguage !== null">
+                    {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
+                    [{{taskService.selectedlanguage.asr}}]
+                </ng-container>
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+                <button class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
+                        (click)="onASRLangCHanged(lang)">
+                    <ng-container
+                            *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
+                        {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                    </ng-container>
+                </button>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+            <th>File</th>
+            <th>Language</th>
+            <th *ngFor="let operation of operations; let i = index">
+                <div>
+                <span *ngIf="operation.icon === ''; else showIcon" style="display:block;"
+                      (click)="openContentModal(operation)">
+                    <ng-container *ngIf="shortstyle">
+                        {{operation.name.charAt(0)}}
+                    </ng-container>
+                    <ng-container *ngIf="!shortstyle">
+                        {{operation.name}}
+                    </ng-container>
+                </span>
+                    <ng-template #showIcon>
+                        <div [innerHTML]="operation.icon" (click)="openContentModal(operation)"></div>
+                    </ng-template>
+                    <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
+                           class="header-checkbox"
+                           [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+                </div>
+            </th>
+            </thead>
+            <tbody>
+            <ng-container *ngFor="let task of tasks">
+                <tr *ngIf="task.state === 'QUEUED'">
+                    <td [ngClass]="{
+            'green': task.files[0].file !== undefined,
+            'yellow': task.files[0].file === undefined
+          }">
+                        {{task.files[0].fullname}}
+                    </td>
+                    <td>{{task.language}}</td>
+                    <td *ngFor="let operation of task.operations">
+                        <span *ngIf="operation.enabled">yes</span>
+                        <span *ngIf="!operation.enabled">skip</span>
+                    </td>
+                </tr>
+            </ng-container>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal-footer" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <button type="button" class="btn btn-outline-dark" (click)="onClose()">Cancel</button>
+        <button type="button" class="btn btn-outline-primary" (click)="onSubmit()">
+            UPLOAD and & PROCESS FILES
+        </button>
+    </div>
+</ng-template>

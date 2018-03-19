@@ -52,6 +52,9 @@ export class QueueItem {
 }
 
 export class Preprocessor {
+  get queue(): QueueItem[] {
+    return this._queue;
+  }
   get itemProcessed(): Subject<QueueItem> {
     return this._itemProcessed;
   }
@@ -71,7 +74,7 @@ export class Preprocessor {
     return this._statechange;
   }
 
-  private queue: QueueItem[] = [];
+  private _queue: QueueItem[] = [];
 
   private _statechange = new Subject<{
     item: QueueItem,
@@ -124,17 +127,17 @@ export class Preprocessor {
   public addToQueue(file: (FileInfo | DirectoryInfo)) {
     const queueItem = new QueueItem(file);
 
-    this.queue.push(queueItem);
+    this._queue.push(queueItem);
     this._itemAdded.next(queueItem);
   }
 
   public removeFromQueue(id: number): boolean {
-    const index = this.queue.findIndex((a) => {
+    const index = this._queue.findIndex((a) => {
       return a.id === id;
     });
 
     if (index > -1) {
-      this.queue.splice(index, 1);
+      this._queue.splice(index, 1);
       this._itemRemoved.next(id);
       return true;
     }
