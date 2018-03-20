@@ -63,42 +63,55 @@ export class AppComponent implements OnDestroy {
               private storage: StorageService,
               public bugService: BugReportService) {
 
-    // overwrite console.log
-    const oldLog = console.log;
-    const serv = this.bugService;
-    (() => {
-      console.log = function (message) {
-        serv.addEntry(ConsoleType.LOG, message);
-        oldLog.apply(console, arguments);
-      };
-    })();
+    const debugging = false;
+    if (debugging) {
+      // overwrite console.log
+      const oldLog = console.log;
+      const serv = this.bugService;
+      (() => {
+        console.log = function (message) {
+          serv.addEntry(ConsoleType.LOG, message);
+          oldLog.apply(console, arguments);
+        };
+      })();
 
-    // overwrite console.err
-    const oldError = console.error;
-    (() => {
-      console.error = function (message) {
-        serv.addEntry(ConsoleType.ERROR, message);
-        oldError.apply(console, arguments);
-      };
-    })();
+      // overwrite console.err
+      const oldError = console.error;
+      (() => {
+        console.error = function (message) {
+          serv.addEntry(ConsoleType.ERROR, message);
+          oldError.apply(console, arguments);
+        };
+      })();
 
-    // overwrite console.info
-    const oldInfo = console.info;
-    (() => {
-      console.info = function (message) {
-        serv.addEntry(ConsoleType.INFO, message);
-        oldInfo.apply(console, arguments);
-      };
-    })();
+      // overwrite console.info
+      const oldInfo = console.info;
+      (() => {
+        console.info = function (message) {
+          serv.addEntry(ConsoleType.INFO, message);
+          oldInfo.apply(console, arguments);
+        };
+      })();
 
-    // overwrite console.warn
-    const oldWarn = console.warn;
-    (() => {
-      console.warn = function (message) {
-        serv.addEntry(ConsoleType.WARN, message);
-        oldWarn.apply(console, arguments);
-      };
-    })();
+      // overwrite console.warn
+      const oldWarn = console.warn;
+      (() => {
+        console.warn = function (message) {
+          serv.addEntry(ConsoleType.WARN, message);
+          oldWarn.apply(console, arguments);
+        };
+      })();
+    }
+
+    this.subscrmanager.add(this.notification.onPermissionChange.subscribe(
+      (result) => {
+        if (this.storage.ready) {
+          this.storage.saveUserSettings('notification', {
+            enabled: result
+          });
+        }
+      }
+    ));
 
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
@@ -132,8 +145,14 @@ export class AppComponent implements OnDestroy {
   private loadFirstModal() {
     if (!this.firstModalShown) {
 
+      this.subscrmanager.add(this.firstModal.onUnderstandClick.subscribe(
+        () => {
+          this.firstModalShown = true;
+        }
+      ));
       setTimeout(() => {
         this.firstModal.open(() => {
+          console.log(`firstModalShown = ${this.firstModalShown}`);
           return this.firstModalShown;
         }, () => {
           this.storage.saveIntern('firstModalShown', true);
@@ -266,6 +285,9 @@ export class AppComponent implements OnDestroy {
     if (lang.code !== this.taskService.selectedlanguage.code) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
+      this.storage.saveUserSettings('defaultTaskOptions', {
+        language: lang.code
+      });
     }
   }
 
@@ -402,7 +424,6 @@ export class AppComponent implements OnDestroy {
             let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
 
             if (!isNullOrUndefined(dirtemp)) {
-              console.log(`C`);
               dirtemp.entries.push(entry.entries[0]);
               const entr = entry.entries[0];
               this.storage.saveTask(dirtemp).catch((err) => {
@@ -415,7 +436,6 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else if (path !== '' && path != '/') {
-              console.log(`A`);
               dirtemp = new TaskDirectory(path);
               this.storage.removeFromDB(entry).then(() => {
                 this.taskService.taskList.removeDir(<TaskDirectory> entry);
@@ -429,16 +449,12 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else {
-              console.log(`B`);
               const entries = this.taskService.taskList.entries[i];
               this.storage.removeFromDB(entries).then(() => {
-                console.log(`${entries.id} removed`);
                 this.taskService.taskList.entries[i] = (<TaskDirectory> entries).entries[0];
 
                 const entr = <Task> this.taskService.taskList.entries[i];
                 entr.directory = null;
-                console.log(`save ${entr.id}`);
-                console.log(entr);
                 this.storage.saveTask(entr).then(() => {
                 }).catch((err) => {
                   console.error(err);
@@ -450,7 +466,7 @@ export class AppComponent implements OnDestroy {
           } else if (entry.entries.length < 1) {
             // empty dir
             this.storage.removeFromDB(entry).then(() => {
-              this.taskService.taskList.removeDir(entry);
+              this.taskService.taskList.removeDir(<TaskDirectory> entry);
             }).catch((error) => {
                 console.error(error);
               }

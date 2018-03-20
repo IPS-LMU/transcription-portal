@@ -1,11 +1,12 @@
 table tr td,
-table tr th {
+.table thead th,
+.table thead th div {
     text-align: center;
     font-size: 0.9em;
 }
 
-table tr td:first-of-type,
-table tr th:first-of-type {
+.table tr td:first-of-type,
+.table thead th:first-of-type {
     text-align: left;
 }
 

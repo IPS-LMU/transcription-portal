@@ -94,14 +94,14 @@ export class TaskService implements OnDestroy {
           }
 
           this.addEntry(result);
-          console.log(`add`);
-          console.log(result);
           this.storage.saveTask(result);
         }
       }
     ));
 
-    this.subscrmanager.add(this.storage.allloaded.subscribe((IDBtasks) => {
+    this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
+      const IDBtasks = results[0];
+
       if (!isNullOrUndefined(IDBtasks)) {
         this.newfiles = IDBtasks.length > 0;
 
@@ -153,11 +153,33 @@ export class TaskService implements OnDestroy {
         }
         this.protocolURL = this.updateProtocolURL();
       }
+      if (!isNullOrUndefined(results[1])) {
+        // read userSettings
+        for (let i = 0; i < results[1].length; i++) {
+          const userSetting = results[1][i];
+
+          switch (userSetting.name) {
+            case ('notification'):
+              this.notification.permissionGranted = userSetting.value.enabled;
+              break;
+            case ('defaultTaskOptions'):
+              // search lang obj
+              const lang = AppInfo.languages.find((a) => {
+                return a.code === userSetting.value.language;
+              });
+              if (!isNullOrUndefined(lang)) {
+                this.selectedlanguage = lang;
+              }
+              break;
+            default:
+              console.log(`could not read option ${userSetting.name}`);
+          }
+        }
+        // this.notification.permissionGranted = results[1][]
+      }
     }));
 
     this.subscrmanager.add(this.taskList.entryAdded.subscribe((entry: (Task | TaskDirectory)) => {
-      console.log(`ITEM ADDED`);
-      console.log(entry);
       if (entry instanceof Task) {
         this.listenToTaskEvents(entry);
       } else {
@@ -166,6 +188,7 @@ export class TaskService implements OnDestroy {
           this.listenToTaskEvents(task);
         }
       }
+      this.updateProtocolArray();
     }));
   }
 
@@ -497,7 +520,6 @@ export class TaskService implements OnDestroy {
                   fileInfos.push(fileInfo);
                 }
                 directory.addEntries(fileInfos);
-                console.log(`process dir`);
                 this.processDirectoryInfo(directory, queueItem).then((result) => {
                   resolve(result);
                 }).catch((err) => {
@@ -506,7 +528,6 @@ export class TaskService implements OnDestroy {
               } else {
                 // TODO ?
                 // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
-                console.log(`less`);
                 this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
               }
 
@@ -520,7 +541,6 @@ export class TaskService implements OnDestroy {
                 newFileInfo.file = file.file;
               }
 
-              console.log(`set`);
               newFileInfo.attributes = file.attributes;
               queueItem.file = newFileInfo;
 
@@ -559,7 +579,6 @@ export class TaskService implements OnDestroy {
         const dirEntry = dir.entries[i];
 
         if (dirEntry instanceof FileInfo) {
-          console.log(`process dir file`);
           const file = <FileInfo> dirEntry;
 
           promises.push(this.processFileInfo(file, dir.path, queueItem));

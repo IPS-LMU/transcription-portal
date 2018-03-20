@@ -98,6 +98,20 @@ export class IndexedDBManager {
     return txn.objectStore(store_name);
   };
 
+  public objectStoreExists = (store_name: string): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+      let mode_str: IDBTransactionMode = 'readonly';
+
+      const txn = this.db.transaction([store_name], mode_str);
+      txn.onerror = (ev) => {
+        reject();
+      };
+      txn.oncomplete = () => {
+        resolve();
+      };
+    });
+  };
+
   public get = (store_name: string | IDBObjectStore, key: string | number): Promise<any> => {
     return new Promise<any>(
       (resolve, reject) => {

@@ -1,6 +1,7 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit, Output, ViewChild} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DomSanitizer} from '@angular/platform-browser';
+import {Subject} from 'rxjs/Subject';
 
 @Component({
   selector: 'app-first-modal',
@@ -11,6 +12,8 @@ export class FirstModalComponent implements OnInit {
 
 
   @ViewChild('content') content: NgbModal;
+
+  @Output() onUnderstandClick: Subject<void> = new Subject<void>();
 
   constructor(private modalService: NgbModal, private sanitizer: DomSanitizer) {
   }
@@ -34,6 +37,5 @@ export class FirstModalComponent implements OnInit {
   }
 
   onDismiss() {
-
   }
 }

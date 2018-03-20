@@ -76,7 +76,7 @@
                     </td>
                     <td>{{task.language}}</td>
                     <td *ngFor="let operation of task.operations">
-                        <span *ngIf="operation.enabled">yes</span>
+                        <span *ngIf="operation.enabled"><i class="fa fa-check" style="color:black;"></i></span>
                         <span *ngIf="!operation.enabled">skip</span>
                     </td>
                 </tr>
