@@ -8,6 +8,7 @@ import {TaskService} from '../../obj/tasks/task.service';
 import {AppInfo} from '../../app.info';
 import {ASROperation} from '../../obj/tasks/asr-operation';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import {StorageService} from '../../storage.service';
 
 @Component({
   selector: 'app-queue-modal',
@@ -26,7 +27,7 @@ export class QueueModalComponent implements OnInit {
     return AppInfo;
   }
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private taskService: TaskService) {
+  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private taskService: TaskService, private storage: StorageService) {
   }
 
   ngOnInit() {
@@ -85,8 +86,12 @@ export class QueueModalComponent implements OnInit {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
+        this.storage.saveTask(task);
       }
     }
+    this.storage.saveUserSettings('defaultTaskOptions', {
+      language: this.taskService.selectedlanguage.code
+    });
   }
 
   deactivateOperation(operation: Operation, index: number) {

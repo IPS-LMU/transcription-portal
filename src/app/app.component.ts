@@ -64,7 +64,7 @@ export class AppComponent implements OnDestroy {
               public bugService: BugReportService) {
 
     const debugging = false;
-    if (debugging) {
+    if (!debugging) {
       // overwrite console.log
       const oldLog = console.log;
       const serv = this.bugService;
@@ -298,6 +298,7 @@ export class AppComponent implements OnDestroy {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
+        this.storage.saveTask(task);
       }
     }
   }
