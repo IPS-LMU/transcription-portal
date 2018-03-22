@@ -205,21 +205,48 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (search > -1) {
         this.selected_tasks.splice(search, 1);
       } else {
-        this.selected_tasks.push(entry);
-        /*
+        if (this.shiftStart < 0) {
+          this.shiftStart = entry.id;
+          this.selected_tasks.push(entry);
+        }
         if (this.pressedKey === 16) {
           // shift pressed
           if (this.shiftStart < 0) {
-            this.shiftStart = entry.id;
-            this.selected_tasks.push(entry);
           } else {
+            console.log(`select all tasks to ${this.shiftStart}`);
+            let end = entry.id;
+
+            if (this.shiftStart > end) {
+              const temp = this.shiftStart;
+              this.shiftStart = end;
+              end = temp;
+            }
+
+            for (let i = 0; i < this.taskList.getAllTasks().length; i++) {
+              const task = this.taskList.getAllTasks()[i];
+              if (task.id > this.shiftStart && task.id <= end) {
+                this.selected_tasks.push(task);
+              }
+            }
             // select all between
-            // const start =
+            // const start =x
+            this.shiftStart = -1;
           }
         } else {
           this.selected_tasks.push(entry);
-        }*/
+        }
       }
+
+      const puffer = [];
+      for (let i = 0; i < this.selected_tasks.length; i++) {
+        const task = this.selected_tasks[i];
+        if (puffer.find((a) => {
+            return task.id === a.id;
+          }) === undefined) {
+          puffer.push(task);
+        }
+      }
+      this.selected_tasks = puffer;
     }
 
     if (
@@ -513,6 +540,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
+    console.log(event);
     const keyMap = {
       mac: {
         cmd: 93
@@ -521,11 +549,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     };
 
     if (event.type === 'keydown') {
+      console.log(event.keyCode);
       if (this.pressedKey < 0) {
         this.pressedKey = event.keyCode;
       } else {
-        if (event.keyCode === 8 && this.pressedKey === 93) {
+        if (event.keyCode === 8 && (this.pressedKey === 93 || this.pressedKey === 224)) {
           // CMD + Backspace on Mac
+          event.preventDefault();
           this.deleteSelectedTasks();
         }
       }
