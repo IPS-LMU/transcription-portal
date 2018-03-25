@@ -37,13 +37,15 @@
     "zone.js": "^0.8.20"
   },
   "devDependencies": {
-    "@angular/cli": "1.7.3",
+    "@angular/cli": "^1.7.3",
     "@angular/compiler-cli": "5.2.8",
     "@angular/language-service": "5.2.8",
     "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~6.0.60",
     "codelyzer": "~4.0.1",
+    "conventional-changelog": "^1.1.19",
+    "cz-conventional-changelog": "^2.1.0",
     "jasmine-core": "~2.8.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~2.0.0",
@@ -55,5 +57,10 @@
     "ts-node": "~4.1.0",
     "tslint": "~5.9.1",
     "typescript": "2.6.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
