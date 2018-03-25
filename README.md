@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" height="250" src="https://raw.githubusercontent.com/IPS-LMU/oh-portal/develop/screenshots/oh-portal01.png" alt="OH-Portal">
+  <img width="300" height="250" src="https://github.com/IPS-LMU/oh-portal/raw/develop/screenshots/oh-portal01.png" alt="OH-Portal">
 </p>
 <h1 align="center">OH-Portal</h1>
 Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
