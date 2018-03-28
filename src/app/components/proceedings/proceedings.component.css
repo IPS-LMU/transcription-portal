@@ -96,8 +96,10 @@
     opacity: 0.5;
 }
 
-.fa.fa-chain-broken {
+.fa.fa-chain-broken,
+.fa.fa-unlink{
     color: red;
+    opacity:0.5;
 }
 
 .timer {

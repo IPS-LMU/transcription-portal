@@ -41,7 +41,7 @@ export class EmuOperation extends ToolOperation {
         if (this.previousOperation.results.length > 0 && this.previousOperation.results[this.previousOperation.results.length - 1].online) {
           result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
         } else {
-          result = '<i class="fa fa-chain-broken" style="color:red;" aria-hidden="true"></i>';
+          result = '<i class="fa fa-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
         }
         break;
       case(TaskState.READY):
@@ -56,7 +56,7 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const audio = encodeURIComponent(this.operations[0].lastResult.url);
+    const audio = encodeURIComponent(this.operations[0].results[0].url);
     const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
 
     return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;

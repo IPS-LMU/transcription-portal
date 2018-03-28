@@ -109,6 +109,8 @@ export class Preprocessor {
   private onItemAdded = (newItem: QueueItem) => {
 
     this.changeState(newItem, State.PROCESSING);
+    console.log(`queueItem:`);
+    console.log(newItem);
     this.process(newItem).then((result) => {
         if (!isNullOrUndefined(result)) {
           newItem.results = result;
@@ -125,6 +127,8 @@ export class Preprocessor {
   };
 
   public addToQueue(file: (FileInfo | DirectoryInfo)) {
+    console.log(`add to queue`);
+    console.log(file);
     const queueItem = new QueueItem(file);
 
     this._queue.push(queueItem);

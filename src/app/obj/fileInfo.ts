@@ -25,6 +25,10 @@ export class FileInfo extends DataInfo {
     return this._file;
   }
 
+    /**
+     * extension including the dot. (this must contain a dot!)
+     * @returns {string}
+     */
   get extension(): string {
     return this._extension;
   }
@@ -35,7 +39,7 @@ export class FileInfo extends DataInfo {
   private _online = true;
 
   public get fullname(): string {
-    return `${this._name}.${this._extension}`;
+    return `${this._name}${this._extension}`;
   }
 
   public set fullname(value: string) {
@@ -107,7 +111,7 @@ export class FileInfo extends DataInfo {
       if ((extension_begin = fullname.lastIndexOf('.')) > -1) {
         // split name and extension
         const name = fullname.substr(0, extension_begin);
-        const extension = fullname.substr(extension_begin + 1);
+        const extension = fullname.substr(extension_begin);
 
         return {
           name: name,
