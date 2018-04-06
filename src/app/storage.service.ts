@@ -68,14 +68,13 @@ export class StorageService {
                 reject(err);
               });
               this.idbm.db.createObjectStore('tasks', {keyPath: 'id'});
-              this.idbm.db.createObjectStore('userSettings', {keyPath: 'name'});
             } else {
               // skip update to 1
               resolve();
             }
           }).then(
             () => {
-              return new Promise<void>((resolve, reject) => {
+              return new Promise<void>((resolve) => {
                 if (oldVersion === 1) {
                   console.log(`UPDATE TO 2!`);
                   this.idbm.db.createObjectStore('userSettings', {keyPath: 'name'});
@@ -87,8 +86,9 @@ export class StorageService {
                 }
               });
             }
-          ).catch(() => {
+          ).catch((err) => {
             console.error(`update to db v1 failed`);
+            console.error(err);
           });
         }
       },
@@ -159,7 +159,7 @@ export class StorageService {
             }
           }
         }
-      } else if (entry instanceof TaskDirectory) {
+      } else {
         this.idbm.remove('tasks', entry.id).then(() => {
           resolve();
         }).catch((err) => {

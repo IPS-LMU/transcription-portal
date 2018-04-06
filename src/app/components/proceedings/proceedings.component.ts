@@ -48,7 +48,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     hidden: true
   };
 
-  public popover = {
+  public popover: {
+    x: number,
+    y: number,
+    state: string,
+    width: number,
+    height: number,
+    operation: Operation,
+    task: Task,
+    pointer: string
+  } = {
     x: 0,
     y: 0,
     state: 'closed',
@@ -241,8 +250,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       for (let i = 0; i < this.selected_tasks.length; i++) {
         const task = this.selected_tasks[i];
         if (puffer.find((a) => {
-            return task.id === a.id;
-          }) === undefined) {
+          return task.id === a.id;
+        }) === undefined) {
           puffer.push(task);
         }
       }
@@ -340,7 +349,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       } else if (!isNullOrUndefined(entry.directory)) {
         return this.isEntrySelected(entry.directory);
       }
-    } else if (entry instanceof TaskDirectory) {
+    } else {
       const search = this.selected_tasks.findIndex((a) => {
         return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id
       });
@@ -540,14 +549,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
-    console.log(event);
-    const keyMap = {
-      mac: {
-        cmd: 93
-      },
-      pc: {}
-    };
-
     if (event.type === 'keydown') {
       console.log(event.keyCode);
       if (this.pressedKey < 0) {
@@ -579,7 +580,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             (<Task> entry.directory.entries[0]).directory = null;
             this.taskList.addEntry(entry.directory.entries[0]);
           }
-        } else if (entry instanceof TaskDirectory) {
+        } else {
           this.taskList.removeDir(entry);
         }
       }).catch((err) => {

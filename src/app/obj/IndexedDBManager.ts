@@ -103,7 +103,7 @@ export class IndexedDBManager {
       let mode_str: IDBTransactionMode = 'readonly';
 
       const txn = this.db.transaction([store_name], mode_str);
-      txn.onerror = (ev) => {
+      txn.onerror = () => {
         reject();
       };
       txn.oncomplete = () => {
@@ -179,6 +179,7 @@ export class IndexedDBManager {
             reject(error);
           };
         } catch (error) {
+          console.log(`save call err ${store_name}`);
           reject(error);
         }
       }
