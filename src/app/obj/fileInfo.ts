@@ -25,10 +25,10 @@ export class FileInfo extends DataInfo {
     return this._file;
   }
 
-    /**
-     * extension including the dot. (this must contain a dot!)
-     * @returns {string}
-     */
+  /**
+   * extension including the dot. (this must contain a dot!)
+   * @returns {string}
+   */
   get extension(): string {
     return this._extension;
   }

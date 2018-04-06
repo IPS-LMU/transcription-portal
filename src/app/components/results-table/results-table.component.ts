@@ -97,7 +97,11 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           for (let k = 0; k < AppInfo.converters.length; k++) {
             const converter = AppInfo.converters[k];
             if (converter.obj.name !== this.operation.resultType) {
-              const res = {
+              const res: {
+                converter: any,
+                state: string,
+                result: any
+              } = {
                 converter: converter,
                 state: 'PENDING',
                 result: null
@@ -116,14 +120,15 @@ export class ResultsTableComponent implements OnInit, OnChanges {
                 type: exp.type
               });
               res.result = FileInfo.fromFileObject(expFile);
-              res.result.url = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(expFile));
+              const url = URL.createObjectURL(expFile);
+              res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
               res.state = 'FINISHED';
             }
           }
 
           this.cd.markForCheck();
           this.cd.detectChanges();
-        }).catch((err) => {
+        }).catch(() => {
           this.convertedArray.push({
             input: result,
             conversions: []
