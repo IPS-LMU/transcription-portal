@@ -40,7 +40,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }[] = [];
 
   public get AppInfo(): AppInfo {
-    return new AppInfo();
+    return AppInfo;
   }
 
   public conversionExtension = '';
@@ -61,8 +61,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   private generateTable() {
     this.convertedArray = [];
     this.from = null;
-    for (let i = 0; i < this.AppInfo.converters.length; i++) {
-      const converter = this.AppInfo.converters[i];
+    for (let i = 0; i < AppInfo.converters.length; i++) {
+      const converter = AppInfo.converters[i];
       if (converter.obj.name === this.operation.resultType) {
         this.from = converter.obj;
       }
@@ -94,8 +94,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           };
           this.convertedArray.push(convElem);
 
-          for (let k = 0; k < this.AppInfo.converters.length; k++) {
-            const converter = this.AppInfo.converters[k];
+          for (let k = 0; k < AppInfo.converters.length; k++) {
+            const converter = AppInfo.converters[k];
             if (converter.obj.name !== this.operation.resultType) {
               const res = {
                 converter: converter,
@@ -135,7 +135,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     } else {
       this.conversionExtension = this.operation.resultType;
       this.from = {
-        extension: 'wav'
+        extension: '.wav'
       };
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];

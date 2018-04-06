@@ -156,9 +156,14 @@
                             {{entry.files[0].attributes.originalFileName}}
                         </ng-container>
                 </span>
-                    <span *ngIf=" entry.files.length > 1">
-                    (+ {{entry.files.length - 1}})
-                </span>
+                    <ng-container *ngIf=" entry.files.length > 1">
+                    <span class="badge" [ngClass]="
+                    {
+                        'badge-info': entry.files[1].file !== undefined || entry.operations[0].results.length > 1,
+                        'badge-warning': !(entry.files[1].file !== undefined || entry.operations[0].results.length > 1)
+                    }
+">{{taskService.getAppendingsExtension(entry.files[1])}}</span>
+                    </ng-container>
                 </td>
 
                 <td *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
@@ -230,6 +235,14 @@
                             {{dirEntry.files[0].attributes?.originalFileName}}
                         </ng-container>
                     </span>
+                        <ng-container *ngIf="dirEntry.files.length > 1">
+                            <span class="badge" [ngClass]="
+                            {
+                                'badge-info': (dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1),
+                                'badge-warning': !(dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1)
+                            }
+        ">{{taskService.getAppendingsExtension(dirEntry.files[1])}}</span>
+                        </ng-container>
                     </td>
                     <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
                 'op-deactivated': !operation.enabled

@@ -9,7 +9,7 @@ import * as X2JS from 'x2js';
 import {AppInfo} from '../../app.info';
 
 export class UploadOperation extends Operation {
-  public resultType = 'wav';
+  public resultType = '.wav';
 
   private progress = 0;
 

@@ -1,6 +1,10 @@
-# OhPortal
-
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.5.0.
+<h1 align="center">OH-Portal</h1>
+<p align="center">
+  <img width="600" height="550" src="https://github.com/IPS-LMU/oh-portal/raw/develop/screenshots/oh-portal01.png" alt="OH-Portal">
+</p>
+<p align="center">
+Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
+</p>
 
 ## Development server
 
