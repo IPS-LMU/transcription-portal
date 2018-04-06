@@ -1,8 +1,18 @@
 <table class="table-hover">
     <tbody>
-    <tr (click)="onDeleteTasks()">
+    <tr *ngIf="filesCount > 0 || dirCount > 0" (click)="onDeleteTasks()">
         <td><i class="fa fa-times"></i></td>
-        <td>Delete {{filesCount}} Tasks<br/>{{dirCount}} Folders</td>
+        <td>
+            <ng-container *ngIf="filesCount > 0 && dirCount < 1">
+                Delete {{filesCount}} Task(s)
+            </ng-container>
+            <ng-container *ngIf="dirCount > 0 && filesCount < 1">
+                Delete {{dirCount}} Folder(s)
+            </ng-container>
+            <ng-container *ngIf="dirCount > 0 && dirCount > 0">
+                Delete {{filesCount}} Task(s) and {{dirCount}} Folder(s)
+            </ng-container>
+        </td>
     </tr>
     <tr *ngIf="selectedOperationType != undefined" (click)="onCompress()">
         <td><i class="fa fa-file-archive-o"></i></td>
