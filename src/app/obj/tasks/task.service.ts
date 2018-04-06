@@ -639,10 +639,17 @@ export class TaskService implements OnDestroy {
               queueItem.file = newFileInfo;
 
               if (!isNullOrUndefined(foundOldFile)) {
-                const oldFileIndex = foundOldFile.files.findIndex((a) => {
-                  return a.fullname === newFileInfo.fullname && a.size === newFileInfo.size;
-                });
-                foundOldFile.files[oldFileIndex] = newFileInfo;
+
+                if (!isValidTranscript || foundOldFile.files.length === 1) {
+                  const oldFileIndex = foundOldFile.files.findIndex((a) => {
+                    return a.fullname === newFileInfo.fullname && a.size === newFileInfo.size;
+                  });
+                  foundOldFile.files[oldFileIndex] = newFileInfo;
+                } else {
+                  // a transcript file already exists
+                  foundOldFile.files.splice(1, 1);
+                  foundOldFile.files.push(newFileInfo);
+                }
                 resolve([]);
               } else {
                 console.log(`foundoldfile is false`);
