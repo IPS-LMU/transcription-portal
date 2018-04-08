@@ -46,4 +46,8 @@ export class ContextMenuComponent implements OnInit {
 
     return test.length;
   }
+
+  public onRemoveAppendings() {
+    this.optionselected.emit('appendings-remove');
+  }
 }

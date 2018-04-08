@@ -277,6 +277,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     } else if (option === 'compress') {
       this.contextmenu.hidden = false;
       this.openContentModal(this.selectedOperation);
+    } else if (option === 'appendings-remove') {
+      this.removeAppendings();
     }
     this.contextmenu.hidden = true;
   }
@@ -335,6 +337,29 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       );
     } else {
+    }
+  }
+
+  removeAppendings() {
+    for (let i = 0; i < this.selected_tasks.length; i++) {
+      const entry = this.selected_tasks[i];
+
+      if (entry instanceof Task) {
+        if (entry.files.length > 1) {
+          entry.files.splice(1)
+          entry.operations[1].enabled = this.taskService.operations[1].enabled;
+          entry.operations[1].changeState(entry.state);
+        }
+      } else {
+        for (let j = 0; j < entry.entries.length; j++) {
+          const task = <Task> entry.entries[j];
+          if (task.files.length > 1) {
+            task.files.splice(1);
+            task.operations[1].enabled = this.taskService.operations[1].enabled;
+            task.operations[1].changeState(task.state);
+          }
+        }
+      }
     }
   }
 

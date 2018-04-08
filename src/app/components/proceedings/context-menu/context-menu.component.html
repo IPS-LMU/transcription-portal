@@ -1,4 +1,4 @@
-<table class="table-hover">
+<table class="table table-hover">
     <tbody>
     <tr *ngIf="filesCount > 0 || dirCount > 0" (click)="onDeleteTasks()">
         <td><i class="fa fa-times"></i></td>
@@ -13,6 +13,10 @@
                 Delete {{filesCount}} Task(s) and {{dirCount}} Folder(s)
             </ng-container>
         </td>
+    </tr>
+    <tr *ngIf="selected_tasks.length > 0">
+        <td></td>
+        <td (click)="onRemoveAppendings()">Remove appendings</td>
     </tr>
     <tr *ngIf="selectedOperationType != undefined" (click)="onCompress()">
         <td><i class="fa fa-file-archive-o"></i></td>

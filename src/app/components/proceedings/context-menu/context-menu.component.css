@@ -14,7 +14,25 @@
 
 tr {
     border-bottom: 1px solid #c0c0c0;
-    padding: 5px auto;
+    padding: 3px auto;
+    text-align: left;
+}
+
+tr td:first-of-type {
+    width: 30px;
+    text-align: center;
+}
+
+td {
+    padding: 2px;
+    border-bottom: 1px solid #e3e3e3;
+    border-top: none;
+    font-size: 0.9em;
+    text-align: left;
+}
+
+tr:first-of-type {
+    text-align: center;
 }
 
 .table-hover {
