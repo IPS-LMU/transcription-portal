@@ -4,13 +4,13 @@
         <td><i class="fa fa-times"></i></td>
         <td>
             <ng-container *ngIf="filesCount > 0 && dirCount < 1">
-                Delete {{filesCount}} Task(s)
+                Delete {{filesCount}} task(s)
             </ng-container>
             <ng-container *ngIf="dirCount > 0 && filesCount < 1">
-                Delete {{dirCount}} Folder(s)
+                Delete {{dirCount}} folder(s)
             </ng-container>
-            <ng-container *ngIf="dirCount > 0 && dirCount > 0">
-                Delete {{filesCount}} Task(s) and {{dirCount}} Folder(s)
+            <ng-container *ngIf="dirCount > 0 && filesCount > 0">
+                Delete {{filesCount}} task(s) and {{dirCount}} folder(s)
             </ng-container>
         </td>
     </tr>
