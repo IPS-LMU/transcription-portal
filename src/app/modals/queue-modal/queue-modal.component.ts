@@ -62,7 +62,7 @@ export class QueueModalComponent implements OnInit {
 
   public get orangeCount(): number {
     return this.tasks.filter((a) => {
-      return a.state == TaskState.QUEUED && a.files[0].file === undefined;
+      return a.state == TaskState.QUEUED && (a.files[0].file === undefined || (a.files.length > 1 && a.files[1].file === undefined));
     }).length;
   }
 
