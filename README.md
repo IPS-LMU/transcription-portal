@@ -20,7 +20,7 @@ You can install OH-Portal on your own web server. Just download the repository a
 
 Clone this repository and install all dependencies using `npm install`. It is recommended to use WebStorm or PHPStorm IDE and the tslint settings from `tslint.json` in order to check the code style automatically.
 
-For this project <a href="https://github.com/commitizen/cz-cli">commitizen</a> is used. If you want to contribute to this project you should make use of this tool to create commit messages important for the changelog (other commit messages will be ignored otherwise). For WebStorm or PHPStorm there is a <a href="https://plugins.jetbrains.com/plugin/9861-git-commit-template">Commit Template Plugin</a> to create this templates.
+For this project <a href="https://github.com/commitizen/cz-cli">commitizen</a> is used. If you want to contribute to this project you should make use of this tool to create commit messages important for the changelog (other commit messages will be ignored otherwise). For WebStorm or PHPStorm there is a <a href="https://plugins.jetbrains.com/plugin/9861-git-commit-template">Commit Template Plugin</a> to create these templates.
 
 ### Development server
 
