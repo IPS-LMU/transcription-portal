@@ -23,6 +23,7 @@ import {BugReportService, ConsoleType} from './shared/bug-report.service';
 import {SplitModalComponent} from './modals/split-modal/split-modal.component';
 import {FirstModalComponent} from './modals/first-modal/first-modal.component';
 import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
+import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
 
 declare var window: any;
 
@@ -34,7 +35,12 @@ declare var window: any;
   animations: [ANIMATIONS]
 })
 export class AppComponent implements OnDestroy {
-  public showtool = false;
+  set showtool(value: boolean) {
+    this.sidebarExpand = (value) ? 'closed' : 'opened';
+    this._showtool = value;
+  }
+
+  private _showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
   public selectedOperation: Operation = null;
@@ -45,10 +51,14 @@ export class AppComponent implements OnDestroy {
     return environment.development;
   }
 
-  public test = 'insactive';
+  public test = 'inactive';
+  public sidebarExpand = 'opened';
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
   public protocolURL = '';
+  public dragborder = 'inactive';
+  public newProceedingsWidth = '100%';
+  public newToolWidth = '70%';
 
   @ViewChild('fileinput') fileinput: ElementRef;
   @ViewChild('folderinput') folderinput: ElementRef;
@@ -57,6 +67,7 @@ export class AppComponent implements OnDestroy {
   @ViewChild('firstModal') firstModal: FirstModalComponent;
   @ViewChild('feedbackModal') feedbackModal: FeedbackModalComponent;
   @ViewChild('queueModal') queueModal: QueueModalComponent;
+  @ViewChild('protocolFooter') protocolFooter: ProtocolFooterComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -115,7 +126,7 @@ export class AppComponent implements OnDestroy {
 
     this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
       () => {
-        this.blop();
+        this.protocolFooter.blop();
       }
     ));
 
@@ -134,7 +145,6 @@ export class AppComponent implements OnDestroy {
     }));
 
     window.onunload = function () {
-      alert('You are trying to leave.');
       return false;
     };
 
@@ -211,21 +221,6 @@ export class AppComponent implements OnDestroy {
   onMissedDrop(event) {
     event.stopPropagation();
     event.preventDefault();
-  }
-
-  blop() {
-    this.test = 'blopped';
-    setTimeout(() => {
-      this.test = 'inactive';
-    }, 500);
-  }
-
-  onProtoclLabelClick(tag: HTMLSpanElement) {
-    if (tag.getAttribute('data-state') === 'opened') {
-      tag.setAttribute('data-state', 'closed');
-    } else {
-      tag.setAttribute('data-state', 'opened');
-    }
   }
 
   onFilesAddButtonClicked() {
@@ -310,7 +305,7 @@ export class AppComponent implements OnDestroy {
   }
 
   onToolDataReceived($event) {
-    if ($event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
+    if ($event.data.data !== undefined && $event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
       const result: string = $event.data.data.transcript_url;
 
       this.selectedOperation.results.push(FileInfo.fromURL(result));
@@ -477,6 +472,49 @@ export class AppComponent implements OnDestroy {
           }
         }
       }
+    }
+  }
+
+
+  public dragBorder($event: any, part: string) {
+    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
+      if (this.dragborder !== 'dragging') {
+        if (part === 'left' && $event.offsetX >= $event.target.clientWidth - 3 && $event.offsetX <= $event.target.clientWidth + 3) {
+          this.dragborder = 'active';
+        } else if (part === 'right' && $event.offsetX <= 10) {
+          this.dragborder = 'active';
+        } else {
+          this.dragborder = 'inactive';
+        }
+      } else if ($event.type === 'mousemove') {
+        // dragging
+        const procWidth = Math.floor(($event.pageX + 10) / window.innerWidth * 100);
+        const toolWidth = 100 - procWidth;
+
+        this.newToolWidth = toolWidth + '%';
+        this.newProceedingsWidth = procWidth + '%';
+      }
+    }
+
+    if (this.dragborder === 'dragging' && $event.type === 'mouseleave') {
+      $event.preventDefault();
+    }
+
+    switch ($event.type) {
+      case ('mousedown'):
+        if (this.dragborder === 'active') {
+          this.dragborder = 'dragging';
+        }
+        break;
+      case ('mouseup'):
+        this.dragborder = 'inactive';
+        break;
+    }
+  }
+
+  public onBlur($event) {
+    if (this.dragborder === 'dragging') {
+      $event.preventDefault();
     }
   }
 }

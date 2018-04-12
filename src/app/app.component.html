@@ -4,12 +4,14 @@
 <app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
                  [operations]="taskService.operations"></app-queue-modal>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
+    <!-- HEADER -->
     <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
         <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version">v{{AppInfo.version}}</span>
             <span *ngIf="isdevelopment"
                   style="color:red;">
-        in development
-         </span></div>
+                in development
+            </span>
+        </div>
         <div class="col-4 status-div" style="background-color: ghostwhite;">
             <div class="status">
                 <ng-container *ngIf="taskService.countRunningTasks() > 0">
@@ -45,7 +47,9 @@
             </div>
         </div>
     </div>
-    <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
+
+    <!-- SUB-HEADER OVERVIEW -->
+    <div class='row proceedings-header' style="padding-top:0;" *ngIf="!_showtool">
         <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
                 <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
@@ -86,8 +90,10 @@
             </button>
         </div>
     </div>
+
+    <!-- SUB-HEADER TOOL -->
     <div class='row proceedings-header' style="padding-top:0px; border-top: 1px solid cornflowerblue; height:50px;"
-         *ngIf="showtool">
+         *ngIf="_showtool">
         <div class="col-2" style="text-align: left;padding-top:5px;">
             <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
                 <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>
@@ -119,78 +125,55 @@
             </button>
         </div>
     </div>
-    <div class="row main-row">
-        <div *ngIf="sidebarstate !== 'hidden'" [ngClass]="{
-            'col-3': sidebarstate !== 'hidden'
-        }" id="sidebar">
-            <app-proceedings style="height:100%; display:flex; flex-direction:column; flex:auto;"
-                             [taskList]="taskService.taskList"
+
+
+    <!-- WORKING AREA -->
+    <div id="main" style="position: relative;">
+        <div [ngStyle]="{'width': newProceedingsWidth}" style="float:right;"
+             [@expandLeft]="sidebarExpand"
+
+             (mousedown)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
+             (mouseup)="dragBorder($event, 'left')" (mouseenter)="dragBorder($event, 'left')"
+             (mouseleave)="dragBorder($event, 'left')"
+             [ngClass]="{
+                                    'dragborder': dragborder === 'active' || dragborder === 'dragging'
+                                }"
+
+             (blur)="onBlur($event)"
+        >
+            <app-proceedings [taskList]="taskService.taskList"
                              [operations]="taskService.operations"
-                             [shortstyle]="true"
                              (afterdrop)="onAfterDrop($event)" #proceedings
                              (operationclick)="onOperationClick($event)"
+                             (operationhover)="onOperationHover($event)"
                              [queue]="taskService.preprocessor.queue"
-            ></app-proceedings>
+                             [shortstyle]="sidebarExpand === 'closed'"
+
+                             style="height:100%"
+                             #proceedings
+            >
+            </app-proceedings>
         </div>
-        <div [ngClass]="{
-        'col-9': sidebarstate !== 'hidden',
-        'col-12': sidebarstate === 'hidden'
-    }" style="height:100%;" id="upper-main">
-            <div id="main">
-                <ng-container *ngIf="showtool; else showProceedings">
-                    <app-tool-loader [url]="tool_url" style="height:100%;" [operation]="selectedOperation"
-                                     (datareceived)="onToolDataReceived($event)"></app-tool-loader>
-                </ng-container>
-                <ng-template #showProceedings>
-                    <app-proceedings style="display:flex; flex:auto;" [taskList]="taskService.taskList"
-                                     [operations]="taskService.operations"
-                                     (afterdrop)="onAfterDrop($event)" #proceedings
-                                     (operationclick)="onOperationClick($event)"
-                                     (operationhover)="onOperationHover($event)"
-                                     [queue]="taskService.preprocessor.queue"
-                                     #proceedings
-                    ></app-proceedings>
-                    <div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
-                        <div class="protocol-header">
-                            <div class="info">
-                                <table>
-                                    <tbody>
-                                    <tr>
-                                        <td (click)="onProtoclLabelClick(tag)" style="padding: 5px;cursor: pointer;">
-                                            <span class="text-danger">{{taskService.errors_count}}</span> Errors
-                                        </td>
-                                        <td (click)="onProtoclLabelClick(tag)" style="padding: 5px;cursor: pointer;">
-                                            <span class="text-warning">{{taskService.warnings_count}}</span> Warnings
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="tag"><i class="fa fa-angle-down" aria-hidden="true" appExpand #tag
-                                                style="cursor:pointer;color:#005cbf;"></i></div>
-                        </div>
-                        <div class="protocol-body" [ngStyle]="{
-                        display: ((tag.getAttribute('data-state') !== 'opened') ? 'none': 'flex')
-                    }">
-                            <table class="table table-bordered">
-                                <tbody>
-                                <tr *ngFor="let elem of taskService.protocol_array">
-                                    <td>{{elem.task_id}}</td>
-                                    <td>
-                                        <i *ngIf="elem.state === 'ERROR'" class="fa fa-exclamation"
-                                           style="color:red"></i>
-                                        <i *ngIf="elem.state === 'FINISHED'" class="fa fa-warning"
-                                           style="color:orange"></i>
-                                    </td>
-                                    <td>{{elem.op_name}}</td>
-                                    <td>{{elem.protocol}}</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </ng-template>
-            </div>
+        <div [hidden]="dragborder === 'inactive'"
+             [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
+             style="position:absolute; height:100%;z-index:800;"
+             [@comeIn]="sidebarExpand"
+             (mousedown)="dragBorder($event, 'right')" (mousemove)="dragBorder($event, 'right')"
+             (mouseup)="dragBorder($event, 'right')" (mouseenter)="dragBorder($event, 'right')"
+             (mouseleave)="dragBorder($event, 'right')"
+             [ngClass]="{
+                                    'dragborder': dragborder === 'active' || dragborder === 'dragging'
+                                }"
+        ></div>
+        <div [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
+             style="position:absolute; height:100%;"
+             [@comeIn]="sidebarExpand">
+            <app-tool-loader [url]="tool_url" style="height:100%;"
+                             [operation]="selectedOperation"
+                             (datareceived)="onToolDataReceived($event)"
+            ></app-tool-loader>
         </div>
+        <div class="clearfix"></div>
     </div>
+    <app-protocol-footer #protocolFooter></app-protocol-footer>
 </div>

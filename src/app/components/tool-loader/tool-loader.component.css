@@ -7,4 +7,5 @@ iframe {
 }
 
 :host {
+    background-color: ghostwhite;
 }

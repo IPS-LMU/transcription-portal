@@ -25,6 +25,7 @@ import {FirstModalComponent} from './modals/first-modal/first-modal.component';
 import {NgbDropdownMenu} from '@ng-bootstrap/ng-bootstrap/dropdown/dropdown';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
+import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
     FeedbackModalComponent,
     SplitModalComponent,
     FirstModalComponent,
-    QueueModalComponent
+    QueueModalComponent,
+    ProtocolFooterComponent
   ],
   imports: [
     BrowserModule,

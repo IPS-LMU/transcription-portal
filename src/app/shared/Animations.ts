@@ -1,4 +1,4 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import {animate, state, style, transition, trigger} from '@angular/animations';
 
 export const ANIMATIONS = [
   trigger('fadeToggle', [
@@ -56,19 +56,25 @@ export const ANIMATIONS = [
       width: '100%'
     })),
     transition('* => closed', animate('600ms ease-in')),
-    transition('opened => closed', animate('600ms ease-in'))
+    transition('opened => closed', animate('600ms ease-in')),
+    transition('closed => opened', animate('600ms ease-out'))
   ]),
 
   trigger('comeIn', [
-    state('hidden', style({
-      display: 'none',
-      transform: 'translate(2500px, 0px)'
+    state('closed', style({
+      'margin-left': '30%',
+      'width': '70%'
+    })),
+    state('opened', style({
+      'margin-left': '100%',
+      'width': '70%'
     })),
     state('*', style({
-      transform: 'translateX(0)',
-      display: 'flex'
+      'margin-left': '100%',
+      'width': '70%'
     })),
-    transition('hidden => *', animate('1000ms ease-in')),
-    transition('opened => hidden', animate('1000ms ease-out'))
+    transition('* => closed', animate('600ms ease-in')),
+    transition('opened => closed', animate('600ms ease-in')),
+    transition('closed => opened', animate('600ms ease-out'))
   ]),
 ];

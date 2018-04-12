@@ -27,87 +27,14 @@ h1 {
 
 #main {
     display: flex;
-    flex-direction: column;
     flex: auto;
     height: 100%;
+    width: 100%;
 }
 
 .btn-nav {
     border: 1px solid lightgray;
     padding: 5px;
-}
-
-#protocol-table {
-    background-color: whitesmoke;
-    border-top: 2px solid cornflowerblue;
-    max-height: 200px;
-}
-
-#protocol-table .protocol-header {
-    background-color: white;
-    min-height: 40px;
-    border-bottom: 1px solid cornflowerblue;
-}
-
-#protocol-table .protocol-header .errors-td,
-#protocol-table .protocol-header .warnings-td {
-    padding: 5px;
-}
-
-#protocol-table .protocol-header .errors-td:hover,
-#protocol-table .protocol-header .warnings-td:hover {
-    background-color: #e7e2d8;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.rounded-num {
-    display: inline-block;
-    padding: 5px;
-    border-radius: 20px;
-    min-width: 24px;
-    background-color: red;
-    font-size: 0.8em;
-    text-align: center;
-    color: white;
-    border: 1px solid navajowhite;
-    vertical-align: middle;
-}
-
-.rounded-num.warning {
-    background-color: #ffc33b;
-}
-
-#protocol-table .protocol-header .info {
-    position: absolute;
-}
-
-#protocol-table .protocol-header .info table tr {
-    padding: 0;
-}
-
-#protocol-table .protocol-header .info table tr td {
-    padding-right: 10px;
-}
-
-#protocol-table .protocol-header .tag {
-    position: absolute;
-    right: 0;
-    margin-top: 8px;
-    margin-right: 10px;
-    width: 25px;
-}
-
-#protocol-table .protocol-body {
-    padding: 10px;
-    overflow: scroll;
-    height: 160px;
-}
-
-#protocol-table .protocol-body table tr {
-    background-color: white;
-    border: 1px solid gray;
-    margin-bottom: 5px;
 }
 
 .proceedings-header {
@@ -131,6 +58,7 @@ h1 {
 .main-row {
     display: inherit;
     height: 100%;
+    width: 100%;
     -webkit-box-orient: unset;
     -webkit-box-direction: unset;
     -ms-flex-direction: unset;
@@ -199,4 +127,8 @@ h1 {
 
 .version {
     color: gray;
+}
+
+.dragborder {
+    cursor: col-resize;
 }

@@ -122,3 +122,7 @@ table thead tr th {
 table thead tr th:hover {
     background-color: whitesmoke;
 }
+
+.table {
+    width: 100%;
+}
