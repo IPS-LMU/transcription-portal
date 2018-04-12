@@ -1,0 +1,39 @@
+<div id="protocol-table" [@expandToggle]="tag.getAttribute('data-state')">
+    <div class="protocol-header">
+        <div class="info">
+            <table>
+                <tbody>
+                <tr>
+                    <td (click)="onProtoclLabelClick(tag)" style="padding: 5px;cursor: pointer;">
+                        <span class="text-danger">{{taskService.errors_count}}</span> Errors
+                    </td>
+                    <td (click)="onProtoclLabelClick(tag)" style="padding: 5px;cursor: pointer;">
+                        <span class="text-warning">{{taskService.warnings_count}}</span> Warnings
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="tag"><i class="fa fa-angle-down" aria-hidden="true" appExpand #tag
+                            style="cursor:pointer;color:#005cbf;"></i></div>
+    </div>
+    <div class="protocol-body" [ngStyle]="{
+                        display: ((tag.getAttribute('data-state') !== 'opened') ? 'none': 'flex')
+                    }">
+        <table class="table table-bordered">
+            <tbody>
+            <tr *ngFor="let elem of taskService.protocol_array">
+                <td>{{elem.task_id}}</td>
+                <td>
+                    <i *ngIf="elem.state === 'ERROR'" class="fa fa-exclamation"
+                       style="color:red"></i>
+                    <i *ngIf="elem.state === 'FINISHED'" class="fa fa-warning"
+                       style="color:orange"></i>
+                </td>
+                <td>{{elem.op_name}}</td>
+                <td>{{elem.protocol}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
