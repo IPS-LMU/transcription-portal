@@ -126,3 +126,7 @@ table thead tr th:hover {
 .table {
     width: 100%;
 }
+
+.badge {
+    display: inline;
+}
