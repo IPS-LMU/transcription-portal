@@ -35,6 +35,9 @@ declare var window: any;
   animations: [ANIMATIONS]
 })
 export class AppComponent implements OnDestroy {
+  get showtool(): boolean {
+    return this._showtool;
+  }
   set showtool(value: boolean) {
     this.sidebarExpand = (value) ? 'closed' : 'opened';
     this._showtool = value;

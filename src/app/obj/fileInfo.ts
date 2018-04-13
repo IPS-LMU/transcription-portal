@@ -1,5 +1,6 @@
 import {DataInfo} from './dataInfo';
 import {isNullOrUndefined} from 'util';
+import {unescape} from 'querystring';
 
 export class FileInfo extends DataInfo {
   get online(): boolean {
@@ -9,6 +10,7 @@ export class FileInfo extends DataInfo {
   set online(value: boolean) {
     this._online = value;
   }
+
   set file(value: File) {
     this._file = value;
   }
@@ -125,13 +127,72 @@ export class FileInfo extends DataInfo {
     return null;
   }
 
-  public toAny() {
-    return {
-      fullname: this.fullname,
-      size: this.size,
-      type: this.type,
-      url: this.url,
-      attributes: this.attributes
-    };
+  public toAny(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const result = {
+        fullname: this.fullname,
+        size: this.size,
+        type: this.type,
+        url: this.url,
+        attributes: this.attributes,
+        data: ''
+      };
+
+      if (this._extension.indexOf('wav') < 0 && this._file !== undefined) {
+        this.getBase64(this._file).then(
+          (base64) => {
+            result.data = '' + base64;
+            resolve(result);
+          }
+        ).catch((err) => {
+          reject(err);
+        });
+      } else {
+        resolve(result);
+      }
+    });
+  }
+
+  public static fromAny(object): FileInfo {
+    let file = undefined;
+    if (object.data !== undefined && object.data !== '') {
+      file = this.getFileFromBase64(object.data, object.fullname);
+    }
+
+    const result = new FileInfo(object.fullname, object.type, object.size, file);
+    result.attributes = object.attributes;
+    return result;
+  }
+
+
+  getBase64(file: File): any {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      console.log(file);
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  public static getFileFromBase64(base64: string, filename: string) {
+    // convert base64/URLEncoded data component to raw binary data held in a string
+    let byteString;
+    if (base64.split(',')[0].indexOf('base64') >= 0)
+      byteString = atob(base64.split(',')[1]);
+    else
+      byteString = unescape(base64.split(',')[1]);
+
+    // separate out the mime component
+    const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+
+    // write the bytes of the string to a typed array
+    const ia = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+
+    const blob = new Blob([ia], {type: mimeString});
+    return new File([blob], filename, {type: mimeString});
   }
 }

@@ -383,27 +383,33 @@ export class TaskService implements OnDestroy {
     return null;
   }
 
-  public updateProtocolURL() {
-    const results = [];
+  public updateProtocolURL(): Promise<SafeResourceUrl> {
+    return new Promise<SafeResourceUrl>((resolve, reject) => {
 
-    for (let i = 0; i < this.taskList.entries.length; i++) {
-      const entry = this.taskList.entries[i];
-      results.push(entry.toAny());
-    }
+      const promises: Promise<any>[] = [];
+      for (let i = 0; i < this.taskList.entries.length; i++) {
+        const entry = this.taskList.entries[i];
+        promises.push(entry.toAny());
+      }
 
-    const json = {
-      version: '1.0.0',
-      encoding: 'UTF-8',
-      created: moment().format(),
-      entries: results
-    };
+      Promise.all(promises).then((values) => {
+        const json = {
+          version: '1.0.0',
+          encoding: 'UTF-8',
+          created: moment().format(),
+          entries: values
+        };
 
-    this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
-    const file = new File([JSON.stringify(json)], this.protocolFileName, {
-      'type': 'text/plain'
+        this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
+        const file = new File([JSON.stringify(json)], this.protocolFileName, {
+          'type': 'text/plain'
+        });
+
+        resolve(this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file)));
+      }).catch((error) => {
+        reject(error);
+      });
     });
-
-    return this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file));
   }
 
 
@@ -579,6 +585,8 @@ export class TaskService implements OnDestroy {
         setTimeout(() => {
           const reader = new FileReader();
           reader.onload = (event: any) => {
+            console.log(`file:`);
+            console.log(event.target.result);
             const format = new WavFormat(event.target.result);
             const isValidFormat = format.isValid(event.target.result);
             const isValidTranscript = this.validTranscript(file.extension);

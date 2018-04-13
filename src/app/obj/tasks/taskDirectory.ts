@@ -147,20 +147,29 @@ export class TaskDirectory {
     this._entries.splice(task_index, 1);
   }
 
-  public toAny(): any {
-    const result = {
-      id: this.id,
-      type: 'folder',
-      path: this.path,
-      entries: []
-    };
+  public toAny(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const result = {
+        id: this.id,
+        type: 'folder',
+        path: this.path,
+        entries: []
+      };
 
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-      result.entries.push(entry.toAny());
-    }
+      const promises: Promise<any>[] = [];
+      for (let i = 0; i < this.entries.length; i++) {
+        const entry = this.entries[i];
+        promises.push(entry.toAny());
+      }
 
-    return result;
+      Promise.all(promises).then((values) => {
+        result.entries = values;
+        console.log(`SAVE!"§`);
+        resolve(result);
+      }).catch((error) => {
+        reject(error);
+      });
+    });
   }
 
   public static fromAny(dirObj: any, defaultOperations: Operation[]): TaskDirectory {

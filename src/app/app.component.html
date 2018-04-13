@@ -49,7 +49,7 @@
     </div>
 
     <!-- SUB-HEADER OVERVIEW -->
-    <div class='row proceedings-header' style="padding-top:0;" *ngIf="!_showtool">
+    <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
         <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
                 <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
@@ -93,7 +93,7 @@
 
     <!-- SUB-HEADER TOOL -->
     <div class='row proceedings-header' style="padding-top:0px; border-top: 1px solid cornflowerblue; height:50px;"
-         *ngIf="_showtool">
+         *ngIf="showtool">
         <div class="col-2" style="text-align: left;padding-top:5px;">
             <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
                 <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>

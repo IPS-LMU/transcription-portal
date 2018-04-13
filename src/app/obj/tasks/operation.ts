@@ -214,24 +214,38 @@ export abstract class Operation {
   onMouseLeave() {
   }
 
-  toAny(): any {
-    let result = {
-      id: this.id,
-      name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
-      enabled: this.enabled,
-      webService: '',
-      results: []
-    };
+  toAny(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      let result = {
+        id: this.id,
+        name: this.name,
+        state: this.state,
+        protocol: this.protocol,
+        time: this.time,
+        enabled: this.enabled,
+        webService: '',
+        results: []
+      };
 
-    // result data
-    for (let i = 0; i < this.results.length; i++) {
-      const resultObj = this.results[i];
-      result.results.push(resultObj.toAny());
-    }
+      // result data
+      const promises: Promise<any>[] = [];
+      for (let i = 0; i < this.results.length; i++) {
+        const resultObj = this.results[i];
+        promises.push(resultObj.toAny());
+      }
 
-    return result;
+      if (promises.length > 0) {
+        Promise.all(promises).then((values) => {
+          result.results = values;
+          console.log(`RESOLVE OP`);
+          console.log(result);
+          resolve(result);
+        }).catch((error) => {
+          reject(error);
+        });
+      } else {
+        resolve(result);
+      }
+    });
   }
 }

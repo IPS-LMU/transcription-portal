@@ -99,14 +99,22 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    let data;
-    if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
-      data = taskEntry.directory.toAny();
-    } else {
-      data = taskEntry.toAny();
-    }
+    return new Promise<any>((resolve, reject) => {
+      let promise: Promise<any>;
 
-    return this.idbm.save('tasks', data.id, data);
+      if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
+        promise = taskEntry.directory.toAny();
+      } else {
+        promise = taskEntry.toAny();
+      }
+
+      promise.then((data) => {
+        console.log(`save!!!!`);
+        return this.idbm.save('tasks', data.id, data);
+      }).catch((error) => {
+        reject(error);
+      });
+    });
   }
 
   public saveCounter(name: string, value: number) {

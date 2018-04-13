@@ -298,9 +298,15 @@ export class Task {
 
     for (let i = 0; i < taskObj.files.length; i++) {
       const file = taskObj.files[i];
-      const audioInfo = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
-      audioInfo.attributes = file.attributes;
-      task.files.push(audioInfo);
+      let info;
+
+      if (file.fullname.indexOf('wav') > 0) {
+        info = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
+        info.attributes = file.attributes;
+      } else {
+        info = FileInfo.fromAny(file);
+      }
+      task.files.push(info);
     }
 
     for (let i = 0; i < taskObj.operations.length; i++) {
@@ -322,44 +328,72 @@ export class Task {
     return task;
   }
 
-  public toAny(): any {
-    const result = {
-      id: this.id,
-      type: 'task',
-      state: this.state,
-      folderPath: '',
-      language: this.language,
-      files: [],
-      operations: []
-    };
+  public toAny(): Promise<any> {
+    console.log(`task to any`);
+    return new Promise<any>((resolve, reject) => {
+      const result = {
+        id: this.id,
+        type: 'task',
+        state: this.state,
+        folderPath: '',
+        language: this.language,
+        files: [],
+        operations: []
+      };
 
-    // read file data
-    for (let i = 0; i < this.files.length; i++) {
-      const file = this.files[i];
+      // read file data
+      const filePromises: Promise<any>[] = [];
+      for (let i = 0; i < this.files.length; i++) {
+        const file = this.files[i];
 
-      let fileObj = file.toAny();
-
-      if (file instanceof AudioInfo) {
-        const audioFile = <AudioInfo> file;
-
-        fileObj['sampleRate'] = audioFile.samplerate;
-        fileObj['bitsPerSecond'] = audioFile.bitrate;
-        fileObj['channels'] = audioFile.channels;
-        fileObj['duration'] = audioFile.duration.samples;
+        filePromises.push(file.toAny());
       }
-      fileObj['attributes'] = file.attributes;
 
-      result.files.push(fileObj);
-    }
+      Promise.all(filePromises).then((values) => {
+        console.log(`all finished`);
+        for (let i = 0; i < values.length; i++) {
+          const file = this.files[i];
 
-    // read operation data
-    for (let i = 0; i < this.operations.length; i++) {
-      const operation = this.operations[i].toAny();
+          let fileObj = values[i];
 
-      result.operations.push(operation);
-    }
+          if (file instanceof AudioInfo) {
+            const audioFile = <AudioInfo> file;
 
-    result.folderPath = (isNullOrUndefined(this._directory)) ? '' : this._directory.path;
-    return result;
+            fileObj['sampleRate'] = audioFile.samplerate;
+            fileObj['bitsPerSecond'] = audioFile.bitrate;
+            fileObj['channels'] = audioFile.channels;
+            fileObj['duration'] = audioFile.duration.samples;
+          }
+          fileObj['attributes'] = file.attributes;
+
+          result.files.push(fileObj);
+        }
+
+        result.folderPath = (isNullOrUndefined(this._directory)) ? '' : this._directory.path;
+
+        // read operation data
+        const promises: Promise<any>[] = [];
+        for (let i = 0; i < this.operations.length; i++) {
+          promises.push(this.operations[i].toAny());
+        }
+
+        if (promises.length > 0) {
+          console.log(`primises > 0`);
+          Promise.all(promises).then((values2) => {
+            console.log(`VALUES ARRIVED!!!!!!`);
+            result.operations = values2;
+            resolve(result)
+          }).catch((error) => {
+            console.error('not arrived');
+            reject(error);
+          });
+        } else {
+          resolve(result);
+        }
+      }).catch((error) => {
+        reject(error);
+      });
+    });
+
   }
 }
