@@ -196,13 +196,22 @@ export class TaskService implements OnDestroy {
               const operation = task.operations[j];
 
               for (let k = 0; k < operation.results.length; k++) {
-                const file = operation.results[k];
+                const opResult = operation.results[k];
 
-                if (!isNullOrUndefined(file.url)) {
-                  this.existsFile(file.url).then(() => {
-                    file.online = true;
+                if (!isNullOrUndefined(opResult.url)) {
+                  this.existsFile(opResult.url).then(() => {
+                    opResult.online = true;
+
+                    if (isNullOrUndefined(opResult.file) && opResult.extension.indexOf('wav') < 0) {
+                      opResult.updateContentFromURL(this.httpclient).then(() => {
+                        // TODO minimize task savings
+                        this.storage.saveTask(task);
+                      }).catch((error) => {
+                        console.error(error);
+                      });
+                    }
                   }).catch(() => {
-                    file.online = false;
+                    opResult.online = false;
                   });
                 }
               }
@@ -217,13 +226,22 @@ export class TaskService implements OnDestroy {
                 const operation = task.operations[j];
 
                 for (let k = 0; k < operation.results.length; k++) {
-                  const file = operation.results[k];
+                  const opResult = operation.results[k];
 
-                  if (!isNullOrUndefined(file.url)) {
-                    this.existsFile(file.url).then(() => {
-                      file.online = true;
+                  if (!isNullOrUndefined(opResult.url)) {
+                    this.existsFile(opResult.url).then(() => {
+                      opResult.online = true;
+
+                      if (isNullOrUndefined(opResult.file) && opResult.extension.indexOf('wav') < 0) {
+                        opResult.updateContentFromURL(this.httpclient).then(() => {
+                          // TODO minimize task savings
+                          this.storage.saveTask(task);
+                        }).catch((error) => {
+                          console.error(error);
+                        });
+                      }
                     }).catch(() => {
-                      file.online = false;
+                      opResult.online = false;
                     });
                   }
                 }
