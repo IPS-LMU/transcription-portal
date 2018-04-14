@@ -11,6 +11,14 @@ export class FileInfo extends DataInfo {
     this._online = value;
   }
 
+  /**
+   * returns if the file is ready for processing
+   * @returns {boolean}
+   */
+  get available(): boolean {
+    return this.online || this._file !== undefined;
+  }
+
   set file(value: File) {
     this._file = value;
   }
@@ -135,13 +143,13 @@ export class FileInfo extends DataInfo {
         type: this.type,
         url: this.url,
         attributes: this.attributes,
-        data: ''
+        content: ''
       };
 
       if (this._extension.indexOf('wav') < 0 && this._file !== undefined) {
-        this.getBase64(this._file).then(
-          (base64) => {
-            result.data = '' + base64;
+        this.getFileContent(this._file).then(
+          (content) => {
+            result.content = content;
             resolve(result);
           }
         ).catch((err) => {
@@ -155,13 +163,32 @@ export class FileInfo extends DataInfo {
 
   public static fromAny(object): FileInfo {
     let file = undefined;
-    if (object.data !== undefined && object.data !== '') {
-      file = this.getFileFromBase64(object.data, object.fullname);
+    if (object.content !== undefined && object.content !== '') {
+      file = this.getFileFromContent(object.content, object.fullname);
     }
 
     const result = new FileInfo(object.fullname, object.type, object.size, file);
     result.attributes = object.attributes;
     return result;
+  }
+
+  private getFileContent(file: File, encoding?: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsText(file, encoding);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  public static getFileFromContent(content: string, filename: string, type?: string): File {
+    let properties = {};
+
+    if (type !== undefined) {
+      properties['type'] = type;
+    }
+
+    return new File([content], filename, properties);
   }
 
 
