@@ -1,6 +1,7 @@
 import {DataInfo} from './dataInfo';
 import {isNullOrUndefined} from 'util';
 import {unescape} from 'querystring';
+import {HttpClient} from '@angular/common/http';
 
 export class FileInfo extends DataInfo {
   get online(): boolean {
@@ -75,7 +76,7 @@ export class FileInfo extends DataInfo {
     return new FileInfo(file.name, file.type, file.size, file);
   }
 
-  public static fromURL(url: string, name: string = null) {
+  public static fromURL(url: string, name: string = null, type: string) {
     let fullname = '';
     if (name != null) {
       const extension = url.substr(url.lastIndexOf('.') + 1);
@@ -83,8 +84,9 @@ export class FileInfo extends DataInfo {
     } else {
       fullname = url.substr(url.lastIndexOf('/') + 1);
     }
-    const result = new FileInfo(fullname, 'audio/wav', 0);
+    const result = new FileInfo(fullname, type, 0);
     result.url = url;
+
     return result;
   }
 
@@ -169,6 +171,7 @@ export class FileInfo extends DataInfo {
 
     const result = new FileInfo(object.fullname, object.type, object.size, file);
     result.attributes = object.attributes;
+    result.url = object.url;
     return result;
   }
 
@@ -181,10 +184,27 @@ export class FileInfo extends DataInfo {
     });
   }
 
+  public updateContentFromURL(httpClient: HttpClient): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (this._url !== undefined && this._url !== null) {
+        httpClient.get(this._url, {responseType: 'text'}).subscribe(
+          result => {
+            this._file = FileInfo.getFileFromContent(result, this.fullname, this._type);
+            this._size = this._file.size;
+            resolve();
+          },
+          error => reject(error)
+        );
+      } else {
+        reject(Error('URL of this file is invalid'));
+      }
+    });
+  }
+
   public static getFileFromContent(content: string, filename: string, type?: string): File {
     let properties = {};
 
-    if (type !== undefined) {
+    if (type !== undefined && type !== '') {
       properties['type'] = type;
     }
 
@@ -201,6 +221,7 @@ export class FileInfo extends DataInfo {
       reader.onerror = error => reject(error);
     });
   }
+
 
   public static getFileFromBase64(base64: string, filename: string) {
     // convert base64/URLEncoded data component to raw binary data held in a string

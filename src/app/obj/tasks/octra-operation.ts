@@ -87,8 +87,7 @@ export class OCTRAOperation extends ToolOperation {
     const result = new OCTRAOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
-      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
-      resultClass.url = resultObj.url;
+      const resultClass = FileInfo.fromAny(resultObj);
       result.results.push(resultClass);
     }
     result._time = operationObj.time;

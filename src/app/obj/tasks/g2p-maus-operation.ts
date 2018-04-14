@@ -59,8 +59,15 @@ export class G2pMausOperation extends Operation {
         }
 
         if (json.success === 'true') {
-          this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
-          this.changeState(TaskState.FINISHED);
+          const file = FileInfo.fromURL(json.downloadLink, inputs[0].name, 'text/plain');
+          file.updateContentFromURL(httpclient).then(() => {
+            this.results.push(file);
+            this.changeState(TaskState.FINISHED);
+          }).catch((error) => {
+            this._protocol = error;
+            this.changeState(TaskState.ERROR);
+            console.error(this._protocol);
+          });
         } else {
           this.changeState(TaskState.ERROR);
           console.error(this._protocol);

@@ -49,8 +49,15 @@ export class ASROperation extends Operation {
         }
 
         if (json.success === 'true') {
-          this.results.push(FileInfo.fromURL(json.downloadLink, inputs[0].name));
-          this.changeState(TaskState.FINISHED);
+          const file = FileInfo.fromURL(json.downloadLink, inputs[0].name, 'text/plain');
+          file.updateContentFromURL(httpclient).then(() => {
+            this.results.push(file);
+            this.changeState(TaskState.FINISHED);
+          }).catch((error) => {
+            this._protocol = error;
+            this.changeState(TaskState.ERROR);
+            console.error(this._protocol);
+          });
         } else {
           this.changeState(TaskState.ERROR);
           console.error(this._protocol);
@@ -77,8 +84,7 @@ export class ASROperation extends Operation {
     const result = new ASROperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
-      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
-      resultClass.url = resultObj.url;
+      const resultClass = FileInfo.fromAny(resultObj);
       result.results.push(resultClass);
     }
     result._time = operationObj.time;

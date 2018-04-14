@@ -25,7 +25,7 @@ export class DataInfo {
 
   protected _type: string;
   protected _name: string;
-  private _size: number;
+  protected _size: number;
   private _attributes = {};
 
   public constructor(name: string, type: string, size?: any) {

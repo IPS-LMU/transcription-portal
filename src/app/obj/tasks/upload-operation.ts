@@ -75,12 +75,13 @@ export class UploadOperation extends Operation {
         if (isArray(json.fileList.entry)) {
           for (let i = 0; i < files.length; i++) {
             files[i].url = json.fileList.entry[i].value;
-            this.results.push(FileInfo.fromURL(files[i].url));
+            const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
+            this.results.push(FileInfo.fromURL(files[i].url, files[i].fullname, type));
           }
         } else {
           // json attribute entry is an object
           files[0].url = json.fileList.entry['value'];
-          this.results.push(FileInfo.fromURL(json.fileList.entry['value']));
+          this.results.push(FileInfo.fromURL(json.fileList.entry['value'], null, 'audio/wav'));
         }
         this.changeState(TaskState.FINISHED);
       } else {

@@ -38,6 +38,7 @@ export class AppComponent implements OnDestroy {
   get showtool(): boolean {
     return this._showtool;
   }
+
   set showtool(value: boolean) {
     this.sidebarExpand = (value) ? 'closed' : 'opened';
     this._showtool = value;
@@ -310,44 +311,49 @@ export class AppComponent implements OnDestroy {
   onToolDataReceived($event) {
     if ($event.data.data !== undefined && $event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
       const result: string = $event.data.data.transcript_url;
+      const file = FileInfo.fromURL(result, null, 'text/plain');
+      file.updateContentFromURL(this.httpclient).then(() => {
+        console.log(`UPDATED FROM URL!`);
+        this.selectedOperation.results.push(file);
 
-      this.selectedOperation.results.push(FileInfo.fromURL(result));
-
-      const index = this.selectedOperation.task.operations.findIndex((op) => {
-        if (op.id === this.selectedOperation.id) {
-          return true;
-        }
-      });
-
-      let startedBefore = false;
-      // reset next operations
-      if (index > -1) {
-        for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
-          const operation = this.selectedOperation.task.operations[i];
-          if (operation.state !== TaskState.PENDING) {
-            startedBefore = true;
+        const index = this.selectedOperation.task.operations.findIndex((op) => {
+          if (op.id === this.selectedOperation.id) {
+            return true;
           }
-          operation.changeState(TaskState.PENDING);
+        });
+
+        let startedBefore = false;
+        // reset next operations
+        if (index > -1) {
+          for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
+            const operation = this.selectedOperation.task.operations[i];
+            if (operation.state !== TaskState.PENDING) {
+              startedBefore = true;
+            }
+            operation.changeState(TaskState.PENDING);
+          }
+        } else {
+          console.error(`index is ${index}`);
         }
-      } else {
-        console.error(`index is ${index}`);
-      }
 
-      if (this.selectedOperation instanceof OCTRAOperation) {
-        this.selectedOperation.time.duration += Date.now() - this.selectedOperation.time.start;
-      }
+        if (this.selectedOperation instanceof OCTRAOperation) {
+          this.selectedOperation.time.duration += Date.now() - this.selectedOperation.time.start;
+        }
 
-      this.selectedOperation.changeState(TaskState.FINISHED);
-      this.storage.saveTask(this.selectedOperation.task);
-      if (startedBefore) {
-        setTimeout(() => {
-          this.selectedOperation.task.restart(this.httpclient);
+        this.selectedOperation.changeState(TaskState.FINISHED);
+        this.storage.saveTask(this.selectedOperation.task);
+        if (startedBefore) {
+          setTimeout(() => {
+            this.selectedOperation.task.restart(this.httpclient);
+            this.onBackButtonClicked();
+          }, 1000);
+        } else {
+
           this.onBackButtonClicked();
-        }, 1000);
-      } else {
-
-        this.onBackButtonClicked();
-      }
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
     }
   }
 
