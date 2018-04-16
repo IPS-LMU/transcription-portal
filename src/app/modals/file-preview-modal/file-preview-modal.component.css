@@ -1,0 +1,6 @@
+textarea {
+    width: 100%;
+    min-height: 400px;
+    border: 1px solid gray;
+    font-size: 0.8em;
+}

@@ -13,6 +13,8 @@
     </div>
 </ng-template>
 
+<app-file-preview-modal #filePreview></app-file-preview-modal>
+
 <div class="inner" (mouseleave)="isDragging = false" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
      (click)="onContextBlur()">
     <div *ngIf="taskService.taskList.entries.length === 0" class="placeholder">
@@ -72,7 +74,8 @@
             </ng-container>
             <ng-container *ngIf="popover.operation.results.length > 0">
                 <div>
-                    <app-results-table [operation]="popover.operation"></app-results-table>
+                    <app-results-table [operation]="popover.operation"
+                                       (previewClick)="onPreviewClick($event)"></app-results-table>
                 </div>
             </ng-container>
             <ng-container>
@@ -164,7 +167,9 @@
                         'badge-info': entry.files[1].file !== undefined || entry.operations[0].results.length > 1,
                         'badge-warning': !(entry.files[1].file !== undefined || entry.operations[0].results.length > 1)
                     }
-">{{taskService.getAppendingsExtension(entry.files[1])}}</span>
+                    "
+                          (click)="onPreviewClick(entry.files[1])">
+                        {{taskService.getAppendingsExtension(entry.files[1])}}</span>
                     </ng-container>
                 </td>
 
@@ -244,7 +249,8 @@
                                 'badge-info': (dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1),
                                 'badge-warning': !(dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1)
                             }
-        ">{{taskService.getAppendingsExtension(dirEntry.files[1])}}</span>
+        " (click)="onPreviewClick(dirEntry.files[1])">
+                                {{taskService.getAppendingsExtension(dirEntry.files[1])}}</span>
                         </ng-container>
                     </td>
                     <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{

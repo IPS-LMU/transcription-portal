@@ -30,6 +30,7 @@ import {ToolOperation} from '../../obj/tasks/tool-operation';
 import {EmuOperation} from '../../obj/tasks/emu-operation';
 import {ASROperation} from '../../obj/tasks/asr-operation';
 import {QueueItem} from '../../obj/preprocessor';
+import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
 
 declare var window: any;
 
@@ -87,6 +88,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @ViewChild('content') content;
 
   @ViewChild('popoverRef') public popoverRef: PopoverComponent;
+  @ViewChild('filePreview') public filePreview: FilePreviewModalComponent;
 
   public selectedOperation: Operation;
 
@@ -617,5 +619,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.selected_tasks.splice(i, 1);
       i--; // because length changed
     }
+  }
+
+  public onPreviewClick(file: FileInfo) {
+    console.log(`preview clicked!!`);
+    this.filePreview.open(file);
   }
 }

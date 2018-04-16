@@ -1,0 +1,14 @@
+<ng-template #content let-onClose="close" let-onDismiss="dismiss">
+    <div class="modal-header" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <h4 class="modal-title">Preview: {{selectedFile?.fullname}}</h4>
+    </div>
+    <div class="modal-body" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <textarea readonly aria-readonly="true">{{fileContent}}</textarea>
+    </div>
+    <div class="modal-footer" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
+        <button type="button" class="btn btn-outline-dark" (click)="onClose()">Cancel</button>
+        <a [href]="downloadURL" [download]="selectedFile?.fullname" target="_self" class="btn btn-outline-primary">
+            DOWNLOAD
+        </a>
+    </div>
+</ng-template>

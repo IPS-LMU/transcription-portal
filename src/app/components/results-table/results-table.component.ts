@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  EventEmitter,
   Input,
   OnChanges,
   OnInit,
+  Output,
   SimpleChanges
 } from '@angular/core';
 import {Operation} from '../../obj/tasks/operation';
@@ -44,6 +46,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   public conversionExtension = '';
+  @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
   constructor(private http: HttpClient, private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {
   }
@@ -181,6 +184,14 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         reject('result is not online!');
       }
     });
+  }
+
+  public onPreviewClick(file: FileInfo) {
+    console.log(`preview click`);
+    this.previewClick.emit(file);
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
 }

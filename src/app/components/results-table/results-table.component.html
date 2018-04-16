@@ -18,9 +18,13 @@
     </thead>
     <tr *ngFor="let elem of convertedArray;let i = index">
         <td>#{{i+1}}</td>
-        <td *ngIf="elem.input.available" style="border-right: 1px solid lightgray;"><a [attr.href]="elem.input.url"
-                                                                                    [attr.download]="elem.input.fullname"><i
-                class="fa fa-file-text"></i></a></td>
+        <td *ngIf="elem.input.available" style="border-right: 1px solid lightgray;">
+            <a [attr.href]="elem.input.url"
+               [attr.download]="elem.input.fullname">
+                <i class="fa fa-file-text"></i>
+            </a>
+            <i (click)="onPreviewClick(elem.input)" class="fa fa-eye"></i>
+        </td>
         <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;"><i class="fa fa-unlink"
                                                                                         style="color:red;"></i>
         </td>
@@ -31,6 +35,8 @@
                    target="_blank">
                     <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
                 </a>
+                <i (click)="onPreviewClick(converter.result)" class="fa fa-eye"
+                   [ngStyle]="{ color: converter.converter.color}"></i>
             </td>
             <ng-container *ngIf="!elem.input.available">
                 <ng-container *ngFor="let converter of AppInfo.converters; let j = index">
