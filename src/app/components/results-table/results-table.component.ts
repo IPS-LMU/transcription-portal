@@ -30,7 +30,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   @Input() operation: Operation;
   public from: any;
   public convertedArray: {
-    input: FileInfo,
+    input: any,
     conversions: {
       converter: {
         obj: Converter,
@@ -75,13 +75,17 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     if (!isNullOrUndefined(this.from)) {
       this.conversionExtension = this.from.name;
       for (let i = 0; i < this.operation.results.length; i++) {
-        const result = <any> this.operation.results[i];
+        const result = this.operation.results[i];
 
-        // overwrite URL with local URL
-        if (!isNullOrUndefined(result.file)) {
-          result.url = URL.createObjectURL(result.file);
-          result.url = this.sanitizer.bypassSecurityTrustUrl(result.url);
-        }
+        const resultObj = {
+          url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)),
+          name: result.name,
+          type: result.type,
+          available: result.available,
+          fullname: result.fullname,
+          extension: result.extension,
+          file: result.file
+        };
 
         const file: IFile = {
           name: result.name,
@@ -100,7 +104,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           file.content = text;
 
           const convElem = {
-            input: result,
+            input: resultObj,
             conversions: []
           };
           this.convertedArray.push(convElem);
@@ -186,9 +190,9 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public onPreviewClick(file: FileInfo) {
+  public onPreviewClick(file: File) {
     console.log(`preview click`);
-    this.previewClick.emit(file);
+    this.previewClick.emit(FileInfo.fromFileObject(file));
 
     this.cd.markForCheck();
     this.cd.detectChanges();
