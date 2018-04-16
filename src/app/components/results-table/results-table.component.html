@@ -23,7 +23,7 @@
                [attr.download]="elem.input.fullname">
                 <i class="fa fa-file-text"></i>
             </a>
-            <i (click)="onPreviewClick(elem.input)" class="fa fa-eye"></i>
+            <i *ngIf="elem.input.extension !== '.wav'" (click)="onPreviewClick(elem.input)" class="fa fa-eye"></i>
         </td>
         <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;"><i class="fa fa-unlink"
                                                                                         style="color:red;"></i>
