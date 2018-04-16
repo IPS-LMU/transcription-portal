@@ -61,6 +61,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   private generateTable() {
     this.convertedArray = [];
     this.from = null;
+
     for (let i = 0; i < AppInfo.converters.length; i++) {
       const converter = AppInfo.converters[i];
       if (converter.obj.name === this.operation.resultType) {
@@ -71,7 +72,14 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     if (!isNullOrUndefined(this.from)) {
       this.conversionExtension = this.from.name;
       for (let i = 0; i < this.operation.results.length; i++) {
-        const result = this.operation.results[i];
+        const result = <any> this.operation.results[i];
+
+        // overwrite URL with local URL
+        if (!isNullOrUndefined(result.file)) {
+          result.url = URL.createObjectURL(result.file);
+          result.url = this.sanitizer.bypassSecurityTrustUrl(result.url);
+        }
+
         const file: IFile = {
           name: result.name,
           content: '',
@@ -85,7 +93,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         audio.name = (<AudioInfo> this.operation.task.files[0]).name;
         audio.size = (<AudioInfo> this.operation.task.files[0]).size;
 
-        this.downloadResult(result).then((text) => {
+        FileInfo.getFileContent(result.file).then((text) => {
           file.content = text;
 
           const convElem = {

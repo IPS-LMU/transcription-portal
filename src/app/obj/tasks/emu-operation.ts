@@ -38,7 +38,7 @@ export class EmuOperation extends ToolOperation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.FINISHED):
-        if (this.previousOperation.results.length > 0 && this.previousOperation.results[this.previousOperation.results.length - 1].online) {
+        if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult.available) {
           result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
         } else {
           result = '<i class="fa fa-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
@@ -56,17 +56,25 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const audio = encodeURIComponent(this.operations[0].results[0].url);
-    const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-
-    return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+    if (!this.operations[0].lastResult.available || !this.previousOperation.lastResult.available) {
+      if (!this.operations[0].lastResult.available && this.previousOperation.lastResult.available) {
+        alert(`The audio file must be re uploaded. Please add the audio file ${this.operations[0].lastResult.fullname}.`);
+      } else if (this.operations[0].lastResult.available && !this.previousOperation.lastResult.available) {
+        alert(`Please run ${this.previousOperation.name} for this task again.`);
+      }
+      return ``;
+    } else {
+      const audio = encodeURIComponent(this.operations[0].results[0].url);
+      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
+      return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+    }
   }
 
   public fromAny(operationObj: any, task: Task): Operation {
     const result = new EmuOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const result = operationObj.results[k];
-      result.results.push(new FileInfo(result.fullname, result.type, result.size));
+      result.results.push(FileInfo.fromAny(result));
       result.url = result;
     }
     result._time = operationObj.time;

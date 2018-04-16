@@ -54,7 +54,7 @@
             <ng-container *ngIf="popover.operation.time.start > 0">
 
                 <p style="color:red;" *ngIf="popover.operation.lastResult !== null &&
-                !popover.operation.lastResult.online
+                !popover.operation.lastResult.available
                 ">
                     The latest result does not exist anymore.
                 </p>
@@ -188,7 +188,8 @@
                         (mousedown)="onOperationClick($event, operation)"
                     >
                         <ng-container
-                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online) || ((operation.name === 'OCTRA' || operation.name == 'EmuWebapp') && entry.operations[0].lastResult !== null && !entry.operations[0].lastResult.online); else elseBlock">
+                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.lastResult.available);
+                                else elseBlock">
                             <i class="fa fa-chain-broken"
                                aria-hidden="true"></i>
                         </ng-container>
@@ -256,9 +257,9 @@
                         (mousedown)="onOperationClick($event, operation)"
                     >
                         <ng-container
-                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.results[operation.results.length-1].online) || ((operation.name === 'OCTRA' || operation.name == 'Emu WebApp') && dirEntry.operations[0].lastResult !== null && !dirEntry.operations[0].lastResult.online); else elseBlock">
+                                *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.lastResult.available); else elseBlock">
                             <i class="fa fa-chain-broken"
-                               aria-hidden="true"></i>
+                               aria-hidden="true"></i>a
                         </ng-container>
                         <ng-template #elseBlock>
                             <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"

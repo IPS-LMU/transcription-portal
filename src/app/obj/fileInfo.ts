@@ -17,7 +17,7 @@ export class FileInfo extends DataInfo {
    * @returns {boolean}
    */
   get available(): boolean {
-    return this.online || this._file !== undefined;
+    return this.online || !(this._file === undefined || this._file === null);
   }
 
   set file(value: File) {
@@ -149,7 +149,7 @@ export class FileInfo extends DataInfo {
       };
 
       if (this._extension.indexOf('wav') < 0 && this._file !== undefined) {
-        this.getFileContent(this._file).then(
+        FileInfo.getFileContent(this._file).then(
           (content) => {
             result.content = content;
             resolve(result);
@@ -175,7 +175,7 @@ export class FileInfo extends DataInfo {
     return result;
   }
 
-  private getFileContent(file: File, encoding?: string): Promise<string> {
+  public static getFileContent(file: File, encoding?: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsText(file, encoding);

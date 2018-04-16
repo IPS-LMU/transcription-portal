@@ -264,17 +264,21 @@ export class AppComponent implements OnDestroy {
 
       this.tool_url = tool.getToolURL();
 
-      if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
-        // some operation already initialized
-        this.leaveToolOption();
-      }
+      if (this.tool_url !== '') {
+        if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
+          // some operation already initialized
+          this.leaveToolOption();
+        }
 
-      this.selectedOperation = operation;
-      this.sidebarstate = 'opened';
+        this.selectedOperation = operation;
+        this.sidebarstate = 'opened';
 
-      this.showtool = true;
-      if (operation instanceof OCTRAOperation) {
-        operation.time.start = Date.now();
+        this.showtool = true;
+        if (operation instanceof OCTRAOperation) {
+          operation.time.start = Date.now();
+        }
+      } else {
+        console.warn(`tool url is empty`);
       }
     }
   }

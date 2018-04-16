@@ -548,7 +548,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public getPopoverColor(operation): string {
     if (!isNullOrUndefined(operation)) {
-      if (operation.state == TaskState.ERROR || (operation.results.length > 0 && !operation.results[operation.results.length - 1].online)) {
+      if (operation.state == TaskState.ERROR || (operation.results.length > 0 && !operation.lastResult.available)) {
         return 'red';
       } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
         return '#ffc33b';
@@ -558,11 +558,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onOperationClick($event, operation: Operation) {
+    console.log(`operation clicked before!`);
     if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
       this.selectedOperation = undefined;
     } else {
       this.selectedOperation = operation;
     }
+    this.operationclick.emit(operation);
   }
 
   openArchiveDownlaod(content) {
