@@ -31,19 +31,16 @@
         </td>
         <ng-container *ngIf="elem.input.extension !== '.wav'">
             <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
-                <a [attr.href]="converter.result.url"
-                   [attr.download]="converter.result.fullname"
-                   target="_self    ">
-                    <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
-                </a>
-                <i (click)="onPreviewClick(converter.result.file)" class="fa fa-eye"
-                   [ngStyle]="{ color: converter.converter.color}" style="cursor: pointer;"></i>
-            </td>
-            <ng-container *ngIf="!elem.input.available">
-                <ng-container *ngFor="let converter of AppInfo.converters; let j = index">
-                    <td *ngIf="j < AppInfo.converters.length - 1" style="border-right: 1px solid lightgray;"></td>
+                <ng-container *ngIf="elem.input.available">
+                    <a [attr.href]="converter.result.url"
+                       [attr.download]="converter.result.fullname"
+                       target="_self    ">
+                        <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
+                    </a>
+                    <i (click)="onPreviewClick(converter.result.file)" class="fa fa-eye"
+                       [ngStyle]="{ color: converter.converter.color}" style="cursor: pointer;"></i>
                 </ng-container>
-            </ng-container>
+            </td>
         </ng-container>
     </tr>
 </table>
