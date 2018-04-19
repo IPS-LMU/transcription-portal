@@ -125,6 +125,7 @@ export class FileInfo extends DataInfo {
         const name = fullname.substr(0, extension_begin);
         const extension = fullname.substr(extension_begin);
 
+        console.log(`extracted: ${name} ${extension}`);
         return {
           name: name,
           extension: extension
@@ -167,6 +168,7 @@ export class FileInfo extends DataInfo {
     let file = undefined;
     if (object.content !== undefined && object.content !== '') {
       file = this.getFileFromContent(object.content, object.fullname);
+      console.log(`FILENAME ${object.fullname}`);
     }
 
     const result = new FileInfo(object.fullname, object.type, object.size, file);
@@ -208,6 +210,7 @@ export class FileInfo extends DataInfo {
       properties['type'] = type;
     }
 
+    console.log(`filename is: ${filename}`);
     return new File([content], filename, properties);
   }
 

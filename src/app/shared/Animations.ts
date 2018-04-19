@@ -15,7 +15,7 @@ export const ANIMATIONS = [
       opacity: '0.0'
     })),
     transition('* => opened', animate('300ms ease-in')),
-    transition('opened => closed', animate('300ms ease-in'))
+    transition('opened => closed', animate('300ms ease-out'))
   ]),
 
   trigger('expandToggle', [
@@ -29,7 +29,7 @@ export const ANIMATIONS = [
       height: '40px'
     })),
     transition('* => opened', animate('300ms ease-in')),
-    transition('opened => closed', animate('300ms ease-in'))
+    transition('opened => closed', animate('300ms ease-out'))
   ]),
 
   trigger('blop', [

@@ -305,6 +305,7 @@ export class Task {
         info.attributes = file.attributes;
       } else {
         info = FileInfo.fromAny(file);
+        console.log(info);
       }
       task.files.push(info);
     }

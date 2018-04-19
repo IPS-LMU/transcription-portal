@@ -56,18 +56,9 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    if (!this.operations[0].lastResult.available || !this.previousOperation.lastResult.available) {
-      if (!this.operations[0].lastResult.available && this.previousOperation.lastResult.available) {
-        alert(`The audio file must be re uploaded. Please add the audio file ${this.operations[0].lastResult.fullname}.`);
-      } else if (this.operations[0].lastResult.available && !this.previousOperation.lastResult.available) {
-        alert(`Please run ${this.previousOperation.name} for this task again.`);
-      }
-      return ``;
-    } else {
-      const audio = encodeURIComponent(this.operations[0].results[0].url);
-      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-      return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
-    }
+    const audio = encodeURIComponent(this.operations[0].results[0].url);
+    const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
+    return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
   }
 
   public fromAny(operationObj: any, task: Task): Operation {

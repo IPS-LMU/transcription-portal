@@ -1,24 +1,37 @@
-import {Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Operation} from '../../obj/tasks/operation';
+import {isNullOrUndefined} from 'util';
 
 @Component({
   selector: 'app-tool-loader',
   templateUrl: './tool-loader.component.html',
   styleUrls: ['./tool-loader.component.css']
 })
-export class ToolLoaderComponent implements OnInit {
+export class ToolLoaderComponent implements OnInit, OnChanges {
   @ViewChild('iframe') iframe: ElementRef;
 
   public selectedtool: {
     url: SafeUrl
   } = {
-    url: ''
+    url: undefined
   };
 
-  @Input()
   public set url(url: string) {
-    this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    if (!isNullOrUndefined(url) && url !== '') {
+      this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    }
   }
 
   @Input() public operation: Operation = null;
@@ -26,6 +39,9 @@ export class ToolLoaderComponent implements OnInit {
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(private sanitizer: DomSanitizer) {
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
   }
 
   ngOnInit() {

@@ -27,6 +27,8 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
 import {FilePreviewModalComponent} from './modals/file-preview-modal/file-preview-modal.component';
+import {AlertComponent} from './components/alert/alert.component';
+import {AlertService} from './shared/alert.service';
 
 @NgModule({
   declarations: [
@@ -46,7 +48,8 @@ import {FilePreviewModalComponent} from './modals/file-preview-modal/file-previe
     FirstModalComponent,
     QueueModalComponent,
     ProtocolFooterComponent,
-    FilePreviewModalComponent
+    FilePreviewModalComponent,
+    AlertComponent
   ],
   imports: [
     BrowserModule,
@@ -61,7 +64,7 @@ import {FilePreviewModalComponent} from './modals/file-preview-modal/file-previe
     StorageService,
     BugReportService,
     NgbDropdown,
-    NgbDropdownMenu],
+    NgbDropdownMenu, AlertService],
   bootstrap: [AppComponent]
 })
 export class AppModule {

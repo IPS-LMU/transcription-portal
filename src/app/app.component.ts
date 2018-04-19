@@ -24,6 +24,8 @@ import {SplitModalComponent} from './modals/split-modal/split-modal.component';
 import {FirstModalComponent} from './modals/first-modal/first-modal.component';
 import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
+import {ToolLoaderComponent} from './components/tool-loader/tool-loader.component';
+import {AlertService} from './shared/alert.service';
 
 declare var window: any;
 
@@ -72,11 +74,14 @@ export class AppComponent implements OnDestroy {
   @ViewChild('feedbackModal') feedbackModal: FeedbackModalComponent;
   @ViewChild('queueModal') queueModal: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter: ProtocolFooterComponent;
+  @ViewChild('toolLoader') toolLoader: ToolLoaderComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
               private storage: StorageService,
-              public bugService: BugReportService) {
+              public bugService: BugReportService,
+              private alertService: AlertService
+  ) {
 
     const debugging = false;
     if (!debugging) {
@@ -262,23 +267,32 @@ export class AppComponent implements OnDestroy {
         tool.changeState(TaskState.PROCESSING);
       }
 
-      this.tool_url = tool.getToolURL();
-
-      if (this.tool_url !== '') {
-        if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
-          // some operation already initialized
-          this.leaveToolOption();
-        }
-
-        this.selectedOperation = operation;
-        this.sidebarstate = 'opened';
-
-        this.showtool = true;
-        if (operation instanceof OCTRAOperation) {
-          operation.time.start = Date.now();
+      if (!tool.task.operations[0].lastResult.available || (!isNullOrUndefined(tool.previousOperation) && !isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.available)) {
+        if (!tool.task.operations[0].lastResult.available && tool.previousOperation.lastResult.available) {
+          this.alertService.showAlert('warning', `The audio file must be re uploaded. Please add the audio file ${tool.task.operations[0].lastResult.fullname}.`, 10);
+        } else if (tool.task.operations[0].lastResult.available && !tool.previousOperation.lastResult.available) {
+          this.alertService.showAlert('info', `Please run ${tool.previousOperation.name} for this task again.`, 12);
         }
       } else {
-        console.warn(`tool url is empty`);
+        this.tool_url = tool.getToolURL();
+
+        if (this.tool_url !== '') {
+          this.toolLoader.url = tool.getToolURL();
+          if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
+            // some operation already initialized
+            this.leaveToolOption();
+          }
+
+          this.selectedOperation = operation;
+          this.sidebarstate = 'opened';
+
+          this.showtool = true;
+          if (operation instanceof OCTRAOperation) {
+            operation.time.start = Date.now();
+          }
+        } else {
+          console.warn(`tool url is empty`);
+        }
       }
     }
   }
