@@ -127,6 +127,7 @@
     </div>
 
 
+    <app-alert></app-alert>
     <!-- WORKING AREA -->
     <div id="main" style="position: relative;">
         <div [ngStyle]="{'width': newProceedingsWidth}" style="float:right;"
@@ -141,7 +142,6 @@
 
              (blur)="onBlur($event)"
         >
-            <app-alert></app-alert>
             <app-proceedings [taskList]="taskService.taskList"
                              [operations]="taskService.operations"
                              (afterdrop)="onAfterDrop($event)" #proceedings

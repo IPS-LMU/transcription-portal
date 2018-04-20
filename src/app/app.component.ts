@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
+import {isArray, isNullOrUndefined} from 'util';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
@@ -26,6 +26,8 @@ import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
 import {ToolLoaderComponent} from './components/tool-loader/tool-loader.component';
 import {AlertService} from './shared/alert.service';
+import {UploadOperation} from './obj/tasks/upload-operation';
+import * as X2JS from 'x2js';
 
 declare var window: any;
 
@@ -269,30 +271,89 @@ export class AppComponent implements OnDestroy {
 
       if (!tool.task.operations[0].lastResult.available || (!isNullOrUndefined(tool.previousOperation) && !isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.available)) {
         if (!tool.task.operations[0].lastResult.available && tool.previousOperation.lastResult.available) {
-          this.alertService.showAlert('warning', `The audio file must be re uploaded. Please add the audio file ${tool.task.operations[0].lastResult.fullname}.`, 10);
+
+          if (isNullOrUndefined(tool.task.files[0].file)) {
+            this.alertService.showAlert('warning',
+              `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.name}" again.`, 10);
+            tool.task.operations[0].changeState(TaskState.PENDING);
+            tool.task.changeState(TaskState.PENDING);
+          } else {
+            // start upload process
+            this.taskService.start();
+          }
         } else if (tool.task.operations[0].lastResult.available && !tool.previousOperation.lastResult.available) {
-          this.alertService.showAlert('info', `Please run ${tool.previousOperation.name} for this task again.`, 12);
+          this.alertService.showAlert('info',
+            `Please run ${tool.previousOperation.name} for this task again.`, 12);
         }
       } else {
-        this.tool_url = tool.getToolURL();
+        new Promise<void>((resolve, reject) => {
+          if (!isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.online) {
+            if (tool.previousOperation.lastResult.available) {
+              // local available, re upload
 
-        if (this.tool_url !== '') {
-          this.toolLoader.url = tool.getToolURL();
-          if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
-            // some operation already initialized
-            this.leaveToolOption();
+              // TODO make using upload easier!
+              const langObj = AppInfo.getLanguageByCode(tool.task.language);
+              const url = `${langObj.host}uploadFileMulti`;
+
+              const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
+              subj.subscribe((obj) => {
+                if (obj.type === 'loadend') {
+                  const result = <string> obj.result;
+                  const x2js = new X2JS();
+                  let json: any = x2js.xml2js(result);
+                  json = json.UploadFileMultiResponse;
+
+
+                  // add messages to protocol
+                  if (json.warnings !== '') {
+                    console.warn(json.warnings);
+                  }
+
+                  if (json.success === 'true') {
+                    // TODO set urls to results only
+                    if (isArray(json.fileList.entry)) {
+                      tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
+                    } else {
+                      // json attribute entry is an object
+                      tool.previousOperation.lastResult.url = json.fileList.entry['value'];
+                    }
+                    console.log('NEW URL: ' + tool.previousOperation.lastResult.url);
+                    this.storage.saveTask(tool.task);
+                    resolve();
+                  } else {
+                    reject(json['message']);
+                  }
+                }
+              }, (err) => {
+                reject(err);
+              });
+            }
+          } else {
+            resolve();
           }
+        }).then(() => {
+          this.tool_url = tool.getToolURL();
 
-          this.selectedOperation = operation;
-          this.sidebarstate = 'opened';
+          if (this.tool_url !== '') {
+            this.toolLoader.url = tool.getToolURL();
+            if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
+              // some operation already initialized
+              this.leaveToolOption();
+            }
 
-          this.showtool = true;
-          if (operation instanceof OCTRAOperation) {
-            operation.time.start = Date.now();
+            this.selectedOperation = operation;
+            this.sidebarstate = 'opened';
+
+            this.showtool = true;
+            if (operation instanceof OCTRAOperation) {
+              operation.time.start = Date.now();
+            }
+          } else {
+            console.warn(`tool url is empty`);
           }
-        } else {
-          console.warn(`tool url is empty`);
-        }
+        }).catch((error) => {
+          console.error(error);
+        });
       }
     }
   }

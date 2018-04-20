@@ -7,6 +7,7 @@ import {Operation} from './operation';
 import {Task, TaskState} from './task';
 import * as X2JS from 'x2js';
 import {AppInfo} from '../../app.info';
+import {Subject} from 'rxjs/Subject';
 
 export class UploadOperation extends Operation {
   public resultType = '.wav';
@@ -28,81 +29,67 @@ export class UploadOperation extends Operation {
     }
   };
 
+  public get wavFile(): FileInfo {
+    return this.results.find(
+      (file) => {
+        return file.extension.indexOf('wav') > -1 && file.online;
+      }
+    );
+  }
+
   public start = (files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this._results = [];
     this._protocol = '';
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
 
-    const form: FormData = new FormData();
     const langObj = AppInfo.getLanguageByCode(this.task.language);
     const url = `${langObj.host}uploadFileMulti`;
+    const subj = UploadOperation.upload(files, url, httpclient);
 
-    for (let i = 0; i < files.length; i++) {
-      form.append('file' + i, files[i].file);
-    }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-
-    xhr.upload.addEventListener('progress', (e: ProgressEvent) => {
-      if (e.lengthComputable) {
-        this.progress = e.loaded / e.total;
+    subj.subscribe((obj) => {
+      if (obj.type === 'progress') {
+        this.progress = <number> obj.result;
         this.updateEstimatedEnd();
-      }
-    }, false);
+      } else if (obj.type === 'loadend') {
 
-    xhr.onerror = (e) => {
+        this.time.duration = Date.now() - this.time.start;
+        const result = <string> obj.result;
+        const x2js = new X2JS();
+        let json: any = x2js.xml2js(result);
+        json = json.UploadFileMultiResponse;
+
+        // add messages to protocol
+        if (json.warnings !== '') {
+          this._protocol = json.warnings;
+        }
+
+        if (json.success === 'true') {
+          // TODO set urls to results only
+          if (isArray(json.fileList.entry)) {
+            for (let i = 0; i < files.length; i++) {
+              files[i].url = json.fileList.entry[i].value;
+              const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
+              this.results.push(FileInfo.fromURL(files[i].url, files[i].fullname, type));
+            }
+          } else {
+            // json attribute entry is an object
+            files[0].url = json.fileList.entry['value'];
+            this.results.push(FileInfo.fromURL(json.fileList.entry['value'], null, 'audio/wav'));
+          }
+          this.changeState(TaskState.FINISHED);
+        } else {
+          this._protocol = json['message'];
+          this.changeState(TaskState.ERROR);
+        }
+      }
+    }, (e) => {
       console.error(e);
       // add messages to protocol
       this._protocol = e.message;
       this.changeState(TaskState.ERROR);
-    };
-
-    xhr.onloadend = (e) => {
-      this.time.duration = Date.now() - this.time.start;
-      const result = e.currentTarget['responseText'];
-      const x2js = new X2JS();
-      let json: any = x2js.xml2js(result);
-      json = json.UploadFileMultiResponse;
-
-      // add messages to protocol
-      if (json.warnings !== '') {
-        this._protocol = json.warnings;
-      }
-
-      if (json.success === 'true') {
-        // TODO set urls to results only
-        if (isArray(json.fileList.entry)) {
-          for (let i = 0; i < files.length; i++) {
-            files[i].url = json.fileList.entry[i].value;
-            const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
-            this.results.push(FileInfo.fromURL(files[i].url, files[i].fullname, type));
-          }
-        } else {
-          // json attribute entry is an object
-          files[0].url = json.fileList.entry['value'];
-          this.results.push(FileInfo.fromURL(json.fileList.entry['value'], null, 'audio/wav'));
-        }
-        this.changeState(TaskState.FINISHED);
-      } else {
-        this._protocol = json['message'];
-        this.changeState(TaskState.ERROR);
-      }
-    };
-    xhr.send(form);
-
-    /*
-    // simulate upload
-    const random = (Math.max(1, Math.random() % 11)) * 1000;
-
-    setTimeout(() => {
-      this.time.end = Date.now();
-      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.08_23.22.25_9BACC305ADBB2F90FBCBC91D564354C6/test.wav';
-      files[ 0 ].url = url;
-      this.results.push(FileInfo.fromURL(url));
-      this.changeState(TaskState.FINISHED);
-    }, random);
-    */
+    }, () => {
+    });
   };
 
   public getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
@@ -157,5 +144,51 @@ export class UploadOperation extends Operation {
   public clone(task?: Task): UploadOperation {
     const selected_task = (isNullOrUndefined(task)) ? this.task : task;
     return new UploadOperation(this.name, this.icon, selected_task, this.state);
+  }
+
+  public static upload(files: FileInfo[], url: string, httpclient: HttpClient): Subject<{
+    type: 'progress' | 'loadend',
+    result?: any
+  }> {
+
+    const subj = new Subject<{
+      type: 'progress' | 'loadend',
+      result?: any
+    }>();
+
+    const form: FormData = new FormData();
+
+    for (let i = 0; i < files.length; i++) {
+      form.append('file' + i, files[i].file);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+
+    xhr.upload.addEventListener('progress', (e: ProgressEvent) => {
+      let progress = -1;
+      if (e.lengthComputable) {
+        progress = e.loaded / e.total;
+      }
+      subj.next({
+        type: 'progress',
+        result: <any> progress
+      })
+    }, false);
+
+    xhr.onerror = (e) => {
+      subj.error(e);
+    };
+
+    xhr.onloadend = (e) => {
+      subj.next({
+        type: 'loadend',
+        result: <any> e.currentTarget['responseText']
+      });
+      subj.complete();
+    };
+    xhr.send(form);
+
+    return subj;
   }
 }

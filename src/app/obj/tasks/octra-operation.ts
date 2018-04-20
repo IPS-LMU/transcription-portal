@@ -7,6 +7,7 @@ import {Operation} from './operation';
 import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
 import {AppInfo} from '../../app.info';
+import {UploadOperation} from './upload-operation';
 
 export class OCTRAOperation extends ToolOperation {
   protected operations: Operation[];
@@ -51,7 +52,7 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    let audio = `audio=${encodeURIComponent(this.operations[0].results[0].url)}`;
+    let audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
     let transcript = `transcript=`;
     let embedded = `embedded=1`;
     let host = `host=${encodeURIComponent(AppInfo.getLanguageByCode(this.task.language).host)}`;

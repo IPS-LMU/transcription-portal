@@ -6,6 +6,7 @@ import {Task} from './index';
 import {Operation} from './operation';
 import {TaskState} from './task';
 import {ToolOperation} from './tool-operation';
+import {UploadOperation} from './upload-operation';
 
 export class EmuOperation extends ToolOperation {
   protected operations: Operation[];
@@ -56,7 +57,8 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const audio = encodeURIComponent(this.operations[0].results[0].url);
+    const uploadOP = <UploadOperation> this.operations[0];
+    const audio = encodeURIComponent(uploadOP.wavFile.url);
     const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
     return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
   }
