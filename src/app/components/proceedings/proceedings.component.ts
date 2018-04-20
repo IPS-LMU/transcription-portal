@@ -562,6 +562,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public onOperationClick($event, operation: Operation) {
     console.log(`operation clicked before!`);
     if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
+      setTimeout(() => {
+        this.popover.state = 'closed';
+      }, 1000);
       this.selectedOperation = undefined;
     } else {
       this.selectedOperation = operation;
