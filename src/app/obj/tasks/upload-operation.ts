@@ -77,6 +77,7 @@ export class UploadOperation extends Operation {
             files[0].url = json.fileList.entry['value'];
             this.results.push(FileInfo.fromURL(json.fileList.entry['value'], null, 'audio/wav'));
           }
+          console.log(`upload op finished`);
           this.changeState(TaskState.FINISHED);
         } else {
           this._protocol = json['message'];

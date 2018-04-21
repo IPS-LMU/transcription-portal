@@ -265,7 +265,7 @@
                         <ng-container
                                 *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.lastResult.available); else elseBlock">
                             <i class="fa fa-chain-broken"
-                               aria-hidden="true"></i>a
+                               aria-hidden="true"></i>
                         </ng-container>
                         <ng-template #elseBlock>
                             <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"

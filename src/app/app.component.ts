@@ -258,19 +258,9 @@ export class AppComponent implements OnDestroy {
   onOperationClick(operation: Operation) {
     if (operation instanceof ToolOperation) {
       const tool = <ToolOperation> operation;
-      const index = tool.task.operations.findIndex((op) => {
-        if (op.id === tool.id) {
-          return true;
-        }
-      });
 
-      if (index < tool.task.operations.length - 1) {
-        // start processing
-        tool.changeState(TaskState.PROCESSING);
-      }
-
-      if (!tool.task.operations[0].lastResult.available || (!isNullOrUndefined(tool.previousOperation) && !isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.available)) {
-        if (!tool.task.operations[0].lastResult.available && tool.previousOperation.lastResult.available) {
+      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!isNullOrUndefined(tool.previousOperation) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
+        if (!tool.task.operations[0].results[0].available) {
 
           if (isNullOrUndefined(tool.task.files[0].file)) {
             this.alertService.showAlert('warning',
@@ -279,6 +269,19 @@ export class AppComponent implements OnDestroy {
             tool.task.changeState(TaskState.PENDING);
           } else {
             // start upload process
+            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and run '${tool.name}' again.`);
+            tool.task.operations[0].statechange.subscribe(
+              (state) => {
+                console.log(`op 1 statechange ${state}`);
+                if (state.newState === 'FINISHED') {
+                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can now run '${tool.name}' for this file.`);
+                  this.storage.saveTask(tool.task);
+                }
+              },
+              (error) => {
+                console.error(error);
+              }
+            );
             this.taskService.start();
           }
         } else if (tool.task.operations[0].lastResult.available && !tool.previousOperation.lastResult.available) {
@@ -287,51 +290,101 @@ export class AppComponent implements OnDestroy {
         }
       } else {
         new Promise<void>((resolve, reject) => {
-          if (!isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.online) {
-            if (tool.previousOperation.lastResult.available) {
-              // local available, re upload
+          // check if tool results exist
+          if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
+            // reupload result from tool operation
 
-              // TODO make using upload easier!
-              const langObj = AppInfo.getLanguageByCode(tool.task.language);
-              const url = `${langObj.host}uploadFileMulti`;
+            // TODO make uploading easier!
+            const langObj = AppInfo.getLanguageByCode(tool.task.language);
+            const url = `${langObj.host}uploadFileMulti`;
 
-              const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
-              subj.subscribe((obj) => {
-                if (obj.type === 'loadend') {
-                  const result = <string> obj.result;
-                  const x2js = new X2JS();
-                  let json: any = x2js.xml2js(result);
-                  json = json.UploadFileMultiResponse;
+            const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
+            subj.subscribe((obj) => {
+              if (obj.type === 'loadend') {
+                const result = <string> obj.result;
+                const x2js = new X2JS();
+                let json: any = x2js.xml2js(result);
+                json = json.UploadFileMultiResponse;
 
 
-                  // add messages to protocol
-                  if (json.warnings !== '') {
-                    console.warn(json.warnings);
-                  }
-
-                  if (json.success === 'true') {
-                    // TODO set urls to results only
-                    if (isArray(json.fileList.entry)) {
-                      tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
-                    } else {
-                      // json attribute entry is an object
-                      tool.previousOperation.lastResult.url = json.fileList.entry['value'];
-                    }
-                    console.log('NEW URL: ' + tool.previousOperation.lastResult.url);
-                    this.storage.saveTask(tool.task);
-                    resolve();
-                  } else {
-                    reject(json['message']);
-                  }
+                // add messages to protocol
+                if (json.warnings !== '') {
+                  console.warn(json.warnings);
                 }
-              }, (err) => {
-                reject(err);
-              });
-            }
+
+                if (json.success === 'true') {
+                  // TODO set urls to results only
+                  if (isArray(json.fileList.entry)) {
+                    tool.lastResult.url = json.fileList.entry[0].value;
+                  } else {
+                    // json attribute entry is an object
+                    tool.lastResult.url = json.fileList.entry['value'];
+                  }
+                  console.log('TOOL NEW URL: ' + tool.lastResult.url);
+                  this.storage.saveTask(tool.task);
+                  resolve();
+                } else {
+                  reject(json['message']);
+                }
+              }
+            }, (err) => {
+              reject(err);
+            });
+          } else if (!isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+            // reupload result from previous operation
+            // local available, re upload
+
+            // TODO make using upload easier!
+            const langObj = AppInfo.getLanguageByCode(tool.task.language);
+            const url = `${langObj.host}uploadFileMulti`;
+
+            const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
+            subj.subscribe((obj) => {
+              if (obj.type === 'loadend') {
+                const result = <string> obj.result;
+                const x2js = new X2JS();
+                let json: any = x2js.xml2js(result);
+                json = json.UploadFileMultiResponse;
+
+
+                // add messages to protocol
+                if (json.warnings !== '') {
+                  console.warn(json.warnings);
+                }
+
+                if (json.success === 'true') {
+                  // TODO set urls to results only
+                  if (isArray(json.fileList.entry)) {
+                    tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
+                  } else {
+                    // json attribute entry is an object
+                    tool.previousOperation.lastResult.url = json.fileList.entry['value'];
+                  }
+                  console.log('NEW URL: ' + tool.previousOperation.lastResult.url);
+                  this.storage.saveTask(tool.task);
+                  resolve();
+                } else {
+                  reject(json['message']);
+                }
+              }
+            }, (err) => {
+              reject(err);
+            });
           } else {
             resolve();
           }
         }).then(() => {
+          const index = tool.task.operations.findIndex((op) => {
+            if (op.id === tool.id) {
+              return true;
+            }
+          });
+
+          if (index < tool.task.operations.length - 1) {
+            // start processing
+            tool.changeState(TaskState.PROCESSING);
+          }
+
           this.tool_url = tool.getToolURL();
 
           if (this.tool_url !== '') {

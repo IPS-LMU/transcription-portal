@@ -52,33 +52,35 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    let audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
-    let transcript = `transcript=`;
-    let embedded = `embedded=1`;
-    let host = `host=${encodeURIComponent(AppInfo.getLanguageByCode(this.task.language).host)}`;
+    if (!isNullOrUndefined((<UploadOperation> this.operations[0]).wavFile)) {
+      let audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
+      let transcript = `transcript=`;
+      let embedded = `embedded=1`;
+      let host = `host=${encodeURIComponent(AppInfo.getLanguageByCode(this.task.language).host)}`;
 
 
-    if (this.results.length < 1) {
-      if (this.previousOperation.results.length > 0) {
-        let url = this.previousOperation.lastResult.url;
-        transcript += encodeURIComponent(url);
-      } else if (this.previousOperation.previousOperation.results.length > 1) {
-        let url = this.previousOperation.previousOperation.lastResult.url;
-        transcript += encodeURIComponent(url);
-        console.log(`transcript url: ${transcript}`);
+      if (this.results.length < 1) {
+        if (this.previousOperation.results.length > 0) {
+          let url = this.previousOperation.lastResult.url;
+          transcript += encodeURIComponent(url);
+        } else if (this.previousOperation.previousOperation.results.length > 1) {
+          let url = this.previousOperation.previousOperation.lastResult.url;
+          transcript += encodeURIComponent(url);
+          console.log(`transcript url: ${transcript}`);
+        } else {
+          transcript = '';
+        }
       } else {
-        transcript = '';
+        let url = this.lastResult.url;
+        transcript += encodeURIComponent(url);
       }
-    } else {
-      let url = this.lastResult.url;
-      transcript += encodeURIComponent(url);
-    }
 
-    return `https://www.phonetik.uni-muenchen.de/apps/octra/octra/user/load?` +
-      `${audio}&` +
-      `${transcript}&` +
-      `${host}&` +
-      `${embedded}`;
+      return `https://www.phonetik.uni-muenchen.de/apps/octra/octra/user/load?` +
+        `${audio}&` +
+        `${transcript}&` +
+        `${host}&` +
+        `${embedded}`;
+    } else return '';
   }
 
   public onMouseOver() {

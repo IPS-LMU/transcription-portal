@@ -19,7 +19,7 @@ export class AlertComponent implements OnInit {
 
   private _success = new Subject<string>();
   private _message = '';
-  private type: 'danger' | 'warning' | 'info' | 'success' = 'danger';
+  public type: 'danger' | 'warning' | 'info' | 'success' = 'danger';
   public duration = 20;
   private counter: Subscription;
 

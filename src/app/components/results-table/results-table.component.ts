@@ -149,8 +149,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
             conversions: []
           });
           this.cd.markForCheck();
-          this.cd.detectChanges();
-        })
+        });
       }
     } else {
       this.conversionExtension = this.operation.resultType;
