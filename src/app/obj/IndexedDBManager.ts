@@ -265,4 +265,16 @@ export class IndexedDBManager {
       }
     );
   }
+
+  public count(store_name: string | IDBObjectStore): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READONLY);
+
+      const countRequest = store.count();
+      countRequest.onsuccess = () => {
+        resolve(countRequest.result);
+      };
+      countRequest.onerror = reject;
+    });
+  }
 }

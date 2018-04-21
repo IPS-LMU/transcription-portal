@@ -12,6 +12,7 @@ export class StorageService {
   private idbm: IndexedDBManager;
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
   public ready = false;
+  public tasksFound = false;
   public allloaded: EventEmitter<any[]> = new EventEmitter<any[]>();
 
   constructor() {
@@ -23,25 +24,32 @@ export class StorageService {
         if (result.type === 'success') {
           // database opened
           console.log('IDB opened');
-          this.idbm.save('intern', 'version', {value: AppInfo.version});
-          const promises = [];
-          promises.push(this.idbm.get('intern', 'taskCounter'));
-          promises.push(this.idbm.get('intern', 'operationCounter'));
-
-          promises.push(this.idbm.getAll('tasks'));
-          promises.push(this.idbm.getAll('userSettings'));
-
-          Promise.all(promises).then((results) => {
-            TaskEntry.counter = results[0].value;
-            Operation.counter = results[1].value;
-            this.ready = true;
-            this.allloaded.emit([results[2], results[3]]);
-          }).catch((err) => {
-            console.error(err);
-            this.ready = true;
-            this.allloaded.emit(null);
+          this.idbm.count('tasks').then((count) => {
+            console.log(`${count} tasks found`);
+            this.tasksFound = true;
+          }).catch((error) => {
+            console.error(error);
           });
+          this.idbm.save('intern', 'version', {value: AppInfo.version});
+          setTimeout(() => {
+            const promises = [];
+            promises.push(this.idbm.get('intern', 'taskCounter'));
+            promises.push(this.idbm.get('intern', 'operationCounter'));
 
+            promises.push(this.idbm.getAll('tasks'));
+            promises.push(this.idbm.getAll('userSettings'));
+
+            Promise.all(promises).then((results) => {
+              TaskEntry.counter = results[0].value;
+              Operation.counter = results[1].value;
+              this.ready = true;
+              this.allloaded.emit([results[2], results[3]]);
+            }).catch((err) => {
+              console.error(err);
+              this.ready = true;
+              this.allloaded.emit(null);
+            });
+          }, 500);
         } else if (result.type === 'upgradeneeded') {
           // database opened and needs upgrade/installation
           console.log(`IDB needs upgrade from v${result.oldVersion} to v${result.newVersion}...`);

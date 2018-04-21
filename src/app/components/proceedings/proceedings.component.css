@@ -130,3 +130,9 @@ table thead tr th:hover {
 .badge {
     display: inline;
 }
+
+#loading {
+    text-align: center;
+    margin-top: 10%;
+    color: rgba(104, 168, 255, 0.53)
+}
