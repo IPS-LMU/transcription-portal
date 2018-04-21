@@ -11,7 +11,7 @@ import {
   ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
+import {isArray, isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
@@ -31,6 +31,8 @@ import {EmuOperation} from '../../obj/tasks/emu-operation';
 import {ASROperation} from '../../obj/tasks/asr-operation';
 import {QueueItem} from '../../obj/preprocessor';
 import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
+import {AppInfo} from '../../app.info';
+import * as X2JS from 'x2js';
 
 declare var window: any;
 
@@ -297,8 +299,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       };
       let tasks = this.taskList.getAllTasks();
+
+      const promises: Promise<void>[] = [];
+
       for (let i = 0; i < tasks.length; i++) {
         const task = tasks[i];
+
+
+        const langObj = AppInfo.getLanguageByCode(task.language);
+        const url = `${langObj.host}uploadFileMulti`;
 
         for (let i = 0; i < task.operations.length; i++) {
           const operation = task.operations[i];
@@ -307,38 +316,92 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           if (operation.name === selectedOperation.name
             && operation.results.length > 0
           ) {
-            for (let i = 0; i < operation.results.length; i++) {
-              const result: FileInfo = operation.results[i];
+            const result: FileInfo = operation.lastResult;
+            if (result.online) {
+              console.log(`${result.fullname} is online: ${result.url}`);
+              requestPackage.data.files.push({
+                name: result.fullname,
+                url: result.url
+              });
+            } else {
+              console.log(`REUPLOAD FILE ${result.fullname}`);
+              const promise = new Promise<void>((resolve, reject) => {
+                UploadOperation.upload([result], url, this.http).subscribe(
+                  (obj) => {
+                    if (obj) {
+                      if (obj.type === 'loadend') {
+                        const httpResult = <string> obj.result;
+                        const x2js = new X2JS();
+                        let json: any = x2js.xml2js(httpResult);
+                        json = json.UploadFileMultiResponse;
 
-              if (result.online) {
-                if (i > 0) {
-                  requestPackage.data.files.push({
-                    name: result.name + `_${i + 1}.${result.extension}`,
-                    url: result.url
-                  })
-                } else {
-                  requestPackage.data.files.push({
-                    name: result.fullname,
-                    url: result.url
-                  })
-                }
-              }
+
+                        // add messages to protocol
+                        if (json.warnings !== '') {
+                          console.warn(json.warnings);
+                        }
+
+                        if (json.success === 'true') {
+                          // TODO set urls to results only
+                          if (isArray(json.fileList.entry)) {
+                            result.url = json.fileList.entry[0].value;
+                          } else {
+                            // json attribute entry is an object
+                            result.url = json.fileList.entry['value'];
+                          }
+
+                          this.storage.saveTask(task);
+
+                          requestPackage.data.files.push({
+                            name: result.fullname,
+                            url: result.url
+                          });
+
+                          resolve();
+                        } else {
+                          reject(json['message']);
+                        }
+                      }
+                    }
+                  },
+                  (error) => {
+                    reject(error);
+                  }
+                );
+              });
+
+              promises.push(promise);
             }
             break;
           }
         }
       }
 
-      this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
-        (response: any) => {
-          this.archiveURL = response.result;
-          this.openArchiveDownlaod(this.content);
-        },
-        (error) => {
-          console.error(error);
+      new Promise<void>((resolve, reject) => {
+        if (promises.length === 0) {
+          resolve();
+        } else {
+          Promise.all(promises).then(() => {
+              resolve();
+            },
+            (error) => {
+              reject(error);
+            });
         }
-      );
-    } else {
+      }).then(() => {
+        this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
+          (response: any) => {
+            this.archiveURL = response.result;
+            this.openArchiveDownlaod(this.content);
+          },
+          (error) => {
+            console.error(error);
+          }
+        );
+      }).catch((error) => {
+        console.error(error);
+      });
+
     }
   }
 
