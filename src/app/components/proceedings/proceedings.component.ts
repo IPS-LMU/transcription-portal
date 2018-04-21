@@ -462,13 +462,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onOperationMouseEnter($event, operation: Operation) {
     // show Popover for normal operations only
-    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING)) {
+    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
       this.popover.operation = operation;
       if (operation.protocol !== '') {
         this.popover.width = 500;
       } else {
         this.popover.width = 400;
       }
+      this.popover.height = 230;
       if (($event.target.offsetLeft + this.popover.width) < window.innerWidth) {
         this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
         this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
@@ -504,6 +505,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.popover.task = task;
     this.popover.x = $event.offsetX + 60;
     this.popover.width = 600;
+    this.popover.height = 320;
     this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
     this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;
     this.togglePopover(true);

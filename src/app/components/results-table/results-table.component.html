@@ -34,7 +34,7 @@
                 <ng-container *ngIf="elem.input.available">
                     <a [attr.href]="converter.result.url"
                        [attr.download]="converter.result.fullname"
-                       target="_self    ">
+                    >
                         <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
                     </a>
                     <i (click)="onPreviewClick(converter.result.file)" class="fa fa-eye"
@@ -44,3 +44,4 @@
         </ng-container>
     </tr>
 </table>
+<span class="remark">On Windows please use right-click and "Save as" to download a result</span>

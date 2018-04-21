@@ -73,7 +73,7 @@
                 </table>
             </ng-container>
             <ng-container *ngIf="popover.operation.results.length > 0">
-                <div>
+                <div style="overflow:auto;">
                     <app-results-table [operation]="popover.operation"
                                        (previewClick)="onPreviewClick($event)"></app-results-table>
                 </div>
