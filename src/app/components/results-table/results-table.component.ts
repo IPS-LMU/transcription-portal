@@ -31,6 +31,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   public from: any;
   public convertedArray: {
     input: any,
+    number: number,
     conversions: {
       converter: {
         obj: Converter,
@@ -105,9 +106,11 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
           const convElem = {
             input: resultObj,
-            conversions: []
+            conversions: [],
+            number: i
           };
           this.convertedArray.push(convElem);
+          this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
 
           for (let k = 0; k < AppInfo.converters.length; k++) {
             const converter = AppInfo.converters[k];
@@ -146,8 +149,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         }).catch(() => {
           this.convertedArray.push({
             input: result,
-            conversions: []
+            conversions: [],
+            number: i
           });
+          this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
           this.cd.markForCheck();
         });
       }
@@ -160,9 +165,11 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         const result = this.operation.results[i];
         this.convertedArray.push({
           input: result,
-          conversions: []
+          conversions: [],
+          number: i
         })
       }
+      this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
     }
 
     this.cd.markForCheck();
@@ -195,6 +202,16 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
     this.cd.markForCheck();
     this.cd.detectChanges();
+  }
+
+  private sortAlgorithm(a, b): number {
+    if (a.number < b.number) {
+      return 1;
+    } else if (a.number === b.number) {
+      return 0;
+    } else if (a.number > b.number) {
+      return -1;
+    }
   }
 
 }

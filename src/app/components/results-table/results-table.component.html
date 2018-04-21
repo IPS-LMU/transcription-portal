@@ -17,7 +17,7 @@
     </tr>
     </thead>
     <tr *ngFor="let elem of convertedArray;let i = index">
-        <td>#{{i+1}}</td>
+        <td>#{{elem.number + 1}}</td>
         <td *ngIf="elem.input.available" style="border-right: 1px solid lightgray;">
             <a [attr.href]="elem.input.url"
                [attr.download]="elem.input.fullname">
