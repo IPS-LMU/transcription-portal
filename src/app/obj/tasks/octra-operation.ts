@@ -75,6 +75,10 @@ export class OCTRAOperation extends ToolOperation {
         transcript += encodeURIComponent(url);
       }
 
+      // deployment:
+      // https://www.phonetik.uni-muenchen.de/apps/octra/octra/user/load?
+      // testing:
+      // http://localhost:5321//user/load?
       return `https://www.phonetik.uni-muenchen.de/apps/octra/octra/user/load?` +
         `${audio}&` +
         `${transcript}&` +

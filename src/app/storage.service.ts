@@ -26,7 +26,9 @@ export class StorageService {
           console.log('IDB opened');
           this.idbm.count('tasks').then((count) => {
             console.log(`${count} tasks found`);
-            this.tasksFound = true;
+            if (count > 0) {
+              this.tasksFound = true;
+            }
           }).catch((error) => {
             console.error(error);
           });
