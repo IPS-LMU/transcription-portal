@@ -78,12 +78,15 @@ export class ResultsTableComponent implements OnInit, OnChanges {
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
 
+        let originalFileName: any = this.operation.task.files[0].attributes.originalFileName;
+        originalFileName = FileInfo.extractFileName(originalFileName);
+
         const resultObj = {
           url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)),
-          name: result.name,
+          name: originalFileName.name,
           type: result.type,
           available: result.available,
-          fullname: result.fullname,
+          fullname: originalFileName.name + result.extension,
           extension: result.extension,
           file: result.file
         };
@@ -134,7 +137,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
                 annotJSON = JSON.parse(text);
               }
               const exp = converter.obj.export(annotJSON, audio, 0).file;
-              const expFile = new File([exp.content], exp.name, {
+              const expFile = new File([exp.content], originalFileName.name + converter.obj.extension, {
                 type: exp.type
               });
               res.result = FileInfo.fromFileObject(expFile);

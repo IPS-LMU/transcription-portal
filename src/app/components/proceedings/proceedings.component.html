@@ -156,12 +156,13 @@
                 <span [ngClass]="{
                     'green': entry.files[0].file !== undefined,
                     'yellow': (entry.files[0].file === undefined && entry.operations[0].results.length === 0)
-                }" title="{{entry.files[0].fullname}}"
+                }" title="{{entry.files[0].attributes.originalFileName}}"
                       (mouseenter)="onTaskMouseEnter($event, entry)"
                       (mouseleave)="onTaskMouseLeave($event, entry)"
                       (mouseover)="onTaskMouseOver($event, entry)">
-                <ng-container *ngIf="!(entry.files[0].file === undefined && entry.operations[0].results.length === 0)">
-                            {{entry.files[0].fullname}}
+                        <ng-container
+                                *ngIf="!(entry.files[0].file === undefined && entry.operations[0].results.length === 0)">
+                            {{entry.files[0].attributes.originalFileName}}
                         </ng-container>
                         <ng-container
                                 *ngIf="(entry.files[0].file === undefined && entry.operations[0].results.length === 0)">
@@ -247,7 +248,7 @@
                 }">
                         <ng-container
                                 *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].fullname}}
+                            {{dirEntry.files[0].attributes.originalFileName}}
                         </ng-container>
                         <ng-container
                                 *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">

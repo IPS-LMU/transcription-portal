@@ -461,8 +461,6 @@ export class AppComponent implements OnDestroy {
             const operation = this.selectedOperation.task.operations[i];
             operation.changeState(TaskState.PENDING);
           }
-        } else {
-          console.error(`index is ${index}`);
         }
 
         if (this.selectedOperation instanceof OCTRAOperation) {
