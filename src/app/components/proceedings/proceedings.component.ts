@@ -95,7 +95,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public selectedOperation: Operation;
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
-              private modalService: NgbModal, private storage: StorageService) {
+              private modalService: NgbModal, public storage: StorageService) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
