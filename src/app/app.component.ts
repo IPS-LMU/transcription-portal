@@ -391,6 +391,7 @@ export class AppComponent implements OnDestroy {
             this.toolLoader.url = tool.getToolURL();
             if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
               // some operation already initialized
+              console.log(`ALREADY INIT!`);
               this.leaveToolOption();
             }
 
@@ -454,14 +455,10 @@ export class AppComponent implements OnDestroy {
           }
         });
 
-        let startedBefore = false;
         // reset next operations
         if (index > -1) {
           for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
             const operation = this.selectedOperation.task.operations[i];
-            if (operation.state !== TaskState.PENDING) {
-              startedBefore = true;
-            }
             operation.changeState(TaskState.PENDING);
           }
         } else {
@@ -474,15 +471,11 @@ export class AppComponent implements OnDestroy {
 
         this.selectedOperation.changeState(TaskState.FINISHED);
         this.storage.saveTask(this.selectedOperation.task);
-        if (startedBefore) {
-          setTimeout(() => {
-            this.selectedOperation.task.restart(this.httpclient);
-            this.onBackButtonClicked();
-          }, 1000);
-        } else {
 
+        setTimeout(() => {
+          this.selectedOperation.task.restart(this.httpclient);
           this.onBackButtonClicked();
-        }
+        }, 1000);
       }).catch((error) => {
         console.error(error);
       });
@@ -496,12 +489,12 @@ export class AppComponent implements OnDestroy {
   }
 
   leaveToolOption() {
-    if (!isNullOrUndefined(this.selectedOperation.nextOperation)) {
-      if (this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
-        this.selectedOperation.changeState(TaskState.FINISHED);
-      }
-    } else {
+    if (!isNullOrUndefined(this.selectedOperation.nextOperation)
+      && this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
+      this.selectedOperation.changeState(TaskState.FINISHED);
+    } else if (this.selectedOperation.state !== TaskState.FINISHED) {
       this.selectedOperation.changeState(TaskState.READY);
+      console.log(`set ${this.selectedOperation.name} to READY`);
     }
   }
 
