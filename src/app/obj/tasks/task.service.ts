@@ -383,7 +383,7 @@ export class TaskService implements OnDestroy {
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
       if (entry.state === TaskState.PENDING &&
-        (!isNullOrUndefined(entry.files[0].file) || entry.operations[0].results.length > 0 && entry.operations[0].results[entry.operations[0].results.length - 1].online)
+        ((!isNullOrUndefined(entry.files[0].file) && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].results[entry.operations[0].results.length - 1].online)
       ) {
         return entry;
       } else if (entry.state === TaskState.READY) {

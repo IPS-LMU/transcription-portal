@@ -154,30 +154,22 @@
                             'shorten': shortstyle
                         }">
                 <span [ngClass]="{
-                    'green': entry.files[0].file !== undefined,
-                    'yellow': (entry.files[0].file === undefined && entry.operations[0].results.length === 0)
+                    'green': ((entry.files[0].extension === '.wav' && entry.files[0].file !== undefined) ||
+                             (entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)),
+                    'yellow': ((entry.files[0].extension === '.wav' && entry.files[0].file === undefined) || entry.files[0].extension !== '.wav') && entry.operations[0].state !== 'FINISHED'
                 }" title="{{entry.files[0].attributes.originalFileName}}"
                       (mouseenter)="onTaskMouseEnter($event, entry)"
                       (mouseleave)="onTaskMouseLeave($event, entry)"
                       (mouseover)="onTaskMouseOver($event, entry)">
-                        <ng-container
-                                *ngIf="!(entry.files[0].file === undefined && entry.operations[0].results.length === 0)">
-                            {{entry.files[0].attributes.originalFileName}}
-                        </ng-container>
-                        <ng-container
-                                *ngIf="(entry.files[0].file === undefined && entry.operations[0].results.length === 0)">
-                            {{entry.files[0].attributes.originalFileName}}
-                        </ng-container>
+                            {{entry.files[0].name.replace('_annot', '') + '.wav'}}
                 </span>
-                        <ng-container *ngIf=" entry.files.length > 1">
-                    <span class="badge" [ngClass]="
-                    {
-                        'badge-info': entry.files[1].file !== undefined || entry.operations[0].results.length > 1,
-                        'badge-warning': !(entry.files[1].file !== undefined || entry.operations[0].results.length > 1)
-                    }
-                    "
-                          (click)="onPreviewClick(entry.files[1])">
-                        {{taskService.getAppendingsExtension(entry.files[1])}}</span>
+                        <ng-container *ngIf=" entry.files.length > 1 || entry.files[0].extension !== '.wav'">
+                    <span class="badge" [ngClass]="{
+                        'badge-info': getBadge(entry).type === 'info',
+                        'badge-warning': getBadge(entry).type === 'warning'
+                    }" (click)="onPreviewClick(entry.files[1])">
+                        {{getBadge(entry).label}}
+                    </span>
                         </ng-container>
                     </td>
 
@@ -258,11 +250,11 @@
                             <ng-container *ngIf="dirEntry.files.length > 1">
                             <span class="badge" [ngClass]="
                             {
-                                'badge-info': (dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1),
-                                'badge-warning': !(dirEntry.files[1].file !== undefined || dirEntry.operations[0].results.length > 1)
+                                'badge-info': getBadge(dirEntry).type === 'info',
+                                'badge-warning': getBadge(dirEntry).type === 'warning'
                             }
         " (click)="onPreviewClick(dirEntry.files[1])">
-                                {{taskService.getAppendingsExtension(dirEntry.files[1])}}</span>
+                                {{getBadge(dirEntry).label}}</span>
                             </ng-container>
                         </td>
                         <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
