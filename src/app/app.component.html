@@ -130,7 +130,10 @@
     <app-alert></app-alert>
     <!-- WORKING AREA -->
     <div id="main" style="position: relative;">
-        <div [ngStyle]="{'width': newProceedingsWidth}" style="float:right;"
+        <div [ngStyle]="{
+            'width': newProceedingsWidth,
+            'border-right': (sidebarExpand === 'closed') ? '2px solid lightgray' : 'none'
+        }" style="float:right;"
              [@expandLeft]="sidebarExpand"
 
              (mousedown)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
@@ -149,7 +152,6 @@
                              (operationhover)="onOperationHover($event)"
                              [queue]="taskService.preprocessor.queue"
                              [shortstyle]="sidebarExpand === 'closed'"
-
                              style="height:100%"
                              #proceedings
             >
@@ -167,7 +169,7 @@
                                 }"
         ></div>
         <div [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
-             style="position:absolute; height:100%;border-left: 3px solid lightgray; border-top: 1px solid gray;"
+             style="position:absolute; height:100%; border-top: 1px solid gray;"
              [@comeIn]="sidebarExpand">
             <app-tool-loader #toolLoader style="height:100%;"
                              [operation]="selectedOperation"
