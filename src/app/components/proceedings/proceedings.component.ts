@@ -226,7 +226,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           // shift pressed
           if (this.shiftStart < 0) {
           } else {
-            console.log(`select all tasks to ${this.shiftStart}`);
             let end = entry.id;
 
             if (this.shiftStart > end) {
@@ -318,13 +317,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           ) {
             const result: FileInfo = operation.lastResult;
             if (result.online) {
-              console.log(`${result.fullname} is online: ${result.url}`);
               requestPackage.data.files.push({
                 name: result.fullname,
                 url: result.url
               });
             } else {
-              console.log(`REUPLOAD FILE ${result.fullname}`);
               const promise = new Promise<void>((resolve, reject) => {
                 UploadOperation.upload([result], url, this.http).subscribe(
                   (obj) => {
@@ -625,7 +622,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onOperationClick($event, operation: Operation) {
-    console.log(`operation clicked before!`);
     if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
       setTimeout(() => {
         this.popover.state = 'closed';
@@ -709,7 +705,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onPreviewClick(file: FileInfo) {
-    console.log(`preview clicked!!`);
     this.filePreview.open(file);
   }
 }

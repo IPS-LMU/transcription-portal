@@ -25,7 +25,6 @@ export class StorageService {
           // database opened
           console.log('IDB opened');
           this.idbm.count('tasks').then((count) => {
-            console.log(`${count} tasks found`);
             if (count > 0) {
               this.tasksFound = true;
             }
@@ -54,7 +53,6 @@ export class StorageService {
           }, 500);
         } else if (result.type === 'upgradeneeded') {
           // database opened and needs upgrade/installation
-          console.log(`IDB needs upgrade from v${result.oldVersion} to v${result.newVersion}...`);
 
           let oldVersion = result.oldVersion;
 

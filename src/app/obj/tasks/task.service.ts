@@ -99,7 +99,6 @@ export class TaskService implements OnDestroy {
 
             if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
-              console.log(`FOUND TASK!`);
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
                 // TODO change if other than transcript files are needed
@@ -109,7 +108,6 @@ export class TaskService implements OnDestroy {
               }
               this.storage.saveTask(foundTask);
             }
-            console.log(`foundTask: ${foundTask}`);
           } else {
             console.log(result);
 
@@ -139,7 +137,6 @@ export class TaskService implements OnDestroy {
                     // TODO change if other than transcript files are needed
                     entry.operations[1].enabled = false;
                     entry.operations[1].changeState(TaskState.SKIPPED);
-                    console.log(`CONCAT DIR ENTRIES`);
                   }
                 }
               }
@@ -155,7 +152,6 @@ export class TaskService implements OnDestroy {
 
               if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
                 && entry.files[0].extension === '.wav')) {
-                console.log(`FOUND TASK IN DIR!`);
                 console.log(entry.files);
                 foundTask.files[0] = entry.files[0];
                 foundTask.files[1] = entry.files[1];
@@ -166,7 +162,6 @@ export class TaskService implements OnDestroy {
                   foundTask.operations[1].changeState(TaskState.SKIPPED);
                 }
               } else {
-                console.log(`foundTask is null!`);
               }
 
               entry.changeState(TaskState.QUEUED);
@@ -272,7 +267,6 @@ export class TaskService implements OnDestroy {
               }
               break;
             default:
-              console.log(`could not read option ${userSetting.name}`);
           }
         }
         // this.notification.permissionGranted = results[1][]
@@ -369,7 +363,6 @@ export class TaskService implements OnDestroy {
           this.start();
         }, 1000);
       } else {
-        console.log(`no free tasks found`);
       }
     } else {
       setTimeout(() => {
@@ -557,7 +550,6 @@ export class TaskService implements OnDestroy {
   }
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = (queueItem: QueueItem) => {
-    console.log(`${queueItem.file.name}`);
     if (queueItem.file instanceof FileInfo) {
       const file = <FileInfo> queueItem.file;
       return this.processFileInfo(file, '', queueItem);
@@ -598,12 +590,10 @@ export class TaskService implements OnDestroy {
       ).then(() => {
         const hash = this.preprocessor.getHashString(file.fullname, file.size);
         const foundOldFile = this.getTaskWithHash(hash);
-        console.log(`${foundOldFile} of ${hash}`);
 
         setTimeout(() => {
           const reader = new FileReader();
           reader.onload = (event: any) => {
-            console.log(`file:`);
             console.log(event.target.result);
             const format = new WavFormat(event.target.result);
             const isValidFormat = format.isValid(event.target.result);
@@ -654,7 +644,6 @@ export class TaskService implements OnDestroy {
                   format.duration, format.channels, format.bitsPerSample, newFileInfo.file
                 );
               } else {
-                console.log(`valid transcript ${newFileInfo.extension}`);
               }
 
               if (isNullOrUndefined(newFileInfo.file)) {
@@ -678,7 +667,6 @@ export class TaskService implements OnDestroy {
                 }
                 resolve([]);
               } else {
-                console.log(`foundoldfile is false`);
                 const task = new Task([<FileInfo> queueItem.file], this.operations);
                 task.language = this.selectedlanguage.code;
 
@@ -706,7 +694,6 @@ export class TaskService implements OnDestroy {
       const dirTask = new TaskDirectory(dir.path, dir.size);
       const promises: Promise<(Task | TaskDirectory)[]>[] = [];
 
-      console.log(`process this dir:`);
       console.log(dir);
       for (let i = 0; i < dir.entries.length; i++) {
         const dirEntry = dir.entries[i];

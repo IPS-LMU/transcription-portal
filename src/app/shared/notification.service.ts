@@ -25,7 +25,6 @@ export class NotificationService {
   }
 
   private onPermissionGranted = () => {
-    console.log(`permission granted`);
     this._permissionGranted = true;
     this.onPermissionChange.next(this._permissionGranted);
   };
@@ -40,10 +39,8 @@ export class NotificationService {
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {
-      console.log(`request permissions`);
       Notify.requestPermission(this.onPermissionGranted, this.onPermissionDenied);
     } else {
-      console.log(`no permissions needed`);
       this._permissionGranted = !Notify.needsPermission;
     }
     this.onPermissionChange.next(this._permissionGranted);

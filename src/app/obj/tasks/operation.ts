@@ -237,7 +237,6 @@ export abstract class Operation {
       if (promises.length > 0) {
         Promise.all(promises).then((values) => {
           result.results = values;
-          console.log(`RESOLVE OP`);
           console.log(result);
           resolve(result);
         }).catch((error) => {

@@ -66,7 +66,6 @@ export class OCTRAOperation extends ToolOperation {
         } else if (this.previousOperation.previousOperation.results.length > 1) {
           let url = this.previousOperation.previousOperation.lastResult.url;
           transcript += encodeURIComponent(url);
-          console.log(`transcript url: ${transcript}`);
         } else {
           transcript = '';
         }

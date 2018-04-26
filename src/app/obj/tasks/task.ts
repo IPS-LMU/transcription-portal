@@ -232,7 +232,6 @@ export class Task {
   }
 
   public restartFailedOperation(httpclient) {
-    console.log(`restart failed!`);
     for (let i = 0; i < this.operations.length; i++) {
       const operation = this.operations[i];
 
@@ -272,7 +271,6 @@ export class Task {
     }
     this._files = this._files.sort((a, b) => {
       if (a.extension === '.wav') {
-        console.log(`wav sorted!`);
         return -1;
       } else {
         return 1;
@@ -330,7 +328,6 @@ export class Task {
   }
 
   public toAny(): Promise<any> {
-    console.log(`task to any`);
     return new Promise<any>((resolve, reject) => {
       const result = {
         id: this.id,
@@ -351,7 +348,6 @@ export class Task {
       }
 
       Promise.all(filePromises).then((values) => {
-        console.log(`all finished`);
         for (let i = 0; i < values.length; i++) {
           const file = this.files[i];
 
@@ -381,7 +377,6 @@ export class Task {
         if (promises.length > 0) {
           console.log(`primises > 0`);
           Promise.all(promises).then((values2) => {
-            console.log(`VALUES ARRIVED!!!!!!`);
             result.operations = values2;
             resolve(result)
           }).catch((error) => {

@@ -200,7 +200,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   public onPreviewClick(file: File) {
-    console.log(`preview click`);
     this.previewClick.emit(FileInfo.fromFileObject(file));
 
     this.cd.markForCheck();

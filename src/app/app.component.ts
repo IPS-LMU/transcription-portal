@@ -391,7 +391,6 @@ export class AppComponent implements OnDestroy {
             this.toolLoader.url = tool.getToolURL();
             if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
               // some operation already initialized
-              console.log(`ALREADY INIT!`);
               this.leaveToolOption();
             }
 
@@ -446,7 +445,6 @@ export class AppComponent implements OnDestroy {
       const result: string = $event.data.data.transcript_url;
       const file = FileInfo.fromURL(result, null, 'text/plain');
       file.updateContentFromURL(this.httpclient).then(() => {
-        console.log(`UPDATED FROM URL!`);
         this.selectedOperation.results.push(file);
 
         const index = this.selectedOperation.task.operations.findIndex((op) => {
@@ -492,7 +490,6 @@ export class AppComponent implements OnDestroy {
       this.selectedOperation.changeState(TaskState.FINISHED);
     } else if (this.selectedOperation.state !== TaskState.FINISHED) {
       this.selectedOperation.changeState(TaskState.READY);
-      console.log(`set ${this.selectedOperation.name} to READY`);
     }
   }
 
