@@ -342,7 +342,10 @@ export class TaskService implements OnDestroy {
     // look for pending tasks
 
     const running_tasks = this.countRunningTasks();
-    if (running_tasks < this.options.max_running_tasks) {
+    const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
+      return task.operations[0].state === 'UPLOADING';
+    });
+    if (running_tasks < this.options.max_running_tasks && uploading_task < 0) {
       let task: Task;
 
       // look for pending tasks
