@@ -3,23 +3,36 @@ import {isNullOrUndefined} from 'util';
 import {Task, TaskState} from './task';
 import {Subject} from 'rxjs/Subject';
 
+export interface EntryChangeEvent {
+  state: 'added' | 'removed' | 'changed';
+  saveToDB: boolean,
+  entry: (Task | TaskDirectory);
+}
+
 export class TaskList {
-  get entryAdded(): Subject<(Task | TaskDirectory)> {
-    return this._entryAdded;
+  get entryChanged(): Subject<EntryChangeEvent> {
+    return this._entryChanged;
   }
+
   get entries(): (Task | TaskDirectory)[] {
     return this._entries;
   }
 
   private _entries: (Task | TaskDirectory)[] = [];
-  private _entryAdded: Subject<(Task | TaskDirectory)> = new Subject<(Task | TaskDirectory)>();
+  private _entryChanged: Subject<EntryChangeEvent> = new Subject<EntryChangeEvent>();
 
   constructor() {
   }
 
-  public addEntry(newEntry: (Task | TaskDirectory)) {
-    this._entries.push(newEntry);
-    this._entryAdded.next(newEntry);
+  public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false) {
+    if (isNullOrUndefined(this.findEntryById(newEntry.id))) {
+      this._entries.push(newEntry);
+      this._entryChanged.next({
+        state: 'added',
+        saveToDB: saveToDB,
+        entry: newEntry
+      });
+    }
   }
 
   public findTaskByState(state: TaskState): Task {
@@ -32,7 +45,7 @@ export class TaskList {
     });
   }
 
-  public findTaskById(id: number): Task {
+  public findEntryById(id: number): (Task | TaskDirectory) {
     let tasks = this.getAllTasks();
 
     return tasks.find((a) => {
@@ -80,31 +93,71 @@ export class TaskList {
     return result;
   }
 
-  public removeEntry(entry: (Task | TaskDirectory)) {
-    if (entry instanceof Task) {
-      if (!isNullOrUndefined(entry.directory)) {
-        entry.directory.removeTask(entry);
+  public removeEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false): boolean {
+    const sendEvent = () => {
+      this._entryChanged.next({
+        state: 'removed',
+        saveToDB: saveToDB,
+        entry: entry
+      })
+    };
+    if (!isNullOrUndefined(entry)) {
+      if (entry instanceof Task) {
+        if (!isNullOrUndefined(entry.directory)) {
+          entry.directory.removeTask(entry);
+          this.cleanup(entry.directory, saveToDB);
+        } else {
+          const task_index = this.entries.findIndex((a) => {
+            if (a instanceof Task && (<Task> a).id === entry.id) {
+              sendEvent();
+              return true;
+            }
+          });
+
+          if (task_index > -1) {
+            this._entries.splice(task_index, 1);
+            sendEvent();
+            return true;
+          }
+        }
       } else {
         const task_index = this.entries.findIndex((a) => {
-          if (a instanceof Task && (<Task> a).id === entry.id) {
+          if (a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id) {
+            sendEvent();
             return true;
           }
         });
 
-        this._entries.splice(task_index, 1);
-      }
-    }
-  }
-
-  public removeDir(dir: TaskDirectory) {
-    if (!isNullOrUndefined(dir)) {
-      const task_index = this.entries.findIndex((a) => {
-        if (a instanceof TaskDirectory && (<TaskDirectory> a).id === dir.id) {
+        if (task_index > -1) {
+          this._entries.splice(task_index, 1);
+          sendEvent();
           return true;
         }
-      });
+      }
+    }
 
-      this._entries.splice(task_index, 1);
+    return false;
+  }
+
+  public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean) {
+    console.log(`cleanup ${saveToDB}`);
+    if (!isNullOrUndefined(entry)) {
+      if (entry instanceof Task) {
+
+      } else {
+        if (entry.entries.length === 0) {
+          // remove dir
+          this.removeEntry(entry, saveToDB);
+        } else if (entry.entries.length === 1) {
+          // move entry task to upper level and remove dir
+          const entryTask = <Task> entry.entries[0];
+          entryTask.directory = null;
+          this.removeEntry(entryTask, saveToDB);
+          this.removeEntry(entry, saveToDB);
+          this.addEntry(entryTask, saveToDB);
+          console.log('task is ' + entryTask.id + ' and parent is ' + entry.id);
+        }
+      }
     }
   }
 }

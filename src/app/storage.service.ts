@@ -106,8 +106,9 @@ export class StorageService {
     ));
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
+  public saveTask(taskEntry: Task | TaskDirectory): Promise<void> {
+    console.log(`saveTask ${taskEntry.id}`);
+    return new Promise<void>((resolve, reject) => {
       let promise: Promise<any>;
 
       if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
@@ -118,7 +119,11 @@ export class StorageService {
 
       promise.then((data) => {
         console.log(`save!!!!`);
-        return this.idbm.save('tasks', data.id, data);
+        this.idbm.save('tasks', data.id, data).then(() => {
+          resolve();
+        }).catch((error) => {
+          reject(error);
+        });
       }).catch((error) => {
         reject(error);
       });
@@ -162,21 +167,13 @@ export class StorageService {
               reject(err);
             });
           } else {
-            // remove empty folder
-            this.idbm.remove('tasks', entry.directory.id).then(() => {
-              resolve();
-            }).catch((err) => {
-              reject(err);
-            });
-
-            if (entry.directory.entries.length === 1) {
-              (<Task> entry.directory.entries[0]).directory = null;
-              this.saveTask(entry.directory.entries[0]);
-            }
+            resolve();
           }
         }
       } else {
+        console.log(`remove DIR! ${entry.id}`);
         this.idbm.remove('tasks', entry.id).then(() => {
+          console.log(`dir rem ${entry.id}`);
           resolve();
         }).catch((err) => {
           reject(err);

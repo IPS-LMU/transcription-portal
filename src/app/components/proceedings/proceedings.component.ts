@@ -643,14 +643,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     if (event.type === 'keydown') {
-      console.log(event.keyCode);
+      console.log(event);
       if (this.pressedKey < 0) {
         this.pressedKey = event.keyCode;
       } else {
+        console.log(`pressed: ${this.pressedKey} && ${event.key}`);
         if (event.keyCode === 8 && (this.pressedKey === 93 || this.pressedKey === 224)) {
           // CMD + Backspace on Mac
-          event.preventDefault();
           this.deleteSelectedTasks();
+        } else if ((this.pressedKey === 91 || this.pressedKey === 224) && event.key === 'a') {
+          event.preventDefault();
+          this.selected_tasks = [];
+          this.selected_tasks = this.taskService.taskList.entries;
+          console.log(`select all`);
         }
       }
     } else if (event.type === 'keyup') {
@@ -664,22 +669,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     for (let i = 0; i < this.selected_tasks.length; i++) {
       let entry = this.selected_tasks[i];
 
-      this.storage.removeFromDB(entry).then(() => {
-        if (entry instanceof Task) {
-          if (isNullOrUndefined(entry.directory)) {
-            this.taskList.removeEntry(entry);
-          } else if (entry.directory.entries.length === 1) {
-            this.taskList.removeDir(entry.directory);
-            (<Task> entry.directory.entries[0]).directory = null;
-            this.taskList.addEntry(entry.directory.entries[0]);
-          }
-        } else {
-          this.taskList.removeDir(entry);
-        }
-      }).catch((err) => {
-        console.error(err);
-      });
-
+      this.taskService.taskList.removeEntry(entry, true);
       this.selected_tasks.splice(i, 1);
       i--; // because length changed
     }

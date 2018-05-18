@@ -54,6 +54,13 @@ export class AppComponent implements OnDestroy {
   public selectedOperation: Operation = null;
   private firstModalShown = false;
 
+  public allTasks(): Task[] {
+    if (!isNullOrUndefined(this.taskService.taskList)) {
+      return this.taskService.taskList.getAllTasks();
+    }
+
+    return [];
+  }
 
   public get isdevelopment(): boolean {
     return environment.development;
@@ -528,22 +535,20 @@ export class AppComponent implements OnDestroy {
 
               // TODO improve this code. Determine the channel file using another way
               if (this.taskService.splitPrompt === 'FIRST') {
-                if (dirEntry.files[0].fullname.indexOf('_2.') > -1) {
-                  entry.entries.splice(j, 1);
+                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_2.') > -1) {
+                  this.taskService.taskList.removeEntry(dirEntry, true);
                   j--;
                 }
               } else if (this.taskService.splitPrompt === 'SECOND') {
-                if (dirEntry.files[0].fullname.indexOf('_1.') > -1) {
-                  entry.entries.splice(j, 1);
+                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_1.') > -1) {
+                  this.taskService.taskList.removeEntry(dirEntry, true);
                   j--;
                 }
               }
             }
-            this.storage.saveTask(entry).catch((err) => {
-              console.error(err);
-            });
           }
 
+          /*
           if (entry.entries.length === 1) {
             // only one item
             let path = entry.path.substr(0, entry.path.lastIndexOf('/'));
@@ -551,6 +556,7 @@ export class AppComponent implements OnDestroy {
             let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
 
             if (!isNullOrUndefined(dirtemp)) {
+              console.log(`dirtemp found`);
               dirtemp.entries.push(entry.entries[0]);
               const entr = entry.entries[0];
               this.storage.saveTask(dirtemp).catch((err) => {
@@ -563,6 +569,7 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else if (path !== '' && path !== '/') {
+              console.log(`dirtemp not found and not empty path`);
               dirtemp = new TaskDirectory(path);
               this.storage.removeFromDB(entry).then(() => {
                 this.taskService.taskList.removeDir(<TaskDirectory> entry);
@@ -576,9 +583,14 @@ export class AppComponent implements OnDestroy {
                 console.error(err);
               });
             } else {
-              const entries = this.taskService.taskList.entries[i];
-              this.storage.removeFromDB(entries).then(() => {
-                this.taskService.taskList.entries[i] = (<TaskDirectory> entries).entries[0];
+              console.log(`dirtemp not found and empty path ${path}`);
+              const entryEntry = this.taskService.taskList.entries[i];
+              this.storage.removeFromDB(entryEntry).then(() => {
+                console.log(`entryEntry removed:`);
+                console.log(entryEntry);
+                this.taskService.taskList.entries[i] = (<TaskDirectory> entryEntry).entries[0];
+                console.log("new entry:");
+                console.log((<TaskDirectory> entryEntry).entries[0]);
 
                 const entr = <Task> this.taskService.taskList.entries[i];
                 entr.directory = null;
@@ -598,7 +610,7 @@ export class AppComponent implements OnDestroy {
                 console.error(error);
               }
             );
-          }
+          }*/
         }
       }
     }

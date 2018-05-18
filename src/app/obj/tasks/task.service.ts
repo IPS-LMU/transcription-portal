@@ -3,7 +3,7 @@ import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
 import {isNullOrUndefined} from 'util';
 import {NotificationService} from '../../shared/notification.service';
 import {SubscriptionManager} from '../../shared/subscription-manager';
-import {Task, TaskDirectory, TaskList, TaskState} from './index';
+import {EntryChangeEvent, Task, TaskDirectory, TaskList, TaskState} from './index';
 import {OCTRAOperation} from './octra-operation';
 import {UploadOperation} from './upload-operation';
 import {G2pMausOperation} from './g2p-maus-operation';
@@ -47,6 +47,19 @@ export class TaskService implements OnDestroy {
     return this._errors_count;
   }
 
+  private _taskList: TaskList;
+
+  get taskList(): TaskList {
+    return this._taskList;
+  }
+
+  private _operations: Operation[] = [];
+  public newfiles = false;
+
+  get operations(): Operation[] {
+    return this._operations;
+  }
+
   private options = {
     max_running_tasks: 3
   };
@@ -69,6 +82,7 @@ export class TaskService implements OnDestroy {
 
   constructor(public httpclient: HttpClient, private notification: NotificationService,
               private storage: StorageService, private sanitizer: DomSanitizer) {
+    this._taskList = new TaskList();
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
       new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
@@ -169,8 +183,7 @@ export class TaskService implements OnDestroy {
           }
 
           if (isNullOrUndefined(foundTask)) {
-            this.addEntry(result);
-            this.storage.saveTask(result);
+            this.addEntry(result, true);
           }
         }
       }
@@ -273,17 +286,40 @@ export class TaskService implements OnDestroy {
       }
     }));
 
-    this.subscrmanager.add(this.taskList.entryAdded.subscribe((entry: (Task | TaskDirectory)) => {
-      if (entry instanceof Task) {
-        this.listenToTaskEvents(entry);
-      } else {
-        for (let i = 0; i < entry.entries.length; i++) {
-          const task = <Task> entry.entries[i];
-          this.listenToTaskEvents(task);
+    this.subscrmanager.add(this.taskList.entryChanged.subscribe((event: EntryChangeEvent) => {
+        console.log(`${event.state} && ${event.saveToDB}`);
+        if (event.state === 'added') {
+          if (event.entry instanceof Task) {
+            this.listenToTaskEvents(event.entry);
+          } else {
+            for (let i = 0; i < event.entry.entries.length; i++) {
+              const task = <Task> event.entry.entries[i];
+              this.listenToTaskEvents(task);
+            }
+          }
+          this.updateProtocolArray();
+
+          if (event.saveToDB) {
+            console.log(`add by event`);
+            this.storage.saveTask(event.entry).then(() => {
+              console.log(`entry with id ${event.entry.id} successfully ADDED by event`);
+            }).catch((error) => {
+              console.error(error);
+            });
+          }
+        } else if (event.state === 'removed') {
+          if (event.saveToDB) {
+            this.storage.removeFromDB(event.entry).then(() => {
+              console.log(`entry with id ${event.entry.id} successfully REMOVED by event`);
+            }).catch((error) => {
+              console.error(error);
+            });
+          }
+        } else if (event.state === 'changed') {
+          // not implemented yet
         }
       }
-      this.updateProtocolArray();
-    }));
+    ));
   }
 
   private listenToTaskEvents(task: Task) {
@@ -315,22 +351,9 @@ export class TaskService implements OnDestroy {
     }));
   }
 
-  private _taskList: TaskList = new TaskList();
-
-  get taskList(): TaskList {
-    return this._taskList;
-  }
-
-  private _operations: Operation[] = [];
-  public newfiles = false;
-
-  get operations(): Operation[] {
-    return this._operations;
-  }
-
-  public addEntry(entry: (Task | TaskDirectory)) {
+  public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
-      this.taskList.addEntry(entry);
+      this.taskList.addEntry(entry, saveToDB);
       this.storage.saveCounter('taskCounter', TaskEntry.counter);
       this.storage.saveCounter('operationCounter', Operation.counter);
     } else {

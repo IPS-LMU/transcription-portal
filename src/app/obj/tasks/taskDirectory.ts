@@ -164,7 +164,6 @@ export class TaskDirectory {
 
       Promise.all(promises).then((values) => {
         result.entries = values;
-        console.log(`SAVE!"§`);
         resolve(result);
       }).catch((error) => {
         reject(error);
