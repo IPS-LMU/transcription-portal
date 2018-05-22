@@ -114,8 +114,8 @@ export class Preprocessor {
         if (!isNullOrUndefined(result)) {
           newItem.results = result;
           this.changeState(newItem, State.FINISHED);
-          this._itemProcessed.next(newItem);
           this.removeFromQueue(newItem.id);
+          this._itemProcessed.next(newItem);
         }
       }
     ).catch((err) => {

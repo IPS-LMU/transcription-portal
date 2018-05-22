@@ -1,7 +1,7 @@
 <app-feedback #feedbackModal></app-feedback>
 <app-first-modal #firstModal></app-first-modal>
 <app-split-modal #splitModal></app-split-modal>
-<app-queue-modal #queueModal [tasks]="allTasks" [queue]="taskService.preprocessor.queue"
+<app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
                  [operations]="taskService.operations"></app-queue-modal>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <!-- HEADER -->

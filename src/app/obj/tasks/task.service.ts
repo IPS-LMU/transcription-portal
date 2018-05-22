@@ -186,6 +186,12 @@ export class TaskService implements OnDestroy {
             this.addEntry(result, true);
           }
         }
+
+        if (this.preprocessor.queue.length === 0) {
+          console.log(`all PROCESSED COMPLETELY`);
+          // check remaining unchecked files
+          this.checkFiles();
+        }
       }
     ));
 
@@ -314,6 +320,8 @@ export class TaskService implements OnDestroy {
             }).catch((error) => {
               console.error(error);
             });
+          } else {
+            console.log(`no saving for remove ${event.entry.id}`);
           }
         } else if (event.state === 'changed') {
           // not implemented yet
@@ -351,11 +359,69 @@ export class TaskService implements OnDestroy {
     }));
   }
 
+  public checkFiles() {
+    if (this.splitPrompt !== 'BOTH') {
+      const removeList = [];
+      const promises = [];
+
+      for (let i = 0; i < this.taskList.entries.length; i++) {
+        let entry = this.taskList.entries[i];
+
+        if (entry instanceof TaskDirectory) {
+          entry = <TaskDirectory> entry;
+          if (entry.path.indexOf('_dir') > -1) {
+            for (let j = 0; j < entry.entries.length; j++) {
+              const dirEntry = <Task> entry.entries[j];
+              let nothingToDo = true;
+              // TODO improve this code. Determine the channel file using another way
+              if (this.splitPrompt === 'FIRST') {
+                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_2.') > -1) {
+                  console.log(`remove first`);
+                  removeList.push(dirEntry);
+                  nothingToDo = false;
+                }
+              } else if (this.splitPrompt === 'SECOND') {
+                console.log(`remove second`);
+                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_1.') > -1) {
+                  removeList.push(dirEntry);
+                  nothingToDo = false;
+                }
+              }
+
+              if (nothingToDo) {
+                console.log(`NOTHING TO DO`);
+                promises.push(this.taskList.cleanup(entry, true));
+              }
+            }
+          }
+        }
+      }
+
+      for (let i = 0; i < removeList.length; i++) {
+        const removeElement = removeList[i];
+        promises.push(this.taskList.removeEntry(removeElement, true));
+      }
+
+      Promise.all(promises).then(() => {
+        console.log('CHECK FILES OK');
+      }).catch((error) => {
+        console.error(error);
+      });
+
+    }
+  }
+
   public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
-      this.taskList.addEntry(entry, saveToDB);
-      this.storage.saveCounter('taskCounter', TaskEntry.counter);
-      this.storage.saveCounter('operationCounter', Operation.counter);
+      this.taskList.addEntry(entry, saveToDB).then(() => {
+        return this.taskList.cleanup(entry, saveToDB);
+      }).then(() => {
+        this.storage.saveCounter('taskCounter', TaskEntry.counter);
+        this.storage.saveCounter('operationCounter', Operation.counter);
+      }).catch((err) => {
+        console.error(`could not add via taskService!`);
+        console.error(`${err}`);
+      });
     } else {
       console.error(`could not add Task or TaskDirectory. Invalid class instance`);
     }

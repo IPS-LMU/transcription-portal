@@ -654,7 +654,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         } else if ((this.pressedKey === 91 || this.pressedKey === 224) && event.key === 'a') {
           event.preventDefault();
           this.selected_tasks = [];
-          this.selected_tasks = this.taskService.taskList.entries;
+          this.selected_tasks = this.taskService.taskList.entries.slice(0);
           console.log(`select all`);
         }
       }
@@ -669,10 +669,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     for (let i = 0; i < this.selected_tasks.length; i++) {
       let entry = this.selected_tasks[i];
 
-      this.taskService.taskList.removeEntry(entry, true);
-      this.selected_tasks.splice(i, 1);
-      i--; // because length changed
+      console.log(`REMOVE SELECTED ${entry.id}`);
+      this.taskService.taskList.removeEntry(entry, true).then(() => {
+        console.log('remove selected task success');
+      }).catch((error) => {
+        console.log(`remove selected false`);
+        console.error(error);
+      });
     }
+
+    this.selected_tasks = [];
   }
 
   public getBadge(task: Task): {

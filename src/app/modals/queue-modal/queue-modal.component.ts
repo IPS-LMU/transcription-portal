@@ -9,6 +9,7 @@ import {AppInfo} from '../../app.info';
 import {ASROperation} from '../../obj/tasks/asr-operation';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
 import {StorageService} from '../../storage.service';
+import {isNullOrUndefined} from 'util';
 
 @Component({
   selector: 'app-queue-modal',
@@ -19,8 +20,8 @@ export class QueueModalComponent implements OnInit {
   @ViewChild('content') content: NgbModal;
   private modalRef: NgbModalRef;
 
-  @Input() tasks: (Task)[] = [];
-  @Input() queue: (QueueItem)[] = [];
+  @Input() tasks: Task[] = [];
+  @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
 
   public get AppInfo() {
@@ -61,9 +62,14 @@ export class QueueModalComponent implements OnInit {
   }
 
   public get orangeCount(): number {
-    return this.tasks.filter((a) => {
-      return a.state == TaskState.QUEUED && (a.files[0].file === undefined || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
-    }).length;
+    if (!isNullOrUndefined(this.tasks.filter)) {
+      console.log(this.tasks);
+      return this.tasks.filter((a) => {
+        return a.state == TaskState.QUEUED && (a.files[0].file === undefined || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
+      }).length;
+    }
+
+    return 0;
   }
 
   onASRLangCHanged(lang) {

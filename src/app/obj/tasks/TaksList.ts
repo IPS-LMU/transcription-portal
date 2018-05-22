@@ -24,15 +24,19 @@ export class TaskList {
   constructor() {
   }
 
-  public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false) {
-    if (isNullOrUndefined(this.findEntryById(newEntry.id))) {
-      this._entries.push(newEntry);
-      this._entryChanged.next({
-        state: 'added',
-        saveToDB: saveToDB,
-        entry: newEntry
-      });
-    }
+  public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (isNullOrUndefined(this.findEntryById(newEntry.id))) {
+        this._entries.push(newEntry);
+        this._entryChanged.next({
+          state: 'added',
+          saveToDB: saveToDB,
+          entry: newEntry
+        });
+      } else {
+        reject(`entry already in list`);
+      }
+    });
   }
 
   public findTaskByState(state: TaskState): Task {
@@ -93,53 +97,63 @@ export class TaskList {
     return result;
   }
 
-  public removeEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false): boolean {
-    const sendEvent = () => {
-      this._entryChanged.next({
-        state: 'removed',
-        saveToDB: saveToDB,
-        entry: entry
-      })
-    };
-    if (!isNullOrUndefined(entry)) {
-      if (entry instanceof Task) {
-        if (!isNullOrUndefined(entry.directory)) {
-          entry.directory.removeTask(entry);
-          this.cleanup(entry.directory, saveToDB);
+  public removeEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      console.log('REMOVE ITEM ' + entry.id);
+      const sendEvent = () => {
+        console.log(`SEND REMOVING ${entry.id}`);
+        this._entryChanged.next({
+          state: 'removed',
+          saveToDB: saveToDB,
+          entry: entry
+        })
+      };
+      if (!isNullOrUndefined(entry)) {
+        if (entry instanceof Task) {
+          if (!isNullOrUndefined(entry.directory)) {
+            entry.directory.removeTask(entry);
+            this.cleanup(entry.directory, saveToDB).then(() => {
+              resolve();
+            }).catch((error) => {
+              reject(error);
+            });
+          } else {
+            const task_index = this.entries.findIndex((a) => {
+              if (a instanceof Task && (<Task> a).id === entry.id) {
+                return true;
+              }
+            });
+
+            if (task_index > -1) {
+              this._entries.splice(task_index, 1);
+            } else {
+              console.log(`entry not found with ID ${entry.id}`);
+            }
+
+            resolve();
+            sendEvent();
+          }
         } else {
           const task_index = this.entries.findIndex((a) => {
-            if (a instanceof Task && (<Task> a).id === entry.id) {
-              sendEvent();
+            if (a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id) {
               return true;
             }
           });
 
           if (task_index > -1) {
             this._entries.splice(task_index, 1);
-            sendEvent();
-            return true;
+          } else {
+            console.log(`entry not found with ID ${entry.id}`);
           }
-        }
-      } else {
-        const task_index = this.entries.findIndex((a) => {
-          if (a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id) {
-            sendEvent();
-            return true;
-          }
-        });
 
-        if (task_index > -1) {
-          this._entries.splice(task_index, 1);
+          resolve();
           sendEvent();
-          return true;
         }
       }
-    }
-
-    return false;
+    });
   }
 
-  public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean) {
+  public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean): Promise<void> {
     console.log(`cleanup ${saveToDB}`);
     if (!isNullOrUndefined(entry)) {
       if (entry instanceof Task) {
@@ -147,15 +161,17 @@ export class TaskList {
       } else {
         if (entry.entries.length === 0) {
           // remove dir
-          this.removeEntry(entry, saveToDB);
+          return this.removeEntry(entry, saveToDB);
         } else if (entry.entries.length === 1) {
           // move entry task to upper level and remove dir
           const entryTask = <Task> entry.entries[0];
           entryTask.directory = null;
-          this.removeEntry(entryTask, saveToDB);
-          this.removeEntry(entry, saveToDB);
-          this.addEntry(entryTask, saveToDB);
           console.log('task is ' + entryTask.id + ' and parent is ' + entry.id);
+          return this.removeEntry(entryTask, saveToDB).then(() => {
+            return this.removeEntry(entry, saveToDB)
+          }).then(() => {
+            return this.addEntry(entryTask, saveToDB)
+          });
         }
       }
     }

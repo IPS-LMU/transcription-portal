@@ -12,7 +12,6 @@ import {AudioInfo} from './obj/audio';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './obj/tasks/task.service';
 import {DirectoryInfo} from './obj/directoryInfo';
-import {TaskDirectory} from './obj/tasks/';
 import {StorageService} from './storage.service';
 import {FileInfo} from './obj/fileInfo';
 import {ToolOperation} from './obj/tasks/tool-operation';
@@ -518,103 +517,9 @@ export class AppComponent implements OnDestroy {
   public openSplitModal = () => {
     this.splitModal.open((reason) => {
       this.taskService.splitPrompt = reason;
-      this.checkFiles();
+      this.taskService.checkFiles();
     });
   };
-
-  public checkFiles() {
-    if (this.taskService.splitPrompt !== 'BOTH') {
-      for (let i = 0; i < this.taskService.taskList.entries.length; i++) {
-        let entry = this.taskService.taskList.entries[i];
-
-        if (entry instanceof TaskDirectory) {
-          entry = <TaskDirectory> entry;
-          if (entry.path.indexOf('_dir') > -1) {
-            for (let j = 0; j < entry.entries.length; j++) {
-              const dirEntry = <Task> entry.entries[j];
-
-              // TODO improve this code. Determine the channel file using another way
-              if (this.taskService.splitPrompt === 'FIRST') {
-                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_2.') > -1) {
-                  this.taskService.taskList.removeEntry(dirEntry, true);
-                  j--;
-                }
-              } else if (this.taskService.splitPrompt === 'SECOND') {
-                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_1.') > -1) {
-                  this.taskService.taskList.removeEntry(dirEntry, true);
-                  j--;
-                }
-              }
-            }
-          }
-
-          /*
-          if (entry.entries.length === 1) {
-            // only one item
-            let path = entry.path.substr(0, entry.path.lastIndexOf('/'));
-            path = path.substr(0, path.lastIndexOf('/')) + '/';
-            let dirtemp = this.taskService.taskList.findTaskDirByPath(path);
-
-            if (!isNullOrUndefined(dirtemp)) {
-              console.log(`dirtemp found`);
-              dirtemp.entries.push(entry.entries[0]);
-              const entr = entry.entries[0];
-              this.storage.saveTask(dirtemp).catch((err) => {
-                console.error(err);
-              });
-              this.storage.removeFromDB(entry).then(() => {
-                this.taskService.taskList.removeDir(<TaskDirectory> entry);
-
-              }).catch((err) => {
-                console.error(err);
-              });
-            } else if (path !== '' && path !== '/') {
-              console.log(`dirtemp not found and not empty path`);
-              dirtemp = new TaskDirectory(path);
-              this.storage.removeFromDB(entry).then(() => {
-                this.taskService.taskList.removeDir(<TaskDirectory> entry);
-              }).catch((error) => {
-                  console.error(error);
-                }
-              );
-              dirtemp.addEntries(entry.entries);
-              this.taskService.taskList.addEntry(dirtemp);
-              this.storage.saveTask(dirtemp).catch((err) => {
-                console.error(err);
-              });
-            } else {
-              console.log(`dirtemp not found and empty path ${path}`);
-              const entryEntry = this.taskService.taskList.entries[i];
-              this.storage.removeFromDB(entryEntry).then(() => {
-                console.log(`entryEntry removed:`);
-                console.log(entryEntry);
-                this.taskService.taskList.entries[i] = (<TaskDirectory> entryEntry).entries[0];
-                console.log("new entry:");
-                console.log((<TaskDirectory> entryEntry).entries[0]);
-
-                const entr = <Task> this.taskService.taskList.entries[i];
-                entr.directory = null;
-                this.storage.saveTask(entr).then(() => {
-                }).catch((err) => {
-                  console.error(err);
-                });
-              }).catch((err) => {
-                console.error(err);
-              });
-            }
-          } else if (entry.entries.length < 1) {
-            // empty dir
-            this.storage.removeFromDB(entry).then(() => {
-              this.taskService.taskList.removeDir(<TaskDirectory> entry);
-            }).catch((error) => {
-                console.error(error);
-              }
-            );
-          }*/
-        }
-      }
-    }
-  }
 
 
   public dragBorder($event: any, part: string) {
