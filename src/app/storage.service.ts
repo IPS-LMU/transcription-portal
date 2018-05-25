@@ -131,6 +131,7 @@ export class StorageService {
   }
 
   public saveCounter(name: string, value: number) {
+    console.log(`SAVE COUNTER ${name} ${value}`);
     this.idbm.save('intern', name, {
       value: value
     });

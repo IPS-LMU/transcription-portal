@@ -52,7 +52,7 @@
     <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
         <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
-                <i class="fa fa-plus"></i> <span class="d-none d-lg-inline d-xl-inline">ADD FILES</span>
+                <i class="fa fa-plus"></i><span class="d-none d-lg-inline d-xl-inline"> ADD FILES</span>
             </button>
             <!-- webkitdirectory directory multiple -->
             <input type="file" multiple class="fileinput" value="Select audio file"
@@ -86,7 +86,7 @@
             <button class="btn btn-primary" (click)="onUploadButtonClick()"
                     [disabled]="!taskService.newfiles">
                 <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
-                    class="d-none d-lg-inline d-xl-inline">UPLOAD & PROCESS FILES</span>
+                    class="d-none d-lg-inline d-xl-inline"> UPLOAD & PROCESS FILES</span>
             </button>
         </div>
     </div>

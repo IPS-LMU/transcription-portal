@@ -391,6 +391,7 @@ export class TaskService implements OnDestroy {
               if (nothingToDo) {
                 console.log(`NOTHING TO DO`);
                 promises.push(this.taskList.cleanup(entry, true));
+                this.saveCounters();
               }
             }
           }
@@ -404,6 +405,8 @@ export class TaskService implements OnDestroy {
 
       Promise.all(promises).then(() => {
         console.log('CHECK FILES OK');
+
+
       }).catch((error) => {
         console.error(error);
       });
@@ -416,8 +419,7 @@ export class TaskService implements OnDestroy {
       this.taskList.addEntry(entry, saveToDB).then(() => {
         return this.taskList.cleanup(entry, saveToDB);
       }).then(() => {
-        this.storage.saveCounter('taskCounter', TaskEntry.counter);
-        this.storage.saveCounter('operationCounter', Operation.counter);
+        this.saveCounters();
       }).catch((err) => {
         console.error(`could not add via taskService!`);
         console.error(`${err}`);
@@ -425,6 +427,11 @@ export class TaskService implements OnDestroy {
     } else {
       console.error(`could not add Task or TaskDirectory. Invalid class instance`);
     }
+  }
+
+  public saveCounters() {
+    this.storage.saveCounter('taskCounter', TaskEntry.counter);
+    this.storage.saveCounter('operationCounter', Operation.counter);
   }
 
   public start() {
