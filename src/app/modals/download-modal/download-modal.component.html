@@ -1,0 +1,30 @@
+<ng-template #content let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">Download results by {{type}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="d()">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <p>Add conversions (optional):</p>
+        <div>
+            <ng-container *ngFor="let conversion of AppInfo.converters; let i = index">
+                <div class="conversion">
+                    <input class="conversion-check" [attr.id]="'check-' + i" type="checkbox"
+                           [name]="conversion.obj.name"/> <label [attr.for]="'check-' + i"> <i class="fa fa-file-text"
+                                                                                               [ngStyle]="{color: conversion.color}"></i>
+                    {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
+                </div>
+            </ng-container>
+            <div class="clearfix"></div>
+        </div>
+        <ng-container *ngIf="type === 'line'">
+            <input type="checkbox" id="remove-check"/> <label style="margin-left:3px;" for="remove-check">remove
+            selected lines from table</label><br/><br/>
+        </ng-container>
+        <button class="btn btn-primary" style="width:100%;" (click)="process()">DOWNLOAD</button>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" (click)="c()">Close</button>
+    </div>
+</ng-template>

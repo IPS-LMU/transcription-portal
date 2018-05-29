@@ -21,8 +21,8 @@ export class ContextMenuComponent implements OnInit {
   ngOnInit() {
   }
 
-  onDeleteTasks() {
-    this.optionselected.emit('delete');
+  onAction(action: string) {
+    this.optionselected.emit(action);
     this.hid = true;
   }
 

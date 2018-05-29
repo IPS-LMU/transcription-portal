@@ -29,6 +29,7 @@ import {ProtocolFooterComponent} from './components/protocol-footer/protocol-foo
 import {FilePreviewModalComponent} from './modals/file-preview-modal/file-preview-modal.component';
 import {AlertComponent} from './components/alert/alert.component';
 import {AlertService} from './shared/alert.service';
+import {DownloadModalComponent} from './modals/download-modal/download-modal.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +50,8 @@ import {AlertService} from './shared/alert.service';
     QueueModalComponent,
     ProtocolFooterComponent,
     FilePreviewModalComponent,
-    AlertComponent
+    AlertComponent,
+    DownloadModalComponent
   ],
   imports: [
     BrowserModule,

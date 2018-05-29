@@ -11,19 +11,17 @@ import {
   ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isArray, isNullOrUndefined} from 'util';
+import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/tasks/upload-operation';
 import {HttpClient} from '@angular/common/http';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../obj/tasks/task.service';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
-import * as moment from 'moment';
 import {StorageService} from '../../storage.service';
 import {Operation} from '../../obj/tasks/operation';
 import {ToolOperation} from '../../obj/tasks/tool-operation';
@@ -31,8 +29,7 @@ import {EmuOperation} from '../../obj/tasks/emu-operation';
 import {ASROperation} from '../../obj/tasks/asr-operation';
 import {QueueItem} from '../../obj/preprocessor';
 import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
-import {AppInfo} from '../../app.info';
-import * as X2JS from 'x2js';
+import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
 
 declare var window: any;
 
@@ -87,7 +84,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
-  @ViewChild('content') content;
+  @ViewChild('content') content: DownloadModalComponent;
 
   @ViewChild('popoverRef') public popoverRef: PopoverComponent;
   @ViewChild('filePreview') public filePreview: FilePreviewModalComponent;
@@ -95,7 +92,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public selectedOperation: Operation;
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
-              private modalService: NgbModal, public storage: StorageService) {
+              public storage: StorageService) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
@@ -274,132 +271,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
 
   onContextMenuOptionSelected(option: String) {
-
     if (option === 'delete') {
       this.deleteSelectedTasks();
-    } else if (option === 'compress') {
-      this.contextmenu.hidden = false;
-      this.openContentModal(this.selectedOperation);
     } else if (option === 'appendings-remove') {
       this.removeAppendings();
+    } else if (option === 'download') {
+      this.openArchiveDownload('line', this.selectedOperation);
     }
     this.contextmenu.hidden = true;
-  }
-
-  openContentModal(selectedOperation: Operation) {
-    if (!(selectedOperation instanceof UploadOperation || selectedOperation instanceof EmuOperation)) {
-      // prepare package
-      let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-      let requestPackage = {
-        requestType: 'createArchieve',
-        data: {
-          archieveName: `${selectedOperation.name}Results_${dateStr}`,
-          files: []
-        }
-      };
-      let tasks = this.taskList.getAllTasks();
-
-      const promises: Promise<void>[] = [];
-
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-
-
-        const langObj = AppInfo.getLanguageByCode(task.language);
-        const url = `${langObj.host}uploadFileMulti`;
-
-        for (let i = 0; i < task.operations.length; i++) {
-          const operation = task.operations[i];
-
-          // TODO improve code!
-          if (operation.name === selectedOperation.name
-            && operation.results.length > 0
-          ) {
-            const result: FileInfo = operation.lastResult;
-            if (result.online) {
-              requestPackage.data.files.push({
-                name: result.fullname,
-                url: result.url
-              });
-            } else {
-              const promise = new Promise<void>((resolve, reject) => {
-                UploadOperation.upload([result], url, this.http).subscribe(
-                  (obj) => {
-                    if (obj) {
-                      if (obj.type === 'loadend') {
-                        const httpResult = <string> obj.result;
-                        const x2js = new X2JS();
-                        let json: any = x2js.xml2js(httpResult);
-                        json = json.UploadFileMultiResponse;
-
-
-                        // add messages to protocol
-                        if (json.warnings !== '') {
-                          console.warn(json.warnings);
-                        }
-
-                        if (json.success === 'true') {
-                          // TODO set urls to results only
-                          if (isArray(json.fileList.entry)) {
-                            result.url = json.fileList.entry[0].value;
-                          } else {
-                            // json attribute entry is an object
-                            result.url = json.fileList.entry['value'];
-                          }
-
-                          this.storage.saveTask(task);
-
-                          requestPackage.data.files.push({
-                            name: result.fullname,
-                            url: result.url
-                          });
-
-                          resolve();
-                        } else {
-                          reject(json['message']);
-                        }
-                      }
-                    }
-                  },
-                  (error) => {
-                    reject(error);
-                  }
-                );
-              });
-
-              promises.push(promise);
-            }
-            break;
-          }
-        }
-      }
-
-      new Promise<void>((resolve, reject) => {
-        if (promises.length === 0) {
-          resolve();
-        } else {
-          Promise.all(promises).then(() => {
-              resolve();
-            },
-            (error) => {
-              reject(error);
-            });
-        }
-      }).then(() => {
-        this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
-          (response: any) => {
-            this.archiveURL = response.result;
-            this.openArchiveDownlaod(this.content);
-          },
-          (error) => {
-            console.error(error);
-          }
-        );
-      }).catch((error) => {
-        console.error(error);
-      });
-
-    }
   }
 
   removeAppendings() {
@@ -633,10 +512,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.operationclick.emit(operation);
   }
 
-  openArchiveDownlaod(content) {
-    this.modalService.open(content).result.then((result) => {
-      this.closeResult = `Closed with: ${result}`;
-    });
+  openArchiveDownload(type: 'column' | 'line', operation: Operation) {
+    this.selectedOperation = operation;
+    this.content.open(type);
   }
 
   @HostListener('window:keydown', ['$event'])

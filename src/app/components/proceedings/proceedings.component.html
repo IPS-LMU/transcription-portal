@@ -1,17 +1,4 @@
-<ng-template #content let-c="close" let-d="dismiss">
-    <div class="modal-header">
-        <h4 class="modal-title">Download Archive</h4>
-        <button type="button" class="close" aria-label="Close" (click)="d()">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <p><a [href]="archiveURL">Download Archive</a></p>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="c()">Close</button>
-    </div>
-</ng-template>
+<app-download-modal #content [selectedTasks]="selected_tasks" [column]="selectedOperation"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
 
@@ -112,7 +99,7 @@
                     <th>
                         <div>
                 <span *ngIf="operation.icon === ''; else showIcon" style="display:block;"
-                      (click)="openContentModal(operation)">
+                      (click)="openArchiveDownload('column', operation)">
                     <ng-container *ngIf="shortstyle">
                         {{operation.name.charAt(0)}}
                     </ng-container>
@@ -121,7 +108,8 @@
                     </ng-container>
                 </span>
                             <ng-template #showIcon>
-                                <div [innerHTML]="operation.icon" (click)="openContentModal(operation)"></div>
+                                <div [innerHTML]="operation.icon"
+                                     (click)="openArchiveDownload('column', operation)"></div>
                             </ng-template>
                             <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
                                    class="header-checkbox"

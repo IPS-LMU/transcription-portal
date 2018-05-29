@@ -1,0 +1,22 @@
+.conversion {
+    margin-right: 5px;
+    margin-bottom: 2px;
+    font-size: 0.9em;
+    display: inline;
+    background-color: whitesmoke;
+    padding: 3px;
+    float: left;
+    white-space: nowrap;
+}
+
+.conversion * {
+    cursor: pointer;
+}
+
+.conversion input {
+    margin-right: 3px;
+}
+
+.conversion label {
+    margin-bottom: 3px;
+}
