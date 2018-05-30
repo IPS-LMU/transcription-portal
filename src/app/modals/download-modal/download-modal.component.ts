@@ -26,6 +26,8 @@ export class DownloadModalComponent implements OnInit {
   @Input('taskList') taskList: Task[];
   @Input('column') column: Operation;
 
+  public archiveURL = '';
+
   public get AppInfo(): AppInfo {
     return AppInfo;
   }
@@ -47,9 +49,10 @@ export class DownloadModalComponent implements OnInit {
       // prepare package
       let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
       let requestPackage = {
-        requestType: 'createArchieve',
+        requestType: 'createAchieve',
         data: {
-          archieveName: `${this.column.name}Results_${dateStr}`,
+          achieveName: `${this.column.name}Results_${dateStr}`,
+          type: 'column',
           files: []
         }
       };
@@ -152,9 +155,10 @@ export class DownloadModalComponent implements OnInit {
         // prepare package
         let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
         let requestPackage = {
-          requestType: 'createArchieve',
+          requestType: 'createAchieve',
           data: {
-            archieveName: `oh-portal_results_${dateStr}`,
+            achieveName: `oh-portal_results_${dateStr}`,
+            type: 'line',
             structure: []
           }
         };
@@ -169,7 +173,8 @@ export class DownloadModalComponent implements OnInit {
             promises.push(new Promise<any>((resolve, reject) => {
               console.log(`process dir!`);
               let dirResult = {
-                folder: entry.foldername,
+                name: entry.foldername,
+                type: 'folder',
                 entries: []
               };
 
@@ -219,27 +224,29 @@ export class DownloadModalComponent implements OnInit {
     return new Promise<any>((resolve, reject) => {
       // single task
       const entryResult = {
-        task: task.files[0].name,
-        operations: []
+        name: task.files[0].name,
+        type: 'folder',
+        entries: []
       };
 
       const uploadPromises = [];
       for (let j = 1; j < task.operations.length; j++) {
         const operation = task.operations[j];
         let entryOp = {
-          operation: operation.name,
-          files: []
+          name: operation.name,
+          type: 'folder',
+          entries: []
         };
         for (let k = 0; k < operation.results.length; k++) {
           const opResult = operation.results[k];
 
           if (opResult.online) {
-            entryOp.files.push(opResult.url);
+            entryOp.entries.push(opResult.url);
           } else {
             // TODO reupload!
           }
         }
-        entryResult.operations.push(entryOp);
+        entryResult.entries.push(entryOp);
       }
 
       Promise.all(uploadPromises).then(() => {
@@ -253,7 +260,8 @@ export class DownloadModalComponent implements OnInit {
   upDateDownloadURL(requestPackage: any) {
     this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
       (response: any) => {
-        // this.archiveURL = response.result;
+        console.log(response);
+        this.archiveURL = response.result;
       },
       (error) => {
         console.error(error);

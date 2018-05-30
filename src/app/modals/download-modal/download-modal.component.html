@@ -1,7 +1,7 @@
 <ng-template #content let-c="close" let-d="dismiss">
     <div class="modal-header">
         <h4 class="modal-title">Download results by {{type}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="d()">
+        <button type="button" class="close" aria-label="Close" (click)="d(); archiveURL = '';">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
@@ -22,9 +22,12 @@
             <input type="checkbox" id="remove-check"/> <label style="margin-left:3px;" for="remove-check">remove
             selected lines from table</label><br/><br/>
         </ng-container>
-        <button class="btn btn-primary" style="width:100%;" (click)="process()">DOWNLOAD</button>
+        <button *ngIf="archiveURL === ''" class="btn btn-outline-primary" style="width:100%;" (click)="process()">Get
+            package
+        </button>
+        <a class="btn btn-outline-success" *ngIf="archiveURL !== ''" style="width:100%;" [attr.href]="archiveURL">DOWNLOAD</a>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="c()">Close</button>
+        <button type="button" class="btn btn-outline-dark" (click)="c();archiveURL = '';">Close</button>
     </div>
 </ng-template>
