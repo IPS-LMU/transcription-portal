@@ -274,22 +274,21 @@
             </ng-container>
             <ng-container *ngFor="let entry of queue; let i = index;">
                 <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
-                    <td *ngIf="entry.file.entries === undefined" style="width:25px;">
-                        <i class="fa fa-file-audio-o op-50"
-                           aria-hidden="true">
-                        </i>
-                    </td>
-                    <td *ngIf="entry.file.entries !== undefined" style="width:25px;" [ngClass]="{
-                            'shorten': shortstyle
-                        }">
-                        <i class="fa fa-folder-open blue op-50" aria-hidden="true"></i>
-                    </td>
                     <td *ngIf="entry.file.entries === undefined"
                         [ngClass]="{'shorten': shortstyle}">
+                        <ng-container *ngIf="entry.file.entries === undefined">
+                            <i class="fa fa-file-audio-o op-50"
+                               aria-hidden="true">
+                            </i>
+                        </ng-container>
+                        <ng-container *ngIf="entry.file.entries !== undefined" [ngClass]="{
+                            'shorten': shortstyle
+                        }">
+                            <i class="fa fa-folder-open blue op-50" aria-hidden="true"></i>
+                        </ng-container>
                     <span class="op-50"
                           title="{{entry.file.fullname}}"
-                    >
-                        {{entry.file.fullname}}
+                    > {{entry.file.fullname}}
                     </span>
                     </td>
                     <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 1">

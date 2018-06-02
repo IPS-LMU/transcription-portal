@@ -1,16 +1,17 @@
 <ng-template #content let-c="close" let-d="dismiss">
     <div class="modal-header">
         <h4 class="modal-title">Download results by {{type}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="d(); archiveURL = '';">
+        <button type="button" class="close" aria-label="Close" (click)="d(); archiveURL = '';state = 'inactive';">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body">
+        <p>If you do not select any additional conversions only the original results are added.</p>
         <p>Add conversions (optional):</p>
         <div>
             <ng-container *ngFor="let conversion of AppInfo.converters; let i = index">
                 <div class="conversion">
-                    <input class="conversion-check" [attr.id]="'check-' + i" type="checkbox"
+                    <input class="conversion-check" [(ngModel)]="checkboxes[i]" [attr.id]="'check-' + i" type="checkbox"
                            [name]="conversion.obj.name"/> <label [attr.for]="'check-' + i"> <i class="fa fa-file-text"
                                                                                                [ngStyle]="{color: conversion.color}"></i>
                     {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
@@ -18,16 +19,24 @@
             </ng-container>
             <div class="clearfix"></div>
         </div>
-        <ng-container *ngIf="type === 'line'">
-            <input type="checkbox" id="remove-check"/> <label style="margin-left:3px;" for="remove-check">remove
-            selected lines from table</label><br/><br/>
-        </ng-container>
-        <button *ngIf="archiveURL === ''" class="btn btn-outline-primary" style="width:100%;" (click)="process()">Get
+        <br/>
+        <button *ngIf="state === 'inactive'" class="btn btn-outline-primary" style="width:100%;" (click)="process()">Get
             package
         </button>
-        <a class="btn btn-outline-success" *ngIf="archiveURL !== ''" style="width:100%;" [attr.href]="archiveURL">DOWNLOAD</a>
+        <a class="btn btn-outline-info" *ngIf="state === 'processing'" style="width:100%;" [attr.disabled]="true">
+            <i class="fa fa-spinner fa-spin"></i> PLEASE WAIT...
+        </a>
+        <a class="btn btn-outline-success" *ngIf="state === 'finished'" style="width:100%;" [attr.href]="archiveURL">
+            DOWNLOAD
+        </a>
+        <ng-container *ngIf="type === 'line' && state === 'finished'">
+            <button class="btn btn-outline-danger" id="remove-check" style="width:100%;" (click)="removeSelected()">
+                Remove selected lines from table
+            </button>
+        </ng-container>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="c();archiveURL = '';">Close</button>
+        <button type="button" class="btn btn-outline-dark" (click)="c();archiveURL = '';state = 'inactive';">Close
+        </button>
     </div>
 </ng-template>

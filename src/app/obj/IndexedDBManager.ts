@@ -179,7 +179,6 @@ export class IndexedDBManager {
             reject(error);
           };
         } catch (error) {
-          console.log(`save call err ${store_name}`);
           reject(error);
         }
       }

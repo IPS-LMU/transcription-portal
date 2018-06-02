@@ -96,7 +96,6 @@ export class TaskService implements OnDestroy {
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
       (item) => {
-        console.log(item);
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
           let foundTask: Task = null;
@@ -118,13 +117,10 @@ export class TaskService implements OnDestroy {
                 // TODO change if other than transcript files are needed
                 foundTask.operations[1].enabled = false;
                 foundTask.operations[1].changeState(TaskState.SKIPPED);
-                console.log(`MORE THAN 1`);
               }
               this.storage.saveTask(foundTask);
             }
           } else {
-            console.log(result);
-
             for (let j = 0; j < result.entries.length; j++) {
               const entry = <Task> result.entries[j];
               const tasks: Task[] = <Task[]> result.entries.filter((a) => {
@@ -144,7 +140,7 @@ export class TaskService implements OnDestroy {
 
                     entry.addFile(task.files[0]);
 
-                    result.entries.splice(v, 1);
+                    (<TaskDirectory> result).entries.splice(v, 1);
                     tasks.splice(v, 1);
                     v--;
 
@@ -155,7 +151,6 @@ export class TaskService implements OnDestroy {
                 }
               }
 
-              console.log(entry);
 
               foundTask = this.taskList.getAllTasks().find((a) => {
                 return a.state === TaskState.QUEUED && !isNullOrUndefined(a.files.find((b) => {
@@ -166,7 +161,6 @@ export class TaskService implements OnDestroy {
 
               if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
                 && entry.files[0].extension === '.wav')) {
-                console.log(entry.files);
                 foundTask.files[0] = entry.files[0];
                 foundTask.files[1] = entry.files[1];
 
@@ -188,7 +182,6 @@ export class TaskService implements OnDestroy {
         }
 
         if (this.preprocessor.queue.length === 0) {
-          console.log(`all PROCESSED COMPLETELY`);
           // check remaining unchecked files
           this.checkFiles();
         }
@@ -293,7 +286,6 @@ export class TaskService implements OnDestroy {
     }));
 
     this.subscrmanager.add(this.taskList.entryChanged.subscribe((event: EntryChangeEvent) => {
-        console.log(`${event.state} && ${event.saveToDB}`);
         if (event.state === 'added') {
           if (event.entry instanceof Task) {
             this.listenToTaskEvents(event.entry);
@@ -306,9 +298,7 @@ export class TaskService implements OnDestroy {
           this.updateProtocolArray();
 
           if (event.saveToDB) {
-            console.log(`add by event`);
             this.storage.saveTask(event.entry).then(() => {
-              console.log(`entry with id ${event.entry.id} successfully ADDED by event`);
             }).catch((error) => {
               console.error(error);
             });
@@ -316,12 +306,10 @@ export class TaskService implements OnDestroy {
         } else if (event.state === 'removed') {
           if (event.saveToDB) {
             this.storage.removeFromDB(event.entry).then(() => {
-              console.log(`entry with id ${event.entry.id} successfully REMOVED by event`);
             }).catch((error) => {
               console.error(error);
             });
           } else {
-            console.log(`no saving for remove ${event.entry.id}`);
           }
         } else if (event.state === 'changed') {
           // not implemented yet
@@ -376,12 +364,10 @@ export class TaskService implements OnDestroy {
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
                 if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_2.') > -1) {
-                  console.log(`remove first`);
                   removeList.push(dirEntry);
                   nothingToDo = false;
                 }
               } else if (this.splitPrompt === 'SECOND') {
-                console.log(`remove second`);
                 if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].fullname.indexOf('_1.') > -1) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
@@ -389,7 +375,6 @@ export class TaskService implements OnDestroy {
               }
 
               if (nothingToDo) {
-                console.log(`NOTHING TO DO`);
                 promises.push(this.taskList.cleanup(entry, true));
                 this.saveCounters();
               }
@@ -404,7 +389,6 @@ export class TaskService implements OnDestroy {
       }
 
       Promise.all(promises).then(() => {
-        console.log('CHECK FILES OK');
 
 
       }).catch((error) => {
@@ -693,7 +677,6 @@ export class TaskService implements OnDestroy {
         setTimeout(() => {
           const reader = new FileReader();
           reader.onload = (event: any) => {
-            console.log(event.target.result);
             const format = new WavFormat(event.target.result);
             const isValidFormat = format.isValid(event.target.result);
             const isValidTranscript = this.validTranscript(file.extension);
@@ -716,7 +699,6 @@ export class TaskService implements OnDestroy {
               const fileInfos: FileInfo[] = [];
 
               if (files.length > 1) {
-                console.log(`greater than 1`);
                 for (let i = 0; i < files.length; i++) {
                   const fileObj = files[i];
                   const fileInfo = FileInfo.fromFileObject(fileObj);
@@ -793,7 +775,6 @@ export class TaskService implements OnDestroy {
       const dirTask = new TaskDirectory(dir.path, dir.size);
       const promises: Promise<(Task | TaskDirectory)[]>[] = [];
 
-      console.log(dir);
       for (let i = 0; i < dir.entries.length; i++) {
         const dirEntry = dir.entries[i];
 
@@ -807,8 +788,6 @@ export class TaskService implements OnDestroy {
       }
 
       Promise.all(promises).then((values) => {
-        console.log('ALL PROCESSED!');
-        console.log(values);
         const result = [];
 
         let content = [];
@@ -827,11 +806,9 @@ export class TaskService implements OnDestroy {
           } else if (value instanceof TaskDirectory) {
             // is dir
             if (value.entries.length === 1) {
-              console.log(`only 1`);
               content.push(value.entries[0]);
             } else {
               if (content.length > 0) {
-                console.log(`greater 0`);
                 dirTask.addEntries(content);
                 result.push(dirTask);
                 content = [];

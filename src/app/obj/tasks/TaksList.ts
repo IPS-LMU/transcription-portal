@@ -99,9 +99,7 @@ export class TaskList {
 
   public removeEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      console.log('REMOVE ITEM ' + entry.id);
       const sendEvent = () => {
-        console.log(`SEND REMOVING ${entry.id}`);
         this._entryChanged.next({
           state: 'removed',
           saveToDB: saveToDB,
@@ -154,7 +152,6 @@ export class TaskList {
   }
 
   public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean): Promise<void> {
-    console.log(`cleanup ${saveToDB}`);
     if (!isNullOrUndefined(entry)) {
       if (entry instanceof Task) {
 
@@ -166,7 +163,6 @@ export class TaskList {
           // move entry task to upper level and remove dir
           const entryTask = <Task> entry.entries[0];
           entryTask.directory = null;
-          console.log('task is ' + entryTask.id + ' and parent is ' + entry.id);
           return this.removeEntry(entryTask, saveToDB).then(() => {
             return this.removeEntry(entry, saveToDB)
           }).then(() => {

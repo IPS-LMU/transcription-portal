@@ -521,11 +521,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     if (event.type === 'keydown') {
-      console.log(event);
       if (this.pressedKey < 0) {
         this.pressedKey = event.keyCode;
       } else {
-        console.log(`pressed: ${this.pressedKey} && ${event.key}`);
         if (event.keyCode === 8 && (this.pressedKey === 93 || this.pressedKey === 224)) {
           // CMD + Backspace on Mac
           this.deleteSelectedTasks();
@@ -533,7 +531,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           event.preventDefault();
           this.selected_tasks = [];
           this.selected_tasks = this.taskService.taskList.entries.slice(0);
-          console.log(`select all`);
         }
       }
     } else if (event.type === 'keyup') {
@@ -547,10 +544,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     for (let i = 0; i < this.selected_tasks.length; i++) {
       let entry = this.selected_tasks[i];
 
-      console.log(`REMOVE SELECTED ${entry.id}`);
-      this.taskService.taskList.removeEntry(entry, true).then(() => {
-        console.log('remove selected task success');
-      }).catch((error) => {
+      this.taskService.taskList.removeEntry(entry, true).catch((error) => {
         console.log(`remove selected false`);
         console.error(error);
       });

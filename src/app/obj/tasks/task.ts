@@ -276,7 +276,6 @@ export class Task {
         return 1;
       }
     });
-    console.log(this._files);
   }
 
   public destroy() {
@@ -303,7 +302,6 @@ export class Task {
         info.attributes = file.attributes;
       } else {
         info = FileInfo.fromAny(file);
-        console.log(info);
       }
       task.files.push(info);
     }
@@ -375,7 +373,6 @@ export class Task {
         }
 
         if (promises.length > 0) {
-          console.log(`primises > 0`);
           Promise.all(promises).then((values2) => {
             result.operations = values2;
             resolve(result)

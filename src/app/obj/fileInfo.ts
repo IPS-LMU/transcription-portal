@@ -116,7 +116,7 @@ export class FileInfo extends DataInfo {
       let lastslash;
       if ((lastslash = fullname.lastIndexOf('/')) > -1) {
         // if path remove all but the filename
-        fullname = fullname.substr(lastslash);
+        fullname = fullname.substr(lastslash + 1);
       }
 
       let extension_begin;
@@ -215,7 +215,6 @@ export class FileInfo extends DataInfo {
   getBase64(file: File): any {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      console.log(file);
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result);
       reader.onerror = error => reject(error);

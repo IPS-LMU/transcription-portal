@@ -179,7 +179,6 @@ export class AppComponent implements OnDestroy {
       ));
       setTimeout(() => {
         this.firstModal.open(() => {
-          console.log(`firstModalShown = ${this.firstModalShown}`);
           return this.firstModalShown;
         }, () => {
           this.storage.saveIntern('firstModalShown', true);
@@ -202,8 +201,6 @@ export class AppComponent implements OnDestroy {
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
     if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
-      console.log('entries:');
-      console.log(entries);
       // filter and re-structure entries array to supported files and directories
       let filteredEntries = this.taskService.cleanUpInputArray(entries);
 
@@ -278,7 +275,6 @@ export class AppComponent implements OnDestroy {
             this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and run '${tool.name}' again.`);
             tool.task.operations[0].statechange.subscribe(
               (state) => {
-                console.log(`op 1 statechange ${state}`);
                 if (state.newState === 'FINISHED') {
                   this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can now run '${tool.name}' for this file.`);
                   this.storage.saveTask(tool.task);
@@ -326,7 +322,6 @@ export class AppComponent implements OnDestroy {
                     // json attribute entry is an object
                     tool.lastResult.url = json.fileList.entry['value'];
                   }
-                  console.log('TOOL NEW URL: ' + tool.lastResult.url);
                   this.storage.saveTask(tool.task);
                   resolve();
                 } else {
@@ -366,7 +361,6 @@ export class AppComponent implements OnDestroy {
                     // json attribute entry is an object
                     tool.previousOperation.lastResult.url = json.fileList.entry['value'];
                   }
-                  console.log('NEW URL: ' + tool.previousOperation.lastResult.url);
                   this.storage.saveTask(tool.task);
                   resolve();
                 } else {

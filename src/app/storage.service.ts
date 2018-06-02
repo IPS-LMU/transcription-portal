@@ -20,7 +20,6 @@ export class StorageService {
     this.subscrmanager.add(this.idbm.open(2).subscribe(
       (result) => {
         console.log('open db');
-        console.log(result.type);
         if (result.type === 'success') {
           // database opened
           console.log('IDB opened');
@@ -172,9 +171,7 @@ export class StorageService {
           }
         }
       } else {
-        console.log(`remove DIR! ${entry.id}`);
         this.idbm.remove('tasks', entry.id).then(() => {
-          console.log(`dir rem ${entry.id}`);
           resolve();
         }).catch((err) => {
           reject(err);
