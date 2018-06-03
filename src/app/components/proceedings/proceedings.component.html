@@ -96,21 +96,30 @@
             <tr>
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-                    <th>
-                        <div>
-                <span *ngIf="operation.icon === ''; else showIcon" style="display:block;"
-                      (click)="openArchiveDownload('column', operation)">
-                    <ng-container *ngIf="shortstyle">
-                        {{operation.name.charAt(0)}}
-                    </ng-container>
-                    <ng-container *ngIf="!shortstyle">
-                        {{operation.name}}
-                    </ng-container>
-                </span>
-                            <ng-template #showIcon>
-                                <div [innerHTML]="operation.icon"
-                                     (click)="openArchiveDownload('column', operation)"></div>
-                            </ng-template>
+                    <th style="padding-left:3px;padding-right:3px;">
+                        <div style="position: relative;">
+                            <div style="display:block;position: relative;height:25px;">
+                                <app-operation-arrow></app-operation-arrow>
+                                <div style="position:absolute;z-index:10;width:100%;text-align:center;">
+                                <span style="background-color:white;padding:0px 3px;"
+                                      *ngIf="operation.icon === ''; else showIcon"
+
+                                      (click)="openArchiveDownload('column', operation)">
+                                    <ng-container *ngIf="shortstyle">
+                                        {{operation.name.charAt(0)}}
+                                    </ng-container>
+                                    <ng-container *ngIf="!shortstyle">
+                                        {{operation.name}}
+                                    </ng-container>
+                                 </span>
+                                    <ng-template #showIcon>
+                                    <span style="background-color:white;padding:0px 3px;"
+                                          [innerHTML]="operation.icon"
+                                          (click)="openArchiveDownload('column', operation)">
+                                    </span>
+                                    </ng-template>
+                                </div>
+                            </div>
                             <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
                                    class="header-checkbox"
                                    [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
@@ -137,14 +146,14 @@
             yellow: (entry.state === 'PROCESSING')
             }"></i>
                         </ng-container>
-                <span [ngClass]="{
+                        <span [ngClass]="{
                     'green': ((entry.files[0].extension === '.wav' && entry.files[0].file !== undefined) ||
                              (entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)),
                     'yellow': ((entry.files[0].extension === '.wav' && entry.files[0].file === undefined) || entry.files[0].extension !== '.wav') && entry.operations[0].state !== 'FINISHED'
                 }" title="{{entry.files[0].attributes.originalFileName}}"
-                      (mouseenter)="onTaskMouseEnter($event, entry)"
-                      (mouseleave)="onTaskMouseLeave($event, entry)"
-                      (mouseover)="onTaskMouseOver($event, entry)"> {{entry.files[0].name.replace('_annot', '') + '.wav'}}
+                              (mouseenter)="onTaskMouseEnter($event, entry)"
+                              (mouseleave)="onTaskMouseLeave($event, entry)"
+                              (mouseover)="onTaskMouseOver($event, entry)"> {{entry.files[0].name.replace('_annot', '') + '.wav'}}
                 </span>
                         <ng-container *ngIf=" entry.files.length > 1 || entry.files[0].extension !== '.wav'">
                     <span class="badge" [ngClass]="{
@@ -286,9 +295,9 @@
                         }">
                             <i class="fa fa-folder-open blue op-50" aria-hidden="true"></i>
                         </ng-container>
-                    <span class="op-50"
-                          title="{{entry.file.fullname}}"
-                    > {{entry.file.fullname}}
+                        <span class="op-50"
+                              title="{{entry.file.fullname}}"
+                        > {{entry.file.fullname}}
                     </span>
                     </td>
                     <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 1">

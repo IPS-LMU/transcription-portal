@@ -1,0 +1,6 @@
+<div class="arrow-outer" #outer (resize)="onResize($event)" onresize="onResize($event)">
+    <svg [attr.width]="size.width" [attr.height]="size.height">
+        <line x1="0" y1="5" [attr.x2]="size.width" y2="5" stroke="cornflowerblue" stroke-width="1"/>
+        <polygon [attr.points]="getTriangle()" style="fill:cornflowerblue;"/>
+    </svg>
+</div>

@@ -30,6 +30,7 @@ import {FilePreviewModalComponent} from './modals/file-preview-modal/file-previe
 import {AlertComponent} from './components/alert/alert.component';
 import {AlertService} from './shared/alert.service';
 import {DownloadModalComponent} from './modals/download-modal/download-modal.component';
+import {OperationArrowComponent} from './components/operation-arrow/operation-arrow.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import {DownloadModalComponent} from './modals/download-modal/download-modal.com
     ProtocolFooterComponent,
     FilePreviewModalComponent,
     AlertComponent,
-    DownloadModalComponent
+    DownloadModalComponent,
+    OperationArrowComponent
   ],
   imports: [
     BrowserModule,
