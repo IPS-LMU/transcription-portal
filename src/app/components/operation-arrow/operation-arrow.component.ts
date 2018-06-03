@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
 
 @Component({
   selector: 'app-operation-arrow',
@@ -17,6 +17,8 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
   };
 
   @ViewChild('outer') outer;
+  @Input('type') type: 'arrow' | 'circle' = 'arrow';
+  @Input('first') first = false;
 
   constructor() {
   }
