@@ -419,14 +419,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.operationhover.emit();
   }
 
-  onTaskMouseEnter($event, task: Task) {
+  onTaskMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
     // show Popover for normal operations only
+    console.log($event);
+    const y = $event.layerY + 10;
     this.popover.task = task;
-    this.popover.x = $event.offsetX + 60;
+    this.popover.x = $event.layerX + 10;
     this.popover.width = 600;
     this.popover.height = 320;
-    this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
-    this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;
+    this.popover.pointer = (y + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
+    this.popover.y = (y + this.popoverRef.height > window.innerHeight) ? y - this.popoverRef.height : y;
+    console.log(`set to ${this.popover.y}`);
     this.togglePopover(true);
 
     this.popover.operation = null;

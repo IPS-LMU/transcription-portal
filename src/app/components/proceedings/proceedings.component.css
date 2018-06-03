@@ -39,7 +39,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     text-wrap: none;
-    max-width: 100px;
+    width: 100%;
     white-space: nowrap;
 }
 
@@ -135,4 +135,8 @@ table thead tr th:hover {
     text-align: center;
     margin-top: 10%;
     color: rgba(104, 168, 255, 0.53)
+}
+
+.table-striped .tool-selected {
+    background-color: lightyellow;
 }

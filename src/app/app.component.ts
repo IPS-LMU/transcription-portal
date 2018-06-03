@@ -491,6 +491,7 @@ export class AppComponent implements OnDestroy {
     } else if (this.selectedOperation.state !== TaskState.FINISHED) {
       this.selectedOperation.changeState(TaskState.READY);
     }
+    this.proceedings.selectedOperation = undefined;
   }
 
   @HostListener('window:beforeunload', ['$event'])

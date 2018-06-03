@@ -44,3 +44,7 @@ tbody .fa.fa-arrow-up {
 .yellow {
     color: #ffc33b;
 }
+
+.tool-selected {
+    background-color: lightyellow;
+}

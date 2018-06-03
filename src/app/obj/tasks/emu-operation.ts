@@ -57,10 +57,13 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    const uploadOP = <UploadOperation> this.operations[0];
-    const audio = encodeURIComponent(uploadOP.wavFile.url);
-    const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-    return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+    if (!isNullOrUndefined(this.previousOperation.lastResult)) {
+      const uploadOP = <UploadOperation> this.operations[0];
+      const audio = encodeURIComponent(uploadOP.wavFile.url);
+      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
+      return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+    }
+    return ``;
   }
 
   public fromAny(operationObj: any, task: Task): Operation {
