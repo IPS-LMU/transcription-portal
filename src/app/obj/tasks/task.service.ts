@@ -258,7 +258,9 @@ export class TaskService implements OnDestroy {
             this._taskList.addEntry(taskDir);
           }
         }
-        this.protocolURL = this.updateProtocolURL();
+        this.updateProtocolURL().then((url) => {
+          this.protocolURL = url;
+        });
       }
       if (!isNullOrUndefined(results[1])) {
         // read userSettings
@@ -343,7 +345,10 @@ export class TaskService implements OnDestroy {
         this.state = TaskState.READY;
       }
       this.storage.saveTask(task);
-      this.protocolURL = this.updateProtocolURL();
+
+      this.updateProtocolURL().then((url) => {
+        this.protocolURL = url;
+      });
     }));
   }
 
@@ -438,7 +443,10 @@ export class TaskService implements OnDestroy {
 
         task.statechange.subscribe((obj) => {
           this.storage.saveTask(task);
-          this.protocolURL = this.updateProtocolURL();
+
+          this.updateProtocolURL().then((url) => {
+            this.protocolURL = url;
+          });
         });
         this.storage.saveTask(task);
         task.start(this.httpclient);
@@ -495,11 +503,12 @@ export class TaskService implements OnDestroy {
         };
 
         this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
-        const file = new File([JSON.stringify(json)], this.protocolFileName, {
+        const file = new File([JSON.stringify(json, null, 2)], this.protocolFileName, {
           'type': 'text/plain'
         });
 
-        resolve(this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file)));
+        const url = URL.createObjectURL(file);
+        resolve(this.sanitizer.bypassSecurityTrustResourceUrl(url));
       }).catch((error) => {
         reject(error);
       });

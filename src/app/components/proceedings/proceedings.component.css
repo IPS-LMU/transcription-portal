@@ -140,3 +140,22 @@ table thead tr th:hover {
 .table-striped .tool-selected {
     background-color: lightyellow;
 }
+
+.subTableHeader th {
+    border-top: none;
+    padding: 3px;
+}
+
+.subTableHeader {
+    border-top: none;
+}
+
+.tableHeaderTop {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.tableHeaderTop th {
+    border-bottom: none;
+    padding-bottom: 0;
+}

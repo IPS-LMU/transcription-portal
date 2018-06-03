@@ -30,6 +30,7 @@ import {ASROperation} from '../../obj/tasks/asr-operation';
 import {QueueItem} from '../../obj/preprocessor';
 import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
 import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
+import {G2pMausOperation} from '../../obj/tasks/g2p-maus-operation';
 
 declare var window: any;
 
@@ -469,6 +470,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   deactivateOperation(operation: Operation, index: number) {
+    // TODO improve code!
     let tasks = this.taskList.getAllTasks().filter((a) => {
       return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
     });
@@ -509,6 +511,21 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           if (currOperation.state === TaskState.PENDING) {
             currOperation.enabled = operation.enabled;
           }
+        }
+      }
+    } else if (operation instanceof G2pMausOperation) {
+      next.enabled = !next.enabled;
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        const task_operation = task.operations[index + 1];
+        const currOperation = task.operations[index];
+
+        if (task_operation.state === TaskState.PENDING) {
+          task_operation.enabled = next.enabled;
+        }
+        if (currOperation.state === TaskState.PENDING) {
+          currOperation.enabled = operation.enabled;
         }
       }
     }

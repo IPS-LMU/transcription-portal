@@ -79,7 +79,6 @@
                 </ng-container>
             </ng-container>
             <ng-container *ngIf="popover.operation === null && popover.task !== null && popover.task !== undefined">
-                {{popover.y}}
                 <ng-container *ngIf="popover.task.state === 'FINISHED'">
                     <!-- <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
                                                                              style="color:cornflowerblue;"></i></a> -->
@@ -93,7 +92,7 @@
         <!-- Big proceedings table -->
         <table class="table table-striped">
             <thead>
-            <tr>
+            <tr class="tableHeaderTop">
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
                     <th style="padding-left:3px;padding-right:3px;" [title]="operation.name">
@@ -121,11 +120,27 @@
                                     </ng-template>
                                 </div>
                             </div>
-                            <input *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" type="checkbox"
-                                   class="header-checkbox"
-                                   [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
                         </div>
                     </th>
+                </ng-container>
+            </tr>
+            <tr class="subTableHeader">
+                <th></th>
+                <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
+                    <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'">
+                        <input type="checkbox"
+                               class="header-checkbox"
+                               [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+                    </th>
+                    <th *ngIf="operation.name === 'MAUS'" colspan="2" style="position: relative">
+                        <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
+                        <input type="checkbox"
+                               class="header-checkbox"
+                               [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+                        <img src="assets/directory.png"
+                             style="height:25px;-webkit-transform: scaleX(-1); transform: scaleX(-1);right:0;position:absolute"/>
+                    </th>
+                    <th *ngIf="i === 0"></th>
                 </ng-container>
             </tr>
             </thead>

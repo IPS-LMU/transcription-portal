@@ -10,6 +10,7 @@ import {ASROperation} from '../../obj/tasks/asr-operation';
 import {OCTRAOperation} from '../../obj/tasks/octra-operation';
 import {StorageService} from '../../storage.service';
 import {isNullOrUndefined} from 'util';
+import {G2pMausOperation} from '../../obj/tasks/g2p-maus-operation';
 
 @Component({
   selector: 'app-queue-modal',
@@ -141,6 +142,21 @@ export class QueueModalComponent implements OnInit {
           if (currOperation.state === TaskState.PENDING) {
             currOperation.enabled = operation.enabled;
           }
+        }
+      }
+    } else if (operation instanceof G2pMausOperation) {
+      next.enabled = !next.enabled;
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        const task_operation = task.operations[index + 1];
+        const currOperation = task.operations[index];
+
+        if (task_operation.state === TaskState.PENDING) {
+          task_operation.enabled = next.enabled;
+        }
+        if (currOperation.state === TaskState.PENDING) {
+          currOperation.enabled = operation.enabled;
         }
       }
     }
