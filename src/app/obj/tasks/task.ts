@@ -312,8 +312,16 @@ export class Task {
         const op = defaultOperations[j];
         if (op.name === operationObj.name) {
           const operation = op.fromAny(operationObj, task);
-          if (operation.state === TaskState.UPLOADING || operation.state === TaskState.PROCESSING) {
+          if (operation.state === TaskState.UPLOADING) {
             operation.changeState(TaskState.PENDING);
+          } else {
+            if (operation.state === TaskState.PROCESSING) {
+              if (operation.name === 'OCTRA') {
+                operation.changeState(TaskState.READY);
+              } else {
+                operation.changeState(TaskState.PENDING);
+              }
+            }
           }
           task.operations.push(operation);
           break;

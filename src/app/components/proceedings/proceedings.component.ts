@@ -78,6 +78,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public isDragging = false;
   private pressedKey = -1;
   private shiftStart = -1;
+  private allSelected = false;
 
   @Input() shortstyle = false;
 
@@ -242,7 +243,47 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             this.shiftStart = -1;
           }
         } else {
-          this.selected_tasks.push(entry);
+
+          if (entry instanceof Task) {
+            if (!isNullOrUndefined(entry.directory)) {
+              const index = this.selected_tasks.findIndex((a) => {
+                return (a.id === entry.directory.id);
+              });
+
+              if (index < 0) {
+                this.selected_tasks.push(entry);
+              } else {
+                const dir: TaskDirectory = <TaskDirectory> this.selected_tasks[index];
+                // folder selected but entry should be removed
+                this.selected_tasks.splice(index, 1);
+
+                for (let i = 0; i < dir.entries.length; i++) {
+                  const dirEntry = dir.entries[i];
+
+                  if (dirEntry.id !== entry.id) {
+                    this.selected_tasks.push(dirEntry);
+                  }
+                }
+              }
+            } else {
+              this.selected_tasks.push(entry);
+            }
+          } else {
+            // remove all dirEntries in selectedTasks
+            for (let i = 0; i < entry.entries.length; i++) {
+              const dirEntry = entry.entries[i];
+
+              const index = this.selected_tasks.findIndex((a) => {
+                return (a.id === dirEntry.id);
+              });
+
+              if (index > -1) {
+                this.selected_tasks.splice(index, 1);
+              }
+            }
+
+            this.selected_tasks.push(entry);
+          }
         }
       }
 
@@ -256,6 +297,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       }
       this.selected_tasks = puffer;
+      console.log(`SELECTED:`);
+      console.log(puffer);
     }
 
     if (
@@ -530,7 +573,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         } else if ((this.pressedKey === 91 || this.pressedKey === 224) && event.key === 'a') {
           event.preventDefault();
           this.selected_tasks = [];
-          this.selected_tasks = this.taskService.taskList.entries.slice(0);
+          if (!this.allSelected) {
+            this.selected_tasks = this.taskService.taskList.entries.slice(0);
+            this.allSelected = true;
+          } else {
+            this.allSelected = false;
+          }
         }
       }
     } else if (event.type === 'keyup') {

@@ -25,8 +25,6 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     setInterval(() => {
-      console.log(`${this.outer.nativeElement.offsetWidth}, ${this.outer.nativeElement.offsetWidth}`);
-      console.log(this.outer.nativeElement.getBoundingClientRect());
       this.size.width = this.outer.nativeElement.offsetWidth;
     }, 300);
   }
@@ -39,7 +37,6 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
   }
 
   onResize($event) {
-    console.log(`RESIZE!`);
     this.size.width = this.outer.nativeElement.offsetWidth;
   }
 }

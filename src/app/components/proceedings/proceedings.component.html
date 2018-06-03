@@ -91,7 +91,7 @@
         </app-popover>
 
         <!-- Big proceedings table -->
-        <table class="table table-responsive-sm table-striped">
+        <table class="table table-striped">
             <thead>
             <tr>
                 <th>File</th>
@@ -132,7 +132,7 @@
             <tbody (contextmenu)="onContextMenu($event)">
             <ng-container *ngFor="let entry of taskList.entries; let i = index;">
 
-                <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
+                <tr appProceedingsRow style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
                     <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry)"
                         [ngClass]="{
                             'shorten': shortstyle

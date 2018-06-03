@@ -517,7 +517,6 @@ export class AppComponent implements OnDestroy {
 
 
   public dragBorder($event: any, part: string) {
-    console.log(`DRAG BORDER!`);
     if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
       if (this.dragborder !== 'dragging') {
         if (part === 'left' && $event.offsetX >= $event.target.clientWidth - 3 && $event.offsetX <= $event.target.clientWidth + 3) {
