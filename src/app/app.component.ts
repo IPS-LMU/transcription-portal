@@ -50,7 +50,6 @@ export class AppComponent implements OnDestroy {
   private _showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
-  public selectedOperation: Operation = null;
   private firstModalShown = false;
 
   public allTasks(): Task[] {
@@ -63,6 +62,14 @@ export class AppComponent implements OnDestroy {
 
   public get isdevelopment(): boolean {
     return environment.development;
+  }
+
+  public get toolSelectedOperation(): Operation {
+    return this.proceedings.toolSelectedOperation;
+  }
+
+  public set toolSelectedOperation(value: Operation) {
+    this.proceedings.toolSelectedOperation = value;
   }
 
   public test = 'inactive';
@@ -389,12 +396,12 @@ export class AppComponent implements OnDestroy {
 
           if (this.tool_url !== '') {
             this.toolLoader.url = tool.getToolURL();
-            if (!isNullOrUndefined(this.selectedOperation) && operation.id !== this.selectedOperation.id) {
+            if (!isNullOrUndefined(this.toolSelectedOperation) && operation.id !== this.toolSelectedOperation.id) {
               // some operation already initialized
               this.leaveToolOption();
             }
 
-            this.selectedOperation = operation;
+            this.toolSelectedOperation = operation;
             this.sidebarstate = 'opened';
 
             this.showtool = true;
@@ -445,31 +452,31 @@ export class AppComponent implements OnDestroy {
       const result: string = $event.data.data.transcript_url;
       const file = FileInfo.fromURL(result, null, 'text/plain');
       file.updateContentFromURL(this.httpclient).then(() => {
-        this.selectedOperation.results.push(file);
+        this.toolSelectedOperation.results.push(file);
 
-        const index = this.selectedOperation.task.operations.findIndex((op) => {
-          if (op.id === this.selectedOperation.id) {
+        const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
+          if (op.id === this.toolSelectedOperation.id) {
             return true;
           }
         });
 
         // reset next operations
         if (index > -1) {
-          for (let i = index + 1; i < this.selectedOperation.task.operations.length; i++) {
-            const operation = this.selectedOperation.task.operations[i];
+          for (let i = index + 1; i < this.toolSelectedOperation.task.operations.length; i++) {
+            const operation = this.toolSelectedOperation.task.operations[i];
             operation.changeState(TaskState.PENDING);
           }
         }
 
-        if (this.selectedOperation instanceof OCTRAOperation) {
-          this.selectedOperation.time.duration += Date.now() - this.selectedOperation.time.start;
+        if (this.toolSelectedOperation instanceof OCTRAOperation) {
+          this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
         }
 
-        this.selectedOperation.changeState(TaskState.FINISHED);
-        this.storage.saveTask(this.selectedOperation.task);
+        this.toolSelectedOperation.changeState(TaskState.FINISHED);
+        this.storage.saveTask(this.toolSelectedOperation.task);
 
         setTimeout(() => {
-          this.selectedOperation.task.restart(this.httpclient);
+          this.toolSelectedOperation.task.restart(this.httpclient);
           this.onBackButtonClicked();
         }, 1000);
       }).catch((error) => {
@@ -485,13 +492,13 @@ export class AppComponent implements OnDestroy {
   }
 
   leaveToolOption() {
-    if (!isNullOrUndefined(this.selectedOperation.nextOperation)
-      && this.selectedOperation.nextOperation.state === TaskState.FINISHED) {
-      this.selectedOperation.changeState(TaskState.FINISHED);
-    } else if (this.selectedOperation.state !== TaskState.FINISHED) {
-      this.selectedOperation.changeState(TaskState.READY);
+    if (!isNullOrUndefined(this.toolSelectedOperation.nextOperation)
+      && this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED) {
+      this.toolSelectedOperation.changeState(TaskState.FINISHED);
+    } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
+      this.toolSelectedOperation.changeState(TaskState.READY);
     }
-    this.proceedings.selectedOperation = undefined;
+    this.toolSelectedOperation = undefined;
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -500,7 +507,7 @@ export class AppComponent implements OnDestroy {
   }
 
   public getTime(): number {
-    let elem: AudioInfo = <AudioInfo> this.selectedOperation.task.files[0];
+    let elem: AudioInfo = <AudioInfo> this.toolSelectedOperation.task.files[0];
 
     if (!isNullOrUndefined(elem.duration)) {
       return elem.duration.unix;
@@ -520,9 +527,9 @@ export class AppComponent implements OnDestroy {
   public dragBorder($event: any, part: string) {
     if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
       if (this.dragborder !== 'dragging') {
-        if (part === 'left' && $event.offsetX >= $event.target.clientWidth - 3 && $event.offsetX <= $event.target.clientWidth + 3) {
+        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
           this.dragborder = 'active';
-        } else if (part === 'right' && $event.offsetX <= 10) {
+        } else if (part === 'right' && $event.pageX <= 10) {
           this.dragborder = 'active';
         } else {
           this.dragborder = 'inactive';

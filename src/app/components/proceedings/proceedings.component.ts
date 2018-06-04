@@ -92,6 +92,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @ViewChild('filePreview') public filePreview: FilePreviewModalComponent;
 
   public selectedOperation: Operation;
+  public toolSelectedOperation: Operation;
 
   constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
               public storage: StorageService) {
@@ -416,6 +417,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onOperationMouseOver($event, operation: Operation) {
     operation.mouseover = true;
+    this.selectedOperation = operation;
     operation.onMouseOver();
     this.operationhover.emit();
   }

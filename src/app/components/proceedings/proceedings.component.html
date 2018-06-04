@@ -147,7 +147,9 @@
             <tbody (contextmenu)="onContextMenu($event)">
             <ng-container *ngFor="let entry of taskList.entries; let i = index;">
 
-                <tr appProceedingsRow style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
+                <tr appProceedingsRow style="cursor:pointer;" [ngClass]="{
+                'tool-selected': ((toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined) && toolSelectedOperation.task.id === entry.id),
+                'selected': (isEntrySelected(entry))}">
                     <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry)"
                         [ngStyle]="{
                             'max-width': (shortstyle) ? '150px' : 'auto'
@@ -240,7 +242,7 @@
                 </tr>
                 <ng-container *ngIf="entry.files === undefined">
                     <tr *ngFor="let dirEntry of entry.entries" [ngClass]="{
-                    'tool-selected': ((selectedOperation !== undefined) && selectedOperation.task.id === dirEntry.id),
+                    'tool-selected': ((toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined) && toolSelectedOperation.task.id === dirEntry.id),
                     'selected': (isEntrySelected(dirEntry))
                     }"
                     >

@@ -101,19 +101,19 @@
         </div>
         <div class="col-8" style="text-align: center;">
             <p style="margin:0px; margin-top:10px;">
-                <ng-container *ngIf="selectedOperation.previousOperation.results.length > 0">
-                    {{selectedOperation.name}}: {{selectedOperation.previousOperation.results[0].fullname}}
+                <ng-container *ngIf="toolSelectedOperation.previousOperation.results.length > 0">
+                    {{toolSelectedOperation.name}}: {{toolSelectedOperation.previousOperation.results[0].fullname}}
 
-                    , Language: {{selectedOperation.task.language}}
+                    , Language: {{toolSelectedOperation.task.language}}
 
                     , Audio duration: {{getTime() |time}}
 
                 </ng-container>
-                <ng-container *ngIf="selectedOperation.previousOperation.results.length < 1">
-                    {{selectedOperation.name}}:
-                    {{selectedOperation.previousOperation.previousOperation.results[0].fullname}}
+                <ng-container *ngIf="toolSelectedOperation.previousOperation.results.length < 1">
+                    {{toolSelectedOperation.name}}:
+                    {{toolSelectedOperation.previousOperation.previousOperation.results[0].fullname}}
 
-                    , Language: {{selectedOperation.task.language}}
+                    , Language: {{toolSelectedOperation.task.language}}
 
                     , Audio duration: {{getTime() | time}}
                 </ng-container>
@@ -159,7 +159,7 @@
         </div>
         <div [hidden]="dragborder === 'inactive'"
              [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
-             style="position:absolute; height:100%;z-index:800;"
+             style="position:absolute; height:100%;z-index:800;border:1px solid red;"
              [@comeIn]="sidebarExpand"
              (mousedown)="dragBorder($event, 'right')" (mousemove)="dragBorder($event, 'right')"
              (mouseup)="dragBorder($event, 'right')" (mouseenter)="dragBorder($event, 'right')"
@@ -169,7 +169,7 @@
                                 }"
         ></div>
         <div [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
-             style="position:absolute; height:100%; border-top: 1px solid gray;"
+             style="position:absolute; height:100%; border-top: 1px solid gray;border-left:1px solid green;"
              [@comeIn]="sidebarExpand">
             <app-tool-loader #toolLoader style="height:100%;"
                              [operation]="selectedOperation"
