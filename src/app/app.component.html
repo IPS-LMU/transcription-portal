@@ -172,7 +172,7 @@
              style="position:absolute; height:100%; border-top: 1px solid gray;border-left:1px solid green;"
              [@comeIn]="sidebarExpand">
             <app-tool-loader #toolLoader style="height:100%;"
-                             [operation]="selectedOperation"
+                             [operation]="toolSelectedOperation"
                              (datareceived)="onToolDataReceived($event)"
             ></app-tool-loader>
         </div>

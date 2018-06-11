@@ -96,6 +96,8 @@ export class TaskService implements OnDestroy {
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
       (item) => {
+        console.log(`PROCESSED!`);
+        console.log(item);
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
           let foundTask: Task = null;
@@ -106,12 +108,13 @@ export class TaskService implements OnDestroy {
             foundTask = this.taskList.getAllTasks().find((a) => {
               return a.state === TaskState.QUEUED && !isNullOrUndefined(a.files.find((b) => {
                 // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                return b.name.includes(result.files[0].name) || result.files[0].name.includes(b.name);
+                return b.name === result.files[0].name;
               }));
             });
 
             if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
+              console.log(`FOUND TASK!?`);
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
                 // TODO change if other than transcript files are needed
@@ -119,6 +122,8 @@ export class TaskService implements OnDestroy {
                 foundTask.operations[1].changeState(TaskState.SKIPPED);
               }
               this.storage.saveTask(foundTask);
+            } else {
+              console.log(`WHAT?`);
             }
           } else {
             for (let j = 0; j < result.entries.length; j++) {
@@ -133,7 +138,7 @@ export class TaskService implements OnDestroy {
 
                 if (!isNullOrUndefined(task.files.find((b) => {
                   // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name.includes(entry.files[0].name) || entry.files[0].name.includes(b.name);
+                  return b.name === entry.files[0].name;
                 }))) {
                   if (!(task.files[0].extension === '.wav'
                     && entry.files[0].extension === '.wav')) {
@@ -155,7 +160,7 @@ export class TaskService implements OnDestroy {
               foundTask = this.taskList.getAllTasks().find((a) => {
                 return a.state === TaskState.QUEUED && !isNullOrUndefined(a.files.find((b) => {
                   // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name.includes(entry.files[0].name) || entry.files[0].name.includes(b.name);
+                  return b.name === entry.files[0].name;
                 }));
               });
 
@@ -177,6 +182,7 @@ export class TaskService implements OnDestroy {
           }
 
           if (isNullOrUndefined(foundTask)) {
+            console.log(result);
             this.addEntry(result, true);
           }
         }
@@ -223,7 +229,9 @@ export class TaskService implements OnDestroy {
                 }
               }
             }
-            this._taskList.addEntry(task);
+            this._taskList.addEntry(task).catch((err) => {
+              console.error(err);
+            });
           } else {
             const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
 
@@ -255,7 +263,9 @@ export class TaskService implements OnDestroy {
               }
             }
 
-            this._taskList.addEntry(taskDir);
+            this._taskList.addEntry(taskDir).catch((err) => {
+              console.error(err);
+            });
           }
         }
         this.updateProtocolURL().then((url) => {
@@ -407,6 +417,8 @@ export class TaskService implements OnDestroy {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
       this.taskList.addEntry(entry, saveToDB).then(() => {
         return this.taskList.cleanup(entry, saveToDB);
+      }).catch((err) => {
+        console.error(`${err}`);
       }).then(() => {
         this.saveCounters();
       }).catch((err) => {

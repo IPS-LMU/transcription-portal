@@ -31,6 +31,7 @@ import {QueueItem} from '../../obj/preprocessor';
 import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
 import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
 import {G2pMausOperation} from '../../obj/tasks/g2p-maus-operation';
+import {ShortcutManager} from '../../obj/shortcut-manager';
 
 declare var window: any;
 
@@ -77,9 +78,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
-  private pressedKey = -1;
   private shiftStart = -1;
   private allSelected = false;
+
+  private shortcutManager = new ShortcutManager();
 
   @Input() shortstyle = false;
 
@@ -100,6 +102,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
+
   }
 
   public get d() {
@@ -209,43 +212,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
-    if (isNullOrUndefined(operation) || !(operation instanceof ToolOperation)) {
+    if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
 
-      const search = this.selected_tasks.findIndex((a) => {
-        return a.id === entry.id;
-      });
+      console.log(`OKOKOKOKOKO hier: ${this.shortcutManager.pressedKey.name}`);
+      if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
+        // select
 
-      if (search > -1) {
-        this.selected_tasks.splice(search, 1);
-      } else {
-        if (this.shiftStart < 0) {
-          this.shiftStart = entry.id;
-          this.selected_tasks.push(entry);
-        }
-        if (this.pressedKey === 16) {
-          // shift pressed
-          if (this.shiftStart < 0) {
-          } else {
-            let end = entry.id;
+        const search = this.selected_tasks.findIndex((a) => {
+          return a.id === entry.id;
+        });
 
-            if (this.shiftStart > end) {
-              const temp = this.shiftStart;
-              this.shiftStart = end;
-              end = temp;
-            }
-
-            for (let i = 0; i < this.taskList.getAllTasks().length; i++) {
-              const task = this.taskList.getAllTasks()[i];
-              if (task.id > this.shiftStart && task.id <= end) {
-                this.selected_tasks.push(task);
-              }
-            }
-            // select all between
-            // const start =x
-            this.shiftStart = -1;
-          }
+        if (search > -1) {
+          this.selected_tasks.splice(search, 1);
         } else {
-
           if (entry instanceof Task) {
             if (!isNullOrUndefined(entry.directory)) {
               const index = this.selected_tasks.findIndex((a) => {
@@ -287,20 +266,55 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             this.selected_tasks.push(entry);
           }
         }
-      }
 
-      const puffer = [];
-      for (let i = 0; i < this.selected_tasks.length; i++) {
-        const task = this.selected_tasks[i];
-        if (puffer.find((a) => {
-          return task.id === a.id;
-        }) === undefined) {
-          puffer.push(task);
+        const puffer = [];
+        for (let i = 0; i < this.selected_tasks.length; i++) {
+          const task = this.selected_tasks[i];
+          if (puffer.find((a) => {
+            return task.id === a.id;
+          }) === undefined) {
+            puffer.push(task);
+          }
+        }
+        this.selected_tasks = puffer;
+        console.log(`SELECTED:`);
+        console.log(puffer);
+      } else {
+        // deselect all
+
+        if (this.shortcutManager.pressedKey.name === 'SHIFT') {
+          // shift pressed
+          if (this.shiftStart > -1) {
+            let end = entry.id;
+
+            if (this.shiftStart > end) {
+              console.log(`SWITCH`);
+              const temp = this.shiftStart;
+              this.shiftStart = end;
+              end = temp;
+            }
+
+            for (let i = 0; i < this.taskList.getAllTasks().length; i++) {
+              const task = this.taskList.getAllTasks()[i];
+              if (task.id >= this.shiftStart && task.id <= end) {
+                this.selected_tasks.push(task);
+              }
+            }
+            // select all between
+            // const start =x
+            this.shiftStart = -1;
+          }
+        } else {
+          const old_id = (this.selected_tasks.length > 0) ? this.selected_tasks[0].id : -1;
+
+          this.selected_tasks = [];
+
+          if (entry.id !== old_id) {
+            this.shiftStart = entry.id;
+            this.selected_tasks.push(entry);
+          }
         }
       }
-      this.selected_tasks = puffer;
-      console.log(`SELECTED:`);
-      console.log(puffer);
     }
 
     if (
@@ -585,29 +599,22 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
-    if (event.type === 'keydown') {
-      if (this.pressedKey < 0) {
-        this.pressedKey = event.keyCode;
-      } else {
-        if (event.keyCode === 8 && (this.pressedKey === 93 || this.pressedKey === 224)) {
-          // CMD + Backspace on Mac
-          this.deleteSelectedTasks();
-        } else if ((this.pressedKey === 91 || this.pressedKey === 224) && event.key === 'a') {
-          event.preventDefault();
-          this.selected_tasks = [];
-          if (!this.allSelected) {
-            this.selected_tasks = this.taskService.taskList.entries.slice(0);
-            this.allSelected = true;
-          } else {
-            this.allSelected = false;
-          }
+    console.log(event);
+    this.shortcutManager.checkKeyEvent(event).then((result) => {
+      if (result.command === 'remove') {
+        this.deleteSelectedTasks();
+      } else if (result.command == 'select all') {
+        this.selected_tasks = [];
+        if (!this.allSelected) {
+          this.selected_tasks = this.taskService.taskList.entries.slice(0);
+          this.allSelected = true;
+        } else {
+          this.allSelected = false;
         }
       }
-    } else if (event.type === 'keyup') {
-      if (event.keyCode === this.pressedKey) {
-        this.pressedKey = -1;
-      }
-    }
+    }).catch((error) => {
+      console.error(error);
+    });
   }
 
   private deleteSelectedTasks() {
