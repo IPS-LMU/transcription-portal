@@ -50,8 +50,8 @@ export const ANIMATIONS = [
       width: '100%'
     })),
     state('closed', style({
-      width: '30%'
-    })),
+      width: '{{ width }}%'
+    }), {params: {width: 30}}),
     state('*', style({
       width: '100%'
     })),
@@ -62,17 +62,17 @@ export const ANIMATIONS = [
 
   trigger('comeIn', [
     state('closed', style({
-      'margin-left': '30%',
-      'width': '70%'
-    })),
+      'margin-left': '{{ procWidth }}%',
+      'width': '{{ toolWidth }}%'
+    }), {params: {toolWidth: 70, procWidth: 30}}),
     state('opened', style({
       'margin-left': '100%',
-      'width': '70%'
-    })),
+      'width': '{{ toolWidth }}%'
+    }), {params: {toolWidth: 70}}),
     state('*', style({
       'margin-left': '100%',
-      'width': '70%'
-    })),
+      'width': '{{ toolWidth }}%'
+    }), {params: {toolWidth: 70}}),
     transition('* => closed', animate('600ms ease-in')),
     transition('opened => closed', animate('600ms ease-in')),
     transition('closed => opened', animate('600ms ease-out'))

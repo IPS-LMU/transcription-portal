@@ -132,3 +132,7 @@ h1 {
 .dragborder {
     cursor: col-resize;
 }
+
+.dropdown-toggle::after {
+    display: none;
+}

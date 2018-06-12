@@ -602,6 +602,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     console.log(event);
     this.shortcutManager.checkKeyEvent(event).then((result) => {
       if (result.command === 'remove') {
+        this.popover.state = 'closed';
         this.deleteSelectedTasks();
       } else if (result.command == 'select all') {
         this.selected_tasks = [];

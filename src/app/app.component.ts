@@ -78,8 +78,18 @@ export class AppComponent implements OnDestroy {
   private subscrmanager = new SubscriptionManager();
   public protocolURL = '';
   public dragborder = 'inactive';
-  public newProceedingsWidth = '100%';
-  public newToolWidth = '70%';
+  public newProceedingsWidth = 30;
+  public newToolWidth = 70;
+
+  public get animationObject(): any {
+    const width = 100 - this.newProceedingsWidth;
+    return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}}
+  }
+
+  public get animationObject2(): any {
+    const width = this.newProceedingsWidth;
+    return {value: this.sidebarExpand, params: {width: width}}
+  }
 
   @ViewChild('fileinput') fileinput: ElementRef;
   @ViewChild('folderinput') folderinput: ElementRef;
@@ -154,7 +164,7 @@ export class AppComponent implements OnDestroy {
       }
     ));
 
-    this.subscrmanager.add(this.storage.allloaded.subscribe(() => {
+    this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
       this.storage.getIntern('firstModalShown').then(
         (result) => {
           if (!isNullOrUndefined(result)) {
@@ -166,6 +176,20 @@ export class AppComponent implements OnDestroy {
         console.error(err);
         this.loadFirstModal();
       });
+
+      if (!isNullOrUndefined(results[1])) {
+        // read userSettings
+        for (let i = 0; i < results[1].length; i++) {
+          const userSetting = results[1][i];
+
+          switch (userSetting.name) {
+            case ('sidebarWidth'):
+              this.newProceedingsWidth = userSetting.value;
+              break;
+          }
+        }
+        // this.notification.permissionGranted = results[1][]
+      }
     }));
 
     window.onunload = function () {
@@ -539,8 +563,9 @@ export class AppComponent implements OnDestroy {
         const procWidth = Math.floor(($event.pageX + 10) / window.innerWidth * 100);
         const toolWidth = 100 - procWidth;
 
-        this.newToolWidth = toolWidth + '%';
-        this.newProceedingsWidth = procWidth + '%';
+        this.newToolWidth = toolWidth;
+        this.newProceedingsWidth = procWidth;
+        this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
       }
     }
 
@@ -564,5 +589,11 @@ export class AppComponent implements OnDestroy {
     if (this.dragborder === 'dragging') {
       $event.preventDefault();
     }
+  }
+
+  resetSideBarWidth() {
+    this.newProceedingsWidth = 30;
+    this.newToolWidth = 70;
+    this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
   }
 }

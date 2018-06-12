@@ -41,8 +41,20 @@
                     <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
                        (click)="notification.permissionGranted = true"></i>
                 </div>
-                <div class="col-sm-3"><i
-                        class="fa fa-cog"></i>
+                <div class="col-sm-3">
+                    <div ngbDropdown placement="bottom-right" class="d-inline-block">
+                        <i class="fa fa-cog" ngbDropdownToggle id="dropdownBasic2"></i>
+                        <div ngbDropdownMenu aria-labelledby="dropdownBasic2" style="width:300px;right:0;padding:10px;">
+                            <table style="width:100%;">
+                                <tbody>
+                                <tr>
+                                    <td colspan="2"><span class="btn-link" style="cursor: pointer;"
+                                                          (click)="resetSideBarWidth();">Reset sidebar width</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,10 +143,10 @@
     <!-- WORKING AREA -->
     <div id="main" style="position: relative;">
         <div [ngStyle]="{
-            'width': newProceedingsWidth,
+            'width': newProceedingsWidth + '%',
             'border-right': (sidebarExpand === 'closed') ? '2px solid lightgray' : 'none'
         }" style="float:right;"
-             [@expandLeft]="sidebarExpand"
+             [@expandLeft]="animationObject2"
 
              (mousedown)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
              (mouseup)="dragBorder($event, 'left')" (mouseenter)="dragBorder($event, 'left')"
@@ -158,9 +170,9 @@
             </app-proceedings>
         </div>
         <div [hidden]="dragborder === 'inactive'"
-             [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
-             style="position:absolute; height:100%;z-index:800;border:1px solid red;"
-             [@comeIn]="sidebarExpand"
+             [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
+             style="position:absolute; height:100%;z-index:800;"
+             [@comeIn]="animationObject"
              (mousedown)="dragBorder($event, 'right')" (mousemove)="dragBorder($event, 'right')"
              (mouseup)="dragBorder($event, 'right')" (mouseenter)="dragBorder($event, 'right')"
              (mouseleave)="dragBorder($event, 'right')"
@@ -168,9 +180,9 @@
                                     'dragborder': dragborder === 'active' || dragborder === 'dragging'
                                 }"
         ></div>
-        <div [ngStyle]="{'margin-left': newProceedingsWidth, 'width': newToolWidth}"
-             style="position:absolute; height:100%; border-top: 1px solid gray;border-left:1px solid green;"
-             [@comeIn]="sidebarExpand">
+        <div [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
+             style="position:absolute; height:100%; border-top: 1px solid gray;"
+             [@comeIn]="animationObject">
             <app-tool-loader #toolLoader style="height:100%;"
                              [operation]="toolSelectedOperation"
                              (datareceived)="onToolDataReceived($event)"

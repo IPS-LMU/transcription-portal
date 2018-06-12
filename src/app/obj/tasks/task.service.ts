@@ -290,7 +290,6 @@ export class TaskService implements OnDestroy {
                 this.selectedlanguage = lang;
               }
               break;
-            default:
           }
         }
         // this.notification.permissionGranted = results[1][]
