@@ -1,17 +1,11 @@
 <table class="table table-hover">
     <tbody>
-    <ng-container *ngIf="filesCount > 0 || dirCount > 0">
+    <ng-container *ngIf="entriesCount > 0 ">
         <tr (click)="onAction('delete')">
             <td><i class="fa fa-times"></i></td>
             <td>
-                <ng-container *ngIf="filesCount > 0 && dirCount < 1">
-                    Delete {{filesCount}} task(s)
-                </ng-container>
-                <ng-container *ngIf="dirCount > 0 && filesCount < 1">
-                    Delete {{dirCount}} folder(s)
-                </ng-container>
-                <ng-container *ngIf="dirCount > 0 && filesCount > 0">
-                    Delete {{filesCount}} task(s) and {{dirCount}} folder(s)
+                <ng-container *ngIf="entriesCount > 0">
+                    Delete selected lines
                 </ng-container>
             </td>
         </tr>

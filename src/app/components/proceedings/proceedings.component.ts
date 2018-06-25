@@ -202,6 +202,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onContextMenu(event) {
     event.preventDefault();
 
+    if (this.selectedRows.length <= 1) {
+      this.selectedRows = [];
+      const index = this.taskList.getIndexByEntry(this.popover.task);
+      this.selectedRows.push(index);
+    }
     this.contextmenu.x = event.layerX - 20;
     this.contextmenu.y = event.layerY;
     this.contextmenu.hidden = false;
@@ -401,6 +406,20 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   onTaskMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
+    this.popover.task = task;
+
+    this.popover.operation = null;
+  }
+
+  onTaskMouseLeave($event, task: Task) {
+    task.mouseover = false;
+  }
+
+  onTaskMouseOver($event, task: Task) {
+    task.mouseover = true;
+  }
+
+  onInfoMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
     // show Popover for normal operations only
     const y = $event.layerY + 10;
     this.popover.task = task;
@@ -415,12 +434,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.popover.operation = null;
   }
 
-  onTaskMouseLeave($event, task: Task) {
+  onInfoMouseLeave($event, task: Task) {
     this.togglePopover(false);
     task.mouseover = false;
   }
 
-  onTaskMouseOver($event, task: Task) {
+  onInfoMouseOver($event, task: Task) {
     task.mouseover = true;
   }
 
@@ -625,6 +644,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
     this.selectedRows = [];
     this.shiftStart = -1;
+  }
+
+  public removeEntry(event, entry: Task | TaskDirectory) {
+    this.taskService.taskList.removeEntry(entry, true).catch((error) => {
+      console.log(`remove selected false`);
+      console.error(error);
+    });
+    setTimeout(() => {
+      this.selectedRows = [];
+    }, 0);
   }
 
   public getBadge(task: Task): {

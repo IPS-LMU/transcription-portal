@@ -85,7 +85,7 @@
                                                                              style="color:cornflowerblue;"></i></a> -->
                 </ng-container>
                 <span>Language: {{popover.task.language}}</span><br/><br/>
-                <span>File infromation:</span>
+                <span>File information:</span>
                 <app-file-info-table [fileinfo]="popover.task.files[0]"></app-file-info-table>
             </ng-container>
         </app-popover>
@@ -187,6 +187,15 @@
                         {{getBadge(entry).label}}
                     </span>
                                 </ng-container>
+                                <i *ngIf="entry.mouseover" class="fa fa-info-circle" aria-hidden="true"
+                                   (mouseenter)="onInfoMouseEnter($event, entry, td)"
+                                   (mouseleave)="onInfoMouseLeave($event, entry)"
+                                   (mouseover)="onInfoMouseOver($event, entry)"
+                                ></i>
+
+                                <i *ngIf="entry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
+                                   (click)="removeEntry($event, entry)"
+                                ></i>
                             </div>
                         </div>
                     </td>
@@ -280,6 +289,14 @@
                             {{dirEntry.files[0].attributes?.originalFileName}}
                         </ng-container>
                     </span>
+                                    <i *ngIf="dirEntry.mouseover" class="fa fa-info-circle" aria-hidden="true"
+                                       (mouseenter)="onInfoMouseEnter($event, dirEntry, td)"
+                                       (mouseleave)="onInfoMouseLeave($event, dirEntry)"
+                                       (mouseover)="onInfoMouseOver($event, dirEntry)"
+                                    ></i>
+                                    <i *ngIf="dirEntry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
+                                       (click)="removeEntry($entry, dirEntry)"
+                                    ></i>
                                     <ng-container *ngIf="dirEntry.files.length > 1">
                             <span class="badge" [ngClass]="
                             {

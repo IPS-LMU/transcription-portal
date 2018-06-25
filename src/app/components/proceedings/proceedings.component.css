@@ -159,3 +159,23 @@ table thead tr th:hover {
     border-bottom: none;
     padding-bottom: 0;
 }
+
+.fa.fa-info-circle {
+    color: lightskyblue;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.fa.fa-info-circle:hover {
+    color: dodgerblue;
+}
+
+.fa.fa-minus-circle {
+    color: orangered;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.fa.fa-minus-circle:hover {
+    color: red;
+}
