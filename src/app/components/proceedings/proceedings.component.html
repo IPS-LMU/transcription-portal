@@ -1,4 +1,4 @@
-<app-download-modal #content [selectedTasks]="selected_tasks" [column]="selectedOperation"></app-download-modal>
+<app-download-modal #content [selectedTasks]="selectedRows" [column]="selectedOperation"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
 
@@ -31,7 +31,7 @@
         'margin-top': contextmenu.y + 'px',
         'margin-left': contextmenu.x + 'px',
         'display': (contextmenu.hidden) ? 'none' : 'inherit'
-    }" [hid]="contextmenu.hidden" [selected_tasks]="selected_tasks" [selectedOperationType]="selectedOperation"
+    }" [hid]="contextmenu.hidden" [selected_tasks]="selectedRows" [selectedOperationType]="selectedOperation"
                           (optionselected)="onContextMenuOptionSelected($event)">
         </app-context-menu>
         <app-popover [@fadeToggle]="popover.state"

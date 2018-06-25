@@ -96,8 +96,6 @@ export class TaskService implements OnDestroy {
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
       (item) => {
-        console.log(`PROCESSED!`);
-        console.log(item);
         for (let i = 0; i < item.results.length; i++) {
           const result = item.results[i];
           let foundTask: Task = null;
@@ -182,7 +180,6 @@ export class TaskService implements OnDestroy {
           }
 
           if (isNullOrUndefined(foundTask)) {
-            console.log(result);
             this.addEntry(result, true);
           }
         }
@@ -200,17 +197,24 @@ export class TaskService implements OnDestroy {
       if (!isNullOrUndefined(IDBtasks)) {
         this.newfiles = IDBtasks.length > 0;
 
+        // make sure that taskCounter and operation counter are equal to their biggest value
+        let maxTaskCounter = 0;
+        let maxOperationCounter = 0;
+
         for (let i = 0; i < IDBtasks.length; i++) {
           const taskObj = IDBtasks[i];
           if (taskObj.type === 'task') {
             const task = Task.fromAny(taskObj, this.operations);
 
+            maxTaskCounter = Math.max(maxTaskCounter, task.id);
+
             for (let j = 0; j < task.operations.length; j++) {
               const operation = task.operations[j];
 
+              maxOperationCounter = Math.max(maxOperationCounter, operation.id);
+
               for (let k = 0; k < operation.results.length; k++) {
                 const opResult = operation.results[k];
-
                 if (!isNullOrUndefined(opResult.url)) {
                   this.existsFile(opResult.url).then(() => {
                     opResult.online = true;
@@ -229,6 +233,8 @@ export class TaskService implements OnDestroy {
                 }
               }
             }
+
+            console.log(`STORAGE ALL LOADED ADD ENTRY`);
             this._taskList.addEntry(task).catch((err) => {
               console.error(err);
             });
@@ -268,6 +274,19 @@ export class TaskService implements OnDestroy {
             });
           }
         }
+
+        console.log(`MAX Tasks: ${maxTaskCounter}, MAX Operations: ${maxOperationCounter}`);
+
+        if (TaskEntry.counter < maxTaskCounter) {
+          console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
+          TaskEntry.counter = maxTaskCounter;
+        }
+
+        if (Operation.counter < maxOperationCounter) {
+          console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
+          Operation.counter = maxOperationCounter;
+        }
+
         this.updateProtocolURL().then((url) => {
           this.protocolURL = url;
         });
@@ -414,6 +433,7 @@ export class TaskService implements OnDestroy {
 
   public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
+      console.log(`TASKSERVICE ADD ENTRY!`);
       this.taskList.addEntry(entry, saveToDB).then(() => {
         return this.taskList.cleanup(entry, saveToDB);
       }).catch((err) => {
@@ -630,7 +650,7 @@ export class TaskService implements OnDestroy {
           result.push(file);
         }
 
-      } else if (entry instanceof DirectoryInfo) {
+      } else {
         const directory = <DirectoryInfo> entry;
 
         const dir = directory.clone();

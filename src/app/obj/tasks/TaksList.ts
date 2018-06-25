@@ -10,6 +10,24 @@ export interface EntryChangeEvent {
 }
 
 export class TaskList {
+
+  public get length(): number {
+    let result = 0;
+
+    for (let i = 0; i < this.entries.length; i++) {
+      const entry = this.entries[i];
+
+      if (entry instanceof Task) {
+        result++;
+      } else {
+        // TaskDirectory
+        result += entry.entries.length + 1;
+      }
+    }
+
+    return result;
+  }
+
   get entryChanged(): Subject<EntryChangeEvent> {
     return this._entryChanged;
   }
@@ -33,6 +51,7 @@ export class TaskList {
           saveToDB: saveToDB,
           entry: newEntry
         });
+        resolve();
       } else {
         reject(`entry already in list`);
       }
@@ -82,6 +101,69 @@ export class TaskList {
     }
 
     return result;
+  }
+
+  public getIndexByEntry(selectedEntry: Task | TaskDirectory): number {
+    let result = -1;
+
+    for (let i = 0; i < this.entries.length; i++) {
+      const entry = this.entries[i];
+
+      if (entry instanceof Task) {
+        if (entry.id === selectedEntry.id) {
+          return result + 1;
+        }
+      } else {
+        // TaskDirectory
+        if (entry.id !== selectedEntry.id) {
+          for (let j = 0; j < entry.entries.length; j++) {
+            const subEntry = entry.entries[j];
+
+            if (subEntry.id === selectedEntry.id) {
+              return result + j + 2;
+            }
+          }
+          result += entry.entries.length;
+        } else {
+          return result + 1;
+        }
+      }
+      result++;
+    }
+
+
+    return result;
+  }
+
+  public getEntryByIndex(index: number) {
+    let counter = -1;
+
+    for (let i = 0; i < this.entries.length; i++) {
+      counter++;
+      const entry = this.entries[i];
+
+      if (entry instanceof Task) {
+        if (counter === index) {
+          return entry;
+        }
+      } else {
+        // TaskDirectory
+        if (index !== counter) {
+          for (let j = 0; j < entry.entries.length; j++) {
+            const subEntry = entry.entries[j];
+
+            if (counter + j + 1 === index) {
+              return subEntry;
+            }
+          }
+          counter += entry.entries.length;
+        } else {
+          return entry;
+        }
+      }
+    }
+
+    return null;
   }
 
   public getAllTaskDirectories(): TaskDirectory[] {
@@ -166,6 +248,7 @@ export class TaskList {
           return this.removeEntry(entryTask, saveToDB).then(() => {
             return this.removeEntry(entry, saveToDB)
           }).then(() => {
+            console.log(`CLEANUP ADD ENTRY`);
             return this.addEntry(entryTask, saveToDB)
           });
         }

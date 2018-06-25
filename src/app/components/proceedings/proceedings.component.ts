@@ -74,7 +74,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
   private fileAPIsupported = false;
-  public selected_tasks: (Task | TaskDirectory)[] = [];
+  public selectedRows: number[] = [];
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
@@ -214,78 +214,42 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
     if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
 
-      console.log(`OKOKOKOKOKO hier: ${this.shortcutManager.pressedKey.name}`);
-      if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
-        // select
+      const indexFromTaskList = this.taskList.getIndexByEntry(entry);
+      console.log(`indexFromTaskLIst: ${indexFromTaskList}`);
+      const search = this.selectedRows.findIndex((a) => {
+        return a === indexFromTaskList
+      });
 
-        const search = this.selected_tasks.findIndex((a) => {
-          return a.id === entry.id;
-        });
+      if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
+        // de-/selection
 
         if (search > -1) {
-          this.selected_tasks.splice(search, 1);
+          // deselect
+          this.selectedRows.splice(search, 1);
         } else {
-          if (entry instanceof Task) {
-            if (!isNullOrUndefined(entry.directory)) {
-              const index = this.selected_tasks.findIndex((a) => {
-                return (a.id === entry.directory.id);
-              });
-
-              if (index < 0) {
-                this.selected_tasks.push(entry);
-              } else {
-                const dir: TaskDirectory = <TaskDirectory> this.selected_tasks[index];
-                // folder selected but entry should be removed
-                this.selected_tasks.splice(index, 1);
-
-                for (let i = 0; i < dir.entries.length; i++) {
-                  const dirEntry = dir.entries[i];
-
-                  if (dirEntry.id !== entry.id) {
-                    this.selected_tasks.push(dirEntry);
-                  }
-                }
-              }
-            } else {
-              this.selected_tasks.push(entry);
-            }
-          } else {
-            // remove all dirEntries in selectedTasks
-            for (let i = 0; i < entry.entries.length; i++) {
-              const dirEntry = entry.entries[i];
-
-              const index = this.selected_tasks.findIndex((a) => {
-                return (a.id === dirEntry.id);
-              });
-
-              if (index > -1) {
-                this.selected_tasks.splice(index, 1);
-              }
-            }
-
-            this.selected_tasks.push(entry);
-          }
+          // select
+          this.selectedRows.push(indexFromTaskList);
         }
 
+        /* What is this?
         const puffer = [];
-        for (let i = 0; i < this.selected_tasks.length; i++) {
-          const task = this.selected_tasks[i];
+        for (let i = 0; i < this.selectedRows.length; i++) {
+          const task = this.selectedRows[i];
           if (puffer.find((a) => {
             return task.id === a.id;
           }) === undefined) {
             puffer.push(task);
           }
         }
-        this.selected_tasks = puffer;
-        console.log(`SELECTED:`);
-        console.log(puffer);
+        this.selectedRows = puffer;
+        */
       } else {
-        // deselect all
+        // shift selection
 
         if (this.shortcutManager.pressedKey.name === 'SHIFT') {
           // shift pressed
           if (this.shiftStart > -1) {
-            let end = entry.id;
+            let end = indexFromTaskList;
 
             if (this.shiftStart > end) {
               console.log(`SWITCH`);
@@ -294,24 +258,25 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
               end = temp;
             }
 
-            for (let i = 0; i < this.taskList.getAllTasks().length; i++) {
-              const task = this.taskList.getAllTasks()[i];
-              if (task.id >= this.shiftStart && task.id <= end) {
-                this.selected_tasks.push(task);
-              }
+            this.selectedRows = [];
+            const entries = this.taskList.entries;
+            for (let i = this.shiftStart; i <= end; i++) {
+              this.selectedRows.push(i);
             }
+            console.log(`srelected TASKS:`);
+            console.log(this.selectedRows);
             // select all between
             // const start =x
             this.shiftStart = -1;
           }
         } else {
-          const old_id = (this.selected_tasks.length > 0) ? this.selected_tasks[0].id : -1;
+          const old_id = (this.selectedRows.length > 0) ? this.selectedRows[0] : -1;
 
-          this.selected_tasks = [];
+          this.selectedRows = [];
 
-          if (entry.id !== old_id) {
-            this.shiftStart = entry.id;
-            this.selected_tasks.push(entry);
+          if (indexFromTaskList !== old_id) {
+            this.shiftStart = indexFromTaskList;
+            this.selectedRows.push(indexFromTaskList);
           }
         }
       }
@@ -326,6 +291,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     ) {
       this.operationclick.emit(operation);
     }
+    console.log(this.selectedRows);
   }
 
 
@@ -341,9 +307,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   removeAppendings() {
-    for (let i = 0; i < this.selected_tasks.length; i++) {
-      const entry = this.selected_tasks[i];
-
+    for (let i = 0; i < this.selectedRows.length; i++) {
+      const index = this.selectedRows[i];
+      const entry = this.taskList.getEntryByIndex(index);
       if (entry instanceof Task) {
         if (entry.files.length > 1) {
           entry.files.splice(1)
@@ -364,21 +330,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   isEntrySelected(entry: (Task | TaskDirectory)) {
-    if (entry instanceof Task) {
-      const search = this.selected_tasks.findIndex((a) => {
-        return a instanceof Task && (<Task> a).id === entry.id
-      });
 
+    const tasklistIndex = this.taskList.getIndexByEntry(entry);
+    const search = this.selectedRows.findIndex((a) => {
+      return a === tasklistIndex
+    });
+
+    if (entry instanceof Task) {
       if (search > -1) {
         return true;
       } else if (!isNullOrUndefined(entry.directory)) {
         return this.isEntrySelected(entry.directory);
       }
     } else {
-      const search = this.selected_tasks.findIndex((a) => {
-        return a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id
-      });
-
       if (search > -1) {
         return true;
       }
@@ -438,7 +402,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   onTaskMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
     // show Popover for normal operations only
-    console.log($event);
     const y = $event.layerY + 10;
     this.popover.task = task;
     this.popover.x = $event.layerX + 10;
@@ -599,15 +562,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
-    console.log(event);
     this.shortcutManager.checkKeyEvent(event).then((result) => {
       if (result.command === 'remove') {
         this.popover.state = 'closed';
         this.deleteSelectedTasks();
       } else if (result.command == 'select all') {
-        this.selected_tasks = [];
+        this.selectedRows = [];
         if (!this.allSelected) {
-          this.selected_tasks = this.taskService.taskList.entries.slice(0);
+          // select all
+          const length = this.taskList.length;
+
+          for (let i = 0; i < length; i++) {
+            this.selectedRows.push(i);
+          }
           this.allSelected = true;
         } else {
           this.allSelected = false;
@@ -619,16 +586,45 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   private deleteSelectedTasks() {
-    for (let i = 0; i < this.selected_tasks.length; i++) {
-      let entry = this.selected_tasks[i];
+    const removeQueue = [];
 
+    for (let i = 0; i < this.selectedRows.length; i++) {
+      const index = this.selectedRows[i];
+      const entry = this.taskList.getEntryByIndex(index);
+
+      let dirFound = false;
+      if (entry instanceof Task && !isNullOrUndefined(entry.directory)) {
+        const dirIndex = this.taskList.getIndexByEntry(entry.directory);
+
+        // found folder?
+        dirFound = this.selectedRows.findIndex((a) => {
+          return a === dirIndex;
+        }) > -1;
+      }
+
+      if (entry === null) {
+        console.error(`can't remove! entry is null!`);
+      }
+
+      console.log(`${index} dir ${dirFound}`);
+      if (!dirFound && entry !== null) {
+        removeQueue.push(entry);
+      }
+    }
+
+    console.log(`REMOVE QUEUE:`);
+    console.log(removeQueue);
+
+    for (let i = 0; i < removeQueue.length; i++) {
+      const entry = removeQueue[i];
       this.taskService.taskList.removeEntry(entry, true).catch((error) => {
         console.log(`remove selected false`);
         console.error(error);
       });
     }
 
-    this.selected_tasks = [];
+    this.selectedRows = [];
+    this.shiftStart = -1;
   }
 
   public getBadge(task: Task): {

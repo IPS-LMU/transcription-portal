@@ -73,7 +73,7 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
             this.modalRef.dismiss();
           }, 3000);
         }, (err) => {
-          console.error('coul not send feedback!');
+          console.error('could not send feedback!');
         }
       )
     );

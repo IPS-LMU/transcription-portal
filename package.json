@@ -6,6 +6,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build-public": "ng build -c dev2 --prod --base-href 'https://www.phonetik.uni-muenchen.de/apps/oh-portal/'",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
