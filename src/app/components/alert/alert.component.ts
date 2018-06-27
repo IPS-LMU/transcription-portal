@@ -89,13 +89,16 @@ export class AlertComponent implements OnInit, OnDestroy {
     });
 
     if (index > -1) {
-      if (this.queue.length === 1) {
+      if (this.queue.length <= 1) {
         this.animation = 'closed';
       }
 
       setTimeout(() => {
         this.queue.splice(index, 1);
-      }, 1000);
+        if (this.queue.length === 0) {
+          this.animation = 'closed';
+        }
+      }, 500);
     }
   }
 
