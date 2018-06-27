@@ -3,6 +3,8 @@
 <app-split-modal #splitModal></app-split-modal>
 <app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
                  [operations]="taskService.operations"></app-queue-modal>
+
+<app-alert></app-alert>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <!-- HEADER -->
     <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
@@ -138,8 +140,6 @@
         </div>
     </div>
 
-
-    <app-alert></app-alert>
     <!-- WORKING AREA -->
     <div id="main" style="position: relative;">
         <div [ngStyle]="{

@@ -234,25 +234,29 @@ export class TaskList {
   }
 
   public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean): Promise<void> {
-    if (!isNullOrUndefined(entry)) {
-      if (entry instanceof Task) {
-
+    if (!isNullOrUndefined(entry) && entry instanceof TaskDirectory) {
+      if (entry.entries.length === 0) {
+        // remove dir
+        return this.removeEntry(entry, saveToDB);
+      } else if (entry.entries.length === 1) {
+        // move entry task to upper level and remove dir
+        const entryTask = <Task> entry.entries[0];
+        entryTask.directory = null;
+        return this.removeEntry(entryTask, saveToDB).then(() => {
+          return this.removeEntry(entry, saveToDB)
+        }).then(() => {
+          console.log(`CLEANUP ADD ENTRY`);
+          return this.addEntry(entryTask, saveToDB)
+        });
       } else {
-        if (entry.entries.length === 0) {
-          // remove dir
-          return this.removeEntry(entry, saveToDB);
-        } else if (entry.entries.length === 1) {
-          // move entry task to upper level and remove dir
-          const entryTask = <Task> entry.entries[0];
-          entryTask.directory = null;
-          return this.removeEntry(entryTask, saveToDB).then(() => {
-            return this.removeEntry(entry, saveToDB)
-          }).then(() => {
-            console.log(`CLEANUP ADD ENTRY`);
-            return this.addEntry(entryTask, saveToDB)
-          });
-        }
+        return new Promise<void>((resolve, reject) => {
+          resolve();
+        });
       }
+    } else {
+      return new Promise<void>((resolve, reject) => {
+        resolve();
+      });
     }
   }
 }

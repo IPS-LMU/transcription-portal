@@ -20,6 +20,7 @@ import {EmuOperation} from './emu-operation';
 import {Operation} from './operation';
 import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {AlertService} from '../../shared/alert.service';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -81,7 +82,8 @@ export class TaskService implements OnDestroy {
   private _preprocessor: Preprocessor = new Preprocessor();
 
   constructor(public httpclient: HttpClient, private notification: NotificationService,
-              private storage: StorageService, private sanitizer: DomSanitizer) {
+              private storage: StorageService, private sanitizer: DomSanitizer,
+              private alertService: AlertService) {
     this._taskList = new TaskList();
     this._operations = [
       new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
@@ -800,6 +802,7 @@ export class TaskService implements OnDestroy {
                 resolve([task]);
               }
             } else {
+              this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid. Only Wave (*.wav) files with 16 Bit signed Int are supported.`, -1);
               reject('no valid wave format!');
             }
           };

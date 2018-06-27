@@ -1,6 +1,13 @@
-<div class="alert alert-{{type}} alert-dismissible fade show" [@fadeToggle]="animation" role="alert">
-    {{message}} (dismissed in {{duration}}s)
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close" (click)="onClose()">
+<button [@fadeToggle]="animation" class="btn btn-secondary"
+        style="width:100%;background-color:lightgray;border:none;margin-bottom:3px;" (click)="clear()"><i
+        class="fa fa-trash-o"></i> Clear all
+</button>
+<ng-container *ngFor="let entry of queue">
+    <div class="alert alert-{{entry.type}} alert-dismissible fade show" [@fadeToggle]="entry.animation" role="alert">
+        {{entry.message}}
+        <ng-container *ngIf="entry.duration > -1"> (dismissed in {{entry.duration}}s)</ng-container>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close" (click)="onClose(entry)">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
+</ng-container>

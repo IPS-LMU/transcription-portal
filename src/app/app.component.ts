@@ -107,7 +107,6 @@ export class AppComponent implements OnDestroy {
               public bugService: BugReportService,
               private alertService: AlertService
   ) {
-
     const debugging = false;
     if (!debugging) {
       // overwrite console.log

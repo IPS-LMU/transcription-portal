@@ -1,10 +1,17 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subject} from 'rxjs/Subject';
 import {AlertService} from '../../shared/alert.service';
 import {interval} from 'rxjs/observable/interval';
 import {ANIMATIONS} from '../../shared/Animations';
 import {Subscription} from 'rxjs/Subscription';
-import {isNullOrUndefined} from 'util';
+
+export interface AlertEntry {
+  type: 'danger' | 'warning' | 'info' | 'success';
+  message: string;
+  duration: number;
+  animation: string;
+  id: number;
+}
 
 @Component({
   selector: 'app-alert',
@@ -12,16 +19,14 @@ import {isNullOrUndefined} from 'util';
   styleUrls: ['./alert.component.css'],
   animations: ANIMATIONS
 })
-export class AlertComponent implements OnInit {
-  get message(): string {
-    return this._message;
-  }
 
+export class AlertComponent implements OnInit, OnDestroy {
   private _success = new Subject<string>();
-  private _message = '';
-  public type: 'danger' | 'warning' | 'info' | 'success' = 'danger';
+  private static counter = 0;
   public duration = 20;
   private counter: Subscription;
+
+  private queue: AlertEntry[] = [];
 
   public animation = 'closed';
 
@@ -32,6 +37,23 @@ export class AlertComponent implements OnInit {
         console.error(err);
       }
     );
+
+    this.counter = interval(1000).subscribe(
+      () => {
+        for (let i = 0; i < this.queue.length; i++) {
+          const queueItem: AlertEntry = this.queue[i];
+          queueItem.duration--;
+          if (queueItem.duration === 0) {
+            queueItem.animation = 'closed';
+            this.removeFromQueue(queueItem);
+          }
+        }
+      }
+    );
+  }
+
+  ngOnDestroy() {
+    this.counter.unsubscribe();
   }
 
   onAlertSend(obj: {
@@ -39,33 +61,53 @@ export class AlertComponent implements OnInit {
     message: string,
     duration: number
   }) {
+    this.animation = 'opened';
     if (obj.type === 'danger' || obj.type === 'warning' || obj.type === 'info' || obj.type === 'success') {
-      this.type = obj.type;
-      this._message = obj.message;
-      this.animation = 'opened';
-      this.duration = obj.duration;
+      const entry: AlertEntry = {
+        type: obj.type,
+        animation: 'opened',
+        duration: obj.duration,
+        message: obj.message,
+        id: ++AlertComponent.counter
+      };
 
-      if (!isNullOrUndefined(this.counter)) {
-        this.counter.unsubscribe();
-      }
-
-      this.counter = interval(1000).subscribe(
-        () => {
-          this.duration--;
-          if (this.duration <= 0) {
-            this.animation = 'closed';
-            this.counter.unsubscribe();
-          }
-        }
-      );
+      this.queue.push(entry);
     }
   }
 
   ngOnInit(): void {
   }
 
-  onClose() {
+  onClose(entry: AlertEntry) {
+    entry.animation = 'closed';
+    this.removeFromQueue(entry);
+  }
+
+  private removeFromQueue(entry: AlertEntry) {
+    const index = this.queue.findIndex((a) => {
+      return a.id === entry.id;
+    });
+
+    if (index > -1) {
+      if (this.queue.length === 1) {
+        this.animation = 'closed';
+      }
+
+      setTimeout(() => {
+        this.queue.splice(index, 1);
+      }, 1000);
+    }
+  }
+
+  public clear() {
+    for (let i = 0; i < this.queue.length; i++) {
+      const queueItem = this.queue[i];
+      queueItem.animation = 'closed';
+    }
+
     this.animation = 'closed';
-    this.counter.unsubscribe();
+    setTimeout(() => {
+      this.queue = [];
+    }, 1000);
   }
 }
