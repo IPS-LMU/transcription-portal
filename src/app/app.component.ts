@@ -595,4 +595,8 @@ export class AppComponent implements OnDestroy {
     this.newToolWidth = 70;
     this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
   }
+
+  public onClearClick() {
+    this.storage.clearAll();
+  }
 }

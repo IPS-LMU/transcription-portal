@@ -186,6 +186,10 @@ export class StorageService {
 
   public destroy() {
     this.subscrmanager.destroy();
-    this.idbm.close();
+  }
+
+  public clearAll() {
+    this.idbm.removeDatabase('oh-portal');
+    window.location.reload(true);
   }
 }

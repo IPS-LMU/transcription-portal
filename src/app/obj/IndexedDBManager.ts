@@ -263,6 +263,22 @@ export class IndexedDBManager {
         wrapper(0);
       }
     );
+  };
+
+  public removeDatabase(database: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const req = this.indexedDB.deleteDatabase(database);
+
+      req.onsuccess = () => {
+        resolve();
+      };
+      req.onerror = () => {
+        reject('Couldn\'t delete database');
+      };
+      req.onblocked = () => {
+        reject('Couldn\'t delete database due to the operation being blocked');
+      };
+    });
   }
 
   public count(store_name: string | IDBObjectStore): Promise<number> {
