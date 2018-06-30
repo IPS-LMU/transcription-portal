@@ -268,8 +268,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             for (let i = this.shiftStart; i <= end; i++) {
               this.selectedRows.push(i);
             }
-            console.log(`srelected TASKS:`);
-            console.log(this.selectedRows);
             // select all between
             // const start =x
             this.shiftStart = -1;
@@ -292,7 +290,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         operation.previousOperation.results[operation.previousOperation.results.length - 1].online
       )
       || (!isNullOrUndefined(operation) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
-      || (!isNullOrUndefined(operation) && operation.name === 'OCTRA' && operation.state !== TaskState.PENDING)
     ) {
       this.operationclick.emit(operation);
     }
@@ -428,7 +425,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.popover.height = 320;
     this.popover.pointer = (y + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
     this.popover.y = (y + this.popoverRef.height > window.innerHeight) ? y - this.popoverRef.height : y;
-    console.log(`set to ${this.popover.y}`);
     this.togglePopover(true);
 
     this.popover.operation = null;
@@ -631,9 +627,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       }
     }
 
-    console.log(`REMOVE QUEUE:`);
-    console.log(removeQueue);
-
     for (let i = 0; i < removeQueue.length; i++) {
       const entry = removeQueue[i];
       this.taskService.taskList.removeEntry(entry, true).catch((error) => {
@@ -648,7 +641,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public removeEntry(event, entry: Task | TaskDirectory) {
     this.taskService.taskList.removeEntry(entry, true).catch((error) => {
-      console.log(`remove selected false`);
       console.error(error);
     });
     setTimeout(() => {

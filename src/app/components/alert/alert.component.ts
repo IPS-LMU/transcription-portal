@@ -26,7 +26,7 @@ export class AlertComponent implements OnInit, OnDestroy {
   public duration = 20;
   private counter: Subscription;
 
-  private queue: AlertEntry[] = [];
+  public queue: AlertEntry[] = [];
 
   public animation = 'closed';
 
@@ -84,7 +84,7 @@ export class AlertComponent implements OnInit, OnDestroy {
   }
 
   private removeFromQueue(entry: AlertEntry) {
-    const index = this.queue.findIndex((a) => {
+    let index = this.queue.findIndex((a) => {
       return a.id === entry.id;
     });
 
@@ -94,10 +94,14 @@ export class AlertComponent implements OnInit, OnDestroy {
       }
 
       setTimeout(() => {
+        index = this.queue.findIndex((a) => {
+          return a.id === entry.id;
+        });
         this.queue.splice(index, 1);
         if (this.queue.length === 0) {
           this.animation = 'closed';
         }
+        console.log(`queue length is ${this.queue.length}`);
       }, 500);
     }
   }

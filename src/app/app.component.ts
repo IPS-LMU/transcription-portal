@@ -289,6 +289,7 @@ export class AppComponent implements OnDestroy {
   }
 
   onOperationClick(operation: Operation) {
+    console.log(`operation click!`);
     if (operation instanceof ToolOperation) {
       const tool = <ToolOperation> operation;
 
