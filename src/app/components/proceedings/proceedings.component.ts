@@ -668,6 +668,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onPreviewClick(file: FileInfo) {
+    console.log(`FILEPREVIEW `);
+    console.log(file);
     this.filePreview.open(file);
   }
 }

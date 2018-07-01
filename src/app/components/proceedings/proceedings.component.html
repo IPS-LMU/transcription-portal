@@ -147,78 +147,22 @@
             </thead>
             <tbody (contextmenu)="onContextMenu($event)">
             <ng-container *ngFor="let entry of taskList.entries; let i = index;">
-
-                <tr appProceedingsRow style="cursor:pointer;" [ngClass]="{
-                'tool-selected': ((toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined) && toolSelectedOperation.task.id === entry.id),
-                'selected': (isEntrySelected(entry))}">
-                    <td *ngIf="entry.files !== undefined" (click)="onRowSelected(entry)"
-                        [ngStyle]="{
-                            'max-width': (shortstyle) ? '150px' : 'auto'
-                        }"
-                    >
-                        <div (mouseenter)="onTaskMouseEnter($event, entry, td)"
-                             (mouseleave)="onTaskMouseLeave($event, entry)"
-                             (mouseover)="onTaskMouseOver($event, entry)">
-                            <div [ngClass]="{
-                            'shorten': shortstyle
-                        }">
-                                <ng-container>
-                                    <i class="fa fa-file-audio-o"
-                                       aria-hidden="true"
-                                       [ngClass]="{
-            green: (entry.state === 'FINISHED'),
-            red: (entry.state === 'ERROR'),
-            blue: (entry.state === 'PENDING' || entry.state === 'READY'),
-            yellow: (entry.state === 'PROCESSING')
-            }"></i>
-                                </ng-container>
-                                <span [ngClass]="{
-                        'shorten': shortstyle,
-                    'green': ((entry.files[0].extension === '.wav' && entry.files[0].file !== undefined)),
-                    'yellow': ((entry.files[0].extension === '.wav' && entry.files[0].file === undefined) || entry.files[0].extension !== '.wav') && entry.operations[0].state !== 'FINISHED'
-                }" title="{{entry.files[0].attributes.originalFileName}}"
-                                > {{entry.files[0].name.replace('_annot', '') + '.wav'}}
-                </span>
-                                <ng-container *ngIf=" entry.files.length > 1 || entry.files[0].extension !== '.wav'">
-                    <span class="badge" [ngClass]="{
-                        'badge-info': getBadge(entry).type === 'info',
-                        'badge-warning': getBadge(entry).type === 'warning'
-                    }" (click)="onPreviewClick(entry.files[1])">
-                        {{getBadge(entry).label}}
-                    </span>
-                                </ng-container>
-                                <i *ngIf="entry.mouseover" class="fa fa-info-circle" aria-hidden="true"
-                                   (mouseenter)="onInfoMouseEnter($event, entry, td)"
-                                   (mouseleave)="onInfoMouseLeave($event, entry)"
-                                   (mouseover)="onInfoMouseOver($event, entry)"
-                                ></i>
-
-                                <i *ngIf="entry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
-                                   (click)="removeEntry($event, entry)"
-                                ></i>
-                            </div>
-                        </div>
+                <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
+                    [rowSelected]="isEntrySelected(entry)">
+                    <!-- filename/foldername column -->
+                    <td appProcColIcon *ngIf="entry.files !== undefined" [entry]="entry" [shortStyle]="shortstyle"
+                        (onAppendingClick)="onPreviewClick($event)"
+                        (click)="onRowSelected(entry)"
+                        (onInfoMouseEnter)="onInfoMouseEnter($event, entry, td)"
+                        (onInfoMouseLeave)="onInfoMouseLeave($event, entry)"
+                        (onInfoMouseOver)="onInfoMouseOver($event, entry)"
+                        (onDeleteIconClick)="removeEntry($event, entry)"
+                        (mouseenter)="onTaskMouseEnter($event, entry, td)"
+                        (mouseleave)="onTaskMouseLeave($event, entry)"
+                        (mouseover)="onTaskMouseOver($event, entry)"
+                        [mouseover]="entry.mouseover">
                     </td>
-
-                    <td [ngStyle]="{
-                            'max-width': (shortstyle) ? '150px' : 'auto'
-                        }"
-                        *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
-                        (click)="onRowSelected(entry)">
-                        <ng-container>
-                            <i class="fa fa-folder-open blue"
-                               aria-hidden="true"></i>
-                        </ng-container>
-                        <span [ngClass]="{
-                            'shorten': shortstyle
-                        }" title="{{entry.foldername}}">
-                {{entry.foldername}}
-                </span>
-                        <span *ngIf="entry.entries.length > 0">
-                    ({{entry.entries.length}})
-                </span>
-                    </td>
-
+                    <!-- Task operations-->
                     <ng-container *ngIf="entry.files !== undefined">
                         <td *ngFor="let operation of entry.operations" style="text-align: center;" [ngClass]="{
                 'op-deactivated': !operation.enabled
@@ -249,69 +193,86 @@
 
                         </td>
                     </ng-container>
+                    <!-- folder name without further columns-->
+                    <td appProcColIcon [shortStyle]="shortstyle"
+                        *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
+                        (click)="onRowSelected(entry)">
+                        <ng-container>
+                            <i class="fa fa-folder-open blue"
+                               aria-hidden="true"></i>
+                        </ng-container>
+                        <span [ngClass]="{
+                            'shorten': shortstyle
+                        }" title="{{entry.foldername}}">
+                        {{entry.foldername}}
+                        </span>
+                        <span *ngIf="entry.entries.length > 0">
+                            ({{entry.entries.length}})
+                        </span>
+                    </td>
                 </tr>
                 <ng-container *ngIf="entry.files === undefined">
-                    <tr *ngFor="let dirEntry of entry.entries" [ngClass]="{
-                    'tool-selected': ((toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined) && toolSelectedOperation.task.id === dirEntry.id),
-                    'selected': (isEntrySelected(dirEntry))
-                    }"
+                    <!-- folder row -->
+                    <tr *ngFor="let dirEntry of entry.entries" appProceedingsRow [entry]="dirEntry"
+                        [toolSelectedOperation]="toolSelectedOperation" [rowSelected]="isEntrySelected(dirEntry)"
                     >
-                        <td [ngStyle]="{
-                            'max-width': (shortstyle) ? '150px' : 'auto'
-                        }"
+                        <td appProcColIcon [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
+                            (mouseenter)="onTaskMouseEnter($event, dirEntry, td)"
+                            (mouseleave)="onTaskMouseLeave($event, dirEntry)"
+                            (mouseover)="onTaskMouseOver($event, dirEntry)"
                         >
-                            <div (mouseenter)="onTaskMouseEnter($event, dirEntry, td)"
-                                 (mouseleave)="onTaskMouseLeave($event, dirEntry)"
-                                 (mouseover)="onTaskMouseOver($event, dirEntry)">
-                                <div [ngClass]="{
+                            <div [ngClass]="{
                                 shorten: shortstyle
                             }">
-                                    <img style="height:20px;margin-right:3px;" src="./assets/directory.png"> <i
+                                <img style="height:20px;margin-right:3px;" src="./assets/directory.png">
+                                <i
                                         class="fa fa-file-audio-o" aria-hidden="true"
                                         [ngClass]="{
-            green: (dirEntry.state === 'FINISHED'),
-            red: (dirEntry.state === 'ERROR'),
-            blue: (dirEntry.state === 'PENDING' || dirEntry.state === 'READY'),
-            yellow: (dirEntry.state === 'PROCESSING')
-            }"></i> <span
-                                        [ngClass]="{
-                                    'shorten': shortstyle,
-                    'green': dirEntry.files[0].file !== undefined,
-                    'yellow': (dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)
-                }">
-                        <ng-container
-                                *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].attributes.originalFileName}}
-                        </ng-container>
-                        <ng-container
-                                *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                            {{dirEntry.files[0].attributes?.originalFileName}}
-                        </ng-container>
-                    </span>
-                                    <i *ngIf="dirEntry.mouseover" class="fa fa-info-circle" aria-hidden="true"
-                                       (mouseenter)="onInfoMouseEnter($event, dirEntry, td)"
-                                       (mouseleave)="onInfoMouseLeave($event, dirEntry)"
-                                       (mouseover)="onInfoMouseOver($event, dirEntry)"
-                                    ></i>
-                                    <i *ngIf="dirEntry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
-                                       (click)="removeEntry($entry, dirEntry)"
-                                    ></i>
-                                    <ng-container *ngIf="dirEntry.files.length > 1">
-                            <span class="badge" [ngClass]="
-                            {
-                                'badge-info': getBadge(dirEntry).type === 'info',
-                                'badge-warning': getBadge(dirEntry).type === 'warning'
-                            }
-        " (click)="onPreviewClick(dirEntry.files[1])">
-                                {{getBadge(dirEntry).label}}</span>
-                                    </ng-container>
-                                </div>
+                                        green: (dirEntry.state === 'FINISHED'),
+                                        red: (dirEntry.state === 'ERROR'),
+                                        blue: (dirEntry.state === 'PENDING' || dirEntry.state === 'READY'),
+                                        yellow: (dirEntry.state === 'PROCESSING')
+                                        }">
+                                </i>
+                                <span [ngClass]="{
+                                        'shorten': shortstyle,
+                                        'green': dirEntry.files[0].file !== undefined,
+                                        'yellow': (dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)
+                                    }">
+                                        <ng-container
+                                                *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
+                                            {{dirEntry.files[0].attributes.originalFileName}}
+                                        </ng-container>
+                                        <ng-container
+                                                *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
+                                            {{dirEntry.files[0].attributes?.originalFileName}}
+                                        </ng-container>
+                                    </span>
+                                <i *ngIf="dirEntry.mouseover" class="fa fa-info-circle" aria-hidden="true"
+                                   (mouseenter)="onInfoMouseEnter($event, dirEntry, td)"
+                                   (mouseleave)="onInfoMouseLeave($event, dirEntry)"
+                                   (mouseover)="onInfoMouseOver($event, dirEntry)"
+                                ></i>
+                                <i *ngIf="dirEntry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
+                                   (click)="removeEntry($entry, dirEntry)"
+                                ></i>
+
+                                <ng-container *ngIf="dirEntry.files.length > 1">
+                                        <span class="badge" [ngClass]="
+                                        {
+                                            'badge-info': getBadge(dirEntry).type === 'info',
+                                            'badge-warning': getBadge(dirEntry).type === 'warning'
+                                        }
+                                        " (click)="onPreviewClick(dirEntry.files[1])">
+                                            {{getBadge(dirEntry).label}}
+                                        </span>
+                                </ng-container>
                             </div>
                         </td>
                         <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
-                'op-deactivated': !operation.enabled
-            }"
+                                'op-deactivated': !operation.enabled
+                            }"
                             (click)="onRowSelected(dirEntry, operation)"
                             (mouseenter)="onOperationMouseEnter($event, operation)"
                             (mouseleave)="onOperationMouseLeave($event, operation)"
@@ -339,6 +300,7 @@
                     </tr>
                 </ng-container>
             </ng-container>
+            <!-- Queue rows -->
             <ng-container *ngFor="let entry of queue; let i = index;">
                 <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
                     <td *ngIf="entry.file.entries === undefined"

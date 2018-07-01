@@ -31,7 +31,8 @@ import {AlertComponent} from './components/alert/alert.component';
 import {AlertService} from './shared/alert.service';
 import {DownloadModalComponent} from './modals/download-modal/download-modal.component';
 import {OperationArrowComponent} from './components/operation-arrow/operation-arrow.component';
-import {ProceedingsRowDirective} from './components/proceedings-row.directive';
+import {ProceedingsRowDirective} from './components/proceedings/directives/proceedings-row.directive';
+import {ProcColIconDirective} from './components/proceedings/directives/proc-col-icon.directive';
 
 @NgModule({
   declarations: [
@@ -55,7 +56,8 @@ import {ProceedingsRowDirective} from './components/proceedings-row.directive';
     AlertComponent,
     DownloadModalComponent,
     OperationArrowComponent,
-    ProceedingsRowDirective
+    ProceedingsRowDirective,
+    ProcColIconDirective
   ],
   imports: [
     BrowserModule,
