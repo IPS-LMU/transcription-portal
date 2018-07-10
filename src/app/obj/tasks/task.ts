@@ -25,6 +25,7 @@ export enum TaskState {
 export class Task {
   set files(value: FileInfo[]) {
     this._files = value;
+    this.fileschange.next();
   }
 
   set directory(value: TaskDirectory) {
@@ -74,6 +75,7 @@ export class Task {
     newState: TaskState;
   }> = this.statesubj.asObservable();
 
+  public fileschange: Subject<void> = new Subject<void>();
 
   get operations(): Operation[] {
     return this._operations;
@@ -331,6 +333,13 @@ export class Task {
     task.listenToOperationChanges();
 
     return task;
+  }
+
+  public setFileObj(index: number, fileObj: FileInfo) {
+    if (index < this.files.length) {
+      this.files[index] = fileObj;
+      this.fileschange.next();
+    }
   }
 
   public toAny(): Promise<any> {

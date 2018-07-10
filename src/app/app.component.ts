@@ -523,6 +523,7 @@ export class AppComponent implements OnDestroy {
       this.toolSelectedOperation.changeState(TaskState.READY);
     }
     this.toolSelectedOperation = undefined;
+    console.log(`toolSelect to undefined`);
   }
 
   @HostListener('window:beforeunload', ['$event'])

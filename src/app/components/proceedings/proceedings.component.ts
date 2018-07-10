@@ -5,9 +5,11 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
@@ -42,7 +44,7 @@ declare var window: any;
   animations: ANIMATIONS,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProceedingsComponent implements OnInit, OnDestroy {
+export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   public contextmenu = {
     x: 0,
@@ -120,6 +122,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.cd.detectChanges();
       }
     }, 500);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
   }
 
   ngOnDestroy() {
@@ -220,7 +225,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
 
       const indexFromTaskList = this.taskList.getIndexByEntry(entry);
-      console.log(`indexFromTaskLIst: ${indexFromTaskList}`);
       const search = this.selectedRows.findIndex((a) => {
         return a === indexFromTaskList
       });
@@ -257,7 +261,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             let end = indexFromTaskList;
 
             if (this.shiftStart > end) {
-              console.log(`SWITCH`);
               const temp = this.shiftStart;
               this.shiftStart = end;
               end = temp;
@@ -293,7 +296,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     ) {
       this.operationclick.emit(operation);
     }
-    console.log(this.selectedRows);
   }
 
 
@@ -402,18 +404,23 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.operationhover.emit();
   }
 
-  onTaskMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
-    this.popover.task = task;
-
-    this.popover.operation = null;
+  onNameMouseEnter($event, entry: (Task | TaskDirectory), td: HTMLTableDataCellElement) {
+    if (entry instanceof Task) {
+      this.popover.task = entry;
+      this.popover.operation = null;
+    }
   }
 
-  onTaskMouseLeave($event, task: Task) {
-    task.mouseover = false;
+  onNameMouseLeave($event, entry: (Task | TaskDirectory)) {
+    if (entry instanceof Task) {
+      entry.mouseover = false;
+    }
   }
 
-  onTaskMouseOver($event, task: Task) {
-    task.mouseover = true;
+  onNameMouseOver($event, entry: (Task | TaskDirectory)) {
+    if (entry instanceof Task) {
+      entry.mouseover = true;
+    }
   }
 
   onInfoMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
@@ -621,7 +628,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         console.error(`can't remove! entry is null!`);
       }
 
-      console.log(`${index} dir ${dirFound}`);
       if (!dirFound && entry !== null) {
         removeQueue.push(entry);
       }
@@ -630,7 +636,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     for (let i = 0; i < removeQueue.length; i++) {
       const entry = removeQueue[i];
       this.taskService.taskList.removeEntry(entry, true).catch((error) => {
-        console.log(`remove selected false`);
         console.error(error);
       });
     }
@@ -668,8 +673,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onPreviewClick(file: FileInfo) {
-    console.log(`FILEPREVIEW `);
-    console.log(file);
     this.filePreview.open(file);
   }
 }

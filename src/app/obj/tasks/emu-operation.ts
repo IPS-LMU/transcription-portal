@@ -56,6 +56,39 @@ export class EmuOperation extends ToolOperation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
+  public getStateIcon2 = () => {
+    let result = '';
+
+    switch (this.state) {
+      case(TaskState.PENDING):
+        result = ``;
+        break;
+      case(TaskState.UPLOADING):
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Loading...</span>';
+        break;
+      case(TaskState.PROCESSING):
+        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Loading...</span>';
+        break;
+      case(TaskState.FINISHED):
+        if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult.available) {
+          result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+        } else {
+          result = '<i class="fa fa-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
+        }
+        break;
+      case(TaskState.READY):
+        result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
+        break;
+      case(TaskState.ERROR):
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+        break;
+    }
+
+    return result;
+  };
+
   public getToolURL(): string {
     if (!isNullOrUndefined(this.previousOperation.lastResult)) {
       const uploadOP = <UploadOperation> this.operations[0];

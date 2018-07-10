@@ -166,8 +166,8 @@ export class TaskService implements OnDestroy {
 
               if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
                 && entry.files[0].extension === '.wav')) {
-                foundTask.files[0] = entry.files[0];
-                foundTask.files[1] = entry.files[1];
+                foundTask.setFileObj(0, entry.files[0]);
+                foundTask.setFileObj(1, entry.files[1]);
 
                 if (foundTask.files.length > 1) {
                   // TODO change if other than transcript files are needed
@@ -782,7 +782,7 @@ export class TaskService implements OnDestroy {
                   const oldFileIndex = foundOldFile.files.findIndex((a) => {
                     return a.fullname === newFileInfo.fullname && a.size === newFileInfo.size;
                   });
-                  foundOldFile.files[oldFileIndex] = newFileInfo;
+                  foundOldFile.setFileObj(oldFileIndex, newFileInfo);
                 } else {
                   // a transcript file already exists
                   foundOldFile.files.splice(1, 1);

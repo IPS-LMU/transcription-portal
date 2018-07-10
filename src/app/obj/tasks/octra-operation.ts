@@ -51,6 +51,34 @@ export class OCTRAOperation extends ToolOperation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
+  public getStateIcon2 = () => {
+    let result = '';
+
+    switch (this.state) {
+      case(TaskState.PENDING):
+        result = ``;
+        break;
+      case(TaskState.UPLOADING):
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Loading...</span>';
+        break;
+      case(TaskState.PROCESSING):
+        result = '<i class="fa fa-cog fa-spin link" aria-hidden="true"></i>';
+        break;
+      case(TaskState.FINISHED):
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+        break;
+      case(TaskState.READY):
+        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+        break;
+      case(TaskState.ERROR):
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+        break;
+    }
+
+    return result;
+  };
+
   public getToolURL(): string {
     if (!isNullOrUndefined((<UploadOperation> this.operations[0]).wavFile)) {
       let audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;

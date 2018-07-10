@@ -5,6 +5,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
   Renderer2,
   SimpleChanges
@@ -12,11 +13,13 @@ import {
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../../../obj/fileInfo';
+import {TaskService} from '../../../obj/tasks/task.service';
+import {SubscriptionManager} from '../../../shared/subscription-manager';
 
 @Directive({
   selector: '[appProcColIcon]'
 })
-export class ProcColIconDirective implements AfterViewInit, OnChanges {
+export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input('entry') entry: (Task | TaskDirectory);
   @Input('shortStyle') shortStyle = false;
@@ -30,7 +33,9 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
 
   @Output('onDeleteIconClick') onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
+  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  constructor(private elementRef: ElementRef, private renderer: Renderer2, private taskService: TaskService) {
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -44,103 +49,129 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
 
   private updateView() {
     if (!isNullOrUndefined(this.elementRef.nativeElement)) {
-      this.clearContents();
-      const wrapper: HTMLElement = this.renderer.createElement('div');
-      if (this.shortStyle) {
-        this.renderer.addClass(wrapper, 'shorten');
-      }
-      const icon = this.createIcon();
-      const filenameSpan = this.createFileNameSpan();
-      const appendingSpan = this.createAppendingsSpan();
 
-      /*
-      <i *ngIf="entry.mouseover" class="fa fa-info-circle" aria-hidden="true"
-                               (mouseenter)="onInfoMouseEnter($event, entry, td)"
-                               (mouseleave)="onInfoMouseLeave($event, entry)"
-                               (mouseover)="onInfoMouseOver($event, entry)"
-                            ></i>
-
-                            <i *ngIf="entry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
-                               (click)="removeEntry($event, entry)"
-                            ></i>
-       */
-
-      this.renderer.appendChild(wrapper, icon);
-      this.renderer.appendChild(wrapper, filenameSpan);
-      this.renderer.appendChild(wrapper, appendingSpan);
-
-      if (this.entry instanceof Task) {
-        const infoIcon = this.renderer.createElement('i');
-        const deleteIcon = this.renderer.createElement('i');
-
-        this.renderer.addClass(infoIcon, 'fa');
-        this.renderer.addClass(infoIcon, 'fa-info-circle');
-        this.renderer.setAttribute(infoIcon, 'aria-hidden', 'true');
-        this.renderer.addClass(deleteIcon, 'fa');
-        this.renderer.addClass(deleteIcon, 'fa-minus-circle');
-        this.renderer.setAttribute(deleteIcon, 'aria-hidden', 'true');
-
-        if (this.mouseOver) {
-          this.renderer.setStyle(infoIcon, 'visibility', 'visible');
-          this.renderer.setStyle(deleteIcon, 'visibility', 'visible');
-        } else {
-          this.renderer.setStyle(infoIcon, 'visibility', 'hidden');
-          this.renderer.setStyle(deleteIcon, 'visibility', 'hidden');
+      if (!isNullOrUndefined(this.entry)) {
+        this.clearContents();
+        const wrapper: HTMLElement = this.renderer.createElement('div');
+        if (this.shortStyle) {
+          this.renderer.addClass(wrapper, 'shorten');
         }
+        this.appendIcon(wrapper);
+        this.appendFileNameSpan(wrapper);
 
-        this.renderer.listen(infoIcon, 'mouseenter', (event) => {
-          this.onInfoMouseEnter.emit(event);
-        });
-        this.renderer.listen(infoIcon, 'mouseleave', (event) => {
-          this.onInfoMouseLeave.emit(event);
-        });
-        this.renderer.listen(infoIcon, 'mouseover', (event) => {
-          this.onInfoMouseOver.emit(event);
-        });
+        if (this.entry instanceof Task) {
+          this.appendAppendingsSpan(wrapper);
+          const infoIcon = this.renderer.createElement('i');
+          const deleteIcon = this.renderer.createElement('i');
 
-        this.renderer.listen(deleteIcon, 'click', (event) => {
-          this.onDeleteIconClick.emit(event);
-        });
+          this.renderer.addClass(infoIcon, 'fa');
+          this.renderer.addClass(infoIcon, 'fa-info-circle');
+          this.renderer.setAttribute(infoIcon, 'aria-hidden', 'true');
+          this.renderer.addClass(deleteIcon, 'fa');
+          this.renderer.addClass(deleteIcon, 'fa-minus-circle');
+          this.renderer.setAttribute(deleteIcon, 'aria-hidden', 'true');
 
-        this.renderer.appendChild(wrapper, infoIcon);
-        this.renderer.appendChild(wrapper, deleteIcon);
+          if (this.mouseOver) {
+            this.renderer.setStyle(infoIcon, 'visibility', 'visible');
+            this.renderer.setStyle(deleteIcon, 'visibility', 'visible');
+          } else {
+            this.renderer.setStyle(infoIcon, 'visibility', 'hidden');
+            this.renderer.setStyle(deleteIcon, 'visibility', 'hidden');
+          }
+
+          this.renderer.listen(infoIcon, 'mouseenter', (event) => {
+            this.onInfoMouseEnter.emit(event);
+          });
+          this.renderer.listen(infoIcon, 'mouseleave', (event) => {
+            this.onInfoMouseLeave.emit(event);
+          });
+          this.renderer.listen(infoIcon, 'mouseover', (event) => {
+            this.onInfoMouseOver.emit(event);
+          });
+
+          this.renderer.listen(deleteIcon, 'click', (event) => {
+            this.onDeleteIconClick.emit(event);
+          });
+
+          this.renderer.appendChild(wrapper, infoIcon);
+          this.renderer.appendChild(wrapper, deleteIcon);
+        }
+        this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
       }
-      this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
     } else {
       throw 'ProcColDirective error: updateView: nativeElement is undefined';
     }
   }
 
-  private createIcon(): HTMLElement {
+  private appendIcon(wrapper: HTMLElement) {
     let icon: HTMLElement;
     if (this.entry instanceof Task) {
-      icon = this.renderer.createElement('i');
-      this.renderer.addClass(icon, 'fa');
-      this.renderer.addClass(icon, 'fa-file-audio-o');
-      this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+      if (isNullOrUndefined(this.entry.directory)) {
+        // normal line
+        icon = this.renderer.createElement('i');
+        this.renderer.addClass(icon, 'fa');
+        this.renderer.addClass(icon, 'fa-file-audio-o');
+        this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
-      switch (this.entry.state) {
-        case(TaskState.FINISHED):
-          this.renderer.addClass(icon, 'green');
-          break;
-        case(TaskState.ERROR):
-          this.renderer.addClass(icon, 'red');
-          break;
-        case(TaskState.PENDING || this.entry.state === TaskState.READY):
-          this.renderer.addClass(icon, 'blue');
-          break;
-        case(TaskState.PROCESSING):
-          this.renderer.addClass(icon, 'yellow');
-          break;
+        switch (this.entry.state) {
+          case(TaskState.FINISHED):
+            this.renderer.addClass(icon, 'green');
+            break;
+          case(TaskState.ERROR):
+            this.renderer.addClass(icon, 'red');
+            break;
+          case(TaskState.PENDING || this.entry.state === TaskState.READY):
+            this.renderer.addClass(icon, 'blue');
+            break;
+          case(TaskState.PROCESSING):
+            this.renderer.addClass(icon, 'yellow');
+            break;
+        }
+
+        this.renderer.appendChild(wrapper, icon);
+      } else {
+        // task is part of a folder
+
+        const img = this.renderer.createElement('img');
+        this.renderer.setAttribute(img, 'src', './assets/directory.png');
+        this.renderer.setStyle(img, 'height', '20px');
+        this.renderer.setStyle(img, 'margin-right', '3px');
+        this.renderer.appendChild(wrapper, img);
+
+        const icon = this.renderer.createElement('i');
+        this.renderer.addClass(icon, 'fa');
+        this.renderer.addClass(icon, 'fa-file-audio-o');
+        this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+
+        switch (this.entry.state) {
+          case(TaskState.FINISHED):
+            this.renderer.addClass(icon, 'green');
+            break;
+          case(TaskState.ERROR):
+            this.renderer.addClass(icon, 'red');
+            break;
+          case(TaskState.PENDING || TaskState.READY):
+            this.renderer.addClass(icon, 'blue');
+            break;
+          case(TaskState.PROCESSING):
+            this.renderer.addClass(icon, 'yellow');
+            break;
+        }
+
+        this.renderer.appendChild(wrapper, icon);
       }
     } else {
       // TaskDirectory
-    }
+      icon = this.renderer.createElement('i');
+      this.renderer.addClass(icon, 'fa');
+      this.renderer.addClass(icon, 'fa-folder-open');
+      this.renderer.addClass(icon, 'blue');
 
-    return icon;
+      this.renderer.appendChild(wrapper, icon);
+    }
   }
 
-  private createFileNameSpan(): HTMLElement {
+  private appendFileNameSpan(wrapper) {
     let result: HTMLElement = this.renderer.createElement('span');
 
     if (this.shortStyle) {
@@ -163,14 +194,29 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
       this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes.originalFileName);
       const filename = this.renderer.createText(' ' + this.entry.files[0].name.replace('_annot', '') + '.wav ');
       this.renderer.appendChild(result, filename);
+      this.renderer.appendChild(wrapper, result);
     } else {
       // TaskDirectory
-    }
 
-    return result;
+      this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
+
+      // set filename
+      this.renderer.setAttribute(result, 'title', this.entry.foldername);
+      const filename = this.renderer.createText(' ' + this.entry.foldername);
+      this.renderer.appendChild(result, filename);
+
+      if (this.entry.entries.length > 0) {
+        // set number of files
+        const filesNumSpan = this.renderer.createElement('span');
+        const filesNum = this.renderer.createText(' (' + this.entry.entries.length + ')');
+        this.renderer.appendChild(filesNumSpan, filesNum);
+        this.renderer.appendChild(result, filesNumSpan);
+      }
+      this.renderer.appendChild(wrapper, result);
+    }
   }
 
-  private createAppendingsSpan(): HTMLElement {
+  private appendAppendingsSpan(wrapper) {
     const result: HTMLElement = this.renderer.createElement('span');
 
     if (this.entry instanceof Task) {
@@ -186,12 +232,9 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
         });
         const content = this.renderer.createText(badgeObj.label);
         this.renderer.appendChild(result, content);
+        this.renderer.appendChild(wrapper, result);
       }
-    } else {
-      return null;
     }
-
-    return result;
   }
 
   private clearContents() {
@@ -227,49 +270,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
     }
   }
 
-  /*
-                            </ng-container>
-
-  <div [ngClass]="{
-                            'shorten': shortstyle
-                        }">
-                            <ng-container>
-                                <i class="fa fa-file-audio-o"
-                                   aria-hidden="true"
-                                   [ngClass]="{
-                                        green: (entry.state === 'FINISHED'),
-                                        red: (entry.state === 'ERROR'),
-                                        blue: (entry.state === 'PENDING' || entry.state === 'READY'),
-                                        yellow: (entry.state === 'PROCESSING')
-                                    }">
-                                </i>
-                            </ng-container>
-                            <span [ngClass]="{
-                                'shorten': shortstyle,
-                                'green': ((entry.files[0].extension === '.wav' && entry.files[0].file !== undefined)),
-                                'yellow': ((entry.files[0].extension === '.wav' && entry.files[0].file === undefined) || entry.files[0].extension !== '.wav') && entry.operations[0].state !== 'FINISHED'
-                                }" title="{{entry.files[0].attributes.originalFileName}}">
-                                {{entry.files[0].name.replace('_annot', '') + '.wav'}}
-                            </span>
-                            <ng-container *ngIf=" entry.files.length > 1 || entry.files[0].extension !== '.wav'">
-                                <span class="badge" [ngClass]="{
-                                    'badge-info': getBadge(entry).type === 'info',
-                                    'badge-warning': getBadge(entry).type === 'warning'
-                                }" (click)="onPreviewClick(entry.files[1])">
-                                    {{getBadge(entry).label}}
-                                </span>
-                            </ng-container>
-                            <i *ngIf="entry.mouseover" class="fa fa-info-circle" aria-hidden="true"
-                               (mouseenter)="onInfoMouseEnter($event, entry, td)"
-                               (mouseleave)="onInfoMouseLeave($event, entry)"
-                               (mouseover)="onInfoMouseOver($event, entry)"
-                            ></i>
-
-                            <i *ngIf="entry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
-                               (click)="removeEntry($event, entry)"
-                            ></i>
-                        </div>
-   */
   ngAfterViewInit() {
     if (!isNullOrUndefined(this.entry)) {
       // entry set
@@ -281,8 +281,23 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges {
         }
       }
 
+      // changes of entry must be observed specifically
+      if (this.entry instanceof Task) {
+        this.subscrmanager.add(this.entry.statechange.subscribe(() => {
+          this.updateView();
+        }));
+
+        this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
+          console.log(`FILES CHANGE!`);
+          this.updateView();
+        }));
+      }
     } else {
       throw 'ProcColDirective error: no entry set';
     }
+  }
+
+  ngOnDestroy() {
+    this.subscrmanager.destroy();
   }
 }

@@ -184,11 +184,41 @@ export abstract class Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
+  public getStateIcon2 = (state: TaskState): String => {
+    let result = '';
+
+    switch (state) {
+      case(TaskState.PENDING):
+        result = '';
+        break;
+      case(TaskState.UPLOADING):
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Loading...</span>';
+        break;
+      case(TaskState.PROCESSING):
+        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Processing...</span>';
+        break;
+      case(TaskState.FINISHED):
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+        break;
+      case(TaskState.READY):
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
+        break;
+      case(TaskState.ERROR):
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+        break;
+    }
+
+    return result;
+  };
+
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     console.error('start not implemented');
   };
 
   public changeState(state: TaskState) {
+    console.log(`CHANGE op state to ${state}!`);
     const oldstate = this._state;
     this._state = state;
 

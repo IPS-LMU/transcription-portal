@@ -33,6 +33,7 @@ import {DownloadModalComponent} from './modals/download-modal/download-modal.com
 import {OperationArrowComponent} from './components/operation-arrow/operation-arrow.component';
 import {ProceedingsRowDirective} from './components/proceedings/directives/proceedings-row.directive';
 import {ProcColIconDirective} from './components/proceedings/directives/proc-col-icon.directive';
+import {ProcColOperationDirective} from './components/proceedings/directives/proc-col-operation.directive';
 
 @NgModule({
   declarations: [
@@ -57,7 +58,8 @@ import {ProcColIconDirective} from './components/proceedings/directives/proc-col
     DownloadModalComponent,
     OperationArrowComponent,
     ProceedingsRowDirective,
-    ProcColIconDirective
+    ProcColIconDirective,
+    ProcColOperationDirective
   ],
   imports: [
     BrowserModule,

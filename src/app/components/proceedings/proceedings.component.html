@@ -86,12 +86,14 @@
                 </ng-container>
                 <span>Language: {{popover.task.language}}</span><br/><br/>
                 <span>File information:</span>
-                <app-file-info-table [fileinfo]="popover.task.files[0]"></app-file-info-table>
+                <app-file-info-table
+                        [fileinfo]="(popover.task.files) ? popover.task.files[0] : null"></app-file-info-table>
             </ng-container>
         </app-popover>
 
         <!-- Big proceedings table -->
         <table class="table table-striped">
+            <!-- TABLE HEADER -->
             <thead>
             <tr class="tableHeaderTop">
                 <th>File</th>
@@ -145,157 +147,85 @@
                 </ng-container>
             </tr>
             </thead>
+
+            <!-- TABLE BODY -->
             <tbody (contextmenu)="onContextMenu($event)">
             <ng-container *ngFor="let entry of taskList.entries; let i = index;">
                 <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
                     [rowSelected]="isEntrySelected(entry)">
                     <!-- filename/foldername column -->
-                    <td appProcColIcon *ngIf="entry.files !== undefined" [entry]="entry" [shortStyle]="shortstyle"
+                    <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
                         (onAppendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
                         (onInfoMouseEnter)="onInfoMouseEnter($event, entry, td)"
                         (onInfoMouseLeave)="onInfoMouseLeave($event, entry)"
                         (onInfoMouseOver)="onInfoMouseOver($event, entry)"
                         (onDeleteIconClick)="removeEntry($event, entry)"
-                        (mouseenter)="onTaskMouseEnter($event, entry, td)"
-                        (mouseleave)="onTaskMouseLeave($event, entry)"
-                        (mouseover)="onTaskMouseOver($event, entry)"
+                        (mouseenter)="onNameMouseEnter($event, entry, td)"
+                        (mouseleave)="onNameMouseLeave($event, entry)"
+                        (mouseover)="onNameMouseOver($event, entry)"
                         [mouseover]="entry.mouseover">
                     </td>
                     <!-- Task operations-->
                     <ng-container *ngIf="entry.files !== undefined">
-                        <td *ngFor="let operation of entry.operations" style="text-align: center;" [ngClass]="{
-                'op-deactivated': !operation.enabled
-            }"
+                        <td *ngFor="let operation of entry.operations" appProcColOperation
+
+                            [entry]="entry"
+                            [operation]="operation"
+
                             (mouseenter)="onOperationMouseEnter($event, operation)"
                             (mouseleave)="onOperationMouseLeave($event, operation)"
                             (mouseover)="onOperationMouseOver($event, operation)"
                             (mousedown)="onOperationClick($event, operation)"
+                            (click)="onRowSelected(entry, operation)"
                         >
-                            <ng-container
-                                    *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.lastResult.available);
-                                else elseBlock">
-                                <i class="fa fa-chain-broken"
-                                   aria-hidden="true"></i>
-                            </ng-container>
-                            <ng-template #elseBlock>
-                                <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"
-                                     [innerHTML]="getStateIcon(operation)"
-                                     (click)="onRowSelected(entry, operation)"></div>
-                                <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
-                                    <i class="fa fa-repeat" aria-hidden="true"
-                                       (click)="entry.restartFailedOperation(taskService.httpclient);"></i>
-                                </div>
-                                <div *ngIf="!operation.enabled">
-                                    <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
-                                </div>
-                            </ng-template>
-
                         </td>
                     </ng-container>
-                    <!-- folder name without further columns-->
-                    <td appProcColIcon [shortStyle]="shortstyle"
-                        *ngIf="entry.files === undefined" [attr.colspan]="taskService.operations.length + 1"
-                        (click)="onRowSelected(entry)">
-                        <ng-container>
-                            <i class="fa fa-folder-open blue"
-                               aria-hidden="true"></i>
-                        </ng-container>
-                        <span [ngClass]="{
-                            'shorten': shortstyle
-                        }" title="{{entry.foldername}}">
-                        {{entry.foldername}}
-                        </span>
-                        <span *ngIf="entry.entries.length > 0">
-                            ({{entry.entries.length}})
-                        </span>
-                    </td>
                 </tr>
                 <ng-container *ngIf="entry.files === undefined">
                     <!-- folder row -->
-                    <tr *ngFor="let dirEntry of entry.entries" appProceedingsRow [entry]="dirEntry"
-                        [toolSelectedOperation]="toolSelectedOperation" [rowSelected]="isEntrySelected(dirEntry)"
+                    <tr *ngFor="let dirEntry of entry.entries" appProceedingsRow
+                        [entry]="dirEntry"
+                        [toolSelectedOperation]="toolSelectedOperation"
+                        [rowSelected]="isEntrySelected(dirEntry)"
                     >
                         <td appProcColIcon [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
-                            (mouseenter)="onTaskMouseEnter($event, dirEntry, td)"
-                            (mouseleave)="onTaskMouseLeave($event, dirEntry)"
-                            (mouseover)="onTaskMouseOver($event, dirEntry)"
+                            [entry]="dirEntry"
+                            (onInfoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"
+                            (onInfoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
+                            (onInfoMouseOver)="onInfoMouseOver($event, dirEntry)"
+                            (onDeleteIconClick)="removeEntry($event, entry)"
+                            (mouseenter)="onNameMouseEnter($event, dirEntry, td)"
+                            (mouseleave)="onNameMouseLeave($event, dirEntry)"
+                            (mouseover)="onNameMouseOver($event, dirEntry)"
+                            [mouseover]="dirEntry.mouseover"
                         >
-                            <div [ngClass]="{
-                                shorten: shortstyle
-                            }">
-                                <img style="height:20px;margin-right:3px;" src="./assets/directory.png">
-                                <i
-                                        class="fa fa-file-audio-o" aria-hidden="true"
-                                        [ngClass]="{
-                                        green: (dirEntry.state === 'FINISHED'),
-                                        red: (dirEntry.state === 'ERROR'),
-                                        blue: (dirEntry.state === 'PENDING' || dirEntry.state === 'READY'),
-                                        yellow: (dirEntry.state === 'PROCESSING')
-                                        }">
-                                </i>
-                                <span [ngClass]="{
-                                        'shorten': shortstyle,
-                                        'green': dirEntry.files[0].file !== undefined,
-                                        'yellow': (dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)
-                                    }">
-                                        <ng-container
-                                                *ngIf="!(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                                            {{dirEntry.files[0].attributes.originalFileName}}
-                                        </ng-container>
-                                        <ng-container
-                                                *ngIf="(dirEntry.files[0].file === undefined && dirEntry.operations[0].results.length === 0)">
-                                            {{dirEntry.files[0].attributes?.originalFileName}}
-                                        </ng-container>
-                                    </span>
-                                <i *ngIf="dirEntry.mouseover" class="fa fa-info-circle" aria-hidden="true"
-                                   (mouseenter)="onInfoMouseEnter($event, dirEntry, td)"
-                                   (mouseleave)="onInfoMouseLeave($event, dirEntry)"
-                                   (mouseover)="onInfoMouseOver($event, dirEntry)"
-                                ></i>
-                                <i *ngIf="dirEntry.mouseover" class="fa fa-minus-circle" aria-hidden="true"
-                                   (click)="removeEntry($entry, dirEntry)"
-                                ></i>
-
-                                <ng-container *ngIf="dirEntry.files.length > 1">
-                                        <span class="badge" [ngClass]="
-                                        {
-                                            'badge-info': getBadge(dirEntry).type === 'info',
-                                            'badge-warning': getBadge(dirEntry).type === 'warning'
-                                        }
-                                        " (click)="onPreviewClick(dirEntry.files[1])">
-                                            {{getBadge(dirEntry).label}}
-                                        </span>
-                                </ng-container>
-                            </div>
                         </td>
-                        <td *ngFor="let operation of dirEntry.operations" style="text-align: center;" [ngClass]="{
-                                'op-deactivated': !operation.enabled
-                            }"
-                            (click)="onRowSelected(dirEntry, operation)"
+                        <ng-container *ngIf="entry.files !== undefined">
+                            <td *ngFor="let operation of entry.operations" appProcColOperation
+
+                                [entry]="entry"
+                                [operation]="operation"
+
+                                (mouseenter)="onOperationMouseEnter($event, operation)"
+                                (mouseleave)="onOperationMouseLeave($event, operation)"
+                                (mouseover)="onOperationMouseOver($event, operation)"
+                                (mousedown)="onOperationClick($event, operation)"
+                                (click)="onRowSelected(entry, operation)"
+                            >
+                            </td>
+                        </ng-container>
+                        <td *ngFor="let operation of dirEntry.operations" appProcColOperation
+
+                            [entry]="dirEntry"
+                            [operation]="operation"
+
                             (mouseenter)="onOperationMouseEnter($event, operation)"
                             (mouseleave)="onOperationMouseLeave($event, operation)"
                             (mouseover)="onOperationMouseOver($event, operation)"
                             (mousedown)="onOperationClick($event, operation)"
-                        >
-                            <ng-container
-                                    *ngIf="(operation.state === 'FINISHED' && operation.results.length > 0 && !operation.lastResult.available); else elseBlock">
-                                <i class="fa fa-chain-broken"
-                                   aria-hidden="true"></i>
-                            </ng-container>
-                            <ng-template #elseBlock>
-                                <div *ngIf="!(operation.mouseover && operation.state === 'ERROR')"
-                                     [innerHTML]="getStateIcon(operation)"
-                                     (click)="onRowSelected(dirEntry, operation)"></div>
-                                <div *ngIf="operation.mouseover && operation.state === 'ERROR'">
-                                    <i class="fa fa-repeat" aria-hidden="true"
-                                       (click)="dirEntry.restartFailedOperation(taskService.httpclient);"></i>
-                                </div>
-                                <div *ngIf="!operation.enabled">
-                                    <i class="fa fa-arrow-circle-right" style="color:white" aria-hidden="true"></i>
-                                </div>
-                            </ng-template>
+                            (click)="onRowSelected(dirEntry, operation)">
                         </td>
                     </tr>
                 </ng-container>
