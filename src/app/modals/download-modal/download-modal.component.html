@@ -12,8 +12,9 @@
             <ng-container *ngFor="let conversion of AppInfo.converters; let i = index">
                 <div class="conversion">
                     <input class="conversion-check" [(ngModel)]="checkboxes[i]" [attr.id]="'check-' + i" type="checkbox"
-                           [name]="conversion.obj.name"/> <label [attr.for]="'check-' + i"> <i class="fa fa-file-text"
-                                                                                               [ngStyle]="{color: conversion.color}"></i>
+                           [name]="conversion.obj.name" (change)="state = 'inactive'; archiveURL = '';"/> <label
+                        [attr.for]="'check-' + i"> <i class="fa fa-file-text"
+                                                      [ngStyle]="{color: conversion.color}"></i>
                     {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
                 </div>
             </ng-container>
