@@ -194,7 +194,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         const promises = [];
 
         for (let i = 0; i < this.selectedTasks.length; i++) {
-          const entry = this.selectedTasks[i];
+          const index = this.selectedTasks[i];
+          const entry = this.taskService.taskList.entries[index];
 
           if (entry instanceof TaskDirectory) {
 
@@ -360,6 +361,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   processTask(task: Task): Promise<any> {
     return new Promise<any>((resolve, reject) => {
+      console.log(`TASK:`);
+      console.log(task);
       // single task
       const entryResult = {
         name: task.files[0].name,
@@ -425,7 +428,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   removeSelected() {
     for (let i = 0; i < this.selectedTasks.length; i++) {
-      const entry = this.selectedTasks[i];
+      const index = this.selectedTasks[i];
+      const entry = this.taskService.taskList.entries[index];
       this.taskService.taskList.removeEntry(entry, true);
     }
   }
