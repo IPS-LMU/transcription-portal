@@ -51,6 +51,7 @@ export class AppComponent implements OnDestroy {
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
   private firstModalShown = false;
+  isCollapsed = true;
 
   public allTasks(): Task[] {
     if (!isNullOrUndefined(this.taskService.taskList)) {

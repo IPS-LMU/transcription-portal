@@ -39,10 +39,10 @@ h1 {
 
 .proceedings-header {
     background-color: ghostwhite;
-    position: relative;
     text-align: center;
     padding: 5px;
     display: -webkit-box;
+    margin-top: 70px;
 }
 
 .proceedings-header .status {
@@ -113,9 +113,6 @@ h1 {
 }
 
 .status-div {
-    border-top: 1px solid cornflowerblue;
-    border-right: 1px solid cornflowerblue;
-    border-left: 1px solid cornflowerblue;
     background-color: ghostwhite;
     border-radius: 10px 10px 0px 0px;
     padding: 10px;
@@ -135,4 +132,42 @@ h1 {
 
 .dropdown-toggle::after {
     display: none;
+}
+
+nav {
+    border-bottom: 1px solid cornflowerblue;
+    background-color: rgb(227, 240, 255);
+}
+
+nav i {
+    font-size: 1.5em;
+}
+
+.right-icons li {
+    padding-left: 20px;
+}
+
+.right-icons .fa-exclamation-circle {
+    text-shadow: 1px 1px gray;
+}
+
+.state-icons li {
+    margin-left: 20px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.state-icons i {
+    opacity: 0.7;
+    font-size: 1.5em;
+    margin-right: 5px;
+}
+
+.state-icons .number {
+    text-align: center;
+    font-size: 0.9em;
+    display: inline;
+    margin-right: 3px;
+    font-weight: 400;
+    vertical-align: middle;
 }

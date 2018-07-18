@@ -6,44 +6,60 @@
 
 <app-alert></app-alert>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
-    <!-- HEADER -->
-    <div class='row proceedings-header' style="background-color: transparent; padding-bottom: 0px;">
-        <div class="col-4" style="text-align: center;"><span class="logo">OH-Portal</span> <span class="version"> v{{AppInfo.version}}</span>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <a class="navbar-brand" href="#">
+            <span class="logo">OH-Portal</span> <span class="version"> v{{AppInfo.version}}</span>
             <span *ngIf="isdevelopment"
                   style="color:red;">
                 in development
             </span>
-        </div>
-        <div class="col-4 status-div" style="background-color: ghostwhite;">
-            <div class="status">
-                <ng-container *ngIf="taskService.countRunningTasks() > 0">
-                    {{taskService.countRunningTasks()}} Task(s) running...
-                </ng-container>
-                <ng-container *ngIf="taskService.countRunningTasks() < 1">
-                    Ready for processing
-                </ng-container>
-            </div>
-        </div>
-        <div class="col-4" style="text-align: center; vertical-align: middle;">
-            <div class="row">
-                <div class="col-sm-3" style="text-align: left; margin-top:10px;">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor03"
+                aria-controls="navbarColor03" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation"
+                (click)="isCollapsed = !isCollapsed">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarColor03" [ngbCollapse]="isCollapsed">
+            <ul class="navbar-nav mx-auto mr-2 state-icons">
+                <li class="nav-item">
+                    <div class="number">{{taskService.countQueuedTasks()}}</div>
+                    <i title="queued items" class="fa fa-database" style="color:gray;"></i>
+
+                    <div class="number">{{taskService.countWaitingTasks()}}</div>
+                    <i title="waiting tasks" class="fa fa-clock-o" style="color:dodgerblue;"></i>
+
+                    <div class="number">{{taskService.countRunningTasks()}}</div>
+                    <i title="running tasks" [ngClass]="{
+                        'fa-spin': (taskService.countRunningTasks() > 0)
+                    }" class="fa fa-cog" style="color:orange;"></i>
+
+                    <div class="number">{{taskService.countFinishedTasks()}}</div>
+                    <i title="finished tasks" class="fa fa-check" style="color:forestgreen;"></i>
+
+                    <div class="number">{{taskService.errors_count}}</div>
+                    <i title="failed tasks" class="fa fa-times" style="color:red;"></i>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-sm-2 right-icons">
+                <li class="nav-item active">
                     <a style="text-align: left; vertical-align: middle;margin-top:20px;"
                        [href]="taskService.protocolURL" [attr.download]="taskService.protocolFileName"><i
                             class="fa fa-file-code-o"></i> Data</a>
-                </div>
-                <div class="col-sm-3" (click)="feedbackModal.open()"><i
-                        class="fa fa-question-circle-o" [ngClass]="{
+                </li>
+                <li class="nav-item active" (click)="feedbackModal.open()">
+                    <i class="fa fa-exclamation-circle" [ngClass]="{
                         'yellow': !bugService.hasErrors,
                         'red': bugService.hasErrors
                         }"></i>
-                </div>
-                <div class="col-sm-3">
+                </li>
+                <li class="nav-item active">
                     <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
                        (click)="notification.permissionGranted = false"></i>
                     <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
                        (click)="notification.permissionGranted = true"></i>
-                </div>
-                <div class="col-sm-3">
+                </li>
+                <li class="nav-item active">
                     <div ngbDropdown placement="bottom-right" class="d-inline-block">
                         <i class="fa fa-cog" ngbDropdownToggle id="dropdownBasic2"></i>
                         <div ngbDropdownMenu aria-labelledby="dropdownBasic2" style="width:300px;right:0;padding:10px;">
@@ -52,7 +68,7 @@
                                 <tr>
                                     <td><i class="fa fa-columns"></i></td>
                                     <td><span class="btn-link" style="cursor: pointer;"
-                                                          (click)="resetSideBarWidth();">Reset sidebar width</span></td>
+                                              (click)="resetSideBarWidth();">Reset sidebar width</span></td>
                                 </tr>
                                 <tr>
                                     <td style="padding-top:20px;"><i class="fa fa-eraser" style="color:red;"></i></td>
@@ -65,10 +81,10 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
+                </li>
+            </ul>
         </div>
-    </div>
+    </nav>
 
     <!-- SUB-HEADER OVERVIEW -->
     <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
@@ -198,5 +214,4 @@
         </div>
         <div class="clearfix"></div>
     </div>
-    <app-protocol-footer #protocolFooter></app-protocol-footer>
 </div>
