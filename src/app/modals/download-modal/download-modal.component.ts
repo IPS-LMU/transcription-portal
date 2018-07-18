@@ -25,7 +25,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   @ViewChild('content') content;
   @Input('type') type: 'line' | 'column' = 'column';
-  @Input('selectedTasks') selectedTasks: (Task | TaskDirectory)[];
+  @Input('selectedTasks') selectedTasks: number[];
   @Input('taskList') taskList: Task[];
   @Input('column') column: Operation;
 
@@ -195,7 +195,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
         for (let i = 0; i < this.selectedTasks.length; i++) {
           const index = this.selectedTasks[i];
-          const entry = this.taskService.taskList.entries[index];
+          const entry = this.taskService.taskList.getEntryByIndex(index);
 
           if (entry instanceof TaskDirectory) {
 
@@ -225,6 +225,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             }));
           } else {
             // task
+            console.log(`task index is = ${index}`);
             promises.push(this.processTask(entry));
           }
         }
@@ -331,6 +332,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   }
 
   uploadFile(fileInfo: FileInfo): Promise<string> {
+    console.log(`upload file ${fileInfo.fullname}`);
     return new Promise<string>((resolve, reject) => {
       UploadOperation.upload([fileInfo], 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
         (event) => {
@@ -361,56 +363,61 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   processTask(task: Task): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      console.log(`TASK:`);
-      console.log(task);
-      // single task
-      const entryResult = {
-        name: task.files[0].name,
-        type: 'folder',
-        entries: []
-      };
+      if (!isNullOrUndefined(task)) {
 
-      const uploadPromises = [];
-      for (let j = 1; j < task.operations.length; j++) {
-        const operation = task.operations[j];
+        console.log(`TASK:`);
+        console.log(task);
+        // single task
+        const entryResult = {
+          name: task.files[0].name,
+          type: 'folder',
+          entries: []
+        };
 
-        if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
-          let entryOp = {
-            name: operation.name,
-            type: 'folder',
-            entries: []
-          };
+        const uploadPromises = [];
+        for (let j = 1; j < task.operations.length; j++) {
+          const operation = task.operations[j];
 
-          const opResult = operation.lastResult;
+          if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
+            let entryOp = {
+              name: operation.name,
+              type: 'folder',
+              entries: []
+            };
 
-          if (opResult.online) {
-            entryOp.entries.push(opResult.url);
-          } else {
-            this.uploadFile(opResult).then((url) => {
-              entryOp.entries.push(url);
-              opResult.url = url;
-              opResult.online = true;
-              this.storage.saveTask(task);
-            }).catch((error) => {
-              console.error(error);
-            });
+            const opResult = operation.lastResult;
+
+            if (opResult.online) {
+              entryOp.entries.push(opResult.url);
+            } else {
+              this.uploadFile(opResult).then((url) => {
+                entryOp.entries.push(url);
+                opResult.url = url;
+                opResult.online = true;
+                this.storage.saveTask(task);
+              }).catch((error) => {
+                console.error(error);
+              });
+            }
+
+            entryResult.entries.push(entryOp);
+
+            uploadPromises.push(this.getConversionFiles(operation));
           }
-
-          entryResult.entries.push(entryOp);
-
-          uploadPromises.push(this.getConversionFiles(operation));
         }
+
+        Promise.all(uploadPromises).then((values) => {
+          for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            entryResult.entries[i].entries = entryResult.entries[i].entries.concat(value);
+          }
+          resolve(entryResult);
+        }).catch((error) => {
+          reject(error);
+        });
+      } else {
+        reject('task is null or undefined');
       }
-
-      Promise.all(uploadPromises).then((values) => {
-        for (let i = 0; i < values.length; i++) {
-          const value = values[i];
-          entryResult.entries[i].entries = entryResult.entries[i].entries.concat(value);
-        }
-        resolve(entryResult);
-      }).catch((error) => {
-        reject(error);
-      });
     });
   }
 
@@ -429,7 +436,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   removeSelected() {
     for (let i = 0; i < this.selectedTasks.length; i++) {
       const index = this.selectedTasks[i];
-      const entry = this.taskService.taskList.entries[index];
+      const entry = this.taskService.taskList.getEntryByIndex(index);
       this.taskService.taskList.removeEntry(entry, true);
     }
   }
