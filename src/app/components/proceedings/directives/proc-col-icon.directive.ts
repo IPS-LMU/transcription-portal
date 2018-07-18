@@ -39,8 +39,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    console.log(changes);
-
     if (changes.hasOwnProperty('shortStyle') && changes.shortStyle.currentValue !== undefined) {
       this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'auto');
     }
@@ -227,7 +225,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.listen(result, 'click', () => {
           const files = (<Task> this.entry).files;
           console.log(`entries ${files.length}`);
-          console.log(files[1]);
           this.onAppendingClick.emit(files[1]);
         });
         const content = this.renderer.createText(badgeObj.label);

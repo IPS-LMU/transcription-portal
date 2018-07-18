@@ -129,6 +129,8 @@ export abstract class Operation {
     newState: TaskState
   }> = this.statesubj.asObservable();
 
+  public changed: Subject<void> = new Subject<void>();
+
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
     if (isNullOrUndefined(id)) {
       this._id = ++Operation.counter;

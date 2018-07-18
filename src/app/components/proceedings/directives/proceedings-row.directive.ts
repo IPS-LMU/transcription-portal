@@ -21,8 +21,6 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    console.log(changes);
-
     if (changes.hasOwnProperty('toolSelectedOperation')) {
       console.log(`toolSelectedChange!`);
       if (this.toolSelected) {

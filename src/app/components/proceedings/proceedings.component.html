@@ -170,7 +170,7 @@
                     <ng-container *ngIf="entry.files !== undefined">
                         <td *ngFor="let operation of entry.operations" appProcColOperation
 
-                            [entry]="entry"
+                            [entry]="entry" w
                             [operation]="operation"
 
                             (mouseenter)="onOperationMouseEnter($event, operation)"
@@ -195,7 +195,7 @@
                             (onInfoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"
                             (onInfoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
                             (onInfoMouseOver)="onInfoMouseOver($event, dirEntry)"
-                            (onDeleteIconClick)="removeEntry($event, entry)"
+                            (onDeleteIconClick)="removeEntry($event, dirEntry)"
                             (mouseenter)="onNameMouseEnter($event, dirEntry, td)"
                             (mouseleave)="onNameMouseLeave($event, dirEntry)"
                             (mouseover)="onNameMouseOver($event, dirEntry)"

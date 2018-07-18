@@ -135,12 +135,15 @@ h1 {
 }
 
 nav {
+    background-color: white;
     border-bottom: 1px solid cornflowerblue;
-    background-color: rgb(227, 240, 255);
 }
 
 nav i {
     font-size: 1.5em;
+}
+
+nav li {
 }
 
 .right-icons li {
@@ -152,15 +155,16 @@ nav i {
 }
 
 .state-icons li {
-    margin-left: 20px;
     text-align: center;
     vertical-align: middle;
+    border-bottom: 4px solid cornflowerblue;
+    padding-bottom: 5px;
 }
 
 .state-icons i {
     opacity: 0.7;
     font-size: 1.5em;
-    margin-right: 5px;
+    margin-right: 10px;
 }
 
 .state-icons .number {

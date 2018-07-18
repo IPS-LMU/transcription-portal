@@ -51,6 +51,8 @@ export class UploadOperation extends Operation {
       if (obj.type === 'progress') {
         this.progress = <number> obj.result;
         this.updateEstimatedEnd();
+        console.log(`state = ${this.state}`);
+        this.changed.next();
       } else if (obj.type === 'loadend') {
 
         this.time.duration = Date.now() - this.time.start;
@@ -125,6 +127,42 @@ export class UploadOperation extends Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
+  };
+
+  public getStateIcon2 = (state: TaskState): String => {
+    let result = '';
+
+    switch (state) {
+      case(TaskState.PENDING):
+        result = '';
+        break;
+      case(TaskState.UPLOADING):
+        if (this.progress > 0) {
+          this.updateEstimatedEnd();
+          const time = this.estimated_end - Date.now();
+          result = '<i class="fa fa-arrow-up" aria-hidden="true" style="color: cornflowerblue"></i> ' +
+            '<span>' + new TimePipe().transform(time) + '</span>';
+        } else {
+          result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
+            '<span class="sr-only">Loading... ' + this.progress + '</span>';
+        }
+        break;
+      case(TaskState.PROCESSING):
+        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
+          '<span class="sr-only">Processing...</span>';
+        break;
+      case(TaskState.FINISHED):
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+        break;
+      case(TaskState.READY):
+        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
+        break;
+      case(TaskState.ERROR):
+        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+        break;
+    }
+
+    return result;
   };
 
   public fromAny(operationObj: any, task: Task): UploadOperation {
