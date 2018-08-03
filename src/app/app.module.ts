@@ -36,6 +36,8 @@ import {ProcColIconDirective} from './components/proceedings/directives/proc-col
 import {ProcColOperationDirective} from './components/proceedings/directives/proc-col-operation.directive';
 import {NgCircleProgressModule} from 'ng-circle-progress';
 import {DirProgressDirective} from './components/proceedings/directives/dir-progress.directive';
+import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
+import {ChartsModule} from 'ng2-charts';
 
 @NgModule({
   declarations: [
@@ -62,13 +64,15 @@ import {DirProgressDirective} from './components/proceedings/directives/dir-prog
     ProceedingsRowDirective,
     ProcColIconDirective,
     ProcColOperationDirective,
-    DirProgressDirective
+    DirProgressDirective,
+    StatisticsModalComponent
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
     NgbModule.forRoot(),
+    ChartsModule,
     NgCircleProgressModule.forRoot({
       // set defaults here
       radius: 40,

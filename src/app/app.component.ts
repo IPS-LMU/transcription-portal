@@ -27,6 +27,7 @@ import {ToolLoaderComponent} from './components/tool-loader/tool-loader.componen
 import {AlertService} from './shared/alert.service';
 import {UploadOperation} from './obj/tasks/upload-operation';
 import * as X2JS from 'x2js';
+import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 
 declare var window: any;
 
@@ -77,7 +78,6 @@ export class AppComponent implements OnDestroy {
   public sidebarExpand = 'opened';
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
-  public protocolURL = '';
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
@@ -101,6 +101,7 @@ export class AppComponent implements OnDestroy {
   @ViewChild('queueModal') queueModal: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter: ProtocolFooterComponent;
   @ViewChild('toolLoader') toolLoader: ToolLoaderComponent;
+  @ViewChild('statisticsModal') statisticsModal: StatisticsModalComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,

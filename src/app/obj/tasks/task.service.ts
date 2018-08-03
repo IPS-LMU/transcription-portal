@@ -624,6 +624,21 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
+  public countFailedTasks() {
+    let result = 0;
+    const tasks = this._taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+
+      if (task.state === TaskState.ERROR) {
+        result++;
+      }
+    }
+
+    return result;
+  }
+
   ngOnDestroy() {
     const tasks = this._taskList.getAllTasks();
 

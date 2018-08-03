@@ -3,7 +3,7 @@
 <app-split-modal #splitModal></app-split-modal>
 <app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
                  [operations]="taskService.operations"></app-queue-modal>
-
+<app-statistics #statisticsModal></app-statistics>
 <app-alert></app-alert>
 <div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
     <nav class="navbar navbar-expand-md navbar-light fixed-top bg-white">
@@ -43,9 +43,9 @@
             </ul>
             <ul class="navbar-nav mr-sm-2 right-icons">
                 <li class="nav-item active">
-                    <a style="text-align: left; vertical-align: middle;margin-top:20px;"
-                       [href]="taskService.protocolURL" [attr.download]="taskService.protocolFileName"><i
-                            class="fa fa-file-code-o"></i> Data</a>
+                    <span style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
+                          (click)="statisticsModal.open();"><i
+                            class="fa fa-line-chart"></i> Statistics</span>
                 </li>
                 <li class="nav-item active" (click)="feedbackModal.open()">
                     <i class="fa fa-exclamation-circle" [ngClass]="{
