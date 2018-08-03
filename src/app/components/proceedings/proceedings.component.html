@@ -96,6 +96,10 @@
             <!-- TABLE HEADER -->
             <thead>
             <tr class="tableHeaderTop">
+                <th (click)="onOpenAllRows()" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
+                    <i *ngIf="allDirOpened === 'opened'" class="fa fa-angle-up"></i>
+                    <i *ngIf="allDirOpened === 'closed'" class="fa fa-angle-down"></i>
+                </th>
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
                     <th style="padding-left:3px;padding-right:3px;" [title]="operation.name">
@@ -128,6 +132,8 @@
                 </ng-container>
             </tr>
             <tr class="subTableHeader">
+                <th style="width:15px; padding-right:0;text-align:center;">
+                </th>
                 <th></th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
                     <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'">
@@ -154,6 +160,12 @@
                 <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
                     [rowSelected]="isEntrySelected(entry)">
                     <!-- filename/foldername column -->
+                    <td (click)="onTagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center;">
+                        <i *ngIf="entry.files === undefined && nameCol.dirOpened === 'opened'"
+                           class="fa fa-angle-up"></i>
+                        <i *ngIf="entry.files === undefined && nameCol.dirOpened === 'closed'"
+                           class="fa fa-angle-down"></i>
+                    </td>
                     <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
                         (onAppendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
@@ -164,13 +176,17 @@
                         (mouseenter)="onNameMouseEnter($event, entry, td)"
                         (mouseleave)="onNameMouseLeave($event, entry)"
                         (mouseover)="onNameMouseOver($event, entry)"
-                        [mouseover]="entry.mouseover">
+                        [mouseover]="entry.mouseover"
+                        #nameCol="colIcon"
+                        [dirOpened]="allDirOpened"
+                        (onTagClicked)="onTagClicked($event)"
+                    >
                     </td>
                     <!-- Task operations-->
                     <ng-container *ngIf="entry.files !== undefined">
                         <td *ngFor="let operation of entry.operations" appProcColOperation
 
-                            [entry]="entry" w
+                            [entry]="entry"
                             [operation]="operation"
 
                             (mouseenter)="onOperationMouseEnter($event, operation)"
@@ -181,6 +197,16 @@
                         >
                         </td>
                     </ng-container>
+                    <ng-container *ngIf="entry.files === undefined">
+                        <td *ngFor="let operation of taskService.operations; let opIndex = index"
+                            (click)="onRowSelected(entry)">
+                            <div class="progress">
+                                <div appDirProgress [dir]="entry" [opIndex]="opIndex" class="progress-bar"
+                                     role="progressbar" aria-valuemin="0" aria-valuemax="100">25%
+                                </div>
+                            </div>
+                        </td>
+                    </ng-container>
                 </tr>
                 <ng-container *ngIf="entry.files === undefined">
                     <!-- folder row -->
@@ -188,8 +214,11 @@
                         [entry]="dirEntry"
                         [toolSelectedOperation]="toolSelectedOperation"
                         [rowSelected]="isEntrySelected(dirEntry)"
+                        [@fadeToggle]="nameCol.dirOpened"
                     >
-                        <td appProcColIcon [shortStyle]="shortstyle"
+                        <td></td>
+                        <td appProcColIcon
+                            [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
                             [entry]="dirEntry"
                             (onInfoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"

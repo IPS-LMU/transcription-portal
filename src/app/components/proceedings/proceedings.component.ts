@@ -83,7 +83,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   private shiftStart = -1;
   private allSelected = false;
 
+  private selectionBlocked = false;
+
   private shortcutManager = new ShortcutManager();
+
+  public allDirOpened: 'opened' | 'closed' = 'closed';
 
   @Input() shortstyle = false;
 
@@ -222,79 +226,81 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
-    if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
+    if (!this.selectionBlocked) {
+      if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
 
-      const indexFromTaskList = this.taskList.getIndexByEntry(entry);
-      const search = this.selectedRows.findIndex((a) => {
-        return a === indexFromTaskList
-      });
+        const indexFromTaskList = this.taskList.getIndexByEntry(entry);
+        const search = this.selectedRows.findIndex((a) => {
+          return a === indexFromTaskList
+        });
 
-      if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
-        // de-/selection
+        if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
+          // de-/selection
 
-        if (search > -1) {
-          // deselect
-          this.selectedRows.splice(search, 1);
-        } else {
-          // select
-          this.selectedRows.push(indexFromTaskList);
-        }
-
-        /* What is this?
-        const puffer = [];
-        for (let i = 0; i < this.selectedRows.length; i++) {
-          const task = this.selectedRows[i];
-          if (puffer.find((a) => {
-            return task.id === a.id;
-          }) === undefined) {
-            puffer.push(task);
+          if (search > -1) {
+            // deselect
+            this.selectedRows.splice(search, 1);
+          } else {
+            // select
+            this.selectedRows.push(indexFromTaskList);
           }
-        }
-        this.selectedRows = puffer;
-        */
-      } else {
-        // shift selection
 
-        if (this.shortcutManager.pressedKey.name === 'SHIFT') {
-          // shift pressed
-          if (this.shiftStart > -1) {
-            let end = indexFromTaskList;
-
-            if (this.shiftStart > end) {
-              const temp = this.shiftStart;
-              this.shiftStart = end;
-              end = temp;
+          /* What is this?
+          const puffer = [];
+          for (let i = 0; i < this.selectedRows.length; i++) {
+            const task = this.selectedRows[i];
+            if (puffer.find((a) => {
+              return task.id === a.id;
+            }) === undefined) {
+              puffer.push(task);
             }
+          }
+          this.selectedRows = puffer;
+          */
+        } else {
+          // shift selection
+
+          if (this.shortcutManager.pressedKey.name === 'SHIFT') {
+            // shift pressed
+            if (this.shiftStart > -1) {
+              let end = indexFromTaskList;
+
+              if (this.shiftStart > end) {
+                const temp = this.shiftStart;
+                this.shiftStart = end;
+                end = temp;
+              }
+
+              this.selectedRows = [];
+              const entries = this.taskList.entries;
+              for (let i = this.shiftStart; i <= end; i++) {
+                this.selectedRows.push(i);
+              }
+              // select all between
+              // const start =x
+              this.shiftStart = -1;
+            }
+          } else {
+            const old_id = (this.selectedRows.length > 0) ? this.selectedRows[0] : -1;
 
             this.selectedRows = [];
-            const entries = this.taskList.entries;
-            for (let i = this.shiftStart; i <= end; i++) {
-              this.selectedRows.push(i);
+
+            if (indexFromTaskList !== old_id) {
+              this.shiftStart = indexFromTaskList;
+              this.selectedRows.push(indexFromTaskList);
             }
-            // select all between
-            // const start =x
-            this.shiftStart = -1;
-          }
-        } else {
-          const old_id = (this.selectedRows.length > 0) ? this.selectedRows[0] : -1;
-
-          this.selectedRows = [];
-
-          if (indexFromTaskList !== old_id) {
-            this.shiftStart = indexFromTaskList;
-            this.selectedRows.push(indexFromTaskList);
           }
         }
       }
-    }
 
-    if (
-      (!isNullOrUndefined(operation) && !isNullOrUndefined(operation.previousOperation) && operation.previousOperation.results.length > 0 &&
-        operation.previousOperation.results[operation.previousOperation.results.length - 1].online
-      )
-      || (!isNullOrUndefined(operation) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
-    ) {
-      this.operationclick.emit(operation);
+      if (
+        (!(operation === null || operation === undefined) && !(operation.previousOperation === null || operation.previousOperation === undefined) && operation.previousOperation.results.length > 0 &&
+          operation.previousOperation.results[operation.previousOperation.results.length - 1].online
+        )
+        || (!(operation === null || operation === undefined) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
+      ) {
+        this.operationclick.emit(operation);
+      }
     }
   }
 
@@ -674,5 +680,21 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   public onPreviewClick(file: FileInfo) {
     this.filePreview.open(file);
+  }
+
+  onTagClicked(nameCol) {
+    if (nameCol.dirOpened === 'opened') {
+      nameCol.dirOpened = 'closed';
+    } else {
+      nameCol.dirOpened = 'opened';
+    }
+  }
+
+  onOpenAllRows() {
+    if (this.allDirOpened === 'opened') {
+      this.allDirOpened = 'closed';
+    } else {
+      this.allDirOpened = 'opened';
+    }
   }
 }

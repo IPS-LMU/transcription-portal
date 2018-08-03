@@ -17,7 +17,8 @@ import {TaskService} from '../../../obj/tasks/task.service';
 import {SubscriptionManager} from '../../../shared/subscription-manager';
 
 @Directive({
-  selector: '[appProcColIcon]'
+  selector: '[appProcColIcon]',
+  exportAs: 'colIcon'
 })
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
 
@@ -30,10 +31,13 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   @Output('onInfoMouseEnter') onInfoMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output('onInfoMouseLeave') onInfoMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output('onInfoMouseOver') onInfoMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output('onTagClicked') onTagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<'opened' | 'closed'>();
 
   @Output('onDeleteIconClick') onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  @Input() public dirOpened: 'opened' | 'closed' = 'opened';
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2, private taskService: TaskService) {
   }
@@ -104,7 +108,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   private appendIcon(wrapper: HTMLElement) {
     let icon: HTMLElement;
     if (this.entry instanceof Task) {
-      if (isNullOrUndefined(this.entry.directory)) {
+      if (this.entry.directory === null || this.entry.directory === undefined) {
         // normal line
         icon = this.renderer.createElement('i');
         this.renderer.addClass(icon, 'fa');
@@ -131,8 +135,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         // task is part of a folder
 
         const img = this.renderer.createElement('img');
-        this.renderer.setAttribute(img, 'src', './assets/directory.png');
-        this.renderer.setStyle(img, 'height', '20px');
+        this.renderer.setAttribute(img, 'src', 'assets/directory.png');
+        this.renderer.setStyle(img, 'width', '20px');
         this.renderer.setStyle(img, 'margin-right', '3px');
         this.renderer.appendChild(wrapper, img);
 
@@ -160,6 +164,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       }
     } else {
       // TaskDirectory
+
       icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'fa');
       this.renderer.addClass(icon, 'fa-folder-open');
@@ -196,7 +201,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     } else {
       // TaskDirectory
 
-      this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
+      //this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
 
       // set filename
       this.renderer.setAttribute(result, 'title', this.entry.foldername);

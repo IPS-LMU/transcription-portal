@@ -7,14 +7,13 @@ export const ANIMATIONS = [
       opacity: '0.0'
     })),
     state('opened', style({
-      display: 'inherit',
       opacity: '1.0'
     })),
     state('*', style({
       display: 'none',
       opacity: '0.0'
     })),
-    transition('* => opened', animate('300ms ease-in')),
+    transition('closed => opened', animate('300ms ease-in')),
     transition('opened => closed', animate('300ms ease-out'))
   ]),
 

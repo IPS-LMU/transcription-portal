@@ -34,6 +34,8 @@ import {OperationArrowComponent} from './components/operation-arrow/operation-ar
 import {ProceedingsRowDirective} from './components/proceedings/directives/proceedings-row.directive';
 import {ProcColIconDirective} from './components/proceedings/directives/proc-col-icon.directive';
 import {ProcColOperationDirective} from './components/proceedings/directives/proc-col-operation.directive';
+import {NgCircleProgressModule} from 'ng-circle-progress';
+import {DirProgressDirective} from './components/proceedings/directives/dir-progress.directive';
 
 @NgModule({
   declarations: [
@@ -59,13 +61,23 @@ import {ProcColOperationDirective} from './components/proceedings/directives/pro
     OperationArrowComponent,
     ProceedingsRowDirective,
     ProcColIconDirective,
-    ProcColOperationDirective
+    ProcColOperationDirective,
+    DirProgressDirective
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
     NgbModule.forRoot(),
+    NgCircleProgressModule.forRoot({
+      // set defaults here
+      radius: 40,
+      outerStrokeWidth: 16,
+      innerStrokeWidth: 8,
+      outerStrokeColor: '#78C000',
+      innerStrokeColor: '#C7E596',
+      animationDuration: 300
+    }),
     FormsModule,
     ReactiveFormsModule
   ],
