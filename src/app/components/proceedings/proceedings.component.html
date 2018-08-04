@@ -160,12 +160,12 @@
                 <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
                     [rowSelected]="isEntrySelected(entry)">
                     <!-- filename/foldername column -->
-                    <td (click)="onTagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center;">
-                        <i *ngIf="entry.files === undefined && nameCol.dirOpened === 'opened'"
+                    <!-- <td (click)="onTagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
+                        <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'opened'"
                            class="fa fa-angle-up"></i>
-                        <i *ngIf="entry.files === undefined && nameCol.dirOpened === 'closed'"
+                        <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'closed'"
                            class="fa fa-angle-down"></i>
-                    </td>
+                    </td> -->
                     <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
                         (onAppendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
@@ -183,7 +183,7 @@
                     >
                     </td>
                     <!-- Task operations-->
-                    <ng-container *ngIf="entry.files !== undefined">
+                    <ng-container *ngIf="entry.type === 'task'">
                         <td *ngFor="let operation of entry.operations" appProcColOperation
 
                             [entry]="entry"
@@ -197,7 +197,7 @@
                         >
                         </td>
                     </ng-container>
-                    <ng-container *ngIf="entry.files === undefined">
+                    <ng-container *ngIf="entry.type === 'folder'">
                         <td *ngFor="let operation of taskService.operations; let opIndex = index"
                             (click)="onRowSelected(entry)">
                             <div class="progress">
@@ -208,7 +208,7 @@
                         </td>
                     </ng-container>
                 </tr>
-                <ng-container *ngIf="entry.files === undefined">
+                <ng-container *ngIf="entry.type === 'folder'">
                     <!-- folder row -->
                     <tr *ngFor="let dirEntry of entry.entries" appProceedingsRow
                         [entry]="dirEntry"
@@ -216,7 +216,6 @@
                         [rowSelected]="isEntrySelected(dirEntry)"
                         [@fadeToggle]="nameCol.dirOpened"
                     >
-                        <td></td>
                         <td appProcColIcon
                             [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
@@ -231,7 +230,7 @@
                             [mouseover]="dirEntry.mouseover"
                         >
                         </td>
-                        <ng-container *ngIf="entry.files !== undefined">
+                        <ng-container *ngIf="entry.type === 'task'">
                             <td *ngFor="let operation of entry.operations" appProcColOperation
 
                                 [entry]="entry"
@@ -262,6 +261,7 @@
             <!-- Queue rows -->
             <ng-container *ngFor="let entry of queue; let i = index;">
                 <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
+                    <td></td>
                     <td *ngIf="entry.file.entries === undefined"
                         [ngClass]="{'shorten': shortstyle}">
                         <ng-container *ngIf="entry.file.entries === undefined">
@@ -291,6 +291,7 @@
                 </tr>
                 <ng-container *ngIf="entry.file.entries !== undefined">
                     <tr *ngFor="let dirEntry of entry.file.entries">
+                        <td></td>
                         <td>
                             <img style="height:20px;" src="./assets/directory.png" class="op-50">
                         </td>

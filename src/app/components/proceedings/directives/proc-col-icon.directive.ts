@@ -58,6 +58,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         if (this.shortStyle) {
           this.renderer.addClass(wrapper, 'shorten');
         }
+        this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '2');
         this.appendIcon(wrapper);
         this.appendFileNameSpan(wrapper);
 
@@ -164,6 +165,17 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       }
     } else {
       // TaskDirectory
+
+      const tag = this.renderer.createElement('span');
+      this.renderer.addClass(tag, 'fa');
+
+      if (this.dirOpened === 'opened') {
+        this.renderer.addClass(tag, 'fa-angle-up');
+      } else {
+        this.renderer.addClass(tag, 'fa-angle-down');
+      }
+      this.renderer.appendChild(wrapper, tag);
+      this.renderer.listen(tag, 'click', this.tagClicked);
 
       icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'fa');
@@ -301,5 +313,15 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   ngOnDestroy() {
     this.subscrmanager.destroy();
+  }
+
+  tagClicked = () => {
+    if (this.dirOpened === 'opened') {
+      this.dirOpened = 'closed';
+    } else {
+      this.dirOpened = 'opened';
+    }
+    this.updateView();
+    this.onTagClicked.emit(this.dirOpened);
   }
 }

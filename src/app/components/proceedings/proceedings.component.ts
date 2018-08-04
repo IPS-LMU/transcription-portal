@@ -682,12 +682,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.filePreview.open(file);
   }
 
-  onTagClicked(nameCol) {
-    if (nameCol.dirOpened === 'opened') {
-      nameCol.dirOpened = 'closed';
-    } else {
-      nameCol.dirOpened = 'opened';
-    }
+  onTagClicked(state) {
+    this.selectionBlocked = true;
+
+    setTimeout(() => {
+      this.selectionBlocked = false;
+    }, 1000);
   }
 
   onOpenAllRows() {
