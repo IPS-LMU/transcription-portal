@@ -82,6 +82,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
                 this.renderer.listen(icon, 'click', this.onRepeatIconClick);
               }
+              this.renderer.removeClass(this.elementRef.nativeElement, 'op-deactivated');
             } else {
               // operation disabled
               this.renderer.addClass(this.elementRef.nativeElement, 'op-deactivated');

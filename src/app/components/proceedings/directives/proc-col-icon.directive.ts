@@ -179,7 +179,12 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
       icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'fa');
-      this.renderer.addClass(icon, 'fa-folder-open');
+
+      if (this.dirOpened === 'opened') {
+        this.renderer.addClass(icon, 'fa-folder-open');
+      } else {
+        this.renderer.addClass(icon, 'fa-folder');
+      }
       this.renderer.addClass(icon, 'blue');
 
       this.renderer.appendChild(wrapper, icon);

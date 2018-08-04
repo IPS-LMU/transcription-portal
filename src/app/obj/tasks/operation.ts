@@ -15,6 +15,7 @@ export abstract class Operation {
 
   set enabled(value: boolean) {
     this._enabled = value;
+    this.changed.next();
   }
 
   get task(): Task {
