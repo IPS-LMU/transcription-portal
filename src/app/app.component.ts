@@ -82,6 +82,7 @@ export class AppComponent implements OnDestroy {
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
 
+
   public get animationObject(): any {
     const width = 100 - this.newProceedingsWidth;
     return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}}
@@ -244,7 +245,7 @@ export class AppComponent implements OnDestroy {
     }
   }
 
-  onUploadButtonClick() {
+  onVerifyButtonClick() {
     new Promise<void>((resolve, reject) => {
         const tasks = this.taskService.taskList.getAllTasks().filter((a) => {
           return a.state === TaskState.QUEUED;
@@ -258,10 +259,7 @@ export class AppComponent implements OnDestroy {
           resolve();
         }
       }
-    ).then(() => {
-      // start first operation of this task
-      this.taskService.start();
-    });
+    );
   }
 
   onMissedDrop(event) {
@@ -602,5 +600,9 @@ export class AppComponent implements OnDestroy {
 
   public onClearClick() {
     this.storage.clearAll();
+  }
+
+  onStartClick() {
+    this.taskService.toggleProcessing();
   }
 }

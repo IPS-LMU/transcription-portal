@@ -175,3 +175,8 @@ nav li {
     font-weight: 400;
     vertical-align: middle;
 }
+
+#overall-state {
+    color: darkblue;
+    margin-top: 10px;
+}

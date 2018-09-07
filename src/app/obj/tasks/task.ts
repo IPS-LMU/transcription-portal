@@ -93,6 +93,8 @@ export class Task {
   private _directory: TaskDirectory;
   private _type = 'task';
 
+  private stopRequested = false;
+
   public mouseover = false;
 
   constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
@@ -174,55 +176,57 @@ export class Task {
   }
 
   private startNextOperation(httpclient: HttpClient, test = false) {
-    let nextoperation = -1;
+    if (!this.stopRequested) {
+      let nextoperation = -1;
 
-    for (let i = 0; i < this.operations.length; i++) {
-      const operation = this.operations[i];
-      if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
-        operation.changeState(TaskState.SKIPPED);
-      }
-      if (operation.enabled && this.operations[i].state !== TaskState.FINISHED && this.operations[i].state !== TaskState.QUEUED) {
-        nextoperation = i;
-        break;
-      }
-    }
-
-    if (nextoperation === -1) {
-      // all finished
-      this.changeState(TaskState.FINISHED);
-    } else {
-      const operation = this.operations[nextoperation];
-      if (operation.state !== TaskState.FINISHED) {
-        if (operation.name === 'OCTRA' && operation.state === TaskState.READY) {
-          this.changeState(TaskState.READY);
-        } else {
-          this.changeState(TaskState.PROCESSING);
+      for (let i = 0; i < this.operations.length; i++) {
+        const operation = this.operations[i];
+        if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
+          operation.changeState(TaskState.SKIPPED);
         }
-        const subscription = this.operations[nextoperation].statechange.subscribe(
-          (event) => {
-            if (event.newState === TaskState.FINISHED) {
-              subscription.unsubscribe();
-              this.startNextOperation(httpclient);
-            } else {
-              if (event.newState === TaskState.READY) {
-                this.changeState(TaskState.READY);
+        if (operation.enabled && this.operations[i].state !== TaskState.FINISHED && this.operations[i].state !== TaskState.QUEUED) {
+          nextoperation = i;
+          break;
+        }
+      }
+
+      if (nextoperation === -1) {
+        // all finished
+        this.changeState(TaskState.FINISHED);
+      } else {
+        const operation = this.operations[nextoperation];
+        if (operation.state !== TaskState.FINISHED) {
+          if (operation.name === 'OCTRA' && operation.state === TaskState.READY) {
+            this.changeState(TaskState.READY);
+          } else {
+            this.changeState(TaskState.PROCESSING);
+          }
+          const subscription = this.operations[nextoperation].statechange.subscribe(
+            (event) => {
+              if (event.newState === TaskState.FINISHED) {
+                subscription.unsubscribe();
+                this.startNextOperation(httpclient);
+              } else {
+                if (event.newState === TaskState.READY) {
+                  this.changeState(TaskState.READY);
+                }
               }
-            }
-          },
-          (error) => {
-            console.error(error);
-          },
-          () => {
-          });
+            },
+            (error) => {
+              console.error(error);
+            },
+            () => {
+            });
 
-        let files;
-        if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
-          files = this.files;
-        } else {
-          files = this.operations[0].results;
+          let files;
+          if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
+            files = this.files;
+          } else {
+            files = this.operations[0].results;
+          }
+
+          this.operations[nextoperation].start(files, this.operations, httpclient);
         }
-
-        this.operations[nextoperation].start(files, this.operations, httpclient);
       }
     }
   }
@@ -404,6 +408,13 @@ export class Task {
         reject(error);
       });
     });
+  }
 
+  public stopTask() {
+    this.stopRequested = true;
+  }
+
+  public resumeTask() {
+    this.stopRequested = false;
   }
 }

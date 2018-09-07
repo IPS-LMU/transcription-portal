@@ -88,9 +88,9 @@
 
     <!-- SUB-HEADER OVERVIEW -->
     <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
-        <div class="col-8" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
+        <div class="col-4" style="text-align: left;border-top: 1px solid cornflowerblue;padding-top:5px;">
             <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
-                <i class="fa fa-plus"></i><span class="d-none d-lg-inline d-xl-inline"> ADD FILES</span>
+                <i class="fa fa-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
             </button>
             <!-- webkitdirectory directory multiple -->
             <input type="file" multiple class="fileinput" value="Select audio file"
@@ -98,33 +98,29 @@
                    #fileinput
                    (change)="onFileChange($event)"/>
 
-            <div ngbDropdown class="d-inline-block">
-                <button class="btn btn-outline-primary" id="dropdownBasic1" style="margin-left:5px;" ngbDropdownToggle>
-                    <ng-container *ngIf="taskService.selectedlanguage === null">
-                        {{AppInfo.languages[0].code | uppercase}}
-                        ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
-                    </ng-container>
-                    <ng-container *ngIf="taskService.selectedlanguage !== null">
-                        {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
-                        [{{taskService.selectedlanguage.asr}}]
-                    </ng-container>
-                </button>
-                <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                    <button class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
-                            (click)="onASRLangCHanged(lang)">
-                        <ng-container
-                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
-                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                        </ng-container>
-                    </button>
-                </div>
+            <button class="btn btn-primary" style="margin-left:10px;" [disabled]="taskService.countQueuedTasks() < 1"
+                    (click)="onVerifyButtonClick()"><i class="fa fa-database"></i> 2. VERIFY
+                <ng-container *ngIf="taskService.countQueuedTasks() > 0">
+                    ({{taskService.countQueuedTasks()}})
+                </ng-container>
+            </button>
+        </div>
+        <div class="col-4">
+            <div id="overall-state">
+                <ng-container *ngIf="taskService.processing">
+                    processing ...
+                </ng-container>
+                <ng-container *ngIf="!taskService.processing">
+                    - ready for processing -
+                </ng-container>
             </div>
         </div>
         <div class="col-4" style="text-align:right;border-top: 1px solid cornflowerblue;padding-top:5px;">
-            <button class="btn btn-primary" (click)="onUploadButtonClick()"
-                    [disabled]="!taskService.newfiles">
-                <i class="fa fa-cloud-upload" aria-hidden="true"></i> <span
-                    class="d-none d-lg-inline d-xl-inline"> UPLOAD & PROCESS FILES</span>
+            <button class="btn btn-primary" [disabled]="!taskService.newfiles" (click)="onStartClick()">
+                <i class="fa" [ngClass]="{
+                    'fa-play': !taskService.processing,
+                    'fa-stop': taskService.processing
+                }" aria-hidden="true"></i><span class="d-none d-lg-inline d-xl-inline"> 3. START PROCESSING</span>
             </button>
         </div>
     </div>

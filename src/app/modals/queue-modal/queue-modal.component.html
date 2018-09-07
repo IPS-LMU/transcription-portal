@@ -20,7 +20,7 @@
         </p>
 
         <div ngbDropdown class="d-inline-block">
-            <label for="dropdownBasic1">Language: </label>
+            <label for="dropdownBasic1" style="margin-right:10px;">Language: </label>
             <button class="btn btn-outline-secondary" id="dropdownBasic1" ngbDropdownToggle>
                 <ng-container *ngIf="taskService.selectedlanguage === null">
                     {{AppInfo.languages[0].code | uppercase}}

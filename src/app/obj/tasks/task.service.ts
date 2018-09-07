@@ -71,6 +71,8 @@ export class TaskService implements OnDestroy {
   private _protocol_array = [];
   private _splitPrompt = 'PENDING';
 
+  public processing = false;
+
   public protocolURL: SafeResourceUrl;
   public protocolFileName = '';
 
@@ -459,44 +461,49 @@ export class TaskService implements OnDestroy {
   public start() {
     // look for pending tasks
 
-    const running_tasks = this.countRunningTasks();
-    const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
-      return task.operations[0].state === 'UPLOADING';
-    });
-    if (running_tasks < this.options.max_running_tasks && uploading_task < 0) {
-      let task: Task;
+    if (this.processing) {
+      const running_tasks = this.countRunningTasks();
+      const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
+        return task.operations[0].state === 'UPLOADING';
+      });
+      if (running_tasks < this.options.max_running_tasks && uploading_task < 0) {
+        let task: Task;
 
-      // look for pending tasks
-      task = this.findNextWaitingTask();
+        // look for pending tasks
+        task = this.findNextWaitingTask();
 
-      if (!isNullOrUndefined(task)) {
-        if (this.state !== TaskState.PROCESSING) {
-          this.state = TaskState.READY;
-        }
+        if (!isNullOrUndefined(task)) {
+          if (this.state !== TaskState.PROCESSING) {
+            this.state = TaskState.READY;
+          }
 
-        task.statechange.subscribe((obj) => {
-          this.storage.saveTask(task);
+          task.statechange.subscribe((obj) => {
+            this.storage.saveTask(task);
 
-          this.updateProtocolURL().then((url) => {
-            this.protocolURL = url;
+            this.updateProtocolURL().then((url) => {
+              this.protocolURL = url;
+            });
           });
-        });
-        this.storage.saveTask(task);
-        task.start(this.httpclient);
+          this.storage.saveTask(task);
+          task.start(this.httpclient);
+          console.log(`TASK start! ${task.files[0].name}`);
+          setTimeout(() => {
+            this.start();
+          }, 1000);
+        } else {
+          console.log(`next waiting task is null!`);
+        }
+      } else {
         setTimeout(() => {
           this.start();
         }, 1000);
-      } else {
       }
-    } else {
-      setTimeout(() => {
-        this.start();
-      }, 1000);
     }
   }
 
   public findNextWaitingTask(): Task {
     const tasks = this.taskList.getAllTasks();
+    console.log(`find waiting`);
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
       if (entry.state === TaskState.PENDING &&
@@ -506,10 +513,13 @@ export class TaskService implements OnDestroy {
       } else if (entry.state === TaskState.READY) {
         for (let j = 0; j < entry.operations.length; j++) {
           const operation = entry.operations[j];
-          if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
-            return entry;
-          } else if (operation.state !== TaskState.FINISHED && operation.name === 'OCTRA') {
-            break;
+          if (operation.state !== TaskState.SKIPPED && operation.enabled) {
+            if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
+              return entry;
+            } else if (operation.state !== TaskState.FINISHED && operation.name === 'OCTRA') {
+              console.log(`${entry.files[0].fullname} is ${entry.state}`);
+              break;
+            }
           }
         }
       }
@@ -990,5 +1000,25 @@ export class TaskService implements OnDestroy {
     }
 
     return file.extension;
+  }
+
+  public toggleProcessing() {
+    this.processing = !this.processing;
+
+    const tasks = this.taskList.getAllTasks();
+    if (this.processing) {
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        task.resumeTask();
+      }
+
+      this.start();
+    } else {
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        task.stopTask();
+      }
+    }
   }
 }
