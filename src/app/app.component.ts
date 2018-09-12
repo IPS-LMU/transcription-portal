@@ -519,7 +519,11 @@ export class AppComponent implements OnDestroy {
       && this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED) {
       this.toolSelectedOperation.changeState(TaskState.FINISHED);
     } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
-      this.toolSelectedOperation.changeState(TaskState.READY);
+      if (this.toolSelectedOperation.results.length > 0) {
+        this.toolSelectedOperation.changeState(TaskState.FINISHED);
+      } else {
+        this.toolSelectedOperation.changeState(TaskState.READY);
+      }
     }
     this.toolSelectedOperation = undefined;
   }

@@ -89,21 +89,21 @@ export class TaskService implements OnDestroy {
 
   public get stateLabel(): string {
     if (this.overallState === 'processing') {
-      const waitingTasks = this.countWaitingTasks();
-      if (waitingTasks > 1) {
-        return `${waitingTasks} tasks need your attention`;
-      } else if (waitingTasks === 1) {
-        return `1 task needs your attention`;
-      }
-
-      const queuedItems = this.countQueuedTasks();
-      if (queuedItems > 0) {
-        return `${queuedItems} audio file(s) waiting to be verified by you.`;
-      }
-
       const runningTasks = this.countRunningTasks();
 
       if (runningTasks === 0) {
+        const waitingTasks = this.countWaitingTasks();
+        if (waitingTasks > 1) {
+          return `${waitingTasks} tasks need your attention`;
+        } else if (waitingTasks === 1) {
+          return `1 task needs your attention`;
+        }
+
+        const queuedItems = this.countQueuedTasks();
+        if (queuedItems > 0) {
+          return `${queuedItems} audio file(s) waiting to be verified by you.`;
+        }
+
         return 'All jobs done. Waiting for new tasks...';
       }
 
@@ -787,7 +787,7 @@ export class TaskService implements OnDestroy {
       const dir = <DirectoryInfo> queueItem.file;
       return this.processDirectoryInfo(dir, queueItem);
     }
-  };
+  }
 
   private processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
@@ -978,7 +978,7 @@ export class TaskService implements OnDestroy {
 
   public openSplitModal = () => {
 
-  };
+  }
 
   private getTaskWithHash(hash: string): Task {
     const tasks: Task[] = this.taskList.getAllTasks();
@@ -990,7 +990,7 @@ export class TaskService implements OnDestroy {
           const file = task.files[j];
 
           const cmpHash = this.preprocessor.getHashString(file.attributes.originalFileName, file.size);
-          //console.log(`${cmpHash} === ${hash}`);
+          // console.log(`${cmpHash} === ${hash}`);
           if (cmpHash === hash && (task.operations[0].state === TaskState.PENDING
             || task.operations[0].state === TaskState.ERROR)) {
             return task;

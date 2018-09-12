@@ -4,7 +4,7 @@ import {Observable} from 'rxjs/Observable';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
-import {Task, TaskState} from './';
+import {Task, TaskState} from './task';
 
 export abstract class Operation {
   public abstract resultType;
@@ -81,15 +81,17 @@ export abstract class Operation {
   }
 
   public get nextOperation(): Operation {
-    const index = this.task.operations.findIndex((op) => {
-        if (op.id === this.id) {
-          return true;
+    if (!(this.task === null || this.task === undefined)) {
+      const index = this.task.operations.findIndex((op) => {
+          if (op.id === this.id) {
+            return true;
+          }
         }
-      }
-    );
+      );
 
-    if (index < this.task.operations.length - 1) {
-      return this.task.operations[index + 1];
+      if (index < this.task.operations.length - 1) {
+        return this.task.operations[index + 1];
+      }
     }
 
     return null;
@@ -230,6 +232,20 @@ export abstract class Operation {
         oldState: oldstate,
         newState: state
       });
+    }
+
+    let nextOP = this.nextOperation;
+
+    while (nextOP !== null) {
+      nextOP = this.nextOperation;
+      nextOP = (nextOP.enabled && nextOP.state !== TaskState.SKIPPED) ? nextOP : null;
+      if (nextOP !== null) {
+        break;
+      }
+    }
+
+    if (state === TaskState.FINISHED && nextOP === null) {
+      this.task.changeState(TaskState.FINISHED);
     }
   }
 

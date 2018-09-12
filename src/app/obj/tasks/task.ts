@@ -184,7 +184,7 @@ export class Task {
         if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
           operation.changeState(TaskState.SKIPPED);
         }
-        if (operation.enabled && this.operations[i].state !== TaskState.FINISHED && this.operations[i].state !== TaskState.QUEUED) {
+        if (operation.enabled && this.operations[i].state !== TaskState.FINISHED && this.operations[i].state !== TaskState.SKIPPED) {
           nextoperation = i;
           break;
         }
