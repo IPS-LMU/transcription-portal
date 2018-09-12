@@ -261,11 +261,10 @@
             <!-- Queue rows -->
             <ng-container *ngFor="let entry of queue; let i = index;">
                 <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
-                    <td></td>
                     <td *ngIf="entry.file.entries === undefined"
-                        [ngClass]="{'shorten': shortstyle}">
+                        [ngClass]="{'shorten': shortstyle}" [attr.colspan]="taskService.operations.length + 1">
                         <ng-container *ngIf="entry.file.entries === undefined">
-                            <i class="fa fa-file-audio-o op-50"
+                            <i class="fa fa-database op-50"
                                aria-hidden="true">
                             </i>
                         </ng-container>
@@ -291,12 +290,8 @@
                 </tr>
                 <ng-container *ngIf="entry.file.entries !== undefined">
                     <tr *ngFor="let dirEntry of entry.file.entries">
-                        <td></td>
                         <td>
-                            <img style="height:20px;" src="./assets/directory.png" class="op-50">
-                        </td>
-                        <td>
-                            <i class="fa fa-file-audio-o op-50" aria-hidden="true"></i>
+                            <i class="fa fa-database op-50" aria-hidden="true"></i>
                             <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
                         </td>
                         <td [attr.colspan]="taskService.operations.length + 1"></td>

@@ -71,7 +71,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     if (counters.failed > 0) {
       this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `red`);
     } else {
-      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `forestgreen`);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `#7AB55C`);
     }
   }
 

@@ -90,17 +90,17 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
               const icon = this.renderer.createElement('i');
               this.renderer.addClass(icon, 'fa');
               this.renderer.addClass(icon, 'fa-arrow-circle-right');
-              this.renderer.setStyle(icon, 'color', 'white');
+              this.renderer.setStyle(icon, 'color', 'gray');
               this.renderer.setAttribute(icon, 'aria-hidden', 'true');
               this.renderer.appendChild(this.elementRef.nativeElement, icon);
             }
           }
         }
       } else {
-        throw 'ProcOperationDirective error: entry is not of type Task'
+        throw new Error('ProcOperationDirective error: entry is not of type Task');
       }
     } else {
-      throw 'ProcOperationDirective error: updateView: nativeElement is undefined';
+      throw new Error('ProcOperationDirective error: updateView: nativeElement is undefined');
     }
   }
 
@@ -134,12 +134,12 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
         if (!isNullOrUndefined(this.entry.files)) {
           this.updateView();
         } else {
-          throw 'ProcOperationDirective error: entry of type Task does not have any files';
+          throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
         }
       }
 
     } else {
-      throw 'ProcOperationDirective error: no entry set';
+      throw new Error('ProcOperationDirective error: no entry set');
     }
 
     // listen to operation changes because these are not detected by default

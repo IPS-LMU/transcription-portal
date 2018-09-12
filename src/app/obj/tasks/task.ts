@@ -228,6 +228,8 @@ export class Task {
           this.operations[nextoperation].start(files, this.operations, httpclient);
         }
       }
+    } else {
+      this.changeState(TaskState.PENDING);
     }
   }
 

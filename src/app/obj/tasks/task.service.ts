@@ -71,7 +71,7 @@ export class TaskService implements OnDestroy {
   private _protocol_array = [];
   private _splitPrompt = 'PENDING';
 
-  public processing = false;
+  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' = 'not started';
 
   public protocolURL: SafeResourceUrl;
   public protocolFileName = '';
@@ -82,6 +82,49 @@ export class TaskService implements OnDestroy {
   private state: TaskState = TaskState.READY;
 
   private _preprocessor: Preprocessor = new Preprocessor();
+
+  public get isProcessing(): boolean {
+    return (this.overallState === 'processing');
+  }
+
+  public get stateLabel(): string {
+    if (this.overallState === 'processing') {
+      const waitingTasks = this.countWaitingTasks();
+      if (waitingTasks > 1) {
+        return `${waitingTasks} tasks need your attention`;
+      } else if (waitingTasks === 1) {
+        return `1 task needs your attention`;
+      }
+
+      const queuedItems = this.countQueuedTasks();
+      if (queuedItems > 0) {
+        return `${queuedItems} audio file(s) waiting to be verified by you.`;
+      }
+
+      const runningTasks = this.countRunningTasks();
+
+      if (runningTasks === 0) {
+        return 'All jobs done. Waiting for new tasks...';
+      }
+
+      return 'Processing...';
+    } else if (this.overallState === 'not started') {
+      const queuedItems = this.countQueuedTasks();
+
+      if (queuedItems > 0) {
+        return `${queuedItems} audio file(s) waiting to be verified by you.`;
+      }
+      return 'Click on "Start processing" to process verified or remaining audio files';
+    }
+    if (this.overallState === 'stopped') {
+      const runningTasks = this.countRunningTasks();
+
+      if (runningTasks > 0) {
+        return `waiting for ${runningTasks} tasks to stop their work...`;
+      }
+      return 'Stopped';
+    }
+  }
 
   constructor(public httpclient: HttpClient, private notification: NotificationService,
               private storage: StorageService, private sanitizer: DomSanitizer,
@@ -461,7 +504,8 @@ export class TaskService implements OnDestroy {
   public start() {
     // look for pending tasks
 
-    if (this.processing) {
+    if (this.overallState === 'processing') {
+      console.log(`tasks should be running`);
       const running_tasks = this.countRunningTasks();
       const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
@@ -491,7 +535,9 @@ export class TaskService implements OnDestroy {
             this.start();
           }, 1000);
         } else {
-          console.log(`next waiting task is null!`);
+          setTimeout(() => {
+            this.start();
+          }, 1000);
         }
       } else {
         setTimeout(() => {
@@ -1003,10 +1049,10 @@ export class TaskService implements OnDestroy {
   }
 
   public toggleProcessing() {
-    this.processing = !this.processing;
+    this.overallState = (this.overallState === 'processing') ? 'stopped' : 'processing';
 
     const tasks = this.taskList.getAllTasks();
-    if (this.processing) {
+    if (this.overallState === 'processing') {
       for (let i = 0; i < tasks.length; i++) {
         const task = tasks[i];
         task.resumeTask();
