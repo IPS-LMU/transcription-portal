@@ -43,6 +43,12 @@
             </ul>
             <ul class="navbar-nav mr-sm-2 right-icons">
                 <li class="nav-item active">
+                    <a style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
+                       href="https://www.phonetik.uni-muenchen.de/apps/oh-portal/contents/v1.0.0/help.html"
+                       target="_blank"><i
+                            class="fa fa-question-circle-o" style="color:cornflowerblue;"></i> Help</a>
+                </li>
+                <li class="nav-item active" style="cursor: pointer;">
                     <span style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
                           (click)="statisticsModal.open();"><i
                             class="fa fa-line-chart"></i> Statistics</span>
@@ -51,17 +57,17 @@
                     <i class="fa fa-exclamation-circle" [ngClass]="{
                         'yellow': !bugService.hasErrors,
                         'red': bugService.hasErrors
-                        }"></i>
+                        }"></i><span style="cursor: pointer;"> Feedback</span>
                 </li>
                 <li class="nav-item active">
                     <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
-                       (click)="notification.permissionGranted = false"></i>
+                       (click)="notification.permissionGranted = false" style="cursor: pointer;"></i>
                     <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
-                       (click)="notification.permissionGranted = true"></i>
+                       (click)="notification.permissionGranted = true" style="cursor: pointer;"></i>
                 </li>
                 <li class="nav-item active">
                     <div ngbDropdown placement="bottom-right" class="d-inline-block">
-                        <i class="fa fa-cog" ngbDropdownToggle id="dropdownBasic2"></i>
+                        <i class="fa fa-cog" ngbDropdownToggle id="dropdownBasic2" style="cursor: pointer;"></i>
                         <div ngbDropdownMenu aria-labelledby="dropdownBasic2" style="width:300px;right:0;padding:10px;">
                             <table style="width:100%;">
                                 <tbody>
