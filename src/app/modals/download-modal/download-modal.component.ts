@@ -225,7 +225,6 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             }));
           } else {
             // task
-            console.log(`task index is = ${index}`);
             promises.push(this.processTask(entry));
           }
         }
@@ -332,7 +331,6 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   }
 
   uploadFile(fileInfo: FileInfo): Promise<string> {
-    console.log(`upload file ${fileInfo.fullname}`);
     return new Promise<string>((resolve, reject) => {
       UploadOperation.upload([fileInfo], 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
         (event) => {
@@ -365,8 +363,6 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     return new Promise<any>((resolve, reject) => {
       if (!isNullOrUndefined(task)) {
 
-        console.log(`TASK:`);
-        console.log(task);
         // single task
         const entryResult = {
           name: task.files[0].name,

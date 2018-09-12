@@ -101,7 +101,6 @@ export class AlertComponent implements OnInit, OnDestroy {
         if (this.queue.length === 0) {
           this.animation = 'closed';
         }
-        console.log(`queue length is ${this.queue.length}`);
       }, 500);
     }
   }

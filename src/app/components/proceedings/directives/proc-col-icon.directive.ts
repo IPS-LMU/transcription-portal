@@ -22,8 +22,8 @@ import {SubscriptionManager} from '../../../shared/subscription-manager';
 })
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
 
-  @Input('entry') entry: (Task | TaskDirectory);
-  @Input('shortStyle') shortStyle = false;
+  @Input() entry: (Task | TaskDirectory);
+  @Input() shortStyle = false;
   @Input('mouseover') mouseOver = false;
 
   @Output('onAppendingClick') onAppendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
@@ -246,7 +246,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(result, 'badge-' + badgeObj.type);
         this.renderer.listen(result, 'click', () => {
           const files = (<Task> this.entry).files;
-          console.log(`entries ${files.length}`);
           this.onAppendingClick.emit(files[1]);
         });
         const content = this.renderer.createText(badgeObj.label);
@@ -307,7 +306,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         }));
 
         this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
-          console.log(`FILES CHANGE!`);
           this.updateView();
         }));
       }

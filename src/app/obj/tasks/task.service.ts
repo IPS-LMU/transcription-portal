@@ -159,7 +159,6 @@ export class TaskService implements OnDestroy {
 
             if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
-              console.log(`FOUND TASK!?`);
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
                 // TODO change if other than transcript files are needed
@@ -167,8 +166,6 @@ export class TaskService implements OnDestroy {
                 foundTask.operations[1].changeState(TaskState.SKIPPED);
               }
               this.storage.saveTask(foundTask);
-            } else {
-              console.log(`WHAT?`);
             }
           } else {
             for (let j = 0; j < result.entries.length; j++) {
@@ -281,7 +278,6 @@ export class TaskService implements OnDestroy {
               }
             }
 
-            console.log(`STORAGE ALL LOADED ADD ENTRY`);
             this._taskList.addEntry(task).catch((err) => {
               console.error(err);
             });
@@ -321,8 +317,6 @@ export class TaskService implements OnDestroy {
             });
           }
         }
-
-        console.log(`MAX Tasks: ${maxTaskCounter}, MAX Operations: ${maxOperationCounter}`);
 
         if (TaskEntry.counter < maxTaskCounter) {
           console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
@@ -480,7 +474,6 @@ export class TaskService implements OnDestroy {
 
   public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
     if (entry instanceof Task || entry instanceof TaskDirectory) {
-      console.log(`TASKSERVICE ADD ENTRY!`);
       this.taskList.addEntry(entry, saveToDB).then(() => {
         return this.taskList.cleanup(entry, saveToDB);
       }).catch((err) => {
@@ -505,7 +498,6 @@ export class TaskService implements OnDestroy {
     // look for pending tasks
 
     if (this.overallState === 'processing') {
-      console.log(`tasks should be running`);
       const running_tasks = this.countRunningTasks();
       const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
@@ -530,7 +522,6 @@ export class TaskService implements OnDestroy {
           });
           this.storage.saveTask(task);
           task.start(this.httpclient);
-          console.log(`TASK start! ${task.files[0].name}`);
           setTimeout(() => {
             this.start();
           }, 1000);
@@ -549,7 +540,6 @@ export class TaskService implements OnDestroy {
 
   public findNextWaitingTask(): Task {
     const tasks = this.taskList.getAllTasks();
-    console.log(`find waiting`);
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
       if (entry.state === TaskState.PENDING &&
@@ -563,7 +553,6 @@ export class TaskService implements OnDestroy {
             if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
               return entry;
             } else if (operation.state !== TaskState.FINISHED && operation.name === 'OCTRA') {
-              console.log(`${entry.files[0].fullname} is ${entry.state}`);
               break;
             }
           }

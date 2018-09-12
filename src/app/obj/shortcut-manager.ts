@@ -24,10 +24,6 @@ export class ShortcutManager {
     }
   };
 
-  /**
-   * mapping for special keys
-   * @type {{name: string; keyCode: number}[]}
-   */
   private table: any = [
     {
       name: 'CMD',
@@ -85,11 +81,9 @@ export class ShortcutManager {
   }
 
   public checkKeyEvent(event: KeyboardEvent): Promise<{ command: string, platform: string }> {
-    return new Promise<{ command: string, platform: string }>((resolve, reject) => {
+    return new Promise<{ command: string, platform: string }>((resolve) => {
       if (event.type === 'keydown') {
-        console.log();
         const shortcut = this.getShorcutCombination(event);
-        console.log(`${shortcut}`);
 
         if (this._pressedKey.code < 0) {
           this._pressedKey.code = event.keyCode;
@@ -97,7 +91,6 @@ export class ShortcutManager {
         }
 
         const command = this.getCommand(shortcut, BrowserInfo.platform);
-        console.log(`COMAND: ${command}`);
 
         if (!isNullOrUndefined(command)) {
           event.preventDefault();
@@ -116,7 +109,7 @@ export class ShortcutManager {
   }
 
   private getCommand(shorcut: string, platform: string) {
-    for (let command in this.keyMap[platform]) {
+    for (const command in this.keyMap[platform]) {
       if (this.keyMap[platform].hasOwnProperty(command)) {
         const entry = this.keyMap[platform][command];
 

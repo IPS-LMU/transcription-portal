@@ -51,7 +51,6 @@ export class UploadOperation extends Operation {
       if (obj.type === 'progress') {
         this.progress = <number> obj.result;
         this.updateEstimatedEnd();
-        console.log(`state = ${this.state}`);
         this.changed.next();
       } else if (obj.type === 'loadend') {
 

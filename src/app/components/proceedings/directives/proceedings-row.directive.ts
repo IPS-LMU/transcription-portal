@@ -8,12 +8,14 @@ import {Task, TaskDirectory} from '../../../obj/tasks';
 })
 export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
 
-  @Input('entry') entry: (Task | TaskDirectory);
-  @Input('toolSelectedOperation') toolSelectedOperation: Operation;
-  @Input('rowSelected') rowSelected = false;
+  @Input() entry: (Task | TaskDirectory);
+  @Input() toolSelectedOperation: Operation;
+  @Input() rowSelected = false;
 
   private get toolSelected(): boolean {
-    return ((this.toolSelectedOperation !== undefined && this.toolSelectedOperation.task !== undefined) && this.toolSelectedOperation.task.id === this.entry.id)
+    return ((this.toolSelectedOperation !== undefined
+      && this.toolSelectedOperation.task !== undefined)
+      && this.toolSelectedOperation.task.id === this.entry.id);
   }
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2) {
@@ -22,7 +24,6 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.hasOwnProperty('toolSelectedOperation')) {
-      console.log(`toolSelectedChange!`);
       if (this.toolSelected) {
         this.renderer.addClass(this.elementRef.nativeElement, 'tool-selected');
       } else {
@@ -44,7 +45,7 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
       // entry set
 
     } else {
-      throw 'ProceedingsRowDirective error: no entry set';
+      throw new Error('ProceedingsRowDirective error: no entry set');
     }
   }
 }

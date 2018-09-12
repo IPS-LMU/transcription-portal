@@ -57,7 +57,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
         if (!isNullOrUndefined(this.operation)) {
-          console.log(`UPDATE VIEW ${this.operation.name} = ${this.operation.state}`);
           if (this.operation.state === 'FINISHED' && this.operation.results.length > 0 && !this.operation.lastResult.available) {
             // result is not available
             const icon = this.renderer.createElement('i');
@@ -148,7 +147,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     }));
 
     this.subscrmanager.add(this.operation.changed.subscribe(() => {
-      console.log(`CHANGED CALLED!`);
       this.updateView();
     }));
   }

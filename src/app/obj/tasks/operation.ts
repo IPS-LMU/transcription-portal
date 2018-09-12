@@ -221,7 +221,6 @@ export abstract class Operation {
   };
 
   public changeState(state: TaskState) {
-    console.log(`CHANGE op state to ${state}!`);
     const oldstate = this._state;
     this._state = state;
 

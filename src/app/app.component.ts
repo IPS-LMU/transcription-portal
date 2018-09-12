@@ -289,7 +289,6 @@ export class AppComponent implements OnDestroy {
   }
 
   onOperationClick(operation: Operation) {
-    console.log(`operation click!`);
     if (operation instanceof ToolOperation) {
       const tool = <ToolOperation> operation;
 
@@ -523,7 +522,6 @@ export class AppComponent implements OnDestroy {
       this.toolSelectedOperation.changeState(TaskState.READY);
     }
     this.toolSelectedOperation = undefined;
-    console.log(`toolSelect to undefined`);
   }
 
   @HostListener('window:beforeunload', ['$event'])

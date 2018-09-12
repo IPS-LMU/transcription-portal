@@ -5,7 +5,7 @@ import {Subject} from 'rxjs/Subject';
 
 export interface EntryChangeEvent {
   state: 'added' | 'removed' | 'changed';
-  saveToDB: boolean,
+  saveToDB: boolean;
   entry: (Task | TaskDirectory);
 }
 
@@ -59,7 +59,7 @@ export class TaskList {
   }
 
   public findTaskByState(state: TaskState): Task {
-    let tasks = this.getAllTasks();
+    const tasks = this.getAllTasks();
 
     return tasks.find((a) => {
       if (a.state === state) {
@@ -69,7 +69,7 @@ export class TaskList {
   }
 
   public findEntryById(id: number): (Task | TaskDirectory) {
-    let tasks = this.getAllTasks();
+    const tasks = this.getAllTasks();
 
     return tasks.find((a) => {
       if (a.id === id) {
@@ -79,7 +79,7 @@ export class TaskList {
   }
 
   public findTaskDirByPath(path: string): TaskDirectory {
-    let tasks = this.getAllTaskDirectories();
+    const tasks = this.getAllTaskDirectories();
 
     return tasks.find((a) => {
       if (a.path === path) {
@@ -167,7 +167,7 @@ export class TaskList {
   }
 
   public getAllTaskDirectories(): TaskDirectory[] {
-    let result: TaskDirectory[] = [];
+    const result: TaskDirectory[] = [];
 
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
@@ -186,7 +186,7 @@ export class TaskList {
           state: 'removed',
           saveToDB: saveToDB,
           entry: entry
-        })
+        });
       };
       if (!isNullOrUndefined(entry)) {
         if (entry instanceof Task) {
@@ -243,18 +243,17 @@ export class TaskList {
         const entryTask = <Task> entry.entries[0];
         entryTask.directory = null;
         return this.removeEntry(entryTask, saveToDB).then(() => {
-          return this.removeEntry(entry, saveToDB)
+          return this.removeEntry(entry, saveToDB);
         }).then(() => {
-          console.log(`CLEANUP ADD ENTRY`);
-          return this.addEntry(entryTask, saveToDB)
+          return this.addEntry(entryTask, saveToDB);
         });
       } else {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>((resolve) => {
           resolve();
         });
       }
     } else {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<void>((resolve) => {
         resolve();
       });
     }

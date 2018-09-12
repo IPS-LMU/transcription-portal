@@ -58,7 +58,5 @@ export class StatisticsService {
     for (let i = 0; i < this.averageDurations.data.length; i++) {
       this.averageDurations.data[i] = Math.ceil(durations[i] / 1000 / 60 * 100) / 100;
     }
-
-    console.log(this.averageDurations);
   }
 }
