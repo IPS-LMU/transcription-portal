@@ -1,5 +1,4 @@
 import {HttpClient} from '@angular/common/http';
-import {isNullOrUndefined} from 'util';
 import * as X2JS from 'x2js';
 import {FileInfo} from '../fileInfo';
 import {Task} from '../tasks/index';
@@ -20,7 +19,8 @@ export class G2pMausOperation extends Operation {
     this._time.start = Date.now();
 
     let url = '';
-    let language = (isNullOrUndefined(AppInfo.getLanguageByCode(this.task.language).mausLanguage))
+    const language = ((AppInfo.getLanguageByCode(this.task.language).mausLanguage === null
+      || AppInfo.getLanguageByCode(this.task.language).mausLanguage === undefined))
       ? this.task.language :
       AppInfo.getLanguageByCode(this.task.language).mausLanguage;
     if (this.previousOperation.enabled) {
@@ -106,7 +106,7 @@ export class G2pMausOperation extends Operation {
   }
 
   public clone(task?: Task): G2pMausOperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new G2pMausOperation(this.name, this.icon, selected_task, this.state);
   }
 }

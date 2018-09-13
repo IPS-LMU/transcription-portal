@@ -1,5 +1,4 @@
 import {AudioRessource} from './AudioRessource';
-import {isNullOrUndefined} from 'util';
 import {EventEmitter} from '@angular/core';
 import {AudioTime} from './AudioTime';
 import {PlayBackState, SourceType} from './index';
@@ -20,14 +19,14 @@ export class AudioManager {
   }
 
   set playposition(value: number) {
-    if (isNullOrUndefined(this._playposition)) {
+    if ((this._playposition === null || this._playposition === undefined)) {
       this._playposition = new AudioTime(0, this.ressource.info.samplerate);
     }
     this._playposition.samples = value;
   }
 
   get playposition(): number {
-    if (isNullOrUndefined(this._playposition)) {
+    if ((this._playposition === null || this._playposition === undefined)) {
       return 0;
     }
     return this._playposition.samples;
@@ -233,7 +232,7 @@ export class AudioManager {
   constructor(filename: string) {
     this._id = ++AudioManager.counter;
 
-    if (!isNullOrUndefined(filename)) {
+    if (!(filename === null || filename === undefined)) {
       // Fix up for prefixing
       if (AudioManager.audiocontext) {
         this.state = PlayBackState.PREPARE;
@@ -269,7 +268,7 @@ export class AudioManager {
                        volume: number, speed: number, drawFunc: () => void, playonhover: boolean = false): boolean {
 
     if (!this.audioplaying) {
-      if (isNullOrUndefined(this._gainNode)) {
+      if ((this._gainNode === null || this._gainNode === undefined)) {
         this.prepareAudioPlayBack();
       }
       this._playonhover = playonhover;
@@ -379,7 +378,7 @@ export class AudioManager {
     this._source = this.getSource();
 
     // get channel data
-    if (isNullOrUndefined(this._channel) || this._channel.length === 0) {
+    if ((this._channel === null || this._channel === undefined) || this._channel.length === 0) {
       this._channel = new Float32Array(this._ressource.audiobuffer.getChannelData(0));
       // clear audiobuffer otherwise this would need to much memory space
     } else {
@@ -391,7 +390,7 @@ export class AudioManager {
   }
 
   public destroy(disconnect: boolean = true) {
-    if (!isNullOrUndefined(AudioManager.audiocontext)) {
+    if (!(AudioManager.audiocontext === null || AudioManager.audiocontext === undefined)) {
       if (disconnect) {
         AudioManager.audiocontext.close()
           .then(() => {
@@ -404,7 +403,7 @@ export class AudioManager {
           );
       }
 
-      if (!isNullOrUndefined(this._source)) {
+      if (!(this._source === null || this._source === undefined)) {
         this._source.disconnect();
       }
     }

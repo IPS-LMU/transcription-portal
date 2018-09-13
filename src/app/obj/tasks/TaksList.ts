@@ -1,5 +1,4 @@
 import {TaskDirectory} from './taskDirectory';
-import {isNullOrUndefined} from 'util';
 import {Task, TaskState} from './task';
 import {Subject} from 'rxjs/Subject';
 
@@ -44,7 +43,7 @@ export class TaskList {
 
   public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if (isNullOrUndefined(this.findEntryById(newEntry.id))) {
+      if ((this.findEntryById(newEntry.id) === null || this.findEntryById(newEntry.id) === undefined)) {
         this._entries.push(newEntry);
         this._entryChanged.next({
           state: 'added',
@@ -188,9 +187,9 @@ export class TaskList {
           entry: entry
         });
       };
-      if (!isNullOrUndefined(entry)) {
+      if (!(entry === null || entry === undefined)) {
         if (entry instanceof Task) {
-          if (!isNullOrUndefined(entry.directory)) {
+          if (!(entry.directory === null || entry.directory === undefined)) {
             entry.directory.removeTask(entry);
             this.cleanup(entry.directory, saveToDB).then(() => {
               resolve();
@@ -234,7 +233,7 @@ export class TaskList {
   }
 
   public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean): Promise<void> {
-    if (!isNullOrUndefined(entry) && entry instanceof TaskDirectory) {
+    if (!(entry === null || entry === undefined) && entry instanceof TaskDirectory) {
       if (entry.entries.length === 0) {
         // remove dir
         return this.removeEntry(entry, saveToDB);

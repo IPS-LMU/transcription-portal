@@ -1,6 +1,5 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Task} from '../tasks/index';
 import {Operation} from './operation';
@@ -90,7 +89,7 @@ export class EmuOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    if (!isNullOrUndefined(this.previousOperation.lastResult)) {
+    if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
       const uploadOP = <UploadOperation> this.operations[0];
       const audio = encodeURIComponent(uploadOP.wavFile.url);
       const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
@@ -114,7 +113,7 @@ export class EmuOperation extends ToolOperation {
   }
 
   public clone(task?: Task): EmuOperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new EmuOperation(this.name, this.icon, selected_task, this.state);
   }
 }

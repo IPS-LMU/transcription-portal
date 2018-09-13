@@ -1,5 +1,4 @@
 import {SourceType} from './index';
-import {isNullOrUndefined} from 'util';
 
 export class MediaRessource {
   get size(): number {
@@ -29,7 +28,7 @@ export class MediaRessource {
   private _arraybuffer: ArrayBuffer;
 
   constructor(fullname: string, source: SourceType, buffer?: ArrayBuffer, size?: number) {
-    if (source !== SourceType.URL && isNullOrUndefined(buffer)) {
+    if (source !== SourceType.URL && (buffer === null || buffer === undefined)) {
       throw new Error('MediaRessource of type File or ArrayBuffer must have content');
     } else if (fullname.lastIndexOf('.') === -1) {
       throw new Error('fullname parameter needs to consist of an file extension');

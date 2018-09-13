@@ -1,6 +1,5 @@
 import {AudioSelection} from './AudioSelection';
 import {AudioManager} from './AudioManager';
-import {isNullOrUndefined} from 'util';
 import {AudioTime} from './AudioTime';
 import {EventEmitter} from '@angular/core';
 import {PlayBackState} from './index';
@@ -54,7 +53,7 @@ export class AudioChunk {
    * @param value
    */
   public set startpos(value: AudioTime) {
-    if (isNullOrUndefined(this.selection)) {
+    if ((this.selection === null || this.selection === undefined)) {
       this.selection = new AudioSelection(value.clone(), this.time.end.clone());
     } else {
       this.selection.start = value.clone();
@@ -115,7 +114,7 @@ export class AudioChunk {
       throw new Error('AudioChunk constructor needs two correct AudioTime objects');
     }
 
-    if (!isNullOrUndefined(audio_manager)) {
+    if (!(audio_manager === null || audio_manager === undefined)) {
       this._audiomanger = audio_manager;
       this._playposition = new AudioTime(time.start.samples, this._audiomanger.ressource.info.samplerate);
       this._state = PlayBackState.INITIALIZED;
@@ -123,7 +122,7 @@ export class AudioChunk {
       throw new Error('AudioChunk needs an audiomanger reference');
     }
 
-    if (!isNullOrUndefined(selection)) {
+    if (!(selection === null || selection === undefined)) {
       this._selection = selection.clone();
     } else {
       this._selection = this._time.clone();
@@ -133,7 +132,7 @@ export class AudioChunk {
   }
 
   public getChannelBuffer(selection: AudioSelection): Float32Array {
-    if (!isNullOrUndefined(selection)) {
+    if (!(selection === null || selection === undefined)) {
       return this.audiomanager.channel.subarray(selection.start.samples, selection.end.samples);
     }
 
@@ -141,7 +140,7 @@ export class AudioChunk {
   }
 
   public startPlayback(drawFunc: () => void, playonhover: boolean = false): boolean {
-    if (isNullOrUndefined(this._selection)) {
+    if ((this._selection === null || this._selection === undefined)) {
       this.selection = new AudioSelection(this.time.start.clone(), this.time.end.clone());
     }
 
@@ -200,7 +199,7 @@ export class AudioChunk {
   }
 
   public stepBackward() {
-    if (!isNullOrUndefined(this.lastplayedpos)) {
+    if (!(this.lastplayedpos === null || this.lastplayedpos === undefined)) {
       this.startpos = this.lastplayedpos.clone();
       const result = this.audiomanager.stepBackward();
 
@@ -239,10 +238,10 @@ export class AudioChunk {
    * @returns {number}
    */
   public updatePlayPosition = () => {
-    if (!isNullOrUndefined(this.selection)) {
+    if (!(this.selection === null || this.selection === undefined)) {
       const timestamp = new Date().getTime();
 
-      if (isNullOrUndefined(this._playposition)) {
+      if ((this._playposition === null || this._playposition === undefined)) {
         this._playposition = this.time.start.clone();
       }
 

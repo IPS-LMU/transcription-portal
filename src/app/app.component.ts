@@ -1,7 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {isArray, isNullOrUndefined} from 'util';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
@@ -55,7 +54,7 @@ export class AppComponent implements OnDestroy {
   isCollapsed = true;
 
   public allTasks(): Task[] {
-    if (!isNullOrUndefined(this.taskService.taskList)) {
+    if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
       return this.taskService.taskList.getAllTasks();
     }
 
@@ -169,7 +168,7 @@ export class AppComponent implements OnDestroy {
     this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
       this.storage.getIntern('firstModalShown').then(
         (result) => {
-          if (!isNullOrUndefined(result)) {
+          if (!(result === null || result === undefined)) {
             this.firstModalShown = result.value;
           }
           this.loadFirstModal();
@@ -179,7 +178,7 @@ export class AppComponent implements OnDestroy {
         this.loadFirstModal();
       });
 
-      if (!isNullOrUndefined(results[1])) {
+      if (!(results[1] === null || results[1] === undefined)) {
         // read userSettings
         for (let i = 0; i < results[1].length; i++) {
           const userSetting = results[1][i];
@@ -233,7 +232,7 @@ export class AppComponent implements OnDestroy {
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    if (!isNullOrUndefined(entries) && !isNullOrUndefined(this.taskService.operations)) {
+    if (!(entries === null || entries === undefined) && !(this.taskService.operations === null || this.taskService.operations === undefined)) {
       // filter and re-structure entries array to supported files and directories
       let filteredEntries = this.taskService.cleanUpInputArray(entries);
 
@@ -292,10 +291,10 @@ export class AppComponent implements OnDestroy {
     if (operation instanceof ToolOperation) {
       const tool = <ToolOperation> operation;
 
-      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!isNullOrUndefined(tool.previousOperation) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
+      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!(tool.previousOperation === null || tool.previousOperation === undefined) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
         if (!tool.task.operations[0].results[0].available) {
 
-          if (isNullOrUndefined(tool.task.files[0].file)) {
+          if ((tool.task.files[0].file === null || tool.task.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
               `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.name}" again.`, 10);
             tool.task.operations[0].changeState(TaskState.PENDING);
@@ -346,7 +345,7 @@ export class AppComponent implements OnDestroy {
 
                 if (json.success === 'true') {
                   // TODO set urls to results only
-                  if (isArray(json.fileList.entry)) {
+                  if (Array.isArray(json.fileList.entry)) {
                     tool.lastResult.url = json.fileList.entry[0].value;
                   } else {
                     // json attribute entry is an object
@@ -361,7 +360,7 @@ export class AppComponent implements OnDestroy {
             }, (err) => {
               reject(err);
             });
-          } else if (!isNullOrUndefined(tool.previousOperation.lastResult) && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+          } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined) && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
             // reupload result from previous operation
             // local available, re upload
 
@@ -385,7 +384,7 @@ export class AppComponent implements OnDestroy {
 
                 if (json.success === 'true') {
                   // TODO set urls to results only
-                  if (isArray(json.fileList.entry)) {
+                  if (Array.isArray(json.fileList.entry)) {
                     tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
                   } else {
                     // json attribute entry is an object
@@ -419,7 +418,7 @@ export class AppComponent implements OnDestroy {
 
           if (this.tool_url !== '') {
             this.toolLoader.url = tool.getToolURL();
-            if (!isNullOrUndefined(this.toolSelectedOperation) && operation.id !== this.toolSelectedOperation.id) {
+            if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined) && operation.id !== this.toolSelectedOperation.id) {
               // some operation already initialized
               this.leaveToolOption();
             }
@@ -515,7 +514,7 @@ export class AppComponent implements OnDestroy {
   }
 
   leaveToolOption() {
-    if (!isNullOrUndefined(this.toolSelectedOperation.nextOperation)
+    if (!(this.toolSelectedOperation.nextOperation === null || this.toolSelectedOperation.nextOperation === undefined)
       && this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED) {
       this.toolSelectedOperation.changeState(TaskState.FINISHED);
     } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
@@ -536,7 +535,7 @@ export class AppComponent implements OnDestroy {
   public getTime(): number {
     let elem: AudioInfo = <AudioInfo> this.toolSelectedOperation.task.files[0];
 
-    if (!isNullOrUndefined(elem.duration)) {
+    if (!(elem.duration === null || elem.duration === undefined)) {
       return elem.duration.unix;
     }
 

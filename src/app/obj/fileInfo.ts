@@ -1,5 +1,4 @@
 import {DataInfo} from './dataInfo';
-import {isNullOrUndefined} from 'util';
 import {unescape} from 'querystring';
 import {HttpClient} from '@angular/common/http';
 
@@ -64,7 +63,7 @@ export class FileInfo extends DataInfo {
   public constructor(fullname: string, type: string, size: number, file?: File) {
     super(FileInfo.extractFileName(fullname).name, type, size);
     const extraction = FileInfo.extractFileName(fullname);
-    if (!isNullOrUndefined(extraction)) {
+    if (!(extraction === null || extraction === undefined)) {
       this._extension = extraction.extension;
       this._file = file;
     } else {
@@ -112,7 +111,7 @@ export class FileInfo extends DataInfo {
   }
 
   public static extractFileName(fullname: string): { name: string, extension: string } {
-    if (!isNullOrUndefined(fullname) && fullname !== '') {
+    if (!(fullname === null || fullname === undefined) && fullname !== '') {
       let lastslash;
       if ((lastslash = fullname.lastIndexOf('/')) > -1) {
         // if path remove all but the filename

@@ -12,7 +12,6 @@ import {
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {Converter, IFile} from '../../obj/Converters';
-import {isNullOrUndefined} from 'util';
 import {OAudiofile} from '../../obj/Annotation';
 import {AudioInfo} from '../../obj/audio';
 import {HttpClient} from '@angular/common/http';
@@ -73,7 +72,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
       }
     }
 
-    if (!isNullOrUndefined(this.from)) {
+    if (!(this.from === null || this.from === undefined)) {
       this.conversionExtension = this.from.name;
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];

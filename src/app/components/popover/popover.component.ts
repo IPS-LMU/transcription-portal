@@ -1,5 +1,4 @@
 import {Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild} from '@angular/core';
-import {isNullOrUndefined} from 'util';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import 'rxjs/add/observable/interval';
 
@@ -54,7 +53,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.hasOwnProperty('borderColor') && !changes.borderColor.isFirstChange() && !isNullOrUndefined(changes.borderColor.currentValue)) {
+    if (changes.hasOwnProperty('borderColor') && !changes.borderColor.isFirstChange() && !(changes.borderColor.currentValue === null || changes.borderColor.currentValue === undefined)) {
     }
 
     if (changes.hasOwnProperty('pointer')) {

@@ -1,6 +1,5 @@
 import {HttpClient} from '@angular/common/http';
 import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
-import {isNullOrUndefined} from 'util';
 import {NotificationService} from '../../shared/notification.service';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {EntryChangeEvent, Task, TaskDirectory, TaskList, TaskState} from './index';
@@ -151,13 +150,14 @@ export class TaskService implements OnDestroy {
             result.changeState(TaskState.QUEUED);
 
             foundTask = this.taskList.getAllTasks().find((a) => {
-              return a.state === TaskState.QUEUED && !isNullOrUndefined(a.files.find((b) => {
+              const foundIt = a.files.find((b) => {
                 // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
                 return b.name === result.files[0].name;
-              }));
+              });
+              return a.state === TaskState.QUEUED && !(foundIt === null || foundIt === undefined);
             });
 
-            if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
+            if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
@@ -178,10 +178,12 @@ export class TaskService implements OnDestroy {
               for (let v = j + 1; v < tasks.length; v++) {
                 const task = tasks[v];
 
-                if (!isNullOrUndefined(task.files.find((b) => {
+                const foundIt = task.files.find((b) => {
                   // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
                   return b.name === entry.files[0].name;
-                }))) {
+                });
+
+                if (!(foundIt === null || foundIt === undefined)) {
                   if (!(task.files[0].extension === '.wav'
                     && entry.files[0].extension === '.wav')) {
 
@@ -200,13 +202,15 @@ export class TaskService implements OnDestroy {
 
 
               foundTask = this.taskList.getAllTasks().find((a) => {
-                return a.state === TaskState.QUEUED && !isNullOrUndefined(a.files.find((b) => {
+                const foundIt = a.files.find((b) => {
                   // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
                   return b.name === entry.files[0].name;
-                }));
+                });
+
+                return a.state === TaskState.QUEUED && !(foundIt === null || foundIt === undefined);
               });
 
-              if (!isNullOrUndefined(foundTask) && !(foundTask.files[0].extension === '.wav'
+              if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
                 && entry.files[0].extension === '.wav')) {
                 foundTask.setFileObj(0, entry.files[0]);
                 foundTask.setFileObj(1, entry.files[1]);
@@ -223,7 +227,7 @@ export class TaskService implements OnDestroy {
             }
           }
 
-          if (isNullOrUndefined(foundTask)) {
+          if ((foundTask === null || foundTask === undefined)) {
             this.addEntry(result, true);
           }
         }
@@ -238,7 +242,7 @@ export class TaskService implements OnDestroy {
     this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
       const IDBtasks = results[0];
 
-      if (!isNullOrUndefined(IDBtasks)) {
+      if (!(IDBtasks === null || IDBtasks === undefined)) {
         this.newfiles = IDBtasks.length > 0;
 
         // make sure that taskCounter and operation counter are equal to their biggest value
@@ -259,11 +263,11 @@ export class TaskService implements OnDestroy {
 
               for (let k = 0; k < operation.results.length; k++) {
                 const opResult = operation.results[k];
-                if (!isNullOrUndefined(opResult.url)) {
+                if (!(opResult.url === null || opResult.url === undefined)) {
                   this.existsFile(opResult.url).then(() => {
                     opResult.online = true;
 
-                    if (isNullOrUndefined(opResult.file) && opResult.extension.indexOf('wav') < 0) {
+                    if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
                       opResult.updateContentFromURL(this.httpclient).then(() => {
                         // TODO minimize task savings
                         this.storage.saveTask(task);
@@ -292,11 +296,11 @@ export class TaskService implements OnDestroy {
                 for (let k = 0; k < operation.results.length; k++) {
                   const opResult = operation.results[k];
 
-                  if (!isNullOrUndefined(opResult.url)) {
+                  if (!(opResult.url === null || opResult.url === undefined)) {
                     this.existsFile(opResult.url).then(() => {
                       opResult.online = true;
 
-                      if (isNullOrUndefined(opResult.file) && opResult.extension.indexOf('wav') < 0) {
+                      if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
                         opResult.updateContentFromURL(this.httpclient).then(() => {
                           // TODO minimize task savings
                           this.storage.saveTask(task);
@@ -332,7 +336,7 @@ export class TaskService implements OnDestroy {
           this.protocolURL = url;
         });
       }
-      if (!isNullOrUndefined(results[1])) {
+      if (!(results[1] === null || results[1] === undefined)) {
         // read userSettings
         for (let i = 0; i < results[1].length; i++) {
           const userSetting = results[1][i];
@@ -346,7 +350,7 @@ export class TaskService implements OnDestroy {
               const lang = AppInfo.languages.find((a) => {
                 return a.code === userSetting.value.language;
               });
-              if (!isNullOrUndefined(lang)) {
+              if (!(lang === null || lang === undefined)) {
                 this.selectedlanguage = lang;
               }
               break;
@@ -508,7 +512,7 @@ export class TaskService implements OnDestroy {
         // look for pending tasks
         task = this.findNextWaitingTask();
 
-        if (!isNullOrUndefined(task)) {
+        if (!(task === null || task === undefined)) {
           if (this.state !== TaskState.PROCESSING) {
             this.state = TaskState.READY;
           }
@@ -543,7 +547,7 @@ export class TaskService implements OnDestroy {
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
       if (entry.state === TaskState.PENDING &&
-        ((!isNullOrUndefined(entry.files[0].file) && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)
+        ((!(entry.files[0].file === null || entry.files[0].file === undefined) && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)
       ) {
         return entry;
       } else if (entry.state === TaskState.READY) {
@@ -874,14 +878,14 @@ export class TaskService implements OnDestroy {
               } else {
               }
 
-              if (isNullOrUndefined(newFileInfo.file)) {
+              if ((newFileInfo.file === null || newFileInfo.file === undefined)) {
                 newFileInfo.file = file.file;
               }
 
               newFileInfo.attributes = file.attributes;
               queueItem.file = newFileInfo;
 
-              if (!isNullOrUndefined(foundOldFile)) {
+              if (!(foundOldFile === null || foundOldFile === undefined)) {
 
                 if (!isValidTranscript || foundOldFile.files.length === 1) {
                   const oldFileIndex = foundOldFile.files.findIndex((a) => {
@@ -985,7 +989,7 @@ export class TaskService implements OnDestroy {
 
     for (let i = 0; i < tasks.length; i++) {
       const task: Task = tasks[i];
-      if (!isNullOrUndefined(task.files[0].attributes.originalFileName)) {
+      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
         for (let j = 0; j < task.files.length; j++) {
           const file = task.files[j];
 

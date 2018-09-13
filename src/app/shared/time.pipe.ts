@@ -1,5 +1,4 @@
 import {Pipe, PipeTransform} from '@angular/core';
-import {isNullOrUndefined} from 'util';
 
 @Pipe({
   name: 'time'
@@ -7,7 +6,7 @@ import {isNullOrUndefined} from 'util';
 export class TimePipe implements PipeTransform {
 
   transform(value: any, args?: any): any {
-    if (isNullOrUndefined(args)) {
+    if ((args === null || args === undefined)) {
       // value are miliseconds
       if (!isNaN(Number(value))) {
         const miliseconds = Number(value);

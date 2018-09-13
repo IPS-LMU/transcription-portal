@@ -1,6 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {ILevel, ISegment, OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
-import {isNullOrUndefined} from 'util';
 import {Functions} from '../../shared/Functions';
 
 export class PraatTableConverter extends Converter {
@@ -33,7 +32,7 @@ export class PraatTableConverter extends Converter {
       return `${res}${tmin}\t${level.name}\t${transcript}\t${tmax}\n`;
     };
 
-    if (!isNullOrUndefined(annotation)) {
+    if (!(annotation === null || annotation === undefined)) {
       result = addHeader(result);
 
       for (let i = 0; i < annotation.levels.length; i++) {
@@ -83,10 +82,10 @@ export class PraatTableConverter extends Converter {
             const tmax = Number(columns[3]);
 
             if (tiers.filter((a) => {
-                if (a === tier) {
-                  return true;
-                }
-              }).length === 0) {
+              if (a === tier) {
+                return true;
+              }
+            }).length === 0) {
               tiers.push(tier);
             }
           }
@@ -121,7 +120,8 @@ export class PraatTableConverter extends Converter {
                   console.error('column 1 is NaN');
                   return null;
                 } else {
-                  const last = (olevel.items.length > 0 && !isNullOrUndefined(olevel.items[olevel.items.length - 1]))
+                  const last = (olevel.items.length > 0 && !(olevel.items[olevel.items.length - 1] === null
+                    || olevel.items[olevel.items.length - 1] === undefined))
                     ? olevel.items[olevel.items.length - 1] : null;
                   if (last !== null && last.sampleStart + last.sampleDur === Math.round(Number(tmin))) {
                     start = tmin;

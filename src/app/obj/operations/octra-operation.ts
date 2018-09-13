@@ -1,6 +1,5 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
 import {Task} from '../tasks/index';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
@@ -80,7 +79,7 @@ export class OCTRAOperation extends ToolOperation {
   };
 
   public getToolURL(): string {
-    if (!isNullOrUndefined((<UploadOperation> this.operations[0]).wavFile)) {
+    if (!((<UploadOperation> this.operations[0]).wavFile === null || (<UploadOperation> this.operations[0]).wavFile === undefined)) {
       let audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
       let transcript = `transcript=`;
       let embedded = `embedded=1`;
@@ -132,7 +131,7 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public clone(task?: Task): OCTRAOperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new OCTRAOperation(this.name, this.icon, selected_task, this.state);
   }
 }

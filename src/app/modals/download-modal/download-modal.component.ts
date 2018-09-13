@@ -5,7 +5,6 @@ import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {UploadOperation} from '../../obj/operations/upload-operation';
 import {FileInfo} from '../../obj/fileInfo';
-import {isArray, isNullOrUndefined} from 'util';
 import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
@@ -179,7 +178,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       });
     } else if (this.type === 'line') {
       // get results url by lines
-      if (!isNullOrUndefined(this.selectedTasks)) {
+      if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
         // prepare package
         let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
         let requestPackage = {
@@ -289,13 +288,13 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           annotJSON = JSON.parse(content);
         }
 
-        if (isNullOrUndefined(annotJSON)) {
+        if ((annotJSON === null || annotJSON === undefined)) {
           // get annotJSON via import
           const importConverter = AppInfo.converters.find((a) => {
             return opResult.fullname.indexOf(a.obj.extension) > -1;
           });
 
-          if (!isNullOrUndefined(importConverter)) {
+          if (!(importConverter === null || importConverter === undefined)) {
             const result: ImportResult = importConverter.obj.import({
               name: opResult.fullname,
               content: content,
@@ -310,7 +309,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
         const conversion = exportConverter.export(annotJSON, audiofile, 0);
 
-        if (!isNullOrUndefined(conversion)) {
+        if (!(conversion === null || conversion === undefined)) {
           const file: File = FileInfo.getFileFromContent(conversion.file.content, operation.task.files[0].name + exportConverter.extension, conversion.file.type);
 
           const fileInfo = new FileInfo(file.name, file.type, file.size, file);
@@ -342,7 +341,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
             let url = '';
 
-            if (isArray(json.fileList.entry)) {
+            if (Array.isArray(json.fileList.entry)) {
               url = json.fileList.entry[0].value;
             } else {
               // json attribute entry is an object
@@ -361,7 +360,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   processTask(task: Task): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      if (!isNullOrUndefined(task)) {
+      if (!(task === null || task === undefined)) {
 
         // single task
         const entryResult = {

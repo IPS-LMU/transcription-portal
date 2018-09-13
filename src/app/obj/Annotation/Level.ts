@@ -1,5 +1,4 @@
 import {AnnotJSONType, ISegment, OEvent, OItem, OLevel} from './AnnotJSON';
-import {isNullOrUndefined} from 'util';
 import {Segments} from './Segments';
 
 export class Level {
@@ -64,7 +63,7 @@ export class Level {
         break;
     }
 
-    if (!isNullOrUndefined(segments)) {
+    if (!(segments === null || segments === undefined)) {
       this.segments = segments;
     }
   }

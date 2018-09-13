@@ -1,6 +1,5 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks';
@@ -72,7 +71,7 @@ export class ToolOperation extends Operation {
   }
 
   public clone(task?: Task): ToolOperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new ToolOperation(this.name, this.icon, selected_task, this.state);
   }
 }

@@ -1,6 +1,5 @@
 import {DataInfo} from './dataInfo';
 import {FileInfo} from './fileInfo';
-import {isNullOrUndefined} from 'util';
 
 export class DirectoryInfo extends DataInfo {
   set entries(value: (FileInfo | DirectoryInfo)[]) {
@@ -27,7 +26,7 @@ export class DirectoryInfo extends DataInfo {
     return new Promise<DirectoryInfo>((resolve, reject) => {
       if (folder) {
         DirectoryInfo.traverseFileTree(folder, '').then((result) => {
-          if (!isNullOrUndefined(result) && result[0] instanceof DirectoryInfo) {
+          if (!(result === null || result === undefined) && result[0] instanceof DirectoryInfo) {
             resolve(<DirectoryInfo> result[0]);
           } else {
             reject('could not parse directory');
@@ -45,7 +44,7 @@ export class DirectoryInfo extends DataInfo {
     //console.log(`search path: ${path}`);
     return new Promise<(FileInfo | DirectoryInfo)[]>((resolve, reject) => {
         path = path || '';
-        if (!isNullOrUndefined(item)) {
+      if (!(item === null || item === undefined)) {
           let webKitEntry: WebKitEntry;
 
           if (item instanceof DataTransferItem) {
@@ -61,7 +60,7 @@ export class DirectoryInfo extends DataInfo {
             if (item instanceof DataTransferItem) {
               let file = item.getAsFile();
 
-              if (!isNullOrUndefined(file)) {
+              if (!(file === null || file === undefined)) {
                 if (file.name.indexOf('.') > -1) {
                   let fileInfo = new FileInfo(file.name, file.type, file.size, file);
                   resolve([fileInfo]);

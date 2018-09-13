@@ -13,7 +13,6 @@ import {
   ViewChild
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isNullOrUndefined} from 'util';
 import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
@@ -180,7 +179,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         } else {
           // check added file
           let file = droppedfiles[i].getAsFile();
-          if (!isNullOrUndefined(file)) {
+          if (!(file === null || file === undefined)) {
             // check file
             if (file.name.indexOf('.') > -1) {
               files.push(FileInfo.fromFileObject(file));
@@ -227,7 +226,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
     if (!this.selectionBlocked) {
-      if ((isNullOrUndefined(operation) || !(operation instanceof ToolOperation))) {
+      if (((operation === null || operation === undefined) || !(operation instanceof ToolOperation))) {
 
         const indexFromTaskList = this.taskList.getIndexByEntry(entry);
         const search = this.selectedRows.findIndex((a) => {
@@ -349,7 +348,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     if (entry instanceof Task) {
       if (search > -1) {
         return true;
-      } else if (!isNullOrUndefined(entry.directory)) {
+      } else if (!(entry.directory === null || entry.directory === undefined)) {
         return this.isEntrySelected(entry.directory);
       }
     } else {
@@ -560,7 +559,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public getPopoverColor(operation): string {
-    if (!isNullOrUndefined(operation)) {
+    if (!(operation === null || operation === undefined)) {
       if (operation.state == TaskState.ERROR || (operation.results.length > 0 && !operation.lastResult.available)) {
         return 'red';
       } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
@@ -621,7 +620,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       const entry = this.taskList.getEntryByIndex(index);
 
       let dirFound = false;
-      if (entry instanceof Task && !isNullOrUndefined(entry.directory)) {
+      if (entry instanceof Task && !(entry.directory === null || entry.directory === undefined)) {
         const dirIndex = this.taskList.getIndexByEntry(entry.directory);
 
         // found folder?

@@ -1,6 +1,5 @@
 import {BugReporter} from './BugReporter';
 import {Observable} from 'rxjs/Observable';
-import {isArray} from 'rxjs/util/isArray';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 export class MantisBugReporter extends BugReporter {
@@ -68,7 +67,7 @@ export class MantisBugReporter extends BugReporter {
 
     for (const attr in pkg) {
       if (pkg.hasOwnProperty(attr)) {
-        if (!isArray(pkg[attr]) && typeof pkg[attr] === 'object') {
+        if (!Array.isArray(pkg[attr]) && typeof pkg[attr] === 'object') {
           result += attr + '\n';
           result += '---------\n';
 
@@ -77,7 +76,7 @@ export class MantisBugReporter extends BugReporter {
               result += '  ' + attr2 + ':  ' + pkg[attr][attr2] + '\n';
             }
           }
-        } else if (isArray(pkg[attr])) {
+        } else if (Array.isArray(pkg[attr])) {
           result += attr + '\n';
           result += '---------\n';
 

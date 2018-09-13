@@ -1,4 +1,3 @@
-import {isNullOrUndefined} from 'util';
 import {Observable} from 'rxjs/Observable';
 
 export enum IDBMode {
@@ -40,7 +39,7 @@ export class IndexedDBManager {
       || (<any> window).webkitIDBKeyRange
       || (<any> window).msIDBKeyRange;
 
-    return (!(isNullOrUndefined(indexedDB) || isNullOrUndefined(idbtransaction) || isNullOrUndefined(idbkeyrange)));
+    return (!((indexedDB === null || indexedDB === undefined) || (idbtransaction === null || idbtransaction === undefined) || (idbkeyrange === null || idbkeyrange === undefined)));
   }
 
   constructor(dbname: string) {

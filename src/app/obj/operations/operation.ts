@@ -1,7 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
 import {Task, TaskState} from '../tasks/task';
@@ -97,7 +96,7 @@ export abstract class Operation {
   }
 
   public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    if (isNullOrUndefined(id)) {
+    if ((id === null || id === undefined)) {
       this._id = ++Operation.counter;
     } else {
       this._id = id;
@@ -105,11 +104,11 @@ export abstract class Operation {
     this._name = name;
     this._task = task;
 
-    if (!isNullOrUndefined(icon)) {
+    if (!(icon === null || icon === undefined)) {
       this._icon = icon;
     }
 
-    if (!isNullOrUndefined(state)) {
+    if (!(state === null || state === undefined)) {
       this.changeState(state);
     } else {
       this.changeState(TaskState.PENDING);

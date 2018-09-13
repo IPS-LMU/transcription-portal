@@ -2,7 +2,6 @@ import {Subject} from 'rxjs/Subject';
 import {FileInfo} from './fileInfo';
 import {DirectoryInfo} from './directoryInfo';
 import {Task, TaskDirectory} from './tasks';
-import {isNullOrUndefined} from 'util';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks
@@ -55,6 +54,7 @@ export class Preprocessor {
   get queue(): QueueItem[] {
     return this._queue;
   }
+
   get itemProcessed(): Subject<QueueItem> {
     return this._itemProcessed;
   }
@@ -110,7 +110,7 @@ export class Preprocessor {
 
     this.changeState(newItem, State.PROCESSING);
     this.process(newItem).then((result) => {
-        if (!isNullOrUndefined(result)) {
+      if (!(result === null || result === undefined)) {
           newItem.results = result;
           this.changeState(newItem, State.FINISHED);
           this.removeFromQueue(newItem.id);

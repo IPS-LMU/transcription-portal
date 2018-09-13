@@ -4,7 +4,6 @@ import {SubscriptionManager} from './shared/subscription-manager';
 import {Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
 import {TaskEntry} from './obj/tasks/task-entry';
-import {isNullOrUndefined} from 'util';
 import {Operation} from './obj/operations/operation';
 
 @Injectable()
@@ -110,7 +109,7 @@ export class StorageService {
     return new Promise<void>((resolve, reject) => {
       let promise: Promise<any>;
 
-      if (taskEntry instanceof Task && !isNullOrUndefined(taskEntry.directory)) {
+      if (taskEntry instanceof Task && !(taskEntry.directory === null || taskEntry.directory === undefined)) {
         promise = taskEntry.directory.toAny();
       } else {
         promise = taskEntry.toAny();
@@ -151,7 +150,7 @@ export class StorageService {
   public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (entry instanceof Task) {
-        if (isNullOrUndefined(entry.directory)) {
+        if ((entry.directory === null || entry.directory === undefined)) {
           this.idbm.remove('tasks', entry.id).then(() => {
             resolve();
           }).catch((err) => {

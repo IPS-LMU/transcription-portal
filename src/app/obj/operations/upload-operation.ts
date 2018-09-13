@@ -1,6 +1,5 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {isArray, isNullOrUndefined} from 'util';
 import {TimePipe} from '../../shared/time.pipe';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
@@ -67,7 +66,7 @@ export class UploadOperation extends Operation {
 
         if (json.success === 'true') {
           // TODO set urls to results only
-          if (isArray(json.fileList.entry)) {
+          if (Array.isArray(json.fileList.entry)) {
             for (let i = 0; i < files.length; i++) {
               files[i].url = json.fileList.entry[i].value;
               const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
@@ -179,7 +178,7 @@ export class UploadOperation extends Operation {
   }
 
   public clone(task?: Task): UploadOperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new UploadOperation(this.name, this.icon, selected_task, this.state);
   }
 

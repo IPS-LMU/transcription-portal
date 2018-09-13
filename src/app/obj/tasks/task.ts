@@ -1,7 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs/Observable';
 import {ReplaySubject} from 'rxjs/ReplaySubject';
-import {isNullOrUndefined} from 'util';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
@@ -98,7 +97,7 @@ export class Task {
   public mouseover = false;
 
   constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
-    if (isNullOrUndefined(id)) {
+    if ((id === null || id === undefined)) {
       this._id = ++TaskEntry.counter;
     } else {
       this._id = id;
@@ -136,7 +135,7 @@ export class Task {
           });
 
           if (event.newState === TaskState.FINISHED) {
-            if (isNullOrUndefined(operation.nextOperation)) {
+            if ((operation.nextOperation === null || operation.nextOperation === undefined)) {
               this.changeState(TaskState.FINISHED);
             }
             subscription.unsubscribe();
@@ -159,7 +158,7 @@ export class Task {
   }
 
   private sortFilesArray() {
-    if (!isNullOrUndefined(this._files)) {
+    if (!(this._files === null || this._files === undefined)) {
       this._files = this._files.sort((a, b) => {
         if (a.extension === '.wav') {
           return -1;
@@ -219,7 +218,7 @@ export class Task {
             });
 
           let files;
-          if (this.files.length > 0 && !isNullOrUndefined(this.files[0].file)) {
+          if (this.files.length > 0 && !(this.files[0].file === null || this.files[0].file === undefined)) {
             files = this.files;
           } else {
             files = this.operations[0].results;
@@ -387,7 +386,7 @@ export class Task {
           result.files.push(fileObj);
         }
 
-        result.folderPath = (isNullOrUndefined(this._directory)) ? '' : this._directory.path;
+        result.folderPath = ((this._directory === null || this._directory === undefined)) ? '' : this._directory.path;
 
         // read operation data
         const promises: Promise<any>[] = [];

@@ -1,5 +1,4 @@
-import { Subscription } from 'rxjs/Subscription';
-import { isNullOrUndefined } from 'util';
+import {Subscription} from 'rxjs/Subscription';
 
 export class SubscriptionManager {
   private subscriptions: {
@@ -25,7 +24,7 @@ export class SubscriptionManager {
   }
 
   public destroy() {
-    if (!isNullOrUndefined(this.subscriptions)) {
+    if (!(this.subscriptions === null || this.subscriptions === undefined)) {
       for (let i = 0; i < this.subscriptions.length; i++) {
         this.subscriptions[i].subscription.unsubscribe();
       }

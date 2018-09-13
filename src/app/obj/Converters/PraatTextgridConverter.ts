@@ -1,6 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {ILevel, ISegment, OAnnotJSON, OAudiofile, OEvent, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
-import {isNullOrUndefined} from 'util';
 import {Functions} from '../../shared/Functions';
 
 export class PraatTextgridConverter extends Converter {
@@ -47,7 +46,7 @@ export class PraatTextgridConverter extends Converter {
       return `${res}${tmin}\t${level.name}\t${transcript}\t${tmax}\n`;
     };
 
-    if (!isNullOrUndefined(annotation)) {
+    if (!(annotation === null || annotation === undefined)) {
       result = addHeader(result);
 
       result += `item []: \n`;
@@ -129,7 +128,7 @@ export class PraatTextgridConverter extends Converter {
                   // get class
                   let class_str = null;
                   let test = lines[i].match(/class = "(.*)"/);
-                  if (isNullOrUndefined(test)) {
+                  if ((test === null || test === undefined)) {
                     console.error(`PraatTextGrid could not read line ${i}`);
                     return null;
                   }
@@ -139,7 +138,7 @@ export class PraatTextgridConverter extends Converter {
                   // get lvl name
                   let lvl_name = null;
                   test = lines[i].match(/name = "(.*)"/);
-                  if (isNullOrUndefined(test)) {
+                  if ((test === null || test === undefined)) {
                     console.error(`PraatTextGrid could not read line ${i}`);
                     return null;
                   }
@@ -153,12 +152,16 @@ export class PraatTextgridConverter extends Converter {
                   i++;
 
                   // read items
-                  while (lines[i] !== '' && isNullOrUndefined(lines[i].match('item \\[(.*)\\]:')) && i < lines.length) {
+                  while (lines[i] !== '' &&
+                  (lines[i].match('item \\[(.*)\\]:') === null
+                    || lines[i].match('item \\[(.*)\\]:') === undefined
+                  )
+                  && i < lines.length) {
                     let is_interval = true;
                     test = lines[i].match(new RegExp('intervals \\[[0-9]+\\]:'));
-                    if (isNullOrUndefined(test)) {
+                    if ((test === null || test === undefined)) {
                       test = lines[i].match(new RegExp('points \\[[0-9]+\\]:'));
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       } else {
@@ -169,7 +172,7 @@ export class PraatTextgridConverter extends Converter {
 
                     if (is_interval) {
                       test = lines[i].match(/xmin = (.*) /);
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       }
@@ -177,7 +180,7 @@ export class PraatTextgridConverter extends Converter {
                       const xmin = Number(test[1]);
 
                       test = lines[i].match(/xmax = (.*) /);
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       }
@@ -185,7 +188,7 @@ export class PraatTextgridConverter extends Converter {
                       const xmax = Number(test[1]);
 
                       test = lines[i].match(/text = "(.*)" /);
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       }
@@ -203,7 +206,7 @@ export class PraatTextgridConverter extends Converter {
                       olevel.items.push(osegment);
                     } else {
                       test = lines[i].match(/number = (.*) /);
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       }
@@ -212,7 +215,7 @@ export class PraatTextgridConverter extends Converter {
                       const number = Number(test[1]);
 
                       test = lines[i].match(/mark = "(.*)" /);
-                      if (isNullOrUndefined(test)) {
+                      if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       }

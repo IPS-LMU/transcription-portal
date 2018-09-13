@@ -1,5 +1,4 @@
 import {AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges} from '@angular/core';
-import {isNullOrUndefined} from 'util';
 import {Operation} from '../../../obj/operations/operation';
 import {Task, TaskDirectory} from '../../../obj/tasks';
 
@@ -41,7 +40,7 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    if (!isNullOrUndefined(this.entry)) {
+    if (!(this.entry === null || this.entry === undefined)) {
       // entry set
 
     } else {

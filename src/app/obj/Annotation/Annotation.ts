@@ -1,5 +1,4 @@
 import {OAnnotJSON, OAudiofile} from './AnnotJSON';
-import {isNullOrUndefined} from 'util';
 import {Level} from './Level';
 import {Link} from './Link';
 
@@ -39,10 +38,10 @@ export class Annotation {
     this._levels = [];
     this._links = [];
 
-    if (!isNullOrUndefined(levels)) {
+    if (!(levels === null || levels === undefined)) {
       this._levels = levels;
     }
-    if (!isNullOrUndefined(links)) {
+    if (!(links === null || links === undefined)) {
       this._links = links;
     }
   }
@@ -57,7 +56,7 @@ export class Annotation {
       const level = this._levels[i].getObj();
       for (let j = 0; j < level.items.length; j++) {
         level.items[j].id = start_id++;
-        if (!isNullOrUndefined(level.items[j].labels) && level.items[j].labels.length > 0) {
+        if (!(level.items[j].labels === null || level.items[j].labels === undefined) && level.items[j].labels.length > 0) {
           if (level.items[j].labels[0].name === '') {
             level.items[j].labels[0].name = level.name;
           }

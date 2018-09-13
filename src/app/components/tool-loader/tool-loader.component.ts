@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Operation} from '../../obj/operations/operation';
-import {isNullOrUndefined} from 'util';
 
 @Component({
   selector: 'app-tool-loader',
@@ -29,7 +28,7 @@ export class ToolLoaderComponent implements OnInit, OnChanges {
   };
 
   public set url(url: string) {
-    if (!isNullOrUndefined(url) && url !== '') {
+    if (!(url === null || url === undefined) && url !== '') {
       this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     }
   }

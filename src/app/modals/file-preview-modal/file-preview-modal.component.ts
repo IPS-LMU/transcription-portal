@@ -2,7 +2,6 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {FileInfo} from '../../obj/fileInfo';
-import {isNullOrUndefined} from 'util';
 
 @Component({
   selector: 'app-file-preview-modal',
@@ -36,7 +35,7 @@ export class FilePreviewModalComponent implements OnInit {
   }
 
   private loadFileContent() {
-    if (!isNullOrUndefined(this.selectedFile)) {
+    if (!(this.selectedFile === null || this.selectedFile === undefined)) {
       FileInfo.getFileContent(this.selectedFile.file).then((text) => {
         this.fileContent = text;
       }).catch((error) => {

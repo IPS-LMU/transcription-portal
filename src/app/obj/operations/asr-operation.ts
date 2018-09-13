@@ -1,5 +1,4 @@
 import {HttpClient} from '@angular/common/http';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks/task';
@@ -128,7 +127,7 @@ export class ASROperation extends Operation {
   }
 
   public clone(task?: Task): ASROperation {
-    const selected_task = (isNullOrUndefined(task)) ? this.task : task;
+    const selected_task = ((task === null || task === undefined)) ? this.task : task;
     return new ASROperation(this.name, this.icon, selected_task, this.state);
   }
 }

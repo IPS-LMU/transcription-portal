@@ -1,5 +1,4 @@
 import {Task} from './task';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
 import {TaskEntry} from './task-entry';
@@ -40,7 +39,7 @@ export class TaskDirectory {
   public constructor(path: string, size?: number, id?: number) {
     this._size = size;
     this._path = path;
-    if (!isNullOrUndefined(id)) {
+    if (!(id === null || id === undefined)) {
       this._id = id;
     } else {
       this._id = ++TaskEntry.counter;
@@ -52,7 +51,7 @@ export class TaskDirectory {
     return new Promise<TaskDirectory>((resolve, reject) => {
       if (folder) {
         TaskDirectory.traverseFileTree(folder, '').then((result) => {
-          if (!isNullOrUndefined(result) && result[0] instanceof TaskDirectory) {
+          if (!(result === null || result === undefined) && result[0] instanceof TaskDirectory) {
             resolve(<TaskDirectory> result[0]);
           } else {
             reject('could not parse directory');

@@ -1,5 +1,4 @@
 import {BrowserInfo} from './BrowserInfo';
-import {isNullOrUndefined} from 'util';
 
 export class ShortcutManager {
   get pressedKey(): { code: number; name: string } {
@@ -92,7 +91,7 @@ export class ShortcutManager {
 
         const command = this.getCommand(shortcut, BrowserInfo.platform);
 
-        if (!isNullOrUndefined(command)) {
+        if (!(command === null || command === undefined)) {
           event.preventDefault();
           resolve({
             platform: BrowserInfo.platform,
@@ -145,7 +144,7 @@ export class ShortcutManager {
     const shift = event.shiftKey;
 
     let name = this.getNameByCode(keycode);
-    if (name === '' && !isNullOrUndefined(event.which)) {
+    if (name === '' && !(event.which === null || event.which === undefined)) {
       name = String.fromCharCode(event.which).toUpperCase();
     }
 

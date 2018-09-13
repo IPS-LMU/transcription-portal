@@ -11,7 +11,6 @@ import {
   SimpleChanges
 } from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
-import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../../../obj/fileInfo';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {SubscriptionManager} from '../../../shared/subscription-manager';
@@ -50,9 +49,9 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   private updateView() {
-    if (!isNullOrUndefined(this.elementRef.nativeElement)) {
+    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
 
-      if (!isNullOrUndefined(this.entry)) {
+      if (!(this.entry === null || this.entry === undefined)) {
         this.clearContents();
         const wrapper: HTMLElement = this.renderer.createElement('div');
         if (this.shortStyle) {
@@ -259,7 +258,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     for (let i = 0; i < (<HTMLElement> this.elementRef.nativeElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
-      if (!isNullOrUndefined(child)) {
+      if (!(child === null || child === undefined)) {
         const old_length = this.elementRef.nativeElement.children.length;
         this.renderer.removeChild(this.elementRef.nativeElement, child);
         if (old_length > this.elementRef.nativeElement.children.length) {
@@ -289,10 +288,10 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   ngAfterViewInit() {
-    if (!isNullOrUndefined(this.entry)) {
+    if (!(this.entry === null || this.entry === undefined)) {
       // entry set
       if (this.entry instanceof Task) {
-        if (!isNullOrUndefined(this.entry.files)) {
+        if (!(this.entry.files === null || this.entry.files === undefined)) {
           this.updateView();
         } else {
           throw 'ProcColDirective error: entry of type Task does not have any files';

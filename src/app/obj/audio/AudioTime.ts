@@ -1,5 +1,3 @@
-import {isNullOrUndefined} from 'util';
-
 /**
  * class initialized with samples which can output other units like seconds, miliseconds
  */
@@ -59,7 +57,7 @@ export class AudioTime {
   }
 
   public static fromSamples(samples: number, samplerate: number): AudioTime {
-    if (!isNullOrUndefined(samples) && !isNullOrUndefined(samplerate) && Number.isInteger(samples) && samples > -1) {
+    if (!(samples === null || samples === undefined) && !(samplerate === null || samplerate === undefined) && Number.isInteger(samples) && samples > -1) {
       return new AudioTime(samples, samplerate);
     }
     return null;
