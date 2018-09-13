@@ -1,6 +1,6 @@
 import {AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges} from '@angular/core';
 import {isNullOrUndefined} from 'util';
-import {Operation} from '../../../obj/tasks/operation';
+import {Operation} from '../../../obj/operations/operation';
 import {Task, TaskDirectory} from '../../../obj/tasks';
 
 @Directive({

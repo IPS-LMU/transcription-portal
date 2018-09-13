@@ -9,7 +9,7 @@ import {
   Output,
   SimpleChanges
 } from '@angular/core';
-import {Operation} from '../../obj/tasks/operation';
+import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {Converter, IFile} from '../../obj/Converters';
 import {isNullOrUndefined} from 'util';

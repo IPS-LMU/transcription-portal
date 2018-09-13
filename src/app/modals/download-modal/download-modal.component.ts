@@ -1,12 +1,12 @@
 import {Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild} from '@angular/core';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {Task, TaskDirectory, TaskState} from '../../obj/tasks';
-import {Operation} from '../../obj/tasks/operation';
+import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
-import {UploadOperation} from '../../obj/tasks/upload-operation';
+import {UploadOperation} from '../../obj/operations/upload-operation';
 import {FileInfo} from '../../obj/fileInfo';
 import {isArray, isNullOrUndefined} from 'util';
-import {EmuOperation} from '../../obj/tasks/emu-operation';
+import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
 import * as X2JS from 'x2js';

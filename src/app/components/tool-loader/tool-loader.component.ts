@@ -11,7 +11,7 @@ import {
   ViewChild
 } from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Operation} from '../../obj/tasks/operation';
+import {Operation} from '../../obj/operations/operation';
 import {isNullOrUndefined} from 'util';
 
 @Component({

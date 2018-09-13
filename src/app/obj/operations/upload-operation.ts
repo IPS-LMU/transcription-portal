@@ -4,7 +4,7 @@ import {isArray, isNullOrUndefined} from 'util';
 import {TimePipe} from '../../shared/time.pipe';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {Task, TaskState} from './task';
+import {Task, TaskState} from '../tasks/task';
 import * as X2JS from 'x2js';
 import {AppInfo} from '../../app.info';
 import {Subject} from 'rxjs/Subject';

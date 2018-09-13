@@ -8,7 +8,7 @@ import {Subject} from 'rxjs/Subject';
 import {TaskDirectory} from './taskDirectory';
 import {AudioInfo} from '../audio';
 import {TaskEntry} from './task-entry';
-import {Operation} from './operation';
+import {Operation} from '../operations/operation';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',

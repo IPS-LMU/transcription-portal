@@ -18,21 +18,21 @@ import {ANIMATIONS} from '../../shared/Animations';
 
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
-import {UploadOperation} from '../../obj/tasks/upload-operation';
+import {UploadOperation} from '../../obj/operations/upload-operation';
 import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../obj/tasks/task.service';
 import {DirectoryInfo} from '../../obj/directoryInfo';
-import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
-import {Operation} from '../../obj/tasks/operation';
-import {ToolOperation} from '../../obj/tasks/tool-operation';
-import {EmuOperation} from '../../obj/tasks/emu-operation';
-import {ASROperation} from '../../obj/tasks/asr-operation';
+import {Operation} from '../../obj/operations/operation';
+import {ToolOperation} from '../../obj/operations/tool-operation';
+import {EmuOperation} from '../../obj/operations/emu-operation';
+import {ASROperation} from '../../obj/operations/asr-operation';
 import {QueueItem} from '../../obj/preprocessor';
 import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-preview-modal.component';
 import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
-import {G2pMausOperation} from '../../obj/tasks/g2p-maus-operation';
+import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 
 declare var window: any;

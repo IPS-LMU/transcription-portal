@@ -2,9 +2,9 @@ import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
-import {Task} from './index';
+import {Task} from '../tasks/index';
 import {Operation} from './operation';
-import {TaskState} from './task';
+import {TaskState} from '../tasks/task';
 import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 

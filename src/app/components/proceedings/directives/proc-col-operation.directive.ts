@@ -13,7 +13,7 @@ import {
 import {Task} from '../../../obj/tasks';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../../../obj/fileInfo';
-import {Operation} from '../../../obj/tasks/operation';
+import {Operation} from '../../../obj/operations/operation';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {SubscriptionManager} from '../../../shared/subscription-manager';

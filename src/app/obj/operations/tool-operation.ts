@@ -3,7 +3,7 @@ import {SafeHtml} from '@angular/platform-browser';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {Task, TaskState} from './task';
+import {Task, TaskState} from '../tasks';
 
 export class ToolOperation extends Operation {
   public resultType;
@@ -22,7 +22,7 @@ export class ToolOperation extends Operation {
       this.changeState(TaskState.FINISHED);
       this.time.duration = 0;
     }, 2000);
-  };
+  }
 
   public getStateIcon = (sanitizer): SafeHtml => {
     let result = '';
@@ -51,7 +51,7 @@ export class ToolOperation extends Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  };
+  }
 
   public getToolURL(): string {
     return '';

@@ -4,10 +4,9 @@ import {Observable} from 'rxjs/Observable';
 import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
-import {Task, TaskState} from './task';
+import {Task, TaskState} from '../tasks/task';
 
 export abstract class Operation {
-  public abstract resultType;
 
   get enabled(): boolean {
     return this._enabled;
@@ -97,7 +96,32 @@ export abstract class Operation {
     return null;
   }
 
+  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+    if (isNullOrUndefined(id)) {
+      this._id = ++Operation.counter;
+    } else {
+      this._id = id;
+    }
+    this._name = name;
+    this._task = task;
+
+    if (!isNullOrUndefined(icon)) {
+      this._icon = icon;
+    }
+
+    if (!isNullOrUndefined(state)) {
+      this.changeState(state);
+    } else {
+      this.changeState(TaskState.PENDING);
+    }
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
   static counter = 0;
+  public abstract resultType;
   private _estimated_end: number;
   protected _results: FileInfo[] = [];
 
@@ -134,31 +158,7 @@ export abstract class Operation {
 
   public changed: Subject<void> = new Subject<void>();
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    if (isNullOrUndefined(id)) {
-      this._id = ++Operation.counter;
-    } else {
-      this._id = id;
-    }
-    this._name = name;
-    this._task = task;
-
-    if (!isNullOrUndefined(icon)) {
-      this._icon = icon;
-    }
-
-    if (!isNullOrUndefined(state)) {
-      this.changeState(state);
-    } else {
-      this.changeState(TaskState.PENDING);
-    }
-  }
-
   private _id: number;
-
-  get id(): number {
-    return this._id;
-  }
 
   public getStateIcon = (sanitizer, state: TaskState): SafeHtml => {
     let result = '';
@@ -187,7 +187,7 @@ export abstract class Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  };
+  }
 
   public getStateIcon2 = (state: TaskState): String => {
     let result = '';
@@ -216,11 +216,11 @@ export abstract class Operation {
     }
 
     return result;
-  };
+  }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     console.error('start not implemented');
-  };
+  }
 
   public changeState(state: TaskState) {
     const oldstate = this._state;
@@ -264,7 +264,7 @@ export abstract class Operation {
 
   toAny(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      let result = {
+      const result = {
         id: this.id,
         name: this.name,
         state: this.state,

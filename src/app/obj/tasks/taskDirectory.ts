@@ -3,7 +3,7 @@ import {isNullOrUndefined} from 'util';
 import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
 import {TaskEntry} from './task-entry';
-import {Operation} from './operation';
+import {Operation} from '../operations/operation';
 
 export class TaskDirectory {
   get foldername(): string {

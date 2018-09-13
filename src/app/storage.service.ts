@@ -5,7 +5,7 @@ import {Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
 import {TaskEntry} from './obj/tasks/task-entry';
 import {isNullOrUndefined} from 'util';
-import {Operation} from './obj/tasks/operation';
+import {Operation} from './obj/operations/operation';
 
 @Injectable()
 export class StorageService {

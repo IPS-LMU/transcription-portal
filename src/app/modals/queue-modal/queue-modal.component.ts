@@ -3,14 +3,14 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {Task, TaskState} from '../../obj/tasks';
 import {QueueItem} from '../../obj/preprocessor';
-import {Operation} from '../../obj/tasks/operation';
+import {Operation} from '../../obj/operations/operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {AppInfo} from '../../app.info';
-import {ASROperation} from '../../obj/tasks/asr-operation';
-import {OCTRAOperation} from '../../obj/tasks/octra-operation';
+import {ASROperation} from '../../obj/operations/asr-operation';
+import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
 import {isNullOrUndefined} from 'util';
-import {G2pMausOperation} from '../../obj/tasks/g2p-maus-operation';
+import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 
 @Component({
   selector: 'app-queue-modal',
