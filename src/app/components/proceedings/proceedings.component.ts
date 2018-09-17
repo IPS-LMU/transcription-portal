@@ -696,4 +696,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       this.allDirOpened = 'opened';
     }
   }
+
+  toggleOperationDescription(tooltip) {
+    if (tooltip.isOpen()) {
+      tooltip.close();
+      this.cd.markForCheck();
+      this.cd.detectChanges();
+    } else {
+      tooltip.open();
+      this.cd.markForCheck();
+      this.cd.detectChanges();
+    }
+  }
 }

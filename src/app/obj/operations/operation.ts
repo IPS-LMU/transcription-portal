@@ -6,6 +6,13 @@ import {Subject} from 'rxjs/Subject';
 import {Task, TaskState} from '../tasks/task';
 
 export abstract class Operation {
+  get shortTitle(): string {
+    return this._shortTitle;
+  }
+
+  get description(): string {
+    return this._description;
+  }
 
   get enabled(): boolean {
     return this._enabled;
@@ -48,8 +55,8 @@ export abstract class Operation {
     return this._name;
   }
 
-  get icon(): string {
-    return this._icon;
+  get title(): string {
+    return this._title;
   }
 
   get isFinished() {
@@ -95,7 +102,7 @@ export abstract class Operation {
     return null;
   }
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
     if ((id === null || id === undefined)) {
       this._id = ++Operation.counter;
     } else {
@@ -104,8 +111,12 @@ export abstract class Operation {
     this._name = name;
     this._task = task;
 
-    if (!(icon === null || icon === undefined)) {
-      this._icon = icon;
+    if (!(title === null || title === undefined)) {
+      this._title = title;
+    }
+
+    if (!(shortTitle === null || shortTitle === undefined)) {
+      this._shortTitle = shortTitle;
     }
 
     if (!(state === null || state === undefined)) {
@@ -129,8 +140,11 @@ export abstract class Operation {
   private _task: Task = null;
   protected _state: TaskState = TaskState.PENDING;
   protected _name: string;
-  protected _icon = '';
+  protected _title = '';
   protected _protocol = '';
+  protected _description = '';
+  private _shortTitle: string;
+
   protected _time: {
     start: number;
     duration: number;

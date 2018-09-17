@@ -10,8 +10,11 @@ import {UploadOperation} from './upload-operation';
 export class EmuOperation extends ToolOperation {
   protected operations: Operation[];
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, icon, task, state, id);
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, title, shortTitle, task, state, id);
+    this._description = 'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
+      'the associated words or phonemes. This is useful for interpreting a transcript, e. g. to determine the focus of' +
+      ' a sentence or phrase.';
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -20,7 +23,7 @@ export class EmuOperation extends ToolOperation {
     this.time.duration = 0;
     this.operations = operations;
     this.changeState(TaskState.FINISHED);
-  };
+  }
 
   public getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
@@ -53,7 +56,7 @@ export class EmuOperation extends ToolOperation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  };
+  }
 
   public getStateIcon2 = () => {
     let result = '';
@@ -86,7 +89,7 @@ export class EmuOperation extends ToolOperation {
     }
 
     return result;
-  };
+  }
 
   public getToolURL(): string {
     if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
@@ -99,11 +102,10 @@ export class EmuOperation extends ToolOperation {
   }
 
   public fromAny(operationObj: any, task: Task): Operation {
-    const result = new EmuOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    const result = new EmuOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
-      const result = operationObj.results[k];
-      result.results.push(FileInfo.fromAny(result));
-      result.url = result;
+      const result2 = operationObj.results[k];
+      result.results.push(FileInfo.fromAny(result2));
     }
     result._time = operationObj.time;
     result._protocol = operationObj.protocol;
@@ -114,6 +116,6 @@ export class EmuOperation extends ToolOperation {
 
   public clone(task?: Task): EmuOperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new EmuOperation(this.name, this.icon, selected_task, this.state);
+    return new EmuOperation(this.name, this.title, this.shortTitle, selected_task, this.state);
   }
 }

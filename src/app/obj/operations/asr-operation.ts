@@ -9,8 +9,11 @@ export class ASROperation extends Operation {
   public webService = '';
   public resultType = 'BAS Partitur Format';
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, icon, task, state, id);
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, title, shortTitle, task, state, id);
+    this._description = 'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
+      'The result of this process is a text file with a literal transcription of the audio file. \n' +
+      'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -67,20 +70,10 @@ export class ASROperation extends Operation {
         console.error(error);
         this.changeState(TaskState.ERROR);
       });
-
-    /*
-    // simulate upload
-    setTimeout(() => {
-      this.time.end = Date.now();
-      const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.15_09.40.12_40979BA89ADE5D8E1B72EA4CA03C9C73/test.par';
-      this.results.push(FileInfo.fromURL(url));
-      this.changeState(TaskState.FINISHED);
-    }, 10000);
-    */
-  };
+  }
 
   public fromAny(operationObj: any, task: Task): Operation {
-    const result = new ASROperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    const result = new ASROperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = FileInfo.fromAny(resultObj);
@@ -95,7 +88,7 @@ export class ASROperation extends Operation {
 
   toAny(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
-      let result = {
+      const result = {
         id: this.id,
         name: this.name,
         state: this.state,
@@ -128,6 +121,6 @@ export class ASROperation extends Operation {
 
   public clone(task?: Task): ASROperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ASROperation(this.name, this.icon, selected_task, this.state);
+    return new ASROperation(this.name, this.title, this.shortTitle, selected_task, this.state);
   }
 }

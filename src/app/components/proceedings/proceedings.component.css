@@ -56,6 +56,7 @@
 
 .table.table-striped th {
     vertical-align: top;
+    font-size: 0.9em;
 }
 
 .op-deactivated {
@@ -176,4 +177,20 @@ table thead tr th:hover {
 
 .fa.fa-minus-circle:hover {
     color: red;
+}
+
+.bigCol {
+    width: 200px;
+}
+
+@media (max-width: 1250px) {
+    .bigCol {
+        width: auto;
+    }
+}
+
+@media (max-width: 900px) {
+    .bigCol {
+        height: 50px;
+    }
 }

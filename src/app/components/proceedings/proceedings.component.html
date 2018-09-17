@@ -1,7 +1,6 @@
 <app-download-modal #content [selectedTasks]="selectedRows" [column]="selectedOperation"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
-
 <div class="inner" (mouseleave)="isDragging = false" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
      (click)="onContextBlur()">
     <div *ngIf="!storage.tasksFound && taskService.taskList.entries.length === 0 && queue.length === 0"
@@ -102,29 +101,31 @@
                 </th>
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-                    <th style="padding-left:3px;padding-right:3px;" [title]="operation.name">
+                    <th style="padding-left:3px;padding-right:3px;" [ngClass]="
+{
+    'bigCol': (!shortstyle)
+}">
                         <div style="position: relative;">
-                            <div style="display:block;position: relative;height:25px;">
+                            <div style="display:block;position: relative;height:25px;cursor:pointer;">
                                 <app-operation-arrow [first]="(i === 0)"
                                                      [type]="(i === operations.length - 1) ? 'circle': 'arrow'"></app-operation-arrow>
-                                <div style="position:absolute;z-index:10;width:100%;text-align:center;">
-                                <span style="background-color:white;padding:0px 3px;"
-                                      *ngIf="operation.icon === ''; else showIcon"
+                                <div style="z-index:10;width:100%;text-align:center;">
+                                    <ng-template #tipContent>{{operation.description}}</ng-template>
+                                    <div style="display:inline;padding:0px 3px;"
 
-                                      (click)="openArchiveDownload('column', operation)">
-                                    <ng-container *ngIf="shortstyle">
-                                        {{operation.name.charAt(0)}}
-                                    </ng-container>
-                                    <ng-container *ngIf="!shortstyle">
-                                        {{operation.name}}
-                                    </ng-container>
-                                 </span>
-                                    <ng-template #showIcon>
-                                    <span style="background-color:white;padding:0px 3px;"
-                                          [innerHTML]="operation.icon"
-                                          (click)="openArchiveDownload('column', operation)">
-                                    </span>
-                                    </ng-template>
+                                         (click)="openArchiveDownload('column', operation)" [ngbTooltip]="tipContent"
+                                         tooltipClass="operation-tooltip"
+                                         triggers="manual" #t2="ngbTooltip" placement="bottom"
+                                         (mouseover)="toggleOperationDescription(t2)"
+                                         (mouseleave)="toggleOperationDescription(t2)"
+                                    >
+                                        <ng-container *ngIf="shortstyle">
+                                            {{operation.shortTitle}}
+                                        </ng-container>
+                                        <ng-container *ngIf="!shortstyle">
+                                            {{operation.title}}
+                                        </ng-container>
+                                    </div>
                                 </div>
                             </div>
                         </div>

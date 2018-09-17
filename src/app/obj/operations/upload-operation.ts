@@ -9,12 +9,69 @@ import {AppInfo} from '../../app.info';
 import {Subject} from 'rxjs/Subject';
 
 export class UploadOperation extends Operation {
+
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, title, shortTitle, task, state, id);
+    this._description = 'Drag and drop your audio and optional text files on the web page to upload them to the server ' +
+      'for processing. Prior to upload, the format of the audio files will be checked; stereo files will be split into ' +
+      'their left and right channel.';
+  }
+
+  public get wavFile(): FileInfo {
+    return this.results.find(
+      (file) => {
+        return file.extension.indexOf('wav') > -1 && file.online;
+      }
+    );
+  }
   public resultType = '.wav';
 
   private progress = 0;
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, icon, task, state, id);
+  public static upload(files: FileInfo[], url: string, httpclient: HttpClient): Subject<{
+    type: 'progress' | 'loadend',
+    result?: any
+  }> {
+
+    const subj = new Subject<{
+      type: 'progress' | 'loadend',
+      result?: any
+    }>();
+
+    const form: FormData = new FormData();
+
+    for (let i = 0; i < files.length; i++) {
+      form.append('file' + i, files[i].file);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+
+    xhr.upload.addEventListener('progress', (e: ProgressEvent) => {
+      let progress = -1;
+      if (e.lengthComputable) {
+        progress = e.loaded / e.total;
+      }
+      subj.next({
+        type: 'progress',
+        result: <any> progress
+      });
+    }, false);
+
+    xhr.onerror = (e) => {
+      subj.error(e);
+    };
+
+    xhr.onloadend = (e) => {
+      subj.next({
+        type: 'loadend',
+        result: <any> e.currentTarget['responseText']
+      });
+      subj.complete();
+    };
+    xhr.send(form);
+
+    return subj;
   }
 
   public updateEstimatedEnd = () => {
@@ -26,14 +83,6 @@ export class UploadOperation extends Operation {
     } else {
       this.estimated_end = 0;
     }
-  };
-
-  public get wavFile(): FileInfo {
-    return this.results.find(
-      (file) => {
-        return file.extension.indexOf('wav') > -1 && file.online;
-      }
-    );
   }
 
   public start = (files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -90,7 +139,7 @@ export class UploadOperation extends Operation {
       this.changeState(TaskState.ERROR);
     }, () => {
     });
-  };
+  }
 
   public getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
     let result = '';
@@ -125,7 +174,7 @@ export class UploadOperation extends Operation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  };
+  }
 
   public getStateIcon2 = (state: TaskState): String => {
     let result = '';
@@ -161,10 +210,10 @@ export class UploadOperation extends Operation {
     }
 
     return result;
-  };
+  }
 
   public fromAny(operationObj: any, task: Task): UploadOperation {
-    const result = new UploadOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    const result = new UploadOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
@@ -179,52 +228,6 @@ export class UploadOperation extends Operation {
 
   public clone(task?: Task): UploadOperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new UploadOperation(this.name, this.icon, selected_task, this.state);
-  }
-
-  public static upload(files: FileInfo[], url: string, httpclient: HttpClient): Subject<{
-    type: 'progress' | 'loadend',
-    result?: any
-  }> {
-
-    const subj = new Subject<{
-      type: 'progress' | 'loadend',
-      result?: any
-    }>();
-
-    const form: FormData = new FormData();
-
-    for (let i = 0; i < files.length; i++) {
-      form.append('file' + i, files[i].file);
-    }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-
-    xhr.upload.addEventListener('progress', (e: ProgressEvent) => {
-      let progress = -1;
-      if (e.lengthComputable) {
-        progress = e.loaded / e.total;
-      }
-      subj.next({
-        type: 'progress',
-        result: <any> progress
-      })
-    }, false);
-
-    xhr.onerror = (e) => {
-      subj.error(e);
-    };
-
-    xhr.onloadend = (e) => {
-      subj.next({
-        type: 'loadend',
-        result: <any> e.currentTarget['responseText']
-      });
-      subj.complete();
-    };
-    xhr.send(form);
-
-    return subj;
+    return new UploadOperation(this.name, this.title, this.shortTitle, selected_task, this.state);
   }
 }

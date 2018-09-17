@@ -48,3 +48,17 @@ tbody .fa.fa-arrow-up {
 .tool-selected {
     background-color: lightyellow;
 }
+
+ngb-tooltip-window .arrow {
+    color: skyblue !important;
+    border-color: skyblue !important;
+}
+
+ngb-tooltip-window .tooltip-inner {
+    background-color: skyblue !important;
+    color: black !important;
+}
+
+ngb-tooltip-window#ngb-tooltip-0 {
+    width: 200px !important;
+}

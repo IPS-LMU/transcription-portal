@@ -7,8 +7,8 @@ import {Task, TaskState} from '../tasks';
 export class ToolOperation extends Operation {
   public resultType;
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, icon, task, state, id);
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, title, shortTitle, task, state, id);
   }
 
   private active = true;
@@ -57,7 +57,7 @@ export class ToolOperation extends Operation {
   }
 
   public fromAny(operationObj: any, task: Task): Operation {
-    const result = new ToolOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    const result = new ToolOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
@@ -72,6 +72,6 @@ export class ToolOperation extends Operation {
 
   public clone(task?: Task): ToolOperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ToolOperation(this.name, this.icon, selected_task, this.state);
+    return new ToolOperation(this.name, this.title, this.shortTitle, selected_task, this.state);
   }
 }

@@ -1,7 +1,7 @@
 <div class="arrow-outer" #outer (resize)="onResize($event)" onresize="onResize($event)">
     <svg [attr.width]="size.width" [attr.height]="size.height">
-        <line *ngIf="first" x1="0" y1="0" [attr.x2]="0" [attr.y2]="10" stroke="cornflowerblue" stroke-width="5"/>
-        <line x1="0" y1="5" [attr.x2]="size.width" y2="5" stroke="cornflowerblue" stroke-width="1"/>
+        <line *ngIf="first" x1="5" y1="0" [attr.x2]="5" [attr.y2]="10" stroke="cornflowerblue" stroke-width="5"/>
+        <line x1="4" y1="5" [attr.x2]="size.width" y2="5" stroke="cornflowerblue" stroke-width="1"/>
         <polygon *ngIf="type === 'arrow'" [attr.points]="getTriangle()" style="fill:cornflowerblue;"/>
         <circle *ngIf="type === 'circle'" [attr.cx]="size.width-5" cy="5" r="5" style="fill:cornflowerblue"></circle>
     </svg>

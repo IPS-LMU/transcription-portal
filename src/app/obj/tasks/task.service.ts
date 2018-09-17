@@ -130,12 +130,12 @@ export class TaskService implements OnDestroy {
               private alertService: AlertService) {
     this._taskList = new TaskList();
     this._operations = [
-      new UploadOperation('Upload', '<i class="fa fa-upload" aria-hidden="true"></i>'),
-      new ASROperation('ASR', '<i class="fa fa-forward" aria-hidden="true"></i>'),
+      new UploadOperation('Upload', 'Upload', 'UL'),
+      new ASROperation('ASR', 'Speech Recognition', 'ASR'),
       // new ToolOperation('OCTRA'),
-      new OCTRAOperation('OCTRA'),
-      new G2pMausOperation('MAUS'),
-      new EmuOperation('Emu WebApp')
+      new OCTRAOperation('OCTRA', 'Manual Transcription', 'MT'),
+      new G2pMausOperation('MAUS', 'Word alignment', 'WA'),
+      new EmuOperation('Emu WebApp', 'Phonetic detail', 'PD')
     ];
 
     this._preprocessor.process = this.process;

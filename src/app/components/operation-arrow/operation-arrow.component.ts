@@ -24,12 +24,14 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.size.width = this.outer.nativeElement.offsetWidth;
     setInterval(() => {
       this.size.width = this.outer.nativeElement.offsetWidth;
     }, 300);
   }
 
   ngAfterViewInit() {
+    this.size.width = this.outer.nativeElement.offsetWidth;
   }
 
   public getTriangle() {

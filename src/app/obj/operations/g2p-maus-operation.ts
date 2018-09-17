@@ -9,8 +9,10 @@ import {AppInfo} from '../../app.info';
 export class G2pMausOperation extends Operation {
   public resultType = 'AnnotJSON';
 
-  public constructor(name: string, icon?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, icon, task, state, id);
+  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, title, shortTitle, task, state, id);
+    this._description = 'The transcript text is time-aligned with the signal, i. e. for every word in the text we get ' +
+      'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
   }
 
   public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
@@ -59,8 +61,6 @@ export class G2pMausOperation extends Operation {
         }
 
         if (json.success === 'true') {
-          console.log(`DOWNLOAD LINK:`);
-          console.log(json.downloadLink);
           const file = FileInfo.fromURL(json.downloadLink, null, 'text/plain');
           file.updateContentFromURL(httpclient).then(() => {
             this.results.push(file);
@@ -80,21 +80,10 @@ export class G2pMausOperation extends Operation {
         console.error(error);
         this.changeState(TaskState.ERROR);
       });
-
-    /*
-        // simulate upload
-        setTimeout(() => {
-          this.time.end = Date.now();
-          const url = 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/data/2018.01.15_09.40.12_40979BA89ADE5D8E1B72EA4CA03C9C73/test_annot.json';
-          this.results.push(FileInfo.fromURL(url));
-          this.changeState(TaskState.FINISHED);
-        }, 2000);
-
-        */
   };
 
   public fromAny(operationObj: any, task: Task): G2pMausOperation {
-    const result = new G2pMausOperation(operationObj.name, this.icon, task, operationObj.state, operationObj.id);
+    const result = new G2pMausOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = FileInfo.fromAny(resultObj);
@@ -109,6 +98,6 @@ export class G2pMausOperation extends Operation {
 
   public clone(task?: Task): G2pMausOperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new G2pMausOperation(this.name, this.icon, selected_task, this.state);
+    return new G2pMausOperation(this.name, this.title, this.shortTitle, selected_task, this.state);
   }
 }
