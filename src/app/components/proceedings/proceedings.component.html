@@ -5,22 +5,42 @@
      (click)="onContextBlur()">
     <div *ngIf="!storage.tasksFound && taskService.taskList.entries.length === 0 && queue.length === 0"
          class="placeholder">
-        <i class="fa" [ngClass]="{
-            'fa-folder-open-o': isDragging,
-            'fa-folder-o': !isDragging
-        }"></i>
-        <p class="description">
-            Drag & drop some files/folders here or click on "+ ADD FILES"
-        </p>
-        <ul class="description">
-            <li>You can add new files even if this message is not shown</li>
-            <li>Adding folders and files is supported by the latest versions of Firefox, Chrome and Opera. <b>Safari is
-                not supported</b></li>
-            <li>Sub-folders will be shown on the first level</li>
-            <li>You can add .wav files and combinations of .wav and transcript files. A transcript must have the same
-                name as its .wav file
-            </li>
-        </ul>
+        <h1 style="margin-top: 10%;margin-bottom:40px;">Quickstart</h1>
+        <div class="row quickstart" style="padding:20px 20px;">
+            <div class="col-4">
+                <div style="width:80px; height:80px; margin: 0 auto;">
+                    <div class="rounded-circle"
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                        1.
+                    </div>
+                </div>
+                <h4>Add files</h4>
+                <p>You can drag & drop files to this whole area (inside the dashed rectangle) or you can use the "1. ADD
+                    FILES" button. Later, you can add files via drag & drop to the table rows, too.</p>
+            </div><!-- /.col-lg-4 -->
+            <div class="col-4">
+                <div style="width:80px; height:80px; margin: 0 auto;">
+                    <div class="rounded-circle"
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                        2.
+                    </div>
+                </div>
+                <h4>Veriy new files</h4>
+                <p>Before the new files can be processed it's required to set few options. Click on the "Verify"
+                    Button.</p>
+            </div><!-- /.col-lg-4 -->
+            <div class="col-4">
+                <div style="width:80px; height:80px; margin: 0 auto;">
+                    <div class="rounded-circle"
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                        3.
+                    </div>
+                </div>
+                <h4>Start Processing</h4>
+                <p>After all files are verified you can click on "START PROCESSING". The application starts the
+                    processing of pending tasks.</p>
+            </div><!-- /.col-lg-4 -->
+        </div>
     </div>
     <div id="loading" *ngIf="storage.tasksFound && !storage.ready">
         <i class="fa fa-spinner fa-spin fa-5x"></i>

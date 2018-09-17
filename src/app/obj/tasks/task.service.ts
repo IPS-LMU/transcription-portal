@@ -113,7 +113,7 @@ export class TaskService implements OnDestroy {
       if (queuedItems > 0) {
         return `${queuedItems} audio file(s) waiting to be verified by you.`;
       }
-      return 'Click on "Start processing" to process verified or remaining audio files';
+      return 'Ready';
     }
     if (this.overallState === 'stopped') {
       const runningTasks = this.countRunningTasks();

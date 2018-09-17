@@ -69,8 +69,11 @@
 .placeholder {
     text-align: center;
     position: absolute;
-    width: 100%;
-    margin-top: 150px;
+    width: 96%;
+    height: 88%;
+    margin-left: 2%;
+    margin-top: 80px;
+    border: 2px dashed cornflowerblue;
 }
 
 .placeholder .description {
@@ -193,4 +196,9 @@ table thead tr th:hover {
     .bigCol {
         height: 50px;
     }
+}
+
+.quickstart p {
+    text-align: justify;
+    padding: 5px 10px;
 }
