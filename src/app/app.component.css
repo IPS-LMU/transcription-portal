@@ -42,7 +42,7 @@ h1 {
     text-align: center;
     padding: 5px;
     display: -webkit-box;
-    margin-top: 70px;
+    margin-top: 60px;
 }
 
 .proceedings-header .status {
@@ -89,7 +89,7 @@ h1 {
 }
 
 .navbar.navbar-expand-md.navbar-light {
-    border: 1px solid gray;
+    border: 1px solid cornflowerblue;
     border-radius: 3px;
 }
 
@@ -119,7 +119,7 @@ h1 {
 }
 
 .logo {
-    font-size: 30px;
+    font-size: 1.5em;
 }
 
 .version {
@@ -135,7 +135,9 @@ h1 {
 }
 
 nav {
+    padding: 3px 10px;
     background-color: white;
+    border: none;
     border-bottom: 1px solid cornflowerblue;
 }
 
@@ -179,4 +181,8 @@ nav li {
 #overall-state {
     color: darkblue;
     margin-top: 10px;
+}
+
+.flex-fill {
+    flex: 1
 }
