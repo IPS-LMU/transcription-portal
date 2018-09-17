@@ -2,7 +2,7 @@
     <div class="modal-header" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
         <h4 class="modal-title">Queue</h4>
         <button type="button" class="btn btn-outline-primary" (click)="onSubmit()" style="margin-left:20px;">
-            These audio files can be processed
+            OK
         </button>
         <button type="button" class="close" aria-label="Close" (click)="onDismiss()">
             <span aria-hidden="true">&times;</span>
@@ -12,10 +12,10 @@
         <p>
             The following files are going to be processed one after the other. Please check if all options are set as
             you wish.
-            If all options are well click on "These audio files can be processed".
+            Click "OK" to mark the files for further processing.
         </p>
         <p *ngIf="orangeCount > 0" class="yellow" style="text-align: center;">
-            Please add the files with orange file names again. Otherwise these files can not be uploaded and will be
+            Please add the files with orange file names again. Otherwise these files will be
             skipped.
         </p>
 
@@ -118,7 +118,7 @@
     <div class="modal-footer" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
         <button type="button" class="btn btn-outline-dark" (click)="onClose()">Cancel</button>
         <button type="button" class="btn btn-outline-primary" (click)="onSubmit()">
-            These audio files can be processed
+            OK
         </button>
     </div>
 </ng-template>

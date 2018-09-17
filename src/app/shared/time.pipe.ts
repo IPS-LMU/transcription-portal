@@ -13,7 +13,7 @@ export class TimePipe implements PipeTransform {
 
         let seconds = Math.round(miliseconds / 1000);
         let minutes = Math.floor(seconds / 60);
-        const hours = Math.floor(minutes / 60);
+        const hours = Math.floor(seconds / 60 / 60);
 
         seconds = seconds % 60;
         minutes = minutes % 60;
@@ -36,7 +36,7 @@ export class TimePipe implements PipeTransform {
         if (hours < 1) {
           return `${min_leading_null}${minutes}:${secs_leading_null}${seconds}`;
         }
-        return `${hour_leading_null}${hours}:${secs_leading_null}${minutes}:${secs_leading_null}${seconds}`;
+        return `${hour_leading_null}${hours}:${min_leading_null}${minutes}:${secs_leading_null}${seconds}`;
       }
     }
     return null;
