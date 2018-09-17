@@ -264,7 +264,9 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       }
 
       Promise.all(promises).then((values) => {
-        resolve(values);
+        resolve(values.filter((a) => {
+          return !(a === null || a === undefined);
+        }));
       }).catch((error) => {
         reject(error);
       });
@@ -307,21 +309,23 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           }
         }
 
-        const conversion = exportConverter.export(annotJSON, audiofile, 0);
+        const conversion = exportConverter.export(annotJSON, audiofile);
 
         if (!(conversion === null || conversion === undefined)) {
-          const file: File = FileInfo.getFileFromContent(conversion.file.content, operation.task.files[0].name + exportConverter.extension, conversion.file.type);
+          const file: File = FileInfo.getFileFromContent(conversion.file.content,
+            operation.task.files[0].name + exportConverter.extension, conversion.file.type);
 
           const fileInfo = new FileInfo(file.name, file.type, file.size, file);
 
           this.uploadFile(fileInfo).then((url) => {
-            resolve(url)
+            resolve(url);
           }).catch((error) => {
             reject(error);
           });
 
         } else {
-          reject('export failed!');
+          // ignore
+          resolve(null);
         }
       }).catch((error) => {
         reject(error);

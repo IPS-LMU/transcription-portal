@@ -135,14 +135,25 @@ export class ResultsTableComponent implements OnInit, OnChanges {
               } else {
                 annotJSON = JSON.parse(text);
               }
-              const exp = converter.obj.export(annotJSON, audio, 0).file;
-              const expFile = new File([exp.content], originalFileName.name + converter.obj.extension, {
-                type: exp.type
-              });
-              res.result = FileInfo.fromFileObject(expFile);
-              const url = URL.createObjectURL(expFile);
-              res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
-              res.state = 'FINISHED';
+
+              let levelnum = 0;
+              if (this.operation.name === 'MAUS') {
+                levelnum = null;
+              }
+
+              const preResult = converter.obj.export(annotJSON, audio, levelnum);
+              const exp = (!(preResult === null || preResult === undefined))
+                ? preResult.file : null;
+
+              if (!(exp === null || exp === undefined)) {
+                const expFile = new File([exp.content], originalFileName.name + converter.obj.extension, {
+                  type: exp.type
+                });
+                res.result = FileInfo.fromFileObject(expFile);
+                const url = URL.createObjectURL(expFile);
+                res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
+                res.state = 'FINISHED';
+              }
             }
           }
 
@@ -169,7 +180,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           input: result,
           conversions: [],
           number: i
-        })
+        });
       }
       this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
     }

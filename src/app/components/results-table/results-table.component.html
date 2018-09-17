@@ -31,7 +31,7 @@
         </td>
         <ng-container *ngIf="elem.input.extension !== '.wav'">
             <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
-                <ng-container *ngIf="elem.input.available">
+                <ng-container *ngIf="elem.input.available && converter.result !== null">
                     <a [attr.href]="converter.result.url"
                        [attr.download]="converter.result.fullname"
                     >

@@ -18,8 +18,9 @@ export class PartiturConverter extends Converter {
     this._multitiers = false;
   }
 
-  public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum: number): ExportResult {
-
+  public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
+    console.log(`in partitur`);
+    // TODO if levelnum not set, read levels with names "ORT" and "TRM" automatically
     if (!(levelnum === null || levelnum === undefined)) {
       const result: ExportResult = {
         file: {

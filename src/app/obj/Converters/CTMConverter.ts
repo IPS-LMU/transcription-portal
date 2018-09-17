@@ -20,32 +20,46 @@ export class CTMConverter extends Converter {
     this._notice = 'OCTRA does not take the confidency level into account. On export to CTM the confidency value will be set to 1 to all values.';
   }
 
-  public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum: number): ExportResult {
+  public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
+    console.log('in ctm');
     let result = '';
     let filename = '';
 
-    if (!(annotation === null || annotation === undefined)) {
-      const level = annotation.levels[levelnum];
+    if (levelnum === null || levelnum === undefined) {
+      for (let i = 0; i < annotation.levels.length; i++) {
+        const level = annotation.levels[i];
 
-      for (let j = 0; j < level.items.length; j++) {
-        const transcript = level.items[j].labels[0].value;
-        const start = Math.round((level.items[j].sampleStart / audiofile.samplerate) * 100) / 100;
-        const duration = Math.round((level.items[j].sampleDur / audiofile.samplerate) * 100) / 100;
-        result += `${annotation.name} 1 ${start} ${duration} ${transcript} 1.00\n`;
+
       }
-
-      filename = annotation.name + this._extension;
-
     }
 
-    return {
-      file: {
-        name: filename,
-        content: result,
-        encoding: 'UTF-8',
-        type: 'text/plain'
+    if (!(levelnum === null || levelnum === undefined)) {
+      if (!(annotation === null || annotation === undefined)) {
+        const level = annotation.levels[levelnum];
+
+        for (let j = 0; j < level.items.length; j++) {
+          const transcript = level.items[j].labels[0].value;
+          const start = Math.round((level.items[j].sampleStart / audiofile.samplerate) * 100) / 100;
+          const duration = Math.round((level.items[j].sampleDur / audiofile.samplerate) * 100) / 100;
+          result += `${annotation.name} 1 ${start} ${duration} ${transcript} 1.00\n`;
+          console.log(`test`);
+        }
+
+        filename = annotation.name + this._extension;
+
       }
-    };
+
+      return {
+        file: {
+          name: filename,
+          content: result,
+          encoding: 'UTF-8',
+          type: 'text/plain'
+        }
+      };
+    }
+    console.log(`end`);
+    return null;
   }
 
   public import(file: IFile, audiofile: OAudiofile): ImportResult {
