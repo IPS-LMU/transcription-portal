@@ -162,7 +162,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       const files: (FileInfo | DirectoryInfo)[] = [];
 
       for (let i = 0; i < droppedfiles.length; i++) {
-        let item: WebKitEntry = droppedfiles[i].webkitGetAsEntry();
+        const item: WebKitEntry = droppedfiles[i].webkitGetAsEntry();
 
         if (item.isDirectory) {
           // TODO fix order!
@@ -178,7 +178,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           }));
         } else {
           // check added file
-          let file = droppedfiles[i].getAsFile();
+          const file = droppedfiles[i].getAsFile();
           if (!(file === null || file === undefined)) {
             // check file
             if (file.name.indexOf('.') > -1) {
@@ -201,8 +201,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       } else {
         this.afterdrop.emit(files);
       }
-    }
-    else {
+    } else {
       this.afterdrop.error(`file api not supported`);
     }
   }
@@ -325,7 +324,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       const entry = this.taskList.getEntryByIndex(index);
       if (entry instanceof Task) {
         if (entry.files.length > 1) {
-          entry.files.splice(1)
+          entry.files.splice(1);
           entry.operations[1].enabled = this.taskService.operations[1].enabled;
           entry.operations[1].changeState(entry.state);
         }
@@ -346,7 +345,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
     const tasklistIndex = this.taskList.getIndexByEntry(entry);
     const search = this.selectedRows.findIndex((a) => {
-      return a === tasklistIndex
+      return a === tasklistIndex;
     });
 
     if (entry instanceof Task) {
@@ -481,7 +480,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   deactivateOperation(operation: Operation, index: number) {
     // TODO improve code!
-    let tasks = this.taskList.getAllTasks().filter((a) => {
+    const tasks = this.taskList.getAllTasks().filter((a) => {
       return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
     });
 
@@ -489,20 +488,31 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     const previous = this.taskService.operations[index - 1];
     const next = this.taskService.operations[index + 1];
     if (operation instanceof OCTRAOperation) {
+      console.log(`is octra`);
+
       if (!previous.enabled && !operation.enabled) {
+        console.log(`prev not enabled this notenabled`);
         previous.enabled = true;
 
         for (let i = 0; i < tasks.length; i++) {
           const task = tasks[i];
           const task_operation = task.operations[index - 1];
           const currOperation = task.operations[index];
+          // check if transcript was added to the task
+          const hasTranscript = currOperation.task.files.findIndex((a) => {
+            return this.taskService.validTranscript(a.extension);
+          }) > -1;
 
-          if (task_operation.state === TaskState.PENDING) {
-            task_operation.enabled = previous.enabled;
-          }
+          console.log(`validTranscript: ${hasTranscript}`);
 
-          if (currOperation.state === TaskState.PENDING) {
-            currOperation.enabled = operation.enabled;
+          if (!hasTranscript) {
+            if (task_operation.state === TaskState.PENDING) {
+              task_operation.enabled = previous.enabled;
+            }
+
+            if (currOperation.state === TaskState.PENDING) {
+              currOperation.enabled = operation.enabled;
+            }
           }
         }
       }
@@ -544,7 +554,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public updateEnableState() {
-    let tasks = this.taskList.getAllTasks().filter((a) => {
+    const tasks = this.taskList.getAllTasks().filter((a) => {
       return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
     });
 
@@ -555,8 +565,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         const task = tasks[i];
         const currOperation = task.operations[j];
 
-        if (currOperation.state === TaskState.PENDING) {
-          currOperation.enabled = operation.enabled;
+        // check if transcript was added to the task
+        const hasTranscript = currOperation.task.files.findIndex((a) => {
+          return this.taskService.validTranscript(a.extension);
+        }) > -1;
+
+        if (!hasTranscript) {
+          if (currOperation.state === TaskState.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
         }
       }
     }
@@ -570,7 +587,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         return '#ffc33b';
       }
     }
-    return '#3a70dd'
+    return '#3a70dd';
   }
 
   public onOperationClick($event, operation: Operation) {
@@ -677,7 +694,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       return {
         type: 'warning',
         label: (task.files[0].extension !== '.wav') ? task.files[0].extension : task.files[1].extension
-      }
+      };
     }
   }
 

@@ -116,12 +116,19 @@ export class QueueModalComponent implements OnInit {
           const task_operation = task.operations[index - 1];
           const currOperation = task.operations[index];
 
-          if (task_operation.state === TaskState.PENDING) {
-            task_operation.enabled = previous.enabled;
-          }
+          // check if transcript was added to the task
+          const hasTranscript = currOperation.task.files.findIndex((a) => {
+            return this.taskService.validTranscript(a.extension);
+          }) > -1;
 
-          if (currOperation.state === TaskState.PENDING) {
-            currOperation.enabled = operation.enabled;
+          if (!hasTranscript) {
+            if (task_operation.state === TaskState.PENDING) {
+              task_operation.enabled = previous.enabled;
+            }
+
+            if (currOperation.state === TaskState.PENDING) {
+              currOperation.enabled = operation.enabled;
+            }
           }
         }
       }
@@ -175,8 +182,15 @@ export class QueueModalComponent implements OnInit {
         const task = tasks[i];
         const currOperation = task.operations[j];
 
-        if (currOperation.state === TaskState.PENDING) {
-          currOperation.enabled = operation.enabled;
+        // check if transcript was added to the task
+        const hasTranscript = currOperation.task.files.findIndex((a) => {
+          return this.taskService.validTranscript(a.extension);
+        }) > -1;
+
+        if (!hasTranscript) {
+          if (currOperation.state === TaskState.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
         }
       }
     }
