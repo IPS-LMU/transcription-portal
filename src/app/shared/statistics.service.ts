@@ -16,7 +16,7 @@ export class StatisticsService {
   };
 
   public averageDurations = {
-    labels: ['Upload', 'ASR', 'OCTRA', 'MAUS'],
+    labels: ['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment'],
     data: [0, 0, 0, 0]
   };
 

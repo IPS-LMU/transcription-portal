@@ -43,12 +43,12 @@ export class StatisticsModalComponent implements OnInit, OnDestroy {
   }
 
   public open() {
-    setTimeout(() => {
-      this.visible = true;
-    }, 500);
     this.modalRef = this.modalService.open(this.content, {
       size: 'lg'
     });
+    setTimeout(() => {
+      this.visible = true;
+    }, 1000);
   }
 
   onClose() {
