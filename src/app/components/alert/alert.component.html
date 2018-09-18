@@ -1,10 +1,6 @@
 <div class="queue" [ngStyle]="{
     display: (queue.length > 0) ? 'inherit': 'none'
 }">
-    <button [@fadeToggle]="animation" class="btn btn-secondary"
-            style="width:100%;background-color:lightgray;border:none;margin-bottom:3px;" (click)="clear()"><i
-            class="fa fa-trash-o"></i> Clear all
-    </button>
     <ng-container *ngFor="let entry of queue">
         <div class="alert alert-{{entry.type}} alert-dismissible fade show" [@fadeToggle]="entry.animation"
              role="alert">
@@ -15,4 +11,8 @@
             </button>
         </div>
     </ng-container>
+    <button [@fadeToggle]="animation" class="btn btn-secondary"
+            style="width:100%;background-color:lightgray;border:none;" (click)="clear()"><i
+            class="fa fa-trash-o"></i> Clear all
+    </button>
 </div>

@@ -2,12 +2,12 @@
     display: none;
     position: absolute;
     width: 400px;
-    top: 0;
+    bottom: 0;
     right: 0;
     z-index: 100;
     overflow: scroll;
 }
 
 .alert {
-    margin-bottom: 3px;
+    margin-bottom: 5px;
 }

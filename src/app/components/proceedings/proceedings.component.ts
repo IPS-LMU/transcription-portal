@@ -230,7 +230,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
         const indexFromTaskList = this.taskList.getIndexByEntry(entry);
         const search = this.selectedRows.findIndex((a) => {
-          return a === indexFromTaskList
+          return a === indexFromTaskList;
         });
 
         if (this.shortcutManager.pressedKey.name === 'CMD' || this.shortcutManager.pressedKey.name === 'CTRL') {
@@ -293,12 +293,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       }
 
       if (
-        (!(operation === null || operation === undefined) && !(operation.previousOperation === null || operation.previousOperation === undefined) && operation.previousOperation.results.length > 0 &&
+        (!(operation === null || operation === undefined)
+          && !(operation.previousOperation === null || operation.previousOperation === undefined)
+          && operation.previousOperation.results.length > 0 &&
           operation.previousOperation.results[operation.previousOperation.results.length - 1].online
         )
-        || (!(operation === null || operation === undefined) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
+        || (!(operation === null || operation === undefined) && operation.results.length > 0
+        && operation.results[operation.results.length - 1].online)
       ) {
         this.operationclick.emit(operation);
+        this.popover.state = 'closed';
       }
     }
   }

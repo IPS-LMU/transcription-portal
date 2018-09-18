@@ -198,6 +198,12 @@ export class AppComponent implements OnDestroy {
     };
 
     this.taskService.openSplitModal = this.openSplitModal;
+    setTimeout(() => {
+      this.alertService.showAlert('warning', 'irgendeine beschissene warnung');
+      this.alertService.showAlert('warning', 'irgendeine beschissene warnung');
+      this.alertService.showAlert('danger', 'irgendeine beschissene warnung');
+      this.alertService.showAlert('warning', 'irgendeine beschissene warnung');
+    }, 1000);
   }
 
 
