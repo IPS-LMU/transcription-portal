@@ -27,6 +27,7 @@ export class TaskService implements OnDestroy {
   get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
     return this._statistics;
   }
+
   set splitPrompt(value: string) {
     this._splitPrompt = value;
   }
@@ -148,14 +149,15 @@ export class TaskService implements OnDestroy {
 
             foundTask = this.taskList.getAllTasks().find((a) => {
               const foundIt = a.files.find((b) => {
-                // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                return b.name === result.files[0].name;
+                // TODO CHANGE!
+                return b.name.replace('_annot', '') === result.files[0].name;
               });
               return a.state === TaskState.QUEUED && !(foundIt === null || foundIt === undefined);
             });
 
             if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
+              console.log(`ADD ${result.files[0].extension} to ${foundTask.files[0].extension}`);
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
                 // TODO change if other than transcript files are needed
@@ -619,6 +621,9 @@ export class TaskService implements OnDestroy {
       if (entry instanceof FileInfo) {
         const file = <FileInfo> entry;
         if (file.extension === '.wav' || this.validTranscript(file.extension)) {
+          if (this.validTranscript(file.extension)) {
+            console.log(`valid transcript file`);
+          }
           result.push(file);
         }
 
@@ -888,6 +893,8 @@ export class TaskService implements OnDestroy {
       const converter = AppInfo.converters[k];
       result = result || converter.obj.extension.includes(extension);
     }
+
+    console.log(`${extension} is valid = ${result}`);
 
     return result;
   }
