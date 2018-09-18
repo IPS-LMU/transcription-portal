@@ -19,7 +19,6 @@ export class TextConverter extends Converter {
   public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
     let result = '';
     let filename = '';
-    console.log(`in text`);
 
     if (!(levelnum === null || levelnum === undefined) && levelnum < annotation.levels.length) {
       const level: OLevel = annotation.levels[levelnum];

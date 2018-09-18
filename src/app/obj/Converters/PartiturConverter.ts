@@ -19,7 +19,6 @@ export class PartiturConverter extends Converter {
   }
 
   public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
-    console.log(`in partitur`);
     // TODO if levelnum not set, read levels with names "ORT" and "TRM" automatically
     if (!(levelnum === null || levelnum === undefined)) {
       const result: ExportResult = {
@@ -57,21 +56,55 @@ LBD:\n`;
         trn.push(trn_line);
       }
 
+      const kanLevel = annotation.levels.find((a) => {
+        return a.name === 'KAN';
+      });
+
+      let j = 0;
+      if (!(kanLevel === null || kanLevel === undefined)) {
+        for (let i = 0; i < kanLevel.items.length; i++) {
+          const kLevelItem = kanLevel.items[i];
+          if (kLevelItem.labels[0].value !== '') {
+            content += `KAN: ${j} ${kLevelItem.labels[0].value}\n`;
+            j++;
+          }
+        }
+      }
+      j = 0;
+
       for (let i = 0; i < ort.length; i++) {
-        content += `ORT: ${i} ${ort[i]}\n`;
+        if (ort[i] !== '') {
+          content += `ORT: ${j} ${ort[i]}\n`;
+          j++;
+        }
       }
       for (let i = 0; i < trn.length; i++) {
         content += trn[i];
       }
 
+      j = 0;
+
+      const mausLevel = annotation.levels.find((a) => {
+        return a.name === 'MAU';
+      });
+
+      if (!(mausLevel === null || mausLevel === undefined)) {
+        for (let i = 0; i < mausLevel.items.length; i++) {
+          const mausItem = mausLevel.items[i];
+          if (mausItem.labels[0].value !== '') {
+            content += `MAU: ${j} ${mausItem.labels[0].value}\n`;
+            j++;
+          }
+        }
+      }
+
       result.file.content = content;
 
       return result;
-    } else {
-      // levelnum is null;
-      console.error('BASPartitur Converter needs a level number for export');
-      return null;
     }
+    // levelnum is null;
+    console.error('BASPartitur Converter needs a level number for export');
+    return null;
   }
 
   public import(file: IFile, audiofile: OAudiofile): ImportResult {

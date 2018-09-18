@@ -309,7 +309,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           }
         }
 
-        const conversion = exportConverter.export(annotJSON, audiofile);
+        const conversion = exportConverter.export(annotJSON, audiofile, 0);
 
         if (!(conversion === null || conversion === undefined)) {
           const file: File = FileInfo.getFileFromContent(conversion.file.content,

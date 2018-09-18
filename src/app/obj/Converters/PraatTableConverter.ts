@@ -7,7 +7,7 @@ export class PraatTableConverter extends Converter {
   public constructor() {
     super();
     this._application = 'Praat';
-    this._name = 'Text';
+    this._name = 'Table';
     this._extension = '.Table';
     this._website.title = '';
     this._website.url = '';

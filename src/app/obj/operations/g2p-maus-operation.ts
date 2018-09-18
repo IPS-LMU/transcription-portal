@@ -7,7 +7,8 @@ import {TaskState} from '../tasks/task';
 import {AppInfo} from '../../app.info';
 
 export class G2pMausOperation extends Operation {
-  public resultType = 'AnnotJSON';
+  // TODO change for the next version
+  public resultType = 'TextGrid/json';
 
   public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, title, shortTitle, task, state, id);
@@ -31,13 +32,13 @@ export class G2pMausOperation extends Operation {
         'TEXT=' + this.previousOperation.lastResult.url +
         '&SIGNAL=' + operations[0].results[0].url + '&' +
         'PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
-        'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
+        'MAUSVARIANT=runPipeline&OUTFORMAT=TextGrid';
     } else {
       url = AppInfo.getLanguageByCode(this.task.language).host + 'runPipelineWebLink?' +
         'TEXT=' + operations[1].lastResult.url +
         '&SIGNAL=' + operations[0].results[0].url +
         '&PIPE=G2P_MAUS&LANGUAGE=' + language + '&' +
-        'MAUSVARIANT=runPipeline&OUTFORMAT=emuDB';
+        'MAUSVARIANT=runPipeline&OUTFORMAT=TextGrid';
     }
 
     httpclient.post(url, {}, {

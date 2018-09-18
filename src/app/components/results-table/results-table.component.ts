@@ -27,7 +27,6 @@ import {DomSanitizer} from '@angular/platform-browser';
 export class ResultsTableComponent implements OnInit, OnChanges {
 
   @Input() operation: Operation;
-  public from: any;
   public convertedArray: {
     input: any,
     number: number,
@@ -44,6 +43,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   public get AppInfo(): AppInfo {
     return AppInfo;
   }
+
+  public originalLabel = '';
 
   public conversionExtension = '';
   @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
@@ -63,19 +64,22 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   private generateTable() {
     this.convertedArray = [];
-    this.from = null;
 
-    for (let i = 0; i < AppInfo.converters.length; i++) {
-      const converter = AppInfo.converters[i];
-      if (converter.obj.name === this.operation.resultType) {
-        this.from = converter.obj;
-      }
-    }
-
-    if (!(this.from === null || this.from === undefined)) {
-      this.conversionExtension = this.from.name;
+    this.conversionExtension = this.operation.resultType;
+    if (this.operation.resultType !== '.wav') {
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
+        let from = null;
+
+        // TODO change this!
+        for (let k = 0; k < AppInfo.converters.length; k++) {
+          const converter = AppInfo.converters[k];
+          if (converter.obj.extension.indexOf(result.extension) > -1) {
+            this.originalLabel = converter.obj.extension;
+            from = converter.obj;
+            break;
+          }
+        }
 
         let originalFileName: any = this.operation.task.files[0].attributes.originalFileName;
         originalFileName = FileInfo.extractFileName(originalFileName);
@@ -116,7 +120,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
           for (let k = 0; k < AppInfo.converters.length; k++) {
             const converter = AppInfo.converters[k];
-            if (converter.obj.name !== this.operation.resultType) {
+            if (converter.obj.extension.indexOf(result.extension) < 0) {
               const res: {
                 converter: any,
                 state: string,
@@ -130,16 +134,13 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
               let annotJSON;
 
-              if (this.from.name !== 'AnnotJSON') {
-                annotJSON = this.from.import(file, audio).annotjson;
+              if (from.name !== 'AnnotJSON') {
+                annotJSON = from.import(file, audio).annotjson;
               } else {
                 annotJSON = JSON.parse(text);
               }
 
-              let levelnum = 0;
-              if (this.operation.name === 'MAUS') {
-                levelnum = null;
-              }
+              const levelnum = 0;
 
               const preResult = converter.obj.export(annotJSON, audio, levelnum);
               const exp = (!(preResult === null || preResult === undefined))
@@ -159,21 +160,22 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
           this.cd.markForCheck();
           this.cd.detectChanges();
-        }).catch(() => {
+        }).catch((err) => {
           this.convertedArray.push({
             input: result,
             conversions: [],
             number: i
           });
+          console.error(err);
           this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
           this.cd.markForCheck();
         });
       }
     } else {
-      this.conversionExtension = this.operation.resultType;
-      this.from = {
+      let from = {
         extension: '.wav'
       };
+
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
         this.convertedArray.push({
@@ -224,6 +226,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     } else if (a.number > b.number) {
       return -1;
     }
+  }
+
+  public isEqualConverterName(converter: any) {
+    return this.conversionExtension.indexOf(converter.obj.name) < 0;
   }
 
 }

@@ -21,7 +21,6 @@ export class CTMConverter extends Converter {
   }
 
   public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
-    console.log('in ctm');
     let result = '';
     let filename = '';
 
@@ -42,7 +41,6 @@ export class CTMConverter extends Converter {
           const start = Math.round((level.items[j].sampleStart / audiofile.samplerate) * 100) / 100;
           const duration = Math.round((level.items[j].sampleDur / audiofile.samplerate) * 100) / 100;
           result += `${annotation.name} 1 ${start} ${duration} ${transcript} 1.00\n`;
-          console.log(`test`);
         }
 
         filename = annotation.name + this._extension;
@@ -58,7 +56,6 @@ export class CTMConverter extends Converter {
         }
       };
     }
-    console.log(`end`);
     return null;
   }
 

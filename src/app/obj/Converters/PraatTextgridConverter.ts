@@ -51,33 +51,28 @@ export class PraatTextgridConverter extends Converter {
 
       result += `item []: \n`;
 
-      let item_counter = 1;
-
       for (let i = 0; i < annotation.levels.length; i++) {
         const level = annotation.levels[i];
 
         if (level.type === 'SEGMENT') {
-          result += `    item [${item_counter}]:\n` +
+          result += `    item [${i + 1}]:\n` +
             `        class = "IntervalTier" \n` +
             `        name = "${level.name}" \n` +
             `        xmin = 0 \n` +
             `        xmax = ${dur_seconds} \n` +
             `        intervals: size = ${level.items.length} \n`;
 
-          let seconds_start = 0;
           for (let j = 0; j < level.items.length; j++) {
             const segment = level.items[j];
 
+            const seconds_start = segment.sampleStart / audiofile.samplerate;
             const seconds_end = (segment.sampleStart + segment.sampleDur) / audiofile.samplerate;
 
             result += `        intervals [${j + 1}]:\n` +
               `            xmin = ${seconds_start} \n` +
               `            xmax = ${seconds_end} \n` +
               `            text = "${segment.labels[0].value}" \n`;
-
-            seconds_start = seconds_end;
           }
-          item_counter++;
         }
       }
 
@@ -115,7 +110,7 @@ export class PraatTextgridConverter extends Converter {
 
           let lvl_num = 0;
 
-          if (lines[7] === 'item []: ') {
+          if (lines[7] === 'item []:') {
             // start reading segments
             for (let i = 8; i < lines.length; i++) {
               lvl_num++;
@@ -152,11 +147,9 @@ export class PraatTextgridConverter extends Converter {
                   i++;
 
                   // read items
-                  while (lines[i] !== '' &&
-                  (lines[i].match('item \\[(.*)\\]:') === null
-                    || lines[i].match('item \\[(.*)\\]:') === undefined
-                  )
-                  && i < lines.length) {
+                  let match = lines[i].match('item \\[([0-9]+)\\]:');
+
+                  while (lines[i] !== '' && (match === null || match === undefined) && i < lines.length) {
                     let is_interval = true;
                     test = lines[i].match(new RegExp('intervals \\[[0-9]+\\]:'));
                     if ((test === null || test === undefined)) {
@@ -171,7 +164,7 @@ export class PraatTextgridConverter extends Converter {
                     i++; // next line begins with 'number' (if is point) or 'xmin' (if is interval)
 
                     if (is_interval) {
-                      test = lines[i].match(/xmin = (.*) /);
+                      test = lines[i].match(/xmin = (.*)/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
@@ -179,7 +172,7 @@ export class PraatTextgridConverter extends Converter {
                       i++;
                       const xmin = Number(test[1]);
 
-                      test = lines[i].match(/xmax = (.*) /);
+                      test = lines[i].match(/xmax = (.*)/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
@@ -187,7 +180,7 @@ export class PraatTextgridConverter extends Converter {
                       i++;
                       const xmax = Number(test[1]);
 
-                      test = lines[i].match(/text = "(.*)" /);
+                      test = lines[i].match(/text = "(.*)"/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
@@ -205,7 +198,7 @@ export class PraatTextgridConverter extends Converter {
                       );
                       olevel.items.push(osegment);
                     } else {
-                      test = lines[i].match(/number = (.*) /);
+                      test = lines[i].match(/number = (.*)/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
@@ -214,7 +207,7 @@ export class PraatTextgridConverter extends Converter {
 
                       const number = Number(test[1]);
 
-                      test = lines[i].match(/mark = "(.*)" /);
+                      test = lines[i].match(/mark = "(.*)"/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
@@ -229,6 +222,7 @@ export class PraatTextgridConverter extends Converter {
                     }
 
                     seg_num++;
+                    match = lines[i].match('item \\[([0-9]+)\\]:');
                   }
                   seg_num++;
                   i--;

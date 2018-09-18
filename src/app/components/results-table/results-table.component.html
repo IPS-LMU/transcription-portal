@@ -8,10 +8,10 @@
     </tr>
     <tr>
         <th>#</th>
-        <th>{{from?.extension}}</th>
+        <th>{{originalLabel}}</th>
         <ng-container *ngIf="conversionExtension !== '.wav'">
             <ng-container *ngFor="let converter of AppInfo.converters">
-                <th *ngIf="converter.obj.name !== conversionExtension">*{{converter.obj.extension}}</th>
+                <th *ngIf="isEqualConverterName(converter)">*{{converter.obj.extension}}</th>
             </ng-container>
         </ng-container>
     </tr>

@@ -96,7 +96,8 @@ export class EmuOperation extends ToolOperation {
       const uploadOP = <UploadOperation> this.operations[0];
       const audio = encodeURIComponent(uploadOP.wavFile.url);
       const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-      return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=annotJSON`;
+      const labelType = (this.previousOperation.lastResult.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
+      return `https://ips-lmu.github.io/EMU-webApp/?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=${labelType}`;
     }
     return ``;
   }
