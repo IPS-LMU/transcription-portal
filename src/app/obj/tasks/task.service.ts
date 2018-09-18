@@ -20,9 +20,13 @@ import {Operation} from '../operations/operation';
 import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {AlertService} from '../../shared/alert.service';
+import {Observable} from 'rxjs';
 
 @Injectable()
 export class TaskService implements OnDestroy {
+  get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
+    return this._statistics;
+  }
   set splitPrompt(value: string) {
     this._splitPrompt = value;
   }
@@ -37,14 +41,6 @@ export class TaskService implements OnDestroy {
 
   get protocol_array(): any[] {
     return this._protocol_array;
-  }
-
-  get warnings_count(): number {
-    return this._warnings_count;
-  }
-
-  get errors_count(): number {
-    return this._errors_count;
   }
 
   private _taskList: TaskList;
@@ -65,8 +61,14 @@ export class TaskService implements OnDestroy {
   };
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
-  private _errors_count = 0;
-  private _warnings_count = 0;
+  private _statistics = {
+    queued: 0,
+    waiting: 0,
+    running: 0,
+    finished: 0,
+    errors: 0
+  };
+
   private _protocol_array = [];
   private _splitPrompt = 'PENDING';
 
@@ -88,19 +90,16 @@ export class TaskService implements OnDestroy {
 
   public get stateLabel(): string {
     if (this.overallState === 'processing') {
-      const runningTasks = this.countRunningTasks();
 
-      if (runningTasks === 0) {
-        const waitingTasks = this.countWaitingTasks();
-        if (waitingTasks > 1) {
-          return `${waitingTasks} tasks need your attention`;
-        } else if (waitingTasks === 1) {
+      if (this._statistics.running === 0) {
+        if (this._statistics.waiting > 1) {
+          return `${this._statistics.waiting} tasks need your attention`;
+        } else if (this._statistics.waiting === 1) {
           return `1 task needs your attention`;
         }
 
-        const queuedItems = this.countQueuedTasks();
-        if (queuedItems > 0) {
-          return `${queuedItems} audio file(s) waiting to be verified by you.`;
+        if (this._statistics.queued > 0) {
+          return `${this._statistics.queued} audio file(s) waiting to be verified by you.`;
         }
 
         return 'All jobs done. Waiting for new tasks...';
@@ -108,18 +107,16 @@ export class TaskService implements OnDestroy {
 
       return 'Processing...';
     } else if (this.overallState === 'not started') {
-      const queuedItems = this.countQueuedTasks();
 
-      if (queuedItems > 0) {
-        return `${queuedItems} audio file(s) waiting to be verified by you.`;
+      if (this._statistics.queued > 0) {
+        return `${this._statistics.queued} audio file(s) waiting to be verified by you.`;
       }
       return 'Ready';
     }
     if (this.overallState === 'stopped') {
-      const runningTasks = this.countRunningTasks();
 
-      if (runningTasks > 0) {
-        return `waiting for ${runningTasks} tasks to stop their work...`;
+      if (this._statistics.running > 0) {
+        return `waiting for ${this._statistics.running} tasks to stop their work...`;
       }
       return 'Stopped';
     }
@@ -370,7 +367,6 @@ export class TaskService implements OnDestroy {
               this.listenToTaskEvents(task);
             }
           }
-          this.updateProtocolArray();
 
           if (event.saveToDB) {
             this.storage.saveTask(event.entry).then(() => {
@@ -391,6 +387,11 @@ export class TaskService implements OnDestroy {
         }
       }
     ));
+
+    this.subscrmanager.add(Observable.interval(1000).subscribe(() => {
+      this.updateStatistics();
+    }));
+    this.updateStatistics();
   }
 
   private listenToTaskEvents(task: Task) {
@@ -398,17 +399,19 @@ export class TaskService implements OnDestroy {
       const operation = task.getOperationByID(event.opID);
       const opName = operation.name;
       if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification('ASR Operation successful', `You can now edit ${task.files[0].name} with OCTRA`);
+        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${task.files[0].name} manually.`);
       } else if (event.newState === TaskState.ERROR) {
-        this.notification.showNotification(opName + ' Operation failed', `Operation failed for ${task.files[0].name}. For more information hover over the operation`);
+        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${task.files[0].name}.
+ For more information hover over the red "X" icon.`);
       } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification('MAUS Operation successful', `You can now edit ${task.files[0].name} with EMU WebApp`);
+        this.notification.showNotification(`"${operation.title}" successful`, `You can now open phonetic
+  details of ${task.files[0].name}.`);
       }
 
-      const running_tasks = this.countRunningTasks();
-      this.updateProtocolArray();
+      this.updateStatistics();
       const lastOp = task.operations[task.operations.length - 1];
-      if (running_tasks > 1 || (running_tasks === 1 && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
+      if (this._statistics.running > 1 || (this._statistics.running === 1
+        && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
         if (operation.state === TaskState.UPLOADING) {
           this.state = TaskState.UPLOADING;
         } else {
@@ -502,11 +505,11 @@ export class TaskService implements OnDestroy {
     // look for pending tasks
 
     if (this.overallState === 'processing') {
-      const running_tasks = this.countRunningTasks();
+      this.updateStatistics();
       const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
-      if (running_tasks < this.options.max_running_tasks && uploading_task < 0) {
+      if (this._statistics.running < this.options.max_running_tasks && uploading_task < 0) {
         let task: Task;
 
         // look for pending tasks
@@ -547,7 +550,8 @@ export class TaskService implements OnDestroy {
     for (let i = 0; i < tasks.length; i++) {
       const entry = tasks[i];
       if (entry.state === TaskState.PENDING &&
-        ((!(entry.files[0].file === null || entry.files[0].file === undefined) && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)
+        ((!(entry.files[0].file === null || entry.files[0].file === undefined)
+          && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)
       ) {
         return entry;
       } else if (entry.state === TaskState.READY) {
@@ -597,97 +601,6 @@ export class TaskService implements OnDestroy {
     });
   }
 
-
-  public countRunningTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
-  public countPendingTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.PENDING) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
-  public countWaitingTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
-  public countQueuedTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.QUEUED) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
-  public countFinishedTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.FINISHED) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
-  public countFailedTasks() {
-    let result = 0;
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      if (task.state === TaskState.ERROR) {
-        result++;
-      }
-    }
-
-    return result;
-  }
-
   ngOnDestroy() {
     const tasks = this._taskList.getAllTasks();
 
@@ -695,58 +608,6 @@ export class TaskService implements OnDestroy {
       tasks[i].destroy();
     }
     this.subscrmanager.destroy();
-  }
-
-  public updateProtocolArray() {
-    let result = [];
-    let errors_count = 0;
-    let warnings_count = 0;
-
-    // TODO implement error and warning attributes in TaskList to improve performance
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      for (let j = 0; j < task.operations.length; j++) {
-        const operation = task.operations[j];
-
-        if ((operation.state === TaskState.FINISHED || operation.state === TaskState.ERROR) && operation.protocol !== '') {
-          if (operation.state === TaskState.ERROR) {
-            errors_count++;
-          } else {
-            warnings_count++;
-          }
-
-          result.push(
-            {
-              task_id: task.id,
-              op_name: operation.name,
-              state: operation.state,
-              protocol: operation.protocol
-            }
-          );
-        }
-      }
-    }
-
-    if (this.errors_count !== errors_count) {
-      this.errorscountchange.emit(this.errors_count);
-    }
-    this._errors_count = errors_count;
-    this._warnings_count = warnings_count;
-
-    // sort protocol_array by task id
-    result = result.sort((a, b) => {
-      if (a.task_id > b.task_id) {
-        return 1;
-      } else if (a.task_id < b.task_id) {
-        return -1;
-      }
-      return 0;
-    });
-
-    this._protocol_array = result;
   }
 
   public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
@@ -911,7 +772,8 @@ export class TaskService implements OnDestroy {
                 resolve([task]);
               }
             } else {
-              this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid. Only Wave (*.wav) files with 16 Bit signed Int are supported.`, -1);
+              this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid.
+              Only Wave (*.wav) files with 16 Bit signed Int are supported.`, -1);
               reject('no valid wave format!');
             }
           };
@@ -1059,5 +921,48 @@ export class TaskService implements OnDestroy {
         task.stopTask();
       }
     }
+  }
+
+  public updateStatistics() {
+    const result = {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0
+    };
+
+    const tasks = this._taskList.getAllTasks();
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+
+      // running
+      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
+        result.running++;
+      }
+
+      // waiting
+      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
+        result.waiting++;
+      }
+
+      // queued
+      if (task.state === TaskState.QUEUED) {
+        result.queued++;
+      }
+
+      // finished
+      if (task.state === TaskState.FINISHED) {
+        result.finished++;
+      }
+
+      // failed
+      if (task.state === TaskState.ERROR) {
+        result.errors++;
+      }
+    }
+
+    this._statistics = result;
   }
 }

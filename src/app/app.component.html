@@ -25,22 +25,49 @@
             <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [ngbCollapse]="isCollapsed">
                 <ul class="nav navbar-nav flex-fill justify-content-center state-icons" style="min-width:300px;">
                     <li class="nav-item">
-                        <div class="number">{{taskService.countQueuedTasks()}}</div>
-                        <i title="queued items" class="fa fa-database" style="color:gray;"></i>
-
-                        <div class="number">{{taskService.countWaitingTasks()}}</div>
-                        <i title="waiting tasks" class="fa fa-clock-o" style="color:dodgerblue;"></i>
-
-                        <div class="number">{{taskService.countRunningTasks()}}</div>
-                        <i title="running tasks" [ngClass]="{
-                        'fa-spin': (taskService.countRunningTasks() > 0)
+                        <div class="totalState" [ngbTooltip]="queuedTipp"
+                             tooltipClass="state-tooltip"
+                             #t2="ngbTooltip" placement="bottom">
+                            <div class="number">{{taskService.statistics.queued}}</div>
+                            <i title="queued items" class="fa fa-database" style="color:gray;"></i>
+                            <ng-template #queuedTipp>{{taskService.statistics.queued}} audio files are waiting for
+                                verification.
+                            </ng-template>
+                        </div>
+                        <div class="totalState" [ngbTooltip]="waitingTipp"
+                             tooltipClass="state-tooltip"
+                             #t2="ngbTooltip" placement="bottom">
+                            <div class="number">{{taskService.statistics.waiting}}</div>
+                            <i title="waiting tasks" class="fa fa-clock-o" style="color:dodgerblue;"></i>
+                            <ng-template #waitingTipp>{{taskService.statistics.waiting}} tasks are waiting for
+                                processing.
+                            </ng-template>
+                        </div>
+                        <div class="totalState" [ngbTooltip]="runningTipp"
+                             tooltipClass="state-tooltip"
+                             #t2="ngbTooltip" placement="bottom">
+                            <div class="number">{{taskService.statistics.running}}</div>
+                            <i title="running tasks" [ngClass]="{
+                        'fa-spin': (taskService.statistics.running > 0)
                     }" class="fa fa-cog" style="color:orange;"></i>
-
-                        <div class="number">{{taskService.countFinishedTasks()}}</div>
-                        <i title="finished tasks" class="fa fa-check" style="color:forestgreen;"></i>
-
-                        <div class="number">{{taskService.errors_count}}</div>
-                        <i title="failed tasks" class="fa fa-times" style="color:red;"></i>
+                            <ng-template #runningTipp>{{taskService.statistics.running}} tasks are running.
+                            </ng-template>
+                        </div>
+                        <div class="totalState" [ngbTooltip]="finishedTipp"
+                             tooltipClass="state-tooltip"
+                             #t2="ngbTooltip" placement="bottom">
+                            <div class="number">{{taskService.statistics.finished}}</div>
+                            <i title="finished tasks" class="fa fa-check" style="color:forestgreen;"></i>
+                            <ng-template #finishedTipp>{{taskService.statistics.finished}} tasks are finished.
+                            </ng-template>
+                        </div>
+                        <div class="totalState" [ngbTooltip]="errorsTipp"
+                             tooltipClass="state-tooltip"
+                             #t2="ngbTooltip" placement="bottom">
+                            <div class="number">{{taskService.statistics.errors}}</div>
+                            <i title="failed tasks" class="fa fa-times" style="color:red;"></i>
+                            <ng-template #errorsTipp>{{taskService.statistics.errors}} tasks are finished.</ng-template>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -110,11 +137,11 @@
                    #fileinput
                    (change)="onFileChange($event)"/>
 
-            <button class="btn btn-primary" style="margin-left:10px;" [disabled]="taskService.countQueuedTasks() < 1"
+            <button class="btn btn-primary" style="margin-left:10px;" [disabled]="taskService.statistics.queued < 1"
                     (click)="onVerifyButtonClick()"><i class="fa fa-database"></i> <span
                     class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
-                <ng-container *ngIf="taskService.countQueuedTasks() > 0">
-                    ({{taskService.countQueuedTasks()}})
+                <ng-container *ngIf="taskService.statistics.queued > 0">
+                    ({{taskService.statistics.queued}})
                 </ng-container>
             </button>
         </div>
