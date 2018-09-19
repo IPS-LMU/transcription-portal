@@ -6,10 +6,15 @@ import {Pipe, PipeTransform} from '@angular/core';
 export class TimePipe implements PipeTransform {
 
   transform(value: any, args?: any): any {
-    if ((args === null || args === undefined)) {
       // value are miliseconds
       if (!isNaN(Number(value))) {
         const miliseconds = Number(value);
+
+        let showFull = false;
+
+        if (!(args === null || args === undefined) && !(args[0] === null || args[0] === undefined)) {
+          showFull = true;
+        }
 
         let seconds = Math.round(miliseconds / 1000);
         let minutes = Math.floor(seconds / 60);
@@ -33,13 +38,11 @@ export class TimePipe implements PipeTransform {
           secs_leading_null = '0';
         }
 
-        if (hours < 1) {
+        if (hours < 1 && !showFull) {
           return `${min_leading_null}${minutes}:${secs_leading_null}${seconds}`;
         }
         return `${hour_leading_null}${hours}:${min_leading_null}${minutes}:${secs_leading_null}${seconds}`;
       }
-    }
-    return null;
   }
 
 }
