@@ -15,7 +15,8 @@
                     </div>
                 </div>
                 <h4>Add files</h4>
-                <p>You can drag & drop files to this whole area (inside the dashed rectangle) or you can use the "1. ADD
+                <p>You can drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or
+                    you can use the "1. ADD
                     FILES" button. Later, you can add files via drag & drop to the table rows, too.</p>
             </div><!-- /.col-lg-4 -->
             <div class="col-4">
@@ -25,8 +26,8 @@
                         2.
                     </div>
                 </div>
-                <h4>Veriy new files</h4>
-                <p>Before the new files can be processed it's required to set few options. Click on the "Verify"
+                <h4>Verify new files</h4>
+                <p>Before the new files can be processed it's required to set few options. Click on the "2. Verify"
                     Button.</p>
             </div><!-- /.col-lg-4 -->
             <div class="col-4">
@@ -79,7 +80,7 @@
                                 | date :"dd.MM.yyyy H:mm"}}
                             </td>
                             <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
-                                {{calculateDuration(popover.operation.time) | time}}
+                                {{calculateDuration(popover.operation.time) | time:'true'}}
                             </td>
                         </tr>
                     </table>
