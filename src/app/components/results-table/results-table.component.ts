@@ -154,6 +154,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
                 const url = URL.createObjectURL(expFile);
                 res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
                 res.state = 'FINISHED';
+                this.cd.markForCheck();
+                this.cd.detectChanges();
               }
             }
           }

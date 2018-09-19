@@ -498,7 +498,6 @@ export class AppComponent implements OnDestroy {
         this.storage.saveTask(this.toolSelectedOperation.task);
 
         setTimeout(() => {
-          this.toolSelectedOperation.task.restart(this.httpclient);
           this.onBackButtonClicked();
         }, 1000);
       }).catch((error) => {
