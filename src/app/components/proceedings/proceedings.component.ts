@@ -58,7 +58,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     width: number,
     height: number,
     operation: Operation,
-    task: Task,
+    task: Task | TaskDirectory,
     pointer: string
   } = {
     x: 0,
@@ -414,10 +414,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onNameMouseEnter($event, entry: (Task | TaskDirectory), td: HTMLTableDataCellElement) {
-    if (entry instanceof Task) {
-      this.popover.task = entry;
-      this.popover.operation = null;
-    }
+    this.popover.task = entry;
+    this.popover.operation = null;
   }
 
   onNameMouseLeave($event, entry: (Task | TaskDirectory)) {
