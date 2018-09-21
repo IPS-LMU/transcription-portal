@@ -125,7 +125,26 @@ export class AppComponent implements OnDestroy {
       const oldError = console.error;
       (() => {
         console.error = function (message) {
-          serv.addEntry(ConsoleType.ERROR, message);
+          let debug = '';
+
+          if (typeof debug === 'string') {
+            debug = message;
+          } else {
+            debug = (
+              arguments.length > 1
+              && !(arguments[1].message === null || arguments[1].message === undefined)
+            ) ? arguments[1].message : '';
+          }
+
+          const stack = (
+            arguments.length > 1
+            && !(arguments[1].stack === null || arguments[1].stack === undefined)
+          ) ? arguments[1].stack : '';
+
+          if (debug !== '') {
+            serv.addEntry(ConsoleType.ERROR, `${debug}: ${stack}`);
+          }
+
           oldError.apply(console, arguments);
         };
       })();
