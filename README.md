@@ -1,8 +1,8 @@
 <h1 align="center">OH-Portal</h1>
 <p align="center">
-  <img width="600" height="390" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal01.png" alt="OH-Portal Overview">
-  <img width="600" height="390" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal02.png" alt="OH-Portal OCTRA">
-  <img width="600" height="390" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal03.png" alt="OH-Portal EMU-webApp">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal01.png">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal02.png" alt="OH-Portal OCTRA">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal03.png" alt="OH-Portal EMU-webApp">
 </p>
 <p align="center">
 Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
