@@ -1,5 +1,5 @@
 <a name="1.0.0"></a>
-# 1.0.0 (2018-09-18)
+# 1.0.0 (2018-09-21)
 
 
 ### Features
@@ -17,6 +17,3 @@
 * **transcripts:** Save transcripts to Browser's storage (IndexedDB) ([08cdadc](https://github.com/IPS-LMU/oh-portal/commit/08cdadc)), closes [#6](https://github.com/IPS-LMU/oh-portal/issues/6)
 * **workflow:** MAUS and EMU-webApp can be skipped ([dca41ef](https://github.com/IPS-LMU/oh-portal/commit/dca41ef)), closes [#4](https://github.com/IPS-LMU/oh-portal/issues/4)
 * **workflow:** new workflow: Add -> Verfiy -> Start/Stop ([939ce46](https://github.com/IPS-LMU/oh-portal/commit/939ce46)), closes [#38](https://github.com/IPS-LMU/oh-portal/issues/38)
-
-
-
