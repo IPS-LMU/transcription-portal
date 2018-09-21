@@ -87,8 +87,8 @@ export class AudioChunk {
 
   private _selection: AudioSelection = null;
   private _time: AudioSelection = null;
-  private _id;
-  private _audiomanger: AudioManager;
+  private readonly _id;
+  private readonly _audiomanger: AudioManager;
   private _state: PlayBackState = PlayBackState.PREPARE;
 
   private _volume = 1;

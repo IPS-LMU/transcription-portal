@@ -102,7 +102,7 @@ export abstract class Operation {
     return null;
   }
 
-  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+  protected constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
     if ((id === null || id === undefined)) {
       this._id = ++Operation.counter;
     } else {
@@ -137,13 +137,13 @@ export abstract class Operation {
 
   public mouseover = false;
 
-  private _task: Task = null;
+  private readonly _task: Task = null;
   protected _state: TaskState = TaskState.PENDING;
   protected _name: string;
   protected _title = '';
   protected _protocol = '';
   protected _description = '';
-  private _shortTitle: string;
+  private readonly _shortTitle: string;
 
   protected _time: {
     start: number;
@@ -171,7 +171,7 @@ export abstract class Operation {
 
   public changed: Subject<void> = new Subject<void>();
 
-  private _id: number;
+  private readonly _id: number;
 
   public getStateIcon = (sanitizer, state: TaskState): SafeHtml => {
     let result = '';

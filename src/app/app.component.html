@@ -178,7 +178,7 @@
             </button>
         </div>
         <div class="col-8" style="text-align: center;">
-            <p style="margin:0px; margin-top:10px;">
+            <p style="margin: 10px 0 0;">
                 <ng-container *ngIf="toolSelectedOperation.previousOperation.results.length > 0">
                     {{toolSelectedOperation.name}}: {{toolSelectedOperation.previousOperation.results[0].fullname}}
 
@@ -223,7 +223,7 @@
         >
             <app-proceedings [taskList]="taskService.taskList"
                              [operations]="taskService.operations"
-                             (afterdrop)="onAfterDrop($event)" #proceedings
+                             (afterdrop)="onAfterDrop($event)"
                              (operationclick)="onOperationClick($event)"
                              (operationhover)="onOperationHover($event)"
                              [queue]="taskService.preprocessor.queue"

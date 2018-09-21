@@ -23,23 +23,6 @@
     border-radius: 5px;
 }
 
-.rounded-num {
-    display: inline-block;
-    padding: 5px;
-    border-radius: 20px;
-    min-width: 24px;
-    background-color: red;
-    font-size: 0.8em;
-    text-align: center;
-    color: white;
-    border: 1px solid navajowhite;
-    vertical-align: middle;
-}
-
-.rounded-num.warning {
-    background-color: #ffc33b;
-}
-
 #protocol-table .protocol-header .info {
     position: absolute;
 }

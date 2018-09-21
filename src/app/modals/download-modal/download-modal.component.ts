@@ -23,10 +23,10 @@ import {Converter, ImportResult} from '../../obj/Converters';
 export class DownloadModalComponent implements OnInit, OnChanges {
 
   @ViewChild('content') content;
-  @Input('type') type: 'line' | 'column' = 'column';
-  @Input('selectedTasks') selectedTasks: number[];
-  @Input('taskList') taskList: Task[];
-  @Input('column') column: Operation;
+  @Input() type: 'line' | 'column' = 'column';
+  @Input() selectedTasks: number[];
+  @Input() taskList: Task[];
+  @Input() column: Operation;
 
   public archiveURL = '';
   public checkboxes: boolean[] = [];
@@ -73,8 +73,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
       // get url for resulty by column
       // prepare package
-      let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-      let requestPackage = {
+      const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+      const requestPackage = {
         requestType: 'createAchieve',
         data: {
           achieveName: `${this.column.name}Results_${dateStr}`,
@@ -82,7 +82,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           files: []
         }
       };
-      let tasks = this.taskService.taskList.getAllTasks();
+      const tasks = this.taskService.taskList.getAllTasks();
 
       const promises: Promise<void>[] = [];
 
@@ -180,8 +180,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       // get results url by lines
       if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
         // prepare package
-        let dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-        let requestPackage = {
+        const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+        const requestPackage = {
           requestType: 'createAchieve',
           data: {
             achieveName: `oh-portal_results_${dateStr}`,
@@ -199,7 +199,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           if (entry instanceof TaskDirectory) {
 
             promises.push(new Promise<any>((resolve, reject) => {
-              let dirResult = {
+              const dirResult = {
                 name: entry.foldername,
                 type: 'folder',
                 entries: []
@@ -335,7 +335,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   uploadFile(fileInfo: FileInfo): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      UploadOperation.upload([fileInfo], 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
+      UploadOperation.upload([fileInfo],
+        'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
         (event) => {
           if (event.type === 'loadend') {
             const result = <string> event.result;
@@ -378,7 +379,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           const operation = task.operations[j];
 
           if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
-            let entryOp = {
+            const entryOp = {
               name: operation.name,
               type: 'folder',
               entries: []

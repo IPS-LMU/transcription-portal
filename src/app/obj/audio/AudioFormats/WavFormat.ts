@@ -73,7 +73,7 @@ export class WavFormat extends AudioFormat {
   }
 
   public splitChannelsToFiles(filename: string, type: string, buffer: ArrayBuffer): File[] {
-    let result = [];
+    const result = [];
 
     // one block contains one sample of each channel
     // eg. blockAlign = 4 Byte => 2 * 8 Channel1 + 2 * 8 Channel2 = 32Bit = 4 Byte
@@ -116,7 +116,7 @@ export class WavFormat extends AudioFormat {
   private getFileFromBufferPart(originalBuffer: ArrayBuffer, data: number[], filename: string): File {
     const samples = (data.length * 2 * 8) / (this._bitsPerSample);
 
-    let buffer = new ArrayBuffer(44 + data.length);
+    const buffer = new ArrayBuffer(44 + data.length);
     const dataView = new DataView(buffer);
 
     /* RIFF identifier */

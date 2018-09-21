@@ -36,18 +36,18 @@ export class QueueItem {
     return this._file;
   }
 
-  private _file: (FileInfo | DirectoryInfo);
-  private _id: number;
-  private _state: State;
-  public results: (Task | TaskDirectory)[] = [];
-
-  private static counter = 0;
-
   constructor(file: (FileInfo | DirectoryInfo)) {
     this._file = file;
     this._id = ++QueueItem.counter;
     this._state = State.PENDING;
   }
+
+  private static counter = 0;
+
+  private _file: (FileInfo | DirectoryInfo);
+  private readonly _id: number;
+  private _state: State;
+  public results: (Task | TaskDirectory)[] = [];
 }
 
 export class Preprocessor {
@@ -90,7 +90,7 @@ export class Preprocessor {
         resolve(null);
       }
     );
-  };
+  }
 
   constructor() {
     this._itemAdded.subscribe(this.onItemAdded);
@@ -121,7 +121,7 @@ export class Preprocessor {
       this.removeFromQueue(newItem.id);
     })
     ;
-  };
+  }
 
   public addToQueue(file: (FileInfo | DirectoryInfo)) {
     const queueItem = new QueueItem(file);

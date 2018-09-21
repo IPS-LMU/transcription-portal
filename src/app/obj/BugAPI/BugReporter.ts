@@ -8,7 +8,8 @@ export abstract class BugReporter {
 
   protected _name = '';
 
-  public abstract sendBugReport(http: HttpClient, form: any, pkg: any, url: string, auth_token: string, sendbugreport: boolean): Observable<any>;
+  public abstract sendBugReport(http: HttpClient, form: any, pkg: any,
+                                url: string, auth_token: string, sendbugreport: boolean): Observable<any>;
 
   public abstract getText(pkg: any): string;
 }

@@ -57,7 +57,8 @@ export class AudioTime {
   }
 
   public static fromSamples(samples: number, samplerate: number): AudioTime {
-    if (!(samples === null || samples === undefined) && !(samplerate === null || samplerate === undefined) && Number.isInteger(samples) && samples > -1) {
+    if (!(samples === null || samples === undefined) && !(samplerate === null
+      || samplerate === undefined) && Number.isInteger(samples) && samples > -1) {
       return new AudioTime(samples, samplerate);
     }
     return null;

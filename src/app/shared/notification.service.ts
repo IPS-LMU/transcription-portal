@@ -18,24 +18,24 @@ export class NotificationService {
     return this._permissionGranted;
   }
 
-  private _permissionGranted = false;
-
   constructor() {
     this.allowNotifications();
   }
 
+  private _permissionGranted = false;
+
+  public onPermissionChange: Subject<boolean> = new Subject<boolean>();
+
   private onPermissionGranted = () => {
     this._permissionGranted = true;
     this.onPermissionChange.next(this._permissionGranted);
-  };
+  }
 
   private onPermissionDenied = () => {
     this._permissionGranted = false;
     console.warn('Permission has been denied by the user');
     this.onPermissionChange.next(this._permissionGranted);
-  };
-
-  public onPermissionChange: Subject<boolean> = new Subject<boolean>();
+  }
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {

@@ -15,10 +15,10 @@ export class IndexedDBManager {
   }
 
   private indexedDB: IDBFactory;
-  private _idbtransaction: IDBTransaction;
+  private readonly _idbtransaction: IDBTransaction;
   private idbkeyrange: IDBKeyRange;
   private _db: IDBDatabase;
-  private dbname: string;
+  private readonly dbname: string;
 
 
   /***
@@ -39,7 +39,9 @@ export class IndexedDBManager {
       || (<any> window).webkitIDBKeyRange
       || (<any> window).msIDBKeyRange;
 
-    return (!((indexedDB === null || indexedDB === undefined) || (idbtransaction === null || idbtransaction === undefined) || (idbkeyrange === null || idbkeyrange === undefined)));
+    return (!((indexedDB === null || indexedDB === undefined)
+      || (idbtransaction === null || idbtransaction === undefined)
+      || (idbkeyrange === null || idbkeyrange === undefined)));
   }
 
   constructor(dbname: string) {
@@ -95,11 +97,11 @@ export class IndexedDBManager {
     }
     const txn = this.db.transaction([store_name], mode_str);
     return txn.objectStore(store_name);
-  };
+  }
 
   public objectStoreExists = (store_name: string): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      let mode_str: IDBTransactionMode = 'readonly';
+      const mode_str: IDBTransactionMode = 'readonly';
 
       const txn = this.db.transaction([store_name], mode_str);
       txn.onerror = () => {
@@ -109,7 +111,7 @@ export class IndexedDBManager {
         resolve();
       };
     });
-  };
+  }
 
   public get = (store_name: string | IDBObjectStore, key: string | number): Promise<any> => {
     return new Promise<any>(
@@ -129,7 +131,7 @@ export class IndexedDBManager {
         }
       }
     );
-  };
+  }
 
   public getAll = (store_name: string | IDBObjectStore): Promise<any[]> => {
     return new Promise<any>(
@@ -155,7 +157,7 @@ export class IndexedDBManager {
         };
       }
     );
-  };
+  }
 
   public save = (store_name: string | IDBObjectStore, key, data): Promise<any> => {
     return new Promise<any>(
@@ -182,7 +184,7 @@ export class IndexedDBManager {
         }
       }
     );
-  };
+  }
 
   public saveSequential = (store_name: string | IDBObjectStore, data: { key: string, value: any }[]): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
@@ -191,7 +193,7 @@ export class IndexedDBManager {
           if (acc < data.length) {
             if (data[acc].hasOwnProperty('key') && data[acc].hasOwnProperty('value')) {
               return this.save(store_name, data[acc].key, data[acc].value).then(() => {
-                wrapper(++acc)
+                wrapper(++acc);
               });
             } else {
               reject(new Error('saveSync data parameter has invalid elements'));
@@ -204,7 +206,7 @@ export class IndexedDBManager {
         wrapper(0);
       }
     );
-  };
+  }
 
   public remove = (store_name: string | IDBObjectStore, key: string | number): Promise<any> => {
     return new Promise<any>(
@@ -219,7 +221,7 @@ export class IndexedDBManager {
           reject(error);
         };
       });
-  };
+  }
 
   public clear = (store_name: string | IDBObjectStore): Promise<any> => {
     return new Promise<any>(
@@ -234,11 +236,11 @@ export class IndexedDBManager {
           reject(error);
         };
       });
-  };
+  }
 
   public close = () => {
     this.db.close();
-  };
+  }
 
   public saveArraySequential = (array: any[], store_name: string | IDBObjectStore, key: any): Promise<void> => {
     return new Promise<void>(
@@ -262,7 +264,7 @@ export class IndexedDBManager {
         wrapper(0);
       }
     );
-  };
+  }
 
   public removeDatabase(database: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {

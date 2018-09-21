@@ -105,7 +105,6 @@ export class StorageService {
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<void> {
-    console.log(`saveTask ${taskEntry.id}`);
     return new Promise<void>((resolve, reject) => {
       let promise: Promise<any>;
 
@@ -116,7 +115,6 @@ export class StorageService {
       }
 
       promise.then((data) => {
-        console.log(`save!!!!`);
         this.idbm.save('tasks', data.id, data).then(() => {
           resolve();
         }).catch((error) => {
@@ -129,7 +127,6 @@ export class StorageService {
   }
 
   public saveCounter(name: string, value: number) {
-    console.log(`SAVE COUNTER ${name} ${value}`);
     this.idbm.save('intern', name, {
       value: value
     });

@@ -17,8 +17,8 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
   };
 
   @ViewChild('outer') outer;
-  @Input('type') type: 'arrow' | 'circle' = 'arrow';
-  @Input('first') first = false;
+  @Input() type: 'arrow' | 'circle' = 'arrow';
+  @Input() first = false;
 
   constructor() {
   }

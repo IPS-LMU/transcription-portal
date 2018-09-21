@@ -21,9 +21,9 @@ export class MediaRessource {
     this._arraybuffer = value;
   }
 
-  private _name: string;
-  private _extension: string;
-  private _size: number;
+  private readonly _name: string;
+  private readonly _extension: string;
+  private readonly _size: number;
   private source: SourceType;
   private _arraybuffer: ArrayBuffer;
 

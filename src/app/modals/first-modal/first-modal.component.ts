@@ -13,7 +13,7 @@ export class FirstModalComponent implements OnInit {
 
   @ViewChild('content') content: NgbModal;
 
-  @Output() onUnderstandClick: Subject<void> = new Subject<void>();
+  @Output() understandClick: Subject<void> = new Subject<void>();
 
   constructor(private modalService: NgbModal, private sanitizer: DomSanitizer) {
   }

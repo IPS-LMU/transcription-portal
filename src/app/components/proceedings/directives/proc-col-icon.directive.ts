@@ -23,16 +23,16 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   @Input() entry: (Task | TaskDirectory);
   @Input() shortStyle = false;
-  @Input('mouseover') mouseOver = false;
+  @Input() mouseOver = false;
 
-  @Output('onAppendingClick') onAppendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  @Output() appendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
-  @Output('onInfoMouseEnter') onInfoMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output('onInfoMouseLeave') onInfoMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output('onInfoMouseOver') onInfoMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output('onTagClicked') onTagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<'opened' | 'closed'>();
+  @Output() infoMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() infoMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() infoMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() tagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<'opened' | 'closed'>();
 
-  @Output('onDeleteIconClick') onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
@@ -82,17 +82,17 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
           }
 
           this.renderer.listen(infoIcon, 'mouseenter', (event) => {
-            this.onInfoMouseEnter.emit(event);
+            this.infoMouseEnter.emit(event);
           });
           this.renderer.listen(infoIcon, 'mouseleave', (event) => {
-            this.onInfoMouseLeave.emit(event);
+            this.infoMouseLeave.emit(event);
           });
           this.renderer.listen(infoIcon, 'mouseover', (event) => {
-            this.onInfoMouseOver.emit(event);
+            this.infoMouseOver.emit(event);
           });
 
           this.renderer.listen(deleteIcon, 'click', (event) => {
-            this.onDeleteIconClick.emit(event);
+            this.deleteIconClick.emit(event);
           });
 
           this.renderer.appendChild(wrapper, infoIcon);
@@ -101,7 +101,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
       }
     } else {
-      throw 'ProcColDirective error: updateView: nativeElement is undefined';
+      throw new Error('ProcColDirective error: updateView: nativeElement is undefined');
     }
   }
 
@@ -174,7 +174,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(tag, 'fa-angle-down');
       }
       this.renderer.appendChild(wrapper, tag);
-      this.renderer.listen(tag, 'click', this.tagClicked);
+      this.renderer.listen(tag, 'click', this.afterTagClicked);
 
       icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'fa');
@@ -191,7 +191,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   private appendFileNameSpan(wrapper) {
-    let result: HTMLElement = this.renderer.createElement('span');
+    const result: HTMLElement = this.renderer.createElement('span');
 
     if (this.shortStyle) {
       this.renderer.addClass(this.elementRef.nativeElement, 'shorten');
@@ -217,7 +217,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     } else {
       // TaskDirectory
 
-      //this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
+      // this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
 
       // set filename
       this.renderer.setAttribute(result, 'title', this.entry.foldername);
@@ -245,7 +245,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(result, 'badge-' + badgeObj.type);
         this.renderer.listen(result, 'click', () => {
           const files = (<Task> this.entry).files;
-          this.onAppendingClick.emit(files[1]);
+          this.appendingClick.emit(files[1]);
         });
         const content = this.renderer.createText(badgeObj.label);
         this.renderer.appendChild(result, content);
@@ -283,7 +283,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       return {
         type: 'warning',
         label: (task.files[0].extension !== '.wav') ? task.files[0].extension : task.files[1].extension
-      }
+      };
     }
   }
 
@@ -294,7 +294,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         if (!(this.entry.files === null || this.entry.files === undefined)) {
           this.updateView();
         } else {
-          throw 'ProcColDirective error: entry of type Task does not have any files';
+          throw new Error('ProcColDirective error: entry of type Task does not have any files');
         }
       }
 
@@ -309,7 +309,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         }));
       }
     } else {
-      throw 'ProcColDirective error: no entry set';
+      throw new Error('ProcColDirective error: no entry set');
     }
   }
 
@@ -317,13 +317,13 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     this.subscrmanager.destroy();
   }
 
-  tagClicked = () => {
+  afterTagClicked = () => {
     if (this.dirOpened === 'opened') {
       this.dirOpened = 'closed';
     } else {
       this.dirOpened = 'opened';
     }
     this.updateView();
-    this.onTagClicked.emit(this.dirOpened);
+    this.tagClicked.emit(this.dirOpened);
   }
 }

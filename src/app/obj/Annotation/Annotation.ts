@@ -27,9 +27,9 @@ export class Annotation {
     this._audiofile = value;
   }
 
-  private _annotates: string;
+  private readonly _annotates: string;
   private _audiofile: OAudiofile;
-  private _levels: Level[];
+  private readonly _levels: Level[];
   private _links: Link[];
 
   constructor(annotates: string, audiofile: OAudiofile, levels?: Level[], links?: Link[]) {

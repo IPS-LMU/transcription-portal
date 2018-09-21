@@ -17,7 +17,8 @@ export class CTMConverter extends Converter {
     this._conversion.import = true;
     this._encoding = 'UTF-8';
     this._multitiers = false;
-    this._notice = 'OCTRA does not take the confidency level into account. On export to CTM the confidency value will be set to 1 to all values.';
+    this._notice = 'OCTRA does not take the confidency level into account. ' +
+      'On export to CTM the confidency value will be set to 1 to all values.';
   }
 
   public export(annotation: OAnnotJSON, audiofile: OAudiofile, levelnum?: number): ExportResult {
@@ -92,10 +93,11 @@ export class CTMConverter extends Converter {
               length = Number(columns[3]);
             }
             const samplerate = audiofile.samplerate;
+            let osegment = null;
 
             if (i === 0 && start > 0) {
               // first segment not set
-              const osegment = new OSegment((i + 1),
+              osegment = new OSegment((i + 1),
                 0,
                 start * samplerate,
                 [(new OLabel('Tier_1', ''))]
@@ -106,7 +108,8 @@ export class CTMConverter extends Converter {
 
             const olabels: OLabel[] = [];
             olabels.push((new OLabel('Tier_1', columns[4])));
-            const osegment = new OSegment(
+
+            osegment = new OSegment(
               (i + 1),
               Math.round(start * samplerate),
               Math.round(length * samplerate),

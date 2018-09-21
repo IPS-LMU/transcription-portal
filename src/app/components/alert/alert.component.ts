@@ -21,14 +21,6 @@ export interface AlertEntry {
 })
 
 export class AlertComponent implements OnInit, OnDestroy {
-  private _success = new Subject<string>();
-  private static counter = 0;
-  public duration = 20;
-  private counter: Subscription;
-
-  public queue: AlertEntry[] = [];
-
-  public animation = 'closed';
 
   constructor(private alert: AlertService) {
     this.alert.alertsend.subscribe(
@@ -51,6 +43,15 @@ export class AlertComponent implements OnInit, OnDestroy {
       }
     );
   }
+
+  private static counter = 0;
+  private _success = new Subject<string>();
+  public duration = 20;
+  private counter: Subscription;
+
+  public queue: AlertEntry[] = [];
+
+  public animation = 'closed';
 
   ngOnDestroy() {
     this.counter.unsubscribe();

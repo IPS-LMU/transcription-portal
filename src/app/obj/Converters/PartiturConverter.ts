@@ -45,9 +45,9 @@ LBD:\n`;
         ort = ort.concat(words);
         let trn_line = `TRN: ${item.sampleStart} ${item.sampleDur} `;
 
-        for (let j = 0; j < words.length; j++) {
-          trn_line += `${ort_counter + j}`;
-          if (j < words.length - 1) {
+        for (let k = 0; k < words.length; k++) {
+          trn_line += `${ort_counter + k}`;
+          if (k < words.length - 1) {
             trn_line += ',';
           }
         }

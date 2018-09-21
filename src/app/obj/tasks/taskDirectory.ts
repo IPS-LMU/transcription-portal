@@ -29,13 +29,6 @@ export class TaskDirectory {
     return this._path;
   }
 
-  private _entries: (Task | TaskDirectory)[] = [];
-  private _size: number;
-  private _path: string;
-  private _id: number;
-  private _foldername: string;
-  private _type = 'folder';
-
   public constructor(path: string, size?: number, id?: number) {
     this._size = size;
     this._path = path;
@@ -46,6 +39,13 @@ export class TaskDirectory {
     }
     this._foldername = DirectoryInfo.extractFolderName(path);
   }
+
+  private _entries: (Task | TaskDirectory)[] = [];
+  private readonly _size: number;
+  private readonly _path: string;
+  private readonly _id: number;
+  private readonly _foldername: string;
+  private _type = 'folder';
 
   public static fromFolderObject(folder: WebKitDirectoryEntry): Promise<TaskDirectory> {
     return new Promise<TaskDirectory>((resolve, reject) => {
@@ -66,31 +66,31 @@ export class TaskDirectory {
   }
 
   private static traverseFileTree(item, path): Promise<(Task | TaskDirectory)[]> {
-    //console.log(`search path: ${path}`);
+    // console.log(`search path: ${path}`);
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
       path = path || '';
       if (item.isFile) {
-        //console.log(`isFile ${item.fullPath}`);
+        // console.log(`isFile ${item.fullPath}`);
         // Get file
         item.file((file) => {
-          let fileInfo = new FileInfo(file.fullName, file.type, 0, file);
+          const fileInfo = new FileInfo(file.fullName, file.type, 0, file);
           const task = new Task([fileInfo], []);
-          //console.log("get file");
+          // console.log("get file");
           resolve([task]);
         });
       } else if (item.isDirectory) {
         // Get folder contents
-        //console.log(`is dir ${item.fullPath}`);
+        // console.log(`is dir ${item.fullPath}`);
 
-        let dirReader = item.createReader();
+        const dirReader = item.createReader();
         dirReader.readEntries((entries) => {
-          let promises: Promise<(Task | TaskDirectory)[]>[] = [];
+          const promises: Promise<(Task | TaskDirectory)[]>[] = [];
           for (let i = 0; i < entries.length; i++) {
             promises.push(this.traverseFileTree(entries[i], path + item.name + '/'));
           }
           Promise.all(promises).then((values: (Task | TaskDirectory)[][]) => {
             const dir = new TaskDirectory(path + item.name + '/');
-            let result = [];
+            const result = [];
 
             for (let i = 0; i < values.length; i++) {
               const value = values[i];
@@ -102,13 +102,24 @@ export class TaskDirectory {
               }
             }
 
-            //console.log(result);
+            // console.log(result);
             dir.addEntries(result);
             resolve([dir]);
           });
         });
       }
     });
+  }
+
+  public static fromAny(dirObj: any, defaultOperations: Operation[]): TaskDirectory {
+    const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
+
+    for (let i = 0; i < dirObj.entries.length; i++) {
+      const entry = dirObj.entries[i];
+      result.addEntries([Task.fromAny(entry, defaultOperations)]);
+    }
+
+    return result;
   }
 
   public addEntries(entries: (Task | TaskDirectory)[]) {
@@ -168,16 +179,5 @@ export class TaskDirectory {
         reject(error);
       });
     });
-  }
-
-  public static fromAny(dirObj: any, defaultOperations: Operation[]): TaskDirectory {
-    const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
-
-    for (let i = 0; i < dirObj.entries.length; i++) {
-      const entry = dirObj.entries[i];
-      result.addEntries([Task.fromAny(entry, defaultOperations)]);
-    }
-
-    return result;
   }
 }

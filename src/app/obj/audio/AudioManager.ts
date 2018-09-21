@@ -104,7 +104,7 @@ export class AudioManager {
     || false)();
 
   private static counter = 0;
-  private _id: number;
+  private readonly _id: number;
   private _ressource: AudioRessource;
 
   public afterdecoded: EventEmitter<AudioRessource> = new EventEmitter<AudioRessource>();
@@ -168,7 +168,8 @@ export class AudioManager {
             // set duration is very important
             result.ressource.info.duration.samples = audiobuffer.length;
 
-            const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate), new AudioTime(audiobuffer.length, audioinfo.samplerate));
+            const selection = new AudioSelection(new AudioTime(0, audioinfo.samplerate),
+              new AudioTime(audiobuffer.length, audioinfo.samplerate));
             result._mainchunk = new AudioChunk(selection, result);
 
             result.state = PlayBackState.INITIALIZED;
@@ -182,7 +183,7 @@ export class AudioManager {
         reject('no valid audio format!');
       }
     });
-  };
+  }
 
   /**
    * Decode an audio file to an AudioBuffer object.
@@ -213,7 +214,7 @@ export class AudioManager {
 
       AudioManager.audiocontext.decodeAudioData(file, function (buffer) {
 
-        var context = new OfflineAudioContext(buffer.numberOfChannels, Math.ceil(buffer.duration * sampleRate), sampleRate);
+        let context = new OfflineAudioContext(buffer.numberOfChannels, Math.ceil(buffer.duration * sampleRate), sampleRate);
         const source = context.createBufferSource();
         source.buffer = buffer;
         source.connect(context.destination);
@@ -322,7 +323,7 @@ export class AudioManager {
     }
     */
     this.statechange.emit(this.state);
-  };
+  }
 
   public rePlayback(): boolean {
     this._replay = !this._replay;

@@ -47,6 +47,44 @@ export class Task {
     this._language = value;
   }
 
+  get operations(): Operation[] {
+    return this._operations;
+  }
+
+  get files(): FileInfo[] {
+    return this._files;
+  }
+
+  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
+    if ((id === null || id === undefined)) {
+      this._id = ++TaskEntry.counter;
+    } else {
+      this._id = id;
+    }
+    this._files = files;
+    this.sortFilesArray();
+
+    // clone operations param
+    for (let i = 0; i < operations.length; i++) {
+      const operation = operations[i].clone(this);
+
+      this.operations.push(operation);
+    }
+
+    this.listenToOperationChanges();
+
+    this.changeState(TaskState.PENDING);
+    this._directory = directory;
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
+  get state(): TaskState {
+    return this._state;
+  }
+
   private opstatesubj: Subject<{
     opID: number;
     oldState: TaskState;
@@ -76,14 +114,6 @@ export class Task {
 
   public fileschange: Subject<void> = new Subject<void>();
 
-  get operations(): Operation[] {
-    return this._operations;
-  }
-
-  get files(): FileInfo[] {
-    return this._files;
-  }
-
   private _language = null;
   private _files: FileInfo[];
   // operations that have to be done
@@ -96,26 +126,59 @@ export class Task {
 
   public mouseover = false;
 
-  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
-    if ((id === null || id === undefined)) {
-      this._id = ++TaskEntry.counter;
+  private readonly _id: number;
+
+  private _state: TaskState;
+
+  public static fromAny(taskObj: any, defaultOperations: Operation[]): Task {
+    const operations = [];
+
+    const task = new Task([], operations, null, taskObj.id);
+    task.language = taskObj.language;
+    if (taskObj.state !== TaskState.PROCESSING) {
+      task.changeState(taskObj.state);
     } else {
-      this._id = id;
-    }
-    this._files = files;
-    this.sortFilesArray();
-
-    // clone operations param
-    for (let i = 0; i < operations.length; i++) {
-      const operation = operations[i].clone(this);
-
-      this.operations.push(operation);
+      task.changeState(TaskState.READY);
     }
 
-    this.listenToOperationChanges();
+    for (let i = 0; i < taskObj.files.length; i++) {
+      const file = taskObj.files[i];
+      let info;
 
-    this.changeState(TaskState.PENDING);
-    this._directory = directory;
+      if (file.fullname.indexOf('wav') > 0) {
+        info = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
+        info.attributes = file.attributes;
+      } else {
+        info = FileInfo.fromAny(file);
+      }
+      task.files.push(info);
+    }
+
+    for (let i = 0; i < taskObj.operations.length; i++) {
+      const operationObj = taskObj.operations[i];
+      for (let j = 0; j < defaultOperations.length; j++) {
+        const op = defaultOperations[j];
+        if (op.name === operationObj.name) {
+          const operation = op.fromAny(operationObj, task);
+          if (operation.state === TaskState.UPLOADING) {
+            operation.changeState(TaskState.PENDING);
+          } else {
+            if (operation.state === TaskState.PROCESSING) {
+              if (operation.name === 'OCTRA') {
+                operation.changeState(TaskState.READY);
+              } else {
+                operation.changeState(TaskState.PENDING);
+              }
+            }
+          }
+          task.operations.push(operation);
+          break;
+        }
+      }
+    }
+    task.listenToOperationChanges();
+
+    return task;
   }
 
   protected listenToOperationChanges() {
@@ -143,18 +206,6 @@ export class Task {
         }
       );
     }
-  }
-
-  private _id: number;
-
-  get id(): number {
-    return this._id;
-  }
-
-  private _state: TaskState;
-
-  get state(): TaskState {
-    return this._state;
   }
 
   private sortFilesArray() {
@@ -289,57 +340,6 @@ export class Task {
     this.subscrmanager.destroy();
   }
 
-  public static fromAny(taskObj: any, defaultOperations: Operation[]): Task {
-    const operations = [];
-
-    const task = new Task([], operations, null, taskObj.id);
-    task.language = taskObj.language;
-    if (taskObj.state !== TaskState.PROCESSING) {
-      task.changeState(taskObj.state);
-    } else {
-      task.changeState(TaskState.READY);
-    }
-
-    for (let i = 0; i < taskObj.files.length; i++) {
-      const file = taskObj.files[i];
-      let info;
-
-      if (file.fullname.indexOf('wav') > 0) {
-        info = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
-        info.attributes = file.attributes;
-      } else {
-        info = FileInfo.fromAny(file);
-      }
-      task.files.push(info);
-    }
-
-    for (let i = 0; i < taskObj.operations.length; i++) {
-      const operationObj = taskObj.operations[i];
-      for (let j = 0; j < defaultOperations.length; j++) {
-        const op = defaultOperations[j];
-        if (op.name === operationObj.name) {
-          const operation = op.fromAny(operationObj, task);
-          if (operation.state === TaskState.UPLOADING) {
-            operation.changeState(TaskState.PENDING);
-          } else {
-            if (operation.state === TaskState.PROCESSING) {
-              if (operation.name === 'OCTRA') {
-                operation.changeState(TaskState.READY);
-              } else {
-                operation.changeState(TaskState.PENDING);
-              }
-            }
-          }
-          task.operations.push(operation);
-          break;
-        }
-      }
-    }
-    task.listenToOperationChanges();
-
-    return task;
-  }
-
   public setFileObj(index: number, fileObj: FileInfo) {
     if (index < this.files.length) {
       this.files[index] = fileObj;
@@ -371,7 +371,7 @@ export class Task {
         for (let i = 0; i < values.length; i++) {
           const file = this.files[i];
 
-          let fileObj = values[i];
+          const fileObj = values[i];
 
           if (file instanceof AudioInfo) {
             const audioFile = <AudioInfo> file;
@@ -397,7 +397,7 @@ export class Task {
         if (promises.length > 0) {
           Promise.all(promises).then((values2) => {
             result.operations = values2;
-            resolve(result)
+            resolve(result);
           }).catch((error) => {
             console.error('not arrived');
             reject(error);

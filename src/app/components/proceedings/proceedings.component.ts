@@ -74,7 +74,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Input() taskList: TaskList = new TaskList();
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-  private fileAPIsupported = false;
+  private readonly fileAPIsupported: boolean = false;
   public selectedRows: number[] = [];
   public archiveURL = '';
   public closeResult = '';
@@ -107,7 +107,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
-
   }
 
   public get d() {
@@ -373,7 +372,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   onOperationMouseEnter($event, operation: Operation) {
     // show Popover for normal operations only
-    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
+    if (!(operation instanceof EmuOperation) &&
+      !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
       this.popover.operation = operation;
       if (operation.protocol !== '') {
         this.popover.width = 500;
@@ -389,7 +389,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         this.popover.pointer = ($event.layerY + this.popoverRef.height < window.innerHeight) ? 'right' : 'bottom-right';
       }
 
-      this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight) ? $event.layerY - this.popoverRef.height : $event.layerY;
+      this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight)
+        ? $event.layerY - this.popoverRef.height : $event.layerY;
       this.togglePopover(true);
 
     }
@@ -488,10 +489,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     const previous = this.taskService.operations[index - 1];
     const next = this.taskService.operations[index + 1];
     if (operation instanceof OCTRAOperation) {
-      console.log(`is octra`);
 
       if (!previous.enabled && !operation.enabled) {
-        console.log(`prev not enabled this notenabled`);
         previous.enabled = true;
 
         for (let i = 0; i < tasks.length; i++) {
@@ -502,8 +501,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           const hasTranscript = currOperation.task.files.findIndex((a) => {
             return this.taskService.validTranscript(a.extension);
           }) > -1;
-
-          console.log(`validTranscript: ${hasTranscript}`);
 
           if (!hasTranscript) {
             if (task_operation.state === TaskState.PENDING) {
@@ -581,7 +578,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   public getPopoverColor(operation): string {
     if (!(operation === null || operation === undefined)) {
-      if (operation.state == TaskState.ERROR || (operation.results.length > 0 && !operation.lastResult.available)) {
+      if (operation.state === TaskState.ERROR || (operation.results.length > 0 && !operation.lastResult.available)) {
         return 'red';
       } else if (operation.state === TaskState.FINISHED && operation.protocol !== '') {
         return '#ffc33b';
@@ -614,7 +611,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       if (result.command === 'remove') {
         this.popover.state = 'closed';
         this.deleteSelectedTasks();
-      } else if (result.command == 'select all') {
+      } else if (result.command === 'select all') {
         this.selectedRows = [];
         if (!this.allSelected) {
           // select all

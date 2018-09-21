@@ -10,7 +10,7 @@
             <div class="col-4">
                 <div style="width:80px; height:80px; margin: 0 auto;">
                     <div class="rounded-circle"
-                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0 auto;">
                         1.
                     </div>
                 </div>
@@ -22,7 +22,7 @@
             <div class="col-4">
                 <div style="width:80px; height:80px; margin: 0 auto;">
                     <div class="rounded-circle"
-                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0 auto;">
                         2.
                     </div>
                 </div>
@@ -33,7 +33,7 @@
             <div class="col-4">
                 <div style="width:80px; height:80px; margin: 0 auto;">
                     <div class="rounded-circle"
-                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0px auto;">
+                         style="background-color:cornflowerblue;width:80px; height:80px; color:white; text-align:center;vertical-align:middle;font-size:2em;display:table-cell;margin:0 auto;">
                         3.
                     </div>
                 </div>
@@ -132,7 +132,7 @@
                                                      [type]="(i === operations.length - 1) ? 'circle': 'arrow'"></app-operation-arrow>
                                 <div style="z-index:10;width:100%;text-align:center;">
                                     <ng-template #tipContent>{{operation.description}}</ng-template>
-                                    <div style="display:inline;padding:0px 3px;"
+                                    <div style="display:inline;padding:0 3px;"
 
                                          (click)="openArchiveDownload('column', operation)" [ngbTooltip]="tipContent"
                                          tooltipClass="operation-tooltip"
@@ -182,26 +182,26 @@
                 <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
                     [rowSelected]="isEntrySelected(entry)">
                     <!-- filename/foldername column -->
-                    <!-- <td (click)="onTagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
+                    <!-- <td (click)="tagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
                         <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'opened'"
                            class="fa fa-angle-up"></i>
                         <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'closed'"
                            class="fa fa-angle-down"></i>
                     </td> -->
                     <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
-                        (onAppendingClick)="onPreviewClick($event)"
+                        (appendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
-                        (onInfoMouseEnter)="onInfoMouseEnter($event, entry, td)"
-                        (onInfoMouseLeave)="onInfoMouseLeave($event, entry)"
-                        (onInfoMouseOver)="onInfoMouseOver($event, entry)"
-                        (onDeleteIconClick)="removeEntry($event, entry)"
+                        (infoMouseEnter)="onInfoMouseEnter($event, entry, td)"
+                        (infoMouseLeave)="onInfoMouseLeave($event, entry)"
+                        (infoMouseOver)="onInfoMouseOver($event, entry)"
+                        (deleteIconClick)="removeEntry($event, entry)"
                         (mouseenter)="onNameMouseEnter($event, entry, td)"
                         (mouseleave)="onNameMouseLeave($event, entry)"
                         (mouseover)="onNameMouseOver($event, entry)"
-                        [mouseover]="entry.mouseover"
+                        [mouseOver]="entry.mouseover"
                         #nameCol="colIcon"
                         [dirOpened]="allDirOpened"
-                        (onTagClicked)="onTagClicked($event)"
+                        (tagClicked)="onTagClicked($event)"
                     >
                     </td>
                     <!-- Task operations-->
@@ -242,14 +242,14 @@
                             [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
                             [entry]="dirEntry"
-                            (onInfoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"
-                            (onInfoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
-                            (onInfoMouseOver)="onInfoMouseOver($event, dirEntry)"
-                            (onDeleteIconClick)="removeEntry($event, dirEntry)"
+                            (infoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"
+                            (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
+                            (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
+                            (deleteIconClick)="removeEntry($event, dirEntry)"
                             (mouseenter)="onNameMouseEnter($event, dirEntry, td)"
                             (mouseleave)="onNameMouseLeave($event, dirEntry)"
                             (mouseover)="onNameMouseOver($event, dirEntry)"
-                            [mouseover]="dirEntry.mouseover"
+                            [mouseOver]="dirEntry.mouseover"
                         >
                         </td>
                         <ng-container *ngIf="entry.type === 'task'">

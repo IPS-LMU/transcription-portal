@@ -1,5 +1,4 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {AudioInfo} from '../../obj/audio';
 import {FileInfo} from '../../obj/fileInfo';
 
 @Component({
@@ -12,7 +11,6 @@ export class FileInfoTableComponent implements OnInit {
   @Input() fileinfo: FileInfo;
 
   constructor() {
-    let test: AudioInfo;
   }
 
   ngOnInit() {

@@ -31,7 +31,8 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
   }
 
   public get allFilled(): boolean {
-    return ((this.formData.email !== '' && this.formData.messsage.length > 10) || this.formData.messsage.length > 10 || this.formData.protocol.append === true);
+    return ((this.formData.email !== '' && this.formData.messsage.length > 10)
+      || this.formData.messsage.length > 10 || this.formData.protocol.append === true);
   }
 
   public get protocolAsText(): SafeHtml {

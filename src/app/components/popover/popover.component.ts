@@ -12,7 +12,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('svg') svg: ElementRef;
   @ViewChild('inner') inner: ElementRef;
 
-  @Input() borderColor: string = '#3a70dd';
+  @Input() borderColor = '#3a70dd';
   @Input() pointer: 'left' | 'right' | 'bottom-left' = 'left';
 
   @Input() public width = 200;
@@ -53,9 +53,6 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.hasOwnProperty('borderColor') && !changes.borderColor.isFirstChange() && !(changes.borderColor.currentValue === null || changes.borderColor.currentValue === undefined)) {
-    }
-
     if (changes.hasOwnProperty('pointer')) {
       this.updatePolygins();
 

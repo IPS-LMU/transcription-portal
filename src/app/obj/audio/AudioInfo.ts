@@ -22,12 +22,13 @@ export class AudioInfo extends FileInfo {
     return this._duration;
   }
 
-  private _samplerate: number;
-  private _bitrate = -1;
-  private _channels = -1;
+  private readonly _samplerate: number;
+  private readonly _bitrate: number = -1;
+  private readonly _channels: number = -1;
   private _duration: AudioTime;
 
-  constructor(fullname: string, type: string, size: number, samplerate: number, duration: number, channels: number, bitrate: number, file?: File) {
+  constructor(fullname: string, type: string, size: number, samplerate: number,
+              duration: number, channels: number, bitrate: number, file?: File) {
     super(fullname, type, size, file);
     this._samplerate = samplerate;
     this._duration = new AudioTime(duration, samplerate);

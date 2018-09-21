@@ -14,7 +14,7 @@ export class DirectoryInfo extends DataInfo {
     return this._path;
   }
 
-  private _path: string;
+  private readonly _path: string;
   private _entries: (FileInfo | DirectoryInfo)[] = [];
 
   public constructor(path: string, size?: number) {
@@ -41,7 +41,7 @@ export class DirectoryInfo extends DataInfo {
   }
 
   private static traverseFileTree(item: (DataTransferItem | WebKitFileEntry), path): Promise<(FileInfo | DirectoryInfo)[]> {
-    //console.log(`search path: ${path}`);
+    // console.log(`search path: ${path}`);
     return new Promise<(FileInfo | DirectoryInfo)[]>((resolve, reject) => {
         path = path || '';
       if (!(item === null || item === undefined)) {
@@ -54,15 +54,15 @@ export class DirectoryInfo extends DataInfo {
           }
 
           if (webKitEntry.isFile) {
-            //console.log(`isFile ${item.fullPath}`);
+            // console.log(`isFile ${item.fullPath}`);
             // Get file
 
             if (item instanceof DataTransferItem) {
-              let file = item.getAsFile();
+              const file = item.getAsFile();
 
               if (!(file === null || file === undefined)) {
                 if (file.name.indexOf('.') > -1) {
-                  let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                  const fileInfo = new FileInfo(file.name, file.type, file.size, file);
                   resolve([fileInfo]);
                 } else {
                   resolve([]);
@@ -75,7 +75,7 @@ export class DirectoryInfo extends DataInfo {
 
               (<WebKitFileEntry> webKitEntry).file((file: any) => {
                 if (file.name.indexOf('.') > -1) {
-                  let fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                  const fileInfo = new FileInfo(file.name, file.type, file.size, file);
                   resolve([fileInfo]);
                 } else {
                   resolve([]);
@@ -84,11 +84,11 @@ export class DirectoryInfo extends DataInfo {
             }
           } else if (webKitEntry.isDirectory) {
             // Get folder contents
-            //console.log(`is dir ${item.fullPath}`);
-            let dirEntry: WebKitDirectoryEntry = <WebKitDirectoryEntry> webKitEntry;
-            let dirReader = dirEntry.createReader();
+            // console.log(`is dir ${item.fullPath}`);
+            const dirEntry: WebKitDirectoryEntry = <WebKitDirectoryEntry> webKitEntry;
+            const dirReader = dirEntry.createReader();
             dirReader.readEntries((entries: any) => {
-              let promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
+              const promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
               for (let i = 0; i < entries.length; i++) {
                 promises.push(this.traverseFileTree(entries[i], path + dirEntry.name + '/'));
               }
@@ -108,25 +108,23 @@ export class DirectoryInfo extends DataInfo {
 
                 result = result.sort((a, b) => {
                   if (a instanceof FileInfo && b instanceof FileInfo) {
-                    let a2 = <FileInfo> a;
-                    let b2 = <FileInfo> b;
+                    const a2 = <FileInfo> a;
+                    const b2 = <FileInfo> b;
 
                     return a2.name.localeCompare(b2.name);
-                  }
-                  else if (a instanceof DirectoryInfo && b instanceof DirectoryInfo) {
-                    let a2 = <DirectoryInfo> a;
-                    let b2 = <DirectoryInfo> b;
+                  } else if (a instanceof DirectoryInfo && b instanceof DirectoryInfo) {
+                    const a2 = <DirectoryInfo> a;
+                    const b2 = <DirectoryInfo> b;
 
                     return a2.path.localeCompare(b2.path);
-                  }
-                  else {
+                  } else {
                     return 0;
                   }
                 });
 
-                //console.log(result);
+                // console.log(result);
                 dir.addEntries(result);
-                //console.log(`dir with ${result.length} found`);
+                // console.log(`dir with ${result.length} found`);
                 resolve([dir]);
               });
             });
@@ -166,7 +164,7 @@ export class DirectoryInfo extends DataInfo {
   }
 
   public clone() {
-    let result = new DirectoryInfo(this.path, this.size);
+    const result = new DirectoryInfo(this.path, this.size);
     result._entries = this.entries;
 
     return result;

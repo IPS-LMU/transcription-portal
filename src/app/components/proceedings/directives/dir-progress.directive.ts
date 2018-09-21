@@ -17,8 +17,8 @@ import {Observable} from 'rxjs';
 })
 export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy {
 
-  @Input('dir') dir: TaskDirectory;
-  @Input('opIndex') opIndex: number;
+  @Input() dir: TaskDirectory;
+  @Input() opIndex: number;
 
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 

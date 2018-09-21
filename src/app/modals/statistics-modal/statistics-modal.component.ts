@@ -17,18 +17,14 @@ export class StatisticsModalComponent implements OnInit, OnDestroy {
   private modalRef: NgbModalRef;
 
   // Pie
-  public pieChartLabels: string[] = ['Download Sales', 'In-Store Sales', 'Mail Sales'];
-  public pieChartData: number[] = [300, 500, 100];
-  public pieChartType: string = 'pie';
+  public pieChartType = 'pie';
   public visible = false;
 
   // events
   public chartClicked(e: any): void {
-    console.log(e);
   }
 
   public chartHovered(e: any): void {
-    console.log(e);
   }
 
   ngOnDestroy() {

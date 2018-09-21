@@ -81,7 +81,7 @@ export class G2pMausOperation extends Operation {
         console.error(error);
         this.changeState(TaskState.ERROR);
       });
-  };
+  }
 
   public fromAny(operationObj: any, task: Task): G2pMausOperation {
     const result = new G2pMausOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);

@@ -28,7 +28,8 @@ export class QueueModalComponent implements OnInit {
     return AppInfo;
   }
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private taskService: TaskService, private storage: StorageService) {
+  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer,
+              private taskService: TaskService, private storage: StorageService) {
   }
 
   ngOnInit() {
@@ -64,7 +65,8 @@ export class QueueModalComponent implements OnInit {
   public get orangeCount(): number {
     if (!(this.tasks.filter === null || this.tasks.filter === undefined)) {
       return this.tasks.filter((a) => {
-        return a.state == TaskState.QUEUED && (a.files[0].file === undefined || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
+        return a.state === TaskState.QUEUED && (a.files[0].file === undefined
+          || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
       }).length;
     }
 
@@ -83,8 +85,8 @@ export class QueueModalComponent implements OnInit {
   }
 
   changeLanguageforAllQueuedTasks() {
-    let tasks = this.tasks.filter((a) => {
-      return a.state == TaskState.QUEUED;
+    const tasks = this.tasks.filter((a) => {
+      return a.state === TaskState.QUEUED;
     });
 
     for (let i = 0; i < tasks.length; i++) {
@@ -100,8 +102,8 @@ export class QueueModalComponent implements OnInit {
   }
 
   deactivateOperation(operation: Operation, index: number) {
-    let tasks = this.tasks.filter((a) => {
-      return a.state == TaskState.QUEUED;
+    const tasks = this.tasks.filter((a) => {
+      return a.state === TaskState.QUEUED;
     });
 
     operation.enabled = !operation.enabled;
@@ -171,8 +173,8 @@ export class QueueModalComponent implements OnInit {
   }
 
   public updateEnableState() {
-    let tasks = this.tasks.filter((a) => {
-      return a.state == TaskState.QUEUED;
+    const tasks = this.tasks.filter((a) => {
+      return a.state === TaskState.QUEUED;
     });
 
     for (let j = 0; j < this.taskService.operations.length; j++) {
@@ -216,7 +218,7 @@ export class QueueModalComponent implements OnInit {
       return {
         type: 'warning',
         label: (task.files[0].extension !== '.wav') ? task.files[0].extension : task.files[1].extension
-      }
+      };
     }
   }
 }

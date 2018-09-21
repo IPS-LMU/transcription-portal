@@ -24,8 +24,8 @@ export class Level {
   public segments: Segments;
   public items: OItem[];
   public events: OEvent[];
-  private _type: AnnotJSONType;
-  private _id: number;
+  private readonly _type: AnnotJSONType;
+  private readonly _id: number;
 
   public static fromObj(entry: any, samplerate: number, last_sample: number): Level {
     let segments: Segments = null;

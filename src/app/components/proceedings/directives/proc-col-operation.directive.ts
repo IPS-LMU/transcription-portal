@@ -22,18 +22,18 @@ import {SubscriptionManager} from '../../../shared/subscription-manager';
 })
 export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
 
-  @Input('entry') entry: Task;
-  @Input('operation') operation: Operation;
-  @Input('shortStyle') shortStyle = false;
-  @Input('mouseover') mouseOver = false;
+  @Input() entry: Task;
+  @Input() operation: Operation;
+  @Input() shortStyle = false;
+  @Input() mouseOver = false;
 
-  @Output('onAppendingClick') onAppendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  @Output() onAppendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
-  @Output('onOperationMouseEnter') onOperationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output('onOperationMouseLeave') onOperationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output('onOperationMouseOver') onOperationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() onOperationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() onOperationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() onOperationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  @Output('onDeleteIconClick') onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
@@ -52,7 +52,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
       this.clearContents();
 
-      if (this.entry instanceof Task && !(this.entry === null || this.entry === undefined)) {
+      if (this.entry && !(this.entry === null || this.entry === undefined)) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
         if (!(this.operation === null || this.operation === undefined)) {
@@ -118,7 +118,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   private onRepeatIconClick = () => {
     this.entry.restartFailedOperation(this.taskService.httpclient);
-  };
+  }
 
 
   ngOnDestroy() {
@@ -128,14 +128,11 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   ngAfterViewInit() {
     if (!(this.entry === null || this.entry === undefined)) {
       // entry set
-      if (this.entry instanceof Task) {
-        if (!(this.entry.files === null || this.entry.files === undefined)) {
-          this.updateView();
-        } else {
-          throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
-        }
+      if (!(this.entry.files === null || this.entry.files === undefined)) {
+        this.updateView();
+      } else {
+        throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
       }
-
     } else {
       throw new Error('ProcOperationDirective error: no entry set');
     }

@@ -204,7 +204,7 @@ export class AppComponent implements OnDestroy {
   private loadFirstModal() {
     if (!this.firstModalShown) {
 
-      this.subscrmanager.add(this.firstModal.onUnderstandClick.subscribe(
+      this.subscrmanager.add(this.firstModal.understandClick.subscribe(
         () => {
           this.firstModalShown = true;
         }
@@ -296,16 +296,16 @@ export class AppComponent implements OnDestroy {
 
           if ((tool.task.files[0].file === null || tool.task.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
-              `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.name}" again.`, 10);
+              `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.title}" again.`, 10);
             tool.task.operations[0].changeState(TaskState.PENDING);
             tool.task.changeState(TaskState.PENDING);
           } else {
             // start upload process
-            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and run '${tool.name}' again.`);
+            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and do '${tool.title}' again.`);
             tool.task.operations[0].statechange.subscribe(
               (state) => {
                 if (state.newState === 'FINISHED') {
-                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can now run '${tool.name}' for this file.`);
+                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can do '${tool.title}' for this file.`);
                   this.storage.saveTask(tool.task);
                 }
               },
@@ -498,6 +498,9 @@ export class AppComponent implements OnDestroy {
         this.storage.saveTask(this.toolSelectedOperation.task);
 
         setTimeout(() => {
+          if (this.toolSelectedOperation.task.state === 'FINISHED') {
+            this.toolSelectedOperation.task.restart(this.httpclient);
+          }
           this.onBackButtonClicked();
         }, 1000);
       }).catch((error) => {

@@ -174,7 +174,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         });
       }
     } else {
-      let from = {
+      const from = {
         extension: '.wav'
       };
 

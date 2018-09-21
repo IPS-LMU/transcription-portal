@@ -71,7 +71,7 @@ export abstract class Converter {
   protected _notice = '';
   protected _multitiers = true;
 
-  constructor() {
+  protected constructor() {
 
   }
 

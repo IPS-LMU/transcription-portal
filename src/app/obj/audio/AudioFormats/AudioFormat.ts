@@ -37,7 +37,7 @@ export abstract class AudioFormat {
   protected _bitsPerSample: number;
   protected _duration: number;
 
-  constructor(buffer: ArrayBuffer) {
+  protected constructor(buffer: ArrayBuffer) {
     this.setSampleRate(buffer);
     this.setChannels(buffer);
     this.setBitsPerSample(buffer);
@@ -47,7 +47,7 @@ export abstract class AudioFormat {
 
   public getAudioInfo(filename: string, type: string, buffer: ArrayBuffer): AudioInfo {
     if (this.isValid(buffer)) {
-      return new AudioInfo(filename, type, buffer.byteLength, this._sampleRate, 1, this._channels, this._bitsPerSample)
+      return new AudioInfo(filename, type, buffer.byteLength, this._sampleRate, 1, this._channels, this._bitsPerSample);
     } else {
       throw new Error(`Audio file is not a valid ${this._extension} file.`);
     }

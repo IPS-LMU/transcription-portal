@@ -44,13 +44,13 @@ export class TaskService implements OnDestroy {
     return this._protocol_array;
   }
 
-  private _taskList: TaskList;
+  private readonly _taskList: TaskList;
 
   get taskList(): TaskList {
     return this._taskList;
   }
 
-  private _operations: Operation[] = [];
+  private readonly _operations: Operation[] = [];
   public newfiles = false;
 
   get operations(): Operation[] {
@@ -157,7 +157,6 @@ export class TaskService implements OnDestroy {
 
             if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
               && result.files[0].extension === '.wav')) {
-              console.log(`ADD ${result.files[0].extension} to ${foundTask.files[0].extension}`);
               foundTask.addFile(result.files[0]);
               if (foundTask.files.length > 1) {
                 // TODO change if other than transcript files are needed
@@ -482,20 +481,16 @@ export class TaskService implements OnDestroy {
   }
 
   public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
-    if (entry instanceof Task || entry instanceof TaskDirectory) {
-      this.taskList.addEntry(entry, saveToDB).then(() => {
-        return this.taskList.cleanup(entry, saveToDB);
-      }).catch((err) => {
-        console.error(`${err}`);
-      }).then(() => {
-        this.saveCounters();
-      }).catch((err) => {
-        console.error(`could not add via taskService!`);
-        console.error(`${err}`);
-      });
-    } else {
-      console.error(`could not add Task or TaskDirectory. Invalid class instance`);
-    }
+    this.taskList.addEntry(entry, saveToDB).then(() => {
+      return this.taskList.cleanup(entry, saveToDB);
+    }).catch((err) => {
+      console.error(`${err}`);
+    }).then(() => {
+      this.saveCounters();
+    }).catch((err) => {
+      console.error(`could not add via taskService!`);
+      console.error(`${err}`);
+    });
   }
 
   public saveCounters() {
@@ -621,9 +616,6 @@ export class TaskService implements OnDestroy {
       if (entry instanceof FileInfo) {
         const file = <FileInfo> entry;
         if (file.extension === '.wav' || this.validTranscript(file.extension)) {
-          if (this.validTranscript(file.extension)) {
-            console.log(`valid transcript file`);
-          }
           result.push(file);
         }
 
@@ -806,14 +798,14 @@ export class TaskService implements OnDestroy {
         }
       }
 
-      Promise.all(promises).then((values) => {
+      Promise.all(promises).then((values: any) => {
         const result = [];
 
         let content = [];
 
         values = [].concat.apply([], values);
         for (let k = 0; k < values.length; k++) {
-          const value = values[k];
+          const value: Task | TaskDirectory = values[k];
 
           if (value instanceof Task) {
             // set state
@@ -822,7 +814,7 @@ export class TaskService implements OnDestroy {
               value.operations[i].enabled = operation.enabled;
             }
             content.push(value);
-          } else if (value instanceof TaskDirectory) {
+          } else {
             // is dir
             if (value.entries.length === 1) {
               content.push(value.entries[0]);
@@ -893,8 +885,6 @@ export class TaskService implements OnDestroy {
       const converter = AppInfo.converters[k];
       result = result || converter.obj.extension.includes(extension);
     }
-
-    console.log(`${extension} is valid = ${result}`);
 
     return result;
   }
