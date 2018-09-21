@@ -10,7 +10,8 @@
         <div class="container justify-content-center" style="width:100%;margin:0;display: contents;">
             <ul class="nav navbar-nav flex-fill w-100 flex-nowrap">
                 <li class="nav-item active">
-                    <a class="nav-link" href="#"><span class="logo">OH-Portal</span> <span class="version"> v{{AppInfo.version}}</span>
+                    <a class="nav-link" href="#" [title]="AppInfo.lastUpdated| date:'dd.MM.yyyy H:mm z'"><span
+                            class="logo">OH-Portal</span> <span class="version"> v{{AppInfo.version}}</span>
                         <span *ngIf="isdevelopment"
                               style="color:red;">
                 Beta
