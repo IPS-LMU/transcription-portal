@@ -32,13 +32,21 @@
                 </ng-container>
             </button>
             <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                <button class="dropdown-item" *ngFor="let lang of AppInfo.languages; let i = index;"
-                        (click)="onASRLangCHanged(lang)">
-                    <ng-container
-                            *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
-                        {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                    </ng-container>
-                </button>
+                <ng-container *ngFor="let lang of AppInfo.languages; let i = index;">
+                    <button class="dropdown-item" *ngIf="lang.state === 'active'"
+                            (click)="onASRLangCHanged(lang)">
+                        <ng-container
+                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
+                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                        </ng-container>
+                    </button>
+                    <button class="dropdown-item disabled" disabled="disabled" *ngIf="lang.state === 'inactive'">
+                        <ng-container
+                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
+                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}] (currently not available)
+                        </ng-container>
+                    </button>
+                </ng-container>
             </div>
         </div>
         <table class="table table-responsive-lg table-striped">
