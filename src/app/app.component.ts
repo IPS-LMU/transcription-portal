@@ -225,6 +225,7 @@ export class AppComponent implements OnDestroy {
 
       this.subscrmanager.add(this.firstModal.understandClick.subscribe(
         () => {
+          console.log(`UNDERSTAND!`);
           this.firstModalShown = true;
         }
       ));
