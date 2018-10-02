@@ -22,54 +22,26 @@ export class ASROperation extends Operation {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
-    const langObj = AppInfo.getLanguageByCode(this.task.language);
+    this.callASR(httpclient, inputs[0]).then((file: FileInfo) => {
+      console.log(file);
 
-    const url = `${langObj.host}runPipelineWebLink?` +
-      ((inputs.length > 1) ? 'TEXT=' + inputs[1].url + '&' : '') +
-      `SIGNAL=${this.previousOperation.lastResult.url}&` +
-      `PIPE=ASR_G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
-      `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+      if (!(file === null || file === undefined)) {
+        this.callG2PChunker(httpclient, file).then((finalResult) => {
+          this.time.duration = Date.now() - this.time.start;
 
-    httpclient.post(url, {}, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      responseType: 'text'
-    }).subscribe((result: string) => {
-        this.time.duration = Date.now() - this.time.start;
-
-        // convert result to json
-        const x2js = new X2JS();
-        let json: any = x2js.xml2js(result);
-        json = json.WebServiceResponseLink;
-
-        // add messages to protocol
-        if (json.warnings !== '') {
-          this._protocol = json.warnings;
-        } else if (json.output !== '') {
-          this._protocol = json.output;
-        }
-
-        if (json.success === 'true') {
-          const file = FileInfo.fromURL(json.downloadLink, inputs[0].name, 'text/plain');
-          file.updateContentFromURL(httpclient).then(() => {
-            this.results.push(file);
-            this.changeState(TaskState.FINISHED);
-          }).catch((error) => {
-            this._protocol = error;
-            this.changeState(TaskState.ERROR);
-            console.error(this._protocol);
-          });
-        } else {
+          this.results.push(finalResult);
+          this.changeState(TaskState.FINISHED);
+        }).catch((error) => {
+          this._protocol += '<br/>' + error;
           this.changeState(TaskState.ERROR);
-          console.error(this._protocol);
-        }
-      },
-      (error) => {
-        this._protocol = error.message;
-        console.error(error);
-        this.changeState(TaskState.ERROR);
-      });
+          console.error(error);
+        });
+      }
+    }).catch((error) => {
+      this._protocol += '<br/>' + error;
+      this.changeState(TaskState.ERROR);
+      console.error(error);
+    });
   }
 
   public fromAny(operationObj: any, task: Task): Operation {
@@ -116,6 +88,97 @@ export class ASROperation extends Operation {
       } else {
         resolve(result);
       }
+    });
+  }
+
+  private callASR(httpClient: HttpClient, input: any): Promise<FileInfo> {
+    return new Promise<FileInfo>((resolve, reject) => {
+      this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
+
+      const langObj = AppInfo.getLanguageByCode(this.task.language);
+
+      const url = `${langObj.host}runASRWebLink?` +
+        `SIGNAL=${this.previousOperation.lastResult.url}&` +
+        `ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
+        `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+
+      httpClient.post(url, {}, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        responseType: 'text'
+      }).subscribe((result: string) => {
+          // convert result to json
+          const x2js = new X2JS();
+          let json: any = x2js.xml2js(result);
+          json = json.WebServiceResponseLink;
+
+          if (json.success === 'true') {
+            const file = FileInfo.fromURL(json.downloadLink, input.name, 'text/plain');
+            file.updateContentFromURL(httpClient).then(() => {
+              // add messages to protocol
+              if (json.warnings !== '') {
+                this._protocol += '<br/>' + json.warnings;
+              } else if (json.output !== '') {
+                this._protocol = '<br/>' + json.output;
+              }
+              resolve(file);
+            }).catch((error) => {
+              reject(error);
+            });
+          } else {
+            reject(json.output);
+          }
+        },
+        (error) => {
+          reject(error.message);
+        });
+    });
+  }
+
+  private callG2PChunker(httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
+    return new Promise<FileInfo>((resolve, reject) => {
+      this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
+
+      const langObj = AppInfo.getLanguageByCode(this.task.language);
+
+      const url = `${langObj.host}runPipelineWebLink?` +
+        'TEXT=' + asrResult.url + '&' +
+        `SIGNAL=${this.previousOperation.lastResult.url}&` +
+        `PIPE=G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
+        `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+
+      httpClient.post(url, {}, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        responseType: 'text'
+      }).subscribe((result: string) => {
+          // convert result to json
+          const x2js = new X2JS();
+          let json: any = x2js.xml2js(result);
+          json = json.WebServiceResponseLink;
+
+          if (json.success === 'true') {
+            const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain');
+            file.updateContentFromURL(httpClient).then(() => {
+              // add messages to protocol
+              if (json.warnings !== '') {
+                this._protocol = '<br/>' + json.warnings;
+              } else if (json.output !== '') {
+                this._protocol = '<br/>' + json.output;
+              }
+              resolve(file);
+            }).catch((error) => {
+              reject(error);
+            });
+          } else {
+            reject(json.output);
+          }
+        },
+        (error) => {
+          reject(error.message);
+        });
     });
   }
 
