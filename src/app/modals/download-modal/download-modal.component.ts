@@ -305,7 +305,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             }, audiofile);
             annotJSON = result.annotjson;
           } else {
-            console.log(`found no importConverter for ${opResult.fullname}`);
+            console.error(`found no importConverter for ${opResult.fullname}`);
           }
         }
 

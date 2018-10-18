@@ -5,11 +5,11 @@ import {Task, TaskState} from '../../obj/tasks';
 import {QueueItem} from '../../obj/preprocessor';
 import {Operation} from '../../obj/operations/operation';
 import {TaskService} from '../../obj/tasks/task.service';
-import {AppInfo} from '../../app.info';
 import {ASROperation} from '../../obj/operations/asr-operation';
 import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
+import {AppSettings} from '../../shared/app.settings';
 
 @Component({
   selector: 'app-queue-modal',
@@ -24,8 +24,8 @@ export class QueueModalComponent implements OnInit {
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
 
-  public get AppInfo() {
-    return AppInfo;
+  public get AppSettings() {
+    return AppSettings;
   }
 
   constructor(private modalService: NgbModal, private sanitizer: DomSanitizer,

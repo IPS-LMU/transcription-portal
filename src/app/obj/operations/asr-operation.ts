@@ -2,31 +2,29 @@ import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks/task';
-import {AppInfo} from '../../app.info';
 import * as X2JS from 'x2js';
+import {OHLanguageObject} from '../oh-config';
 
 export class ASROperation extends Operation {
   public webService = '';
   public resultType = 'BAS Partitur Format';
 
-  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, title, shortTitle, task, state, id);
+  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, commands, title, shortTitle, task, state, id);
     this._description = 'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
       'The result of this process is a text file with a literal transcription of the audio file. \n' +
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+    this.webService = `${languageObject.asr}ASR`;
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
-    this.callASR(httpclient, inputs[0]).then((file: FileInfo) => {
-      console.log(file);
-
+    this.callASR(languageObject, httpclient, inputs[0]).then((file: FileInfo) => {
       if (!(file === null || file === undefined)) {
-        this.callG2PChunker(httpclient, file).then((finalResult) => {
+        this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
           this.time.duration = Date.now() - this.time.start;
 
           this.results.push(finalResult);
@@ -44,8 +42,9 @@ export class ASROperation extends Operation {
     });
   }
 
-  public fromAny(operationObj: any, task: Task): Operation {
-    const result = new ASROperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
+  public fromAny(operationObj: any, commands: string[], task: Task): Operation {
+    const result = new ASROperation(operationObj.name, commands, this.title,
+      this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = FileInfo.fromAny(resultObj);
@@ -91,16 +90,14 @@ export class ASROperation extends Operation {
     });
   }
 
-  private callASR(httpClient: HttpClient, input: any): Promise<FileInfo> {
+  private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
-      this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
+      this.webService = `${languageObject.asr}ASR`;
 
-      const langObj = AppInfo.getLanguageByCode(this.task.language);
-
-      const url = `${langObj.host}runASRWebLink?` +
-        `SIGNAL=${this.previousOperation.lastResult.url}&` +
-        `ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
-        `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+      const url = this._commands[0].replace('{{host}}', languageObject.host)
+        .replace('{{audioURL}}', this.previousOperation.lastResult.url)
+        .replace('{{asrType}}', languageObject.asr)
+        .replace('{{language}}', this.task.language);
 
       httpClient.post(url, {}, {
         headers: {
@@ -136,17 +133,15 @@ export class ASROperation extends Operation {
     });
   }
 
-  private callG2PChunker(httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
+  private callG2PChunker(languageObject: OHLanguageObject, httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
-      this.webService = `${AppInfo.getLanguageByCode(this.task.language).asr}ASR`;
+      this.webService = `${languageObject.asr}ASR`;
 
-      const langObj = AppInfo.getLanguageByCode(this.task.language);
-
-      const url = `${langObj.host}runPipelineWebLink?` +
-        'TEXT=' + asrResult.url + '&' +
-        `SIGNAL=${this.previousOperation.lastResult.url}&` +
-        `PIPE=G2P_CHUNKER&ASRType=call${AppInfo.getLanguageByCode(this.task.language).asr}ASR&LANGUAGE=${this.task.language}&` +
-        `MAUSVARIANT=runPipeline&OUTFORMAT=bpf`;
+      const url = this._commands[1].replace('{{host}}', languageObject.host)
+        .replace('{{transcriptURL}}', asrResult.url)
+        .replace('{{audioURL}}', this.previousOperation.lastResult.url)
+        .replace('{{asrType}}', languageObject.asr)
+        .replace('{{language}}', this.task.language);
 
       httpClient.post(url, {}, {
         headers: {
@@ -184,6 +179,6 @@ export class ASROperation extends Operation {
 
   public clone(task?: Task): ASROperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ASROperation(this.name, this.title, this.shortTitle, selected_task, this.state);
+    return new ASROperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
   }
 }

@@ -16,6 +16,7 @@ import {Operation} from '../../../obj/operations/operation';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {SubscriptionManager} from '../../../shared/subscription-manager';
+import {AppSettings} from '../../../shared/app.settings';
 
 @Directive({
   selector: '[appProcColOperation]'
@@ -117,7 +118,8 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private onRepeatIconClick = () => {
-    this.entry.restartFailedOperation(this.taskService.httpclient);
+    const langObj = AppSettings.getLanguageByCode(this.entry.language);
+    this.entry.restartFailedOperation(langObj, this.taskService.httpclient);
   }
 
 

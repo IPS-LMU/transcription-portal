@@ -3,6 +3,7 @@ import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
 import {TaskEntry} from './task-entry';
 import {Operation} from '../operations/operation';
+import {OHCommand} from '../oh-config';
 
 export class TaskDirectory {
   get foldername(): string {
@@ -111,12 +112,12 @@ export class TaskDirectory {
     });
   }
 
-  public static fromAny(dirObj: any, defaultOperations: Operation[]): TaskDirectory {
+  public static fromAny(dirObj: any, commands: OHCommand[], defaultOperations: Operation[]): TaskDirectory {
     const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
 
     for (let i = 0; i < dirObj.entries.length; i++) {
       const entry = dirObj.entries[i];
-      result.addEntries([Task.fromAny(entry, defaultOperations)]);
+      result.addEntries([Task.fromAny(entry, commands, defaultOperations)]);
     }
 
     return result;

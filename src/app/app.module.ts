@@ -38,6 +38,7 @@ import {NgCircleProgressModule} from 'ng-circle-progress';
 import {DirProgressDirective} from './components/proceedings/directives/dir-progress.directive';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {ChartsModule} from 'ng2-charts';
+import {SettingsService} from './shared/settings.service';
 
 @NgModule({
   declarations: [
@@ -85,12 +86,16 @@ import {ChartsModule} from 'ng2-charts';
     FormsModule,
     ReactiveFormsModule
   ],
-  providers: [TaskService,
+  providers: [
+    TaskService,
     NotificationService,
     StorageService,
     BugReportService,
     NgbDropdown,
-    NgbDropdownMenu, AlertService],
+    NgbDropdownMenu,
+    AlertService,
+    SettingsService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

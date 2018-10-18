@@ -24,13 +24,17 @@ export class StatisticsService {
 
   constructor(private taskService: TaskService) {
     this.subscrmanager.add(Observable.interval(1000).subscribe(() => {
-      const allTasks = this.taskService.taskList.getAllTasks().length;
-      this.overAllProgress.waiting = (this.taskService.statistics.waiting + this.taskService.statistics.queued) / allTasks * 100;
-      this.overAllProgress.failed = this.taskService.statistics.errors / allTasks * 100;
-      this.overAllProgress.processing = this.taskService.statistics.running / allTasks * 100;
-      this.overAllProgress.finished = this.taskService.statistics.finished / allTasks * 100;
+      const allTasks = this.taskService.taskList.getAllTasks();
 
-      this.updateAverageDurations();
+      if (!(allTasks === null || allTasks === undefined)) {
+        const allTasksCount = allTasks.length;
+        this.overAllProgress.waiting = (this.taskService.statistics.waiting + this.taskService.statistics.queued) / allTasksCount * 100;
+        this.overAllProgress.failed = this.taskService.statistics.errors / allTasksCount * 100;
+        this.overAllProgress.processing = this.taskService.statistics.running / allTasksCount * 100;
+        this.overAllProgress.finished = this.taskService.statistics.finished / allTasksCount * 100;
+
+        this.updateAverageDurations();
+      }
     }));
   }
 

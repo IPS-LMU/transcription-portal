@@ -23,8 +23,8 @@
             <label for="dropdownBasic1" style="margin-right:10px;">Language: </label>
             <button class="btn btn-outline-secondary" id="dropdownBasic1" ngbDropdownToggle>
                 <ng-container *ngIf="taskService.selectedlanguage === null">
-                    {{AppInfo.languages[0].code | uppercase}}
-                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppInfo.languages[0].asr}}]
+                    {{AppSettings.configuration.api.languages[0].code | uppercase}}
+                    ({{getShortCode(AppInfo.languages[0].code)}}) [{{AppSettings.configuration.api.languages[0].asr}}]
                 </ng-container>
                 <ng-container *ngIf="taskService.selectedlanguage !== null">
                     {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
@@ -32,7 +32,7 @@
                 </ng-container>
             </button>
             <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                <ng-container *ngFor="let lang of AppInfo.languages; let i = index;">
+                <ng-container *ngFor="let lang of AppSettings.configuration.api.languages; let i = index;">
                     <button class="dropdown-item" *ngIf="lang.state === 'active'"
                             (click)="onASRLangCHanged(lang)">
                         <ng-container

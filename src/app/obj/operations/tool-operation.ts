@@ -3,17 +3,18 @@ import {SafeHtml} from '@angular/platform-browser';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks';
+import {OHLanguageObject} from '../oh-config';
 
 export class ToolOperation extends Operation {
   public resultType;
 
-  public constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, title, shortTitle, task, state, id);
+  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, commands, title, shortTitle, task, state, id);
   }
 
   private active = true;
 
-  public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 
@@ -56,8 +57,8 @@ export class ToolOperation extends Operation {
     return '';
   }
 
-  public fromAny(operationObj: any, task: Task): Operation {
-    const result = new ToolOperation(operationObj.name, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
+  public fromAny(operationObj: any, commands: string[], task: Task): Operation {
+    const result = new ToolOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (let k = 0; k < operationObj.results.length; k++) {
       const resultObj = operationObj.results[k];
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
@@ -72,6 +73,6 @@ export class ToolOperation extends Operation {
 
   public clone(task?: Task): ToolOperation {
     const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ToolOperation(this.name, this.title, this.shortTitle, selected_task, this.state);
+    return new ToolOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
   }
 }

@@ -8,6 +8,7 @@ import {TaskDirectory} from './taskDirectory';
 import {AudioInfo} from '../audio';
 import {TaskEntry} from './task-entry';
 import {Operation} from '../operations/operation';
+import {OHCommand, OHLanguageObject} from '../oh-config';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -130,7 +131,7 @@ export class Task {
 
   private _state: TaskState;
 
-  public static fromAny(taskObj: any, defaultOperations: Operation[]): Task {
+  public static fromAny(taskObj: any, commands: OHCommand[], defaultOperations: Operation[]): Task {
     const operations = [];
 
     const task = new Task([], operations, null, taskObj.id);
@@ -159,7 +160,7 @@ export class Task {
       for (let j = 0; j < defaultOperations.length; j++) {
         const op = defaultOperations[j];
         if (op.name === operationObj.name) {
-          const operation = op.fromAny(operationObj, task);
+          const operation = op.fromAny(operationObj, commands[j].calls, task);
           if (operation.state === TaskState.UPLOADING) {
             operation.changeState(TaskState.PENDING);
           } else {
@@ -176,6 +177,7 @@ export class Task {
         }
       }
     }
+
     task.listenToOperationChanges();
 
     return task;
@@ -219,13 +221,13 @@ export class Task {
     }
   }
 
-  public start(httpclient: HttpClient, test = false) {
+  public start(languageObject: OHLanguageObject, httpclient: HttpClient, test = false) {
     if (this.state !== TaskState.FINISHED) {
-      this.startNextOperation(httpclient, test);
+      this.startNextOperation(languageObject, httpclient, test);
     }
   }
 
-  private startNextOperation(httpclient: HttpClient, test = false) {
+  private startNextOperation(languageObject: OHLanguageObject, httpclient: HttpClient, test = false) {
     if (!this.stopRequested) {
       let nextoperation = -1;
 
@@ -255,7 +257,7 @@ export class Task {
             (event) => {
               if (event.newState === TaskState.FINISHED) {
                 subscription.unsubscribe();
-                this.startNextOperation(httpclient);
+                this.startNextOperation(languageObject, httpclient);
               } else {
                 if (event.newState === TaskState.READY) {
                   this.changeState(TaskState.READY);
@@ -275,7 +277,7 @@ export class Task {
             files = this.operations[0].results;
           }
 
-          this.operations[nextoperation].start(files, this.operations, httpclient);
+          this.operations[nextoperation].start(languageObject, files, this.operations, httpclient);
         }
       }
     } else {
@@ -283,13 +285,13 @@ export class Task {
     }
   }
 
-  public restart(http: HttpClient) {
+  public restart(languageObject: OHLanguageObject, http: HttpClient) {
     this.changeState(TaskState.PROCESSING);
     this.listenToOperationChanges();
-    this.start(http, true);
+    this.start(languageObject, http, true);
   }
 
-  public restartFailedOperation(httpclient) {
+  public restartFailedOperation(languageObject: OHLanguageObject, httpclient) {
     for (let i = 0; i < this.operations.length; i++) {
       const operation = this.operations[i];
 
@@ -297,7 +299,7 @@ export class Task {
         // restart failed operation
         operation.changeState(TaskState.READY);
         this.changeState(TaskState.PENDING);
-        this.restart(httpclient);
+        this.restart(languageObject, httpclient);
         break;
       }
     }

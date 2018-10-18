@@ -27,6 +27,8 @@ import {AlertService} from './shared/alert.service';
 import {UploadOperation} from './obj/operations/upload-operation';
 import * as X2JS from 'x2js';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
+import {SettingsService} from './shared/settings.service';
+import {AppSettings} from './shared/app.settings';
 
 declare var window: any;
 
@@ -66,7 +68,7 @@ export class AppComponent implements OnDestroy {
   }
 
   public get toolSelectedOperation(): Operation {
-    return this.proceedings.toolSelectedOperation;
+    return (!(this.proceedings === null || this.proceedings === undefined)) ? this.proceedings.toolSelectedOperation : undefined;
   }
 
   public set toolSelectedOperation(value: Operation) {
@@ -107,7 +109,8 @@ export class AppComponent implements OnDestroy {
               private httpclient: HttpClient, public notification: NotificationService,
               private storage: StorageService,
               public bugService: BugReportService,
-              private alertService: AlertService
+              private alertService: AlertService,
+              public settingsService: SettingsService
   ) {
     const debugging = false;
     if (!debugging) {
@@ -184,33 +187,59 @@ export class AppComponent implements OnDestroy {
       }
     ));
 
-    this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
-      this.storage.getIntern('firstModalShown').then(
-        (result) => {
-          if (!(result === null || result === undefined)) {
-            this.firstModalShown = result.value;
+    new Promise<void>((resolve, reject) => {
+      if (this.settingsService.allLoaded) {
+        resolve();
+      } else {
+        this.subscrmanager.add(this.settingsService.settingsload.subscribe(
+          () => {
+            resolve();
           }
-          this.loadFirstModal();
-        }
-      ).catch((err) => {
-        console.error(err);
-        this.loadFirstModal();
-      });
-
-      if (!(results[1] === null || results[1] === undefined)) {
-        // read userSettings
-        for (let i = 0; i < results[1].length; i++) {
-          const userSetting = results[1][i];
-
-          switch (userSetting.name) {
-            case ('sidebarWidth'):
-              this.newProceedingsWidth = userSetting.value;
-              break;
-          }
-        }
-        // this.notification.permissionGranted = results[1][]
+        ));
       }
-    }));
+    }).then(() => {
+      // configuration loaded
+      this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
+
+      new Promise<any>((resolve, reject) => {
+        if (!this.storage.ready) {
+          this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
+            resolve(results);
+          }));
+        } else {
+          resolve([null]);
+        }
+      }).then((results) => {
+        //idb loaded
+        this.taskService.init();
+        this.taskService.importDBData(results);
+
+        this.storage.getIntern('firstModalShown').then(
+          (result) => {
+            if (!(result === null || result === undefined)) {
+              this.firstModalShown = result.value;
+            }
+            this.loadFirstModal();
+          }
+        ).catch((err) => {
+          console.error(err);
+          this.loadFirstModal();
+        });
+
+        if (!(results[1] === null || results[1] === undefined)) {
+          // read userSettings
+          for (let i = 0; i < results[1].length; i++) {
+            const userSetting = results[1][i];
+
+            switch (userSetting.name) {
+              case ('sidebarWidth'):
+                this.newProceedingsWidth = userSetting.value;
+                break;
+            }
+          }
+        }
+      });
+    });
 
     window.onunload = function () {
       return false;
@@ -225,7 +254,6 @@ export class AppComponent implements OnDestroy {
 
       this.subscrmanager.add(this.firstModal.understandClick.subscribe(
         () => {
-          console.log(`UNDERSTAND!`);
           this.firstModalShown = true;
         }
       ));
@@ -346,7 +374,7 @@ export class AppComponent implements OnDestroy {
             // reupload result from tool operation
 
             // TODO make uploading easier!
-            const langObj = AppInfo.getLanguageByCode(tool.task.language);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
@@ -385,7 +413,7 @@ export class AppComponent implements OnDestroy {
             // local available, re upload
 
             // TODO make using upload easier!
-            const langObj = AppInfo.getLanguageByCode(tool.task.language);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
@@ -519,7 +547,8 @@ export class AppComponent implements OnDestroy {
 
         setTimeout(() => {
           if (this.toolSelectedOperation.task.state === 'FINISHED') {
-            this.toolSelectedOperation.task.restart(this.httpclient);
+            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language);
+            this.toolSelectedOperation.task.restart(langObj, this.httpclient);
           }
           this.onBackButtonClicked();
         }, 1000);

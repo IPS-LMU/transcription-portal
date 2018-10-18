@@ -1,11 +1,12 @@
 <app-feedback #feedbackModal></app-feedback>
 <app-first-modal #firstModal></app-first-modal>
 <app-split-modal #splitModal></app-split-modal>
-<app-queue-modal #queueModal [tasks]="taskService.taskList.getAllTasks()" [queue]="taskService.preprocessor.queue"
+<app-queue-modal #queueModal *ngIf="taskService.taskList !== undefined" [tasks]="taskService.taskList.getAllTasks()"
+                 [queue]="taskService.preprocessor.queue"
                  [operations]="taskService.operations"></app-queue-modal>
 <app-statistics #statisticsModal></app-statistics>
 <app-alert></app-alert>
-<div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)">
+<div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded">
     <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top">
         <div class="container justify-content-center" style="width:100%;margin:0;display: contents;">
             <ul class="nav navbar-nav flex-fill w-100 flex-nowrap">
@@ -222,7 +223,8 @@
 
              (blur)="onBlur($event)"
         >
-            <app-proceedings [taskList]="taskService.taskList"
+            <app-proceedings *ngIf="settingsService.allLoaded && taskService.taskList !== undefined"
+                             [taskList]="taskService.taskList"
                              [operations]="taskService.operations"
                              (afterdrop)="onAfterDrop($event)"
                              (operationclick)="onOperationClick($event)"

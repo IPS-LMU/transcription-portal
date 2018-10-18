@@ -21,6 +21,7 @@ import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {AlertService} from '../../shared/alert.service';
 import {Observable} from 'rxjs';
+import {AppSettings} from '../../shared/app.settings';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -44,13 +45,13 @@ export class TaskService implements OnDestroy {
     return this._protocol_array;
   }
 
-  private readonly _taskList: TaskList;
+  private _taskList: TaskList;
 
   get taskList(): TaskList {
     return this._taskList;
   }
 
-  private readonly _operations: Operation[] = [];
+  private _operations: Operation[] = [];
   public newfiles = false;
 
   get operations(): Operation[] {
@@ -80,7 +81,7 @@ export class TaskService implements OnDestroy {
 
   public errorscountchange = new EventEmitter<number>();
 
-  public selectedlanguage = AppInfo.languages[0];
+  public selectedlanguage;
   private state: TaskState = TaskState.READY;
 
   private _preprocessor: Preprocessor = new Preprocessor();
@@ -126,14 +127,16 @@ export class TaskService implements OnDestroy {
   constructor(public httpclient: HttpClient, private notification: NotificationService,
               private storage: StorageService, private sanitizer: DomSanitizer,
               private alertService: AlertService) {
+  }
+
+  public init() {
     this._taskList = new TaskList();
     this._operations = [
-      new UploadOperation('Upload', 'Upload', 'UL'),
-      new ASROperation('ASR', 'Speech Recognition', 'ASR'),
-      // new ToolOperation('OCTRA'),
-      new OCTRAOperation('OCTRA', 'Manual Transcription', 'MT'),
-      new G2pMausOperation('MAUS', 'Word alignment', 'WA'),
-      new EmuOperation('Emu WebApp', 'Phonetic detail', 'PD')
+      new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
+      new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
+      new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
+      new G2pMausOperation('MAUS', AppSettings.configuration.api.commands[3].calls, 'Word alignment', 'WA'),
+      new EmuOperation('Emu WebApp', AppSettings.configuration.api.commands[4].calls, 'Phonetic detail', 'PD')
     ];
 
     this._preprocessor.process = this.process;
@@ -237,127 +240,6 @@ export class TaskService implements OnDestroy {
       }
     ));
 
-    this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
-      const IDBtasks = results[0];
-
-      if (!(IDBtasks === null || IDBtasks === undefined)) {
-        this.newfiles = IDBtasks.length > 0;
-
-        // make sure that taskCounter and operation counter are equal to their biggest value
-        let maxTaskCounter = 0;
-        let maxOperationCounter = 0;
-
-        for (let i = 0; i < IDBtasks.length; i++) {
-          const taskObj = IDBtasks[i];
-          if (taskObj.type === 'task') {
-            const task = Task.fromAny(taskObj, this.operations);
-
-            maxTaskCounter = Math.max(maxTaskCounter, task.id);
-
-            for (let j = 0; j < task.operations.length; j++) {
-              const operation = task.operations[j];
-
-              maxOperationCounter = Math.max(maxOperationCounter, operation.id);
-
-              for (let k = 0; k < operation.results.length; k++) {
-                const opResult = operation.results[k];
-                if (!(opResult.url === null || opResult.url === undefined)) {
-                  this.existsFile(opResult.url).then(() => {
-                    opResult.online = true;
-
-                    if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
-                      opResult.updateContentFromURL(this.httpclient).then(() => {
-                        // TODO minimize task savings
-                        this.storage.saveTask(task);
-                      }).catch((error) => {
-                        console.error(error);
-                      });
-                    }
-                  }).catch(() => {
-                    opResult.online = false;
-                  });
-                }
-              }
-            }
-
-            this._taskList.addEntry(task).catch((err) => {
-              console.error(err);
-            });
-          } else {
-            const taskDir = TaskDirectory.fromAny(taskObj, this.operations);
-
-            for (let l = 0; l < taskDir.entries.length; l++) {
-              const task = <Task> taskDir.entries[l];
-              for (let j = 0; j < task.operations.length; j++) {
-                const operation = task.operations[j];
-
-                for (let k = 0; k < operation.results.length; k++) {
-                  const opResult = operation.results[k];
-
-                  if (!(opResult.url === null || opResult.url === undefined)) {
-                    this.existsFile(opResult.url).then(() => {
-                      opResult.online = true;
-
-                      if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
-                        opResult.updateContentFromURL(this.httpclient).then(() => {
-                          // TODO minimize task savings
-                          this.storage.saveTask(task);
-                        }).catch((error) => {
-                          console.error(error);
-                        });
-                      }
-                    }).catch(() => {
-                      opResult.online = false;
-                    });
-                  }
-                }
-              }
-            }
-
-            this._taskList.addEntry(taskDir).catch((err) => {
-              console.error(err);
-            });
-          }
-        }
-
-        if (TaskEntry.counter < maxTaskCounter) {
-          console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
-          TaskEntry.counter = maxTaskCounter;
-        }
-
-        if (Operation.counter < maxOperationCounter) {
-          console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
-          Operation.counter = maxOperationCounter;
-        }
-
-        this.updateProtocolURL().then((url) => {
-          this.protocolURL = url;
-        });
-      }
-      if (!(results[1] === null || results[1] === undefined)) {
-        // read userSettings
-        for (let i = 0; i < results[1].length; i++) {
-          const userSetting = results[1][i];
-
-          switch (userSetting.name) {
-            case ('notification'):
-              this.notification.permissionGranted = userSetting.value.enabled;
-              break;
-            case ('defaultTaskOptions'):
-              // search lang obj
-              const lang = AppInfo.languages.find((a) => {
-                return a.code === userSetting.value.language;
-              });
-              if (!(lang === null || lang === undefined)) {
-                this.selectedlanguage = lang;
-              }
-              break;
-          }
-        }
-        // this.notification.permissionGranted = results[1][]
-      }
-    }));
-
     this.subscrmanager.add(this.taskList.entryChanged.subscribe((event: EntryChangeEvent) => {
         if (event.state === 'added') {
           if (event.entry instanceof Task) {
@@ -393,6 +275,128 @@ export class TaskService implements OnDestroy {
       this.updateStatistics();
     }));
     this.updateStatistics();
+  }
+
+  public importDBData(dbEntries: any[]) {
+
+    const IDBtasks = dbEntries[0];
+
+    if (!(IDBtasks === null || IDBtasks === undefined)) {
+      this.newfiles = IDBtasks.length > 0;
+
+      // make sure that taskCounter and operation counter are equal to their biggest value
+      let maxTaskCounter = 0;
+      let maxOperationCounter = 0;
+
+      for (let i = 0; i < IDBtasks.length; i++) {
+        const taskObj = IDBtasks[i];
+        if (taskObj.type === 'task') {
+          const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
+
+          maxTaskCounter = Math.max(maxTaskCounter, task.id);
+
+          for (let j = 0; j < task.operations.length; j++) {
+            const operation = task.operations[j];
+
+            maxOperationCounter = Math.max(maxOperationCounter, operation.id);
+
+            for (let k = 0; k < operation.results.length; k++) {
+              const opResult = operation.results[k];
+              if (!(opResult.url === null || opResult.url === undefined)) {
+                this.existsFile(opResult.url).then(() => {
+                  opResult.online = true;
+
+                  if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
+                    opResult.updateContentFromURL(this.httpclient).then(() => {
+                      // TODO minimize task savings
+                      this.storage.saveTask(task);
+                    }).catch((error) => {
+                      console.error(error);
+                    });
+                  }
+                }).catch(() => {
+                  opResult.online = false;
+                });
+              }
+            }
+          }
+
+          this._taskList.addEntry(task).catch((err) => {
+            console.error(err);
+          });
+        } else {
+          const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
+
+          for (let l = 0; l < taskDir.entries.length; l++) {
+            const task = <Task> taskDir.entries[l];
+            for (let j = 0; j < task.operations.length; j++) {
+              const operation = task.operations[j];
+
+              for (let k = 0; k < operation.results.length; k++) {
+                const opResult = operation.results[k];
+
+                if (!(opResult.url === null || opResult.url === undefined)) {
+                  this.existsFile(opResult.url).then(() => {
+                    opResult.online = true;
+
+                    if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
+                      opResult.updateContentFromURL(this.httpclient).then(() => {
+                        // TODO minimize task savings
+                        this.storage.saveTask(task);
+                      }).catch((error) => {
+                        console.error(error);
+                      });
+                    }
+                  }).catch(() => {
+                    opResult.online = false;
+                  });
+                }
+              }
+            }
+          }
+
+          this._taskList.addEntry(taskDir).catch((err) => {
+            console.error(err);
+          });
+        }
+      }
+
+      if (TaskEntry.counter < maxTaskCounter) {
+        console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
+        TaskEntry.counter = maxTaskCounter;
+      }
+
+      if (Operation.counter < maxOperationCounter) {
+        console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
+        Operation.counter = maxOperationCounter;
+      }
+
+      this.updateProtocolURL().then((url) => {
+        this.protocolURL = url;
+      });
+    }
+    if (!(dbEntries[1] === null || dbEntries[1] === undefined)) {
+      // read userSettings
+      for (let i = 0; i < dbEntries[1].length; i++) {
+        const userSetting = dbEntries[1][i];
+
+        switch (userSetting.name) {
+          case ('notification'):
+            this.notification.permissionGranted = userSetting.value.enabled;
+            break;
+          case ('defaultTaskOptions'):
+            // search lang obj
+            const lang = AppSettings.configuration.api.languages.find((a) => {
+              return a.code === userSetting.value.language;
+            });
+            if (!(lang === null || lang === undefined)) {
+              this.selectedlanguage = lang;
+            }
+            break;
+        }
+      }
+      // this.notification.permissionGranted = results[1][]
+    }
   }
 
   private listenToTaskEvents(task: Task) {
@@ -525,7 +529,8 @@ export class TaskService implements OnDestroy {
             });
           });
           this.storage.saveTask(task);
-          task.start(this.httpclient);
+          const langObj = AppSettings.getLanguageByCode(task.language);
+          task.start(langObj, this.httpclient);
           setTimeout(() => {
             this.start();
           }, 1000);

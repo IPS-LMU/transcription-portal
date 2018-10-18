@@ -4,6 +4,7 @@ import {Observable} from 'rxjs/Observable';
 import {FileInfo} from '../fileInfo';
 import {Subject} from 'rxjs/Subject';
 import {Task, TaskState} from '../tasks/task';
+import {OHLanguageObject} from '../oh-config';
 
 export abstract class Operation {
   get shortTitle(): string {
@@ -102,7 +103,8 @@ export abstract class Operation {
     return null;
   }
 
-  protected constructor(name: string, title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+  protected constructor(name: string, commands: string[], title?: string, shortTitle?: string,
+                        task?: Task, state?: TaskState, id?: number) {
     if ((id === null || id === undefined)) {
       this._id = ++Operation.counter;
     } else {
@@ -110,6 +112,7 @@ export abstract class Operation {
     }
     this._name = name;
     this._task = task;
+    this._commands = commands;
 
     if (!(title === null || title === undefined)) {
       this._title = title;
@@ -144,6 +147,7 @@ export abstract class Operation {
   protected _protocol = '';
   protected _description = '';
   private readonly _shortTitle: string;
+  protected readonly _commands: string[];
 
   protected _time: {
     start: number;
@@ -172,6 +176,8 @@ export abstract class Operation {
   public changed: Subject<void> = new Subject<void>();
 
   private readonly _id: number;
+
+  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => void;
 
   public getStateIcon = (sanitizer, state: TaskState): SafeHtml => {
     let result = '';
@@ -231,10 +237,6 @@ export abstract class Operation {
     return result;
   }
 
-  public start = (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    console.error('start not implemented');
-  }
-
   public changeState(state: TaskState) {
     const oldstate = this._state;
     this._state = state;
@@ -264,7 +266,7 @@ export abstract class Operation {
 
   public abstract clone(task?: Task): Operation;
 
-  public abstract fromAny(operationObj: any, task: Task): Operation;
+  public abstract fromAny(operationObj: any, commands: string[], task: Task): Operation;
 
   onMouseOver() {
   }

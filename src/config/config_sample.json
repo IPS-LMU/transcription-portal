@@ -1,0 +1,83 @@
+{
+  "name": "OH-Portal Configuration",
+  "version": "1.0.0",
+  "api": {
+    "commands": [
+      {
+        "name": "Upload",
+        "calls": [
+          ""
+        ]
+      },
+      {
+        "name": "ASR",
+        "calls": [
+          "",
+          ""
+        ]
+      },
+      {
+        "name": "OCTRA",
+        "calls": [
+          ""
+        ]
+      },
+      {
+        "name": "MAUS",
+        "calls": [
+          ""
+        ]
+      },
+      {
+        "name": "Emu WebApp",
+        "calls": [
+          ""
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "code": "deu-DE",
+        "name": "German",
+        "asr": "EML",
+        "state": "active",
+        "host": ""
+      },
+      {
+        "code": "eng-US",
+        "name": "English",
+        "state": "active",
+        "asr": "EML",
+        "host": ""
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "active",
+        "asr": "Web",
+        "host": ""
+      },
+      {
+        "code": "ita-IT",
+        "name": "Italian",
+        "state": "active",
+        "asr": "EML",
+        "host": ""
+      },
+      {
+        "code": "nld-NL-OH",
+        "name": "Dutch",
+        "state": "active",
+        "asr": "LSTDutch",
+        "host": ""
+      },
+      {
+        "code": "nld-NL",
+        "name": "Dutch",
+        "state": "active",
+        "asr": "LSTDutch",
+        "host": ""
+      }
+    ]
+  }
+}
