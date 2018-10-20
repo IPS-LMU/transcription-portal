@@ -2,7 +2,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {NgbDropdown, NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 import {AppComponent} from './app.component';
 import {PopoverComponent} from './components/popover/popover.component';
@@ -22,7 +22,6 @@ import {FeedbackModalComponent} from './modals/feedback-modal/feedback-modal.com
 import {BugReportService} from './shared/bug-report.service';
 import {SplitModalComponent} from './modals/split-modal/split-modal.component';
 import {FirstModalComponent} from './modals/first-modal/first-modal.component';
-import {NgbDropdownMenu} from '@ng-bootstrap/ng-bootstrap/dropdown/dropdown';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
@@ -72,7 +71,7 @@ import {SettingsService} from './shared/settings.service';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    NgbModule.forRoot(),
+    NgbModule,
     ChartsModule,
     NgCircleProgressModule.forRoot({
       // set defaults here
@@ -91,8 +90,6 @@ import {SettingsService} from './shared/settings.service';
     NotificationService,
     StorageService,
     BugReportService,
-    NgbDropdown,
-    NgbDropdownMenu,
     AlertService,
     SettingsService
   ],

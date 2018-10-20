@@ -667,7 +667,7 @@ export class TaskService implements OnDestroy {
             // no valid name, replace
             FileInfo.renameFile(file.file, newName, {
               type: file.type,
-              lastModified: file.file.lastModifiedDate
+              lastModified: file.file.lastModified
             }).then((newfile: File) => {
               newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;

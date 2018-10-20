@@ -48,7 +48,7 @@ export class TaskDirectory {
   private readonly _foldername: string;
   private _type = 'folder';
 
-  public static fromFolderObject(folder: WebKitDirectoryEntry): Promise<TaskDirectory> {
+  public static fromFolderObject(folder: any): Promise<TaskDirectory> {
     return new Promise<TaskDirectory>((resolve, reject) => {
       if (folder) {
         TaskDirectory.traverseFileTree(folder, '').then((result) => {

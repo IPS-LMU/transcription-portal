@@ -161,7 +161,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       const files: (FileInfo | DirectoryInfo)[] = [];
 
       for (let i = 0; i < droppedfiles.length; i++) {
-        const item: WebKitEntry = droppedfiles[i].webkitGetAsEntry();
+        const item: any = droppedfiles[i].webkitGetAsEntry();
 
         if (item.isDirectory) {
           // TODO fix order!

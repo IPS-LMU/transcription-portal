@@ -40,17 +40,17 @@ export class DirectoryInfo extends DataInfo {
     });
   }
 
-  private static traverseFileTree(item: (DataTransferItem | WebKitFileEntry), path): Promise<(FileInfo | DirectoryInfo)[]> {
+  private static traverseFileTree(item: (DataTransferItem | any), path): Promise<(FileInfo | DirectoryInfo)[]> {
     // console.log(`search path: ${path}`);
     return new Promise<(FileInfo | DirectoryInfo)[]>((resolve, reject) => {
         path = path || '';
       if (!(item === null || item === undefined)) {
-          let webKitEntry: WebKitEntry;
+        let webKitEntry: any;
 
           if (item instanceof DataTransferItem) {
             webKitEntry = item.webkitGetAsEntry();
           } else {
-            webKitEntry = <WebKitEntry> item;
+            webKitEntry = <any> item;
           }
 
           if (webKitEntry.isFile) {
@@ -73,7 +73,7 @@ export class DirectoryInfo extends DataInfo {
             } else {
               // item is FileEntry
 
-              (<WebKitFileEntry> webKitEntry).file((file: any) => {
+              (<any> webKitEntry).file((file: any) => {
                 if (file.name.indexOf('.') > -1) {
                   const fileInfo = new FileInfo(file.name, file.type, file.size, file);
                   resolve([fileInfo]);
@@ -85,7 +85,7 @@ export class DirectoryInfo extends DataInfo {
           } else if (webKitEntry.isDirectory) {
             // Get folder contents
             // console.log(`is dir ${item.fullPath}`);
-            const dirEntry: WebKitDirectoryEntry = <WebKitDirectoryEntry> webKitEntry;
+            const dirEntry: any = <any> webKitEntry;
             const dirReader = dirEntry.createReader();
             dirReader.readEntries((entries: any) => {
               const promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
