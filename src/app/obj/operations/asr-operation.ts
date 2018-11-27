@@ -22,24 +22,26 @@ export class ASROperation extends Operation {
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
-    this.callASR(languageObject, httpclient, inputs[0]).then((file: FileInfo) => {
-      if (!(file === null || file === undefined)) {
-        this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
-          this.time.duration = Date.now() - this.time.start;
+    setTimeout(() => {
+      this.callASR(languageObject, httpclient, inputs[0]).then((file: FileInfo) => {
+        if (!(file === null || file === undefined)) {
+          this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
+            this.time.duration = Date.now() - this.time.start;
 
-          this.results.push(finalResult);
-          this.changeState(TaskState.FINISHED);
-        }).catch((error) => {
-          this._protocol += '<br/>' + error;
-          this.changeState(TaskState.ERROR);
-          console.error(error);
-        });
-      }
-    }).catch((error) => {
-      this._protocol += '<br/>' + error;
-      this.changeState(TaskState.ERROR);
-      console.error(error);
-    });
+            this.results.push(finalResult);
+            this.changeState(TaskState.FINISHED);
+          }).catch((error) => {
+            this._protocol += '<br/>' + error;
+            this.changeState(TaskState.ERROR);
+            console.error(error);
+          });
+        }
+      }).catch((error) => {
+        this._protocol += '<br/>' + error;
+        this.changeState(TaskState.ERROR);
+        console.error(error);
+      });
+    }, 2000);
   }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
