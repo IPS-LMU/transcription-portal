@@ -26,8 +26,8 @@
             <i *ngIf="elem.input.extension !== '.wav'" (click)="onPreviewClick(elem.input.file)" class="fa fa-eye"
                style="margin-left:3px;cursor: pointer;"></i>
         </td>
-        <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;"><i class="fa fa-unlink"
-                                                                                        style="color:red;"></i>
+        <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;">
+            <i class="fa fa-unlink" style="color:red;"></i>
         </td>
         <ng-container *ngIf="elem.input.extension !== '.wav'">
             <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">

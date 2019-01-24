@@ -152,7 +152,7 @@ export class FileInfo extends DataInfo {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsText(file, encoding);
-      reader.onload = () => resolve(<string> reader.result);
+      reader.onload = () => resolve(<string>reader.result);
       reader.onerror = error => reject(error);
     });
   }
@@ -219,7 +219,9 @@ export class FileInfo extends DataInfo {
   public updateContentFromURL(httpClient: HttpClient): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this._url !== undefined && this._url !== null) {
-        httpClient.get(this._url, {responseType: 'text'}).subscribe(
+        httpClient.get(this._url, {
+          responseType: 'text'
+        }).subscribe(
           result => {
             this._file = FileInfo.getFileFromContent(result, this.fullname, this._type);
             this._size = this._file.size;
@@ -238,7 +240,7 @@ export class FileInfo extends DataInfo {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(<string> reader.result);
+      reader.onload = () => resolve(<string>reader.result);
       reader.onerror = error => reject(error);
     });
   }

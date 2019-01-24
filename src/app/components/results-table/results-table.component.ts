@@ -69,7 +69,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     if (this.operation.resultType !== '.wav') {
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
-        let from = null;
+        let from: Converter = null;
 
         // TODO change this!
         for (let k = 0; k < AppInfo.converters.length; k++) {
@@ -102,10 +102,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         };
 
         const audio: OAudiofile = new OAudiofile();
-        audio.samplerate = (<AudioInfo> this.operation.task.files[0]).samplerate;
-        audio.duration = (<AudioInfo> this.operation.task.files[0]).duration.samples;
-        audio.name = (<AudioInfo> this.operation.task.files[0]).name;
-        audio.size = (<AudioInfo> this.operation.task.files[0]).size;
+        audio.samplerate = (<AudioInfo>this.operation.task.files[0]).samplerate;
+        audio.duration = (<AudioInfo>this.operation.task.files[0]).duration.samples;
+        audio.name = (<AudioInfo>this.operation.task.files[0]).name;
+        audio.size = (<AudioInfo>this.operation.task.files[0]).size;
 
         FileInfo.getFileContent(result.file).then((text) => {
           file.content = text;
@@ -132,6 +132,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
               };
               convElem.conversions.push(res);
 
+              console.log(`IMPORT from ${from.name}`);
               let annotJSON;
 
               if (from.name !== 'AnnotJSON') {
@@ -142,7 +143,16 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
               const levelnum = 0;
 
-              const preResult = converter.obj.export(annotJSON, audio, levelnum);
+              console.log(`ANNOTJSON:`);
+              console.log(annotJSON);
+              let preResult = null;
+
+              try {
+                preResult = converter.obj.export(annotJSON, audio, levelnum);
+              } catch (e) {
+                console.log(e);
+              }
+
               const exp = (!(preResult === null || preResult === undefined))
                 ? preResult.file : null;
 

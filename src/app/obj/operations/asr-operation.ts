@@ -101,12 +101,16 @@ export class ASROperation extends Operation {
         .replace('{{asrType}}', languageObject.asr)
         .replace('{{language}}', this.task.language);
 
+      console.log(`Call ASR:`);
+      console.log(url);
       httpClient.post(url, {}, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
         responseType: 'text'
       }).subscribe((result: string) => {
+          console.log(`XML Result:`);
+          console.log(result);
           // convert result to json
           const x2js = new X2JS();
           let json: any = x2js.xml2js(result);
@@ -145,12 +149,18 @@ export class ASROperation extends Operation {
         .replace('{{asrType}}', languageObject.asr)
         .replace('{{language}}', this.task.language);
 
+
+      console.log(`Call G2P_CHUNKER:`);
+      console.log(url);
+
       httpClient.post(url, {}, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
         responseType: 'text'
       }).subscribe((result: string) => {
+          console.log(`XML Result:`);
+          console.log(result);
           // convert result to json
           const x2js = new X2JS();
           let json: any = x2js.xml2js(result);
