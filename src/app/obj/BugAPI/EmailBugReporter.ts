@@ -11,8 +11,9 @@ export class EmailBugReporter extends BugReporter {
   public sendBugReport(http: HttpClient, pkg: any, form: any, url: string,
                        auth_token: string, sendbugreport: boolean): Observable<HttpResponse<any>> {
 
-    const report = (sendbugreport) ? this.getText(pkg) : '';
+    const report = (sendbugreport) ? pkg : {};
 
+    console.log(`bugreport: ${sendbugreport}`);
     const json = pkg;
 
     const body = {

@@ -3,6 +3,7 @@ import {ModalDismissReasons, NgbModal, NgbModalRef} from '@ng-bootstrap/ng-boots
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BugReportService} from '../../shared/bug-report.service';
+import {AppSettings} from '../../shared/app.settings';
 
 @Component({
   selector: 'app-feedback',
@@ -62,9 +63,9 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
 
   onSubmit() {
     this._subscrmanager.add(
-      this.bugService.sendReport(this.formData.email, this.formData.messsage, true, {
-        auth_token: 'asdf3245234q234t2c3v',
-        url: 'https://www.phonetik.uni-muenchen.de/apps/octra/oh-email/index.php'
+      this.bugService.sendReport(this.formData.email, this.formData.messsage, this.formData.protocol.append, {
+        auth_token: AppSettings.configuration.plugins.emailSender.authKey,
+        url: AppSettings.configuration.plugins.emailSender.url
       }).subscribe(
         (result) => {
           this.showThankYou = true;

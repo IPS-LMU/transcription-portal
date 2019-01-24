@@ -5,6 +5,12 @@ export interface OHConfiguration {
     'commands': OHCommand[];
     'languages': OHLanguageObject[];
   };
+  'plugins': {
+    'emailSender': {
+      'authKey': string;
+      'url': string;
+    }
+  }
 }
 
 export interface OHLanguageObject {

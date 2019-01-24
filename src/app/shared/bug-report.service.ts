@@ -6,6 +6,7 @@ import {AppInfo} from '../app.info';
 import {BrowserInfo} from '../obj/BrowserInfo';
 import {StorageService} from '../storage.service';
 import {EmailBugReporter} from '../obj/BugAPI/EmailBugReporter';
+import * as moment from 'moment';
 
 export enum ConsoleType {
   LOG,
@@ -16,6 +17,7 @@ export enum ConsoleType {
 
 export interface ConsoleEntry {
   type: ConsoleType;
+  timestamp: string;
   message: string;
 }
 
@@ -44,12 +46,17 @@ export class BugReportService {
   }
 
   public addEntry(type: ConsoleType, message: any) {
-    const console: ConsoleEntry = {
+    if (typeof message !== 'string') {
+      message = JSON.stringify(message);
+    }
+
+    const consoleItem: ConsoleEntry = {
       type: type,
+      timestamp: moment().format('DD.MM.YY HH:mm:ss'),
       message: message
     };
 
-    this._console.push(console);
+    this._console.push(consoleItem);
   }
 
   public clear() {
@@ -57,9 +64,11 @@ export class BugReportService {
   }
 
   public getPackage(): any {
-    const result = {
+    return {
       ohportal: {
-        version: AppInfo.version
+        version: AppInfo.version,
+        url: window.location.href,
+        lastUpdated: AppInfo.lastUpdated
       },
       system: {
         os: {
@@ -71,15 +80,12 @@ export class BugReportService {
       },
       entries: this._console
     };
-
-    return result;
   }
 
   sendReport(email: string, description: string, sendbugreport: boolean, credentials: {
     auth_token: string,
     url: string
   }): Observable<any> {
-
     const auth_token = credentials.auth_token;
     const url = credentials.url;
     const form = {
