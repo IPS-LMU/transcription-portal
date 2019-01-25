@@ -1,3 +1,13 @@
+## [1.0.1](https://github.com/IPS-LMU/oh-portal/compare/v1.0.0...v1.0.1) (2019-01-25)
+
+
+### Bug Fixes
+
+* **http-requests:** fixed problem with http-caching ([3f1b050](https://github.com/IPS-LMU/oh-portal/commit/3f1b050))
+* **popovers:** fixed problems with positioning and fadein/fadeout ([c34bd08](https://github.com/IPS-LMU/oh-portal/commit/c34bd08))
+
+
+
 <a name="1.0.0"></a>
 # 1.0.0 (2018-09-21)
 
