@@ -4,7 +4,7 @@ import {
   CTMConverter,
   PartiturConverter,
   PraatTableConverter,
-  PraatTextgridConverter
+  PraatTextgridConverter, TextConverter
 } from './obj/Converters';
 
 export class AppInfo {
@@ -20,7 +20,7 @@ export class AppInfo {
   }
 
   private static _version = '1.0.0';
-  public static readonly lastUpdated = '2018-01-24 18:00';
+  public static readonly lastUpdated = '2018-01-25 12:20';
 
   private static _converters: {
     obj: Converter;
@@ -45,6 +45,10 @@ export class AppInfo {
     {
       obj: new PraatTableConverter(),
       color: 'purple'
+    },
+    {
+      obj: new TextConverter(),
+      color: 'darkblue'
     }
   ];
 }
