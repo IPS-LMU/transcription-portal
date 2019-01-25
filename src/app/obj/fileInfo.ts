@@ -219,7 +219,7 @@ export class FileInfo extends DataInfo {
   public updateContentFromURL(httpClient: HttpClient): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this._url !== undefined && this._url !== null) {
-        httpClient.get(this._url, {
+        httpClient.get(this._url + `?d=${Date.now()}`, {
           responseType: 'text'
         }).subscribe(
           result => {

@@ -168,17 +168,20 @@ export class ASROperation extends Operation {
 
           if (json.success === 'true') {
             const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain');
-            file.updateContentFromURL(httpClient).then(() => {
-              // add messages to protocol
-              if (json.warnings !== '') {
-                this._protocol = '<br/>' + json.warnings;
-              } else if (json.output !== '') {
-                this._protocol = '<br/>' + json.output;
-              }
-              resolve(file);
-            }).catch((error) => {
-              reject(error);
-            });
+
+            setTimeout(() => {
+              file.updateContentFromURL(httpClient).then(() => {
+                // add messages to protocol
+                if (json.warnings !== '') {
+                  this._protocol = '<br/>' + json.warnings;
+                } else if (json.output !== '') {
+                  this._protocol = '<br/>' + json.output;
+                }
+                resolve(file);
+              }).catch((error) => {
+                reject(error);
+              });
+            }, 5000);
           } else {
             reject(json.output);
           }
