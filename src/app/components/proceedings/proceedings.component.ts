@@ -33,6 +33,7 @@ import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-pr
 import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
+import {NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 
 declare var window: any;
 
@@ -59,7 +60,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     height: number,
     operation: Operation,
     task: Task | TaskDirectory,
-    pointer: string
+    pointer: string,
+    mouseIn: boolean
   } = {
     x: 0,
     y: 0,
@@ -68,7 +70,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     height: 320,
     operation: null,
     task: null,
-    pointer: 'left'
+    pointer: 'left',
+    mouseIn: false
   };
 
   @Input() taskList: TaskList = new TaskList();
@@ -97,11 +100,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   @ViewChild('popoverRef') public popoverRef: PopoverComponent;
   @ViewChild('filePreview') public filePreview: FilePreviewModalComponent;
+  @ViewChild('t2') public tooltip: NgbTooltip;
 
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
 
-  constructor(public sanitizer: DomSanitizer, private cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
+  constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
               public storage: StorageService) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -329,7 +333,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         }
       } else {
         for (let j = 0; j < entry.entries.length; j++) {
-          const task = <Task> entry.entries[j];
+          const task = <Task>entry.entries[j];
           if (task.files.length > 1) {
             task.files.splice(1);
             task.operations[1].enabled = this.taskService.operations[1].enabled;
@@ -368,12 +372,21 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     } else {
       this.popover.state = 'closed';
     }
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onOperationMouseEnter($event, operation: Operation) {
+    console.log(`MOUSE ENTERED!`);
+    console.log($event);
     // show Popover for normal operations only
     if (!(operation instanceof EmuOperation) &&
       !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
+      console.log(`show popup!`);
+      const icon = $event.target;
+      const parentNode = icon.parentNode;
+
       this.popover.operation = operation;
       if (operation.protocol !== '') {
         this.popover.width = 500;
@@ -381,16 +394,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         this.popover.width = 400;
       }
       this.popover.height = 230;
-      if (($event.target.offsetLeft + this.popover.width) < window.innerWidth) {
-        this.popover.x = $event.target.offsetLeft + ($event.target.offsetWidth / 2);
+      if ((parentNode.offsetLeft + this.popover.width) < window.innerWidth) {
+        this.popover.x = parentNode.offsetLeft + (parentNode.offsetWidth / 2);
         this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
       } else {
-        this.popover.x = $event.target.offsetLeft - this.popover.width + ($event.target.offsetWidth / 2);
+        this.popover.x = parentNode.offsetLeft - this.popover.width + (parentNode.offsetWidth / 2);
         this.popover.pointer = ($event.layerY + this.popoverRef.height < window.innerHeight) ? 'right' : 'bottom-right';
       }
 
-      this.popover.y = ($event.layerY + this.popoverRef.height > window.innerHeight)
-        ? $event.layerY - this.popoverRef.height : $event.layerY;
+      const top = icon.offsetTop + parentNode.offsetTop + icon.offsetHeight;
+      this.popover.y = (top + this.popoverRef.height > window.innerHeight)
+        ? top - this.popoverRef.height : top;
       this.togglePopover(true);
 
     }
@@ -399,15 +413,19 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onOperationMouseLeave($event, operation: Operation) {
-    if (!(operation instanceof EmuOperation) && !(operation.state === TaskState.PENDING)) {
-      this.togglePopover(false);
-    }
     operation.mouseover = false;
+    this.popover.mouseIn = false;
+    setTimeout(() => {
+      if (!this.popover.mouseIn) {
+        this.togglePopover(false);
+      }
+    }, 250);
     operation.onMouseLeave();
   }
 
   onOperationMouseOver($event, operation: Operation) {
     operation.mouseover = true;
+    this.popover.mouseIn = true;
     this.selectedOperation = operation;
     operation.onMouseOver();
     this.operationhover.emit();
@@ -463,7 +481,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   getMailToLink(task: Task) {
     if (task.state === TaskState.FINISHED) {
-      const tool_url = (<EmuOperation> task.operations[4]).getToolURL();
+      const tool_url = (<EmuOperation>task.operations[4]).getToolURL();
       let subject = 'OH-Portal Links';
       let body = '' +
         'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[1].results[0].url + '\n\n' +
@@ -587,9 +605,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   public onOperationClick($event, operation: Operation) {
     if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
-      setTimeout(() => {
-        this.popover.state = 'closed';
-      }, 1000);
+      this.popover.state = 'closed';
+      this.cd.markForCheck();
+      this.cd.detectChanges();
       this.selectedOperation = undefined;
     } else {
       this.selectedOperation = operation;
@@ -598,7 +616,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   openArchiveDownload(type: 'column' | 'line', operation: Operation) {
-    this.selectedOperation = operation;
     this.content.open(type);
   }
 
@@ -713,15 +730,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  toggleOperationDescription(tooltip) {
-    if (tooltip.isOpen()) {
-      tooltip.close();
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-    } else {
+  toolTipAction(action: string, tooltip) {
+    if (action === 'open') {
       tooltip.open();
-      this.cd.markForCheck();
-      this.cd.detectChanges();
+    } else {
+      tooltip.close();
     }
+
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 }

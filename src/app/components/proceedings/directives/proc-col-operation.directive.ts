@@ -69,11 +69,18 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
             // result is available
 
             if (this.operation.enabled) {
+              let icon = null;
               if (!(this.operation.mouseover && this.operation.state === 'ERROR')) {
-                const icon = this.operation.getStateIcon2(this.operation.state);
-                this.elementRef.nativeElement.innerHTML = icon;
+                const wrapper = this.renderer.createElement('div');
+                this.renderer.setStyle(wrapper, 'display', 'inline');
+                wrapper.innerHTML = this.operation.getStateIcon2(this.operation.state);
+
+                this.renderer.listen(wrapper, 'mouseover', this.onMouseOver);
+                this.renderer.listen(wrapper, 'mouseenter', this.onMouseEnter);
+                this.renderer.listen(wrapper, 'mouseleave', this.onMouseLeave);
+                this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
               } else {
-                const icon = this.renderer.createElement('i');
+                icon = this.renderer.createElement('i');
                 this.renderer.addClass(icon, 'fa');
                 this.renderer.addClass(icon, 'fa-repeat');
                 this.renderer.setAttribute(icon, 'aria-hidden', 'true');
@@ -81,6 +88,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
                 this.renderer.listen(icon, 'click', this.onRepeatIconClick);
               }
+
               this.renderer.removeClass(this.elementRef.nativeElement, 'op-deactivated');
             } else {
               // operation disabled
@@ -104,7 +112,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private clearContents() {
-    for (let i = 0; i < (<HTMLElement> this.elementRef.nativeElement).children.length; i++) {
+    for (let i = 0; i < (<HTMLElement>this.elementRef.nativeElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
       if (!(child === null || child === undefined)) {
@@ -115,6 +123,19 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
         }
       }
     }
+  }
+
+  private onMouseOver = (event) => {
+    console.log(`MOUSEOVER PROCCOL`);
+    this.onOperationMouseOver.next(event);
+  }
+
+  private onMouseEnter = (event) => {
+    this.onOperationMouseEnter.next(event);
+  }
+
+  private onMouseLeave = (event) => {
+    this.onOperationMouseLeave.next(event);
   }
 
   private onRepeatIconClick = () => {

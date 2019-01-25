@@ -208,7 +208,7 @@ export abstract class Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   }
 
-  public getStateIcon2 = (state: TaskState): String => {
+  public getStateIcon2 = (state: TaskState): string => {
     let result = '';
 
     switch (state) {

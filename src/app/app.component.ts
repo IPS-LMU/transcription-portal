@@ -337,11 +337,10 @@ export class AppComponent implements OnDestroy {
 
   onOperationClick(operation: Operation) {
     if (operation instanceof ToolOperation) {
-      const tool = <ToolOperation> operation;
+      const tool = <ToolOperation>operation;
 
       if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!(tool.previousOperation === null || tool.previousOperation === undefined) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
         if (!tool.task.operations[0].results[0].available) {
-
           if ((tool.task.files[0].file === null || tool.task.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
               `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.title}" again.`, 10);
@@ -380,7 +379,7 @@ export class AppComponent implements OnDestroy {
             const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
             subj.subscribe((obj) => {
               if (obj.type === 'loadend') {
-                const result = <string> obj.result;
+                const result = <string>obj.result;
                 const x2js = new X2JS();
                 let json: any = x2js.xml2js(result);
                 json = json.UploadFileMultiResponse;
@@ -419,7 +418,7 @@ export class AppComponent implements OnDestroy {
             const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
             subj.subscribe((obj) => {
               if (obj.type === 'loadend') {
-                const result = <string> obj.result;
+                const result = <string>obj.result;
                 const x2js = new X2JS();
                 let json: any = x2js.xml2js(result);
                 json = json.UploadFileMultiResponse;
@@ -465,6 +464,8 @@ export class AppComponent implements OnDestroy {
           this.tool_url = tool.getToolURL();
 
           if (this.tool_url !== '') {
+            this.proceedings.cd.markForCheck();
+            this.proceedings.cd.detectChanges();
             this.toolLoader.url = tool.getToolURL();
             if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined) && operation.id !== this.toolSelectedOperation.id) {
               // some operation already initialized
@@ -478,6 +479,7 @@ export class AppComponent implements OnDestroy {
             if (operation instanceof OCTRAOperation) {
               operation.time.start = Date.now();
             }
+            this.proceedings.togglePopover(false);
           } else {
             console.warn(`tool url is empty`);
           }
@@ -491,7 +493,7 @@ export class AppComponent implements OnDestroy {
   onOperationHover(operation: Operation) {
   }
 
-  onASRLangCHanged(lang) {
+  onASRLangChanged(lang) {
     if (lang.code !== this.taskService.selectedlanguage.code) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
@@ -584,7 +586,7 @@ export class AppComponent implements OnDestroy {
   }
 
   public getTime(): number {
-    let elem: AudioInfo = <AudioInfo> this.toolSelectedOperation.task.files[0];
+    let elem: AudioInfo = <AudioInfo>this.toolSelectedOperation.task.files[0];
 
     if (!(elem.duration === null || elem.duration === undefined)) {
       return elem.duration.unix;
