@@ -78,6 +78,13 @@
         "asr": "LSTDutch",
         "host": ""
       }
-    ]
+    ],
+    "plugins": {
+      "emailSender": {
+        "url": "",
+        "old": "",
+        "authKey": ""
+      }
+    }
   }
 }
