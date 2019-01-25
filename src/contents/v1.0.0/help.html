@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="You find the OH-Portal v1.0.0 Documentation here.">
+    <meta name="description" content="OH-Portal v1.0.0 Documentation gives you a quick start using the OH-Portal.">
 
     <title>OH-Portal v1.0.0 Documentation</title>
 
@@ -16,6 +16,10 @@
 
         ol li {
             margin-bottom: 20px;
+        }
+
+        table .first {
+            width: 25px;
         }
     </style>
 </head>
@@ -31,15 +35,9 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-            <!-- <li class="nav-item active">
-                <a class="nav-link" href="#" data-bcup-haslogintext="no">Home <span class="sr-only">(current)</span></a>
+            <li>
+                <a class="nav-link" href="https://github.com/IPS-LMU/oh-portal">Github repository</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#" data-bcup-haslogintext="no">Link</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" href="#" data-bcup-haslogintext="no">Disabled</a>
-            </li> -->
         </ul>
     </div>
 </nav>
@@ -79,30 +77,30 @@
                     <li>Now click on the button "START PROCESSING".</li>
                     <li>Each line represents a task and each step has it's own status. The status is represented as an
                         icon:
-                        <table class="table table-striped table-sm">
+                        <table class="table table-striped table-sm" style="max-width:300px;margin: 20px auto;">
                             <tr>
-                                <td>no icon:</td>
-                                <td>pending</td>
+                                <td class="first"><img src="img/no-icon.png" alt="no-icon"/></td>
+                                <td>(no icon): pending</td>
                             </tr>
                             <tr>
-                                <td>black cog:</td>
+                                <td class="first"><img src="img/cog.png" alt="spinning cog"/></td>
                                 <td>processing</td>
                             </tr>
                             <tr>
-                                <td>red "X":</td>
+                                <td><img src="img/error.png" alt="error"/></td>
                                 <td>error</td>
                             </tr>
                             <tr>
-                                <td>green checkmark:</td>
+                                <td class="first"><img src="img/checkmark.png" alt="checkmark"/></td>
                                 <td>finished</td>
                             </tr>
                             <tr>
-                                <td>gray arrow pointing to the right:</td>
+                                <td class="first"><img src="img/skip.png" alt="skip"/></td>
                                 <td>skipped</td>
                             </tr>
                         </table>
-                        <p>
-                            For further information move the mouse over a icon.
+                        <p class="text-info text-center">
+                            For further information move the mouse over an icon.
                         </p>
                     </li>
                     <li>
