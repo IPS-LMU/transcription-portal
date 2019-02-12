@@ -79,31 +79,30 @@ export class WavFormat extends AudioFormat {
     // eg. blockAlign = 4 Byte => 2 * 8 Channel1 + 2 * 8 Channel2 = 32Bit = 4 Byte
 
     if (this.isValid(buffer)) {
-      const channelData: number[][] = [];
+      const channelData: Uint8Array[] = [];
+      const u8array = new Uint8Array(buffer);
+
       for (let i = 0; i < this._channels; i++) {
-        channelData.push([]);
+        channelData.push(new Uint8Array((u8array.length - 44) / this._channels));
       }
 
       let pointer = 0;
-      const u8array = new Uint8Array(buffer);
       for (let i = 44; i < u8array.length; i++) {
         try {
           for (let j = 0; j < this._channels; j++) {
-
-            for (let k = 0; k < this.blockAlign / this._channels; k++) {
-              channelData[j].push(u8array[i + k]);
-            }
+            const subArray = u8array.slice(i, i + (this.blockAlign / this._channels));
+            channelData[j].set(subArray, pointer);
             i += this.blockAlign / this._channels;
           }
           i--;
-          pointer++;
+          pointer += this.blockAlign / this._channels;
         } catch (e) {
           console.error(e);
         }
       }
 
       for (let i = 0; i < channelData.length; i++) {
-        const file = this.getFileFromBufferPart(buffer, channelData[i], filename + '_' + (i + 1));
+        const file = this.getFileFromBufferPart(channelData[i], filename + '_' + (i + 1));
         result.push(file);
       }
     } else {
@@ -113,7 +112,7 @@ export class WavFormat extends AudioFormat {
     return result;
   }
 
-  private getFileFromBufferPart(originalBuffer: ArrayBuffer, data: number[], filename: string): File {
+  private getFileFromBufferPart(data: Uint8Array, filename: string): File {
     const samples = (data.length * 2 * 8) / (this._bitsPerSample);
 
     const buffer = new ArrayBuffer(44 + data.length);

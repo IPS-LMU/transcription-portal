@@ -211,7 +211,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
       // set filename
       this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes.originalFileName);
-      const filename = this.renderer.createText(' ' + this.entry.files[0].name.replace('_annot', '') + '.wav ');
+      const filename = this.renderer.createText(' ' + this.entry.files[0].attributes.originalFileName.replace('_annot.json', '.wav') + ' ');
       this.renderer.appendChild(result, filename);
       this.renderer.appendChild(wrapper, result);
     } else {
