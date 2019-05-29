@@ -94,6 +94,7 @@ export class ASROperation extends Operation {
 
   private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
+      console.log(`CALL ASR`);
       this.webService = `${languageObject.asr}ASR`;
 
       const url = this._commands[0].replace('{{host}}', languageObject.host)
@@ -141,6 +142,7 @@ export class ASROperation extends Operation {
 
   private callG2PChunker(languageObject: OHLanguageObject, httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
+      console.log(`CALL G2P`);
       this.webService = `${languageObject.asr}ASR`;
 
       const url = this._commands[1].replace('{{host}}', languageObject.host)
