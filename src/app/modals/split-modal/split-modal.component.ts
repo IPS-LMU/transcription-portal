@@ -17,7 +17,7 @@ export class SplitModalComponent implements OnInit {
     this.dissmissedChange.emit(this._splitModalDismissedProperly);
   }
 
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
   private _splitModalDismissedProperly = false;
   @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 

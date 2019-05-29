@@ -12,7 +12,7 @@ import {AppSettings} from '../../shared/app.settings';
 })
 export class FeedbackModalComponent implements OnInit, OnDestroy {
 
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
 
   public showThankYou = false;
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();

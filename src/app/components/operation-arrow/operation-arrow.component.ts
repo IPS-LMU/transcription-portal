@@ -16,7 +16,7 @@ export class OperationArrowComponent implements OnInit, AfterViewInit {
     color: 'cornflowerblue'
   };
 
-  @ViewChild('outer') outer;
+  @ViewChild('outer', { static: true }) outer;
   @Input() type: 'arrow' | 'circle' = 'arrow';
   @Input() first = false;
 

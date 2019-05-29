@@ -94,16 +94,16 @@ export class AppComponent implements OnDestroy {
     return {value: this.sidebarExpand, params: {width: width}}
   }
 
-  @ViewChild('fileinput') fileinput: ElementRef;
-  @ViewChild('folderinput') folderinput: ElementRef;
-  @ViewChild('proceedings') proceedings: ProceedingsComponent;
-  @ViewChild('splitModal') splitModal: SplitModalComponent;
-  @ViewChild('firstModal') firstModal: FirstModalComponent;
-  @ViewChild('feedbackModal') feedbackModal: FeedbackModalComponent;
-  @ViewChild('queueModal') queueModal: QueueModalComponent;
-  @ViewChild('protocolFooter') protocolFooter: ProtocolFooterComponent;
-  @ViewChild('toolLoader') toolLoader: ToolLoaderComponent;
-  @ViewChild('statisticsModal') statisticsModal: StatisticsModalComponent;
+  @ViewChild('fileinput', { static: false }) fileinput: ElementRef;
+  @ViewChild('folderinput', { static: false }) folderinput: ElementRef;
+  @ViewChild('proceedings', { static: false }) proceedings: ProceedingsComponent;
+  @ViewChild('splitModal', { static: true }) splitModal: SplitModalComponent;
+  @ViewChild('firstModal', { static: true }) firstModal: FirstModalComponent;
+  @ViewChild('feedbackModal', { static: true }) feedbackModal: FeedbackModalComponent;
+  @ViewChild('queueModal', { static: false }) queueModal: QueueModalComponent;
+  @ViewChild('protocolFooter', { static: false }) protocolFooter: ProtocolFooterComponent;
+  @ViewChild('toolLoader', { static: true }) toolLoader: ToolLoaderComponent;
+  @ViewChild('statisticsModal', { static: true }) statisticsModal: StatisticsModalComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,

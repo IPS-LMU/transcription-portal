@@ -11,7 +11,7 @@ import {Subject} from 'rxjs/Subject';
 export class FirstModalComponent implements OnInit {
 
 
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
 
   @Output() understandClick: Subject<void> = new Subject<void>();
 

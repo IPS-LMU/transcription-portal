@@ -11,7 +11,7 @@ import {TaskService} from '../../obj/tasks/task.service';
 })
 export class StatisticsModalComponent implements OnInit, OnDestroy {
 
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
 
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();
   private modalRef: NgbModalRef;

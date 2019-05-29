@@ -9,7 +9,7 @@ import {FileInfo} from '../../obj/fileInfo';
   styleUrls: ['./file-preview-modal.component.css']
 })
 export class FilePreviewModalComponent implements OnInit {
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
   private modalRef: NgbModalRef;
 
   public selectedFile: FileInfo;

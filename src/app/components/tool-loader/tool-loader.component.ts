@@ -19,7 +19,7 @@ import {Operation} from '../../obj/operations/operation';
   styleUrls: ['./tool-loader.component.css']
 })
 export class ToolLoaderComponent implements OnInit, OnChanges {
-  @ViewChild('iframe') iframe: ElementRef;
+  @ViewChild('iframe', { static: true }) iframe: ElementRef;
 
   public selectedtool: {
     url: SafeUrl

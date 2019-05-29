@@ -17,7 +17,7 @@ import {AppSettings} from '../../shared/app.settings';
   styleUrls: ['./queue-modal.component.css']
 })
 export class QueueModalComponent implements OnInit {
-  @ViewChild('content') content: NgbModal;
+  @ViewChild('content', { static: true }) content: NgbModal;
   private modalRef: NgbModalRef;
 
   @Input() tasks: Task[] = [];

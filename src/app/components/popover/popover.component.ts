@@ -9,8 +9,8 @@ import 'rxjs/add/observable/interval';
 })
 export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
-  @ViewChild('svg') svg: ElementRef;
-  @ViewChild('inner') inner: ElementRef;
+  @ViewChild('svg', { static: true }) svg: ElementRef;
+  @ViewChild('inner', { static: true }) inner: ElementRef;
 
   @Input() borderColor = '#3a70dd';
   @Input() pointer: 'left' | 'right' | 'bottom-left' = 'left';

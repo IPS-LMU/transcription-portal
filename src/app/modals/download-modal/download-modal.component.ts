@@ -22,7 +22,7 @@ import {Converter, ImportResult} from '../../obj/Converters';
 })
 export class DownloadModalComponent implements OnInit, OnChanges {
 
-  @ViewChild('content') content;
+  @ViewChild('content', { static: true }) content;
   @Input() type: 'line' | 'column' = 'column';
   @Input() selectedTasks: number[];
   @Input() taskList: Task[];
