@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {TaskService} from '../obj/tasks/task.service';
 import {SubscriptionManager} from './subscription-manager';
-import {Observable} from 'rxjs';
+import {interval} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,7 @@ export class StatisticsService {
   private subscrmanager = new SubscriptionManager();
 
   constructor(private taskService: TaskService) {
-    this.subscrmanager.add(Observable.interval(1000).subscribe(() => {
+    this.subscrmanager.add(interval(1000).subscribe(() => {
       const allTasks = this.taskService.taskList.getAllTasks();
 
       if (!(allTasks === null || allTasks === undefined)) {

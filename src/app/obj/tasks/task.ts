@@ -1,9 +1,7 @@
 import {HttpClient} from '@angular/common/http';
-import {Observable} from 'rxjs/Observable';
-import {ReplaySubject} from 'rxjs/ReplaySubject';
+import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
-import {Subject} from 'rxjs/Subject';
 import {TaskDirectory} from './taskDirectory';
 import {AudioInfo} from '../audio';
 import {TaskEntry} from './task-entry';
@@ -376,7 +374,7 @@ export class Task {
           const fileObj = values[i];
 
           if (file instanceof AudioInfo) {
-            const audioFile = <AudioInfo> file;
+            const audioFile = <AudioInfo>file;
 
             fileObj['sampleRate'] = audioFile.samplerate;
             fileObj['bitsPerSecond'] = audioFile.bitrate;

@@ -20,7 +20,7 @@ import {Operation} from '../operations/operation';
 import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {AlertService} from '../../shared/alert.service';
-import {Observable} from 'rxjs';
+import {interval} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 
 @Injectable()
@@ -170,8 +170,8 @@ export class TaskService implements OnDestroy {
             }
           } else {
             for (let j = 0; j < result.entries.length; j++) {
-              const entry = <Task> result.entries[j];
-              const tasks: Task[] = <Task[]> result.entries.filter((a) => {
+              const entry = <Task>result.entries[j];
+              const tasks: Task[] = <Task[]>result.entries.filter((a) => {
                 return a instanceof Task;
               });
 
@@ -190,7 +190,7 @@ export class TaskService implements OnDestroy {
 
                     entry.addFile(task.files[0]);
 
-                    (<TaskDirectory> result).entries.splice(v, 1);
+                    (<TaskDirectory>result).entries.splice(v, 1);
                     tasks.splice(v, 1);
                     v--;
 
@@ -246,7 +246,7 @@ export class TaskService implements OnDestroy {
             this.listenToTaskEvents(event.entry);
           } else {
             for (let i = 0; i < event.entry.entries.length; i++) {
-              const task = <Task> event.entry.entries[i];
+              const task = <Task>event.entry.entries[i];
               this.listenToTaskEvents(task);
             }
           }
@@ -271,7 +271,7 @@ export class TaskService implements OnDestroy {
       }
     ));
 
-    this.subscrmanager.add(Observable.interval(1000).subscribe(() => {
+    this.subscrmanager.add(interval(1000).subscribe(() => {
       this.updateStatistics();
     }));
     this.updateStatistics();
@@ -328,7 +328,7 @@ export class TaskService implements OnDestroy {
           const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
 
           for (let l = 0; l < taskDir.entries.length; l++) {
-            const task = <Task> taskDir.entries[l];
+            const task = <Task>taskDir.entries[l];
             for (let j = 0; j < task.operations.length; j++) {
               const operation = task.operations[j];
 
@@ -442,10 +442,10 @@ export class TaskService implements OnDestroy {
         let entry = this.taskList.entries[i];
 
         if (entry instanceof TaskDirectory) {
-          entry = <TaskDirectory> entry;
+          entry = <TaskDirectory>entry;
           if (entry.path.indexOf('_dir') > -1) {
             for (let j = 0; j < entry.entries.length; j++) {
-              const dirEntry = <Task> entry.entries[j];
+              const dirEntry = <Task>entry.entries[j];
               let nothingToDo = true;
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
@@ -619,13 +619,13 @@ export class TaskService implements OnDestroy {
       const entry = entries[i];
 
       if (entry instanceof FileInfo) {
-        const file = <FileInfo> entry;
+        const file = <FileInfo>entry;
         if (file.extension === '.wav' || this.validTranscript(file.extension)) {
           result.push(file);
         }
 
       } else {
-        const directory = <DirectoryInfo> entry;
+        const directory = <DirectoryInfo>entry;
 
         const dir = directory.clone();
 
@@ -648,10 +648,10 @@ export class TaskService implements OnDestroy {
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = (queueItem: QueueItem) => {
     if (queueItem.file instanceof FileInfo) {
-      const file = <FileInfo> queueItem.file;
+      const file = <FileInfo>queueItem.file;
       return this.processFileInfo(file, '', queueItem);
     } else if (queueItem.file instanceof DirectoryInfo) {
-      const dir = <DirectoryInfo> queueItem.file;
+      const dir = <DirectoryInfo>queueItem.file;
       return this.processDirectoryInfo(dir, queueItem);
     }
   }
@@ -762,7 +762,7 @@ export class TaskService implements OnDestroy {
                 }
                 resolve([]);
               } else {
-                const task = new Task([<FileInfo> queueItem.file], this.operations);
+                const task = new Task([<FileInfo>queueItem.file], this.operations);
                 task.language = this.selectedlanguage.code;
 
                 // set state
@@ -795,7 +795,7 @@ export class TaskService implements OnDestroy {
         const dirEntry = dir.entries[i];
 
         if (dirEntry instanceof FileInfo) {
-          const file = <FileInfo> dirEntry;
+          const file = <FileInfo>dirEntry;
           promises.push(this.processFileInfo(file, dir.path, queueItem));
 
         } else {

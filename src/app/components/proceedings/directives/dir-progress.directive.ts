@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
 import {SubscriptionManager} from '../../../shared/subscription-manager';
-import {Observable} from 'rxjs';
+import {interval, Observable} from 'rxjs';
 
 @Directive({
   selector: '[appDirProgress]'
@@ -23,7 +23,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2) {
-    this.subscrmanager.add(Observable.interval(1000).subscribe(() => {
+    this.subscrmanager.add(interval(1000).subscribe(() => {
       this.updateView();
     }));
   }

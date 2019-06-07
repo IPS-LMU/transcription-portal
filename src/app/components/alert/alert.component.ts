@@ -1,9 +1,7 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Subject} from 'rxjs/Subject';
 import {AlertService} from '../../shared/alert.service';
-import {interval} from 'rxjs/observable/interval';
 import {ANIMATIONS} from '../../shared/Animations';
-import {Subscription} from 'rxjs/Subscription';
+import {interval, Subject, Subscription} from 'rxjs';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';

@@ -1,5 +1,5 @@
 import {BugReporter} from './BugReporter';
-import {Observable} from 'rxjs/Observable';
+import {Observable} from 'rxjs';
 import {HttpClient, HttpResponse} from '@angular/common/http';
 
 export class EmailBugReporter extends BugReporter {

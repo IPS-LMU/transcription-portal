@@ -1,5 +1,5 @@
 import {BugReporter} from './BugReporter';
-import {Observable} from 'rxjs/Observable';
+import {Observable} from 'rxjs';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 
 export class MantisBugReporter extends BugReporter {

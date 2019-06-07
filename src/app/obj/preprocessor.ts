@@ -1,4 +1,4 @@
-import {Subject} from 'rxjs/Subject';
+import {Subject} from 'rxjs';
 import {FileInfo} from './fileInfo';
 import {DirectoryInfo} from './directoryInfo';
 import {Task, TaskDirectory} from './tasks';

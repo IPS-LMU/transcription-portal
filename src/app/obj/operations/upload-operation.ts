@@ -5,7 +5,7 @@ import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks/task';
 import * as X2JS from 'x2js';
-import {Subject} from 'rxjs/Subject';
+import {Subject} from 'rxjs';
 import {OHLanguageObject} from '../oh-config';
 
 export class UploadOperation extends Operation {

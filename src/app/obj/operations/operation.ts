@@ -1,8 +1,8 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
-import {Observable} from 'rxjs/Observable';
+import {Observable} from 'rxjs';
 import {FileInfo} from '../fileInfo';
-import {Subject} from 'rxjs/Subject';
+import {Subject} from 'rxjs';
 import {Task, TaskState} from '../tasks/task';
 import {OHLanguageObject} from '../oh-config';
 

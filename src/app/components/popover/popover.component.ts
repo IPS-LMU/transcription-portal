@@ -1,6 +1,5 @@
 import {Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild} from '@angular/core';
 import {SubscriptionManager} from '../../shared/subscription-manager';
-import 'rxjs/add/observable/interval';
 
 @Component({
   selector: 'app-popover',
