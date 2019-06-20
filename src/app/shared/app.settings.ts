@@ -12,9 +12,9 @@ export class AppSettings {
     this._configuration = configuration;
   }
 
-  public static getLanguageByCode(code: string): OHLanguageObject {
+  public static getLanguageByCode(code: string, asr: string): OHLanguageObject {
     return this.configuration.api.languages.find((a) => {
-      return a.code === code;
+      return a.code === code && a.asr === asr;
     });
   }
 }

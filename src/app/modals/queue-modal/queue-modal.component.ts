@@ -17,7 +17,7 @@ import {AppSettings} from '../../shared/app.settings';
   styleUrls: ['./queue-modal.component.css']
 })
 export class QueueModalComponent implements OnInit {
-  @ViewChild('content', { static: true }) content: NgbModal;
+  @ViewChild('content', {static: true}) content: NgbModal;
   private modalRef: NgbModalRef;
 
   @Input() tasks: Task[] = [];
@@ -93,6 +93,7 @@ export class QueueModalComponent implements OnInit {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
+        task.asr = this.taskService.selectedlanguage.asr;
         this.storage.saveTask(task);
       }
     }

@@ -529,7 +529,7 @@ export class TaskService implements OnDestroy {
             });
           });
           this.storage.saveTask(task);
-          const langObj = AppSettings.getLanguageByCode(task.language);
+          const langObj = AppSettings.getLanguageByCode(task.language, task.asr);
           task.start(langObj, this.httpclient);
           setTimeout(() => {
             this.start();
@@ -764,6 +764,7 @@ export class TaskService implements OnDestroy {
               } else {
                 const task = new Task([<FileInfo>queueItem.file], this.operations);
                 task.language = this.selectedlanguage.code;
+                task.asr = this.selectedlanguage.asr;
 
                 // set state
                 for (let i = 0; i < this.operations.length; i++) {

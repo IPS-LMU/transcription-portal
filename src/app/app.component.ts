@@ -373,7 +373,7 @@ export class AppComponent implements OnDestroy {
             // reupload result from tool operation
 
             // TODO make uploading easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.asr);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
@@ -412,7 +412,7 @@ export class AppComponent implements OnDestroy {
             // local available, re upload
 
             // TODO make using upload easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.asr);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
@@ -494,7 +494,7 @@ export class AppComponent implements OnDestroy {
   }
 
   onASRLangChanged(lang) {
-    if (lang.code !== this.taskService.selectedlanguage.code) {
+    if (lang.code !== this.taskService.selectedlanguage.code || lang.asr !== this.taskService.selectedlanguage.asr) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
       this.storage.saveUserSettings('defaultTaskOptions', {
@@ -510,6 +510,7 @@ export class AppComponent implements OnDestroy {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
+        task.asr = this.taskService.selectedlanguage.asr;
         this.storage.saveTask(task);
       }
     }
@@ -549,7 +550,7 @@ export class AppComponent implements OnDestroy {
 
         setTimeout(() => {
           if (this.toolSelectedOperation.task.state === 'FINISHED') {
-            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language);
+            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.asr);
             this.toolSelectedOperation.task.restart(langObj, this.httpclient);
           }
           this.onBackButtonClicked();

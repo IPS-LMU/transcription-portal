@@ -21,6 +21,12 @@ export enum TaskState {
 }
 
 export class Task {
+  set asr(value: any) {
+    this._asr = value;
+  }
+  get asr(): any {
+    return this._asr;
+  }
   set files(value: FileInfo[]) {
     this._files = value;
     this.fileschange.next();
@@ -114,6 +120,7 @@ export class Task {
   public fileschange: Subject<void> = new Subject<void>();
 
   private _language = null;
+  private _asr = null;
   private _files: FileInfo[];
   // operations that have to be done
   private _operations: Operation[] = [];
@@ -134,6 +141,7 @@ export class Task {
 
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
+    task.asr = taskObj.asr;
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
     } else {
@@ -355,6 +363,7 @@ export class Task {
         state: this.state,
         folderPath: '',
         language: this.language,
+        asr: this.asr,
         files: [],
         operations: []
       };
