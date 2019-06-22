@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
@@ -30,7 +30,6 @@ import {StatisticsModalComponent} from './modals/statistics-modal/statistics-mod
 import {SettingsService} from './shared/settings.service';
 import {AppSettings} from './shared/app.settings';
 import {OHLanguageObject} from './obj/oh-config';
-import * as clipboard from 'clipboard-polyfill';
 
 declare var window: any;
 
@@ -39,7 +38,8 @@ declare var window: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   providers: [],
-  animations: [ANIMATIONS]
+  animations: [ANIMATIONS],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnDestroy {
   get showtool(): boolean {

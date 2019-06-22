@@ -190,3 +190,17 @@ nav li {
 .totalState {
     display: inline;
 }
+
+#settings-dropdown {
+    margin-left: -280px;
+    width: 300px;
+    padding: 10px;
+}
+
+@media (max-width: 800px) {
+    #settings-dropdown {
+        margin-left: 0;
+        width:100%;
+        display:block;
+    }
+}
