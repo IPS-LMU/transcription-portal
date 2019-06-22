@@ -13,6 +13,10 @@ export class AppSettings {
   }
 
   public static getLanguageByCode(code: string, asr: string): OHLanguageObject {
+    if ((asr === null || asr === undefined)) {
+      return null;
+    }
+
     return this.configuration.api.languages.find((a) => {
       return a.code === code && a.asr === asr;
     });

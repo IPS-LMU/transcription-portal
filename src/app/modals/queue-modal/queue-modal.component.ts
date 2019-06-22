@@ -10,6 +10,7 @@ import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {AppSettings} from '../../shared/app.settings';
+import {OHLanguageObject} from '../../obj/oh-config';
 
 @Component({
   selector: 'app-queue-modal',
@@ -73,8 +74,8 @@ export class QueueModalComponent implements OnInit {
     return 0;
   }
 
-  onASRLangCHanged(lang) {
-    if (lang.code !== this.taskService.selectedlanguage.code) {
+  onASRLangChanged(lang: OHLanguageObject) {
+    if (lang.code !== this.taskService.selectedlanguage.code || lang.asr !== this.taskService.selectedlanguage.asr) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
     }
@@ -98,7 +99,8 @@ export class QueueModalComponent implements OnInit {
       }
     }
     this.storage.saveUserSettings('defaultTaskOptions', {
-      language: this.taskService.selectedlanguage.code
+      language: this.taskService.selectedlanguage.code,
+      asr: this.taskService.selectedlanguage.asr
     });
   }
 

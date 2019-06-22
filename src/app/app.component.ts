@@ -29,6 +29,7 @@ import * as X2JS from 'x2js';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {SettingsService} from './shared/settings.service';
 import {AppSettings} from './shared/app.settings';
+import {OHLanguageObject} from './obj/oh-config';
 
 declare var window: any;
 
@@ -200,6 +201,8 @@ export class AppComponent implements OnDestroy {
     }).then(() => {
       // configuration loaded
       this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
+      console.log("taskSevrice language is");
+      console.log(this.taskService.selectedlanguage);
 
       new Promise<any>((resolve, reject) => {
         if (!this.storage.ready) {
@@ -493,12 +496,13 @@ export class AppComponent implements OnDestroy {
   onOperationHover(operation: Operation) {
   }
 
-  onASRLangChanged(lang) {
+  onASRLangChanged(lang: OHLanguageObject) {
     if (lang.code !== this.taskService.selectedlanguage.code || lang.asr !== this.taskService.selectedlanguage.asr) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
       this.storage.saveUserSettings('defaultTaskOptions', {
-        language: lang.code
+        language: lang.code,
+        asr: lang.asr
       });
     }
   }

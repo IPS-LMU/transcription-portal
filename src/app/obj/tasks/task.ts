@@ -142,6 +142,7 @@ export class Task {
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
     task.asr = taskObj.asr;
+
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
     } else {

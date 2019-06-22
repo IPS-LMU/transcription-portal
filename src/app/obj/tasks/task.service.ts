@@ -22,6 +22,7 @@ import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {AlertService} from '../../shared/alert.service';
 import {interval} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
+import {OHLanguageObject} from '../oh-config';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -81,7 +82,7 @@ export class TaskService implements OnDestroy {
 
   public errorscountchange = new EventEmitter<number>();
 
-  public selectedlanguage;
+  public selectedlanguage: OHLanguageObject;
   private state: TaskState = TaskState.READY;
 
   private _preprocessor: Preprocessor = new Preprocessor();
@@ -291,6 +292,17 @@ export class TaskService implements OnDestroy {
       for (let i = 0; i < IDBtasks.length; i++) {
         const taskObj = IDBtasks[i];
         if (taskObj.type === 'task') {
+
+          if ((taskObj.asr === null || taskObj.asr === undefined)) {
+            const firstLangObj = AppSettings.configuration.api.languages.find((a) => {
+              return a.code === taskObj.language;
+            });
+
+            if (!(firstLangObj === null || firstLangObj === undefined)) {
+              taskObj.asr = firstLangObj.asr;
+              console.log(`ASR NULL found: ${taskObj.asr}`);
+            }
+          }
           const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
 
           maxTaskCounter = Math.max(maxTaskCounter, task.id);
@@ -386,9 +398,7 @@ export class TaskService implements OnDestroy {
             break;
           case ('defaultTaskOptions'):
             // search lang obj
-            const lang = AppSettings.configuration.api.languages.find((a) => {
-              return a.code === userSetting.value.language;
-            });
+            const lang = AppSettings.getLanguageByCode(userSetting.value.language, userSetting.value.asr);
             if (!(lang === null || lang === undefined)) {
               this.selectedlanguage = lang;
             }

@@ -106,7 +106,11 @@
                     <!-- <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
                                                                              style="color:cornflowerblue;"></i></a> -->
                 </ng-container>
-                <span>Language: {{popover.task.language}}</span><br/><br/>
+                <span>Language: {{popover.task.language}}</span>
+                <span *ngIf="popover.task.asr !== undefined && popover.task.asr !== null">
+                    , ASR: {{popover.task.asr}}
+                </span>
+                <br/><br/>
                 <span>File information:</span>
                 <app-file-info-table
                         [fileinfo]="(popover.task.files) ? popover.task.files[0] : null"></app-file-info-table>

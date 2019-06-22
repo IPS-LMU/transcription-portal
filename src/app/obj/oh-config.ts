@@ -10,7 +10,7 @@ export interface OHConfiguration {
       'authKey': string;
       'url': string;
     }
-  }
+  };
 }
 
 export interface OHLanguageObject {

@@ -4,6 +4,7 @@ import {Operation} from './operation';
 import {Task, TaskState} from '../tasks/task';
 import * as X2JS from 'x2js';
 import {OHLanguageObject} from '../oh-config';
+import {UploadOperation} from './upload-operation';
 
 export class ASROperation extends Operation {
   public webService = '';
@@ -32,17 +33,19 @@ export class ASROperation extends Operation {
             this.changeState(TaskState.FINISHED);
           }).catch((error) => {
             this._protocol += '<br/>' + error;
+            this.time.duration = Date.now() - this.time.start;
             this.changeState(TaskState.ERROR);
             console.error(error);
           });
         }
       }).catch((error) => {
         this._protocol += '<br/>' + error;
+        this.time.duration = Date.now() - this.time.start;
         this.changeState(TaskState.ERROR);
         console.error(error);
       });
     }, 2000);
-  }
+  };
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
     const result = new ASROperation(operationObj.name, commands, this.title,
@@ -142,55 +145,85 @@ export class ASROperation extends Operation {
 
   private callG2PChunker(languageObject: OHLanguageObject, httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
-      console.log(`CALL G2P`);
-      this.webService = `${languageObject.asr}ASR`;
 
-      const url = this._commands[1].replace('{{host}}', languageObject.host)
-        .replace('{{transcriptURL}}', asrResult.url)
-        .replace('{{audioURL}}', this.previousOperation.lastResult.url)
-        .replace('{{asrType}}', languageObject.asr)
-        .replace('{{language}}', this.task.language);
+      new Promise<string>((resolve2, reject2) => {
+        UploadOperation.upload([asrResult], 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', httpClient).subscribe(
+          (event) => {
+            if (event.type === 'loadend') {
+              const result = <string>event.result;
+              const x2js = new X2JS();
+              let json: any = x2js.xml2js(result);
+              json = json.UploadFileMultiResponse;
 
+              let url = '';
 
-      console.log(`Call G2P_CHUNKER:`);
-      console.log(url);
+              if (Array.isArray(json.fileList.entry)) {
+                url = json.fileList.entry[0].value;
+              } else {
+                // json attribute entry is an object
+                url = json.fileList.entry['value'];
+              }
 
-      httpClient.post(url, {}, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        responseType: 'text'
-      }).subscribe((result: string) => {
-          console.log(`XML Result:`);
-          console.log(result);
-          // convert result to json
-          const x2js = new X2JS();
-          let json: any = x2js.xml2js(result);
-          json = json.WebServiceResponseLink;
-
-          if (json.success === 'true') {
-            const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain');
-
-            setTimeout(() => {
-              file.updateContentFromURL(httpClient).then(() => {
-                // add messages to protocol
-                if (json.warnings !== '') {
-                  this._protocol = '<br/>' + json.warnings;
-                } else if (json.output !== '') {
-                  this._protocol = '<br/>' + json.output;
-                }
-                resolve(file);
-              }).catch((error) => {
-                reject(error);
-              });
-            }, 5000);
-          } else {
-            reject(json.output);
+              resolve2(url);
+            }
+          },
+          (error) => {
+            reject2(error);
           }
-        },
-        (error) => {
-          reject(error.message);
-        });
+        );
+      }).then((asrURL) => {
+        console.log(`CALL G2P ${asrURL}`);
+        this.webService = `${languageObject.asr}ASR`;
+
+        const url = this._commands[1].replace('{{host}}', languageObject.host)
+          .replace('{{transcriptURL}}', asrURL)
+          .replace('{{audioURL}}', this.previousOperation.lastResult.url)
+          .replace('{{asrType}}', languageObject.asr)
+          .replace('{{language}}', this.task.language);
+
+
+        console.log(`Call G2P_CHUNKER:`);
+        console.log(url);
+
+        httpClient.post(url, {}, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          responseType: 'text'
+        }).subscribe((result: string) => {
+            console.log(`XML Result:`);
+            console.log(result);
+            // convert result to json
+            const x2js = new X2JS();
+            let json: any = x2js.xml2js(result);
+            json = json.WebServiceResponseLink;
+
+            if (json.success === 'true') {
+              const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain');
+
+              setTimeout(() => {
+                file.updateContentFromURL(httpClient).then(() => {
+                  // add messages to protocol
+                  if (json.warnings !== '') {
+                    this._protocol = '<br/>' + json.warnings;
+                  } else if (json.output !== '') {
+                    this._protocol = '<br/>' + json.output;
+                  }
+                  resolve(file);
+                }).catch((error) => {
+                  reject(error);
+                });
+              }, 5000);
+            } else {
+              reject(json.output);
+            }
+          },
+          (error) => {
+            reject(error.message);
+          });
+      }).catch((error) => {
+        reject(error);
+      });
     });
   }
 
