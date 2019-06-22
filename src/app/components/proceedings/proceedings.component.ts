@@ -34,6 +34,7 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import {NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
+import * as clipboard from 'clipboard-polyfill';
 
 declare var window: any;
 
@@ -96,11 +97,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
-  @ViewChild('content', { static: true }) content: DownloadModalComponent;
+  @ViewChild('content', {static: true}) content: DownloadModalComponent;
 
-  @ViewChild('popoverRef', { static: false }) public popoverRef: PopoverComponent;
-  @ViewChild('filePreview', { static: true }) public filePreview: FilePreviewModalComponent;
-  @ViewChild('t2', { static: false }) public tooltip: NgbTooltip;
+  @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
+  @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
+  @ViewChild('t2', {static: false}) public tooltip: NgbTooltip;
 
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
@@ -741,4 +742,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
+
+  copyProtocolToClipboard(protocol: string) {
+    clipboard.writeText(protocol);
+  }
+
 }

@@ -92,10 +92,13 @@
                                            (previewClick)="onPreviewClick($event)"></app-results-table>
                     </div>
                 </ng-container>
-                <ng-container>
+                <ng-container *ngIf="popover.operation.protocol !== ''">
                     <p style="font-size:12px;" [ngStyle]="{
                     color: getPopoverColor(popover.operation)
                 }">
+                        <span style="display:block;text-align:right;"
+                              (click)="copyProtocolToClipboard(popover.operation.protocol)"> <i
+                                class="fa fa-clipboard"></i> Copy to clickboard </span>
                         {{popover.operation.protocol}}
                     </p>
                 </ng-container>

@@ -27,6 +27,7 @@
     "@ng-bootstrap/ng-bootstrap": "^4.2.1",
     "bootstrap": "^4.3.1",
     "chart.js": "^2.7.3",
+    "clipboard-polyfill": "^2.8.1",
     "conventional-changelog-cli": "^2.0.22",
     "core-js": "^2.6.2",
     "font-awesome": "^4.7.0",

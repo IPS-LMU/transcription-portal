@@ -30,6 +30,7 @@ import {StatisticsModalComponent} from './modals/statistics-modal/statistics-mod
 import {SettingsService} from './shared/settings.service';
 import {AppSettings} from './shared/app.settings';
 import {OHLanguageObject} from './obj/oh-config';
+import * as clipboard from 'clipboard-polyfill';
 
 declare var window: any;
 
@@ -95,16 +96,16 @@ export class AppComponent implements OnDestroy {
     return {value: this.sidebarExpand, params: {width: width}}
   }
 
-  @ViewChild('fileinput', { static: false }) fileinput: ElementRef;
-  @ViewChild('folderinput', { static: false }) folderinput: ElementRef;
-  @ViewChild('proceedings', { static: false }) proceedings: ProceedingsComponent;
-  @ViewChild('splitModal', { static: true }) splitModal: SplitModalComponent;
-  @ViewChild('firstModal', { static: true }) firstModal: FirstModalComponent;
-  @ViewChild('feedbackModal', { static: true }) feedbackModal: FeedbackModalComponent;
-  @ViewChild('queueModal', { static: false }) queueModal: QueueModalComponent;
-  @ViewChild('protocolFooter', { static: false }) protocolFooter: ProtocolFooterComponent;
-  @ViewChild('toolLoader', { static: true }) toolLoader: ToolLoaderComponent;
-  @ViewChild('statisticsModal', { static: true }) statisticsModal: StatisticsModalComponent;
+  @ViewChild('fileinput', {static: false}) fileinput: ElementRef;
+  @ViewChild('folderinput', {static: false}) folderinput: ElementRef;
+  @ViewChild('proceedings', {static: false}) proceedings: ProceedingsComponent;
+  @ViewChild('splitModal', {static: true}) splitModal: SplitModalComponent;
+  @ViewChild('firstModal', {static: true}) firstModal: FirstModalComponent;
+  @ViewChild('feedbackModal', {static: true}) feedbackModal: FeedbackModalComponent;
+  @ViewChild('queueModal', {static: false}) queueModal: QueueModalComponent;
+  @ViewChild('protocolFooter', {static: false}) protocolFooter: ProtocolFooterComponent;
+  @ViewChild('toolLoader', {static: true}) toolLoader: ToolLoaderComponent;
+  @ViewChild('statisticsModal', {static: true}) statisticsModal: StatisticsModalComponent;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -201,7 +202,7 @@ export class AppComponent implements OnDestroy {
     }).then(() => {
       // configuration loaded
       this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
-      console.log("taskSevrice language is");
+      console.log('taskSevrice language is');
       console.log(this.taskService.selectedlanguage);
 
       new Promise<any>((resolve, reject) => {
