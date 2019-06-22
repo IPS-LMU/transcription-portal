@@ -20,7 +20,7 @@ export class AppInfo {
   }
 
   private static _version = '1.0.2';
-  public static readonly lastUpdated = '2018-06-22 9:00';
+  public static readonly lastUpdated = '2018-06-22 10:00';
 
   private static _converters: {
     obj: Converter;
