@@ -93,14 +93,15 @@
                     </div>
                 </ng-container>
                 <ng-container *ngIf="popover.operation.protocol !== ''">
-                    <p style="font-size:12px;" [ngStyle]="{
+                    <div style="width:100%;text-align:right;padding:0;margin-bottom:0;">
+                        <button style="font-size:11px;cursor:pointer;margin-bottom:0;"
+                                (click)="copyProtocolToClipboard(popover.operation.protocol)">
+                            <i class="fa fa-clipboard"></i> Copy to clipboard
+                        </button>
+                    </div>
+                    <p [innerHTML]="popover.operation.protocol" style="font-size:11px;cursor:pointer;padding:0;margin-top:-10px;" [ngStyle]="{
                     color: getPopoverColor(popover.operation)
-                }">
-                        <span style="display:block;text-align:right;"
-                              (click)="copyProtocolToClipboard(popover.operation.protocol)"> <i
-                                class="fa fa-clipboard"></i> Copy to clickboard </span>
-                        {{popover.operation.protocol}}
-                    </p>
+                }"></p>
                 </ng-container>
             </ng-container>
             <ng-container

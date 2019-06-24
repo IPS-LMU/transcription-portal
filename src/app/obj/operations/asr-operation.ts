@@ -32,14 +32,14 @@ export class ASROperation extends Operation {
             this.results.push(finalResult);
             this.changeState(TaskState.FINISHED);
           }).catch((error) => {
-            this._protocol += '<br/>' + error;
+            this._protocol += '<br/>' + error.replace('¶');
             this.time.duration = Date.now() - this.time.start;
             this.changeState(TaskState.ERROR);
             console.error(error);
           });
         }
       }).catch((error) => {
-        this._protocol += '<br/>' + error;
+        this._protocol += '<br/>' + error.replace('¶');
         this.time.duration = Date.now() - this.time.start;
         this.changeState(TaskState.ERROR);
         console.error(error);
@@ -56,7 +56,7 @@ export class ASROperation extends Operation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    result._protocol = operationObj.protocol.replace('¶');
     result.enabled = operationObj.enabled;
     result.webService = operationObj.webService;
     return result;
@@ -125,9 +125,9 @@ export class ASROperation extends Operation {
             file.updateContentFromURL(httpClient).then(() => {
               // add messages to protocol
               if (json.warnings !== '') {
-                this._protocol += '<br/>' + json.warnings;
+                this._protocol += '<br/>' + json.warnings.replace('¶');
               } else if (json.output !== '') {
-                this._protocol = '<br/>' + json.output;
+                this._protocol = '<br/>' + json.output.replace('¶');
               }
               resolve(file);
             }).catch((error) => {
@@ -205,9 +205,9 @@ export class ASROperation extends Operation {
                 file.updateContentFromURL(httpClient).then(() => {
                   // add messages to protocol
                   if (json.warnings !== '') {
-                    this._protocol = '<br/>' + json.warnings;
+                    this._protocol = '<br/>' + json.warnings.replace('¶');
                   } else if (json.output !== '') {
-                    this._protocol = '<br/>' + json.output;
+                    this._protocol = '<br/>' + json.output.replace('¶');
                   }
                   resolve(file);
                 }).catch((error) => {
