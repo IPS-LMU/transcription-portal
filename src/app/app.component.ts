@@ -1,5 +1,13 @@
 import {HttpClient} from '@angular/common/http';
-import {ChangeDetectionStrategy, Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  ViewChild
+} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
@@ -38,8 +46,7 @@ declare var window: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   providers: [],
-  animations: [ANIMATIONS],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  animations: [ANIMATIONS]
 })
 export class AppComponent implements OnDestroy {
   get showtool(): boolean {
@@ -112,7 +119,8 @@ export class AppComponent implements OnDestroy {
               private storage: StorageService,
               public bugService: BugReportService,
               private alertService: AlertService,
-              public settingsService: SettingsService
+              public settingsService: SettingsService,
+              private cd: ChangeDetectorRef
   ) {
     const debugging = false;
     if (!debugging) {
@@ -201,6 +209,8 @@ export class AppComponent implements OnDestroy {
       }
     }).then(() => {
       // configuration loaded
+      this.cd.markForCheck();
+      this.cd.detectChanges();
       this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
       console.log('taskSevrice language is');
       console.log(this.taskService.selectedlanguage);
@@ -217,6 +227,8 @@ export class AppComponent implements OnDestroy {
         //idb loaded
         this.taskService.init();
         this.taskService.importDBData(results);
+        this.cd.markForCheck();
+        this.cd.detectChanges();
 
         this.storage.getIntern('firstModalShown').then(
           (result) => {
@@ -484,6 +496,10 @@ export class AppComponent implements OnDestroy {
               operation.time.start = Date.now();
             }
             this.proceedings.togglePopover(false);
+            this.cd.markForCheck();
+            this.cd.detectChanges();
+            this.proceedings.cd.markForCheck();
+            this.proceedings.cd.detectChanges();
           } else {
             console.warn(`tool url is empty`);
           }

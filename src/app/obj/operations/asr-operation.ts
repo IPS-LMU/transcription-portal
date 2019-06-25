@@ -147,7 +147,7 @@ export class ASROperation extends Operation {
     return new Promise<FileInfo>((resolve, reject) => {
 
       new Promise<string>((resolve2, reject2) => {
-        UploadOperation.upload([asrResult], 'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', httpClient).subscribe(
+        UploadOperation.upload([asrResult], languageObject.host + 'uploadFileMulti', httpClient).subscribe(
           (event) => {
             if (event.type === 'loadend') {
               const result = <string>event.result;
