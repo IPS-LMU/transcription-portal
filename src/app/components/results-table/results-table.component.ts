@@ -54,6 +54,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.hasOwnProperty('operation') && !changes.operation.isFirstChange()) {
+      console.log(`changed operation to ${changes.operation.currentValue.id}`);
       this.generateTable();
     }
   }

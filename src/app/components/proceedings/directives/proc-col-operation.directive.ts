@@ -139,7 +139,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private onRepeatIconClick = () => {
-    const langObj = AppSettings.getLanguageByCode(this.entry.language, this.entry.asr);
+    const langObj = AppSettings.getLanguageByCode(this.entry.language, this.entry.operations[1].providerInformation.provider);
     this.entry.restartFailedOperation(langObj, this.taskService.httpclient);
   }
 

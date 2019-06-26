@@ -145,7 +145,7 @@ LBD:\n`;
 
           if (search[0] === 'SAM') {
             if (audiofile.samplerate !== Number(columns[1])) {
-              console.error(`Sample Rate of audio file is not equal to the value from Partitur file!`);
+              console.error(`Sample Rate of audio file is not equal to the value from Partitur file! ${audiofile.samplerate} !== ${columns[1]}`);
             }
           }
 

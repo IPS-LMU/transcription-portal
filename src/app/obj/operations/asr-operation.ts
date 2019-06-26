@@ -5,6 +5,7 @@ import {Task, TaskState} from '../tasks/task';
 import * as X2JS from 'x2js';
 import {OHLanguageObject} from '../oh-config';
 import {UploadOperation} from './upload-operation';
+import {AppSettings} from '../../shared/app.settings';
 
 export class ASROperation extends Operation {
   public webService = '';
@@ -59,6 +60,14 @@ export class ASROperation extends Operation {
     result._protocol = operationObj.protocol.replace('¶');
     result.enabled = operationObj.enabled;
     result.webService = operationObj.webService;
+
+    if (!(operationObj.serviceProvider === null || operationObj.serviceProvider === undefined)) {
+      result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProvider);
+    } else {
+      result._providerInformation = AppSettings.getServiceInformation(operationObj.webService.replace('ASR', ''));
+      console.log(operationObj.webService);
+    }
+
     return result;
   }
 
@@ -72,6 +81,7 @@ export class ASROperation extends Operation {
         time: this.time,
         enabled: this.enabled,
         webService: this.webService,
+        serviceProvider: (!(this._providerInformation === null || this._providerInformation === undefined)) ? this._providerInformation.provider : undefined,
         results: []
       };
 

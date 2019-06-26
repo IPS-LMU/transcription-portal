@@ -18,7 +18,6 @@ import {ANIMATIONS} from '../../shared/Animations';
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../../obj/fileInfo';
 import {TaskService} from '../../obj/tasks/task.service';
 import {DirectoryInfo} from '../../obj/directoryInfo';
@@ -35,6 +34,8 @@ import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import {NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import * as clipboard from 'clipboard-polyfill';
+import {AppSettings} from '../../shared/app.settings';
+import {OHService} from '../../obj/oh-config';
 
 declare var window: any;
 
@@ -97,6 +98,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
+  @Output() public feedbackRequested = new EventEmitter<Operation>();
+
   @ViewChild('content', {static: true}) content: DownloadModalComponent;
 
   @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
@@ -106,7 +109,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
 
-  constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService, private http: HttpClient,
+  constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService,
               public storage: StorageService) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -747,4 +750,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     clipboard.writeText(protocol);
   }
 
+  onReportIconClick(operation: Operation) {
+    this.feedbackRequested.emit(operation);
+  }
 }

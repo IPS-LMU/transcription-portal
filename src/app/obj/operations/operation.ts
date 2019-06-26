@@ -1,12 +1,17 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
-import {Observable} from 'rxjs';
+import {Observable, Subject} from 'rxjs';
 import {FileInfo} from '../fileInfo';
-import {Subject} from 'rxjs';
 import {Task, TaskState} from '../tasks/task';
-import {OHLanguageObject} from '../oh-config';
+import {OHLanguageObject, OHService} from '../oh-config';
 
 export abstract class Operation {
+  set providerInformation(value: OHService) {
+    this._providerInformation = value;
+  }
+  get providerInformation(): OHService {
+    return this._providerInformation;
+  }
   get shortTitle(): string {
     return this._shortTitle;
   }
@@ -146,6 +151,8 @@ export abstract class Operation {
   protected _title = '';
   protected _protocol = '';
   protected _description = '';
+  protected _providerInformation: OHService;
+
   private readonly _shortTitle: string;
   protected readonly _commands: string[];
 

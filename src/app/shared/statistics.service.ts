@@ -24,16 +24,18 @@ export class StatisticsService {
 
   constructor(private taskService: TaskService) {
     this.subscrmanager.add(interval(1000).subscribe(() => {
-      const allTasks = this.taskService.taskList.getAllTasks();
+      if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
+        const allTasks = this.taskService.taskList.getAllTasks();
 
-      if (!(allTasks === null || allTasks === undefined)) {
-        const allTasksCount = allTasks.length;
-        this.overAllProgress.waiting = (this.taskService.statistics.waiting + this.taskService.statistics.queued) / allTasksCount * 100;
-        this.overAllProgress.failed = this.taskService.statistics.errors / allTasksCount * 100;
-        this.overAllProgress.processing = this.taskService.statistics.running / allTasksCount * 100;
-        this.overAllProgress.finished = this.taskService.statistics.finished / allTasksCount * 100;
+        if (!(allTasks === null || allTasks === undefined)) {
+          const allTasksCount = allTasks.length;
+          this.overAllProgress.waiting = (this.taskService.statistics.waiting + this.taskService.statistics.queued) / allTasksCount * 100;
+          this.overAllProgress.failed = this.taskService.statistics.errors / allTasksCount * 100;
+          this.overAllProgress.processing = this.taskService.statistics.running / allTasksCount * 100;
+          this.overAllProgress.finished = this.taskService.statistics.finished / allTasksCount * 100;
 
-        this.updateAverageDurations();
+          this.updateAverageDurations();
+        }
       }
     }));
   }

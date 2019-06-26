@@ -539,7 +539,7 @@ export class TaskService implements OnDestroy {
             });
           });
           this.storage.saveTask(task);
-          const langObj = AppSettings.getLanguageByCode(task.language, task.asr);
+          const langObj = AppSettings.getLanguageByCode(task.language, task.operations[1].providerInformation.provider);
           task.start(langObj, this.httpclient);
           setTimeout(() => {
             this.start();

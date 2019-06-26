@@ -4,6 +4,7 @@ export interface OHConfiguration {
   'api': {
     'commands': OHCommand[];
     'languages': OHLanguageObject[];
+    'services': OHService[];
   };
   'plugins': {
     'emailSender': {
@@ -24,5 +25,14 @@ export interface OHLanguageObject {
 export interface OHCommand {
   name: string;
   calls: string[];
+}
+
+export interface OHService {
+  provider: string;
+  type: string;
+  termsURL: string;
+  dataStoragePolicy: string;
+  homepageURL: string;
+  logoURL: string;
 }
 

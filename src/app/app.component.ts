@@ -1,13 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  HostListener,
-  OnDestroy,
-  ViewChild
-} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
@@ -389,7 +381,7 @@ export class AppComponent implements OnDestroy {
             // reupload result from tool operation
 
             // TODO make uploading easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.asr);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
@@ -428,7 +420,7 @@ export class AppComponent implements OnDestroy {
             // local available, re upload
 
             // TODO make using upload easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.asr);
+            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
             const url = `${langObj.host}uploadFileMulti`;
 
             const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
@@ -571,7 +563,7 @@ export class AppComponent implements OnDestroy {
 
         setTimeout(() => {
           if (this.toolSelectedOperation.task.state === 'FINISHED') {
-            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.asr);
+            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.operations[1].providerInformation.provider);
             this.toolSelectedOperation.task.restart(langObj, this.httpclient);
           }
           this.onBackButtonClicked();
@@ -680,5 +672,12 @@ export class AppComponent implements OnDestroy {
 
   onStartClick() {
     this.taskService.toggleProcessing();
+  }
+
+  onFeedbackRequest(operation: Operation) {
+    this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
+    + `operation: ${operation.name}, ${operation.state}\n`
+    + `protocol: ${operation.protocol}\n`)
+    this.feedbackModal.open();
   }
 }

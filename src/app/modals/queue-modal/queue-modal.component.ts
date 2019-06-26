@@ -53,6 +53,7 @@ export class QueueModalComponent implements OnInit {
   }
 
   onSubmit() {
+    this.changeLanguageforAllQueuedTasks();
     for (let i = 0; i < this.tasks.length; i++) {
       const task = this.tasks[i];
       if (task.files[0].file !== undefined) {
@@ -94,7 +95,8 @@ export class QueueModalComponent implements OnInit {
       const task = tasks[i];
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
-        task.asr = this.taskService.selectedlanguage.asr;
+        task.operations[1].providerInformation = AppSettings.getServiceInformation(this.taskService.selectedlanguage.asr);
+        console.log(`!!! ${task.operations[1].providerInformation}`);
         this.storage.saveTask(task);
       }
     }

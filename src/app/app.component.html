@@ -230,6 +230,7 @@
                              (operationhover)="onOperationHover($event)"
                              [queue]="taskService.preprocessor.queue"
                              [shortstyle]="sidebarExpand === 'closed'"
+                             (feedbackRequested)="onFeedbackRequest($event)"
                              style="height:100%"
                              #proceedings
             >

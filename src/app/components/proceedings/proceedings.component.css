@@ -191,3 +191,43 @@ table thead tr th:hover {
     text-align: justify;
     padding: 5px 10px;
 }
+
+.service-preview {
+    text-align: center;
+    width: 150px;
+    float: left;
+}
+
+.service-remarks {
+    margin-left: 160px;
+    font-size: 11px;
+    color: gray;
+}
+
+.service-remarks ul{
+    padding:0;
+    margin-left:20px;
+}
+
+.provided-by {
+    font-size: 12px;
+}
+
+.service-logo {
+    width: 100%;
+}
+
+.service-terms a {
+    padding: 0;
+    font-size: 12px;
+    color: gray;
+    text-decoration: none;
+}
+
+.report-issue {
+    position: absolute;
+    left: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
