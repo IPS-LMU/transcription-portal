@@ -24,7 +24,7 @@
     "@angular/platform-browser-dynamic": "^8.0.0",
     "@angular/platform-server": "^8.0.0",
     "@angular/router": "^8.0.0",
-    "@ng-bootstrap/ng-bootstrap": "^4.2.1",
+    "@ng-bootstrap/ng-bootstrap": "^5.0.0-rc.0",
     "bootstrap": "^4.3.1",
     "chart.js": "^2.8.0",
     "clipboard-polyfill": "^2.8.1",
