@@ -231,3 +231,17 @@ table thead tr th:hover {
     margin-bottom: 5px;
     cursor: pointer;
 }
+
+.operation-tooltip .arrow {
+    color: skyblue !important;
+    border-color: skyblue !important;
+}
+
+.operation-tooltip .tooltip-inner {
+    background-color: skyblue !important;
+    color: black !important;
+}
+
+.operation-tooltip #ngb-tooltip-0 {
+    width: 200px !important;
+}

@@ -3,7 +3,7 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {TimePipe} from '../../shared/time.pipe';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {Task, TaskState} from '../tasks/task';
+import {Task, TaskState} from '../tasks';
 import * as X2JS from 'x2js';
 import {Subject} from 'rxjs';
 import {OHLanguageObject} from '../oh-config';
@@ -55,7 +55,7 @@ export class UploadOperation extends Operation {
       }
       subj.next({
         type: 'progress',
-        result: <any> progress
+        result: <any>progress
       });
     }, false);
 
@@ -66,7 +66,7 @@ export class UploadOperation extends Operation {
     xhr.onloadend = (e) => {
       subj.next({
         type: 'loadend',
-        result: <any> e.currentTarget['responseText']
+        result: <any>e.currentTarget['responseText']
       });
       subj.complete();
     };
@@ -97,13 +97,13 @@ export class UploadOperation extends Operation {
 
     subj.subscribe((obj) => {
       if (obj.type === 'progress') {
-        this.progress = <number> obj.result;
+        this.progress = <number>obj.result;
         this.updateEstimatedEnd();
         this.changed.next();
       } else if (obj.type === 'loadend') {
 
         this.time.duration = Date.now() - this.time.start;
-        const result = <string> obj.result;
+        const result = <string>obj.result;
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.UploadFileMultiResponse;

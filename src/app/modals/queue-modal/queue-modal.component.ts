@@ -1,4 +1,12 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {Task, TaskState} from '../../obj/tasks';
@@ -15,7 +23,9 @@ import {OHLanguageObject} from '../../obj/oh-config';
 @Component({
   selector: 'app-queue-modal',
   templateUrl: './queue-modal.component.html',
-  styleUrls: ['./queue-modal.component.css']
+  styleUrls: ['./queue-modal.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class QueueModalComponent implements OnInit {
   @ViewChild('content', {static: true}) content: NgbModal;
@@ -29,8 +39,15 @@ export class QueueModalComponent implements OnInit {
     return AppSettings;
   }
 
+  public serviceProviders = {};
+
   constructor(private modalService: NgbModal, private sanitizer: DomSanitizer,
-              private taskService: TaskService, private storage: StorageService) {
+              private taskService: TaskService, private storage: StorageService,
+              private cd: ChangeDetectorRef) {
+    for (let i = 0; i < AppSettings.configuration.api.services.length; i++) {
+      const provider = AppSettings.configuration.api.services[i];
+      this.serviceProviders['' + provider.provider] = provider;
+    }
   }
 
   ngOnInit() {
@@ -62,6 +79,8 @@ export class QueueModalComponent implements OnInit {
     }
     this.modalRef.dismiss();
     this.onDismiss();
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   public get orangeCount(): number {
@@ -104,6 +123,9 @@ export class QueueModalComponent implements OnInit {
       language: this.taskService.selectedlanguage.code,
       asr: this.taskService.selectedlanguage.asr
     });
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   deactivateOperation(operation: Operation, index: number) {
@@ -175,6 +197,9 @@ export class QueueModalComponent implements OnInit {
     }
 
     this.updateEnableState();
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   public updateEnableState() {

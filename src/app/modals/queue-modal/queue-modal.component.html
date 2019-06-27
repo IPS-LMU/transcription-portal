@@ -9,12 +9,17 @@
         </button>
     </div>
     <div class="modal-body" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
-        <p>
+        <p style="font-size: 0.9em;text-align: justify;margin-bottom:0px;">
             The following files are going to be processed one after the other. Please check if all options are set as
-            you wish.
-            Click "OK" to mark the files for further processing.
+            you wish. While you are selecting the language you can click on the logos of the service providers for
+            further information like data storage policy and terms and
+            conditions.
         </p>
-        <p *ngIf="orangeCount > 0" class="yellow" style="text-align: center;">
+        <p style="font-size: 0.9em;text-align: justify;margin-top:5px;">
+            When you click "OK" you agree with the terms and conditions of the selected (third-party) services and the
+            files are marked for further processing.
+        </p>
+        <p *ngIf="orangeCount > 0" class="yellow" style="text-align: center; font-size:0.9em;">
             Please add the files with orange file names again. Otherwise these files will be
             skipped.
         </p>
@@ -24,32 +29,131 @@
             <button class="btn btn-outline-secondary" id="dropdownBasic1" ngbDropdownToggle>
                 <ng-container *ngIf="taskService.selectedlanguage === null">
                     {{AppSettings.configuration.api.languages[0].code | uppercase}}
-                    ({{getShortCode(AppSettings.configuration.api.languages[0].code)}}) [{{AppSettings.configuration.api.languages[0].asr}}]
+                    ({{getShortCode(AppSettings.configuration.api.languages[0].code)}})
+                    [{{AppSettings.configuration.api.languages[0].asr}}]
                 </ng-container>
                 <ng-container *ngIf="taskService.selectedlanguage !== null">
                     {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
                     [{{taskService.selectedlanguage.asr}}]
                 </ng-container>
             </button>
-            <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-                <ng-container *ngFor="let lang of AppSettings.configuration.api.languages; let i = index;">
-                    <button class="dropdown-item" *ngIf="lang.state === 'active'"
-                            (click)="onASRLangChanged(lang)">
-                        <ng-container
-                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
-                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                        </ng-container>
-                    </button>
-                    <button class="dropdown-item disabled" disabled="disabled" *ngIf="lang.state === 'inactive'">
-                        <ng-container
-                                *ngIf="!(taskService.selectedlanguage === null && i === 0) && (taskService.selectedlanguage !== lang.code)">
-                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}] (currently not available)
-                        </ng-container>
-                    </button>
-                </ng-container>
+            <div ngbDropdownMenu aria-labelledby="dropdownBasic1" style="padding:5px;">
+                <table class="table table-hover languageTable">
+                    <thead>
+                    <tr>
+                        <th>Language</th>
+                        <th>Upload</th>
+                        <th>Speech Recognition</th>
+                        <th>Manual transcription, Word alignment, Phonetic detail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <ng-container *ngFor="let lang of AppSettings.configuration.api.languages; let i = index;">
+                        <tr [ngClass]="{
+                            selected:  !(taskService.selectedlanguage === null)
+                                        && (taskService.selectedlanguage.code === lang.code)
+                                        && (taskService.selectedlanguage.asr === lang.asr)
+                            }"
+                            (click)="onASRLangChanged(lang)"
+                        >
+                            <td class="col-language">
+                                <ng-container
+                                        *ngIf="lang !== undefined && lang.state === 'active'">
+                                    {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                                </ng-container>
+                                <ng-container
+                                        *ngIf="lang !== undefined && lang.state === 'inactive'">
+                                    {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}] (currently not
+                                    available)
+                                </ng-container>
+                            </td>
+                            <td class="col-upload">
+                                <img [src]="serviceProviders['BAS']?.logoURL" class="logo"
+                                     popoverTitle="Service Information"
+                                     popoverClass="popover-logo"
+                                     [ngbPopover]="otherDescription">
+                            </td>
+                            <td class="col-asr">
+                                <img [src]="serviceProviders[lang.asr]?.logoURL" class="logo"
+                                     popoverTitle="Service Information"
+                                     [ngbPopover]="asrDescription">
+                                <ng-template #asrDescription>
+                                    <table class="table table-sm table-borderless">
+                                        <tbody>
+                                        <tr>
+                                            <td>
+                                                <i class="fa fa-database"></i>
+                                            </td>
+                                            <td>
+                                                {{serviceProviders[lang.asr]?.dataStoragePolicy}}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <i class="fa fa-handshake-o"></i>
+                                            </td>
+                                            <td>
+                                                <a [href]="serviceProviders[lang.asr]?.termsURL" target="_blank">Terms
+                                                    &amp; Conditions</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <i class="fa fa-globe"></i>
+                                            </td>
+                                            <td>
+                                                <a [href]="serviceProviders[lang.asr]?.homepageURL" target="_blank">Homepage</a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </ng-template>
+                            </td>
+                            <td class="col-octra" style="text-align: center;">
+                                <img [src]="serviceProviders['BAS']?.logoURL" class="logo"
+                                     popoverTitle="Service Information"
+                                     popoverClass="popover-logo"
+                                     [ngbPopover]="otherDescription">
+                            </td>
+                            <ng-template #otherDescription>
+                                <table class="table table-sm table-borderless">
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                            <i class="fa fa-database"></i>
+                                        </td>
+                                        <td>
+                                            {{serviceProviders['BAS']?.dataStoragePolicy}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="fa fa-handshake-o"></i>
+                                        </td>
+                                        <td>
+                                            <a [href]="serviceProviders['BAS']?.termsURL" target="_blank">Terms &amp;
+                                                Conditions</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="fa fa-globe"></i>
+                                        </td>
+                                        <td>
+                                            <a [href]="serviceProviders['BAS']?.homepageURL"
+                                               target="_blank">Homepage</a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </ng-template>
+                        </tr>
+                    </ng-container>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <table class="table table-responsive-lg table-striped">
+        <table class="table table-responsive-lg table-striped" id="queue">
             <thead>
             <tr>
                 <th>File</th>

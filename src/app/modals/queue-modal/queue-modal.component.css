@@ -1,15 +1,47 @@
-table tr td,
-.table thead th,
-.table thead th div {
+#queue tr td,
+#queue thead th,
+#queue thead th div {
     text-align: center;
     font-size: 0.9em;
 }
 
-.table tr td:first-of-type,
-.table thead th:first-of-type {
+#queue tr td:first-of-type,
+#queue thead th:first-of-type {
     text-align: left;
 }
 
-.table thead th {
+#queue thead th {
     vertical-align: top;
+}
+
+.languageTable thead th {
+    text-align: center;
+    font-size: 0.8em;
+    vertical-align: middle;
+}
+
+.languageTable .selected {
+    background-color: powderblue;
+}
+
+.languageTable tr td {
+    font-size: 0.8em;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.languageTable .logo {
+    width: 120px;
+}
+
+.languageTable a {
+    display: block;
+}
+
+.popover-header{
+    font-size: 0.9em;
+}
+
+ngb-tooltip-window {
+    opacity: 1;
 }

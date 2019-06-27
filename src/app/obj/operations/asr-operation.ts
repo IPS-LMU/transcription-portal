@@ -61,8 +61,8 @@ export class ASROperation extends Operation {
     result.enabled = operationObj.enabled;
     result.webService = operationObj.webService;
 
-    if (!(operationObj.serviceProvider === null || operationObj.serviceProvider === undefined)) {
-      result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProvider);
+    if (!(operationObj.serviceProviders === null || operationObj.serviceProviders === undefined)) {
+      result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProviders);
     } else {
       result._providerInformation = AppSettings.getServiceInformation(operationObj.webService.replace('ASR', ''));
       console.log(operationObj.webService);
