@@ -54,7 +54,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.hasOwnProperty('operation') && !changes.operation.isFirstChange()) {
-      console.log(`changed operation to ${changes.operation.currentValue.id}`);
       this.generateTable();
     }
   }
@@ -133,7 +132,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
               };
               convElem.conversions.push(res);
 
-              console.log(`IMPORT from ${from.name}`);
               let annotJSON;
 
               if (from.name !== 'AnnotJSON') {
@@ -144,8 +142,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
               const levelnum = 0;
 
-              console.log(`ANNOTJSON:`);
-              console.log(annotJSON);
               let preResult = null;
 
               try {

@@ -204,8 +204,6 @@ export class AppComponent implements OnDestroy {
       this.cd.markForCheck();
       this.cd.detectChanges();
       this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
-      console.log('taskSevrice language is');
-      console.log(this.taskService.selectedlanguage);
 
       new Promise<any>((resolve, reject) => {
         if (!this.storage.ready) {

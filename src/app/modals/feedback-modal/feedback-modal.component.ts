@@ -1,4 +1,13 @@
-import {Component, OnDestroy, OnInit, SecurityContext, ViewChild} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SecurityContext,
+  ViewChild
+} from '@angular/core';
 import {ModalDismissReasons, NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {SubscriptionManager} from '../../shared/subscription-manager';
@@ -8,11 +17,12 @@ import {AppSettings} from '../../shared/app.settings';
 @Component({
   selector: 'app-feedback',
   templateUrl: './feedback-modal.component.html',
-  styleUrls: ['./feedback-modal.component.css']
+  styleUrls: ['./feedback-modal.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FeedbackModalComponent implements OnInit, OnDestroy {
+export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
 
-  @ViewChild('content', { static: true }) content: NgbModal;
+  @ViewChild('content', {static: true}) content: NgbModal;
 
   public showThankYou = false;
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();
@@ -27,6 +37,8 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
     }
   };
 
+  public protocolText: SafeHtml = '';
+
   ngOnDestroy() {
     this._subscrmanager.destroy();
   }
@@ -36,29 +48,44 @@ export class FeedbackModalComponent implements OnInit, OnDestroy {
       || this.formData.messsage.length > 10 || this.formData.protocol.append === true);
   }
 
-  public get protocolAsText(): SafeHtml {
+  public updateProtocolAsText() {
     const str = JSON.stringify(this.bugService.getPackage(), null, 2);
-    return this.sanitizer.sanitize(SecurityContext.HTML, str);
+    this.protocolText = this.sanitizer.sanitize(SecurityContext.HTML, str);
   }
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private bugService: BugReportService) {
+  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private bugService: BugReportService,
+              private cd: ChangeDetectorRef) {
   }
 
   ngOnInit() {
+    this.updateProtocolAsText();
+  }
+
+  ngOnChanges() {
+    this.updateProtocolAsText();
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   public open() {
     this.modalRef = this.modalService.open(this.content, {
       size: 'lg'
     });
+    this.updateProtocolAsText();
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onClose() {
-
+    this.updateProtocolAsText();
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onDismiss() {
-
+    this.updateProtocolAsText();
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onSubmit() {

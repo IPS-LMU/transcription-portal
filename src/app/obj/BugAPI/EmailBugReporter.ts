@@ -13,7 +13,6 @@ export class EmailBugReporter extends BugReporter {
 
     const report = (sendbugreport) ? pkg : {};
 
-    console.log(`bugreport: ${sendbugreport}`);
     const json = pkg;
 
     const body = {

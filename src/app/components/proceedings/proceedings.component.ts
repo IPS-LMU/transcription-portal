@@ -382,12 +382,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onOperationMouseEnter($event, operation: Operation) {
-    console.log(`MOUSE ENTERED!`);
-    console.log($event);
     // show Popover for normal operations only
     if (!(operation instanceof EmuOperation) &&
       !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
-      console.log(`show popup!`);
       const icon = $event.target;
       const parentNode = icon.parentNode;
 

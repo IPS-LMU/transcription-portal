@@ -126,7 +126,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private onMouseOver = (event) => {
-    console.log(`MOUSEOVER PROCCOL`);
     this.onOperationMouseOver.next(event);
   }
 

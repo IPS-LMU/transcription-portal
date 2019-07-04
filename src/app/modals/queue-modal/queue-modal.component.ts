@@ -115,7 +115,6 @@ export class QueueModalComponent implements OnInit {
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
         task.operations[1].providerInformation = AppSettings.getServiceInformation(this.taskService.selectedlanguage.asr);
-        console.log(`!!! ${task.operations[1].providerInformation}`);
         this.storage.saveTask(task);
       }
     }

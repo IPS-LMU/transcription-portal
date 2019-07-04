@@ -65,7 +65,6 @@ export class ASROperation extends Operation {
       result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProviders);
     } else {
       result._providerInformation = AppSettings.getServiceInformation(operationObj.webService.replace('ASR', ''));
-      console.log(operationObj.webService);
     }
 
     return result;

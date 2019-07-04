@@ -25,7 +25,6 @@ export class AppSettings {
   public static getServiceInformation(serviceProvider: string) {
     if (!(AppSettings.configuration.api.services === null || AppSettings.configuration.api.services === undefined)) {
       return AppSettings.configuration.api.services.find((a) => {
-        console.log(`check '${a.provider}' === '${serviceProvider}'`);
         return a.provider === serviceProvider;
       });
     }
