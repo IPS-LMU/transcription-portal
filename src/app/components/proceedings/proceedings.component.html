@@ -86,21 +86,26 @@
                         </tr>
                     </table>
                 </ng-container>
-                <ng-container *ngIf="popover.operation.results.length === 0 && popover.operation.providerInformation !== undefined">
+                <ng-container
+                        *ngIf="popover.operation.results.length === 0 && popover.operation.providerInformation !== undefined">
                     <div class="service-preview">
                         <div class="provided-by">Service provided by</div>
                         <a href="https://www.eml.org/" target="_blank" style="display:block;vertical-align: middle;">
-                            <img class="service-logo" [src]="popover.operation.providerInformation.logoURL" alt="EML Logo">
+                            <img class="service-logo" [src]="popover.operation.providerInformation.logoURL"
+                                 alt="EML Logo">
                         </a>
                         <div class="service-terms">
                             <a href="https://www.phonetik.uni-muenchen.de/Bas/BasLSTRadboutUniDisclaimer.txt"
                                target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a>
                         </div>
-                        <i class="fa fa-exclamation-circle report-issue" (click)="onReportIconClick(popover.operation)"></i>
+                        <i class="fa fa-exclamation-circle report-issue"
+                           (click)="onReportIconClick(popover.operation)"></i>
                     </div>
                     <div class="service-remarks">
                         <ul>
-                            <li>The processing time depends on the properties of the audio file and the service provider.</li>
+                            <li>The processing time depends on the properties of the audio file and the service
+                                provider.
+                            </li>
                             <li>As soon as the service has finished processing the result appears here.</li>
                             <li>{{popover.operation.providerInformation.dataStoragePolicy}}</li>
                         </ul>
@@ -120,7 +125,8 @@
                             <i class="fa fa-clipboard"></i> Copy to clipboard
                         </button>
                     </div>
-                    <p [innerHTML]="popover.operation.protocol" style="font-size:11px;cursor:pointer;padding:0;margin-top:-10px;" [ngStyle]="{
+                    <p [innerHTML]="popover.operation.protocol"
+                       style="font-size:11px;cursor:pointer;padding:0;margin-top:-10px;" [ngStyle]="{
                     color: getPopoverColor(popover.operation)
                 }"></p>
                 </ng-container>

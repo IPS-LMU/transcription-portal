@@ -56,7 +56,7 @@ export class QueueModalComponent implements OnInit {
   ngOnInit() {
   }
 
-  public open(beforeDismiss?: () => boolean, onDismiss: () => void = () => {
+  public open(beforeDismiss: () => boolean = () => true, onDismiss: () => void = () => {
   }) {
     this.subscrManager.add(this.modalService.onHide.subscribe(() => {
       beforeDismiss();

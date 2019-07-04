@@ -613,7 +613,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   openArchiveDownload(type: 'column' | 'line', operation: Operation) {
-    this.content.open(type);
+    console.log(`selected: ${operation.name}`);
+    if (operation.name !== 'Upload') {
+      this.selectedOperation = operation;
+      this.content.open(type);
+    }
   }
 
   @HostListener('window:keydown', ['$event'])
