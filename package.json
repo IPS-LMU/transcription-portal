@@ -24,7 +24,7 @@
     "@angular/platform-browser-dynamic": "^8.0.0",
     "@angular/platform-server": "^8.0.0",
     "@angular/router": "^8.0.0",
-    "@ng-bootstrap/ng-bootstrap": "^5.0.0-rc.0",
+    "@ng-bootstrap/ng-bootstrap": "^5.0.0-rc.1",
     "bootstrap": "^4.3.1",
     "chart.js": "^2.8.0",
     "clipboard-polyfill": "^2.8.1",
@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.800.2",
-    "@angular/cli": "^8.0.2",
+    "@angular/cli": "^8.1.0",
     "@angular/compiler-cli": "^8.0.0",
     "@angular/language-service": "^8.0.0",
     "@types/jasmine": "~3.3.7",
