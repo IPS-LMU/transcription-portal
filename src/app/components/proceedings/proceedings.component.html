@@ -92,11 +92,13 @@
                         <div class="provided-by">Service provided by</div>
                         <a href="https://www.eml.org/" target="_blank" style="display:block;vertical-align: middle;">
                             <img class="service-logo" [src]="popover.operation.providerInformation.logoURL"
-                                 alt="EML Logo">
+                                 alt="EML Logo" style="border:1px solid lightgray;">
                         </a>
                         <div class="service-terms">
-                            <a href="https://www.phonetik.uni-muenchen.de/Bas/BasLSTRadboutUniDisclaimer.txt"
-                               target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a>
+                            <a [href]="popover.operation.providerInformation.termsURL"
+                               target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a><br/>
+                            <a [href]="popover.operation.providerInformation.homepageURL"
+                               target="_blank"><i class="fa fa-globe"></i> Homepage</a><br/>
                         </div>
                         <i class="fa fa-exclamation-circle report-issue"
                            (click)="onReportIconClick(popover.operation)"></i>

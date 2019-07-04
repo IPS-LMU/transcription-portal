@@ -28,27 +28,31 @@
     font-size: 0.8em;
     cursor: pointer;
     vertical-align: middle;
-    z-index:10;
+    z-index: 10;
 }
 
 .languageTable .logo {
     width: 120px;
     border: 1px solid lightgray;
-    z-index:30;
+    z-index: 30;
 }
 
 .languageTable a {
     display: block;
 }
 
-.popover-header{
+.popover-header {
     font-size: 0.9em;
 }
 
 .languageTable {
-    width:350px;
+    width: 350px;
 }
 
 ngb-tooltip-window {
     opacity: 1;
+}
+
+.modal {
+    overflow-y: scroll !important;
 }

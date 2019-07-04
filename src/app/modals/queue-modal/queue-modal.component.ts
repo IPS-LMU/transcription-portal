@@ -45,7 +45,7 @@ export class QueueModalComponent implements OnInit {
   private subscrManager = new SubscriptionManager();
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer,
-              private taskService: TaskService, private storage: StorageService,
+              public taskService: TaskService, private storage: StorageService,
               private cd: ChangeDetectorRef) {
     for (let i = 0; i < AppSettings.configuration.api.services.length; i++) {
       const provider = AppSettings.configuration.api.services[i];

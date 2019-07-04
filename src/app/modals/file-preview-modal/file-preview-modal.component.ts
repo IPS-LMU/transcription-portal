@@ -15,7 +15,7 @@ export class FilePreviewModalComponent implements OnInit {
 
   public selectedFile: FileInfo;
   public fileContent = '';
-  private downloadURL: SafeResourceUrl;
+  public downloadURL: SafeResourceUrl;
   private subscrmanager = new SubscriptionManager();
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {

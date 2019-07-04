@@ -25,13 +25,14 @@
                     and the
                     files are marked for further processing.
                 </p>
-                <p *ngIf="orangeCount > 0" class="yellow" style="text-align: center; font-size:0.9em;">
-                    Please add the files with orange file names again. Otherwise these files will be
+                <p *ngIf="orangeCount > 0" class="alert alert-warning" style="text-align: center; font-size:0.9em;">
+                    Please add the files with file names in orange again. Otherwise these files will be
                     skipped.
                 </p>
 
-                <div class="btn-group" dropdown placement="down right" [insideClick]="true" #dropdown="bs-dropdown">
-                    <label for="button-basic" style="margin-right:10px;">Language: </label>
+                <div class="btn-group" dropdown placement="down right" [insideClick]="true" #dropdown="bs-dropdown"
+                style="display: block;margin-bottom:10px;">
+                    <label for="button-basic" style="vertical-align: middle;margin-top:10px;margin-right:10px;">Language: </label>
                     <button id="button-basic" dropdownToggle type="button"
                             class="btn btn-outline-secondary dropdown-toggle"
                             aria-controls="dropdown-basic">
