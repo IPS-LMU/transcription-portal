@@ -30,7 +30,7 @@
                     skipped.
                 </p>
 
-                <div class="btn-group" dropdown placement="down right" [insideClick]="true" #dropdown="bs-dropdown"
+                <div class="btn-group" dropdown placement="down right" (mousemove)="onMouseMove()" (mouseleave)="onMouseOut();" [insideClick]="true" #dropdown="bs-dropdown"
                 style="display: block;margin-bottom:10px;">
                     <label for="button-basic" style="vertical-align: middle;margin-top:10px;margin-right:10px;">Language: </label>
                     <button id="button-basic" dropdownToggle type="button"
@@ -47,7 +47,7 @@
                         </ng-container>
                         <span class="caret"></span>
                     </button>
-                    <div id="dropdown-basic" *dropdownMenu class="dropdown-menu"
+                    <div id="dropdown-basic" *dropdownMenu class="dropdown-menu" (mousemove)="onMouseMove()" (mouseleave)="onMouseOut();"
                          role="menu" aria-labelledby="button-basic" style="padding:5px;">
                         <table class="table table-hover languageTable">
                             <thead>

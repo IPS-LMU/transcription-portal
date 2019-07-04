@@ -41,6 +41,8 @@ export class QueueModalComponent implements OnInit {
     return AppSettings;
   }
 
+  public mouseInDropdown = false;
+
   public serviceProviders = {};
   private subscrManager = new SubscriptionManager();
 
@@ -253,5 +255,19 @@ export class QueueModalComponent implements OnInit {
         label: (task.files[0].extension !== '.wav') ? task.files[0].extension : task.files[1].extension
       };
     }
+  }
+
+  onMouseMove() {
+    this.mouseInDropdown = true;
+  }
+
+  onMouseOut() {
+    setTimeout(() => {
+      if (!this.mouseInDropdown) {
+        this.dropdown.hide();
+      }
+    }, 500);
+
+    this.mouseInDropdown = false;
   }
 }
