@@ -1,5 +1,4 @@
-import {TaskDirectory} from './taskDirectory';
-import {Task, TaskState} from './task';
+import {Task, TaskDirectory, TaskState} from './task';
 import {Subject} from 'rxjs';
 
 export interface EntryChangeEvent {

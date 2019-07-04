@@ -1,5 +1,5 @@
 import {AudioTime} from './AudioTime';
-import {AudioChunk} from './AudioChunk';
+import {AudioChunk} from './AudioManager';
 
 export class AudioTimeCalculator {
   public static roundSamples(samples: number) {
