@@ -32,6 +32,7 @@
 
 .languageTable .logo {
     width: 120px;
+    border: 1px solid lightgray;
 }
 
 .languageTable a {
@@ -40,6 +41,10 @@
 
 .popover-header{
     font-size: 0.9em;
+}
+
+.languageTable {
+    width:350px;
 }
 
 ngb-tooltip-window {

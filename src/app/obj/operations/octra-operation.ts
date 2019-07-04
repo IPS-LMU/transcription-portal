@@ -87,7 +87,7 @@ export class OCTRAOperation extends ToolOperation {
       const audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
       let transcript = `transcript=`;
       const embedded = `embedded=1`;
-      const host = `host=${encodeURIComponent(AppSettings.getLanguageByCode(this.task.language, this.task.operations[1].providerInformation.provider).host)}`;
+      const host = `host=${encodeURIComponent(AppSettings.getLanguageByCode(this.task.language, this.task.asr).host)}`;
 
 
       if (this.results.length < 1) {

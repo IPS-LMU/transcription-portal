@@ -42,9 +42,7 @@
                     <thead>
                     <tr>
                         <th>Language</th>
-                        <th>Upload</th>
                         <th>Speech Recognition</th>
-                        <th>Manual transcription, Word alignment, Phonetic detail</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -66,12 +64,6 @@
                                     {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}] (currently not
                                     available)
                                 </ng-container>
-                            </td>
-                            <td class="col-upload">
-                                <img [src]="serviceProviders['BAS']?.logoURL" class="logo"
-                                     popoverTitle="Service Information"
-                                     popoverClass="popover-logo"
-                                     [ngbPopover]="otherDescription">
                             </td>
                             <td class="col-asr">
                                 <img [src]="serviceProviders[lang.asr]?.logoURL" class="logo"
@@ -109,44 +101,6 @@
                                     </table>
                                 </ng-template>
                             </td>
-                            <td class="col-octra" style="text-align: center;">
-                                <img [src]="serviceProviders['BAS']?.logoURL" class="logo"
-                                     popoverTitle="Service Information"
-                                     popoverClass="popover-logo"
-                                     [ngbPopover]="otherDescription">
-                            </td>
-                            <ng-template #otherDescription>
-                                <table class="table table-sm table-borderless">
-                                    <tbody>
-                                    <tr>
-                                        <td>
-                                            <i class="fa fa-database"></i>
-                                        </td>
-                                        <td>
-                                            {{serviceProviders['BAS']?.dataStoragePolicy}}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <i class="fa fa-handshake-o"></i>
-                                        </td>
-                                        <td>
-                                            <a [href]="serviceProviders['BAS']?.termsURL" target="_blank">Terms &amp;
-                                                Conditions</a>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <i class="fa fa-globe"></i>
-                                        </td>
-                                        <td>
-                                            <a [href]="serviceProviders['BAS']?.homepageURL"
-                                               target="_blank">Homepage</a>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </ng-template>
                         </tr>
                     </ng-container>
                     </tbody>
