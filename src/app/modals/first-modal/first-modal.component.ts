@@ -1,7 +1,8 @@
-import {Component, OnInit, Output, ViewChild} from '@angular/core';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {Component, OnInit, Output, TemplateRef, ViewChild} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {Subject} from 'rxjs';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap';
+import {SubscriptionManager} from '../../shared/subscription-manager';
 
 @Component({
   selector: 'app-first-modal',
@@ -11,31 +12,32 @@ import {Subject} from 'rxjs';
 export class FirstModalComponent implements OnInit {
 
 
-  @ViewChild('content', { static: true }) content: NgbModal;
-
+  @ViewChild('content', {static: true}) content: TemplateRef<any>;
   @Output() understandClick: Subject<void> = new Subject<void>();
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer) {
+  bsModalRef: BsModalRef;
+  private subscrmanager = new SubscriptionManager();
+
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
   }
 
   ngOnInit() {
   }
 
   public open(beforeDismiss: () => boolean, onDismiss?: () => void) {
-    this.modalService.open(this.content, {
-      beforeDismiss: beforeDismiss
-    }).result.then((result) => {
-      this.onClose();
-    }, (reason) => {
-      this.onDismiss();
+    this.subscrmanager.add(this.modalService.onHide.subscribe(() => {
+      beforeDismiss();
+    }));
+
+    this.subscrmanager.add(this.modalService.onHidden.subscribe(() => {
       onDismiss();
-    });
+      this.onHidden();
+    }));
+
+    this.bsModalRef = this.modalService.show(this.content);
   }
 
-  onClose() {
-
-  }
-
-  onDismiss() {
+  onHidden() {
+    this.subscrmanager.destroy();
   }
 }

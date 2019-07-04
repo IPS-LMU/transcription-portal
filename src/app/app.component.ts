@@ -114,8 +114,7 @@ export class AppComponent implements OnDestroy {
               public settingsService: SettingsService,
               private cd: ChangeDetectorRef
   ) {
-    const debugging = false;
-    if (!debugging) {
+    if (!AppInfo.debugging) {
       // overwrite console.log
       const oldLog = console.log;
       const serv = this.bugService;
@@ -594,7 +593,9 @@ export class AppComponent implements OnDestroy {
 
   @HostListener('window:beforeunload', ['$event'])
   doSomething($event) {
-    $event.returnValue = this.blockLeaving;
+    if (!AppInfo.debugging) {
+      $event.returnValue = this.blockLeaving;
+    }
   }
 
   public getTime(): number {
@@ -674,8 +675,8 @@ export class AppComponent implements OnDestroy {
 
   onFeedbackRequest(operation: Operation) {
     this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
-    + `operation: ${operation.name}, ${operation.state}\n`
-    + `protocol: ${operation.protocol}\n`)
+      + `operation: ${operation.name}, ${operation.state}\n`
+      + `protocol: ${operation.protocol}\n`)
     this.feedbackModal.open();
   }
 }

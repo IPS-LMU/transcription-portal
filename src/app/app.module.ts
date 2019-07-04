@@ -2,7 +2,6 @@ import {HttpClientModule} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 import {AppComponent} from './app.component';
 import {PopoverComponent} from './components/popover/popover.component';
@@ -38,6 +37,8 @@ import {DirProgressDirective} from './components/proceedings/directives/dir-prog
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {ChartsModule} from 'ng2-charts';
 import {SettingsService} from './shared/settings.service';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import {BsDropdownModule, CollapseModule, ModalModule, PopoverModule} from 'ngx-bootstrap';
 
 @NgModule({
   declarations: [
@@ -71,8 +72,12 @@ import {SettingsService} from './shared/settings.service';
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    NgbModule,
     ChartsModule,
+    TooltipModule.forRoot(),
+    ModalModule.forRoot(),
+    CollapseModule.forRoot(),
+    PopoverModule.forRoot(),
+    BsDropdownModule.forRoot(),
     NgCircleProgressModule.forRoot({
       // set defaults here
       radius: 40,

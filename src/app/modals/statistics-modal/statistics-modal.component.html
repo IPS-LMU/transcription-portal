@@ -1,88 +1,94 @@
-<ng-template #content let-onClose="close" let-onDismiss="dismiss">
-    <div class="modal-header">
-        <h4 class="modal-title">Statistics</h4>
-        <button type="button" class="close" aria-label="Close" (click)="onDismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div style="text-align: right;">
-            <a [href]="taskService.protocolURL" [download]="taskService.protocolFileName">Download JSON</a>
-        </div>
-        <div class="row">
-            <div class="col-3" style="margin-left:-20px;">
-                <circle-progress
-                        [percent]="statisticsService.overAllProgress.waiting"
-                        [radius]="80"
-                        [outerStrokeWidth]="16"
-                        [innerStrokeWidth]="8"
-                        [outerStrokeColor]="'gray'"
-                        [innerStrokeColor]="'lightgray'"
-                        [animation]="true"
-                        [animationDuration]="300"
-                        [titleFontSize]="30"
-                        [subtitle]="'waiting'"
-                        [subtitleFontSize]="20"
-                ></circle-progress>
+<div bsModal #statisticsModal="bs-modal" class="modal fade" tabindex="-1"
+     role="dialog" aria-labelledby="dialog-sizes-name1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title pull-left">Statistics</h4>
+                <button type="button" class="close pull-right" aria-label="Close" (click)="statisticsModal.hide()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="col-3">
-                <circle-progress
-                        [percent]="statisticsService.overAllProgress.processing"
-                        [radius]="80"
-                        [outerStrokeWidth]="16"
-                        [innerStrokeWidth]="8"
-                        [outerStrokeColor]="'cornflowerblue'"
-                        [innerStrokeColor]="'#82ade5'"
-                        [animation]="true"
-                        [animationDuration]="300"
-                        [titleFontSize]="30"
-                        [subtitle]="'processing'"
-                        [subtitleFontSize]="20"
-                ></circle-progress>
-            </div>
-            <div class="col-3">
-                <circle-progress
-                        [percent]="statisticsService.overAllProgress.finished"
-                        [radius]="80"
-                        [outerStrokeWidth]="16"
-                        [innerStrokeWidth]="8"
-                        [outerStrokeColor]="'#78C000'"
-                        [innerStrokeColor]="'#C7E596'"
-                        [animation]="true"
-                        [animationDuration]="300"
-                        [titleFontSize]="30"
-                        [subtitle]="'finished'"
-                        [subtitleFontSize]="20"
-                ></circle-progress>
-            </div>
-            <div class="col-3">
-                <circle-progress
-                        [percent]="statisticsService.overAllProgress.failed"
-                        [radius]="80"
-                        [outerStrokeWidth]="16"
-                        [innerStrokeWidth]="8"
-                        [outerStrokeColor]="'red'"
-                        [innerStrokeColor]="'#e56255'"
-                        [animation]="true"
-                        [animationDuration]="300"
-                        [titleFontSize]="30"
-                        [subtitle]="'failed'"
-                        [subtitleFontSize]="20"
-                ></circle-progress>
-            </div>
-        </div>
+            <div class="modal-body">
+                <div style="text-align: right;">
+                    <a [href]="taskService.protocolURL" [download]="taskService.protocolFileName">Download JSON</a>
+                </div>
+                <div class="row">
+                    <div class="col-3" style="margin-left:-20px;">
+                        <circle-progress
+                                [percent]="statisticsService.overAllProgress.waiting"
+                                [radius]="80"
+                                [outerStrokeWidth]="16"
+                                [innerStrokeWidth]="8"
+                                [outerStrokeColor]="'gray'"
+                                [innerStrokeColor]="'lightgray'"
+                                [animation]="true"
+                                [animationDuration]="300"
+                                [titleFontSize]="30"
+                                [subtitle]="'waiting'"
+                                [subtitleFontSize]="20"
+                        ></circle-progress>
+                    </div>
+                    <div class="col-3">
+                        <circle-progress
+                                [percent]="statisticsService.overAllProgress.processing"
+                                [radius]="80"
+                                [outerStrokeWidth]="16"
+                                [innerStrokeWidth]="8"
+                                [outerStrokeColor]="'cornflowerblue'"
+                                [innerStrokeColor]="'#82ade5'"
+                                [animation]="true"
+                                [animationDuration]="300"
+                                [titleFontSize]="30"
+                                [subtitle]="'processing'"
+                                [subtitleFontSize]="20"
+                        ></circle-progress>
+                    </div>
+                    <div class="col-3">
+                        <circle-progress
+                                [percent]="statisticsService.overAllProgress.finished"
+                                [radius]="80"
+                                [outerStrokeWidth]="16"
+                                [innerStrokeWidth]="8"
+                                [outerStrokeColor]="'#78C000'"
+                                [innerStrokeColor]="'#C7E596'"
+                                [animation]="true"
+                                [animationDuration]="300"
+                                [titleFontSize]="30"
+                                [subtitle]="'finished'"
+                                [subtitleFontSize]="20"
+                        ></circle-progress>
+                    </div>
+                    <div class="col-3">
+                        <circle-progress
+                                [percent]="statisticsService.overAllProgress.failed"
+                                [radius]="80"
+                                [outerStrokeWidth]="16"
+                                [innerStrokeWidth]="8"
+                                [outerStrokeColor]="'red'"
+                                [innerStrokeColor]="'#e56255'"
+                                [animation]="true"
+                                [animationDuration]="300"
+                                [titleFontSize]="30"
+                                [subtitle]="'failed'"
+                                [subtitleFontSize]="20"
+                        ></circle-progress>
+                    </div>
+                </div>
 
-        <div style="display: block" *ngIf="visible">
-            <h4>Processing duration (minutes)</h4>
-            <canvas baseChart
-                    [data]="statisticsService.averageDurations.data"
-                    [labels]="statisticsService.averageDurations.labels"
-                    [chartType]="pieChartType"
-                    (chartHover)="chartHovered($event)"
-                    (chartClick)="chartClicked($event)"></canvas>
+                <div style="display: block">
+                    <h4>Processing duration (minutes)</h4>
+                    <canvas baseChart
+                            [data]="statisticsService.averageDurations.data"
+                            [labels]="statisticsService.averageDurations.labels"
+                            [chartType]="pieChartType"
+                            (chartHover)="chartHovered($event)"
+                            (chartClick)="chartClicked($event)"></canvas>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-dark" (click)="statisticsModal.hide()">Cancel</button>
+            </div>
         </div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="onClose('Close click')">Cancel</button>
-    </div>
-</ng-template>
+</div>
+

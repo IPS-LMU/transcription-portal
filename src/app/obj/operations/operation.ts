@@ -6,9 +6,11 @@ import {Task, TaskState} from '../tasks/task';
 import {OHLanguageObject, OHService} from '../oh-config';
 
 export abstract class Operation {
+
   set providerInformation(value: OHService) {
     this._providerInformation = value;
   }
+
   get providerInformation(): OHService {
     return this._providerInformation;
   }

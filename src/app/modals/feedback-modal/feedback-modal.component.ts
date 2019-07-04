@@ -6,13 +6,14 @@ import {
   OnDestroy,
   OnInit,
   SecurityContext,
+  TemplateRef,
   ViewChild
 } from '@angular/core';
-import {ModalDismissReasons, NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BugReportService} from '../../shared/bug-report.service';
 import {AppSettings} from '../../shared/app.settings';
+import {BsModalRef, BsModalService, ModalDirective, PopoverDirective} from 'ngx-bootstrap';
 
 @Component({
   selector: 'app-feedback',
@@ -22,11 +23,11 @@ import {AppSettings} from '../../shared/app.settings';
 })
 export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
 
-  @ViewChild('content', {static: true}) content: NgbModal;
+  @ViewChild('content', {static: true}) content: TemplateRef<any>;
 
   public showThankYou = false;
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();
-  private modalRef: NgbModalRef;
+  @ViewChild('feedbackModal', { static: false }) feedbackModal: ModalDirective;
 
   public formData = {
     email: '',
@@ -53,7 +54,7 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
     this.protocolText = this.sanitizer.sanitize(SecurityContext.HTML, str);
   }
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer, private bugService: BugReportService,
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer, private bugService: BugReportService,
               private cd: ChangeDetectorRef) {
   }
 
@@ -68,21 +69,18 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public open() {
-    this.modalRef = this.modalService.open(this.content, {
-      size: 'lg'
-    });
+    const id = this._subscrmanager.add(this.modalService.onHidden.subscribe((e) => {
+      this._subscrmanager.remove(id);
+      this.onClose(e);
+    }));
+
+    this.feedbackModal.show();
     this.updateProtocolAsText();
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
 
-  onClose() {
-    this.updateProtocolAsText();
-    this.cd.markForCheck();
-    this.cd.detectChanges();
-  }
-
-  onDismiss() {
+  onClose(e) {
     this.updateProtocolAsText();
     this.cd.markForCheck();
     this.cd.detectChanges();
@@ -99,22 +97,12 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
           setTimeout(() => {
             this.showThankYou = false;
             this.formData.messsage = '';
-            this.modalRef.dismiss();
+            this.feedbackModal.hide();
           }, 3000);
         }, (err) => {
           console.error('could not send feedback!');
         }
       )
     );
-  }
-
-  private getDismissReason(reason: any): string {
-    if (reason === ModalDismissReasons.ESC) {
-      return 'by pressing ESC';
-    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
-      return 'by clicking on a backdrop';
-    } else {
-      return `with: ${reason}`;
-    }
   }
 }

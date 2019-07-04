@@ -1,30 +1,34 @@
-<ng-template #content let-c="close" let-d="dismiss">
-    <div class="modal-header">
-        <h4 class="modal-title">Audio files with two channels detected</h4>
-    </div>
-    <div class="modal-body split-modal">
-        <p>You have added audio files with two channels. In order to continue the channels will be split in
-            separate files and each could be processed separately.
-        </p>
-        <p style="text-align: center;">
-            What would you like to do?
-        </p>
-        <div class="row">
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('FIRST');">Always<br/>use 1.
-                    channel
-                </button>
+<div bsModal #splitModal="bs-modal" class="modal fade" tabindex="-1"
+     role="dialog" aria-labelledby="dialog-sizes-name1">
+    <div class="modal-dialog" style="width:570px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title pull-left">Audio files with two channels detected</h4>
             </div>
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('SECOND');">Always<br/>use
-                    2. channel
-                </button>
-            </div>
-            <div class="col-4">
-                <button class="btn btn-info" (click)="splitModalDismissedProperly = true; d('BOTH');">Always<br/>use
-                    both channels
-                </button>
+            <div class="modal-body">
+                <p>You have added audio files with two channels. In order to continue the channels will be split in
+                    separate files and each could be processed separately.
+                </p>
+                <p style="text-align: center;">
+                    What would you like to do?
+                </p>
+                <div class="row">
+                    <div class="col-4">
+                        <button class="btn btn-info" (click)="splitModalDismissedProperly = true; dismiss('FIRST');">Always<br/>use 1.
+                            channel
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-info" (click)="splitModalDismissedProperly = true; dismiss('SECOND');">Always<br/>use
+                            2. channel
+                        </button>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-info" (click)="splitModalDismissedProperly = true; dismiss('BOTH');">Always<br/>use
+                            both channels
+                        </button>
+                    </div>
             </div>
         </div>
     </div>
-</ng-template>
+</div>

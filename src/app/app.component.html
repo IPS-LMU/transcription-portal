@@ -24,30 +24,28 @@
                     </a>
                 </li>
             </ul>
-            <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [ngbCollapse]="isCollapsed">
+            <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [collapse]="!isCollapsed">
                 <ul class="nav navbar-nav flex-fill justify-content-center state-icons" style="min-width:300px;">
                     <li class="nav-item">
-                        <div class="totalState" [ngbTooltip]="queuedTipp"
-                             tooltipClass="state-tooltip"
-                             #t2="ngbTooltip" placement="bottom">
+                        <div class="totalState" [tooltip]="queuedTipp"
+                             containerClass="state-tooltip"
+                             placement="bottom">
                             <div class="number">{{taskService.statistics.queued}}</div>
                             <i class="fa fa-database" style="color:gray;"></i>
                             <ng-template #queuedTipp>{{taskService.statistics.queued}} audio files are waiting for
                                 verification.
                             </ng-template>
                         </div>
-                        <div class="totalState" [ngbTooltip]="waitingTipp"
-                             tooltipClass="state-tooltip"
-                             #t2="ngbTooltip" placement="bottom">
+                        <div class="totalState" [tooltip]="waitingTipp"
+                             containerClass="state-tooltip" placement="bottom">
                             <div class="number">{{taskService.statistics.waiting}}</div>
                             <i class="fa fa-clock-o" style="color:dodgerblue;"></i>
                             <ng-template #waitingTipp>{{taskService.statistics.waiting}} tasks are waiting for
                                 processing.
                             </ng-template>
                         </div>
-                        <div class="totalState" [ngbTooltip]="runningTipp"
-                             tooltipClass="state-tooltip"
-                             #t2="ngbTooltip" placement="bottom">
+                        <div class="totalState" [tooltip]="runningTipp"
+                             containerClass="state-tooltip" placement="bottom">
                             <div class="number">{{taskService.statistics.running}}</div>
                             <i [ngClass]="{
                         'fa-spin': (taskService.statistics.running > 0)
@@ -55,17 +53,15 @@
                             <ng-template #runningTipp>{{taskService.statistics.running}} tasks are running.
                             </ng-template>
                         </div>
-                        <div class="totalState" [ngbTooltip]="finishedTipp"
-                             tooltipClass="state-tooltip"
-                             #t2="ngbTooltip" placement="bottom">
+                        <div class="totalState" [tooltip]="finishedTipp"
+                             containerClass="state-tooltip" placement="bottom">
                             <div class="number">{{taskService.statistics.finished}}</div>
                             <i class="fa fa-check" style="color:forestgreen;"></i>
                             <ng-template #finishedTipp>{{taskService.statistics.finished}} tasks are finished.
                             </ng-template>
                         </div>
-                        <div class="totalState" [ngbTooltip]="errorsTipp"
-                             tooltipClass="state-tooltip"
-                             #t2="ngbTooltip" placement="bottom">
+                        <div class="totalState" [tooltip]="errorsTipp"
+                             containerClass="state-tooltip" placement="bottom">
                             <div class="number">{{taskService.statistics.errors}}</div>
                             <i class="fa fa-times" style="color:red;"></i>
                             <ng-template #errorsTipp>{{taskService.statistics.errors}} tasks failed. For further details
@@ -75,7 +71,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [ngbCollapse]="isCollapsed">
+            <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [collapse]="!isCollapsed">
                 <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
                     <li class="nav-item active">
                         <a style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
@@ -101,9 +97,10 @@
                            (click)="notification.permissionGranted = true" style="cursor: pointer;"></i>
                     </li>
                     <li class="nav-item active">
-                        <div ngbDropdown placement="left" class="d-inline-block">
-                            <i class="fa fa-cog" ngbDropdownToggle id="dropdownBasic2" style="cursor: pointer;"></i>
-                            <div ngbDropdownMenu aria-labelledby="dropdownBasic2" id="settings-dropdown">
+                        <div class="btn-group" dropdown>
+                            <i class="fa fa-cog" dropdownToggle id="dropdownBasic2" style="cursor: pointer;"></i>
+
+                            <div *dropdownMenu class="dropdown-menu" id="settings-dropdown" role="menu">
                                 <table style="width:100%;">
                                     <tbody>
                                     <tr>

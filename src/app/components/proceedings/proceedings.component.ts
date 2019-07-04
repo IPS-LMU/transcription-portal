@@ -32,10 +32,7 @@ import {FilePreviewModalComponent} from '../../modals/file-preview-modal/file-pr
 import {DownloadModalComponent} from '../../modals/download-modal/download-modal.component';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
-import {NgbTooltip} from '@ng-bootstrap/ng-bootstrap';
 import * as clipboard from 'clipboard-polyfill';
-import {AppSettings} from '../../shared/app.settings';
-import {OHService} from '../../obj/oh-config';
 
 declare var window: any;
 
@@ -104,7 +101,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
   @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
-  @ViewChild('t2', {static: false}) public tooltip: NgbTooltip;
 
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;

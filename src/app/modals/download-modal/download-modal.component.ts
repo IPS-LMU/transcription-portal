@@ -1,5 +1,4 @@
-import {Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild} from '@angular/core';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {Component, Input, OnChanges, OnInit, SimpleChanges, TemplateRef, ViewChild} from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../obj/tasks';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
@@ -14,6 +13,8 @@ import * as moment from 'moment';
 import {OAudiofile} from '../../obj/Annotation';
 import {AudioInfo} from '../../obj/audio';
 import {Converter, ImportResult} from '../../obj/Converters';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap';
+import {SubscriptionManager} from '../../shared/subscription-manager';
 
 @Component({
   selector: 'app-download-modal',
@@ -22,22 +23,28 @@ import {Converter, ImportResult} from '../../obj/Converters';
 })
 export class DownloadModalComponent implements OnInit, OnChanges {
 
-  @ViewChild('content', { static: true }) content;
+  @ViewChild('content', {static: true}) content: TemplateRef<any>;
   @Input() type: 'line' | 'column' = 'column';
   @Input() selectedTasks: number[];
   @Input() taskList: Task[];
   @Input() column: Operation;
+
+  downloadModal: BsModalRef;
 
   public archiveURL = '';
   public checkboxes: boolean[] = [];
 
   public state = 'inactive';
 
+  private subscrManager = new SubscriptionManager();
+
   public get AppInfo(): AppInfo {
     return AppInfo;
   }
 
-  constructor(private modalService: NgbModal, private taskService: TaskService, private http: HttpClient, private storage: StorageService) {
+  constructor(private taskService: TaskService, private http: HttpClient, private storage: StorageService,
+              private modalService: BsModalService) {
+
   }
 
   ngOnInit() {
@@ -60,12 +67,12 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   public open(type: 'column' | 'line') {
     this.uncheckAll();
     this.type = type;
-    this.modalService.open(this.content, {
-      beforeDismiss: () => {
-        this.state = 'inactive';
-        return true;
-      }
-    });
+
+    this.subscrManager.add(this.modalService.onHidden.subscribe((e) => {
+      this.state = 'inactive';
+    }));
+
+    this.downloadModal = this.modalService.show(this.content);
   }
 
   process() {
@@ -208,7 +215,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
               const dirPromises = [];
 
               for (let j = 0; j < entry.entries.length; j++) {
-                const dirEntry = <Task> entry.entries[j];
+                const dirEntry = <Task>entry.entries[j];
                 dirPromises.push(this.processTask(dirEntry));
               }
 
@@ -277,10 +284,10 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     return new Promise<string>((resolve, reject) => {
       FileInfo.getFileContent(opResult.file).then((content) => {
         const audiofile = new OAudiofile();
-        audiofile.duration = (<AudioInfo> operation.task.files[0]).duration.samples;
-        audiofile.name = (<AudioInfo> operation.task.files[0]).name;
-        audiofile.samplerate = (<AudioInfo> operation.task.files[0]).samplerate;
-        audiofile.size = (<AudioInfo> operation.task.files[0]).size;
+        audiofile.duration = (<AudioInfo>operation.task.files[0]).duration.samples;
+        audiofile.name = (<AudioInfo>operation.task.files[0]).name;
+        audiofile.samplerate = (<AudioInfo>operation.task.files[0]).samplerate;
+        audiofile.size = (<AudioInfo>operation.task.files[0]).size;
 
 
         let annotJSON = null;
@@ -339,7 +346,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
         (event) => {
           if (event.type === 'loadend') {
-            const result = <string> event.result;
+            const result = <string>event.result;
             const x2js = new X2JS();
             let json: any = x2js.xml2js(result);
             json = json.UploadFileMultiResponse;

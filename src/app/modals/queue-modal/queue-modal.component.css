@@ -28,11 +28,13 @@
     font-size: 0.8em;
     cursor: pointer;
     vertical-align: middle;
+    z-index:10;
 }
 
 .languageTable .logo {
     width: 120px;
     border: 1px solid lightgray;
+    z-index:30;
 }
 
 .languageTable a {

@@ -1,7 +1,8 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
-import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
+import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {FileInfo} from '../../obj/fileInfo';
+import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap';
+import {SubscriptionManager} from '../../shared/subscription-manager';
 
 @Component({
   selector: 'app-file-preview-modal',
@@ -9,14 +10,15 @@ import {FileInfo} from '../../obj/fileInfo';
   styleUrls: ['./file-preview-modal.component.css']
 })
 export class FilePreviewModalComponent implements OnInit {
-  @ViewChild('content', { static: true }) content: NgbModal;
-  private modalRef: NgbModalRef;
+  @ViewChild('previewModal', {static: true}) previewModal: ModalDirective;
+  private modalRef: BsModalRef;
 
   public selectedFile: FileInfo;
   public fileContent = '';
   private downloadURL: SafeResourceUrl;
+  private subscrmanager = new SubscriptionManager();
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer) {
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
   }
 
   ngOnInit() {
@@ -28,10 +30,12 @@ export class FilePreviewModalComponent implements OnInit {
     this.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file.file));
     this.loadFileContent();
     this.onDismiss = onDismiss;
-    this.modalRef = this.modalService.open(this.content, {
-      beforeDismiss: beforeDismiss,
-      size: 'lg'
-    });
+
+    const id = this.subscrmanager.add(this.previewModal.onHidden.subscribe(() => {
+      this.subscrmanager.remove(id);
+      this.onDismiss();
+    }));
+    this.previewModal.show();
   }
 
   private loadFileContent() {
@@ -44,10 +48,6 @@ export class FilePreviewModalComponent implements OnInit {
     } else {
       console.error(`selectedFile is null!`);
     }
-  }
-
-  onClose() {
-
   }
 
   onDismiss() {

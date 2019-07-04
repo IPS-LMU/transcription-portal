@@ -1,4 +1,9 @@
-.split-modal button {
-    width: 100%;
+.btn.btn-info {
+    width: 100% !important;
     font-size: 0.9em;
 }
+
+.modal-content {
+    width: 570px;
+}
+

@@ -8,7 +8,6 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
 import {Task, TaskState} from '../../obj/tasks';
 import {QueueItem} from '../../obj/preprocessor';
 import {Operation} from '../../obj/operations/operation';
@@ -19,17 +18,20 @@ import {StorageService} from '../../storage.service';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../../obj/oh-config';
+import {BsDropdownDirective, BsModalService, ModalDirective, PopoverDirective} from 'ngx-bootstrap';
+import {SubscriptionManager} from '../../shared/subscription-manager';
 
 @Component({
   selector: 'app-queue-modal',
   templateUrl: './queue-modal.component.html',
   styleUrls: ['./queue-modal.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.None
 })
 export class QueueModalComponent implements OnInit {
-  @ViewChild('content', {static: true}) content: NgbModal;
-  private modalRef: NgbModalRef;
+  @ViewChild('queueModal', {static: true}) queueModal: ModalDirective;
+  @ViewChild('dropdown', {static: true}) dropdown: BsDropdownDirective;
+  @ViewChild('pop', {static: true}) popover: PopoverDirective;
 
   @Input() tasks: Task[] = [];
   @Input() queue: QueueItem[] = [];
@@ -40,8 +42,9 @@ export class QueueModalComponent implements OnInit {
   }
 
   public serviceProviders = {};
+  private subscrManager = new SubscriptionManager();
 
-  constructor(private modalService: NgbModal, private sanitizer: DomSanitizer,
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer,
               private taskService: TaskService, private storage: StorageService,
               private cd: ChangeDetectorRef) {
     for (let i = 0; i < AppSettings.configuration.api.services.length; i++) {
@@ -55,18 +58,20 @@ export class QueueModalComponent implements OnInit {
 
   public open(beforeDismiss?: () => boolean, onDismiss: () => void = () => {
   }) {
-    this.onDismiss = onDismiss;
-    this.modalRef = this.modalService.open(this.content, {
-      beforeDismiss: beforeDismiss,
-      size: 'lg'
-    });
+    this.subscrManager.add(this.modalService.onHide.subscribe(() => {
+      beforeDismiss();
+    }));
+
+    this.subscrManager.add(this.modalService.onHidden.subscribe(() => {
+      onDismiss();
+      this.onHidden();
+    }));
+
+    this.queueModal.show();
   }
 
-  onClose() {
-
-  }
-
-  onDismiss() {
+  onHidden() {
+    this.subscrManager.destroy();
   }
 
   onSubmit() {
@@ -77,8 +82,7 @@ export class QueueModalComponent implements OnInit {
         task.changeState(TaskState.PENDING);
       }
     }
-    this.modalRef.dismiss();
-    this.onDismiss();
+    this.queueModal.hide();
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
@@ -95,10 +99,8 @@ export class QueueModalComponent implements OnInit {
   }
 
   onASRLangChanged(lang: OHLanguageObject) {
-    if (lang.code !== this.taskService.selectedlanguage.code || lang.asr !== this.taskService.selectedlanguage.asr) {
-      this.taskService.selectedlanguage = lang;
-      this.changeLanguageforAllQueuedTasks();
-    }
+    this.taskService.selectedlanguage = lang;
+    this.changeLanguageforAllQueuedTasks();
   }
 
   getShortCode(code) {
@@ -122,6 +124,8 @@ export class QueueModalComponent implements OnInit {
       language: this.taskService.selectedlanguage.code,
       asr: this.taskService.selectedlanguage.asr
     });
+
+    this.dropdown.hide();
 
     this.cd.markForCheck();
     this.cd.detectChanges();

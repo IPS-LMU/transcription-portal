@@ -1,8 +1,9 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {NgbModal, NgbModalRef} from '@ng-bootstrap/ng-bootstrap';
+import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {StatisticsService} from '../../shared/statistics.service';
 import {TaskService} from '../../obj/tasks/task.service';
+import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap';
+import {ChartType} from 'chart.js';
 
 @Component({
   selector: 'app-statistics',
@@ -11,14 +12,12 @@ import {TaskService} from '../../obj/tasks/task.service';
 })
 export class StatisticsModalComponent implements OnInit, OnDestroy {
 
-  @ViewChild('content', { static: true }) content: NgbModal;
+  @ViewChild('statisticsModal', {static: true}) statisticsModal: ModalDirective;
 
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();
-  private modalRef: NgbModalRef;
 
   // Pie
-  public pieChartType = 'pie';
-  public visible = false;
+  public pieChartType: ChartType = 'pie';
 
   // events
   public chartClicked(e: any): void {
@@ -32,28 +31,20 @@ export class StatisticsModalComponent implements OnInit, OnDestroy {
     this.statisticsService.destroy();
   }
 
-  constructor(private modalService: NgbModal, public statisticsService: StatisticsService, public taskService: TaskService) {
+  constructor(public statisticsService: StatisticsService, public taskService: TaskService) {
   }
 
   ngOnInit() {
   }
 
   public open() {
-    this.modalRef = this.modalService.open(this.content, {
-      size: 'lg'
-    });
-    setTimeout(() => {
-      this.visible = true;
-    }, 1000);
+    this._subscrmanager.add(this.statisticsModal.onShown.subscribe(() => {
+    }));
+    this._subscrmanager.add(this.statisticsModal.onHidden.subscribe(this.onHidden));
+    this.statisticsModal.show();
   }
 
-  onClose() {
-    this.visible = false;
-    this.statisticsService.destroy();
-  }
-
-  onDismiss() {
-    this.visible = false;
+  onHidden = () => {
     this.statisticsService.destroy();
   }
 }

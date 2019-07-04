@@ -1,8 +1,11 @@
-<ng-template #content let-onDismiss="dismiss">
+<ng-template #content>
     <div class="modal-header">
-        <h4 class="modal-title">Notice</h4>
+        <h4 class="modal-title pull-left">Notice</h4>
+        <button type="button" class="close pull-right" aria-label="Close" (click)="modalRef.hide()">
+            <span aria-hidden="true">&times;</span>
+        </button>
     </div>
-    <div class="modal-body split-modal">
+    <div class="modal-body">
         <p> Please notice:</p>
         <ol>
             <li>
@@ -24,7 +27,7 @@
         </ol>
         <div class="row">
             <div class="col-12">
-                <button class="btn btn-info" style="width:100%;" (click)="understandClick.next(); onDismiss();">
+                <button class="btn btn-info" style="width:100%;" (click)="understandClick.next(); bsModalRef.hide();">
                     I understand
                 </button>
             </div>

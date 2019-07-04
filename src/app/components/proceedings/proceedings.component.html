@@ -164,12 +164,10 @@
                                 <div style="z-index:10;width:100%;text-align:center;">
                                     <ng-template #tipContent>{{operation.description}}</ng-template>
                                     <div style="display:inline;padding:0 3px;"
-
-                                         (click)="openArchiveDownload('column', operation)" [ngbTooltip]="tipContent"
-                                         tooltipClass="operation-tooltip"
-                                         triggers="manual" #t2="ngbTooltip" placement="bottom"
-                                         (mouseenter)="toolTipAction('open', t2)"
-                                         (mouseleave)="toolTipAction('close', t2)"
+                                         (click)="openArchiveDownload('column', operation)"
+                                         [tooltip]="tipContent"
+                                         placement="bottom"
+                                         containerClass="operation-tooltip"
                                     >
                                         <ng-container *ngIf="shortstyle">
                                             {{operation.shortTitle}}
