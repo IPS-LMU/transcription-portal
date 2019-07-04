@@ -29,7 +29,6 @@
     "chart.js": "^2.8.0",
     "clipboard-polyfill": "^2.8.1",
     "conventional-changelog-cli": "^2.0.22",
-    "core-js": "^2.6.2",
     "font-awesome": "^4.7.0",
     "intl": "^1.2.5",
     "jquery": "^3.4.1",
