@@ -58,13 +58,15 @@ export class QueueModalComponent implements OnInit {
   ngOnInit() {
   }
 
-  public open(beforeDismiss: () => boolean = () => true, onDismiss: () => void = () => {
+  public open(beforeDismiss: () => boolean = () => {
+    return true;
+  }, onDismiss: () => void = () => {
   }) {
-    this.subscrManager.add(this.modalService.onHide.subscribe(() => {
+    this.subscrManager.add(this.queueModal.onHide.subscribe(() => {
       beforeDismiss();
     }));
 
-    this.subscrManager.add(this.modalService.onHidden.subscribe(() => {
+    this.subscrManager.add(this.queueModal.onHidden.subscribe(() => {
       onDismiss();
       this.onHidden();
     }));

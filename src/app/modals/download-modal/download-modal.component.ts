@@ -7,7 +7,6 @@ import {FileInfo} from '../../obj/fileInfo';
 import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
-import * as X2JS from 'x2js';
 import {StorageService} from '../../storage.service';
 import * as moment from 'moment';
 import {OAudiofile} from '../../obj/Annotation';
@@ -15,6 +14,9 @@ import {AudioInfo} from '../../obj/audio';
 import {Converter, ImportResult} from '../../obj/Converters';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+
+declare var JSZip;
 
 @Component({
   selector: 'app-download-modal',
@@ -31,7 +33,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   downloadModal: BsModalRef;
 
-  public archiveURL = '';
+  public archiveURL: SafeResourceUrl = '';
+  public archiveName = '';
   public checkboxes: boolean[] = [];
 
   public state = 'inactive';
@@ -43,7 +46,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   }
 
   constructor(private taskService: TaskService, private http: HttpClient, private storage: StorageService,
-              private modalService: BsModalService) {
+              private modalService: BsModalService, private sanitizer: DomSanitizer) {
 
   }
 
@@ -81,13 +84,13 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       // get url for resulty by column
       // prepare package
       const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-      const requestPackage = {
-        requestType: 'createAchieve',
-        data: {
-          achieveName: `${this.column.name}Results_${dateStr}`,
-          type: 'column',
-          files: []
-        }
+      const requestPackage: {
+        entries: {
+          path: string,
+          file: File
+        }[]
+      } = {
+        entries: []
       };
       const tasks = this.taskService.taskList.getAllTasks();
 
@@ -108,45 +111,21 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           if (operation.results.length > 0 && operation.state === TaskState.FINISHED) {
             const result: FileInfo = operation.lastResult;
             if (result.online) {
-              requestPackage.data.files.push({
-                name: result.fullname,
-                url: result.url
+              requestPackage.entries.push({
+                path: result.fullname,
+                file: result.file
               });
 
               const promise = new Promise<void>((resolve, reject) => {
-                this.getConversionFiles(operation).then((strings) => {
-                  for (let k = 0; k < strings.length; k++) {
-                    const url = strings[k];
+                this.getConversionFiles(operation).then((files) => {
+                  for (let k = 0; k < files.length; k++) {
+                    const fileInfo = files[k];
 
-                    const nameObj = FileInfo.extractFileName(url);
-
-                    requestPackage.data.files.push({
-                      name: `${nameObj.name}${nameObj.extension}`,
-                      url: url
+                    requestPackage.entries.push({
+                      path: fileInfo.file.name,
+                      file: fileInfo.file
                     });
                   }
-                  resolve();
-                }).catch((error) => {
-                  reject(error);
-                });
-              });
-
-              promises.push(promise);
-            } else {
-              // reupload file
-
-              // TODO improve code!
-              const promise = new Promise<void>((resolve, reject) => {
-                this.uploadFile(result).then((url) => {
-                  result.url = url;
-                  result.online = true;
-                  this.storage.saveTask(task);
-
-                  requestPackage.data.files.push({
-                    name: result.fullname,
-                    url: result.url
-                  });
-
                   resolve();
                 }).catch((error) => {
                   reject(error);
@@ -174,8 +153,9 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             });
         }
       }).then(() => {
-        if (requestPackage.data.files.length > 0) {
-          this.upDateDownloadURL(requestPackage);
+        if (requestPackage.entries.length > 0) {
+          this.archiveName = `${this.column.name}Results_${dateStr}`;
+          this.doZipping(requestPackage.entries);
         } else {
           this.state = 'inactive';
           this.archiveURL = '';
@@ -188,14 +168,16 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
         // prepare package
         const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-        const requestPackage = {
-          requestType: 'createAchieve',
-          data: {
-            achieveName: `oh-portal_results_${dateStr}`,
-            type: 'line',
-            structure: []
-          }
+        const requestPackage: {
+          entries: {
+            path: string,
+            file: File
+          }[]
+        } = {
+          entries: []
         };
+
+        this.archiveName = `oh-portal_results_${dateStr}`;
 
         const promises = [];
 
@@ -205,13 +187,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
           if (entry instanceof TaskDirectory) {
 
-            promises.push(new Promise<any>((resolve, reject) => {
-              const dirResult = {
-                name: entry.foldername,
-                type: 'folder',
-                entries: []
-              };
-
+            promises.push(new Promise<void>((resolve, reject) => {
               const dirPromises = [];
 
               for (let j = 0; j < entry.entries.length; j++) {
@@ -220,27 +196,44 @@ export class DownloadModalComponent implements OnInit, OnChanges {
               }
 
               Promise.all(dirPromises).then((values) => {
+                console.log(values);
                 for (let l = 0; l < values.length; l++) {
                   const value = values[l];
-                  dirResult.entries.push(value);
+
+                  for (let j = 0; j < value.length; j++) {
+                    const val = value[j];
+                    console.log(val.path);
+                    val.path = `${entry.foldername}/${val.path}`;
+                    requestPackage.entries.push(val);
+                  }
                 }
-                resolve(dirResult);
+                resolve();
               }).catch((error) => {
                 console.error(error);
               });
             }));
           } else {
             // task
-            promises.push(this.processTask(entry));
+            promises.push(
+              new Promise<void>((resolve, reject) => {
+                this.processTask(entry).then((entries) => {
+                  console.log(`entries are`);
+                  console.log(entries);
+                  for (let i2 = 0; i2 < entries.length; i2++) {
+                    const entry2 = entries[i2];
+                    requestPackage.entries.push(entry2);
+                  }
+                  resolve();
+                }).catch((error) => {
+                  console.error(error);
+                  reject(error);
+                });
+              }));
           }
         }
 
-        Promise.all(promises).then((values) => {
-          for (let l = 0; l < values.length; l++) {
-            const value = values[l];
-            requestPackage.data.structure.push(value);
-          }
-          this.upDateDownloadURL(requestPackage);
+        Promise.all(promises).then(() => {
+          this.doZipping(requestPackage.entries);
         }).catch((error) => {
           this.state = 'error';
           console.error(error);
@@ -249,8 +242,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     }
   }
 
-  getConversionFiles(operation: Operation): Promise<string[]> {
-    return new Promise<string[]>((resolve, reject) => {
+  getConversionFiles(operation: Operation): Promise<FileInfo[]> {
+    return new Promise<FileInfo[]>((resolve, reject) => {
 
       const promises = [];
 
@@ -264,7 +257,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             const opResult = operation.results[k];
 
             if (opResult.fullname.indexOf(exportConverter.extension) < 0) {
-              promises.push(this.getResultConversionURL(exportConverter, operation, opResult));
+              promises.push(this.getResultConversion(exportConverter, operation, opResult));
             }
           }
         }
@@ -280,8 +273,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     });
   }
 
-  getResultConversionURL(exportConverter: Converter, operation: Operation, opResult: FileInfo): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+  getResultConversion(exportConverter: Converter, operation: Operation, opResult: FileInfo): Promise<FileInfo> {
+    return new Promise<FileInfo>((resolve, reject) => {
       FileInfo.getFileContent(opResult.file).then((content) => {
         const audiofile = new OAudiofile();
         audiofile.duration = (<AudioInfo>operation.task.files[0]).duration.samples;
@@ -323,13 +316,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             operation.task.files[0].name + exportConverter.extension, conversion.file.type);
 
           const fileInfo = new FileInfo(file.name, file.type, file.size, file);
-
-          this.uploadFile(fileInfo).then((url) => {
-            resolve(url);
-          }).catch((error) => {
-            reject(error);
-          });
-
+          resolve(fileInfo);
         } else {
           // ignore
           resolve(null);
@@ -340,84 +327,50 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     });
   }
 
-  uploadFile(fileInfo: FileInfo): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      UploadOperation.upload([fileInfo],
-        'https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/uploadFileMulti', this.http).subscribe(
-        (event) => {
-          if (event.type === 'loadend') {
-            const result = <string>event.result;
-            const x2js = new X2JS();
-            let json: any = x2js.xml2js(result);
-            json = json.UploadFileMultiResponse;
-
-            let url = '';
-
-            if (Array.isArray(json.fileList.entry)) {
-              url = json.fileList.entry[0].value;
-            } else {
-              // json attribute entry is an object
-              url = json.fileList.entry['value'];
-            }
-
-            resolve(url);
-          }
-        },
-        (err) => {
-          reject(err);
-        }
-      );
-    });
-  }
-
-  processTask(task: Task): Promise<any> {
+  processTask(task: Task): Promise<{
+    path: 'string',
+    file: File
+  }[]> {
     return new Promise<any>((resolve, reject) => {
       if (!(task === null || task === undefined)) {
 
         // single task
-        const entryResult = {
-          name: task.files[0].name,
-          type: 'folder',
-          entries: []
-        };
+        const entryResult: {
+          path: string,
+          file: File
+        }[] = [];
 
-        const uploadPromises = [];
+        const promises = [];
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
           if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
-            const entryOp = {
-              name: operation.name,
-              type: 'folder',
-              entries: []
-            };
-
             const opResult = operation.lastResult;
 
-            if (opResult.online) {
-              entryOp.entries.push(opResult.url);
-            } else {
-              this.uploadFile(opResult).then((url) => {
-                entryOp.entries.push(url);
-                opResult.url = url;
-                opResult.online = true;
-                this.storage.saveTask(task);
+            entryResult.push({
+              path: `${task.files[0].name}/${operation.name}/${opResult.file.name}`,
+              file: opResult.file
+            });
+
+
+            promises.push(new Promise<void>((resolve2, reject2) => {
+              this.getConversionFiles(operation).then((entries) => {
+                for (let k = 0; k < entries.length; k++) {
+                  const entry = entries[k];
+                  entryResult.push({
+                    path: `${task.files[0].name}/${operation.name}/${entry.fullname}`,
+                    file: entry.file
+                  });
+                  resolve2();
+                }
               }).catch((error) => {
-                console.error(error);
+                reject2(error);
               });
-            }
-
-            entryResult.entries.push(entryOp);
-
-            uploadPromises.push(this.getConversionFiles(operation));
+            }));
           }
         }
 
-        Promise.all(uploadPromises).then((values) => {
-          for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            entryResult.entries[i].entries = entryResult.entries[i].entries.concat(value);
-          }
+        Promise.all(promises).then(() => {
           resolve(entryResult);
         }).catch((error) => {
           reject(error);
@@ -428,16 +381,21 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     });
   }
 
-  upDateDownloadURL(requestPackage: any) {
-    this.http.post('https://www.phonetik.uni-muenchen.de/apps/octra/zAPI/', requestPackage).subscribe(
-      (response: any) => {
-        this.archiveURL = response.result;
-        this.state = 'finished';
-      },
-      (error) => {
-        console.error(error);
-      }
-    );
+  doZipping(entries: {
+    path: string,
+    file: File
+  }[]) {
+    const zip = new JSZip();
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      zip.file(entry.path, entry.file);
+    }
+
+    zip.generateAsync({type: 'base64'}).then((base64) => {
+      this.archiveURL = this.sanitizer.bypassSecurityTrustResourceUrl('data:application/zip;base64,' + base64);
+      this.state = 'finished';
+    });
   }
 
   removeSelected() {

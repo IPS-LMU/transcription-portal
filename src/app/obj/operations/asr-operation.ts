@@ -61,10 +61,16 @@ export class ASROperation extends Operation {
     result.enabled = operationObj.enabled;
     result.webService = operationObj.webService;
 
-    if (!(operationObj.serviceProviders === null || operationObj.serviceProviders === undefined)) {
-      result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProviders);
+    if (!(operationObj.serviceProvider === null || operationObj.serviceProvider === undefined)) {
+      result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProvider);
+      console.log(`loaded ASR: ${result._providerInformation.provider}`);
     } else {
-      result._providerInformation = AppSettings.getServiceInformation(operationObj.webService.replace('ASR', ''));
+      const providerName = operationObj.webService.replace('ASR', '');
+
+      if (providerName !== '') {
+        result._providerInformation = AppSettings.getServiceInformation(providerName);
+        console.log(`provider not available, set ${result._providerInformation.provider}`);
+      }
     }
 
     return result;

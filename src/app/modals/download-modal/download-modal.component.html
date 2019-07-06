@@ -30,7 +30,7 @@
             <i class="fa fa-spinner fa-spin"></i> PLEASE WAIT...
         </a>
         <a class="btn btn-outline-success" *ngIf="state === 'finished'" style="width:100%;" [attr.href]="archiveURL"
-           target="_blank">
+           [attr.download]="archiveName">
             DOWNLOAD
         </a>
         <ng-container *ngIf="type === 'line' && state === 'finished'">

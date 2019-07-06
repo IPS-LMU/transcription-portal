@@ -304,7 +304,9 @@ export class AppComponent implements OnDestroy {
         });
 
         if (tasks.length > 0) {
-          this.queueModal.open(null, () => {
+          this.queueModal.open(() => {
+            return true;
+          }, () => {
             resolve();
           });
         } else {

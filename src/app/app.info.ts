@@ -4,8 +4,12 @@ import {
   CTMConverter,
   PartiturConverter,
   PraatTableConverter,
-  PraatTextgridConverter, TextConverter
+  PraatTextgridConverter,
+  TextConverter
 } from './obj/Converters';
+
+declare var ohPortalVersion: string;
+declare var ohPortalLastUpdated: string;
 
 export class AppInfo {
   static get converters(): {
@@ -19,9 +23,9 @@ export class AppInfo {
     return this._version;
   }
 
-  private static _version = '1.0.2';
   public static readonly debugging = false;
-  public static readonly lastUpdated = '2018-06-22 10:00';
+  static readonly _version = ohPortalVersion;
+  static readonly lastUpdated = ohPortalLastUpdated;
 
   private static _converters: {
     obj: Converter;

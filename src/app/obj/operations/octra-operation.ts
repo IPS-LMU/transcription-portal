@@ -83,36 +83,41 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public getToolURL(): string {
-    if (!((<UploadOperation> this.operations[0]).wavFile === null || (<UploadOperation> this.operations[0]).wavFile === undefined)) {
-      const audio = `audio=${encodeURIComponent((<UploadOperation> this.operations[0]).wavFile.url)}`;
+    if (!((<UploadOperation>this.operations[0]).wavFile === null || (<UploadOperation>this.operations[0]).wavFile === undefined)) {
+      const audio = `audio=${encodeURIComponent((<UploadOperation>this.operations[0]).wavFile.url)}`;
       let transcript = `transcript=`;
       const embedded = `embedded=1`;
-      const host = `host=${encodeURIComponent(AppSettings.getLanguageByCode(this.task.language, this.task.asr).host)}`;
 
+      const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);
 
-      if (this.results.length < 1) {
-        if (this.previousOperation.results.length > 0) {
-          const url = this.previousOperation.lastResult.url;
-          transcript += encodeURIComponent(url);
-        } else if (this.previousOperation.previousOperation.results.length > 1) {
-          const url = this.previousOperation.previousOperation.lastResult.url;
-          transcript += encodeURIComponent(url);
+      if (!(langObj === null || langObj === undefined)) {
+        const host = `host=${encodeURIComponent(langObj.host)}`;
+
+        if (this.results.length < 1) {
+          if (this.previousOperation.results.length > 0) {
+            const url = this.previousOperation.lastResult.url;
+            transcript += encodeURIComponent(url);
+          } else if (this.previousOperation.previousOperation.results.length > 1) {
+            const url = this.previousOperation.previousOperation.lastResult.url;
+            transcript += encodeURIComponent(url);
+          } else {
+            transcript = '';
+          }
         } else {
-          transcript = '';
+          const url = this.lastResult.url;
+          transcript += encodeURIComponent(url);
         }
-      } else {
-        const url = this.lastResult.url;
-        transcript += encodeURIComponent(url);
-      }
 
-      return `${this._commands[0]}/user/load?` +
-        `${audio}&` +
-        `${transcript}&` +
-        `${host}&` +
-        `${embedded}`;
-    } else {
-      return '';
+        return `${this._commands[0]}/user/load?` +
+          `${audio}&` +
+          `${transcript}&` +
+          `${host}&` +
+          `${embedded}`;
+      } else {
+        console.log(`langObj not found in octra operation lang:${this.task.language} and ${this.task.asr}`);
+      }
     }
+    return '';
   }
 
   public onMouseOver() {
