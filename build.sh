@@ -5,25 +5,28 @@ targetFolder="assets"
 baseHref="https://www.phonetik.uni-muenchen.de/apps/oh-portal/"
 
 # change this list to your needs (for exclusion of files or folders in the dist folder)
-excludedList='"config" "LICENCE.txt"'
+excludedList='"config" "LICENCE.txt" "contents"'
 
 # 1 = disable indexing, 2 = enable
 disableRobots=0
 
 timeNow=`date "+%Y-%m-%d %H:%M:%S"`
-octraVersion="1.3.0"
+octraVersion="1.0.2"
 
 echo "Building OH-Portal..."
 node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build --prod --base-href "${baseHref}"
 echo "Change index.html..."
 indexHTML=$(<${buildDir}index.html)
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(scripts\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(polyfills\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(polyfills-es5\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(polyfills-es2015\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(src=\"\)\(-es2015\.[0-9a-z]*\.js\)/\1.\/${targetFolder}\/\2/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(src=\"\)\(-es5\.[0-9a-z]*\.js\)/\1.\/${targetFolder}\/\2/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(main\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(main-es2015\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(main-es5\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es2015\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es5\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(styles\.[0-9a-z]*\.css\)/.\/${targetFolder}\/\1/g")
