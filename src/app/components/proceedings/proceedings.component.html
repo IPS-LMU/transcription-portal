@@ -54,7 +54,7 @@
     }" [hid]="contextmenu.hidden" [selected_tasks]="selectedRows" [selectedOperationType]="selectedOperation"
                           (optionselected)="onContextMenuOptionSelected($event)">
         </app-context-menu>
-        <app-popover [@fadeToggle]="popover.state"
+        <app-popover [@fadeToggleRow]="popover.state"
                      [height]="popover.height"
                      [width]="popover.width"
                      [ngStyle]="{
@@ -273,7 +273,7 @@
                         [entry]="dirEntry"
                         [toolSelectedOperation]="toolSelectedOperation"
                         [rowSelected]="isEntrySelected(dirEntry)"
-                        [@fadeToggle]="nameCol.dirOpened"
+                        [@fadeToggleRow]="nameCol.dirOpened"
                     >
                         <td appProcColIcon
                             [shortStyle]="shortstyle"

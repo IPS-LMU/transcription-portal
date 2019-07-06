@@ -120,12 +120,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   ngOnInit() {
     this.cd.detach();
     if (!this.cd['destroyed']) {
+      this.cd.markForCheck();
       this.cd.detectChanges();
     }
 
     setInterval(() => {
       if (!this.cd['destroyed']) {
         this.cd.detectChanges();
+        this.cd.markForCheck();
       }
     }, 500);
   }

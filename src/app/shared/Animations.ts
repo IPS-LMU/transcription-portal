@@ -1,6 +1,23 @@
 import {animate, state, style, transition, trigger} from '@angular/animations';
 
 export const ANIMATIONS = [
+  trigger('fadeToggleRow', [
+    state('closed', style({
+      display: 'none',
+      opacity: '0.0'
+    })),
+    state('opened', style({
+      opacity: '1.0'
+    })),
+    transition('* => opened', [
+      style({
+        display: 'table-row'
+      }),
+      animate('200ms ease-in')]),
+    transition('opened => *', [
+      animate('200ms ease-out')])
+  ]),
+
   trigger('fadeToggle', [
     state('closed', style({
       display: 'none',
@@ -9,32 +26,16 @@ export const ANIMATIONS = [
     state('opened', style({
       opacity: '1.0'
     })),
-    state('*', style({
-      display: 'none',
-      opacity: '0.0'
-    })),
-    transition('closed => opened', animate('300ms ease-in')),
-    transition('opened => closed', animate('300ms ease-out'))
-  ]),
-
-  trigger('expandToggle', [
-    state('closed', style({
-      height: '40px'
-    })),
-    state('opened', style({
-      height: '200px'
-    })),
-    state('*', style({
-      height: '40px'
-    })),
-    transition('* => opened', animate('300ms ease-in')),
-    transition('opened => closed', animate('300ms ease-out'))
+    transition('* => opened', [
+      animate('200ms ease-in')]),
+    transition('opened => *', [
+      animate('200ms ease-in')])
   ]),
 
   trigger('blop', [
     state('blopped', style({
-      height   : '40px',
-      width    : '40px',
+      height: '40px',
+      width: '40px',
       transform: 'translate(-5px, -10px)'
     })),
     state('*', style({
@@ -75,5 +76,5 @@ export const ANIMATIONS = [
     transition('* => closed', animate('600ms ease-in')),
     transition('opened => closed', animate('600ms ease-in')),
     transition('closed => opened', animate('600ms ease-out'))
-  ]),
+  ])
 ];
