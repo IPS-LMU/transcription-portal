@@ -19,7 +19,7 @@ export class ASROperation extends Operation {
   }
 
   public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    this.webService = `${languageObject.asr}ASR`;
+    this.webService = languageObject.asr;
     this._protocol = '';
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
@@ -59,7 +59,7 @@ export class ASROperation extends Operation {
     result._time = operationObj.time;
     result._protocol = operationObj.protocol.replace('¶');
     result.enabled = operationObj.enabled;
-    result.webService = operationObj.webService;
+    result.webService = operationObj.webService.replace('ASR', '');
 
     if (!(operationObj.serviceProvider === null || operationObj.serviceProvider === undefined)) {
       result._providerInformation = AppSettings.getServiceInformation(operationObj.serviceProvider);
@@ -112,15 +112,14 @@ export class ASROperation extends Operation {
 
   private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
-      console.log(`CALL ASR`);
-      this.webService = `${languageObject.asr}ASR`;
+      this.webService = languageObject.asr;
 
       const url = this._commands[0].replace('{{host}}', languageObject.host)
         .replace('{{audioURL}}', this.previousOperation.lastResult.url)
         .replace('{{asrType}}', languageObject.asr)
         .replace('{{language}}', this.task.language);
 
-      console.log(`Call ASR:`);
+      console.log(`Call ${languageObject.asr}ASR:`);
       console.log(url);
       httpClient.post(url, {}, {
         headers: {
@@ -188,12 +187,12 @@ export class ASROperation extends Operation {
         );
       }).then((asrURL) => {
         console.log(`CALL G2P ${asrURL}`);
-        this.webService = `${languageObject.asr}ASR`;
+        this.webService = languageObject.asr;
 
         const url = this._commands[1].replace('{{host}}', languageObject.host)
           .replace('{{transcriptURL}}', asrURL)
           .replace('{{audioURL}}', this.previousOperation.lastResult.url)
-          .replace('{{asrType}}', languageObject.asr)
+          .replace('{{asrType}}', `${languageObject.asr}`)
           .replace('{{language}}', this.task.language);
 
 

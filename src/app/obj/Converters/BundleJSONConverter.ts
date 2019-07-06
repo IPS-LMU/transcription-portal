@@ -1,6 +1,6 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {IAnnotJSON, OAnnotJSON, OAudiofile} from '../Annotation/AnnotJSON';
-import {Functions} from '../../shared/Functions';
+import {base64ToArrayBuffer, contains} from '../../shared/Functions';
 
 export interface Bundle {
   ssffFiles: {
@@ -69,12 +69,12 @@ export class BundleJSONConverter extends Converter {
       && json.hasOwnProperty('annotation')) {
       const data = json.mediaFile.data;
       const annotation: IAnnotJSON = json.annotation;
-      const buffer = Functions.base64ToArrayBuffer(data);
+      const buffer = base64ToArrayBuffer(data);
 
       const audio_result: OAudiofile = new OAudiofile();
       audio_result.name = annotation.name + annotation.annotates.substr(annotation.annotates.lastIndexOf('.'));
 
-      if (Functions.contains(audio_result.name, '.wav') || Functions.contains(audio_result.name, '.ogg')) {
+      if (contains(audio_result.name, '.wav') || contains(audio_result.name, '.ogg')) {
         audio_result.size = buffer.byteLength;
         audio_result.samplerate = annotation.sampleRate;
         audio_result.arraybuffer = buffer;

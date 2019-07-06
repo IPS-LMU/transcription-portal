@@ -1,6 +1,6 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
-import {Functions} from '../../shared/Functions';
+import {contains} from '../../shared/Functions';
 
 export class CTMConverter extends Converter {
 
@@ -71,7 +71,7 @@ export class CTMConverter extends Converter {
       // check if filename is equal with audio file
       const filename = lines[0].substr(0, lines[0].indexOf(' '));
 
-      if (Functions.contains(file.name, filename) && Functions.contains(audiofile.name, filename)) {
+      if (contains(file.name, filename) && contains(audiofile.name, filename)) {
         const olevel = new OLevel('Tier_1', 'SEGMENT');
 
         let start = 0;

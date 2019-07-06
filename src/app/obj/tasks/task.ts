@@ -7,6 +7,7 @@ import {TaskEntry} from './task-entry';
 import {Operation} from '../operations/operation';
 import {OHCommand, OHLanguageObject} from '../oh-config';
 import {DirectoryInfo} from '../directoryInfo';
+import {isset} from '../../shared/Functions';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -24,9 +25,11 @@ export class Task {
   set asr(value: any) {
     this._asr = value;
   }
+
   get asr(): any {
     return this._asr;
   }
+
   set files(value: FileInfo[]) {
     this._files = value;
     this.fileschange.next();
@@ -141,7 +144,7 @@ export class Task {
 
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
-    task.asr = taskObj.asr;
+    task._asr = (isset(taskObj.operations[1].webService)) ? taskObj.operations[1].webService : taskObj.asr;
 
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
@@ -478,7 +481,7 @@ export class TaskDirectory {
       if (folder) {
         TaskDirectory.traverseFileTree(folder, '').then((result) => {
           if (!(result === null || result === undefined) && result[0] instanceof TaskDirectory) {
-            resolve(<TaskDirectory> result[0]);
+            resolve(<TaskDirectory>result[0]);
           } else {
             reject('could not parse directory');
           }
@@ -567,7 +570,7 @@ export class TaskDirectory {
       if (elem instanceof Task) {
         result.push(elem);
       } else {
-        result = result.concat((<TaskDirectory> elem).getAllTasks());
+        result = result.concat((<TaskDirectory>elem).getAllTasks());
       }
     }
 
@@ -576,7 +579,7 @@ export class TaskDirectory {
 
   public removeTask(task: Task) {
     const task_index = this.entries.findIndex((a) => {
-      if (a instanceof Task && (<Task> a).id === task.id) {
+      if (a instanceof Task && (<Task>a).id === task.id) {
         return true;
       }
     });

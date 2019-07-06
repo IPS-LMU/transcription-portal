@@ -1,6 +1,6 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {ILevel, ISegment, OAnnotJSON, OAudiofile, OEvent, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
-import {Functions} from '../../shared/Functions';
+import {contains} from '../../shared/Functions';
 
 export class PraatTextgridConverter extends Converter {
 
@@ -104,8 +104,8 @@ export class PraatTextgridConverter extends Converter {
       // check if header is first
       if (lines.length > 14) {
         if (
-          Functions.contains(lines[0], 'File type = "ooTextFile"')
-          && Functions.contains(lines[1], 'Object class = "TextGrid"')) {
+          contains(lines[0], 'File type = "ooTextFile"')
+          && contains(lines[1], 'Object class = "TextGrid"')) {
           // is TextGrid
 
           let lvl_num = 0;
