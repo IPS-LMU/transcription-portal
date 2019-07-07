@@ -1,9 +1,9 @@
 .arrow-outer {
     position: absolute;
     width: 100%;
-    margin-top: 9px;
-    height: 100%;
-    z-index: 10;
+    margin-top: 18px;
+    height: 11px;
+    z-index: 1;
 }
 
 .arrow-start {
