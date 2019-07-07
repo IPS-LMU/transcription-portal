@@ -23,7 +23,7 @@ export class AppInfo {
     return this._version;
   }
 
-  public static readonly debugging = true;
+  public static readonly debugging = false;
   static readonly _version = ohPortalVersion;
   static readonly lastUpdated = ohPortalLastUpdated;
 

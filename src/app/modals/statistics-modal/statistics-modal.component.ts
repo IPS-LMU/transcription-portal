@@ -40,11 +40,6 @@ export class StatisticsModalComponent implements OnInit, OnDestroy {
   public open() {
     this._subscrmanager.add(this.statisticsModal.onShown.subscribe(() => {
     }));
-    this._subscrmanager.add(this.statisticsModal.onHidden.subscribe(this.onHidden));
     this.statisticsModal.show();
-  }
-
-  onHidden = () => {
-    this.statisticsService.destroy();
   }
 }

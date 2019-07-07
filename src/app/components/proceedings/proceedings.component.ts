@@ -751,9 +751,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       tooltip.close();
     }
 
-
-    this.cd.markForCheck();
-    this.cd.detectChanges();
+    this.updateChanges();
   }
 
   copyProtocolToClipboard(protocol: string) {
@@ -762,5 +760,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   onReportIconClick(operation: Operation) {
     this.feedbackRequested.emit(operation);
+  }
+
+  public updateChanges() {
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 }

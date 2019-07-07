@@ -161,7 +161,7 @@
                 </th>
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-                    <th style="padding-left:3px;padding-right:3px;">
+                    <th style="padding-left:3px;padding-right:3px;" (mousemove)="updateChanges()">
                         <div style="position: relative;">
                             <div style="display:block;position: relative;height:25px;cursor:pointer;">
                                 <app-operation-arrow [first]="(i === 0)"

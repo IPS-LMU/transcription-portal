@@ -16,12 +16,13 @@
                     <div class="col-3" style="margin-left:-20px;">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.waiting"
+                                [lazy]="false"
                                 [radius]="80"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'gray'"
                                 [innerStrokeColor]="'lightgray'"
-                                [animation]="true"
+                                [animation]="false"
                                 [animationDuration]="300"
                                 [titleFontSize]="30"
                                 [subtitle]="'waiting'"
@@ -31,12 +32,13 @@
                     <div class="col-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.processing"
+                                [lazy]="false"
                                 [radius]="80"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'cornflowerblue'"
                                 [innerStrokeColor]="'#82ade5'"
-                                [animation]="true"
+                                [animation]="false"
                                 [animationDuration]="300"
                                 [titleFontSize]="30"
                                 [subtitle]="'processing'"
@@ -46,12 +48,13 @@
                     <div class="col-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.finished"
+                                [lazy]="false"
                                 [radius]="80"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'#78C000'"
                                 [innerStrokeColor]="'#C7E596'"
-                                [animation]="true"
+                                [animation]="false"
                                 [animationDuration]="300"
                                 [titleFontSize]="30"
                                 [subtitle]="'finished'"
@@ -61,12 +64,13 @@
                     <div class="col-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.failed"
+                                [lazy]="false"
                                 [radius]="80"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'red'"
                                 [innerStrokeColor]="'#e56255'"
-                                [animation]="true"
+                                [animation]="false"
                                 [animationDuration]="300"
                                 [titleFontSize]="30"
                                 [subtitle]="'failed'"
