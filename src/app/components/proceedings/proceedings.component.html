@@ -1,7 +1,7 @@
 <app-download-modal #content [selectedTasks]="selectedRows" [column]="selectedOperation"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
-<div class="inner" (mouseleave)="isDragging = false" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
+<div class="inner" #inner (mouseleave)="isDragging = false" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
      (click)="onContextBlur()">
     <div *ngIf="!storage.tasksFound && taskService.taskList.entries.length === 0 && queue.length === 0"
          class="placeholder">

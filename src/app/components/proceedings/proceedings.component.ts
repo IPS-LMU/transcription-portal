@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  Component,
+  Component, ElementRef,
   EventEmitter,
   HostListener,
   Input,
@@ -99,6 +99,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Output() public feedbackRequested = new EventEmitter<Operation>();
 
   @ViewChild('content', {static: true}) content: DownloadModalComponent;
+  @ViewChild('inner', {static: true}) inner: ElementRef;
 
   @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
   @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
@@ -399,15 +400,18 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       this.popover.height = 230;
       if ((parentNode.offsetLeft + this.popover.width) < window.innerWidth) {
         this.popover.x = parentNode.offsetLeft + (parentNode.offsetWidth / 2);
-        this.popover.pointer = ($event.layerY + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
+        this.popover.pointer = ($event.layerY + this.popoverRef.height + 20 > window.innerHeight) ? 'bottom-left' : 'left';
       } else {
         this.popover.x = parentNode.offsetLeft - this.popover.width + (parentNode.offsetWidth / 2);
-        this.popover.pointer = ($event.layerY + this.popoverRef.height < window.innerHeight) ? 'right' : 'bottom-right';
+        this.popover.pointer = ($event.layerY + this.popoverRef.height + 20 < window.innerHeight) ? 'right' : 'bottom-right';
       }
+      this.updateChanges();
 
-      const top = icon.offsetTop + parentNode.offsetTop + icon.offsetHeight;
-      this.popover.y = (top + this.popoverRef.height > window.innerHeight)
-        ? top - this.popoverRef.height : top;
+      const top = icon.offsetTop + parentNode.offsetTop - this.inner.nativeElement.scrollTop + icon.offsetHeight;
+      this.popover.y = (top + this.popoverRef.height + 20 > window.innerHeight)
+        ? top - this.popover.height : top;
+
+
       this.togglePopover(true);
 
     }
