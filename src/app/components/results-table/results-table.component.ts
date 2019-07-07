@@ -104,7 +104,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         const audio: OAudiofile = new OAudiofile();
         audio.samplerate = (<AudioInfo>this.operation.task.files[0]).samplerate;
         audio.duration = (<AudioInfo>this.operation.task.files[0]).duration.samples;
-        audio.name = (<AudioInfo>this.operation.task.files[0]).name;
+        audio.name = (<AudioInfo>this.operation.task.files[0]).fullname;
         audio.size = (<AudioInfo>this.operation.task.files[0]).size;
 
         FileInfo.getFileContent(result.file).then((text) => {
