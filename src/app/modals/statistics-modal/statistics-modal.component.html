@@ -13,11 +13,12 @@
                     <a [href]="taskService.protocolURL" [download]="taskService.protocolFileName">Download JSON</a>
                 </div>
                 <div class="row">
-                    <div class="col-3" style="margin-left:-20px;">
+                    <div class="col-6 col-md-3" style="margin-left:-20px;">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.waiting"
                                 [lazy]="false"
                                 [radius]="80"
+                                [responsive]="true"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'gray'"
@@ -29,11 +30,12 @@
                                 [subtitleFontSize]="20"
                         ></circle-progress>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.processing"
                                 [lazy]="false"
                                 [radius]="80"
+                                [responsive]="true"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'cornflowerblue'"
@@ -45,11 +47,12 @@
                                 [subtitleFontSize]="20"
                         ></circle-progress>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.finished"
                                 [lazy]="false"
                                 [radius]="80"
+                                [responsive]="true"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
                                 [outerStrokeColor]="'#78C000'"
@@ -61,10 +64,11 @@
                                 [subtitleFontSize]="20"
                         ></circle-progress>
                     </div>
-                    <div class="col-3">
+                    <div class="col-6 col-md-3">
                         <circle-progress
                                 [percent]="statisticsService.overAllProgress.failed"
                                 [lazy]="false"
+                                [responsive]="true"
                                 [radius]="80"
                                 [outerStrokeWidth]="16"
                                 [innerStrokeWidth]="8"
