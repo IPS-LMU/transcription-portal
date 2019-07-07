@@ -226,7 +226,7 @@
                              (operationclick)="onOperationClick($event)"
                              (operationhover)="onOperationHover($event)"
                              [queue]="taskService.preprocessor.queue"
-                             [shortstyle]="sidebarExpand === 'closed'"
+                             [shortstyle]="sidebarstate === 'opened'"
                              (feedbackRequested)="onFeedbackRequest($event)"
                              style="height:100%"
                              #proceedings

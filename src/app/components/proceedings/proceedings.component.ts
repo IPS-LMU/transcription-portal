@@ -228,7 +228,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.contextmenu.hidden = true;
   }
 
-  onRowSelected(entry: (Task | TaskDirectory), operation: Operation) {
+  onRowSelected(entry: (Task | TaskDirectory), operation?: Operation) {
     if (!this.selectionBlocked) {
       if (((operation === null || operation === undefined) || !(operation instanceof ToolOperation))) {
 
@@ -308,6 +308,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         this.operationclick.emit(operation);
         this.popover.state = 'closed';
       }
+
+      this.cd.markForCheck();
+      this.cd.detectChanges();
     }
   }
 
@@ -430,7 +433,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.operationhover.emit();
   }
 
-  onNameMouseEnter($event, entry: (Task | TaskDirectory), td: HTMLTableDataCellElement) {
+  onNameMouseEnter($event, entry: (Task | TaskDirectory)) {
     this.popover.task = entry;
     this.popover.operation = null;
   }
@@ -447,7 +450,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  onInfoMouseEnter($event, task: Task, td: HTMLTableDataCellElement) {
+  onInfoMouseEnter($event, task: Task) {
     // show Popover for normal operations only
     const y = $event.layerY + 10;
     this.popover.task = task;
@@ -644,6 +647,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           this.allSelected = false;
         }
       }
+      this.cd.markForCheck();
+      this.cd.detectChanges();
     }).catch((error) => {
       console.error(error);
     });
@@ -684,6 +689,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
     this.selectedRows = [];
     this.shiftStart = -1;
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   public removeEntry(event, entry: Task | TaskDirectory) {
@@ -692,6 +699,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     });
     setTimeout(() => {
       this.selectedRows = [];
+      this.cd.markForCheck();
+      this.cd.detectChanges();
     }, 0);
   }
 

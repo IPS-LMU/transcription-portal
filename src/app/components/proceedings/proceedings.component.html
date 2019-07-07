@@ -161,10 +161,7 @@
                 </th>
                 <th>File</th>
                 <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-                    <th style="padding-left:3px;padding-right:3px;" [ngClass]="
-{
-    'bigCol': (!shortstyle)
-}">
+                    <th style="padding-left:3px;padding-right:3px;">
                         <div style="position: relative;">
                             <div style="display:block;position: relative;height:25px;cursor:pointer;">
                                 <app-operation-arrow [first]="(i === 0)"
@@ -228,11 +225,11 @@
                     <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
                         (appendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
-                        (infoMouseEnter)="onInfoMouseEnter($event, entry, td)"
+                        (infoMouseEnter)="onInfoMouseEnter($event, entry)"
                         (infoMouseLeave)="onInfoMouseLeave($event, entry)"
                         (infoMouseOver)="onInfoMouseOver($event, entry)"
                         (deleteIconClick)="removeEntry($event, entry)"
-                        (mouseenter)="onNameMouseEnter($event, entry, td)"
+                        (mouseenter)="onNameMouseEnter($event, entry)"
                         (mouseleave)="onNameMouseLeave($event, entry)"
                         (mouseover)="onNameMouseOver($event, entry)"
                         [mouseOver]="entry.mouseover"
@@ -279,11 +276,11 @@
                             [shortStyle]="shortstyle"
                             (click)="onRowSelected(dirEntry)" #td
                             [entry]="dirEntry"
-                            (infoMouseEnter)="onInfoMouseEnter($event, dirEntry, td)"
+                            (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
                             (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
                             (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
                             (deleteIconClick)="removeEntry($event, dirEntry)"
-                            (mouseenter)="onNameMouseEnter($event, dirEntry, td)"
+                            (mouseenter)="onNameMouseEnter($event, dirEntry)"
                             (mouseleave)="onNameMouseLeave($event, dirEntry)"
                             (mouseover)="onNameMouseOver($event, dirEntry)"
                             [mouseOver]="dirEntry.mouseover"
@@ -319,7 +316,7 @@
             </ng-container>
             <!-- Queue rows -->
             <ng-container *ngFor="let entry of queue; let i = index;">
-                <tr style="cursor:pointer;" [ngClass]="{'selected': (isEntrySelected(entry))}">
+                <tr style="cursor:pointer;">
                     <td *ngIf="entry.file.entries === undefined"
                         [ngClass]="{'shorten': shortstyle}" [attr.colspan]="taskService.operations.length + 1">
                         <ng-container *ngIf="entry.file.entries === undefined">

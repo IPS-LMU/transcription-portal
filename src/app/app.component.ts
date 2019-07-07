@@ -30,6 +30,7 @@ import {StatisticsModalComponent} from './modals/statistics-modal/statistics-mod
 import {SettingsService} from './shared/settings.service';
 import {AppSettings} from './shared/app.settings';
 import {OHLanguageObject} from './obj/oh-config';
+import {timeInterval} from 'rxjs/operators';
 
 declare var window: any;
 
@@ -480,7 +481,10 @@ export class AppComponent implements OnDestroy {
             }
 
             this.toolSelectedOperation = operation;
-            this.sidebarstate = 'opened';
+
+            setTimeout(() => {
+              this.sidebarstate = 'opened';
+            }, 400);
 
             this.showtool = true;
             if (operation instanceof OCTRAOperation) {
@@ -575,7 +579,9 @@ export class AppComponent implements OnDestroy {
 
   onBackButtonClicked() {
     this.showtool = false;
-    this.sidebarstate = 'hidden';
+    setTimeout(() => {
+      this.sidebarstate = 'hidden';
+    }, 200);
     this.leaveToolOption();
   }
 
