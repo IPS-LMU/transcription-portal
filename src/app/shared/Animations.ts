@@ -57,7 +57,7 @@ export const ANIMATIONS = [
     })),
     transition('* => closed', animate('600ms ease-in')),
     transition('opened => closed', animate('600ms ease-in')),
-    transition('closed => opened', animate('600ms ease-out'))
+    transition('closed => opened', animate('600ms ease-in'))
   ]),
 
   trigger('comeIn', [
@@ -75,6 +75,6 @@ export const ANIMATIONS = [
     }), {params: {toolWidth: 70}}),
     transition('* => closed', animate('600ms ease-in')),
     transition('opened => closed', animate('600ms ease-in')),
-    transition('closed => opened', animate('600ms ease-out'))
+    transition('closed => opened', animate('600ms ease-in'))
   ])
 ];

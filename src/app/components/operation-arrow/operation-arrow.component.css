@@ -1,6 +1,25 @@
 .arrow-outer {
     position: absolute;
     width: 100%;
-    margin-top: 15px;
-    z-index: 1;
+    margin-top: 9px;
+    height: 100%;
+    z-index: 10;
+}
+
+.arrow-start {
+    background-image: url("/assets/arrow-blue-rect.png"), url("/assets/arrow-blue-middle.png"), url("/assets/arrow-blue-right.png");
+    background-position: left bottom, left bottom, right bottom;
+    background-repeat: no-repeat, repeat no-repeat, no-repeat;
+}
+
+.arrow-middle {
+    background-image: url("/assets/arrow-blue-middle.png"), url("/assets/arrow-blue-right.png");
+    background-position: left bottom, right bottom;
+    background-repeat: repeat no-repeat, no-repeat;
+}
+
+.arrow-end {
+    background-image: url("/assets/arrow-blue-middle.png"), url("/assets/arrow-blue-circle.png");
+    background-position: left bottom, right bottom;
+    background-repeat: repeat no-repeat, no-repeat;
 }
