@@ -250,6 +250,9 @@
                             (onOperationMouseOver)="onOperationMouseOver($event, operation)"
                             (mousedown)="onOperationClick($event, operation)"
                             (click)="onRowSelected(entry, operation)"
+                            [ngStyle]="{
+                        'width': (operation.name === 'Upload' && !isClosed)? '120px': 'auto'
+                    }"
                         >
                         </td>
                     </ng-container>

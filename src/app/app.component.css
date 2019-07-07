@@ -30,6 +30,7 @@ h1 {
     flex: auto;
     height: 100%;
     width: 100%;
+    overflow:hidden;
 }
 
 .btn-nav {
