@@ -222,7 +222,7 @@
                         <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'closed'"
                            class="fa fa-angle-down"></i>
                     </td> -->
-                    <td appProcColIcon [entry]="entry" [shortStyle]="shortstyle"
+                    <td appProcColIcon [entry]="entry" [shortStyle]="isClosed"
                         (appendingClick)="onPreviewClick($event)"
                         (click)="onRowSelected(entry)"
                         (infoMouseEnter)="onInfoMouseEnter($event, entry)"

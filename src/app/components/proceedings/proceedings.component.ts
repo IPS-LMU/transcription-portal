@@ -91,6 +91,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   public allDirOpened: 'opened' | 'closed' = 'closed';
 
   @Input() shortstyle = false;
+  @Input() isClosed = false;
 
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
