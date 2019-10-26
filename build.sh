@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 
-buildDir="dist/octra/"
+buildDir="dist/oh-portal/"
 targetFolder="assets"
-baseHref="https://www.phonetik.uni-muenchen.de/apps/octra/octra/"
+baseHref="https://www.phonetik.uni-muenchen.de/apps/oh-portal/"
+dev=""
+#dev="-c dev"
 
 # change this list to your needs (for exclusion of files or folders in the dist folder)
-excludedList='"config" "LICENCE.txt"'
+excludedList='"config" "LICENCE.txt" "media"'
 
-# 1 = disable indexing, 2 = enable
+# 1 = disable indexing, 0 = enable
 disableRobots=0
+# 1 = enable isUpdate, 0 = disable
+isUpdate=0
 
 timeNow=`date "+%Y-%m-%d %H:%M:%S"`
 octraVersion="1.0.3"
 
-echo "Building OCTRA..."
-node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build --prod --base-href "${baseHref}"
+echo "Remove cache..."
+rm -rf ./node_modules/.cache
+echo "Building OH-Portal..."
+node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build --prod ${dev} --base-href "${baseHref}"
 echo "Change index.html..."
 indexHTML=$(<${buildDir}index.html)
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(scripts\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
@@ -27,8 +33,8 @@ indexHTML=$(echo "${indexHTML}" | sed -e "s/\(main-es5\.[0-9a-z]*\.js\)/.\/${tar
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es2015\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es5\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(styles\.[0-9a-z]*\.css\)/.\/${targetFolder}\/\1/g")
-indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohLastUpdated = \"\).*\(\";\)/\1${timeNow}\2/g")
-indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohVersion = \"\).*\(\";\)/\1${octraVersion}\2/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohPortalLastUpdated = \"\).*\(\";\)/\1${timeNow}\2/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohPortalVersion = \"\).*\(\";\)/\1${octraVersion}\2/g")
 
 if [[ ${disableRobots} == 0 ]]
 then
@@ -64,5 +70,10 @@ for old in ./${buildDir}*; do
   done
 # you can add more jobs here
 mv "./${buildDir}assets/.htaccess" "./${buildDir}.htaccess"
+
+if [[ ${isUpdate} == 1 ]]
+then
+  rm -rf "./${buildDir}config" "./${buildDir}media" "./${buildDir}.htaccess"
+fi
 
 echo "Building COMPLETE"
