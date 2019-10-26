@@ -1,25 +1,25 @@
 .arrow-outer {
-    position: absolute;
-    width: 100%;
-    margin-top: 18px;
-    height: 11px;
-    z-index: 1;
+  position: absolute;
+  width: 100%;
+  margin-top: 18px;
+  height: 11px;
+  z-index: 1;
 }
 
 .arrow-start {
-    background-image: url("assets/arrow-blue-rect.png"), url("assets/arrow-blue-middle.png"), url("assets/arrow-blue-right.png");
-    background-position: left bottom, left bottom, right bottom;
-    background-repeat: no-repeat, repeat no-repeat, no-repeat;
+  background-image: url("src/assets/arrow-blue-rect.png"), url("src/assets/arrow-blue-middle.png"), url("src/assets/arrow-blue-right.png");
+  background-position: left bottom, left bottom, right bottom;
+  background-repeat: no-repeat, repeat no-repeat, no-repeat;
 }
 
 .arrow-middle {
-    background-image: url("assets/arrow-blue-middle.png"), url("assets/arrow-blue-right.png");
-    background-position: left bottom, right bottom;
-    background-repeat: repeat no-repeat, no-repeat;
+  background-image: url("src/assets/arrow-blue-middle.png"), url("src/assets/arrow-blue-right.png");
+  background-position: left bottom, right bottom;
+  background-repeat: repeat no-repeat, no-repeat;
 }
 
 .arrow-end {
-    background-image: url("assets/arrow-blue-middle.png"), url("assets/arrow-blue-circle.png");
-    background-position: left bottom, right bottom;
-    background-repeat: repeat no-repeat, no-repeat;
+  background-image: url("src/assets/arrow-blue-middle.png"), url("src/assets/arrow-blue-circle.png");
+  background-position: left bottom, right bottom;
+  background-repeat: repeat no-repeat, no-repeat;
 }

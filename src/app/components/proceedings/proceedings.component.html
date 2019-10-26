@@ -134,13 +134,9 @@
                 </ng-container>
             </ng-container>
             <ng-container
-                    *ngIf="popover.operation === null && popover.task !== null && popover.task !== undefined && popover.task.entries === undefined">
-                <ng-container *ngIf="popover.task.state === 'FINISHED'">
-                    <!-- <a [href]="getMailToLink(popover.task)">Share results <i class="fa fa-envelope" aria-hidden="true"
-                                                                             style="color:cornflowerblue;"></i></a> -->
-                </ng-container>
+                    *ngIf="popover.operation === null && popover.directory !== null && popover.directory !== undefined && popover.directory.entries === undefined">
                 <span>Language: {{popover.task.language}}</span>
-                <span *ngIf="popover.task.asr !== undefined && popover.task.asr !== null">
+                <span *ngIf="popover.task && popover.task.asr !== undefined && popover.task.asr !== null">
                     , ASR: {{popover.task.asr}}
                 </span>
                 <br/><br/>

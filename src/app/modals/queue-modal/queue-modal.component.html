@@ -128,10 +128,7 @@
                         <th *ngFor="let operation of operations; let i = index">
                             <div>
                 <span *ngIf="operation.title === ''; else showIcon" style="display:block;">
-                    <ng-container *ngIf="shortstyle">
-                        {{operation.name.charAt(0)}}
-                    </ng-container>
-                    <ng-container *ngIf="!shortstyle">
+                    <ng-container>
                         {{operation.name}}
                     </ng-container>
                 </span>

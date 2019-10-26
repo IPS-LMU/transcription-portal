@@ -40,8 +40,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     }[];
   }[] = [];
 
-  public get AppInfo(): AppInfo {
-    return AppInfo;
+  public get converters() {
+    return AppInfo.converters;
   }
 
   public originalLabel = '';

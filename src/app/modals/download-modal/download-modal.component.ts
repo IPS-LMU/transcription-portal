@@ -41,8 +41,8 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   private subscrManager = new SubscriptionManager();
 
-  public get AppInfo(): AppInfo {
-    return AppInfo;
+  public get converters() {
+    return AppInfo.converters;
   }
 
   constructor(private taskService: TaskService, private http: HttpClient, private storage: StorageService,

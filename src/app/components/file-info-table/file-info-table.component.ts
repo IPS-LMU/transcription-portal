@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {FileInfo} from '../../obj/fileInfo';
+import {AudioInfo} from '../../obj/audio';
 
 @Component({
   selector: 'app-file-info-table',
@@ -9,6 +10,13 @@ import {FileInfo} from '../../obj/fileInfo';
 export class FileInfoTableComponent implements OnInit {
 
   @Input() fileinfo: FileInfo;
+
+  get audioInfo(): AudioInfo {
+    if (this.fileinfo instanceof AudioInfo) {
+      return this.fileinfo;
+    }
+    return null;
+  }
 
   constructor() {
   }

@@ -3,14 +3,14 @@
     <tr>
         <th colspan="2">Results</th>
         <ng-container *ngIf="conversionExtension !== '.wav'">
-            <th [attr.colspan]="AppInfo.converters.length">Conversions</th>
+            <th [attr.colspan]="converters.length">Conversions</th>
         </ng-container>
     </tr>
     <tr>
         <th>#</th>
         <th>{{originalLabel}}</th>
         <ng-container *ngIf="conversionExtension !== '.wav'">
-            <ng-container *ngFor="let converter of AppInfo.converters">
+            <ng-container *ngFor="let converter of converters">
                 <th *ngIf="isEqualConverterName(converter)">*{{converter.obj.extension}}</th>
             </ng-container>
         </ng-container>

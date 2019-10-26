@@ -1,7 +1,8 @@
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  Component, ElementRef,
+  Component,
+  ElementRef,
   EventEmitter,
   HostListener,
   Input,
@@ -58,7 +59,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     width: number,
     height: number,
     operation: Operation,
-    task: Task | TaskDirectory,
+    task: Task,
+    directory: TaskDirectory,
     pointer: string,
     mouseIn: boolean
   } = {
@@ -69,6 +71,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     height: 320,
     operation: null,
     task: null,
+    directory: null,
     pointer: 'left',
     mouseIn: false
   };
@@ -340,7 +343,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
         }
       } else {
         for (let j = 0; j < entry.entries.length; j++) {
-          const task = <Task>entry.entries[j];
+          const task = entry.entries[j] as Task;
           if (task.files.length > 1) {
             task.files.splice(1);
             task.operations[1].enabled = this.taskService.operations[1].enabled;
@@ -439,7 +442,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onNameMouseEnter($event, entry: (Task | TaskDirectory)) {
-    this.popover.task = entry;
+    if (entry instanceof Task) {
+      this.popover.directory = null;
+      this.popover.task = entry;
+    } else {
+      this.popover.task = null;
+      this.popover.directory = entry;
+    }
     this.popover.operation = null;
   }
 
