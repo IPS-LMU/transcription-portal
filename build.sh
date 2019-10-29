@@ -15,7 +15,7 @@ disableRobots=0
 isUpdate=0
 
 timeNow=`date "+%Y-%m-%d %H:%M:%S"`
-octraVersion="1.0.3"
+version="1.0.2"
 
 echo "Remove cache..."
 rm -rf ./node_modules/.cache
@@ -33,8 +33,8 @@ indexHTML=$(echo "${indexHTML}" | sed -e "s/\(main-es5\.[0-9a-z]*\.js\)/.\/${tar
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es2015\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(runtime-es5\.[0-9a-z]*\.js\)/.\/${targetFolder}\/\1/g")
 indexHTML=$(echo "${indexHTML}" | sed -e "s/\(styles\.[0-9a-z]*\.css\)/.\/${targetFolder}\/\1/g")
-indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohPortalLastUpdated = \"\).*\(\";\)/\1${timeNow}\2/g")
-indexHTML=$(echo "${indexHTML}" | sed -e "s/\(const ohPortalVersion = \"\).*\(\";\)/\1${octraVersion}\2/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(var ohPortalLastUpdated = \"\).*\(\";\)/\1${timeNow}\2/g")
+indexHTML=$(echo "${indexHTML}" | sed -e "s/\(var ohPortalVersion = \"\).*\(\";\)/\1${version}\2/g")
 
 if [[ ${disableRobots} == 0 ]]
 then
