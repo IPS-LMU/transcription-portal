@@ -1,0 +1,49 @@
+<div class="container">
+  <h2>Browser compatibility check</h2>
+
+  <table class="table table-striped">
+    <tbody>
+    <tr *ngFor="let rule of compatibility.rules">
+      <td style="width:40px;text-align:center;">
+        <i class="fa" [ngStyle]="{color:getStateColor(rule)}"
+           [ngClass]="{
+                         spin:(rule.state === 'processing'),
+                         'fa-spinner': getStateIcon(rule) === 'spinner',
+                         'fa-times': getStateIcon(rule) === 'times',
+                         'fa-check': getStateIcon(rule) === 'check'
+                         }"></i>
+      </td>
+      <td>{{rule.description}}
+        <p [innerHTML]="rule.help" *ngIf="rule.state === 'failed' && rule.help !== ''" style="color:red;"></p>
+        <p *ngIf="rule.state === 'failed' && rule.name === 'cookies'" style="color:red;">
+          <ng-container *ngIf="browserName === 'Chrome'">
+            To use OH-Portal with this browser please follow the instructions:
+            <ul>
+              <li>Open a new tab.</li>
+              <li>Type in "chrome://settings/content/cookies" in the address bar.</li>
+              <li>Enable "Cookies".</li>
+              <li>Reload this page.</li>
+            </ul>
+          </ng-container>
+          <ng-container *ngIf="browserName === 'Firefox'">
+            To use OH-Portal with this browser please follow the instructions:
+            <ul>
+              <li>Open a new tab.</li>
+              <li>Type in "about:preferences#privacy" in the address bar.</li>
+              <li>Scroll to chronicle. Disable the "private mode"</li>
+              <li>Scroll to "Cookies and web data". Check the first radio box to enable Cookies.</li>
+              <li>Reload this page.</li>
+            </ul>
+          </ng-container>
+        </p>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <div style="text-align: right;">
+    <button class="btn btn-raised btn-secondary" (click)="reload()" style="margin-right:10px;">Reload this page</button>
+    <button class="btn btn-raised btn-primary" style="width: 200px;" (click)="modalService.openFeedbackModal()">I need
+      help
+    </button>
+  </div>
+</div>

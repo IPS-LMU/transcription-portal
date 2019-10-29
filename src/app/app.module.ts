@@ -37,8 +37,13 @@ import {DirProgressDirective} from './components/proceedings/directives/dir-prog
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {ChartsModule} from 'ng2-charts';
 import {SettingsService} from './shared/settings.service';
-import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import {TooltipModule} from 'ngx-bootstrap/tooltip';
 import {BsDropdownModule, CollapseModule, ModalModule, PopoverModule} from 'ngx-bootstrap';
+import {BrowserTestComponent} from './components/browser-test/browser-test.component';
+import {CompatibilityService} from './shared/compatibility.service';
+import {routing} from './app.routes';
+import {MainComponent} from './main/main.component';
+import {OHModalService} from './shared/ohmodal.service';
 
 @NgModule({
   declarations: [
@@ -66,10 +71,13 @@ import {BsDropdownModule, CollapseModule, ModalModule, PopoverModule} from 'ngx-
     ProcColIconDirective,
     ProcColOperationDirective,
     DirProgressDirective,
-    StatisticsModalComponent
+    StatisticsModalComponent,
+    BrowserTestComponent,
+    MainComponent
   ],
   imports: [
     BrowserModule,
+    routing,
     BrowserAnimationsModule,
     HttpClientModule,
     ChartsModule,
@@ -96,7 +104,9 @@ import {BsDropdownModule, CollapseModule, ModalModule, PopoverModule} from 'ngx-
     StorageService,
     BugReportService,
     AlertService,
-    SettingsService
+    SettingsService,
+    CompatibilityService,
+    OHModalService
   ],
   bootstrap: [AppComponent]
 })

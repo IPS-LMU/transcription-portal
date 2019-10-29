@@ -1,0 +1,17 @@
+{
+  "minify": true,
+  "options": [
+    "setClasses"
+  ],
+  "feature-detects": [
+    "test/canvas",
+    "test/canvastext",
+    "test/cookies",
+    "test/audio/webaudio",
+    "test/es6/promises",
+    "test/indexeddb",
+    "test/file/api",
+    "test/url/bloburls",
+    "test/workers/webworkers"
+  ]
+}

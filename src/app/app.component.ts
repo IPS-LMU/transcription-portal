@@ -1,21 +1,16 @@
 import {HttpClient} from '@angular/common/http';
-import {ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {environment} from '../environments/environment';
 import {AppInfo} from './app.info';
 import {ANIMATIONS} from './shared/Animations';
 import {NotificationService} from './shared/notification.service';
 import {SubscriptionManager} from './shared/subscription-manager';
-import {Task, TaskState} from './obj/tasks';
-import {AudioInfo} from './obj/audio';
+import {Task} from './obj/tasks';
 import {ProceedingsComponent} from './components/proceedings/proceedings.component';
 import {TaskService} from './obj/tasks/task.service';
-import {DirectoryInfo} from './obj/directoryInfo';
 import {StorageService} from './storage.service';
-import {FileInfo} from './obj/fileInfo';
-import {ToolOperation} from './obj/operations/tool-operation';
 import {Operation} from './obj/operations/operation';
-import {OCTRAOperation} from './obj/operations/octra-operation';
 import {FeedbackModalComponent} from './modals/feedback-modal/feedback-modal.component';
 import {BugReportService, ConsoleType} from './shared/bug-report.service';
 import {SplitModalComponent} from './modals/split-modal/split-modal.component';
@@ -24,13 +19,9 @@ import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
 import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
 import {ToolLoaderComponent} from './components/tool-loader/tool-loader.component';
 import {AlertService} from './shared/alert.service';
-import {UploadOperation} from './obj/operations/upload-operation';
-import * as X2JS from 'x2js';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {SettingsService} from './shared/settings.service';
-import {AppSettings} from './shared/app.settings';
-import {OHLanguageObject} from './obj/oh-config';
-import {timeInterval} from 'rxjs/operators';
+import {OHModalService} from './shared/ohmodal.service';
 
 declare var window: any;
 
@@ -50,6 +41,8 @@ export class AppComponent implements OnDestroy {
     this.sidebarExpand = (value) ? 'closed' : 'opened';
     this._showtool = value;
   }
+
+  @ViewChild('feedbackModal', {static: true}) feedbackModal: FeedbackModalComponent;
 
   private _showtool = false;
   public sidebarstate = 'hidden';
@@ -101,7 +94,6 @@ export class AppComponent implements OnDestroy {
   @ViewChild('proceedings', {static: false}) proceedings: ProceedingsComponent;
   @ViewChild('splitModal', {static: true}) splitModal: SplitModalComponent;
   @ViewChild('firstModal', {static: true}) firstModal: FirstModalComponent;
-  @ViewChild('feedbackModal', {static: true}) feedbackModal: FeedbackModalComponent;
   @ViewChild('queueModal', {static: false}) queueModal: QueueModalComponent;
   @ViewChild('protocolFooter', {static: false}) protocolFooter: ProtocolFooterComponent;
   @ViewChild('toolLoader', {static: true}) toolLoader: ToolLoaderComponent;
@@ -113,7 +105,8 @@ export class AppComponent implements OnDestroy {
               public bugService: BugReportService,
               private alertService: AlertService,
               public settingsService: SettingsService,
-              private cd: ChangeDetectorRef
+              private cd: ChangeDetectorRef,
+              private modalService: OHModalService
   ) {
     if (!AppInfo.debugging) {
       // overwrite console.log
@@ -173,518 +166,12 @@ export class AppComponent implements OnDestroy {
       })();
     }
 
-    this.subscrmanager.add(this.notification.onPermissionChange.subscribe(
-      (result) => {
-        if (this.storage.ready) {
-          this.storage.saveUserSettings('notification', {
-            enabled: result
-          });
-        }
-      }
-    ));
-
-    this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
-      () => {
-        this.protocolFooter.blop();
-      }
-    ));
-
-    new Promise<void>((resolve, reject) => {
-      if (this.settingsService.allLoaded) {
-        resolve();
-      } else {
-        this.subscrmanager.add(this.settingsService.settingsload.subscribe(
-          () => {
-            resolve();
-          }
-        ));
-      }
-    }).then(() => {
-      // configuration loaded
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-      this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
-
-      new Promise<any>((resolve, reject) => {
-        if (!this.storage.ready) {
-          this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
-            resolve(results);
-          }));
-        } else {
-          resolve([null]);
-        }
-      }).then((results) => {
-        //idb loaded
-        this.taskService.init();
-        this.taskService.importDBData(results);
-        this.cd.markForCheck();
-        this.cd.detectChanges();
-
-        this.storage.getIntern('firstModalShown').then(
-          (result) => {
-            if (!(result === null || result === undefined)) {
-              this.firstModalShown = result.value;
-            }
-            this.loadFirstModal();
-          }
-        ).catch((err) => {
-          console.error(err);
-          this.loadFirstModal();
-        });
-
-        if (!(results[1] === null || results[1] === undefined)) {
-          // read userSettings
-          for (let i = 0; i < results[1].length; i++) {
-            const userSetting = results[1][i];
-
-            switch (userSetting.name) {
-              case ('sidebarWidth'):
-                this.newProceedingsWidth = userSetting.value;
-                break;
-            }
-          }
-        }
-      });
-    });
-
-    window.onunload = function () {
-      return false;
-    };
-
-    this.taskService.openSplitModal = this.openSplitModal;
+    this.subscrmanager.add(this.modalService.onFeedBackRequested.subscribe(() => {
+      this.feedbackModal.open();
+    }))
   }
 
-
-  private loadFirstModal() {
-    if (!this.firstModalShown) {
-
-      this.subscrmanager.add(this.firstModal.understandClick.subscribe(
-        () => {
-          this.firstModalShown = true;
-        }
-      ));
-      setTimeout(() => {
-        this.firstModal.open(() => {
-          return this.firstModalShown;
-        }, () => {
-          this.storage.saveIntern('firstModalShown', true);
-        });
-      }, 1000);
-    }
-  }
-
-  public get AppInfo() {
-    return AppInfo;
-  }
-
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.subscrmanager.destroy();
-  }
-
-  onAfterDrop(entries: (FileInfo | DirectoryInfo)[]) {
-    this.readNewFiles(entries);
-  }
-
-  private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    if (!(entries === null || entries === undefined) && !(this.taskService.operations === null || this.taskService.operations === undefined)) {
-      // filter and re-structure entries array to supported files and directories
-      let filteredEntries = this.taskService.cleanUpInputArray(entries);
-
-      for (let i = 0; i < filteredEntries.length; i++) {
-        const entry = filteredEntries[i];
-
-        this.taskService.preprocessor.addToQueue(entry);
-      }
-    }
-  }
-
-  onVerifyButtonClick() {
-    new Promise<void>((resolve, reject) => {
-        const tasks = this.taskService.taskList.getAllTasks().filter((a) => {
-          return a.state === TaskState.QUEUED;
-        });
-
-        if (tasks.length > 0) {
-          this.queueModal.open(() => {
-            return true;
-          }, () => {
-            resolve();
-          });
-        } else {
-          resolve();
-        }
-      }
-    );
-  }
-
-  onMissedDrop(event) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-
-  onFilesAddButtonClicked() {
-    this.fileinput.nativeElement.click();
-  }
-
-  onFoldersAddButtonClicked() {
-    this.folderinput.nativeElement.click();
-  }
-
-  onFileChange($event) {
-    const files: FileList = $event.target.files;
-    const test = $event.target.items;
-    const file_infos: FileInfo[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file: File = files[i];
-      file_infos.push(new FileInfo(file.name, file.type, file.size, file));
-    }
-
-    this.readNewFiles(file_infos);
-  }
-
-  onOperationClick(operation: Operation) {
-    if (operation instanceof ToolOperation) {
-      const tool = <ToolOperation>operation;
-
-      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!(tool.previousOperation === null || tool.previousOperation === undefined) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
-        if (!tool.task.operations[0].results[0].available) {
-          if ((tool.task.files[0].file === null || tool.task.files[0].file === undefined)) {
-            this.alertService.showAlert('warning',
-              `Please add the audio file "${tool.task.operations[0].results[0].fullname}" and run "${tool.title}" again.`, 10);
-            tool.task.operations[0].changeState(TaskState.PENDING);
-            tool.task.changeState(TaskState.PENDING);
-          } else {
-            // start upload process
-            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and do '${tool.title}' again.`);
-            tool.task.operations[0].statechange.subscribe(
-              (state) => {
-                if (state.newState === 'FINISHED') {
-                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can do '${tool.title}' for this file.`);
-                  this.storage.saveTask(tool.task);
-                }
-              },
-              (error) => {
-                console.error(error);
-              }
-            );
-            this.taskService.start();
-          }
-        } else if (tool.task.operations[0].lastResult.available && !tool.previousOperation.lastResult.available) {
-          this.alertService.showAlert('info',
-            `Please run ${tool.previousOperation.name} for this task again.`, 12);
-        }
-      } else {
-        new Promise<void>((resolve, reject) => {
-          // check if tool results exist
-          if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
-            // reupload result from tool operation
-
-            // TODO make uploading easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
-            const url = `${langObj.host}uploadFileMulti`;
-
-            const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
-            subj.subscribe((obj) => {
-              if (obj.type === 'loadend') {
-                const result = <string>obj.result;
-                const x2js = new X2JS();
-                let json: any = x2js.xml2js(result);
-                json = json.UploadFileMultiResponse;
-
-
-                // add messages to protocol
-                if (json.warnings !== '') {
-                  console.warn(json.warnings);
-                }
-
-                if (json.success === 'true') {
-                  // TODO set urls to results only
-                  if (Array.isArray(json.fileList.entry)) {
-                    tool.lastResult.url = json.fileList.entry[0].value;
-                  } else {
-                    // json attribute entry is an object
-                    tool.lastResult.url = json.fileList.entry['value'];
-                  }
-                  this.storage.saveTask(tool.task);
-                  resolve();
-                } else {
-                  reject(json['message']);
-                }
-              }
-            }, (err) => {
-              reject(err);
-            });
-          } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined) && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
-            // reupload result from previous operation
-            // local available, re upload
-
-            // TODO make using upload easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
-            const url = `${langObj.host}uploadFileMulti`;
-
-            const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
-            subj.subscribe((obj) => {
-              if (obj.type === 'loadend') {
-                const result = <string>obj.result;
-                const x2js = new X2JS();
-                let json: any = x2js.xml2js(result);
-                json = json.UploadFileMultiResponse;
-
-
-                // add messages to protocol
-                if (json.warnings !== '') {
-                  console.warn(json.warnings);
-                }
-
-                if (json.success === 'true') {
-                  // TODO set urls to results only
-                  if (Array.isArray(json.fileList.entry)) {
-                    tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
-                  } else {
-                    // json attribute entry is an object
-                    tool.previousOperation.lastResult.url = json.fileList.entry['value'];
-                  }
-                  this.storage.saveTask(tool.task);
-                  resolve();
-                } else {
-                  reject(json['message']);
-                }
-              }
-            }, (err) => {
-              reject(err);
-            });
-          } else {
-            resolve();
-          }
-        }).then(() => {
-          const index = tool.task.operations.findIndex((op) => {
-            if (op.id === tool.id) {
-              return true;
-            }
-          });
-
-          if (index < tool.task.operations.length - 1) {
-            // start processing
-            tool.changeState(TaskState.PROCESSING);
-          }
-
-          this.tool_url = tool.getToolURL();
-
-          if (this.tool_url !== '') {
-            this.proceedings.cd.markForCheck();
-            this.proceedings.cd.detectChanges();
-            this.toolLoader.url = tool.getToolURL();
-            if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined) && operation.id !== this.toolSelectedOperation.id) {
-              // some operation already initialized
-              this.leaveToolOption();
-            }
-
-            this.toolSelectedOperation = operation;
-
-            setTimeout(() => {
-              this.sidebarstate = 'opened';
-            }, 400);
-
-            this.showtool = true;
-            if (operation instanceof OCTRAOperation) {
-              operation.time.start = Date.now();
-            }
-            this.proceedings.togglePopover(false);
-            this.cd.markForCheck();
-            this.cd.detectChanges();
-            this.proceedings.cd.markForCheck();
-            this.proceedings.cd.detectChanges();
-          } else {
-            console.warn(`tool url is empty`);
-          }
-        }).catch((error) => {
-          console.error(error);
-        });
-      }
-    }
-  }
-
-  onOperationHover(operation: Operation) {
-  }
-
-  onASRLangChanged(lang: OHLanguageObject) {
-    if (lang.code !== this.taskService.selectedlanguage.code || lang.asr !== this.taskService.selectedlanguage.asr) {
-      this.taskService.selectedlanguage = lang;
-      this.changeLanguageforAllQueuedTasks();
-      this.storage.saveUserSettings('defaultTaskOptions', {
-        language: lang.code,
-        asr: lang.asr
-      });
-    }
-  }
-
-  changeLanguageforAllQueuedTasks() {
-    let tasks = this.taskService.taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      if (task.state === TaskState.QUEUED) {
-        task.language = this.taskService.selectedlanguage.code;
-        task.asr = this.taskService.selectedlanguage.asr;
-        this.storage.saveTask(task);
-      }
-    }
-  }
-
-  getShortCode(code) {
-    return code.substring(code.length - 2);
-  }
-
-  onToolDataReceived($event) {
-    if ($event.data.data !== undefined && $event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
-      const result: string = $event.data.data.transcript_url;
-      const file = FileInfo.fromURL(result, null, 'text/plain');
-      file.updateContentFromURL(this.httpclient).then(() => {
-        this.toolSelectedOperation.results.push(file);
-
-        const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
-          if (op.id === this.toolSelectedOperation.id) {
-            return true;
-          }
-        });
-
-        // reset next operations
-        if (index > -1) {
-          for (let i = index + 1; i < this.toolSelectedOperation.task.operations.length; i++) {
-            const operation = this.toolSelectedOperation.task.operations[i];
-            operation.changeState(TaskState.PENDING);
-          }
-        }
-
-        if (this.toolSelectedOperation instanceof OCTRAOperation) {
-          this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
-        }
-
-        this.toolSelectedOperation.changeState(TaskState.FINISHED);
-        this.storage.saveTask(this.toolSelectedOperation.task);
-
-        setTimeout(() => {
-          if (this.toolSelectedOperation.task.state === 'FINISHED') {
-            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.operations[1].providerInformation.provider);
-            this.toolSelectedOperation.task.restart(langObj, this.httpclient);
-          }
-          this.onBackButtonClicked();
-        }, 1000);
-      }).catch((error) => {
-        console.error(error);
-      });
-    }
-  }
-
-  onBackButtonClicked() {
-    this.showtool = false;
-    setTimeout(() => {
-      this.sidebarstate = 'hidden';
-    }, 200);
-    this.leaveToolOption();
-  }
-
-  leaveToolOption() {
-    if (!(this.toolSelectedOperation.nextOperation === null || this.toolSelectedOperation.nextOperation === undefined)
-      && this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED) {
-      this.toolSelectedOperation.changeState(TaskState.FINISHED);
-    } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
-      if (this.toolSelectedOperation.results.length > 0) {
-        this.toolSelectedOperation.changeState(TaskState.FINISHED);
-      } else {
-        this.toolSelectedOperation.changeState(TaskState.READY);
-      }
-    }
-    this.toolSelectedOperation = undefined;
-  }
-
-  @HostListener('window:beforeunload', ['$event'])
-  doSomething($event) {
-    if (!AppInfo.debugging) {
-      $event.returnValue = this.blockLeaving;
-    }
-  }
-
-  public getTime(): number {
-    let elem: AudioInfo = <AudioInfo>this.toolSelectedOperation.task.files[0];
-
-    if (!(elem.duration === null || elem.duration === undefined)) {
-      return elem.duration.unix;
-    }
-
-    return 0;
-  }
-
-  public openSplitModal = () => {
-    this.splitModal.open((reason) => {
-      this.taskService.splitPrompt = reason;
-      this.taskService.checkFiles();
-    });
-  };
-
-
-  public dragBorder($event: any, part: string) {
-    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
-      if (this.dragborder !== 'dragging') {
-        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
-          this.dragborder = 'active';
-        } else if (part === 'right' && $event.pageX <= 10) {
-          this.dragborder = 'active';
-        } else {
-          this.dragborder = 'inactive';
-        }
-      } else if ($event.type === 'mousemove') {
-        // dragging
-        const procWidth = Math.floor(($event.pageX + 10) / window.innerWidth * 100);
-        const toolWidth = 100 - procWidth;
-
-        this.newToolWidth = toolWidth;
-        this.newProceedingsWidth = procWidth;
-        this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
-      }
-    }
-
-    if (this.dragborder === 'dragging' && $event.type === 'mouseleave') {
-      $event.preventDefault();
-    }
-
-    switch ($event.type) {
-      case ('mousedown'):
-        if (this.dragborder === 'active') {
-          this.dragborder = 'dragging';
-        }
-        break;
-      case ('mouseup'):
-        this.dragborder = 'inactive';
-        break;
-    }
-  }
-
-  public onBlur($event) {
-    if (this.dragborder === 'dragging') {
-      $event.preventDefault();
-    }
-  }
-
-  resetSideBarWidth() {
-    this.newProceedingsWidth = 30;
-    this.newToolWidth = 70;
-    this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
-  }
-
-  public onClearClick() {
-    this.storage.clearAll();
-  }
-
-  onStartClick() {
-    this.taskService.toggleProcessing();
-  }
-
-  onFeedbackRequest(operation: Operation) {
-    this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
-      + `operation: ${operation.name}, ${operation.state}\n`
-      + `protocol: ${operation.protocol}\n`)
-    this.feedbackModal.open();
   }
 }

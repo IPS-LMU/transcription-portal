@@ -12,6 +12,10 @@ export interface OHConfiguration {
       'url': string;
     }
   };
+  'allowed_browsers': {
+    'name': string,
+    'version': string
+  }[];
 }
 
 export interface OHLanguageObject {

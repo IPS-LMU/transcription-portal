@@ -5,13 +5,14 @@
   "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU MÜnchen",
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng serve",
+    "start": "npm run modernizr && node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng serve",
     "build": "node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build",
     "build-public": "node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build -c dev2 --prod --base-href 'https://www.phonetik.uni-muenchen.de/apps/oh-portal/'",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "modernizr": "modernizr -d src/assets/js/modernizr.js -c ./modernizr.json"
   },
   "private": true,
   "dependencies": {
@@ -32,6 +33,7 @@
     "intl": "^1.2.5",
     "jquery": "^3.4.1",
     "jszip": "^3.2.2",
+    "modernizr": "^3.8.0",
     "moment": "^2.24.0",
     "ng-circle-progress": "^1.5.1",
     "ng2-charts": "^2.3.0",
