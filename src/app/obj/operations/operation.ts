@@ -6,6 +6,9 @@ import {Task, TaskState} from '../tasks/task';
 import {OHLanguageObject, OHService} from '../oh-config';
 
 export abstract class Operation {
+  get parsedProtocol(): { type: 'WARNING' | 'ERROR'; message: string }[] {
+    return this._parsedProtocol;
+  }
 
   set providerInformation(value: OHService) {
     this._providerInformation = value;
@@ -14,6 +17,7 @@ export abstract class Operation {
   get providerInformation(): OHService {
     return this._providerInformation;
   }
+
   get shortTitle(): string {
     return this._shortTitle;
   }
@@ -77,6 +81,11 @@ export abstract class Operation {
     }
     return null;
   }
+
+  protected _parsedProtocol: {
+    type: 'WARNING' | 'ERROR',
+    message: string
+  }[] = [];
 
   public get previousOperation(): Operation {
     const index = this.task.operations.findIndex((op) => {
@@ -151,7 +160,7 @@ export abstract class Operation {
   protected _state: TaskState = TaskState.PENDING;
   protected _name: string;
   protected _title = '';
-  protected _protocol = '';
+  private _protocol = '';
   protected _description = '';
   protected _providerInformation: OHService;
 
@@ -317,5 +326,33 @@ export abstract class Operation {
         resolve(result);
       }
     });
+  }
+
+  protected updateProtocol(protocol: string) {
+    this._protocol = protocol;
+    this.parseProtocol(this._protocol);
+  }
+
+  private parseProtocol(protocol: string) {
+    if (protocol === '') {
+      this._parsedProtocol = [];
+    } else {
+      const result = [];
+      const text = protocol.replace(/<br\/>/g, '\n');
+      const regex = /((?:ERROR)|(?:WARNING)): (.+)$/gm;
+      let match = regex.exec(text);
+      console.log(text);
+      console.log(match);
+
+      while (match !== null) {
+        result.push({
+          type: match[1],
+          message: match[2]
+        });
+        match = regex.exec(text);
+      }
+
+      this._parsedProtocol = result;
+    }
   }
 }

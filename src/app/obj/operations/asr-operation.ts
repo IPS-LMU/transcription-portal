@@ -20,7 +20,7 @@ export class ASROperation extends Operation {
 
   public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this.webService = languageObject.asr;
-    this._protocol = '';
+    this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
@@ -33,14 +33,14 @@ export class ASROperation extends Operation {
             this.results.push(finalResult);
             this.changeState(TaskState.FINISHED);
           }).catch((error) => {
-            this._protocol += '<br/>' + error.replace('¶');
+            this.updateProtocol(this.protocol + '<br/>' + error.replace('¶'));
             this.time.duration = Date.now() - this.time.start;
             this.changeState(TaskState.ERROR);
             console.error(error);
           });
         }
       }).catch((error) => {
-        this._protocol += '<br/>' + error.replace('¶');
+        this.updateProtocol(this.protocol + '<br/>' + error.replace('¶'));
         this.time.duration = Date.now() - this.time.start;
         this.changeState(TaskState.ERROR);
         console.error(error);
@@ -57,7 +57,7 @@ export class ASROperation extends Operation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol.replace('¶');
+    result.updateProtocol(operationObj.protocol.replace('¶'));
     result.enabled = operationObj.enabled;
     result.webService = operationObj.webService.replace('ASR', '');
 
@@ -139,9 +139,9 @@ export class ASROperation extends Operation {
             file.updateContentFromURL(httpClient).then(() => {
               // add messages to protocol
               if (json.warnings !== '') {
-                this._protocol += '<br/>' + json.warnings.replace('¶');
+                this.updateProtocol(this.protocol + '<br/>' + json.warnings.replace('¶'));
               } else if (json.output !== '') {
-                this._protocol = '<br/>' + json.output.replace('¶');
+                this.updateProtocol(this.protocol + '<br/>' + json.output.replace('¶'));
               }
               resolve(file);
             }).catch((error) => {
@@ -219,9 +219,9 @@ export class ASROperation extends Operation {
                 file.updateContentFromURL(httpClient).then(() => {
                   // add messages to protocol
                   if (json.warnings !== '') {
-                    this._protocol = '<br/>' + json.warnings.replace('¶');
+                    this.updateProtocol('<br/>' + json.warnings.replace('¶'));
                   } else if (json.output !== '') {
-                    this._protocol = '<br/>' + json.output.replace('¶');
+                    this.updateProtocol('<br/>' + json.output.replace('¶'));
                   }
                   resolve(file);
                 }).catch((error) => {

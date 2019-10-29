@@ -88,7 +88,7 @@ export class UploadOperation extends Operation {
 
   public start = (languageObject: OHLanguageObject, files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
     this._results = [];
-    this._protocol = '';
+    this.updateProtocol('');
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
 
@@ -110,7 +110,7 @@ export class UploadOperation extends Operation {
 
         // add messages to protocol
         if (json.warnings !== '') {
-          this._protocol = json.warnings;
+          this.updateProtocol(json.warnings.replace('¶'));
         }
 
         if (json.success === 'true') {
@@ -128,14 +128,14 @@ export class UploadOperation extends Operation {
           }
           this.changeState(TaskState.FINISHED);
         } else {
-          this._protocol = json['message'];
+          this.updateProtocol(json['message']);
           this.changeState(TaskState.ERROR);
         }
       }
     }, (e) => {
       console.error(e);
       // add messages to protocol
-      this._protocol = e.message;
+      this.updateProtocol(e.message);
       this.changeState(TaskState.ERROR);
     }, () => {
     });
@@ -221,7 +221,7 @@ export class UploadOperation extends Operation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
     return result;
   }

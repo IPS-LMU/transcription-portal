@@ -17,7 +17,7 @@ export class G2pMausOperation extends Operation {
   }
 
   public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    this._protocol = '';
+    this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
@@ -47,9 +47,9 @@ export class G2pMausOperation extends Operation {
 
         // add messages to protocol
         if (json.warnings !== '') {
-          this._protocol = json.warnings;
+          this.updateProtocol(json.warnings.replace('¶'));
         } else if (json.output !== '') {
-          this._protocol = json.output;
+          this.updateProtocol(json.output.replace('¶'));
         }
 
         if (json.success === 'true') {
@@ -58,18 +58,15 @@ export class G2pMausOperation extends Operation {
             this.results.push(file);
             this.changeState(TaskState.FINISHED);
           }).catch((error) => {
-            this._protocol = error;
+            this.updateProtocol(error);
             this.changeState(TaskState.ERROR);
-            console.error(this._protocol);
           });
         } else {
           this.changeState(TaskState.ERROR);
-          console.error(this._protocol);
         }
       },
       (error) => {
-        this._protocol = error.message;
-        console.error(error);
+        this.updateProtocol(error.message);
         this.changeState(TaskState.ERROR);
       });
   }
@@ -84,7 +81,7 @@ export class G2pMausOperation extends Operation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
     return result;
   }

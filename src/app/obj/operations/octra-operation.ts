@@ -21,7 +21,7 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
-    this._protocol = '';
+    this.updateProtocol('');
     this.operations = operations;
     this.changeState(TaskState.READY);
   }
@@ -132,7 +132,7 @@ export class OCTRAOperation extends ToolOperation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    result.updateProtocol(operationObj.protocol);
     result.operations = task.operations;
     result.enabled = operationObj.enabled;
     return result;

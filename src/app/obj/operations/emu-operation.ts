@@ -110,7 +110,7 @@ export class EmuOperation extends ToolOperation {
       result.results.push(FileInfo.fromAny(result2));
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    result.updateProtocol(operationObj.protocol);
     result.operations = task.operations;
     result.enabled = operationObj.enabled;
     return result;

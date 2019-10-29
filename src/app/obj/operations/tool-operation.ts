@@ -66,7 +66,7 @@ export class ToolOperation extends Operation {
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
-    result._protocol = operationObj.protocol;
+    this.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
     return result;
   }
