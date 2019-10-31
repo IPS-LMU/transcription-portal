@@ -205,8 +205,6 @@ export class ASROperation extends Operation {
           },
           responseType: 'text'
         }).subscribe((result: string) => {
-            console.log(`XML Result:`);
-            console.log(result);
             // convert result to json
             const x2js = new X2JS();
             let json: any = x2js.xml2js(result);

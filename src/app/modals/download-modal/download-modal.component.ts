@@ -196,13 +196,11 @@ export class DownloadModalComponent implements OnInit, OnChanges {
               }
 
               Promise.all(dirPromises).then((values) => {
-                console.log(values);
                 for (let l = 0; l < values.length; l++) {
                   const value = values[l];
 
                   for (let j = 0; j < value.length; j++) {
                     const val = value[j];
-                    console.log(val.path);
                     val.path = `${entry.foldername}/${val.path}`;
                     requestPackage.entries.push(val);
                   }
@@ -217,8 +215,6 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             promises.push(
               new Promise<void>((resolve, reject) => {
                 this.processTask(entry).then((entries) => {
-                  console.log(`entries are`);
-                  console.log(entries);
                   for (let i2 = 0; i2 < entries.length; i2++) {
                     const entry2 = entries[i2];
                     requestPackage.entries.push(entry2);

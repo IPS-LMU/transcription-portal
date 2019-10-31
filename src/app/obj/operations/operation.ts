@@ -341,8 +341,6 @@ export abstract class Operation {
       const text = protocol.replace(/<br\/>/g, '\n');
       const regex = /((?:ERROR)|(?:WARNING)): (.+)$/gm;
       let match = regex.exec(text);
-      console.log(text);
-      console.log(match);
 
       while (match !== null) {
         result.push({

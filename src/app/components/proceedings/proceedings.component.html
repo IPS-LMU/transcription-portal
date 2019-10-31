@@ -146,7 +146,7 @@
         </div>
       </ng-container>
       <ng-container
-        *ngIf="popover.operation === null && popover.directory !== null && popover.directory !== undefined && popover.directory.entries === undefined">
+        *ngIf="popover.operation === null && popover.task !== null && popover.task !== undefined">
         <span>Language: {{popover.task.language}}</span>
         <span *ngIf="popover.task && popover.task.asr !== undefined && popover.task.asr !== null">
                     , ASR: {{popover.task.asr}}
