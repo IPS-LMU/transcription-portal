@@ -195,7 +195,7 @@ export abstract class Operation {
 
   private readonly _id: number;
 
-  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => void;
+  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => void;
 
   public getStateIcon = (sanitizer, state: TaskState): SafeHtml => {
     let result = '';
@@ -353,4 +353,9 @@ export abstract class Operation {
       this._parsedProtocol = result;
     }
   }
+}
+
+export interface IAccessCode {
+  name: string;
+  value: string
 }

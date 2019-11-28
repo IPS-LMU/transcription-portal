@@ -18,14 +18,14 @@ export class ASROperation extends Operation {
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this.webService = languageObject.asr;
     this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
 
     setTimeout(() => {
-      this.callASR(languageObject, httpclient, inputs[0]).then((file: FileInfo) => {
+      this.callASR(languageObject, httpclient, inputs[0], accessCode).then((file: FileInfo) => {
         if (!(file === null || file === undefined)) {
           this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
             this.time.duration = Date.now() - this.time.start;
@@ -110,14 +110,18 @@ export class ASROperation extends Operation {
     });
   }
 
-  private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any): Promise<FileInfo> {
+  private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any, accessCode: string): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       this.webService = languageObject.asr;
 
-      const url = this._commands[0].replace('{{host}}', languageObject.host)
+      let url = this._commands[0].replace('{{host}}', languageObject.host)
         .replace('{{audioURL}}', this.previousOperation.lastResult.url)
         .replace('{{asrType}}', languageObject.asr)
         .replace('{{language}}', this.task.language);
+
+      if (accessCode !== '') {
+        url += `&ACCESSCODE=${accessCode}`;
+      }
 
       console.log(`Call ${languageObject.asr}ASR:`);
       console.log(url);

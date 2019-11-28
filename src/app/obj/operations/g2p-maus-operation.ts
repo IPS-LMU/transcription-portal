@@ -16,7 +16,7 @@ export class G2pMausOperation extends Operation {
       'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();

@@ -20,7 +20,7 @@ export class OCTRAOperation extends ToolOperation {
       'The editor Octra allows you to correct or create such transcripts.';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this.updateProtocol('');
     this.operations = operations;
     this.changeState(TaskState.READY);

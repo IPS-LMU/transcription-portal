@@ -140,7 +140,7 @@ export class StorageService {
 
   public saveUserSettings(name: string, value: any) {
     this.idbm.save('userSettings', name, {
-      value: value
+      value
     });
   }
 

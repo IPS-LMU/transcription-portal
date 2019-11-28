@@ -4,7 +4,7 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {FileInfo} from '../fileInfo';
 import {AudioInfo} from '../audio';
 import {TaskEntry} from './task-entry';
-import {Operation} from '../operations/operation';
+import {IAccessCode, Operation} from '../operations/operation';
 import {OHCommand, OHLanguageObject} from '../oh-config';
 import {DirectoryInfo} from '../directoryInfo';
 import {isset} from '../../shared/Functions';
@@ -231,13 +231,13 @@ export class Task {
     }
   }
 
-  public start(languageObject: OHLanguageObject, httpclient: HttpClient, test = false) {
+  public start(languageObject: OHLanguageObject, httpclient: HttpClient, accessCodes: IAccessCode[]) {
     if (this.state !== TaskState.FINISHED) {
-      this.startNextOperation(languageObject, httpclient, test);
+      this.startNextOperation(languageObject, httpclient, accessCodes);
     }
   }
 
-  private startNextOperation(languageObject: OHLanguageObject, httpclient: HttpClient, test = false) {
+  private startNextOperation(languageObject: OHLanguageObject, httpclient: HttpClient, accessCodes: IAccessCode[]) {
     if (!this.stopRequested) {
       let nextoperation = -1;
 
@@ -267,7 +267,7 @@ export class Task {
             (event) => {
               if (event.newState === TaskState.FINISHED) {
                 subscription.unsubscribe();
-                this.startNextOperation(languageObject, httpclient);
+                this.startNextOperation(languageObject, httpclient, accessCodes);
               } else {
                 if (event.newState === TaskState.READY) {
                   this.changeState(TaskState.READY);
@@ -287,7 +287,7 @@ export class Task {
             files = this.operations[0].results;
           }
 
-          this.operations[nextoperation].start(languageObject, files, this.operations, httpclient);
+          this.operations[nextoperation].start(languageObject, files, this.operations, httpclient, this.getAccessCode(languageObject, accessCodes));
         }
       }
     } else {
@@ -295,13 +295,20 @@ export class Task {
     }
   }
 
-  public restart(languageObject: OHLanguageObject, http: HttpClient) {
-    this.changeState(TaskState.PROCESSING);
-    this.listenToOperationChanges();
-    this.start(languageObject, http, true);
+  private getAccessCode(langObject: OHLanguageObject, accessCodes: IAccessCode[]) {
+    const result = accessCodes.find((a) => {
+      return a.name === `${langObject.asr}ASR`;
+    });
+    return (result) ? result.value : '';
   }
 
-  public restartFailedOperation(languageObject: OHLanguageObject, httpclient) {
+  public restart(languageObject: OHLanguageObject, http: HttpClient, accessCodes: IAccessCode[]) {
+    this.changeState(TaskState.PROCESSING);
+    this.listenToOperationChanges();
+    this.start(languageObject, http, accessCodes);
+  }
+
+  public restartFailedOperation(languageObject: OHLanguageObject, httpclient, accessCodes: IAccessCode[]) {
     for (let i = 0; i < this.operations.length; i++) {
       const operation = this.operations[i];
 
@@ -309,7 +316,7 @@ export class Task {
         // restart failed operation
         operation.changeState(TaskState.READY);
         this.changeState(TaskState.PENDING);
-        this.restart(languageObject, httpclient);
+        this.restart(languageObject, httpclient, accessCodes);
         break;
       }
     }

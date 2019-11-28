@@ -86,7 +86,7 @@ export class UploadOperation extends Operation {
     }
   }
 
-  public start = (languageObject: OHLanguageObject, files: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, files: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this._results = [];
     this.updateProtocol('');
     this.changeState(TaskState.UPLOADING);

@@ -18,7 +18,7 @@ export class EmuOperation extends ToolOperation {
       ' a sentence or phrase.';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
     this.time.duration = 0;
@@ -94,7 +94,7 @@ export class EmuOperation extends ToolOperation {
 
   public getToolURL(): string {
     if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
-      const uploadOP = <UploadOperation> this.operations[0];
+      const uploadOP = <UploadOperation>this.operations[0];
       const audio = encodeURIComponent(uploadOP.wavFile.url);
       const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
       const labelType = (this.previousOperation.lastResult.extension === '.json') ? 'annotJSON' : 'TEXTGRID';

@@ -63,6 +63,7 @@ export class MainComponent implements OnDestroy {
   private firstModalShown = false;
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
+  public settingsCollapsed = true;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -141,13 +142,16 @@ export class MainComponent implements OnDestroy {
               case ('sidebarWidth'):
                 this.newProceedingsWidth = userSetting.value;
                 break;
+              case ('accessCode'):
+                this.taskService.accessCode = userSetting.value;
+                break;
             }
           }
         }
       });
     });
 
-    window.onunload = function () {
+    window.onunload = () => {
       return false;
     };
 
@@ -476,7 +480,10 @@ export class MainComponent implements OnDestroy {
         setTimeout(() => {
           if (this.toolSelectedOperation.task.state === 'FINISHED') {
             const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.operations[1].providerInformation.provider);
-            this.toolSelectedOperation.task.restart(langObj, this.httpclient);
+            this.toolSelectedOperation.task.restart(langObj, this.httpclient, [{
+              name: 'GoogleASR',
+              value: this.taskService.accessCode
+            }]);
           }
           this.onBackButtonClicked();
         }, 1000);

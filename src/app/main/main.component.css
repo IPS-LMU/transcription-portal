@@ -205,3 +205,12 @@ nav li {
     display: block;
   }
 }
+
+#settings-dropdown *,
+#accessCode {
+  font-size: 14px;
+}
+
+#accessCode {
+  margin-bottom: 10px;
+}

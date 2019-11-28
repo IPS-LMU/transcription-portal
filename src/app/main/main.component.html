@@ -97,11 +97,23 @@
           </li>
           <li class="nav-item active">
             <div class="btn-group" dropdown>
-              <i class="fa fa-cog" dropdownToggle id="dropdownBasic2" style="cursor: pointer;"></i>
+              <i class="fa fa-cog" dropdownToggle id="dropdownBasic2" style="cursor: pointer;"
+                 (click)="settingsCollapsed = !settingsCollapsed;"></i>
 
-              <div *dropdownMenu class="dropdown-menu" id="settings-dropdown" role="menu">
+              <div *dropdownMenu class="dropdown-menu" id="settings-dropdown" role="menu" [collapse]="settingsCollapsed"
+                   (mouseleave)="settingsCollapsed = true;"
+              >
                 <table style="width:100%;">
                   <tbody>
+                  <tr>
+                    <td><i class="fa fa-key"></i></td>
+                    <td style="font-size:0.9em;">Access Code (for Google ASR only):</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td><input type="text" style="width:100%; padding:5px;" name="accessCode" id="accessCode"
+                               [(ngModel)]="taskService.accessCode"/></td>
+                  </tr>
                   <tr>
                     <td><i class="fa fa-columns"></i></td>
                     <td><span class="btn-link" style="cursor: pointer;"

@@ -14,7 +14,7 @@ export class ToolOperation extends Operation {
 
   private active = true;
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 

@@ -26,6 +26,9 @@ import {OHLanguageObject} from '../oh-config';
 
 @Injectable()
 export class TaskService implements OnDestroy {
+  public get accessCode(): string {
+    return this._accessCode;
+  }
   get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
     return this._statistics;
   }
@@ -62,6 +65,14 @@ export class TaskService implements OnDestroy {
   private options = {
     max_running_tasks: 3
   };
+
+  public set accessCode(value: string) {
+    this.storage.saveUserSettings('accessCode', value);
+    this._accessCode = value;
+  }
+
+  private _accessCode = '';
+
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   private _statistics = {
@@ -540,7 +551,12 @@ export class TaskService implements OnDestroy {
           });
           this.storage.saveTask(task);
           const langObj = AppSettings.getLanguageByCode(task.language, task.operations[1].providerInformation.provider);
-          task.start(langObj, this.httpclient);
+          task.start(langObj, this.httpclient, [
+            {
+              name: 'GoogleASR',
+              value: this._accessCode
+            }
+          ]);
           setTimeout(() => {
             this.start();
           }, 1000);
