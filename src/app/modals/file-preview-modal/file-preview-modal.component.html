@@ -1,22 +1,22 @@
-<div bsModal #previewModal="bs-modal" class="modal fade" tabindex="-1"
-     role="dialog" aria-labelledby="dialog-sizes-name1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title pull-left">Preview: {{selectedFile?.fullname}}</h4>
-                <button type="button" class="close pull-right" aria-label="Close" (click)="previewModal.hide()">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <textarea readonly aria-readonly="true">{{fileContent}}</textarea>
-            </div>
-            <div class="modal-footer" (drop)="cancelEvent($event)" (dragover)="cancelEvent($event)">
-                <button type="button" class="btn btn-outline-dark" (click)="previewModal.hide();">Cancel</button>
-                <a [href]="downloadURL" [download]="selectedFile?.fullname" target="_self" class="btn btn-outline-primary">
-                    DOWNLOAD
-                </a>
-            </div>
-        </div>
+<div #previewModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
+     role="dialog" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title pull-left">Preview: {{selectedFile?.fullname}}</h4>
+        <button (click)="previewModal.hide()" aria-label="Close" class="close pull-right" type="button">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <textarea aria-readonly="true" readonly>{{fileContent}}</textarea>
+      </div>
+      <div (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)" class="modal-footer">
+        <button (click)="previewModal.hide();" class="btn btn-outline-dark" type="button">Cancel</button>
+        <a [download]="selectedFile?.fullname" [href]="downloadURL" class="btn btn-outline-primary" target="_self">
+          DOWNLOAD
+        </a>
+      </div>
     </div>
+  </div>
 </div>

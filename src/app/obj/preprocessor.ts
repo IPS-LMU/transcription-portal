@@ -16,25 +16,9 @@ export enum State {
 }
 
 export class QueueItem {
-  set file(value: FileInfo | DirectoryInfo) {
-    this._file = value;
-  }
-
-  set state(value: State) {
-    this._state = value;
-  }
-
-  get state(): State {
-    return this._state;
-  }
-
-  get id(): number {
-    return this._id;
-  }
-
-  get file(): (FileInfo | DirectoryInfo) {
-    return this._file;
-  }
+  private static counter = 0;
+  public results: (Task | TaskDirectory)[] = [];
+  private readonly _id: number;
 
   constructor(file: (FileInfo | DirectoryInfo)) {
     this._file = file;
@@ -42,30 +26,46 @@ export class QueueItem {
     this._state = State.PENDING;
   }
 
-  private static counter = 0;
+  get id(): number {
+    return this._id;
+  }
 
   private _file: (FileInfo | DirectoryInfo);
-  private readonly _id: number;
+
+  get file(): (FileInfo | DirectoryInfo) {
+    return this._file;
+  }
+
+  set file(value: FileInfo | DirectoryInfo) {
+    this._file = value;
+  }
+
   private _state: State;
-  public results: (Task | TaskDirectory)[] = [];
+
+  get state(): State {
+    return this._state;
+  }
+
+  set state(value: State) {
+    this._state = value;
+  }
 }
 
 export class Preprocessor {
+  constructor() {
+    this._itemAdded.subscribe(this.onItemAdded);
+  }
+
+  private _queue: QueueItem[] = [];
+
   get queue(): QueueItem[] {
     return this._queue;
   }
 
-  get itemProcessed(): Subject<QueueItem> {
-    return this._itemProcessed;
-  }
-
-  get itemRemoved(): Subject<number> {
-    return this._itemRemoved;
-  }
-
-  get itemAdded(): Subject<QueueItem> {
-    return this._itemAdded;
-  }
+  private _statechange = new Subject<{
+    item: QueueItem,
+    oldState: State
+  }>();
 
   get statechange(): Subject<{
     item: QueueItem,
@@ -74,15 +74,23 @@ export class Preprocessor {
     return this._statechange;
   }
 
-  private _queue: QueueItem[] = [];
-
-  private _statechange = new Subject<{
-    item: QueueItem,
-    oldState: State
-  }>();
   private _itemProcessed = new Subject<QueueItem>();
+
+  get itemProcessed(): Subject<QueueItem> {
+    return this._itemProcessed;
+  }
+
   private _itemAdded = new Subject<QueueItem>();
+
+  get itemAdded(): Subject<QueueItem> {
+    return this._itemAdded;
+  }
+
   private _itemRemoved = new Subject<number>();
+
+  get itemRemoved(): Subject<number> {
+    return this._itemRemoved;
+  }
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = () => {
     return new Promise<(Task | TaskDirectory)[]>(
@@ -92,35 +100,14 @@ export class Preprocessor {
     );
   }
 
-  constructor() {
-    this._itemAdded.subscribe(this.onItemAdded);
-  }
-
   public changeState(item: QueueItem, state: State) {
     const oldState = item.state;
     item.state = state;
 
     this.statechange.next({
-      item: item,
-      oldState: oldState
+      item,
+      oldState
     });
-  }
-
-  private onItemAdded = (newItem: QueueItem) => {
-
-    this.changeState(newItem, State.PROCESSING);
-    this.process(newItem).then((result) => {
-      if (!(result === null || result === undefined)) {
-          newItem.results = result;
-          this.changeState(newItem, State.FINISHED);
-          this.removeFromQueue(newItem.id);
-          this._itemProcessed.next(newItem);
-        }
-      }
-    ).catch((err) => {
-      this.removeFromQueue(newItem.id);
-    })
-    ;
   }
 
   public addToQueue(file: (FileInfo | DirectoryInfo)) {
@@ -152,5 +139,22 @@ export class Preprocessor {
 
   public getHashString(filename: string, size: number) {
     return `${filename}_${size}`;
+  }
+
+  private onItemAdded = (newItem: QueueItem) => {
+
+    this.changeState(newItem, State.PROCESSING);
+    this.process(newItem).then((result) => {
+        if (!(result === null || result === undefined)) {
+          newItem.results = result;
+          this.changeState(newItem, State.FINISHED);
+          this.removeFromQueue(newItem.id);
+          this._itemProcessed.next(newItem);
+        }
+      }
+    ).catch((err) => {
+      this.removeFromQueue(newItem.id);
+    })
+    ;
   }
 }

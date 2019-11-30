@@ -1,5 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
-import {OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
+import {OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation';
 import {contains} from '../../shared/Functions';
 
 export class CTMConverter extends Converter {
@@ -26,21 +26,17 @@ export class CTMConverter extends Converter {
     let filename = '';
 
     if (levelnum === null || levelnum === undefined) {
-      for (let i = 0; i < annotation.levels.length; i++) {
-        const level = annotation.levels[i];
-
-
-      }
+      // TODO what to do here?
     }
 
     if (!(levelnum === null || levelnum === undefined)) {
       if (!(annotation === null || annotation === undefined)) {
         const level = annotation.levels[levelnum];
 
-        for (let j = 0; j < level.items.length; j++) {
-          const transcript = level.items[j].labels[0].value;
-          const start = Math.round((level.items[j].sampleStart / audiofile.samplerate) * 100) / 100;
-          const duration = Math.round((level.items[j].sampleDur / audiofile.samplerate) * 100) / 100;
+        for (const item of level.items) {
+          const transcript = item.labels[0].value;
+          const start = Math.round((item.sampleStart / audiofile.samplerate) * 100) / 100;
+          const duration = Math.round((item.sampleDur / audiofile.samplerate) * 100) / 100;
           result += `${annotation.name} 1 ${start} ${duration} ${transcript} 1.00\n`;
         }
 
@@ -120,14 +116,14 @@ export class CTMConverter extends Converter {
 
             if (i === lines.length - 2) {
               if ((start + length) < audiofile.duration) {
-                const osegment_end = new OSegment(
+                const osegmentSend = new OSegment(
                   (i + 2),
                   Math.round((start + length) * samplerate),
                   Math.round((audiofile.duration - (start + length)) * samplerate),
                   [(new OLabel('Tier_1', ''))]
                 );
 
-                olevel.items.push(osegment_end);
+                olevel.items.push(osegmentSend);
               }
             }
 

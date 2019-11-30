@@ -6,15 +6,17 @@ import {Task, TaskState} from '../tasks';
 import {OHLanguageObject} from '../oh-config';
 
 export class ToolOperation extends Operation {
-  public resultType;
 
   public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, commands, title, shortTitle, task, state, id);
   }
 
+  public resultType;
+
   private active = true;
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
 
@@ -53,14 +55,14 @@ export class ToolOperation extends Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   }
 
-  public getToolURL(): string {
-    return '';
+  public clone(task?: Task): ToolOperation {
+    const selectedTasks = ((task === null || task === undefined)) ? this.task : task;
+    return new ToolOperation(this.name, this._commands, this.title, this.shortTitle, selectedTasks, this.state);
   }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
     const result = new ToolOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const resultObj = operationObj.results[k];
+    for (const resultObj of operationObj.results) {
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
       resultClass.url = resultObj.url;
       result.results.push(resultClass);
@@ -71,8 +73,7 @@ export class ToolOperation extends Operation {
     return result;
   }
 
-  public clone(task?: Task): ToolOperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ToolOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
+  public getToolURL(): string {
+    return '';
   }
 }

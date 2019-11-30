@@ -8,11 +8,11 @@ import {Operation} from './obj/operations/operation';
 
 @Injectable()
 export class StorageService {
-  private idbm: IndexedDBManager;
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
   public ready = false;
   public tasksFound = false;
   public allloaded: EventEmitter<any[]> = new EventEmitter<any[]>();
+  private idbm: IndexedDBManager;
+  private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   constructor() {
     this.idbm = new IndexedDBManager('oh-portal');
@@ -128,13 +128,13 @@ export class StorageService {
 
   public saveCounter(name: string, value: number) {
     this.idbm.save('intern', name, {
-      value: value
+      value
     });
   }
 
   public saveIntern(name: string, value: any) {
     this.idbm.save('intern', name, {
-      value: value
+      value
     });
   }
 

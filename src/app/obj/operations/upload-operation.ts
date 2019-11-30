@@ -55,7 +55,7 @@ export class UploadOperation extends Operation {
       }
       subj.next({
         type: 'progress',
-        result: <any>progress
+        result: progress as any
       });
     }, false);
 
@@ -66,7 +66,7 @@ export class UploadOperation extends Operation {
     xhr.onloadend = (e) => {
       subj.next({
         type: 'loadend',
-        result: <any>e.currentTarget['responseText']
+        result: (e.currentTarget as any).responseText as any
       });
       subj.complete();
     };
@@ -75,18 +75,8 @@ export class UploadOperation extends Operation {
     return subj;
   }
 
-  public updateEstimatedEnd = () => {
-    if (this.progress > 0) {
-      const time_till_now = Date.now() - this.time.start;
-      const time_one_percent = (time_till_now / this.progress);
-      const time = Math.round((1 - this.progress) * time_one_percent);
-      this.estimated_end = Date.now() + time;
-    } else {
-      this.estimated_end = 0;
-    }
-  }
-
-  public start = (languageObject: OHLanguageObject, files: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public start = (languageObject: OHLanguageObject, files: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this._results = [];
     this.updateProtocol('');
     this.changeState(TaskState.UPLOADING);
@@ -97,13 +87,13 @@ export class UploadOperation extends Operation {
 
     subj.subscribe((obj) => {
       if (obj.type === 'progress') {
-        this.progress = <number>obj.result;
+        this.progress = obj.result as number;
         this.updateEstimatedEnd();
         this.changed.next();
       } else if (obj.type === 'loadend') {
 
         this.time.duration = Date.now() - this.time.start;
-        const result = <string>obj.result;
+        const result = obj.result as string;
         const x2js = new X2JS();
         let json: any = x2js.xml2js(result);
         json = json.UploadFileMultiResponse;
@@ -123,12 +113,12 @@ export class UploadOperation extends Operation {
             }
           } else {
             // json attribute entry is an object
-            files[0].url = json.fileList.entry['value'];
-            this.results.push(FileInfo.fromURL(json.fileList.entry['value'], null, 'audio/wav'));
+            files[0].url = json.fileList.entry.value;
+            this.results.push(FileInfo.fromURL(json.fileList.entry.value, null, 'audio/wav'));
           }
           this.changeState(TaskState.FINISHED);
         } else {
-          this.updateProtocol(json['message']);
+          this.updateProtocol(json.message);
           this.changeState(TaskState.ERROR);
         }
       }
@@ -150,7 +140,7 @@ export class UploadOperation extends Operation {
       case(TaskState.UPLOADING):
         if (this.progress > 0) {
           this.updateEstimatedEnd();
-          const time = this.estimated_end - Date.now();
+          const time = this.estimatedEnd - Date.now();
           result = '<i class="fa fa-arrow-up" aria-hidden="true" style="color: cornflowerblue"></i> ' +
             '<span>' + new TimePipe().transform(time) + '</span>';
         } else {
@@ -186,7 +176,7 @@ export class UploadOperation extends Operation {
       case(TaskState.UPLOADING):
         if (this.progress > 0) {
           this.updateEstimatedEnd();
-          const time = this.estimated_end - Date.now();
+          const time = this.estimatedEnd - Date.now();
           result = '<i class="fa fa-arrow-up" aria-hidden="true" style="color: cornflowerblue"></i> ' +
             '<span>' + new TimePipe().transform(time) + '</span>';
         } else {
@@ -212,10 +202,14 @@ export class UploadOperation extends Operation {
     return result;
   }
 
+  public clone(task?: Task): UploadOperation {
+    const selectedTask = ((task === null || task === undefined)) ? this.task : task;
+    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state);
+  }
+
   public fromAny(operationObj: any, commands: string[], task: Task): UploadOperation {
     const result = new UploadOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const resultObj = operationObj.results[k];
+    for (const resultObj of operationObj.results) {
       const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
       resultClass.url = resultObj.url;
       result.results.push(resultClass);
@@ -226,8 +220,14 @@ export class UploadOperation extends Operation {
     return result;
   }
 
-  public clone(task?: Task): UploadOperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
+  public updateEstimatedEnd = () => {
+    if (this.progress > 0) {
+      const timeTillNow = Date.now() - this.time.start;
+      const timeOnePercent = (timeTillNow / this.progress);
+      const time = Math.round((1 - this.progress) * timeOnePercent);
+      this.estimatedEnd = Date.now() + time;
+    } else {
+      this.estimatedEnd = 0;
+    }
   }
 }

@@ -1,13 +1,13 @@
 .queue {
-    display: none;
-    position: absolute;
-    width: 400px;
-    bottom: 0;
-    right: 0;
-    z-index: 100;
-    overflow: scroll;
+  display: none;
+  position: absolute;
+  width: 400px;
+  bottom: 0;
+  right: 0;
+  z-index: 100;
+  overflow: scroll;
 }
 
 .alert {
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 }

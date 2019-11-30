@@ -41,19 +41,19 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   private subscrManager = new SubscriptionManager();
 
-  public get converters() {
-    return AppInfo.converters;
-  }
-
   constructor(private taskService: TaskService, private http: HttpClient, private storage: StorageService,
               private modalService: BsModalService, private sanitizer: DomSanitizer) {
 
   }
 
+  public get converters() {
+    return AppInfo.converters;
+  }
+
   ngOnInit() {
     this.checkboxes = [];
 
-    for (let i = 0; i < AppInfo.converters.length; i++) {
+    for (const converter of AppInfo.converters) {
       this.checkboxes.push(false);
     }
   }
@@ -103,8 +103,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       if (opIndex > -1) {
         // operation found
 
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
+        for (const task of tasks) {
           const operation = task.operations[opIndex];
 
           // TODO improve code!
@@ -118,9 +117,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
               const promise = new Promise<void>((resolve, reject) => {
                 this.getConversionFiles(operation).then((files) => {
-                  for (let k = 0; k < files.length; k++) {
-                    const fileInfo = files[k];
-
+                  for (const fileInfo of files) {
                     requestPackage.entries.push({
                       path: fileInfo.file.name,
                       file: fileInfo.file
@@ -181,8 +178,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
         const promises = [];
 
-        for (let i = 0; i < this.selectedTasks.length; i++) {
-          const index = this.selectedTasks[i];
+        for (const index of this.selectedTasks) {
           const entry = this.taskService.taskList.getEntryByIndex(index);
 
           if (entry instanceof TaskDirectory) {
@@ -190,17 +186,13 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             promises.push(new Promise<void>((resolve, reject) => {
               const dirPromises = [];
 
-              for (let j = 0; j < entry.entries.length; j++) {
-                const dirEntry = <Task>entry.entries[j];
-                dirPromises.push(this.processTask(dirEntry));
+              for (const dirEntry of entry.entries) {
+                dirPromises.push(this.processTask(dirEntry as Task));
               }
 
               Promise.all(dirPromises).then((values) => {
-                for (let l = 0; l < values.length; l++) {
-                  const value = values[l];
-
-                  for (let j = 0; j < value.length; j++) {
-                    const val = value[j];
+                for (const value of values) {
+                  for (const val of value) {
                     val.path = `${entry.foldername}/${val.path}`;
                     requestPackage.entries.push(val);
                   }
@@ -215,8 +207,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
             promises.push(
               new Promise<void>((resolve, reject) => {
                 this.processTask(entry).then((entries) => {
-                  for (let i2 = 0; i2 < entries.length; i2++) {
-                    const entry2 = entries[i2];
+                  for (const entry2 of entries) {
                     requestPackage.entries.push(entry2);
                   }
                   resolve();
@@ -249,9 +240,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         if (checkbox) {
           const exportConverter = AppInfo.converters[i].obj;
 
-          for (let k = 0; k < operation.results.length; k++) {
-            const opResult = operation.results[k];
-
+          for (const opResult of operation.results) {
             if (opResult.fullname.indexOf(exportConverter.extension) < 0) {
               promises.push(this.getResultConversion(exportConverter, operation, opResult));
             }
@@ -273,10 +262,10 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     return new Promise<FileInfo>((resolve, reject) => {
       FileInfo.getFileContent(opResult.file).then((content) => {
         const audiofile = new OAudiofile();
-        audiofile.duration = (<AudioInfo>operation.task.files[0]).duration.samples;
-        audiofile.name = (<AudioInfo>operation.task.files[0]).name;
-        audiofile.samplerate = (<AudioInfo>operation.task.files[0]).samplerate;
-        audiofile.size = (<AudioInfo>operation.task.files[0]).size;
+        audiofile.duration = (operation.task.files[0] as AudioInfo).duration.samples;
+        audiofile.name = (operation.task.files[0] as AudioInfo).name;
+        audiofile.samplerate = (operation.task.files[0] as AudioInfo).samplerate;
+        audiofile.size = (operation.task.files[0] as AudioInfo).size;
 
 
         let annotJSON = null;
@@ -295,7 +284,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
           if (!(importConverter === null || importConverter === undefined)) {
             const result: ImportResult = importConverter.obj.import({
               name: opResult.fullname,
-              content: content,
+              content,
               encoding: 'utf-8',
               type: 'text/plain'
             }, audiofile);
@@ -351,8 +340,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
             promises.push(new Promise<void>((resolve2, reject2) => {
               this.getConversionFiles(operation).then((entries) => {
-                for (let k = 0; k < entries.length; k++) {
-                  const entry = entries[k];
+                for (const entry of entries) {
                   entryResult.push({
                     path: `${task.files[0].name}/${operation.name}/${entry.fullname}`,
                     file: entry.file
@@ -383,8 +371,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   }[]) {
     const zip = new JSZip();
 
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
+    for (const entry of entries) {
       zip.file(entry.path, entry.file);
     }
 
@@ -395,8 +382,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   }
 
   removeSelected() {
-    for (let i = 0; i < this.selectedTasks.length; i++) {
-      const index = this.selectedTasks[i];
+    for (const index of this.selectedTasks) {
       const entry = this.taskService.taskList.getEntryByIndex(index);
       this.taskService.taskList.removeEntry(entry, true);
     }

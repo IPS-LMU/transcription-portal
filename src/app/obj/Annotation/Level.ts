@@ -2,51 +2,12 @@ import {AnnotJSONType, ISegment, OEvent, OItem, OLevel} from './AnnotJSON';
 import {Segments} from './Segments';
 
 export class Level {
-  get type(): AnnotJSONType {
-    return this._type;
-  }
-
-  get id(): number {
-    return this._id;
-  }
-
-  set name(value: string) {
-    this._name = value;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
   public static counter = 1;
-
-  private _name: string;
   public segments: Segments;
   public items: OItem[];
   public events: OEvent[];
   private readonly _type: AnnotJSONType;
   private readonly _id: number;
-
-  public static fromObj(entry: any, samplerate: number, last_sample: number): Level {
-    let segments: Segments = null;
-    let events = [];
-    let items = [];
-
-    if (entry.level.type === 'SEGMENT') {
-      const segment_entries: ISegment[] = <ISegment[]> entry.level.items;
-      segments = new Segments(samplerate, segment_entries, last_sample);
-    } else if (entry.level.type === 'ITEM') {
-      items = entry.level.items;
-    } else if (entry.level.type === 'EVENT') {
-      events = entry.level.items;
-    }
-
-    const result = new Level(entry.id, entry.level.name, entry.level.type, segments);
-    result.items = items;
-    result.events = events;
-
-    return result;
-  }
 
   constructor(id: number, name: string, type: string, segments?: Segments) {
     this._name = name;
@@ -66,6 +27,45 @@ export class Level {
     if (!(segments === null || segments === undefined)) {
       this.segments = segments;
     }
+  }
+
+  get type(): AnnotJSONType {
+    return this._type;
+  }
+
+  get id(): number {
+    return this._id;
+  }
+
+  private _name: string;
+
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    this._name = value;
+  }
+
+  public static fromObj(entry: any, samplerate: number, lastSample: number): Level {
+    let segments: Segments = null;
+    let events = [];
+    let items = [];
+
+    if (entry.level.type === 'SEGMENT') {
+      const segmentEntries: ISegment[] = entry.level.items as ISegment[];
+      segments = new Segments(samplerate, segmentEntries, lastSample);
+    } else if (entry.level.type === 'ITEM') {
+      items = entry.level.items;
+    } else if (entry.level.type === 'EVENT') {
+      events = entry.level.items;
+    }
+
+    const result = new Level(entry.id, entry.level.name, entry.level.type, segments);
+    result.items = items;
+    result.events = events;
+
+    return result;
   }
 
   public getObj(): OLevel {

@@ -20,6 +20,13 @@ export interface AlertEntry {
 
 export class AlertComponent implements OnInit, OnDestroy {
 
+  private static counter = 0;
+  public duration = 20;
+  public queue: AlertEntry[] = [];
+  public animation = 'closed';
+  private _success = new Subject<string>();
+  private counter: Subscription;
+
   constructor(private alert: AlertService) {
     this.alert.alertsend.subscribe(
       obj => this.onAlertSend(obj),
@@ -30,8 +37,7 @@ export class AlertComponent implements OnInit, OnDestroy {
 
     this.counter = interval(1000).subscribe(
       () => {
-        for (let i = 0; i < this.queue.length; i++) {
-          const queueItem: AlertEntry = this.queue[i];
+        for (const queueItem of this.queue) {
           queueItem.duration--;
           if (queueItem.duration === 0) {
             queueItem.animation = 'closed';
@@ -41,15 +47,6 @@ export class AlertComponent implements OnInit, OnDestroy {
       }
     );
   }
-
-  private static counter = 0;
-  private _success = new Subject<string>();
-  public duration = 20;
-  private counter: Subscription;
-
-  public queue: AlertEntry[] = [];
-
-  public animation = 'closed';
 
   ngOnDestroy() {
     this.counter.unsubscribe();
@@ -82,6 +79,17 @@ export class AlertComponent implements OnInit, OnDestroy {
     this.removeFromQueue(entry);
   }
 
+  public clear() {
+    for (const queueItem of this.queue) {
+      queueItem.animation = 'closed';
+    }
+
+    this.animation = 'closed';
+    setTimeout(() => {
+      this.queue = [];
+    }, 1000);
+  }
+
   private removeFromQueue(entry: AlertEntry) {
     let index = this.queue.findIndex((a) => {
       return a.id === entry.id;
@@ -102,17 +110,5 @@ export class AlertComponent implements OnInit, OnDestroy {
         }
       }, 500);
     }
-  }
-
-  public clear() {
-    for (let i = 0; i < this.queue.length; i++) {
-      const queueItem = this.queue[i];
-      queueItem.animation = 'closed';
-    }
-
-    this.animation = 'closed';
-    setTimeout(() => {
-      this.queue = [];
-    }, 1000);
   }
 }

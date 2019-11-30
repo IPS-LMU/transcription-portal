@@ -9,6 +9,16 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
   styleUrls: ['./split-modal.component.css']
 })
 export class SplitModalComponent implements OnInit {
+  @ViewChild('splitModal', {static: true}) splitModal: ModalDirective;
+  @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+  private reason = '';
+  private subscrManager = new SubscriptionManager();
+
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
+  }
+
+  private _splitModalDismissedProperly = false;
+
   get splitModalDismissedProperly(): boolean {
     return this._splitModalDismissedProperly;
   }
@@ -16,16 +26,6 @@ export class SplitModalComponent implements OnInit {
   @Input() set splitModalDismissedProperly(value: boolean) {
     this._splitModalDismissedProperly = value;
     this.dissmissedChange.emit(this._splitModalDismissedProperly);
-  }
-
-  @ViewChild('splitModal', {static: true}) splitModal: ModalDirective;
-  private _splitModalDismissedProperly = false;
-  @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
-
-  private reason = '';
-  private subscrManager = new SubscriptionManager();
-
-  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
   }
 
   ngOnInit() {

@@ -5,18 +5,7 @@ declare var Notify: any;
 
 @Injectable()
 export class NotificationService {
-  set permissionGranted(value: boolean) {
-    if (value) {
-      this.allowNotifications();
-    } else {
-      this._permissionGranted = false;
-      this.onPermissionChange.next(false);
-    }
-  }
-
-  get permissionGranted(): boolean {
-    return this._permissionGranted;
-  }
+  public onPermissionChange: Subject<boolean> = new Subject<boolean>();
 
   constructor() {
     this.allowNotifications();
@@ -24,17 +13,17 @@ export class NotificationService {
 
   private _permissionGranted = false;
 
-  public onPermissionChange: Subject<boolean> = new Subject<boolean>();
-
-  private onPermissionGranted = () => {
-    this._permissionGranted = true;
-    this.onPermissionChange.next(this._permissionGranted);
+  get permissionGranted(): boolean {
+    return this._permissionGranted;
   }
 
-  private onPermissionDenied = () => {
-    this._permissionGranted = false;
-    console.warn('Permission has been denied by the user');
-    this.onPermissionChange.next(this._permissionGranted);
+  set permissionGranted(value: boolean) {
+    if (value) {
+      this.allowNotifications();
+    } else {
+      this._permissionGranted = false;
+      this.onPermissionChange.next(false);
+    }
   }
 
   public allowNotifications() {
@@ -49,11 +38,22 @@ export class NotificationService {
   public showNotification(title: string, body: string) {
     if (this.permissionGranted) {
       const myNotification = new Notify(title, {
-        body   : body,
+        body,
         timeout: 30
       });
 
       myNotification.show();
     }
+  }
+
+  private onPermissionGranted = () => {
+    this._permissionGranted = true;
+    this.onPermissionChange.next(this._permissionGranted);
+  }
+
+  private onPermissionDenied = () => {
+    this._permissionGranted = false;
+    console.warn('Permission has been denied by the user');
+    this.onPermissionChange.next(this._permissionGranted);
   }
 }

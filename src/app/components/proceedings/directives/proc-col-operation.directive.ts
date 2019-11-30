@@ -28,13 +28,13 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
-  @Output() onAppendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  @Output() appendClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
-  @Output() onOperationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output() onOperationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-  @Output() onOperationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() operationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() operationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() operationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  @Output() onDeleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
@@ -47,6 +47,32 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
       this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'auto');
     }
     this.updateView();
+  }
+
+  ngOnDestroy() {
+    this.subscrmanager.destroy();
+  }
+
+  ngAfterViewInit() {
+    if (!(this.entry === null || this.entry === undefined)) {
+      // entry set
+      if (!(this.entry.files === null || this.entry.files === undefined)) {
+        this.updateView();
+      } else {
+        throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
+      }
+    } else {
+      throw new Error('ProcOperationDirective error: no entry set');
+    }
+
+    // listen to operation changes because these are not detected by default
+    this.subscrmanager.add(this.operation.statechange.subscribe(() => {
+      this.updateView();
+    }));
+
+    this.subscrmanager.add(this.operation.changed.subscribe(() => {
+      this.updateView();
+    }));
   }
 
   private updateView() {
@@ -112,13 +138,13 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private clearContents() {
-    for (let i = 0; i < (<HTMLElement>this.elementRef.nativeElement).children.length; i++) {
+    for (let i = 0; i < (this.elementRef.nativeElement as HTMLElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
       if (!(child === null || child === undefined)) {
-        const old_length = this.elementRef.nativeElement.children.length;
+        const oldLength = this.elementRef.nativeElement.children.length;
         this.renderer.removeChild(this.elementRef.nativeElement, child);
-        if (old_length > this.elementRef.nativeElement.children.length) {
+        if (oldLength > this.elementRef.nativeElement.children.length) {
           i--;
         }
       }
@@ -126,15 +152,15 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private onMouseOver = (event) => {
-    this.onOperationMouseOver.next(event);
+    this.operationMouseOver.next(event);
   }
 
   private onMouseEnter = (event) => {
-    this.onOperationMouseEnter.next(event);
+    this.operationMouseEnter.next(event);
   }
 
   private onMouseLeave = (event) => {
-    this.onOperationMouseLeave.next(event);
+    this.operationMouseLeave.next(event);
   }
 
   private onRepeatIconClick = () => {
@@ -143,32 +169,5 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
       name: 'GoogleASR',
       value: this.taskService.accessCode
     }]);
-  }
-
-
-  ngOnDestroy() {
-    this.subscrmanager.destroy();
-  }
-
-  ngAfterViewInit() {
-    if (!(this.entry === null || this.entry === undefined)) {
-      // entry set
-      if (!(this.entry.files === null || this.entry.files === undefined)) {
-        this.updateView();
-      } else {
-        throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
-      }
-    } else {
-      throw new Error('ProcOperationDirective error: no entry set');
-    }
-
-    // listen to operation changes because these are not detected by default
-    this.subscrmanager.add(this.operation.statechange.subscribe(() => {
-      this.updateView();
-    }));
-
-    this.subscrmanager.add(this.operation.changed.subscribe(() => {
-      this.updateView();
-    }));
   }
 }

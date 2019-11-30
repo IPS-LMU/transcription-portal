@@ -6,19 +6,11 @@ import {Injectable} from '@angular/core';
 
 @Injectable()
 export class SettingsService {
-  get settingsload(): Subject<void> {
-    return this._settingsload;
-  }
-
-  get allLoaded(): boolean {
-    return this._allLoaded;
-  }
-
   constructor(private http: HttpClient) {
     this.http.get('config/config.json', {
       responseType: 'json'
     }).subscribe((json) => {
-      AppSettings.init(<OHConfiguration> json);
+      AppSettings.init(json as OHConfiguration);
       this._settingsload.next();
       this._allLoaded = true;
     }, (err) => {
@@ -28,5 +20,14 @@ export class SettingsService {
   }
 
   private _allLoaded = false;
+
+  get allLoaded(): boolean {
+    return this._allLoaded;
+  }
+
   private _settingsload: Subject<void> = new Subject<void>();
+
+  get settingsload(): Subject<void> {
+    return this._settingsload;
+  }
 }

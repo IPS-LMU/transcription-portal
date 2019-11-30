@@ -1,17 +1,24 @@
 import {Segment} from './Segment';
-import {AudioTime} from '../audio/AudioTime';
+import {AudioTime} from '../audio';
 import {EventEmitter} from '@angular/core';
 import {ISegment, OLabel, OSegment} from './AnnotJSON';
 
 export class Segments {
-  set segments(value: Segment[]) {
-    this._segments = value;
-  }
-
   public onsegmentchange: EventEmitter<void> = new EventEmitter<void>();
 
-  get segments(): Segment[] {
-    return this._segments;
+  constructor(private sampleRate: number, segments: ISegment[], lastSample: number) {
+    this._segments = [];
+
+    if (segments !== null) {
+      if (segments.length === 0) {
+        this._segments.push(new Segment(new AudioTime(lastSample, sampleRate)));
+      }
+
+      for (const segment of segments) {
+        const newSegment = Segment.fromObj(segment, sampleRate);
+        this._segments.push(newSegment);
+      }
+    }
   }
 
   get length(): number {
@@ -20,28 +27,19 @@ export class Segments {
 
   private _segments: Segment[];
 
-  constructor(private sample_rate: number, segments: ISegment[], last_sample: number) {
-    this._segments = [];
+  get segments(): Segment[] {
+    return this._segments;
+  }
 
-    if (segments !== null) {
-      if (segments.length === 0) {
-        this._segments.push(new Segment(new AudioTime(last_sample, sample_rate)));
-      }
-
-      for (let i = 0; i < segments.length; i++) {
-        const new_segment = Segment.fromObj(segments[i], sample_rate);
-        this._segments.push(new_segment);
-      }
-    }
+  set segments(value: Segment[]) {
+    this._segments = value;
   }
 
   /**
    * adds new Segment
-   * @param time_samples
-   * @returns {boolean}
    */
-  public add(time_samples: number, transcript: string = null): boolean {
-    const newSegment: Segment = new Segment(new AudioTime(time_samples, this.sample_rate));
+  public add(timeSamples: number, transcript: string = null): boolean {
+    const newSegment: Segment = new Segment(new AudioTime(timeSamples, this.sampleRate));
 
     if (!(transcript === null || transcript === undefined)) {
       newSegment.transcript = transcript;
@@ -55,11 +53,10 @@ export class Segments {
 
   /**
    * removes Segment by number of samples
-   * @param time
    */
-  public removeBySamples(time_samples: number) {
+  public removeBySamples(timeSamples: number) {
     for (let i = 0; i < this.segments.length; i++) {
-      if (this.segments[i].time.samples === time_samples) {
+      if (this.segments[i].time.samples === timeSamples) {
         this.segments.splice(i, 1);
 
         this.onsegmentchange.emit();
@@ -70,18 +67,18 @@ export class Segments {
   public removeByIndex(index: number, breakmarker: string) {
     if (index > -1 && index < this.segments.length) {
       if (index < this.segments.length - 1) {
-        const next_segment = this.segments[index + 1];
+        const nextSegment = this.segments[index + 1];
         const transcription: string = this.segments[index].transcript;
-        if (next_segment.transcript !== breakmarker && transcription !== breakmarker) {
+        if (nextSegment.transcript !== breakmarker && transcription !== breakmarker) {
           // concat transcripts
-          if (next_segment.transcript !== '' && transcription !== '') {
-            next_segment.transcript = transcription + ' ' + next_segment.transcript;
-          } else if (next_segment.transcript === '' && transcription !== '') {
-            next_segment.transcript = transcription;
+          if (nextSegment.transcript !== '' && transcription !== '') {
+            nextSegment.transcript = transcription + ' ' + nextSegment.transcript;
+          } else if (nextSegment.transcript === '' && transcription !== '') {
+            nextSegment.transcript = transcription;
           }
-        } else if (next_segment.transcript === breakmarker) {
+        } else if (nextSegment.transcript === breakmarker) {
           // delete pause
-          next_segment.transcript = transcription;
+          nextSegment.transcript = transcription;
         }
       }
 
@@ -92,9 +89,6 @@ export class Segments {
 
   /**
    * changes samples of segment by given index and sorts the List after adding
-   * @param i
-   * @param new_time
-   * @returns {boolean}
    */
   public change(i: number, segment: Segment): boolean {
     if (i > -1 && this._segments[i]) {
@@ -118,7 +112,7 @@ export class Segments {
    * sorts the segments by time in samples
    */
   public sort() {
-    this.segments.sort(function (a, b) {
+    this.segments.sort((a, b) => {
       if (a.time.samples < b.time.samples) {
         return -1;
       }
@@ -135,8 +129,6 @@ export class Segments {
 
   /**
    * gets Segment by index
-   * @param i
-   * @returns {any}
    */
   public get(i: number): Segment {
     if (i > -1 && i < this.segments.length) {
@@ -148,8 +140,8 @@ export class Segments {
   public getFullTranscription(): string {
     let result = '';
 
-    for (let i = 0; i < this.segments.length; i++) {
-      result += ' ' + this.segments[i].transcript;
+    for (const segment of this.segments) {
+      result += ' ' + segment.transcript;
     }
 
     return result;
@@ -168,17 +160,16 @@ export class Segments {
     return -1;
   }
 
-  public getSegmentsOfRange(start_samples: number, end_samples: number): Segment[] {
+  public getSegmentsOfRange(startSamples: number, endSamples: number): Segment[] {
     const result: Segment[] = [];
     let start = 0;
 
-    for (let i = 0; i < this._segments.length; i++) {
-      const segment = this._segments[i];
+    for (const segment of this._segments) {
       if (
-        (segment.time.samples >= start_samples && segment.time.samples <= end_samples) ||
-        (start >= start_samples && start <= end_samples)
+        (segment.time.samples >= startSamples && segment.time.samples <= endSamples) ||
+        (start >= startSamples && start <= endSamples)
         ||
-        (start <= start_samples && segment.time.samples >= end_samples)
+        (start <= startSamples && segment.time.samples >= endSamples)
 
       ) {
         result.push(segment);
@@ -207,33 +198,14 @@ export class Segments {
     return null;
   }
 
-  private cleanup() {
-    const remove: number[] = [];
-
-    for (let i = 0; i < this.segments.length; i++) {
-      if (i > 0) {
-        const last = this.segments[i - 1];
-        if (last.time.samples === this.segments[i].time.samples) {
-          remove.push(i);
-        }
-      }
-    }
-
-    for (let i = 0; i < remove.length; i++) {
-      this.segments.splice(remove[i], 1);
-      remove.splice(i, 1);
-      --i;
-    }
-  }
-
   public BetweenWhichSegment(samples: number): Segment {
     let start = 0;
 
-    for (let i = 0; i < this.segments.length; i++) {
-      if (samples >= start && samples <= this.segments[i].time.samples) {
-        return this.segments[i];
+    for (const segment of this.segments) {
+      if (samples >= start && samples <= segment.time.samples) {
+        return segment;
       }
-      start = this.segments[i].time.samples;
+      start = segment.time.samples;
     }
 
     return null;
@@ -262,10 +234,29 @@ export class Segments {
   }
 
   public clone(): Segments {
-    const result = new Segments(this.sample_rate, null, this.segments[this.length - 1].time.samples);
-    for (let i = 0; i < this.segments.length; i++) {
-      result.add(this.segments[i].time.samples, this.segments[i].transcript);
+    const result = new Segments(this.sampleRate, null, this.segments[this.length - 1].time.samples);
+    for (const segment of this.segments) {
+      result.add(segment.time.samples, segment.transcript);
     }
     return result;
+  }
+
+  private cleanup() {
+    const remove: number[] = [];
+
+    for (let i = 0; i < this.segments.length; i++) {
+      if (i > 0) {
+        const last = this.segments[i - 1];
+        if (last.time.samples === this.segments[i].time.samples) {
+          remove.push(i);
+        }
+      }
+    }
+
+    for (let i = 0; i < remove.length; i++) {
+      this.segments.splice(remove[i], 1);
+      remove.splice(i, 1);
+      --i;
+    }
   }
 }

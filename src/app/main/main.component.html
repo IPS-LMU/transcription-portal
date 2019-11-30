@@ -1,32 +1,32 @@
 <app-first-modal #firstModal></app-first-modal>
 <app-split-modal #splitModal></app-split-modal>
-<app-queue-modal #queueModal *ngIf="taskService.taskList !== undefined" [tasks]="taskService.taskList.getAllTasks()"
+<app-queue-modal #queueModal *ngIf="taskService.taskList !== undefined" [operations]="taskService.operations"
                  [queue]="taskService.preprocessor.queue"
-                 [operations]="taskService.operations"></app-queue-modal>
+                 [tasks]="taskService.taskList.getAllTasks()"></app-queue-modal>
 <app-statistics #statisticsModal></app-statistics>
 <app-alert></app-alert>
-<div id="app" (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded">
+<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded" id="app">
   <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top">
     <div class="container justify-content-center" style="width:100%;margin:0;display: contents;">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap">
         <li class="nav-item active">
-          <a class="nav-link" href="#" [title]="AppInfo.lastUpdated| date:'dd.MM.yyyy H:mm z'"><span
+          <a [title]="AppInfo.lastUpdated| date:'dd.MM.yyyy H:mm z'" class="nav-link" href="#"><span
             class="logo">OH-Portal</span> <span class="version"> v{{AppInfo.version}}</span>
             <span *ngIf="isdevelopment"
                   style="color:red;">
                 Beta
             </span>
-            <button class="navbar-toggler" type="button" data-toggle="collapse"
-                    data-target=".dual-collapse2" (click)="isCollapsed = !isCollapsed">
+            <button (click)="isCollapsed = !isCollapsed" class="navbar-toggler" data-target=".dual-collapse2"
+                    data-toggle="collapse" type="button">
               <span class="navbar-toggler-icon"></span>
             </button>
           </a>
         </li>
       </ul>
-      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [collapse]="!isCollapsed">
+      <div [collapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
         <ul class="nav navbar-nav flex-fill justify-content-center state-icons" style="min-width:300px;">
           <li class="nav-item">
-            <div class="totalState" [tooltip]="queuedTipp"
+            <div [tooltip]="queuedTipp" class="totalState"
                  containerClass="state-tooltip"
                  placement="bottom">
               <div class="number">{{taskService.statistics.queued}}</div>
@@ -35,7 +35,7 @@
                 verification.
               </ng-template>
             </div>
-            <div class="totalState" [tooltip]="waitingTipp"
+            <div [tooltip]="waitingTipp" class="totalState"
                  containerClass="state-tooltip" placement="bottom">
               <div class="number">{{taskService.statistics.waiting}}</div>
               <i class="fa fa-clock-o" style="color:dodgerblue;"></i>
@@ -43,7 +43,7 @@
                 processing.
               </ng-template>
             </div>
-            <div class="totalState" [tooltip]="runningTipp"
+            <div [tooltip]="runningTipp" class="totalState"
                  containerClass="state-tooltip" placement="bottom">
               <div class="number">{{taskService.statistics.running}}</div>
               <i [ngClass]="{
@@ -52,14 +52,14 @@
               <ng-template #runningTipp>{{taskService.statistics.running}} tasks are running.
               </ng-template>
             </div>
-            <div class="totalState" [tooltip]="finishedTipp"
+            <div [tooltip]="finishedTipp" class="totalState"
                  containerClass="state-tooltip" placement="bottom">
               <div class="number">{{taskService.statistics.finished}}</div>
               <i class="fa fa-check" style="color:forestgreen;"></i>
               <ng-template #finishedTipp>{{taskService.statistics.finished}} tasks are finished.
               </ng-template>
             </div>
-            <div class="totalState" [tooltip]="errorsTipp"
+            <div [tooltip]="errorsTipp" class="totalState"
                  containerClass="state-tooltip" placement="bottom">
               <div class="number">{{taskService.statistics.errors}}</div>
               <i class="fa fa-times" style="color:red;"></i>
@@ -70,38 +70,41 @@
           </li>
         </ul>
       </div>
-      <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2" [collapse]="!isCollapsed">
+      <div [collapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
         <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
           <li class="nav-item active">
-            <a style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
-               href="https://www.phonetik.uni-muenchen.de/apps/oh-portal/contents/v1.0.0/help.html"
+            <a href="https://www.phonetik.uni-muenchen.de/apps/oh-portal/contents/v1.0.0/help.html"
+               style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
                target="_blank"><i
               class="fa fa-question-circle-o" style="color:cornflowerblue;"></i> Help</a>
           </li>
           <li class="nav-item active" style="cursor: pointer;">
-                    <span style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
-                          (click)="statisticsModal.open();"><i
+                    <span (click)="statisticsModal.open();"
+                          style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"><i
                       class="fa fa-line-chart"></i> Statistics</span>
           </li>
-          <li class="nav-item active" (click)="modalService.openFeedbackModal()">
-            <i class="fa fa-exclamation-circle" [ngClass]="{
+          <li (click)="modalService.openFeedbackModal()" class="nav-item active">
+            <i [ngClass]="{
                         'yellow': !bugService.hasErrors,
                         'red': bugService.hasErrors
-                        }"></i><span style="cursor: pointer;"> Feedback</span>
+                        }" class="fa fa-exclamation-circle"></i><span style="cursor: pointer;"> Feedback</span>
           </li>
           <li class="nav-item active">
-            <i class="fa fa-bell-o" aria-hidden="true" *ngIf="notification.permissionGranted"
-               (click)="notification.permissionGranted = false" style="cursor: pointer;"></i>
-            <i class="fa fa-bell-slash-o" aria-hidden="true" *ngIf="!notification.permissionGranted"
-               (click)="notification.permissionGranted = true" style="cursor: pointer;"></i>
+            <i (click)="notification.permissionGranted = false" *ngIf="notification.permissionGranted"
+               aria-hidden="true"
+               class="fa fa-bell-o" style="cursor: pointer;"></i>
+            <i (click)="notification.permissionGranted = true" *ngIf="!notification.permissionGranted"
+               aria-hidden="true"
+               class="fa fa-bell-slash-o" style="cursor: pointer;"></i>
           </li>
           <li class="nav-item active">
             <div class="btn-group" dropdown>
-              <i class="fa fa-cog" dropdownToggle id="dropdownBasic2" style="cursor: pointer;"
-                 (click)="settingsCollapsed = !settingsCollapsed;"></i>
+              <i (click)="settingsCollapsed = !settingsCollapsed;" class="fa fa-cog" dropdownToggle id="dropdownBasic2"
+                 style="cursor: pointer;"></i>
 
-              <div *dropdownMenu class="dropdown-menu" id="settings-dropdown" role="menu" [collapse]="settingsCollapsed"
-                   (mouseleave)="settingsCollapsed = true;"
+              <div (mouseleave)="settingsCollapsed = true;" *dropdownMenu [collapse]="settingsCollapsed"
+                   class="dropdown-menu" id="settings-dropdown"
+                   role="menu"
               >
                 <table style="width:100%;">
                   <tbody>
@@ -111,20 +114,21 @@
                   </tr>
                   <tr>
                     <td></td>
-                    <td><input type="text" style="width:100%; padding:5px;" name="accessCode" id="accessCode"
-                               [(ngModel)]="taskService.accessCode"/></td>
+                    <td><input [(ngModel)]="taskService.accessCode" id="accessCode" name="accessCode"
+                               style="width:100%; padding:5px;"
+                               type="text"/></td>
                   </tr>
                   <tr>
                     <td><i class="fa fa-columns"></i></td>
-                    <td><span class="btn-link" style="cursor: pointer;"
-                              (click)="resetSideBarWidth();">Reset sidebar width</span></td>
+                    <td><span (click)="resetSideBarWidth();" class="btn-link"
+                              style="cursor: pointer;">Reset sidebar width</span></td>
                   </tr>
                   <tr>
                     <td style="padding-top:20px;"><i class="fa fa-eraser" style="color:red;"></i>
                     </td>
-                    <td style="padding-top:20px;"><span class="btn-link"
-                                                        style="cursor: pointer;color:red;"
-                                                        (click)="onClearClick();">Clear all data</span>
+                    <td style="padding-top:20px;"><span (click)="onClearClick();"
+                                                        class="btn-link"
+                                                        style="cursor: pointer;color:red;">Clear all data</span>
                     </td>
                   </tr>
                   </tbody>
@@ -137,19 +141,19 @@
     </div>
   </nav>
   <!-- SUB-HEADER OVERVIEW -->
-  <div class='row proceedings-header' style="padding-top:0;" *ngIf="!showtool">
+  <div *ngIf="!showtool" class='row proceedings-header' style="padding-top:0;">
     <div class="col-4" style="text-align: left;padding-top:5px;">
-      <button class="btn btn-primary" (click)="onFilesAddButtonClicked()">
+      <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
         <i class="fa fa-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
       </button>
       <!-- webkitdirectory directory multiple -->
-      <input type="file" multiple class="fileinput" value="Select audio file"
+      <input #fileinput (change)="onFileChange($event)" class="fileinput" multiple
              style="display:none;"
-             #fileinput
-             (change)="onFileChange($event)"/>
+             type="file"
+             value="Select audio file"/>
 
-      <button class="btn btn-primary" style="margin-left:10px;" [disabled]="taskService.statistics.queued < 1"
-              (click)="onVerifyButtonClick()"><i class="fa fa-database"></i> <span
+      <button (click)="onVerifyButtonClick()" [disabled]="taskService.statistics.queued < 1" class="btn btn-primary"
+              style="margin-left:10px;"><i class="fa fa-database"></i> <span
         class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
         <ng-container *ngIf="taskService.statistics.queued > 0">
           ({{taskService.statistics.queued}})
@@ -162,11 +166,11 @@
       </div>
     </div>
     <div class="col-4" style="text-align:right;padding-top:5px;">
-      <button class="btn btn-primary" [disabled]="!taskService.newfiles" (click)="onStartClick()">
-        <i class="fa" [ngClass]="{
+      <button (click)="onStartClick()" [disabled]="!taskService.newfiles" class="btn btn-primary">
+        <i [ngClass]="{
                     'fa-play': !taskService.isProcessing,
                     'fa-stop': taskService.isProcessing
-                }" aria-hidden="true"></i><span class="d-none d-lg-inline d-xl-inline">
+                }" aria-hidden="true" class="fa"></i><span class="d-none d-lg-inline d-xl-inline">
                 <ng-container *ngIf="!taskService.isProcessing">
                      3. START PROCESSING
                 </ng-container>
@@ -179,11 +183,11 @@
   </div>
 
   <!-- SUB-HEADER TOOL -->
-  <div class='row proceedings-header' style="padding-top:0; height:50px;"
-       *ngIf="showtool">
+  <div *ngIf="showtool" class='row proceedings-header'
+       style="padding-top:0; height:50px;">
     <div class="col-2" style="text-align: left;padding-top:5px;">
-      <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
-        <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>
+      <button (click)="onBackButtonClicked();" class="btn btn-primary" style="width:100%;">
+        <i aria-hidden="true" class="fa fa-angle-double-left" style="font-size:20px;"></i>
       </button>
     </div>
     <div class="col-8" style="text-align: center;">
@@ -207,61 +211,61 @@
       </p>
     </div>
     <div class="col-2" style="text-align:right;padding-top:5px;">
-      <button class="btn btn-primary" (click)="onBackButtonClicked();" style="width:100%;">
-        <i class="fa fa-angle-double-left" aria-hidden="true" style="font-size:20px;"></i>
+      <button (click)="onBackButtonClicked();" class="btn btn-primary" style="width:100%;">
+        <i aria-hidden="true" class="fa fa-angle-double-left" style="font-size:20px;"></i>
       </button>
     </div>
   </div>
 
   <!-- WORKING AREA -->
   <div id="main" style="position: relative;">
-    <div [ngStyle]="{
-            'width': newProceedingsWidth + '%',
-            'border-right': (sidebarExpand === 'closed') ? '2px solid lightgray' : 'none'
-        }" style="float:right;"
-         [@expandLeft]="animationObject2"
+    <div (blur)="onBlur($event)" (mousedown)="dragBorder($event, 'left')"
+         (mouseenter)="dragBorder($event, 'left')"
 
-         (mousedown)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
-         (mouseup)="dragBorder($event, 'left')" (mouseenter)="dragBorder($event, 'left')"
-         (mouseleave)="dragBorder($event, 'left')"
+         (mouseleave)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
+         (mouseup)="dragBorder($event, 'left')" [@expandLeft]="animationObject2"
          [ngClass]="{
                                     'dragborder': dragborder === 'active' || dragborder === 'dragging'
                                 }"
+         [ngStyle]="{
+            'width': newProceedingsWidth + '%',
+            'border-right': (sidebarExpand === 'closed') ? '2px solid lightgray' : 'none'
+        }"
 
-         (blur)="onBlur($event)"
+         style="float:right;"
     >
-      <app-proceedings *ngIf="settingsService.allLoaded && taskService.taskList !== undefined"
-                       [taskList]="taskService.taskList"
-                       [operations]="taskService.operations"
+      <app-proceedings #proceedings
                        (afterdrop)="onAfterDrop($event)"
+                       (feedbackRequested)="onFeedbackRequest($event)"
                        (operationclick)="onOperationClick($event)"
                        (operationhover)="onOperationHover($event)"
+                       *ngIf="settingsService.allLoaded && taskService.taskList !== undefined"
+                       [isClosed]="sidebarExpand === 'closed'"
+                       [operations]="taskService.operations"
                        [queue]="taskService.preprocessor.queue"
                        [shortstyle]="sidebarstate === 'opened'"
-                       [isClosed]="sidebarExpand === 'closed'"
-                       (feedbackRequested)="onFeedbackRequest($event)"
+                       [taskList]="taskService.taskList"
                        style="height:100%"
-                       #proceedings
       >
       </app-proceedings>
     </div>
-    <div [hidden]="dragborder === 'inactive'"
-         [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
-         style="position:absolute; height:100%;z-index:800;"
-         [@comeIn]="animationObject"
-         (mousedown)="dragBorder($event, 'right')" (mousemove)="dragBorder($event, 'right')"
-         (mouseup)="dragBorder($event, 'right')" (mouseenter)="dragBorder($event, 'right')"
+    <div (mousedown)="dragBorder($event, 'right')"
+         (mouseenter)="dragBorder($event, 'right')"
          (mouseleave)="dragBorder($event, 'right')"
-         [ngClass]="{
+         (mousemove)="dragBorder($event, 'right')"
+         (mouseup)="dragBorder($event, 'right')" [@comeIn]="animationObject"
+         [hidden]="dragborder === 'inactive'" [ngClass]="{
                                     'dragborder': dragborder === 'active' || dragborder === 'dragging'
                                 }"
+         [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
+         style="position:absolute; height:100%;z-index:800;"
     ></div>
-    <div [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
-         style="position:absolute; height:100%; border-top: 1px solid gray;"
-         [@comeIn]="animationObject">
-      <app-tool-loader #toolLoader style="height:100%;"
+    <div [@comeIn]="animationObject"
+         [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
+         style="position:absolute; height:100%; border-top: 1px solid gray;">
+      <app-tool-loader #toolLoader (datareceived)="onToolDataReceived($event)"
                        [operation]="toolSelectedOperation"
-                       (datareceived)="onToolDataReceived($event)"
+                       style="height:100%;"
       ></app-tool-loader>
     </div>
     <div class="clearfix"></div>

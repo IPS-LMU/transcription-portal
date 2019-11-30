@@ -1,5 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
-import {ILevel, ISegment, OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
+import {ILevel, ISegment, OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation';
 import {contains} from '../../shared/Functions';
 
 export class PraatTableConverter extends Converter {
@@ -35,12 +35,11 @@ export class PraatTableConverter extends Converter {
     if (!(annotation === null || annotation === undefined)) {
       result = addHeader(result);
 
-      for (let i = 0; i < annotation.levels.length; i++) {
-        const level = annotation.levels[i];
+      for (const level of annotation.levels) {
         // export segments only
         if (level.type === 'SEGMENT') {
-          for (let j = 0; j < level.items.length; j++) {
-            const segment: ISegment = <ISegment> level.items[j];
+          for (const levelItem of level.items) {
+            const segment: ISegment = levelItem as ISegment;
             result = addEntry(result, level, segment);
           }
         }
@@ -91,8 +90,8 @@ export class PraatTableConverter extends Converter {
           }
         }
 
-        for (let t = 0; t < tiers.length; t++) {
-          const olevel = new OLevel(tiers[t], 'SEGMENT');
+        for (const tierElem of tiers) {
+          const olevel = new OLevel(tierElem, 'SEGMENT');
           let start = 0;
           let puffer = 0;
           let id = 1;
@@ -115,7 +114,7 @@ export class PraatTableConverter extends Converter {
               }
               const samplerate = audiofile.samplerate;
 
-              if (tier === tiers[t]) {
+              if (tier === tierElem) {
                 if (isNaN(tmin)) {
                   console.error('column 1 is NaN');
                   return null;

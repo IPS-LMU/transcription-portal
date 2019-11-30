@@ -3,25 +3,6 @@ import {SourceType} from './index';
 import {AudioInfo} from './AudioInfo';
 
 export class AudioRessource extends MediaRessource {
-  set audiobuffer(value: AudioBuffer) {
-    this._audiobuffer = value;
-  }
-
-  get audiobuffer(): AudioBuffer {
-    return this._audiobuffer;
-  }
-
-  set info(value: AudioInfo) {
-    this._info = value;
-  }
-
-  get info(): AudioInfo {
-    return this._info;
-  }
-
-  private _info: AudioInfo;
-  private _audiobuffer: AudioBuffer;
-
   constructor(fullname: string, source: SourceType, info: AudioInfo, buffer?: ArrayBuffer, audiobuffer?: AudioBuffer, size?: number) {
     super(fullname, source, buffer, size);
     if (!(info.duration === null || info.duration === undefined) && !(info.duration === null
@@ -31,5 +12,25 @@ export class AudioRessource extends MediaRessource {
       throw Error('AudioRessource needs a correct instance of AudioInfo as parameter');
     }
     this._audiobuffer = audiobuffer;
+  }
+
+  private _info: AudioInfo;
+
+  get info(): AudioInfo {
+    return this._info;
+  }
+
+  set info(value: AudioInfo) {
+    this._info = value;
+  }
+
+  private _audiobuffer: AudioBuffer;
+
+  get audiobuffer(): AudioBuffer {
+    return this._audiobuffer;
+  }
+
+  set audiobuffer(value: AudioBuffer) {
+    this._audiobuffer = value;
   }
 }

@@ -1,17 +1,12 @@
-import {AudioTime} from '../audio/AudioTime';
+import {AudioTime} from '../audio';
 import {OSegment} from './AnnotJSON';
 
 export class Segment {
-  get changed(): boolean {
-    return this._changed;
-  }
+  constructor(public time: AudioTime) {
 
-  set changed(value: boolean) {
-    this._changed = value;
   }
 
   private _transcript = '';
-  private _changed = false;
 
   get transcript(): string {
     return this._transcript;
@@ -22,6 +17,16 @@ export class Segment {
       this.changed = true;
     }
     this._transcript = value;
+  }
+
+  private _changed = false;
+
+  get changed(): boolean {
+    return this._changed;
+  }
+
+  set changed(value: boolean) {
+    this._changed = value;
   }
 
   public static fromObj(obj: OSegment, samplerate: number): Segment {
@@ -36,10 +41,6 @@ export class Segment {
     }
 
     return null;
-  }
-
-  constructor(public time: AudioTime) {
-
   }
 
   public clone(): Segment {

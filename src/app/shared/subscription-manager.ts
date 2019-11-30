@@ -17,7 +17,7 @@ export class SubscriptionManager {
     this.subscriptions.push(
       {
         id: ++this.counter,
-        subscription: subscription
+        subscription
       }
     );
     return this.counter;
@@ -25,8 +25,8 @@ export class SubscriptionManager {
 
   public destroy() {
     if (!(this.subscriptions === null || this.subscriptions === undefined)) {
-      for (let i = 0; i < this.subscriptions.length; i++) {
-        this.subscriptions[i].subscription.unsubscribe();
+      for (const subscription of this.subscriptions) {
+        subscription.subscription.unsubscribe();
       }
       this.subscriptions = [];
     }

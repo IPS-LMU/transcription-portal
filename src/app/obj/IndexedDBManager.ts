@@ -6,43 +6,10 @@ export enum IDBMode {
 }
 
 export class IndexedDBManager {
-  get db(): IDBDatabase {
-    return this._db;
-  }
-
-  get idbtransaction(): IDBTransaction {
-    return this._idbtransaction;
-  }
-
   private indexedDB: IDBFactory;
   private readonly _idbtransaction: IDBTransaction;
   private idbkeyrange: IDBKeyRange;
-  private _db: IDBDatabase;
   private readonly dbname: string;
-
-
-  /***
-   * checks if browser supports indexedDB
-   * @returns {boolean}
-   */
-  public static isCompatible(): boolean {
-    const indexedDB = (<any> window).indexedDB
-      || (<any> window).mozIndexedDB
-      || (<any> window).webkitIndexedDB
-      || (<any> window).msIndexedDB;
-
-    const idbtransaction = (<any> window).IDBTransaction
-      || (<any> window).webkitIDBTransaction
-      || (<any> window).msIDBTransaction;
-
-    const idbkeyrange = (<any> window).IDBKeyRange
-      || (<any> window).webkitIDBKeyRange
-      || (<any> window).msIDBKeyRange;
-
-    return (!((indexedDB === null || indexedDB === undefined)
-      || (idbtransaction === null || idbtransaction === undefined)
-      || (idbkeyrange === null || idbkeyrange === undefined)));
-  }
 
   constructor(dbname: string) {
     this.dbname = dbname;
@@ -50,19 +17,51 @@ export class IndexedDBManager {
     if (!IndexedDBManager.isCompatible()) {
       console.error('Browser doesn\'t support a stable version of IndexedDB.');
     } else {
-      this.indexedDB = (<any> window).indexedDB
-        || (<any> window).mozIndexedDB
-        || (<any> window).webkitIndexedDB
-        || (<any> window).msIndexedDB;
+      this.indexedDB = window.indexedDB
+        || (window as any).mozIndexedDB
+        || (window as any).webkitIndexedDB
+        || (window as any).msIndexedDB;
 
-      this._idbtransaction = (<any> window).IDBTransaction
-        || (<any> window).webkitIDBTransaction
-        || (<any> window).msIDBTransaction;
+      this._idbtransaction = (window as any).IDBTransaction
+        || (window as any).webkitIDBTransaction
+        || (window as any).msIDBTransaction;
 
-      this.idbkeyrange = (<any> window).IDBKeyRange
-        || (<any> window).webkitIDBKeyRange
-        || (<any> window).msIDBKeyRange;
+      this.idbkeyrange = (window as any).IDBKeyRange
+        || (window as any).webkitIDBKeyRange
+        || (window as any).msIDBKeyRange;
     }
+  }
+
+  get idbtransaction(): IDBTransaction {
+    return this._idbtransaction;
+  }
+
+  private _db: IDBDatabase;
+
+  get db(): IDBDatabase {
+    return this._db;
+  }
+
+  /***
+   * checks if browser supports indexedDB
+   */
+  public static isCompatible(): boolean {
+    const indexedDB = (window as any).indexedDB
+      || (window as any).mozIndexedDB
+      || (window as any).webkitIndexedDB
+      || (window as any).msIndexedDB;
+
+    const idbtransaction = (window as any).IDBTransaction
+      || (window as any).webkitIDBTransaction
+      || (window as any).msIDBTransaction;
+
+    const idbkeyrange = (window as any).IDBKeyRange
+      || (window as any).webkitIDBKeyRange
+      || (window as any).msIDBKeyRange;
+
+    return (!((indexedDB === null || indexedDB === undefined)
+      || (idbtransaction === null || idbtransaction === undefined)
+      || (idbkeyrange === null || idbkeyrange === undefined)));
   }
 
   public open(version?: number): Observable<any> {
@@ -89,21 +88,21 @@ export class IndexedDBManager {
     });
   }
 
-  public getObjectStore = (store_name: string, mode: IDBMode): IDBObjectStore => {
-    let mode_str: IDBTransactionMode = 'readonly';
+  public getObjectStore = (storeName: string, mode: IDBMode): IDBObjectStore => {
+    let modeStr: IDBTransactionMode = 'readonly';
 
     if (mode === IDBMode.READWRITE) {
-      mode_str = 'readwrite';
+      modeStr = 'readwrite';
     }
-    const txn = this.db.transaction([store_name], mode_str);
-    return txn.objectStore(store_name);
+    const txn = this.db.transaction([storeName], modeStr);
+    return txn.objectStore(storeName);
   }
 
-  public objectStoreExists = (store_name: string): Promise<void> => {
+  public objectStoreExists = (storeName: string): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      const mode_str: IDBTransactionMode = 'readonly';
+      const modeStr: IDBTransactionMode = 'readonly';
 
-      const txn = this.db.transaction([store_name], mode_str);
+      const txn = this.db.transaction([storeName], modeStr);
       txn.onerror = () => {
         reject();
       };
@@ -113,10 +112,10 @@ export class IndexedDBManager {
     });
   }
 
-  public get = (store_name: string | IDBObjectStore, key: string | number): Promise<any> => {
+  public get = (storeName: string | IDBObjectStore, key: string | number): Promise<any> => {
     return new Promise<any>(
       (resolve, reject) => {
-        const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READONLY);
+        const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READONLY);
         if (key !== null && key !== undefined) {
           const request: IDBRequest = store.get(key);
           request.onsuccess = (idbrequest: any) => {
@@ -133,14 +132,14 @@ export class IndexedDBManager {
     );
   }
 
-  public getAll = (store_name: string | IDBObjectStore): Promise<any[]> => {
+  public getAll = (storeName: string | IDBObjectStore): Promise<any[]> => {
     return new Promise<any>(
       (resolve, reject) => {
         const result = [];
-        const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READONLY);
+        const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READONLY);
         const cursorRequest = store.openCursor();
 
-        cursorRequest.onsuccess = function (event: any) {
+        cursorRequest.onsuccess = (event: any) => {
           const cursor = event.target.result;
 
           if (cursor) {
@@ -159,11 +158,11 @@ export class IndexedDBManager {
     );
   }
 
-  public save = (store_name: string | IDBObjectStore, key, data): Promise<any> => {
+  public save = (storeName: string | IDBObjectStore, key, data): Promise<any> => {
     return new Promise<any>(
       (resolve, reject) => {
         try {
-          const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READWRITE);
+          const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READWRITE);
 
           if (data === null || data === undefined) {
             data = {};
@@ -186,17 +185,17 @@ export class IndexedDBManager {
     );
   }
 
-  public saveSequential = (store_name: string | IDBObjectStore, data: { key: string, value: any }[]): Promise<void> => {
+  public saveSequential = (storeName: string | IDBObjectStore, data: { key: string, value: any }[]): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
 
-        const wrapper = (acc: number) => {
-          if (acc < data.length) {
-            if (data[acc].hasOwnProperty('key') && data[acc].hasOwnProperty('value')) {
-              return this.save(store_name, data[acc].key, data[acc].value).then(() => {
-                wrapper(++acc);
-              });
-            } else {
-              reject(new Error('saveSync data parameter has invalid elements'));
+      const wrapper = (acc: number) => {
+        if (acc < data.length) {
+          if (data[acc].hasOwnProperty('key') && data[acc].hasOwnProperty('value')) {
+            return this.save(storeName, data[acc].key, data[acc].value).then(() => {
+              wrapper(++acc);
+            });
+          } else {
+            reject(new Error('saveSync data parameter has invalid elements'));
             }
           } else {
             resolve();
@@ -208,10 +207,10 @@ export class IndexedDBManager {
     );
   }
 
-  public remove = (store_name: string | IDBObjectStore, key: string | number): Promise<any> => {
+  public remove = (storeName: string | IDBObjectStore, key: string | number): Promise<any> => {
     return new Promise<any>(
       (resolve, reject) => {
-        const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READWRITE);
+        const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READWRITE);
         const request = store.delete(key);
         request.onsuccess = (result: any) => {
           resolve(result);
@@ -223,10 +222,10 @@ export class IndexedDBManager {
       });
   }
 
-  public clear = (store_name: string | IDBObjectStore): Promise<any> => {
+  public clear = (storeName: string | IDBObjectStore): Promise<any> => {
     return new Promise<any>(
       (resolve, reject) => {
-        const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READWRITE);
+        const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READWRITE);
         const request = store.clear();
         request.onsuccess = (result: any) => {
           resolve(result);
@@ -242,10 +241,10 @@ export class IndexedDBManager {
     this.db.close();
   }
 
-  public saveArraySequential = (array: any[], store_name: string | IDBObjectStore, key: any): Promise<void> => {
+  public saveArraySequential = (array: any[], storeName: string | IDBObjectStore, key: any): Promise<void> => {
     return new Promise<void>(
       (resolve, reject) => {
-        const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READWRITE);
+        const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READWRITE);
 
         const wrapper = (acc: number) => {
           if (acc < array.length) {
@@ -282,9 +281,9 @@ export class IndexedDBManager {
     });
   }
 
-  public count(store_name: string | IDBObjectStore): Promise<number> {
+  public count(storeName: string | IDBObjectStore): Promise<number> {
     return new Promise<number>((resolve, reject) => {
-      const store = (typeof store_name !== 'string') ? store_name : this.getObjectStore(store_name, IDBMode.READONLY);
+      const store = (typeof storeName !== 'string') ? storeName : this.getObjectStore(storeName, IDBMode.READONLY);
 
       const countRequest = store.count();
       countRequest.onsuccess = () => {

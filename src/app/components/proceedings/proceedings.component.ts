@@ -79,36 +79,28 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Input() taskList: TaskList = new TaskList();
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-  private readonly fileAPIsupported: boolean = false;
   public selectedRows: number[] = [];
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
-  private shiftStart = -1;
-  private allSelected = false;
-
-  private selectionBlocked = false;
-
-  private shortcutManager = new ShortcutManager();
-
   public allDirOpened: 'opened' | 'closed' = 'closed';
-
   @Input() shortstyle = false;
   @Input() isClosed = false;
-
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public feedbackRequested = new EventEmitter<Operation>();
-
   @ViewChild('content', {static: true}) content: DownloadModalComponent;
   @ViewChild('inner', {static: true}) inner: ElementRef;
-
   @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
   @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
-
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
+  private readonly fileAPIsupported: boolean = false;
+  private shiftStart = -1;
+  private allSelected = false;
+  private selectionBlocked = false;
+  private shortcutManager = new ShortcutManager();
 
   constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService,
               public storage: StorageService) {
@@ -124,13 +116,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnInit() {
     this.cd.detach();
-    if (!this.cd['destroyed']) {
+    if (!(this.cd as any).destroyed) {
       this.cd.markForCheck();
       this.cd.detectChanges();
     }
 
     setInterval(() => {
-      if (!this.cd['destroyed']) {
+      if (!(this.cd as any).destroyed) {
         this.cd.detectChanges();
         this.cd.markForCheck();
       }
@@ -171,13 +163,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       const droppedfiles = $event.dataTransfer.items;
       const files: (FileInfo | DirectoryInfo)[] = [];
 
-      for (let i = 0; i < droppedfiles.length; i++) {
-        const item: any = droppedfiles[i].webkitGetAsEntry();
+      for (const droppedItem of droppedfiles) {
+        const item: any = droppedItem.webkitGetAsEntry();
 
         if (item.isDirectory) {
           // TODO fix order!
           promises.push(new Promise<void>((resolve, reject) => {
-            DirectoryInfo.fromFolderObject(droppedfiles[i]).then((dir) => {
+            DirectoryInfo.fromFolderObject(droppedItem).then((dir) => {
               // check added directory
               files.push(dir);
               resolve();
@@ -188,7 +180,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           }));
         } else {
           // check added file
-          const file = droppedfiles[i].getAsFile();
+          const file = droppedItem.getAsFile();
           if (!(file === null || file === undefined)) {
             // check file
             if (file.name.indexOf('.') > -1) {
@@ -289,11 +281,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
               this.shiftStart = -1;
             }
           } else {
-            const old_id = (this.selectedRows.length > 0) ? this.selectedRows[0] : -1;
+            const oldId = (this.selectedRows.length > 0) ? this.selectedRows[0] : -1;
 
             this.selectedRows = [];
 
-            if (indexFromTaskList !== old_id) {
+            if (indexFromTaskList !== oldId) {
               this.shiftStart = indexFromTaskList;
               this.selectedRows.push(indexFromTaskList);
             }
@@ -320,7 +312,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
 
-  onContextMenuOptionSelected(option: String) {
+  onContextMenuOptionSelected(option: string) {
     if (option === 'delete') {
       this.deleteSelectedTasks();
     } else if (option === 'appendings-remove') {
@@ -332,8 +324,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   removeAppendings() {
-    for (let i = 0; i < this.selectedRows.length; i++) {
-      const index = this.selectedRows[i];
+    for (const index of this.selectedRows) {
       const entry = this.taskList.getEntryByIndex(index);
       if (entry instanceof Task) {
         if (entry.files.length > 1) {
@@ -342,8 +333,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           entry.operations[1].changeState(entry.state);
         }
       } else {
-        for (let j = 0; j < entry.entries.length; j++) {
-          const task = entry.entries[j] as Task;
+        for (const entryElem of entry.entries) {
+          const task = entryElem as Task;
           if (task.files.length > 1) {
             task.files.splice(1);
             task.operations[1].enabled = this.taskService.operations[1].enabled;
@@ -497,12 +488,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   getMailToLink(task: Task) {
     if (task.state === TaskState.FINISHED) {
-      const tool_url = (<EmuOperation>task.operations[4]).getToolURL();
+      const toolURL = (task.operations[4] as EmuOperation).getToolURL();
       let subject = 'OH-Portal Links';
       let body = '' +
         'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[1].results[0].url + '\n\n' +
         'MAUS:\n' + task.operations[3].results[0].url + '\n\n' +
-        'EMU WebApp:\n' + tool_url;
+        'EMU WebApp:\n' + toolURL;
       subject = encodeURI(subject);
       body = encodeURIComponent(body);
 
@@ -525,9 +516,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       if (!previous.enabled && !operation.enabled) {
         previous.enabled = true;
 
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
-          const task_operation = task.operations[index - 1];
+        for (const task of tasks) {
+          const taskOperation = task.operations[index - 1];
           const currOperation = task.operations[index];
           // check if transcript was added to the task
           const hasTranscript = currOperation.task.files.findIndex((a) => {
@@ -535,8 +525,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
           }) > -1;
 
           if (!hasTranscript) {
-            if (task_operation.state === TaskState.PENDING) {
-              task_operation.enabled = previous.enabled;
+            if (taskOperation.state === TaskState.PENDING) {
+              taskOperation.enabled = previous.enabled;
             }
 
             if (currOperation.state === TaskState.PENDING) {
@@ -549,13 +539,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
-          const task_operation = task.operations[index + 1];
+        for (const task of tasks) {
+          const taskOperation = task.operations[index + 1];
           const currOperation = task.operations[index];
 
-          if (task_operation.state === TaskState.PENDING) {
-            task_operation.enabled = next.enabled;
+          if (taskOperation.state === TaskState.PENDING) {
+            taskOperation.enabled = next.enabled;
           }
           if (currOperation.state === TaskState.PENDING) {
             currOperation.enabled = operation.enabled;
@@ -565,13 +554,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     } else if (operation instanceof G2pMausOperation) {
       next.enabled = !next.enabled;
 
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-        const task_operation = task.operations[index + 1];
+      for (const task of tasks) {
+        const taskOperation = task.operations[index + 1];
         const currOperation = task.operations[index];
 
-        if (task_operation.state === TaskState.PENDING) {
-          task_operation.enabled = next.enabled;
+        if (taskOperation.state === TaskState.PENDING) {
+          taskOperation.enabled = next.enabled;
         }
         if (currOperation.state === TaskState.PENDING) {
           currOperation.enabled = operation.enabled;
@@ -590,8 +578,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     for (let j = 0; j < this.taskService.operations.length; j++) {
       const operation = this.taskService.operations[j];
 
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
+      for (const task of tasks) {
         const currOperation = task.operations[j];
 
         // check if transcript was added to the task
@@ -668,45 +655,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     });
   }
 
-  private deleteSelectedTasks() {
-    const removeQueue = [];
-
-    for (let i = 0; i < this.selectedRows.length; i++) {
-      const index = this.selectedRows[i];
-      const entry = this.taskList.getEntryByIndex(index);
-
-      let dirFound = false;
-      if (entry instanceof Task && !(entry.directory === null || entry.directory === undefined)) {
-        const dirIndex = this.taskList.getIndexByEntry(entry.directory);
-
-        // found folder?
-        dirFound = this.selectedRows.findIndex((a) => {
-          return a === dirIndex;
-        }) > -1;
-      }
-
-      if (entry === null) {
-        console.error(`can't remove! entry is null!`);
-      }
-
-      if (!dirFound && entry !== null) {
-        removeQueue.push(entry);
-      }
-    }
-
-    for (let i = 0; i < removeQueue.length; i++) {
-      const entry = removeQueue[i];
-      this.taskService.taskList.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
-    }
-
-    this.selectedRows = [];
-    this.shiftStart = -1;
-    this.cd.markForCheck();
-    this.cd.detectChanges();
-  }
-
   public removeEntry(event, entry: Task | TaskDirectory) {
     this.taskService.taskList.removeEntry(entry, true).catch((error) => {
       console.error(error);
@@ -776,6 +724,43 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   public updateChanges() {
+    this.cd.markForCheck();
+    this.cd.detectChanges();
+  }
+
+  private deleteSelectedTasks() {
+    const removeQueue = [];
+
+    for (const index of this.selectedRows) {
+      const entry = this.taskList.getEntryByIndex(index);
+
+      let dirFound = false;
+      if (entry instanceof Task && !(entry.directory === null || entry.directory === undefined)) {
+        const dirIndex = this.taskList.getIndexByEntry(entry.directory);
+
+        // found folder?
+        dirFound = this.selectedRows.findIndex((a) => {
+          return a === dirIndex;
+        }) > -1;
+      }
+
+      if (entry === null) {
+        console.error(`can't remove! entry is null!`);
+      }
+
+      if (!dirFound && entry !== null) {
+        removeQueue.push(entry);
+      }
+    }
+
+    for (const entry of removeQueue) {
+      this.taskService.taskList.removeEntry(entry, true).catch((error) => {
+        console.error(error);
+      });
+    }
+
+    this.selectedRows = [];
+    this.shiftStart = -1;
     this.cd.markForCheck();
     this.cd.detectChanges();
   }

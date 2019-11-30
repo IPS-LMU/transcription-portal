@@ -1,17 +1,14 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
-import {Task} from '../tasks/index';
+import {Task, TaskState} from '../tasks';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {TaskState} from '../tasks/task';
 import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 
 export class OCTRAOperation extends ToolOperation {
-  protected operations: Operation[];
-  public resultType = 'BAS Partitur Format';
 
   public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
     super(name, commands, title, shortTitle, task, state, id);
@@ -20,7 +17,12 @@ export class OCTRAOperation extends ToolOperation {
       'The editor Octra allows you to correct or create such transcripts.';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public resultType = 'BAS Partitur Format';
+
+  protected operations: Operation[];
+
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this.updateProtocol('');
     this.operations = operations;
     this.changeState(TaskState.READY);
@@ -82,9 +84,28 @@ export class OCTRAOperation extends ToolOperation {
     return result;
   }
 
+  public clone(task?: Task): OCTRAOperation {
+    const selectedTask = ((task === null || task === undefined)) ? this.task : task;
+    return new OCTRAOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state);
+  }
+
+  public fromAny(operationObj: any, commands: string[], task: Task): OCTRAOperation {
+    const result = new OCTRAOperation(operationObj.name, commands, this.title,
+      this.shortTitle, task, operationObj.state, operationObj.id);
+    for (const operationResult of operationObj.results) {
+      const resultClass = FileInfo.fromAny(operationResult);
+      result.results.push(resultClass);
+    }
+    result._time = operationObj.time;
+    result.updateProtocol(operationObj.protocol);
+    result.operations = task.operations;
+    result.enabled = operationObj.enabled;
+    return result;
+  }
+
   public getToolURL(): string {
-    if (!((<UploadOperation>this.operations[0]).wavFile === null || (<UploadOperation>this.operations[0]).wavFile === undefined)) {
-      const audio = `audio=${encodeURIComponent((<UploadOperation>this.operations[0]).wavFile.url)}`;
+    if (!((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
+      const audio = `audio=${encodeURIComponent((this.operations[0] as UploadOperation).wavFile.url)}`;
       let transcript = `transcript=`;
       const embedded = `embedded=1`;
 
@@ -121,25 +142,5 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public onMouseOver() {
-  }
-
-  public fromAny(operationObj: any, commands: string[], task: Task): OCTRAOperation {
-    const result = new OCTRAOperation(operationObj.name, commands, this.title,
-      this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const resultObj = operationObj.results[k];
-      const resultClass = FileInfo.fromAny(resultObj);
-      result.results.push(resultClass);
-    }
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol);
-    result.operations = task.operations;
-    result.enabled = operationObj.enabled;
-    return result;
-  }
-
-  public clone(task?: Task): OCTRAOperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new OCTRAOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
   }
 }

@@ -8,13 +8,17 @@ import {Operation} from '../../../obj/operations/operation';
 })
 export class ContextMenuComponent implements OnInit {
 
-  @Input() selected_tasks: number[] = [];
+  @Input() selectedTasks: number[] = [];
   @Input() selectedOperationType: Operation;
   @Output() optionselected: EventEmitter<string> = new EventEmitter<string>();
 
   @Input() hid = true;
 
   constructor() {
+  }
+
+  public get entriesCount(): number {
+    return this.selectedTasks.length;
   }
 
   ngOnInit() {
@@ -28,10 +32,6 @@ export class ContextMenuComponent implements OnInit {
   onCompress() {
     this.optionselected.emit('compress');
     this.hid = false;
-  }
-
-  public get entriesCount(): number {
-    return this.selected_tasks.length;
   }
 
   public onRemoveAppendings() {

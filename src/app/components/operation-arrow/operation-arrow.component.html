@@ -1,6 +1,6 @@
-<div class="arrow-outer" #outer [ngClass]="{
+<div #outer [ngClass]="{
     'arrow-start': first,
     'arrow-middle': !first && type !== 'circle',
     'arrow-end': !first && type === 'circle'
-}">
+}" class="arrow-outer">
 </div>

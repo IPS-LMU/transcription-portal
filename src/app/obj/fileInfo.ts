@@ -3,44 +3,22 @@ import {unescape} from 'querystring';
 import {HttpClient} from '@angular/common/http';
 
 export class FileInfo extends DataInfo {
-  get online(): boolean {
-    return this._online;
-  }
-
-  set online(value: boolean) {
-    this._online = value;
+  public constructor(fullname: string, type: string, size: number, file?: File) {
+    super(FileInfo.extractFileName(fullname).name, type, size);
+    const extraction = FileInfo.extractFileName(fullname);
+    if (!(extraction === null || extraction === undefined)) {
+      this._extension = extraction.extension;
+      this._file = file;
+    } else {
+      throw Error('could not extract file name.');
+    }
   }
 
   /**
    * returns if the file is ready for processing
-   * @returns {boolean}
    */
   get available(): boolean {
     return this.online || !(this._file === undefined || this._file === null);
-  }
-
-  set file(value: File) {
-    this._file = value;
-  }
-
-  get url(): string {
-    return this._url;
-  }
-
-  set url(value: string) {
-    this._url = value;
-  }
-
-  get file(): File {
-    return this._file;
-  }
-
-  /**
-   * extension including the dot. (this must contain a dot!)
-   * @returns {string}
-   */
-  get extension(): string {
-    return this._extension;
   }
 
   public get fullname(): string {
@@ -55,21 +33,44 @@ export class FileInfo extends DataInfo {
     this._extension = str2;
   }
 
-  public constructor(fullname: string, type: string, size: number, file?: File) {
-    super(FileInfo.extractFileName(fullname).name, type, size);
-    const extraction = FileInfo.extractFileName(fullname);
-    if (!(extraction === null || extraction === undefined)) {
-      this._extension = extraction.extension;
-      this._file = file;
-    } else {
-      throw Error('could not extract file name.');
-    }
+  protected _extension: string;
+
+  /**
+   * extension including the dot. (this must contain a dot!)
+   */
+  get extension(): string {
+    return this._extension;
   }
 
-  protected _extension: string;
   protected _file: File;
+
+  get file(): File {
+    return this._file;
+  }
+
+  set file(value: File) {
+    this._file = value;
+  }
+
   protected _url: string;
+
+  get url(): string {
+    return this._url;
+  }
+
+  set url(value: string) {
+    this._url = value;
+  }
+
   private _online = true;
+
+  get online(): boolean {
+    return this._online;
+  }
+
+  set online(value: boolean) {
+    this._online = value;
+  }
 
   public static fromFileObject(file: File) {
     return new FileInfo(file.name, file.type, file.size, file);
@@ -93,13 +94,13 @@ export class FileInfo extends DataInfo {
     return name.replace(/[\s\/?!%*()[\]{}&:=+#'<>^;,Ââ°]/g, '_');
   }
 
-  public static renameFile(file: File, new_name: string, attributes: any): Promise<File> {
+  public static renameFile(file: File, newName: string, attributes: any): Promise<File> {
     return new Promise<File>(
       (resolve, reject) => {
         const reader = new FileReader();
 
         reader.onload = (result: any) => {
-          resolve(new File([result.target.result], new_name, attributes));
+          resolve(new File([result.target.result], newName, attributes));
         };
         reader.onerror = (error) => {
           reject(error);
@@ -112,21 +113,21 @@ export class FileInfo extends DataInfo {
 
   public static extractFileName(fullname: string): { name: string, extension: string } {
     if (!(fullname === null || fullname === undefined) && fullname !== '') {
-      let lastslash;
-      if ((lastslash = fullname.lastIndexOf('/')) > -1) {
+      const lastSlash = fullname.lastIndexOf('/');
+      if (lastSlash > -1) {
         // if path remove all but the filename
-        fullname = fullname.substr(lastslash + 1);
+        fullname = fullname.substr(lastSlash + 1);
       }
 
-      let extension_begin;
-      if ((extension_begin = fullname.lastIndexOf('.')) > -1) {
+      const extensionBegin = fullname.lastIndexOf('.');
+      if (extensionBegin > -1) {
         // split name and extension
-        const name = fullname.substr(0, extension_begin);
-        const extension = fullname.substr(extension_begin);
+        const name = fullname.substr(0, extensionBegin);
+        const extension = fullname.substr(extensionBegin);
 
         return {
-          name: name,
-          extension: extension
+          name,
+          extension
         };
       } else {
         throw new Error('invalid fullname. Fullname must contain the file extension');
@@ -152,16 +153,18 @@ export class FileInfo extends DataInfo {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsText(file, encoding);
-      reader.onload = () => resolve(<string>reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = error => reject(error);
     });
   }
 
   public static getFileFromContent(content: string, filename: string, type?: string): File {
-    const properties = {};
+    const properties = {
+      type: ''
+    };
 
     if (type !== undefined && type !== '') {
-      properties['type'] = type;
+      properties.type = type;
     }
 
     return new File([content], filename, properties);
@@ -240,7 +243,7 @@ export class FileInfo extends DataInfo {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(<string>reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = error => reject(error);
     });
   }

@@ -1,4 +1,4 @@
-import { ExpandDirective } from './expand.directive';
+import {ExpandDirective} from './expand.directive';
 
 describe('ExpandDirective', () => {
   it('should create an instance', () => {

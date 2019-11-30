@@ -1,8 +1,8 @@
-import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {StatisticsService} from '../../shared/statistics.service';
 import {TaskService} from '../../obj/tasks/task.service';
-import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap';
+import {ModalDirective} from 'ngx-bootstrap';
 import {ChartType} from 'chart.js';
 
 @Component({
@@ -13,11 +13,12 @@ import {ChartType} from 'chart.js';
 export class StatisticsModalComponent implements OnInit, OnDestroy {
 
   @ViewChild('statisticsModal', {static: true}) statisticsModal: ModalDirective;
-
-  private _subscrmanager: SubscriptionManager = new SubscriptionManager();
-
   // Pie
   public pieChartType: ChartType = 'pie';
+  private _subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  constructor(public statisticsService: StatisticsService, public taskService: TaskService) {
+  }
 
   // events
   public chartClicked(e: any): void {
@@ -29,9 +30,6 @@ export class StatisticsModalComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this._subscrmanager.destroy();
     this.statisticsService.destroy();
-  }
-
-  constructor(public statisticsService: StatisticsService, public taskService: TaskService) {
   }
 
   ngOnInit() {

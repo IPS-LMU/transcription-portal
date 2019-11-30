@@ -49,9 +49,7 @@ export class StatisticsService {
 
     const durations = [0, 0, 0, 0];
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
+    for (const task of tasks) {
       for (let j = 0; j < task.operations.length - 1; j++) {
         const operation = task.operations[j];
 

@@ -1,28 +1,18 @@
 import {BrowserInfo} from './BrowserInfo';
 
 export class ShortcutManager {
-  get pressedKey(): { code: number; name: string } {
-    return this._pressedKey;
-  }
-
-  private _pressedKey = {
-    code: -1,
-    name: ''
-  };
-
   private keyMap = {
     mac: {
-      'select': 'CMD',
+      select: 'CMD',
       'select all': 'CMD + A',
-      'remove': 'CMD + BACKSPACE'
+      remove: 'CMD + BACKSPACE'
     },
     pc: {
-      'select': 'CTRL',
+      select: 'CTRL',
       'select all': 'CTRL + A',
-      'remove': 'CTRL + BACKSPACE'
+      remove: 'CTRL + BACKSPACE'
     }
   };
-
   private table: any = [
     {
       name: 'CMD',
@@ -79,6 +69,15 @@ export class ShortcutManager {
 
   }
 
+  private _pressedKey = {
+    code: -1,
+    name: ''
+  };
+
+  get pressedKey(): { code: number; name: string } {
+    return this._pressedKey;
+  }
+
   public checkKeyEvent(event: KeyboardEvent): Promise<{ command: string, platform: string }> {
     return new Promise<{ command: string, platform: string }>((resolve) => {
       if (event.type === 'keydown') {
@@ -95,7 +94,7 @@ export class ShortcutManager {
           event.preventDefault();
           resolve({
             platform: BrowserInfo.platform,
-            command: command
+            command
           });
         }
       } else if (event.type === 'keyup') {
@@ -124,13 +123,11 @@ export class ShortcutManager {
   /**
    *
    * gets the name of a special Key by number
-   * @param code
-   * @returns {string}
    */
   private getNameByCode(code: number): string {
-    for (let i = 0; i < this.table.length; i++) {
-      if (this.table[i].keyCode === code) {
-        return this.table[i].name;
+    for (const elem of this.table) {
+      if (elem.keyCode === code) {
+        return elem.name;
       }
     }
     return '';
@@ -156,23 +153,23 @@ export class ShortcutManager {
       name = 'CTRL';
     }
 
-    let is_combination = false;
+    let isCombination = false;
     let comboKey = '';
 
     // only one kombination permitted
     if (alt && !(ctrl || shift)) {
-      is_combination = true;
+      isCombination = true;
     } else if (ctrl && !(alt || shift)) {
-      is_combination = true;
+      isCombination = true;
     } else if (shift && !(alt || ctrl)) {
-      is_combination = true;
+      isCombination = true;
     }
 
     if (this._pressedKey.code > -1) {
-      is_combination = true;
+      isCombination = true;
     }
 
-    if (is_combination) {
+    if (isCombination) {
       if (alt) {
         comboKey = 'ALT';
       } else if (ctrl) {

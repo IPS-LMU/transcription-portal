@@ -10,8 +10,8 @@ import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
 import {StorageService} from '../../storage.service';
 import {Preprocessor, QueueItem} from '../preprocessor';
-import {WavFormat} from '../audio/AudioFormats/index';
-import {AudioInfo} from '../audio/index';
+import {WavFormat} from '../audio/AudioFormats';
+import {AudioInfo} from '../audio';
 import {AppInfo} from '../../app.info';
 import {TaskEntry} from './task-entry';
 import {ASROperation} from '../operations/asr-operation';
@@ -26,27 +26,21 @@ import {OHLanguageObject} from '../oh-config';
 
 @Injectable()
 export class TaskService implements OnDestroy {
-  public get accessCode(): string {
-    return this._accessCode;
-  }
-  get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
-    return this._statistics;
-  }
+  public newfiles = false;
+  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' = 'not started';
+  public protocolURL: SafeResourceUrl;
+  public protocolFileName = '';
+  public errorscountchange = new EventEmitter<number>();
+  public selectedlanguage: OHLanguageObject;
+  private options = {
+    max_running_tasks: 3
+  };
+  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private state: TaskState = TaskState.READY;
 
-  set splitPrompt(value: string) {
-    this._splitPrompt = value;
-  }
-
-  get splitPrompt(): string {
-    return this._splitPrompt;
-  }
-
-  get preprocessor(): Preprocessor {
-    return this._preprocessor;
-  }
-
-  get protocol_array(): any[] {
-    return this._protocol_array;
+  constructor(public httpclient: HttpClient, private notification: NotificationService,
+              private storage: StorageService, private sanitizer: DomSanitizer,
+              private alertService: AlertService) {
   }
 
   private _taskList: TaskList;
@@ -56,24 +50,21 @@ export class TaskService implements OnDestroy {
   }
 
   private _operations: Operation[] = [];
-  public newfiles = false;
 
   get operations(): Operation[] {
     return this._operations;
   }
 
-  private options = {
-    max_running_tasks: 3
-  };
+  private _accessCode = '';
+
+  public get accessCode(): string {
+    return this._accessCode;
+  }
 
   public set accessCode(value: string) {
     this.storage.saveUserSettings('accessCode', value);
     this._accessCode = value;
   }
-
-  private _accessCode = '';
-
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   private _statistics = {
     queued: 0,
@@ -83,20 +74,31 @@ export class TaskService implements OnDestroy {
     errors: 0
   };
 
-  private _protocol_array = [];
+  get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
+    return this._statistics;
+  }
+
+  private _protocolArray = [];
+
+  get protocolArray(): any[] {
+    return this._protocolArray;
+  }
+
   private _splitPrompt = 'PENDING';
 
-  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' = 'not started';
+  get splitPrompt(): string {
+    return this._splitPrompt;
+  }
 
-  public protocolURL: SafeResourceUrl;
-  public protocolFileName = '';
-
-  public errorscountchange = new EventEmitter<number>();
-
-  public selectedlanguage: OHLanguageObject;
-  private state: TaskState = TaskState.READY;
+  set splitPrompt(value: string) {
+    this._splitPrompt = value;
+  }
 
   private _preprocessor: Preprocessor = new Preprocessor();
+
+  get preprocessor(): Preprocessor {
+    return this._preprocessor;
+  }
 
   public get isProcessing(): boolean {
     return (this.overallState === 'processing');
@@ -136,11 +138,6 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  constructor(public httpclient: HttpClient, private notification: NotificationService,
-              private storage: StorageService, private sanitizer: DomSanitizer,
-              private alertService: AlertService) {
-  }
-
   public init() {
     this._taskList = new TaskList();
     this._operations = [
@@ -155,8 +152,7 @@ export class TaskService implements OnDestroy {
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
       (item) => {
-        for (let i = 0; i < item.results.length; i++) {
-          const result = item.results[i];
+        for (const result of item.results) {
           let foundTask: Task = null;
 
           if (result instanceof Task) {
@@ -182,10 +178,10 @@ export class TaskService implements OnDestroy {
             }
           } else {
             for (let j = 0; j < result.entries.length; j++) {
-              const entry = <Task>result.entries[j];
-              const tasks: Task[] = <Task[]>result.entries.filter((a) => {
+              const entry = result.entries[j] as Task;
+              const tasks: Task[] = result.entries.filter((a) => {
                 return a instanceof Task;
-              });
+              }) as Task[];
 
               // search for grouped files in this new directory
               for (let v = j + 1; v < tasks.length; v++) {
@@ -202,7 +198,7 @@ export class TaskService implements OnDestroy {
 
                     entry.addFile(task.files[0]);
 
-                    (<TaskDirectory>result).entries.splice(v, 1);
+                    (result as TaskDirectory).entries.splice(v, 1);
                     tasks.splice(v, 1);
                     v--;
 
@@ -257,8 +253,8 @@ export class TaskService implements OnDestroy {
           if (event.entry instanceof Task) {
             this.listenToTaskEvents(event.entry);
           } else {
-            for (let i = 0; i < event.entry.entries.length; i++) {
-              const task = <Task>event.entry.entries[i];
+            for (const entry of event.entry.entries) {
+              const task = entry as Task;
               this.listenToTaskEvents(task);
             }
           }
@@ -291,17 +287,16 @@ export class TaskService implements OnDestroy {
 
   public importDBData(dbEntries: any[]) {
 
-    const IDBtasks = dbEntries[0];
+    const idbTasks = dbEntries[0];
 
-    if (!(IDBtasks === null || IDBtasks === undefined)) {
-      this.newfiles = IDBtasks.length > 0;
+    if (!(idbTasks === null || idbTasks === undefined)) {
+      this.newfiles = idbTasks.length > 0;
 
       // make sure that taskCounter and operation counter are equal to their biggest value
       let maxTaskCounter = 0;
       let maxOperationCounter = 0;
 
-      for (let i = 0; i < IDBtasks.length; i++) {
-        const taskObj = IDBtasks[i];
+      for (const taskObj of idbTasks) {
         if (taskObj.type === 'task') {
 
           if ((taskObj.asr === null || taskObj.asr === undefined)) {
@@ -318,13 +313,10 @@ export class TaskService implements OnDestroy {
 
           maxTaskCounter = Math.max(maxTaskCounter, task.id);
 
-          for (let j = 0; j < task.operations.length; j++) {
-            const operation = task.operations[j];
-
+          for (const operation of task.operations) {
             maxOperationCounter = Math.max(maxOperationCounter, operation.id);
 
-            for (let k = 0; k < operation.results.length; k++) {
-              const opResult = operation.results[k];
+            for (const opResult of operation.results) {
               if (!(opResult.url === null || opResult.url === undefined)) {
                 this.existsFile(opResult.url).then(() => {
                   opResult.online = true;
@@ -350,14 +342,11 @@ export class TaskService implements OnDestroy {
         } else {
           const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
 
-          for (let l = 0; l < taskDir.entries.length; l++) {
-            const task = <Task>taskDir.entries[l];
-            for (let j = 0; j < task.operations.length; j++) {
-              const operation = task.operations[j];
+          for (const taskElem of taskDir.entries) {
+            const task = taskElem as Task;
+            for (const operation of task.operations) {
 
-              for (let k = 0; k < operation.results.length; k++) {
-                const opResult = operation.results[k];
-
+              for (const opResult of operation.results) {
                 if (!(opResult.url === null || opResult.url === undefined)) {
                   this.existsFile(opResult.url).then(() => {
                     opResult.online = true;
@@ -400,9 +389,7 @@ export class TaskService implements OnDestroy {
     }
     if (!(dbEntries[1] === null || dbEntries[1] === undefined)) {
       // read userSettings
-      for (let i = 0; i < dbEntries[1].length; i++) {
-        const userSetting = dbEntries[1][i];
-
+      for (const userSetting of dbEntries[1]) {
         switch (userSetting.name) {
           case ('notification'):
             this.notification.permissionGranted = userSetting.value.enabled;
@@ -420,53 +407,17 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  private listenToTaskEvents(task: Task) {
-    this.subscrmanager.add(task.opstatechange.subscribe((event) => {
-      const operation = task.getOperationByID(event.opID);
-      const opName = operation.name;
-      if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${task.files[0].name} manually.`);
-      } else if (event.newState === TaskState.ERROR) {
-        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${task.files[0].name}.
- For more information hover over the red "X" icon.`);
-      } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification(`"${operation.title}" successful`, `You can now open phonetic
-  details of ${task.files[0].name}.`);
-      }
-
-      this.updateStatistics();
-      const lastOp = task.operations[task.operations.length - 1];
-      if (this._statistics.running > 1 || (this._statistics.running === 1
-        && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
-        if (operation.state === TaskState.UPLOADING) {
-          this.state = TaskState.UPLOADING;
-        } else {
-          this.state = TaskState.PROCESSING;
-        }
-      } else {
-        this.state = TaskState.READY;
-      }
-      this.storage.saveTask(task);
-
-      this.updateProtocolURL().then((url) => {
-        this.protocolURL = url;
-      });
-    }));
-  }
-
   public checkFiles() {
     if (this.splitPrompt !== 'BOTH') {
       const removeList = [];
       const promises = [];
 
-      for (let i = 0; i < this.taskList.entries.length; i++) {
-        let entry = this.taskList.entries[i];
-
-        if (entry instanceof TaskDirectory) {
-          entry = <TaskDirectory>entry;
+      for (const entryElem of this.taskList.entries) {
+        if (entryElem instanceof TaskDirectory) {
+          const entry = entryElem as TaskDirectory;
           if (entry.path.indexOf('_dir') > -1) {
-            for (let j = 0; j < entry.entries.length; j++) {
-              const dirEntry = <Task>entry.entries[j];
+            for (const dirElem of entry.entries) {
+              const dirEntry = dirElem as Task;
               let nothingToDo = true;
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
@@ -490,8 +441,7 @@ export class TaskService implements OnDestroy {
         }
       }
 
-      for (let i = 0; i < removeList.length; i++) {
-        const removeElement = removeList[i];
+      for (const removeElement of removeList) {
         promises.push(this.taskList.removeEntry(removeElement, true));
       }
 
@@ -528,10 +478,10 @@ export class TaskService implements OnDestroy {
 
     if (this.overallState === 'processing') {
       this.updateStatistics();
-      const uploading_task = this._taskList.getAllTasks().findIndex((task) => {
+      const uploadingTask = this._taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
-      if (this._statistics.running < this.options.max_running_tasks && uploading_task < 0) {
+      if (this._statistics.running < this.options.max_running_tasks && uploadingTask < 0) {
         let task: Task;
 
         // look for pending tasks
@@ -575,16 +525,14 @@ export class TaskService implements OnDestroy {
 
   public findNextWaitingTask(): Task {
     const tasks = this.taskList.getAllTasks();
-    for (let i = 0; i < tasks.length; i++) {
-      const entry = tasks[i];
+    for (const entry of tasks) {
       if (entry.state === TaskState.PENDING &&
         ((!(entry.files[0].file === null || entry.files[0].file === undefined)
           && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0].lastResult.online)
       ) {
         return entry;
       } else if (entry.state === TaskState.READY) {
-        for (let j = 0; j < entry.operations.length; j++) {
-          const operation = entry.operations[j];
+        for (const operation of entry.operations) {
           if (operation.state !== TaskState.SKIPPED && operation.enabled) {
             if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
               return entry;
@@ -603,8 +551,7 @@ export class TaskService implements OnDestroy {
     return new Promise<SafeResourceUrl>((resolve, reject) => {
 
       const promises: Promise<any>[] = [];
-      for (let i = 0; i < this.taskList.entries.length; i++) {
-        const entry = this.taskList.entries[i];
+      for (const entry of this.taskList.entries) {
         promises.push(entry.toAny());
       }
 
@@ -618,7 +565,7 @@ export class TaskService implements OnDestroy {
 
         this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
         const file = new File([JSON.stringify(json, null, 2)], this.protocolFileName, {
-          'type': 'text/plain'
+          type: 'text/plain'
         });
 
         const url = URL.createObjectURL(file);
@@ -632,8 +579,8 @@ export class TaskService implements OnDestroy {
   ngOnDestroy() {
     const tasks = this._taskList.getAllTasks();
 
-    for (let i = 0; i < tasks.length; i++) {
-      tasks[i].destroy();
+    for (const task of tasks) {
+      task.destroy();
     }
     this.subscrmanager.destroy();
   }
@@ -641,17 +588,15 @@ export class TaskService implements OnDestroy {
   public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
     let result: (FileInfo | DirectoryInfo)[] = [];
 
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-
+    for (const entry of entries) {
       if (entry instanceof FileInfo) {
-        const file = <FileInfo>entry;
+        const file = entry as FileInfo;
         if (file.extension === '.wav' || this.validTranscript(file.extension)) {
           result.push(file);
         }
 
       } else {
-        const directory = <DirectoryInfo>entry;
+        const directory = entry as DirectoryInfo;
 
         const dir = directory.clone();
 
@@ -674,12 +619,140 @@ export class TaskService implements OnDestroy {
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = (queueItem: QueueItem) => {
     if (queueItem.file instanceof FileInfo) {
-      const file = <FileInfo>queueItem.file;
+      const file = queueItem.file as FileInfo;
       return this.processFileInfo(file, '', queueItem);
     } else if (queueItem.file instanceof DirectoryInfo) {
-      const dir = <DirectoryInfo>queueItem.file;
+      const dir = queueItem.file as DirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem);
     }
+  }
+
+  public openSplitModal = () => {
+
+  }
+
+  public existsFile(url: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.httpclient.head(url).subscribe(() => {
+          resolve();
+        },
+        (err) => {
+          reject(err);
+        });
+    });
+  }
+
+  public validTranscript(extension: string): boolean {
+    let result = false;
+
+    for (const converter of AppInfo.converters) {
+      result = result || converter.obj.extension.includes(extension);
+    }
+
+    return result;
+  }
+
+  public getAppendingsExtension(file: FileInfo): string {
+    for (const converter of AppInfo.converters) {
+      if (file.fullname.includes(converter.obj.extension)) {
+        return converter.obj.extension;
+      }
+    }
+
+    return file.extension;
+  }
+
+  public toggleProcessing() {
+    this.overallState = (this.overallState === 'processing') ? 'stopped' : 'processing';
+
+    const tasks = this.taskList.getAllTasks();
+    if (this.overallState === 'processing') {
+      for (const task of tasks) {
+        task.resumeTask();
+      }
+
+      this.start();
+    } else {
+
+      for (const task of tasks) {
+        task.stopTask();
+      }
+    }
+  }
+
+  public updateStatistics() {
+    const result = {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0
+    };
+
+    const tasks = this._taskList.getAllTasks();
+
+    for (const task of tasks) {
+      // running
+      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
+        result.running++;
+      }
+
+      // waiting
+      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
+        result.waiting++;
+      }
+
+      // queued
+      if (task.state === TaskState.QUEUED) {
+        result.queued++;
+      }
+
+      // finished
+      if (task.state === TaskState.FINISHED) {
+        result.finished++;
+      }
+
+      // failed
+      if (task.state === TaskState.ERROR) {
+        result.errors++;
+      }
+    }
+
+    this._statistics = result;
+  }
+
+  private listenToTaskEvents(task: Task) {
+    this.subscrmanager.add(task.opstatechange.subscribe((event) => {
+      const operation = task.getOperationByID(event.opID);
+      const opName = operation.name;
+      if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
+        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${task.files[0].name} manually.`);
+      } else if (event.newState === TaskState.ERROR) {
+        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${task.files[0].name}.
+ For more information hover over the red "X" icon.`);
+      } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+        this.notification.showNotification(`"${operation.title}" successful`, `You can now open phonetic
+  details of ${task.files[0].name}.`);
+      }
+
+      this.updateStatistics();
+      const lastOp = task.operations[task.operations.length - 1];
+      if (this._statistics.running > 1 || (this._statistics.running === 1
+        && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
+        if (operation.state === TaskState.UPLOADING) {
+          this.state = TaskState.UPLOADING;
+        } else {
+          this.state = TaskState.PROCESSING;
+        }
+      } else {
+        this.state = TaskState.READY;
+      }
+      this.storage.saveTask(task);
+
+      this.updateProtocolURL().then((url) => {
+        this.protocolURL = url;
+      });
+    }));
   }
 
   private processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
@@ -689,26 +762,26 @@ export class TaskService implements OnDestroy {
       this.newfiles = true;
 
       new Promise<void>((res) => {
-          if (newName !== file.fullname) {
-            // no valid name, replace
+        if (newName !== file.fullname) {
+          // no valid name, replace
             FileInfo.renameFile(file.file, newName, {
               type: file.type,
               lastModified: file.file.lastModified
             }).then((newfile: File) => {
               newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
-              newFileInfo.attributes['originalFileName'] = file.fullname;
-              file.attributes['originalFileName'] = file.fullname;
+              newFileInfo.attributes.originalFileName = file.fullname;
+              file.attributes.originalFileName = file.fullname;
               res();
             });
           } else {
-            newFileInfo = new FileInfo(file.fullname, (file.type !== '')
-              ? file.type : file.file.type, file.size, file.file);
-            newFileInfo.attributes = queueItem.file.attributes;
-            newFileInfo.attributes['originalFileName'] = file.fullname;
-            file.attributes['originalFileName'] = file.fullname;
-            res();
-          }
+          newFileInfo = new FileInfo(file.fullname, (file.type !== '')
+            ? file.type : file.file.type, file.size, file.file);
+          newFileInfo.attributes = queueItem.file.attributes;
+          newFileInfo.attributes.originalFileName = file.fullname;
+          file.attributes.originalFileName = file.fullname;
+          res();
+        }
         }
       ).then(() => {
         const hash = this.preprocessor.getHashString(file.fullname, file.size);
@@ -742,7 +815,7 @@ export class TaskService implements OnDestroy {
                 for (let i = 0; i < files.length; i++) {
                   const fileObj = files[i];
                   const fileInfo = FileInfo.fromFileObject(fileObj);
-                  fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
+                  fileInfo.attributes.originalFileName = `${file.name}_${i + 1}.${file.extension}`;
                   fileInfos.push(fileInfo);
                 }
                 directory.addEntries(fileInfos);
@@ -788,7 +861,7 @@ export class TaskService implements OnDestroy {
                 }
                 resolve([]);
               } else {
-                const task = new Task([<FileInfo>queueItem.file], this.operations);
+                const task = new Task([queueItem.file as FileInfo], this.operations);
                 task.language = this.selectedlanguage.code;
                 task.asr = this.selectedlanguage.asr;
 
@@ -818,11 +891,9 @@ export class TaskService implements OnDestroy {
       const dirTask = new TaskDirectory(dir.path, dir.size);
       const promises: Promise<(Task | TaskDirectory)[]>[] = [];
 
-      for (let i = 0; i < dir.entries.length; i++) {
-        const dirEntry = dir.entries[i];
-
+      for (const dirEntry of dir.entries) {
         if (dirEntry instanceof FileInfo) {
-          const file = <FileInfo>dirEntry;
+          const file = dirEntry as FileInfo;
           promises.push(this.processFileInfo(file, dir.path, queueItem));
 
         } else {
@@ -836,9 +907,7 @@ export class TaskService implements OnDestroy {
         let content = [];
 
         values = [].concat.apply([], values);
-        for (let k = 0; k < values.length; k++) {
-          const value: Task | TaskDirectory = values[k];
-
+        for (const value of values) {
           if (value instanceof Task) {
             // set state
             for (let i = 0; i < this.operations.length; i++) {
@@ -871,19 +940,12 @@ export class TaskService implements OnDestroy {
     });
   }
 
-  public openSplitModal = () => {
-
-  }
-
   private getTaskWithHash(hash: string): Task {
     const tasks: Task[] = this.taskList.getAllTasks();
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task: Task = tasks[i];
+    for (const task of tasks) {
       if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
-        for (let j = 0; j < task.files.length; j++) {
-          const file = task.files[j];
-
+        for (const file of task.files) {
           const cmpHash = this.preprocessor.getHashString(file.attributes.originalFileName, file.size);
           // console.log(`${cmpHash} === ${hash}`);
           if (cmpHash === hash && (task.operations[0].state === TaskState.PENDING
@@ -897,101 +959,5 @@ export class TaskService implements OnDestroy {
     }
 
     return null;
-  }
-
-  public existsFile(url: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.httpclient.head(url).subscribe(() => {
-          resolve();
-        },
-        (err) => {
-          reject(err);
-        });
-    });
-  }
-
-  public validTranscript(extension: string): boolean {
-    let result = false;
-
-    for (let k = 0; k < AppInfo.converters.length; k++) {
-      const converter = AppInfo.converters[k];
-      result = result || converter.obj.extension.includes(extension);
-    }
-
-    return result;
-  }
-
-  public getAppendingsExtension(file: FileInfo): string {
-    for (let i = 0; i < AppInfo.converters.length; i++) {
-      const converter = AppInfo.converters[i];
-      if (file.fullname.includes(converter.obj.extension)) {
-        return converter.obj.extension;
-      }
-    }
-
-    return file.extension;
-  }
-
-  public toggleProcessing() {
-    this.overallState = (this.overallState === 'processing') ? 'stopped' : 'processing';
-
-    const tasks = this.taskList.getAllTasks();
-    if (this.overallState === 'processing') {
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-        task.resumeTask();
-      }
-
-      this.start();
-    } else {
-
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-        task.stopTask();
-      }
-    }
-  }
-
-  public updateStatistics() {
-    const result = {
-      queued: 0,
-      waiting: 0,
-      running: 0,
-      finished: 0,
-      errors: 0
-    };
-
-    const tasks = this._taskList.getAllTasks();
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-
-      // running
-      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
-        result.running++;
-      }
-
-      // waiting
-      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
-        result.waiting++;
-      }
-
-      // queued
-      if (task.state === TaskState.QUEUED) {
-        result.queued++;
-      }
-
-      // finished
-      if (task.state === TaskState.FINISHED) {
-        result.finished++;
-      }
-
-      // failed
-      if (task.state === TaskState.ERROR) {
-        result.errors++;
-      }
-    }
-
-    this._statistics = result;
   }
 }

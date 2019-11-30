@@ -8,8 +8,8 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 })
 export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
-  @ViewChild('svg', { static: true }) svg: ElementRef;
-  @ViewChild('inner', { static: true }) inner: ElementRef;
+  @ViewChild('svg', {static: true}) svg: ElementRef;
+  @ViewChild('inner', {static: true}) inner: ElementRef;
 
   @Input() borderColor = '#3a70dd';
   @Input() pointer: 'left' | 'right' | 'bottom-left' = 'left';
@@ -31,15 +31,11 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
 
   private leftTopPolygon;
-
+  public polygon = this.leftTopPolygon;
   private leftBottomPolygon;
-
   private rightTopPolygon;
-
   private rightBottomPolygon;
   private arrowWidth = 20;
-
-  public polygon = this.leftTopPolygon;
   private lineWidth = 2;
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
 

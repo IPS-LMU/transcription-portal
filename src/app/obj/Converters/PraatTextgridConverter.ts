@@ -1,5 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
-import {ILevel, ISegment, OAnnotJSON, OAudiofile, OEvent, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
+import {ILevel, ISegment, OAnnotJSON, OAudiofile, OEvent, OLabel, OLevel, OSegment} from '../Annotation';
 import {contains} from '../../shared/Functions';
 
 export class PraatTextgridConverter extends Converter {
@@ -19,13 +19,13 @@ export class PraatTextgridConverter extends Converter {
   public export(annotation: OAnnotJSON, audiofile: OAudiofile): ExportResult {
     let result = '';
     let filename = '';
-    const dur_seconds = (audiofile.duration / audiofile.samplerate);
+    const durSeconds = (audiofile.duration / audiofile.samplerate);
 
-    let seg_levels = 0;
+    let segLevels = 0;
 
-    for (let i = 0; i < annotation.levels.length; i++) {
-      if (annotation.levels[i].type === 'SEGMENT') {
-        seg_levels++;
+    for (const level of annotation.levels) {
+      if (level.type === 'SEGMENT') {
+        segLevels++;
       }
     }
     const addHeader = (res: string) => {
@@ -33,9 +33,9 @@ export class PraatTextgridConverter extends Converter {
         `Object class = "TextGrid"\n` +
         `\n` +
         `xmin = 0\n` +
-        `xmax = ${dur_seconds}\n` +
+        `xmax = ${durSeconds}\n` +
         `tiers? <exists>\n` +
-        `size = ${seg_levels}\n`;
+        `size = ${segLevels}\n`;
     };
 
     const addEntry = (res: string, level: ILevel, segment: ISegment) => {
@@ -59,18 +59,18 @@ export class PraatTextgridConverter extends Converter {
             `        class = "IntervalTier" \n` +
             `        name = "${level.name}" \n` +
             `        xmin = 0 \n` +
-            `        xmax = ${dur_seconds} \n` +
+            `        xmax = ${durSeconds} \n` +
             `        intervals: size = ${level.items.length} \n`;
 
           for (let j = 0; j < level.items.length; j++) {
             const segment = level.items[j];
 
-            const seconds_start = segment.sampleStart / audiofile.samplerate;
-            const seconds_end = (segment.sampleStart + segment.sampleDur) / audiofile.samplerate;
+            const secondsStart = segment.sampleStart / audiofile.samplerate;
+            const secondsEnd = (segment.sampleStart + segment.sampleDur) / audiofile.samplerate;
 
             result += `        intervals [${j + 1}]:\n` +
-              `            xmin = ${seconds_start} \n` +
-              `            xmax = ${seconds_end} \n` +
+              `            xmin = ${secondsStart} \n` +
+              `            xmax = ${secondsEnd} \n` +
               `            text = "${segment.labels[0].value}" \n`;
           }
         }
@@ -95,12 +95,12 @@ export class PraatTextgridConverter extends Converter {
 
       let content = file.content;
       // replace
-      const ctrl_char = String.fromCharCode(13);
-      content = content.replace(new RegExp(ctrl_char, 'g'), '');
+      const ctrlChar = String.fromCharCode(13);
+      content = content.replace(new RegExp(ctrlChar, 'g'), '');
       const lines: string[] = content.split('\n');
 
 
-      let seg_num = 1;
+      let segNum = 1;
       // check if header is first
       if (lines.length > 14) {
         if (
@@ -108,37 +108,37 @@ export class PraatTextgridConverter extends Converter {
           && contains(lines[1], 'Object class = "TextGrid"')) {
           // is TextGrid
 
-          let lvl_num = 0;
+          let lvlNum = 0;
 
           if (lines[7] === 'item []:') {
             // start reading segments
             for (let i = 8; i < lines.length; i++) {
-              lvl_num++;
+              lvlNum++;
               if (lines[i] !== '') {
 
                 const level = '    ';
-                if (lines[i] === level + `item [${lvl_num}]:`) {
+                if (lines[i] === level + `item [${lvlNum}]:`) {
                   i++;
 
                   // get class
-                  let class_str = null;
+                  let classStr = null;
                   let test = lines[i].match(/class = "(.*)"/);
                   if ((test === null || test === undefined)) {
                     console.error(`PraatTextGrid could not read line ${i}`);
                     return null;
                   }
-                  class_str = test[1];
+                  classStr = test[1];
                   i++;
 
                   // get lvl name
-                  let lvl_name = null;
+                  let lvlName = null;
                   test = lines[i].match(/name = "(.*)"/);
                   if ((test === null || test === undefined)) {
                     console.error(`PraatTextGrid could not read line ${i}`);
                     return null;
                   }
-                  lvl_name = test[1];
-                  const olevel = (class_str === 'IntervalTier') ? new OLevel(lvl_name, 'SEGMENT') : new OLevel(lvl_name, 'EVENT');
+                  lvlName = test[1];
+                  const olevel = (classStr === 'IntervalTier') ? new OLevel(lvlName, 'SEGMENT') : new OLevel(lvlName, 'EVENT');
                   i++;
 
                   // ignore xmin and xmax, interval size
@@ -150,7 +150,7 @@ export class PraatTextgridConverter extends Converter {
                   let match = lines[i].match('item \\[([0-9]+)\\]:');
 
                   while (lines[i] !== '' && (match === null || match === undefined) && i < lines.length) {
-                    let is_interval = true;
+                    let isInterval = true;
                     test = lines[i].match(new RegExp('intervals \\[[0-9]+\\]:'));
                     if ((test === null || test === undefined)) {
                       test = lines[i].match(new RegExp('points \\[[0-9]+\\]:'));
@@ -158,12 +158,12 @@ export class PraatTextgridConverter extends Converter {
                         console.error(`PraatTextGrid could not read line ${i}`);
                         return null;
                       } else {
-                        is_interval = false;
+                        isInterval = false;
                       }
                     }
                     i++; // next line begins with 'number' (if is point) or 'xmin' (if is interval)
 
-                    if (is_interval) {
+                    if (isInterval) {
                       test = lines[i].match(/xmin = (.*)/);
                       if ((test === null || test === undefined)) {
                         console.error(`PraatTextGrid could not read line ${i}`);
@@ -189,9 +189,9 @@ export class PraatTextgridConverter extends Converter {
                       const text = test[1];
 
                       const olabels: OLabel[] = [];
-                      olabels.push((new OLabel(lvl_name, text)));
+                      olabels.push((new OLabel(lvlName, text)));
                       const osegment = new OSegment(
-                        (seg_num),
+                        (segNum),
                         Math.round(xmin * audiofile.samplerate),
                         Math.round((xmax - xmin) * audiofile.samplerate),
                         olabels
@@ -216,15 +216,15 @@ export class PraatTextgridConverter extends Converter {
                       const mark = test[1];
 
                       const olabels: OLabel[] = [];
-                      olabels.push((new OLabel(lvl_name, mark)));
-                      const oevent = new OEvent(seg_num, Math.round(number * audiofile.samplerate), olabels);
+                      olabels.push((new OLabel(lvlName, mark)));
+                      const oevent = new OEvent(segNum, Math.round(number * audiofile.samplerate), olabels);
                       olevel.items.push(oevent);
                     }
 
-                    seg_num++;
+                    segNum++;
                     match = lines[i].match('item \\[([0-9]+)\\]:');
                   }
-                  seg_num++;
+                  segNum++;
                   i--;
                   result.levels.push(olevel);
                 }

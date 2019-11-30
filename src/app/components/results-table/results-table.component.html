@@ -1,47 +1,47 @@
 <table class="table table-striped">
-    <thead>
-    <tr>
-        <th colspan="2">Results</th>
-        <ng-container *ngIf="conversionExtension !== '.wav'">
-            <th [attr.colspan]="converters.length">Conversions</th>
+  <thead>
+  <tr>
+    <th colspan="2">Results</th>
+    <ng-container *ngIf="conversionExtension !== '.wav'">
+      <th [attr.colspan]="converters.length">Conversions</th>
+    </ng-container>
+  </tr>
+  <tr>
+    <th>#</th>
+    <th>{{originalLabel}}</th>
+    <ng-container *ngIf="conversionExtension !== '.wav'">
+      <ng-container *ngFor="let converter of converters">
+        <th *ngIf="isEqualConverterName(converter)">*{{converter.obj.extension}}</th>
+      </ng-container>
+    </ng-container>
+  </tr>
+  </thead>
+  <tr *ngFor="let elem of convertedArray;let i = index">
+    <td>#{{elem.number + 1}}</td>
+    <td *ngIf="elem.input.available" style="border-right: 1px solid lightgray;">
+      <a [attr.download]="elem.input.fullname"
+         [attr.href]="elem.input.url">
+        <i class="fa fa-file-text"></i>
+      </a>
+      <i (click)="onPreviewClick(elem.input.file)" *ngIf="elem.input.extension !== '.wav'" class="fa fa-eye"
+         style="margin-left:3px;cursor: pointer;"></i>
+    </td>
+    <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;">
+      <i class="fa fa-unlink" style="color:red;"></i>
+    </td>
+    <ng-container *ngIf="elem.input.extension !== '.wav'">
+      <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
+        <ng-container *ngIf="elem.input.available && converter.result !== null">
+          <a [attr.download]="converter.result.fullname"
+             [attr.href]="converter.result.url"
+          >
+            <i [ngStyle]="{ color: converter.converter.color}" class="fa fa-file-text"></i>
+          </a>
+          <i (click)="onPreviewClick(converter.result.file)" [ngStyle]="{ color: converter.converter.color}"
+             class="fa fa-eye" style="cursor: pointer;margin-left:3px;"></i>
         </ng-container>
-    </tr>
-    <tr>
-        <th>#</th>
-        <th>{{originalLabel}}</th>
-        <ng-container *ngIf="conversionExtension !== '.wav'">
-            <ng-container *ngFor="let converter of converters">
-                <th *ngIf="isEqualConverterName(converter)">*{{converter.obj.extension}}</th>
-            </ng-container>
-        </ng-container>
-    </tr>
-    </thead>
-    <tr *ngFor="let elem of convertedArray;let i = index">
-        <td>#{{elem.number + 1}}</td>
-        <td *ngIf="elem.input.available" style="border-right: 1px solid lightgray;">
-            <a [attr.href]="elem.input.url"
-               [attr.download]="elem.input.fullname">
-                <i class="fa fa-file-text"></i>
-            </a>
-            <i *ngIf="elem.input.extension !== '.wav'" (click)="onPreviewClick(elem.input.file)" class="fa fa-eye"
-               style="margin-left:3px;cursor: pointer;"></i>
-        </td>
-        <td *ngIf="!elem.input.available" style="border-right: 1px solid lightgray;">
-            <i class="fa fa-unlink" style="color:red;"></i>
-        </td>
-        <ng-container *ngIf="elem.input.extension !== '.wav'">
-            <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
-                <ng-container *ngIf="elem.input.available && converter.result !== null">
-                    <a [attr.href]="converter.result.url"
-                       [attr.download]="converter.result.fullname"
-                    >
-                        <i class="fa fa-file-text" [ngStyle]="{ color: converter.converter.color}"></i>
-                    </a>
-                    <i (click)="onPreviewClick(converter.result.file)" class="fa fa-eye"
-                       [ngStyle]="{ color: converter.converter.color}" style="cursor: pointer;margin-left:3px;"></i>
-                </ng-container>
-            </td>
-        </ng-container>
-    </tr>
+      </td>
+    </ng-container>
+  </tr>
 </table>
 <span class="remark">On Windows please use right-click and "Save as" to download a result</span>

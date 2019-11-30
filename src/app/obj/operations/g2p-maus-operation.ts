@@ -1,22 +1,16 @@
 import {HttpClient} from '@angular/common/http';
 import * as X2JS from 'x2js';
 import {FileInfo} from '../fileInfo';
-import {Task} from '../tasks/index';
+import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
-import {TaskState} from '../tasks/task';
 import {OHLanguageObject} from '../oh-config';
 
 export class G2pMausOperation extends Operation {
   // TODO change for the next version
   public resultType = 'TextGrid/json';
 
-  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, commands, title, shortTitle, task, state, id);
-    this._description = 'The transcript text is time-aligned with the signal, i. e. for every word in the text we get ' +
-      'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
-  }
-
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
     this._time.start = Date.now();
@@ -71,13 +65,17 @@ export class G2pMausOperation extends Operation {
       });
   }
 
+  public clone(task?: Task): G2pMausOperation {
+    const selectedTask = ((task === null || task === undefined)) ? this.task : task;
+    return new G2pMausOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state);
+  }
+
   public fromAny(operationObj: any, commands: string[], task: Task): G2pMausOperation {
     const result = new G2pMausOperation(operationObj.name, commands, this.title,
       this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const resultObj = operationObj.results[k];
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.url = resultObj.url;
+    for (const resultElement of operationObj.results) {
+      const resultClass = FileInfo.fromAny(resultElement);
+      resultClass.url = resultElement.url;
       result.results.push(resultClass);
     }
     result._time = operationObj.time;
@@ -86,8 +84,9 @@ export class G2pMausOperation extends Operation {
     return result;
   }
 
-  public clone(task?: Task): G2pMausOperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new G2pMausOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
+  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, commands, title, shortTitle, task, state, id);
+    this._description = 'The transcript text is time-aligned with the signal, i. e. for every word in the text we get ' +
+      'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
   }
 }

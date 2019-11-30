@@ -1,14 +1,14 @@
 iframe {
-    display:flex;
-    flex-direction: column;
-    flex: auto;
-    height:100%;
-    width:100%;
-    border: none;
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+  height: 100%;
+  width: 100%;
+  border: none;
 }
 
 :host {
-    background-color: ghostwhite;
-    height: 100%;
-    width: 100%;
+  background-color: ghostwhite;
+  height: 100%;
+  width: 100%;
 }

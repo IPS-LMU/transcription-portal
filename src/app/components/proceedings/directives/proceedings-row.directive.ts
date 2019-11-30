@@ -11,14 +11,14 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   @Input() toolSelectedOperation: Operation;
   @Input() rowSelected = false;
 
+  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
+    renderer.setStyle(elementRef.nativeElement, 'cursor', 'pointer');
+  }
+
   private get toolSelected(): boolean {
     return ((this.toolSelectedOperation !== undefined
       && this.toolSelectedOperation.task !== undefined)
       && this.toolSelectedOperation.task.id === this.entry.id);
-  }
-
-  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
-    renderer.setStyle(elementRef.nativeElement, 'cursor', 'pointer');
   }
 
   ngOnChanges(changes: SimpleChanges) {

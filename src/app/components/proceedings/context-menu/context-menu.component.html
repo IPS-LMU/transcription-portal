@@ -1,27 +1,27 @@
 <table class="table table-hover">
-    <tbody>
-    <ng-container *ngIf="entriesCount > 0 ">
-        <tr (click)="onAction('delete')">
-            <td><i class="fa fa-times"></i></td>
-            <td>
-                <ng-container *ngIf="entriesCount > 0">
-                    Delete selected lines
-                </ng-container>
-            </td>
-        </tr>
-        <tr (click)="onAction('download')">
-            <td><i class="fa fa-download"></i></td>
-            <td>Download selected lines</td>
-        </tr>
-    </ng-container>
-    <tr *ngIf="selected_tasks.length > 0">
-        <td></td>
-        <td (click)="onRemoveAppendings()">Remove appendings</td>
+  <tbody>
+  <ng-container *ngIf="entriesCount > 0 ">
+    <tr (click)="onAction('delete')">
+      <td><i class="fa fa-times"></i></td>
+      <td>
+        <ng-container *ngIf="entriesCount > 0">
+          Delete selected lines
+        </ng-container>
+      </td>
     </tr>
-    <tr *ngIf="selectedOperationType != undefined" (click)="onCompress()">
-        <td><i class="fa fa-file-archive-o"></i></td>
-        <td>Save all {{selectedOperationType.name}} results</td>
+    <tr (click)="onAction('download')">
+      <td><i class="fa fa-download"></i></td>
+      <td>Download selected lines</td>
     </tr>
-    <ng-content></ng-content>
-    </tbody>
+  </ng-container>
+  <tr *ngIf="selectedTasks.length > 0">
+    <td></td>
+    <td (click)="onRemoveAppendings()">Remove appendings</td>
+  </tr>
+  <tr (click)="onCompress()" *ngIf="selectedOperationType != undefined">
+    <td><i class="fa fa-file-archive-o"></i></td>
+    <td>Save all {{selectedOperationType.name}} results</td>
+  </tr>
+  <ng-content></ng-content>
+  </tbody>
 </table>

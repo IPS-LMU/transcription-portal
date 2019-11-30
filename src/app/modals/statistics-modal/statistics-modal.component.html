@@ -1,102 +1,102 @@
-<div bsModal #statisticsModal="bs-modal" class="modal fade" tabindex="-1"
-     role="dialog" aria-labelledby="dialog-sizes-name1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title pull-left">Statistics</h4>
-                <button type="button" class="close pull-right" aria-label="Close" (click)="statisticsModal.hide()">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div style="text-align: right;">
-                    <a [href]="taskService.protocolURL" [download]="taskService.protocolFileName">Download JSON</a>
-                </div>
-                <div class="row">
-                    <div class="col-6 col-md-3" style="margin-left:-20px;">
-                        <circle-progress
-                                [percent]="statisticsService.overAllProgress.waiting"
-                                [lazy]="false"
-                                [radius]="80"
-                                [responsive]="true"
-                                [outerStrokeWidth]="16"
-                                [innerStrokeWidth]="8"
-                                [outerStrokeColor]="'gray'"
-                                [innerStrokeColor]="'lightgray'"
-                                [animation]="false"
-                                [animationDuration]="300"
-                                [titleFontSize]="30"
-                                [subtitle]="'waiting'"
-                                [subtitleFontSize]="20"
-                        ></circle-progress>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <circle-progress
-                                [percent]="statisticsService.overAllProgress.processing"
-                                [lazy]="false"
-                                [radius]="80"
-                                [responsive]="true"
-                                [outerStrokeWidth]="16"
-                                [innerStrokeWidth]="8"
-                                [outerStrokeColor]="'cornflowerblue'"
-                                [innerStrokeColor]="'#82ade5'"
-                                [animation]="false"
-                                [animationDuration]="300"
-                                [titleFontSize]="30"
-                                [subtitle]="'processing'"
-                                [subtitleFontSize]="20"
-                        ></circle-progress>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <circle-progress
-                                [percent]="statisticsService.overAllProgress.finished"
-                                [lazy]="false"
-                                [radius]="80"
-                                [responsive]="true"
-                                [outerStrokeWidth]="16"
-                                [innerStrokeWidth]="8"
-                                [outerStrokeColor]="'#78C000'"
-                                [innerStrokeColor]="'#C7E596'"
-                                [animation]="false"
-                                [animationDuration]="300"
-                                [titleFontSize]="30"
-                                [subtitle]="'finished'"
-                                [subtitleFontSize]="20"
-                        ></circle-progress>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <circle-progress
-                                [percent]="statisticsService.overAllProgress.failed"
-                                [lazy]="false"
-                                [responsive]="true"
-                                [radius]="80"
-                                [outerStrokeWidth]="16"
-                                [innerStrokeWidth]="8"
-                                [outerStrokeColor]="'red'"
-                                [innerStrokeColor]="'#e56255'"
-                                [animation]="false"
-                                [animationDuration]="300"
-                                [titleFontSize]="30"
-                                [subtitle]="'failed'"
-                                [subtitleFontSize]="20"
-                        ></circle-progress>
-                    </div>
-                </div>
-
-                <div style="display: block">
-                    <h4>Processing duration (minutes)</h4>
-                    <canvas baseChart
-                            [data]="statisticsService.averageDurations.data"
-                            [labels]="statisticsService.averageDurations.labels"
-                            [chartType]="pieChartType"
-                            (chartHover)="chartHovered($event)"
-                            (chartClick)="chartClicked($event)"></canvas>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-dark" (click)="statisticsModal.hide()">Cancel</button>
-            </div>
+<div #statisticsModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
+     role="dialog" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title pull-left">Statistics</h4>
+        <button (click)="statisticsModal.hide()" aria-label="Close" class="close pull-right" type="button">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: right;">
+          <a [download]="taskService.protocolFileName" [href]="taskService.protocolURL">Download JSON</a>
         </div>
+        <div class="row">
+          <div class="col-6 col-md-3" style="margin-left:-20px;">
+            <circle-progress
+              [animationDuration]="300"
+              [animation]="false"
+              [innerStrokeColor]="'lightgray'"
+              [innerStrokeWidth]="8"
+              [lazy]="false"
+              [outerStrokeColor]="'gray'"
+              [outerStrokeWidth]="16"
+              [percent]="statisticsService.overAllProgress.waiting"
+              [radius]="80"
+              [responsive]="true"
+              [subtitleFontSize]="20"
+              [subtitle]="'waiting'"
+              [titleFontSize]="30"
+            ></circle-progress>
+          </div>
+          <div class="col-6 col-md-3">
+            <circle-progress
+              [animationDuration]="300"
+              [animation]="false"
+              [innerStrokeColor]="'#82ade5'"
+              [innerStrokeWidth]="8"
+              [lazy]="false"
+              [outerStrokeColor]="'cornflowerblue'"
+              [outerStrokeWidth]="16"
+              [percent]="statisticsService.overAllProgress.processing"
+              [radius]="80"
+              [responsive]="true"
+              [subtitleFontSize]="20"
+              [subtitle]="'processing'"
+              [titleFontSize]="30"
+            ></circle-progress>
+          </div>
+          <div class="col-6 col-md-3">
+            <circle-progress
+              [animationDuration]="300"
+              [animation]="false"
+              [innerStrokeColor]="'#C7E596'"
+              [innerStrokeWidth]="8"
+              [lazy]="false"
+              [outerStrokeColor]="'#78C000'"
+              [outerStrokeWidth]="16"
+              [percent]="statisticsService.overAllProgress.finished"
+              [radius]="80"
+              [responsive]="true"
+              [subtitleFontSize]="20"
+              [subtitle]="'finished'"
+              [titleFontSize]="30"
+            ></circle-progress>
+          </div>
+          <div class="col-6 col-md-3">
+            <circle-progress
+              [animationDuration]="300"
+              [animation]="false"
+              [innerStrokeColor]="'#e56255'"
+              [innerStrokeWidth]="8"
+              [lazy]="false"
+              [outerStrokeColor]="'red'"
+              [outerStrokeWidth]="16"
+              [percent]="statisticsService.overAllProgress.failed"
+              [radius]="80"
+              [responsive]="true"
+              [subtitleFontSize]="20"
+              [subtitle]="'failed'"
+              [titleFontSize]="30"
+            ></circle-progress>
+          </div>
+        </div>
+
+        <div style="display: block">
+          <h4>Processing duration (minutes)</h4>
+          <canvas (chartClick)="chartClicked($event)"
+                  (chartHover)="chartHovered($event)"
+                  [chartType]="pieChartType"
+                  [data]="statisticsService.averageDurations.data"
+                  [labels]="statisticsService.averageDurations.labels"
+                  baseChart></canvas>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="statisticsModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
+      </div>
     </div>
+  </div>
 </div>
 

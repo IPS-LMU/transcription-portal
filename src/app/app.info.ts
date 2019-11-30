@@ -12,20 +12,13 @@ declare var ohPortalVersion: string;
 declare var ohPortalLastUpdated: string;
 
 export class AppInfo {
-  static get converters(): {
-    obj: Converter,
-    color: string
-  }[] {
-    return this._converters;
-  }
+  public static readonly debugging = false;
+  static readonly _version = ohPortalVersion;
+  static readonly lastUpdated = ohPortalLastUpdated;
 
   static get version(): string {
     return this._version;
   }
-
-  public static readonly debugging = false;
-  static readonly _version = ohPortalVersion;
-  static readonly lastUpdated = ohPortalLastUpdated;
 
   private static _converters: {
     obj: Converter;
@@ -56,4 +49,11 @@ export class AppInfo {
       color: 'darkblue'
     }
   ];
+
+  static get converters(): {
+    obj: Converter,
+    color: string
+  }[] {
+    return this._converters;
+  }
 }

@@ -2,73 +2,67 @@ import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {Observable, Subject} from 'rxjs';
 import {FileInfo} from '../fileInfo';
-import {Task, TaskState} from '../tasks/task';
+import {Task, TaskState} from '../tasks';
 import {OHLanguageObject, OHService} from '../oh-config';
 
 export abstract class Operation {
-  get parsedProtocol(): { type: 'WARNING' | 'ERROR'; message: string }[] {
-    return this._parsedProtocol;
-  }
+  static counter = 0;
+  public abstract resultType;
+  public mouseover = false;
+  public changed: Subject<void> = new Subject<void>();
+  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                          httpclient: HttpClient, accessCode: string) => void;
+  protected readonly _commands: string[];
+  private readonly _task: Task = null;
+  private readonly _shortTitle: string;
+  private statesubj: Subject<{
+    opID: number;
+    oldState: TaskState;
+    newState: TaskState
+  }> = new Subject<{
+    opID: number;
+    oldState: TaskState;
+    newState: TaskState
+  }>();
+  public statechange: Observable<{
+    opID: number,
+    oldState: TaskState;
+    newState: TaskState
+  }> = this.statesubj.asObservable();
+  private readonly _id: number;
 
-  set providerInformation(value: OHService) {
-    this._providerInformation = value;
-  }
+  protected constructor(name: string, commands: string[], title?: string, shortTitle?: string,
+                        task?: Task, state?: TaskState, id?: number) {
+    if ((id === null || id === undefined)) {
+      this._id = ++Operation.counter;
+    } else {
+      this._id = id;
+    }
+    this._name = name;
+    this._task = task;
+    this._commands = commands;
 
-  get providerInformation(): OHService {
-    return this._providerInformation;
+    if (!(title === null || title === undefined)) {
+      this._title = title;
+    }
+
+    if (!(shortTitle === null || shortTitle === undefined)) {
+      this._shortTitle = shortTitle;
+    }
+
+    if (!(state === null || state === undefined)) {
+      this.changeState(state);
+    } else {
+      this.changeState(TaskState.PENDING);
+    }
   }
 
   get shortTitle(): string {
     return this._shortTitle;
   }
 
-  get description(): string {
-    return this._description;
-  }
-
-  get enabled(): boolean {
-    return this._enabled;
-  }
-
-  set enabled(value: boolean) {
-    this._enabled = value;
-    this.changed.next();
-  }
-
   get task(): Task {
     return this._task;
-  }
-
-  get protocol(): string {
-    return this._protocol;
-  }
-
-  set estimated_end(value: number) {
-    this._estimated_end = value;
-  }
-
-  get estimated_end(): number {
-    return this._estimated_end;
-  }
-
-  get results(): FileInfo[] {
-    return this._results;
-  }
-
-  get time(): { start: number; duration: number } {
-    return this._time;
-  }
-
-  get state(): TaskState {
-    return this._state;
-  }
-
-  get name(): string {
-    return this._name;
-  }
-
-  get title(): string {
-    return this._title;
   }
 
   get isFinished() {
@@ -86,6 +80,10 @@ export abstract class Operation {
     type: 'WARNING' | 'ERROR',
     message: string
   }[] = [];
+
+  get parsedProtocol(): { type: 'WARNING' | 'ERROR'; message: string }[] {
+    return this._parsedProtocol;
+  }
 
   public get previousOperation(): Operation {
     const index = this.task.operations.findIndex((op) => {
@@ -119,53 +117,65 @@ export abstract class Operation {
     return null;
   }
 
-  protected constructor(name: string, commands: string[], title?: string, shortTitle?: string,
-                        task?: Task, state?: TaskState, id?: number) {
-    if ((id === null || id === undefined)) {
-      this._id = ++Operation.counter;
-    } else {
-      this._id = id;
-    }
-    this._name = name;
-    this._task = task;
-    this._commands = commands;
-
-    if (!(title === null || title === undefined)) {
-      this._title = title;
-    }
-
-    if (!(shortTitle === null || shortTitle === undefined)) {
-      this._shortTitle = shortTitle;
-    }
-
-    if (!(state === null || state === undefined)) {
-      this.changeState(state);
-    } else {
-      this.changeState(TaskState.PENDING);
-    }
-  }
-
   get id(): number {
     return this._id;
   }
 
-  static counter = 0;
-  public abstract resultType;
-  private _estimated_end: number;
+  private _estimatedEnd: number;
+
+  get estimatedEnd(): number {
+    return this._estimatedEnd;
+  }
+
+  set estimatedEnd(value: number) {
+    this._estimatedEnd = value;
+  }
+
   protected _results: FileInfo[] = [];
 
-  public mouseover = false;
+  get results(): FileInfo[] {
+    return this._results;
+  }
 
-  private readonly _task: Task = null;
   protected _state: TaskState = TaskState.PENDING;
+
+  get state(): TaskState {
+    return this._state;
+  }
+
   protected _name: string;
+
+  get name(): string {
+    return this._name;
+  }
+
   protected _title = '';
+
+  get title(): string {
+    return this._title;
+  }
+
   private _protocol = '';
+
+  get protocol(): string {
+    return this._protocol;
+  }
+
   protected _description = '';
+
+  get description(): string {
+    return this._description;
+  }
+
   protected _providerInformation: OHService;
 
-  private readonly _shortTitle: string;
-  protected readonly _commands: string[];
+  get providerInformation(): OHService {
+    return this._providerInformation;
+  }
+
+  set providerInformation(value: OHService) {
+    this._providerInformation = value;
+  }
 
   protected _time: {
     start: number;
@@ -174,28 +184,21 @@ export abstract class Operation {
     start: 0,
     duration: 0
   };
+
+  get time(): { start: number; duration: number } {
+    return this._time;
+  }
+
   private _enabled = true;
 
-  private statesubj: Subject<{
-    opID: number;
-    oldState: TaskState;
-    newState: TaskState
-  }> = new Subject<{
-    opID: number;
-    oldState: TaskState;
-    newState: TaskState
-  }>();
-  public statechange: Observable<{
-    opID: number,
-    oldState: TaskState;
-    newState: TaskState
-  }> = this.statesubj.asObservable();
+  get enabled(): boolean {
+    return this._enabled;
+  }
 
-  public changed: Subject<void> = new Subject<void>();
-
-  private readonly _id: number;
-
-  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => void;
+  set enabled(value: boolean) {
+    this._enabled = value;
+    this.changed.next();
+  }
 
   public getStateIcon = (sanitizer, state: TaskState): SafeHtml => {
     let result = '';
@@ -310,8 +313,7 @@ export abstract class Operation {
 
       // result data
       const promises: Promise<any>[] = [];
-      for (let i = 0; i < this.results.length; i++) {
-        const resultObj = this.results[i];
+      for (const resultObj of this.results) {
         promises.push(resultObj.toAny());
       }
 
@@ -357,5 +359,5 @@ export abstract class Operation {
 
 export interface IAccessCode {
   name: string;
-  value: string
+  value: string;
 }

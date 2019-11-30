@@ -33,10 +33,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   @Output() tagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<'opened' | 'closed'>();
 
   @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
-
   @Input() public dirOpened: 'opened' | 'closed' = 'opened';
+  private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2, private taskService: TaskService) {
   }
@@ -46,6 +44,46 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'auto');
     }
     this.updateView();
+  }
+
+  ngAfterViewInit() {
+    if (!(this.entry === null || this.entry === undefined)) {
+      // entry set
+      if (this.entry instanceof Task) {
+        if (!(this.entry.files === null || this.entry.files === undefined)) {
+          this.updateView();
+        } else {
+          throw new Error('ProcColDirective error: entry of type Task does not have any files');
+        }
+      }
+
+      // changes of entry must be observed specifically
+      if (this.entry instanceof Task) {
+        this.subscrmanager.add(this.entry.statechange.subscribe(() => {
+          this.updateView();
+        }));
+
+        this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
+          this.updateView();
+        }));
+      }
+    } else {
+      throw new Error('ProcColDirective error: no entry set');
+    }
+  }
+
+  ngOnDestroy() {
+    this.subscrmanager.destroy();
+  }
+
+  afterTagClicked = () => {
+    if (this.dirOpened === 'opened') {
+      this.dirOpened = 'closed';
+    } else {
+      this.dirOpened = 'opened';
+    }
+    this.updateView();
+    this.tagClicked.emit(this.dirOpened);
   }
 
   private updateView() {
@@ -140,7 +178,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.setStyle(img, 'margin-right', '3px');
         this.renderer.appendChild(wrapper, img);
 
-        const icon = this.renderer.createElement('i');
+        icon = this.renderer.createElement('i');
         this.renderer.addClass(icon, 'fa');
         this.renderer.addClass(icon, 'fa-file-audio-o');
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
@@ -244,7 +282,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(result, 'badge');
         this.renderer.addClass(result, 'badge-' + badgeObj.type);
         this.renderer.listen(result, 'click', () => {
-          const files = (<Task> this.entry).files;
+          const files = (this.entry as Task).files;
           this.appendingClick.emit(files[1]);
         });
         const content = this.renderer.createText(badgeObj.label);
@@ -255,13 +293,13 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   private clearContents() {
-    for (let i = 0; i < (<HTMLElement> this.elementRef.nativeElement).children.length; i++) {
+    for (let i = 0; i < (this.elementRef.nativeElement as HTMLElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
       if (!(child === null || child === undefined)) {
-        const old_length = this.elementRef.nativeElement.children.length;
+        const oldLength = this.elementRef.nativeElement.children.length;
         this.renderer.removeChild(this.elementRef.nativeElement, child);
-        if (old_length > this.elementRef.nativeElement.children.length) {
+        if (oldLength > this.elementRef.nativeElement.children.length) {
           i--;
         }
       }
@@ -285,45 +323,5 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         label: (task.files[0].extension !== '.wav') ? task.files[0].extension : task.files[1].extension
       };
     }
-  }
-
-  ngAfterViewInit() {
-    if (!(this.entry === null || this.entry === undefined)) {
-      // entry set
-      if (this.entry instanceof Task) {
-        if (!(this.entry.files === null || this.entry.files === undefined)) {
-          this.updateView();
-        } else {
-          throw new Error('ProcColDirective error: entry of type Task does not have any files');
-        }
-      }
-
-      // changes of entry must be observed specifically
-      if (this.entry instanceof Task) {
-        this.subscrmanager.add(this.entry.statechange.subscribe(() => {
-          this.updateView();
-        }));
-
-        this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
-          this.updateView();
-        }));
-      }
-    } else {
-      throw new Error('ProcColDirective error: no entry set');
-    }
-  }
-
-  ngOnDestroy() {
-    this.subscrmanager.destroy();
-  }
-
-  afterTagClicked = () => {
-    if (this.dirOpened === 'opened') {
-      this.dirOpened = 'closed';
-    } else {
-      this.dirOpened = 'opened';
-    }
-    this.updateView();
-    this.tagClicked.emit(this.dirOpened);
   }
 }

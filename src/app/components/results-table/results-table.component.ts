@@ -39,17 +39,15 @@ export class ResultsTableComponent implements OnInit, OnChanges {
       result: FileInfo;
     }[];
   }[] = [];
-
-  public get converters() {
-    return AppInfo.converters;
-  }
-
   public originalLabel = '';
-
   public conversionExtension = '';
   @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
   constructor(private http: HttpClient, private sanitizer: DomSanitizer, private cd: ChangeDetectorRef) {
+  }
+
+  public get converters() {
+    return AppInfo.converters;
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -62,6 +60,17 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     this.generateTable();
   }
 
+  public onPreviewClick(file: File) {
+    this.previewClick.emit(FileInfo.fromFileObject(file));
+
+    this.cd.markForCheck();
+    this.cd.detectChanges();
+  }
+
+  public isEqualConverterName(converter: any) {
+    return this.conversionExtension.indexOf(converter.obj.name) < 0;
+  }
+
   private generateTable() {
     this.convertedArray = [];
 
@@ -72,8 +81,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         let from: Converter = null;
 
         // TODO change this!
-        for (let k = 0; k < AppInfo.converters.length; k++) {
-          const converter = AppInfo.converters[k];
+        for (const converter of AppInfo.converters) {
           if (converter.obj.extension.indexOf(result.extension) > -1) {
             this.originalLabel = converter.obj.extension;
             from = converter.obj;
@@ -102,10 +110,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         };
 
         const audio: OAudiofile = new OAudiofile();
-        audio.samplerate = (<AudioInfo>this.operation.task.files[0]).samplerate;
-        audio.duration = (<AudioInfo>this.operation.task.files[0]).duration.samples;
-        audio.name = (<AudioInfo>this.operation.task.files[0]).fullname;
-        audio.size = (<AudioInfo>this.operation.task.files[0]).size;
+        audio.samplerate = (this.operation.task.files[0] as AudioInfo).samplerate;
+        audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
+        audio.name = (this.operation.task.files[0] as AudioInfo).fullname;
+        audio.size = (this.operation.task.files[0] as AudioInfo).size;
 
         FileInfo.getFileContent(result.file).then((text) => {
           file.content = text;
@@ -118,15 +126,14 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           this.convertedArray.push(convElem);
           this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
 
-          for (let k = 0; k < AppInfo.converters.length; k++) {
-            const converter = AppInfo.converters[k];
+          for (const converter of AppInfo.converters) {
             if (converter.obj.extension.indexOf(result.extension) < 0) {
               const res: {
                 converter: any,
                 state: string,
                 result: any
               } = {
-                converter: converter,
+                converter,
                 state: 'PENDING',
                 result: null
               };
@@ -220,13 +227,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     });
   }
 
-  public onPreviewClick(file: File) {
-    this.previewClick.emit(FileInfo.fromFileObject(file));
-
-    this.cd.markForCheck();
-    this.cd.detectChanges();
-  }
-
   private sortAlgorithm(a, b): number {
     if (a.number < b.number) {
       return 1;
@@ -235,10 +235,6 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     } else if (a.number > b.number) {
       return -1;
     }
-  }
-
-  public isEqualConverterName(converter: any) {
-    return this.conversionExtension.indexOf(converter.obj.name) < 0;
   }
 
 }

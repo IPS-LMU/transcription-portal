@@ -1,23 +1,23 @@
 table tr td,
 table tr th {
-    font-size: 11px;
-    padding: 3px;
-    text-align: center;
-    border-right: 1px solid lightgray;
+  font-size: 11px;
+  padding: 3px;
+  text-align: center;
+  border-right: 1px solid lightgray;
 }
 
 table thead tr:first-of-type th {
-    border: 1px solid lightgray;
+  border: 1px solid lightgray;
 }
 
 table {
-    border: 1px solid lightgray;
-    margin-bottom: 0;
+  border: 1px solid lightgray;
+  margin-bottom: 0;
 }
 
 .remark {
-    width: 100%;
-    text-align: center;
-    font-size: 10px;
-    display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 10px;
+  display: block;
 }

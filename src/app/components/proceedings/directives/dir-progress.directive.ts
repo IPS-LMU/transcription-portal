@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
 import {SubscriptionManager} from '../../../shared/subscription-manager';
-import {interval, Observable} from 'rxjs';
+import {interval} from 'rxjs';
 
 @Directive({
   selector: '[appDirProgress]'
@@ -37,7 +37,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
   }
 
   updateView() {
-    const all_entries = this.dir.entries.length;
+    const allEntries = this.dir.entries.length;
 
     const counters = {
       processing: 0,
@@ -45,9 +45,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
       failed: 0
     };
 
-    for (let i = 0; i < this.dir.entries.length; i++) {
-      const entry = this.dir.entries[i];
-
+    for (const entry of this.dir.entries) {
       if (entry instanceof Task) {
 
         const operation = entry.operations[this.opIndex];
@@ -63,10 +61,10 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     }
 
     const sum = counters.finished;
-    this.elementRef.nativeElement.innerHTML = sum + '/' + all_entries;
+    this.elementRef.nativeElement.innerHTML = sum + '/' + allEntries;
 
-    this.renderer.setStyle(this.elementRef.nativeElement, 'width', `${sum / all_entries * 100}%`);
-    this.renderer.setAttribute(this.elementRef.nativeElement, 'aria-valuenow', `${sum / all_entries * 100}`);
+    this.renderer.setStyle(this.elementRef.nativeElement, 'width', `${sum / allEntries * 100}%`);
+    this.renderer.setAttribute(this.elementRef.nativeElement, 'aria-valuenow', `${sum / allEntries * 100}`);
 
     if (counters.failed > 0) {
       this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `red`);

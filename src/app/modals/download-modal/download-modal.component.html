@@ -1,46 +1,51 @@
 <ng-template #content>
-    <div class="modal-header">
-        <h4 class="modal-title pull-left">Download results by {{type}}</h4>
-        <button type="button" class="close pull-right" aria-label="Close" (click)="downloadModal.hide(); archiveURL = '';state = 'inactive';">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <p style="text-align: justify;">This creates a zip-archive of all the selected results and optionally
-            conversions to other formats.
-            If you do not select any additional conversions only the original results are added to the zip-archive.</p>
-        <p>Add conversions (optional):</p>
-        <div>
-            <ng-container *ngFor="let conversion of converters; let i = index">
-                <div class="conversion">
-                    <input class="conversion-check" [(ngModel)]="checkboxes[i]" [attr.id]="'check-' + i" type="checkbox"
-                           [name]="conversion.obj.name" (change)="state = 'inactive'; archiveURL = '';"/> <label
-                        [attr.for]="'check-' + i"> <i class="fa fa-file-text"
-                                                      [ngStyle]="{color: conversion.color}"></i>
-                    {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
-                </div>
-            </ng-container>
-            <div class="clearfix"></div>
+  <div class="modal-header">
+    <h4 class="modal-title pull-left">Download results by {{type}}</h4>
+    <button (click)="downloadModal.hide(); archiveURL = '';state = 'inactive';" aria-label="Close"
+            class="close pull-right"
+            type="button">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p style="text-align: justify;">This creates a zip-archive of all the selected results and optionally
+      conversions to other formats.
+      If you do not select any additional conversions only the original results are added to the zip-archive.</p>
+    <p>Add conversions (optional):</p>
+    <div>
+      <ng-container *ngFor="let conversion of converters; let i = index">
+        <div class="conversion">
+          <input (change)="state = 'inactive'; archiveURL = '';" [(ngModel)]="checkboxes[i]" [attr.id]="'check-' + i"
+                 [name]="conversion.obj.name"
+                 class="conversion-check" type="checkbox"/> <label
+          [attr.for]="'check-' + i"> <i [ngStyle]="{color: conversion.color}"
+                                        class="fa fa-file-text"></i>
+          {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
         </div>
-        <br/>
-        <button *ngIf="state === 'inactive'" class="btn btn-outline-primary" style="width:100%;" (click)="process()">Get
-            package
-        </button>
-        <a class="btn btn-outline-info" *ngIf="state === 'processing'" style="width:100%;" [attr.disabled]="true">
-            <i class="fa fa-spinner fa-spin"></i> PLEASE WAIT...
-        </a>
-        <a class="btn btn-outline-success" *ngIf="state === 'finished'" style="width:100%;" [attr.href]="archiveURL"
-           [attr.download]="archiveName">
-            DOWNLOAD
-        </a>
-        <ng-container *ngIf="type === 'line' && state === 'finished'">
-            <button class="btn btn-outline-danger" id="remove-check" style="width:100%;" (click)="removeSelected()">
-                Remove selected lines from table
-            </button>
-        </ng-container>
+      </ng-container>
+      <div class="clearfix"></div>
     </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="downloadModal.hide();archiveURL = '';state = 'inactive';">Close
-        </button>
-    </div>
+    <br/>
+    <button (click)="process()" *ngIf="state === 'inactive'" class="btn btn-outline-primary" style="width:100%;">Get
+      package
+    </button>
+    <a *ngIf="state === 'processing'" [attr.disabled]="true" class="btn btn-outline-info" style="width:100%;">
+      <i class="fa fa-spinner fa-spin"></i> PLEASE WAIT...
+    </a>
+    <a *ngIf="state === 'finished'" [attr.download]="archiveName" [attr.href]="archiveURL"
+       class="btn btn-outline-success"
+       style="width:100%;">
+      DOWNLOAD
+    </a>
+    <ng-container *ngIf="type === 'line' && state === 'finished'">
+      <button (click)="removeSelected()" class="btn btn-outline-danger" id="remove-check" style="width:100%;">
+        Remove selected lines from table
+      </button>
+    </ng-container>
+  </div>
+  <div class="modal-footer">
+    <button (click)="downloadModal.hide();archiveURL = '';state = 'inactive';" class="btn btn-outline-dark"
+            type="button">Close
+    </button>
+  </div>
 </ng-template>

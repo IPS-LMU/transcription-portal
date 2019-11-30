@@ -14,8 +14,8 @@ export class AlertService {
 
   public showAlert(type: 'danger' | 'warning' | 'info' | 'success', message: string, duration?: number) {
     this.alertsend.emit({
-      type: type,
-      message: message,
+      type,
+      message,
       duration: (duration) ? duration : 5
     });
   }

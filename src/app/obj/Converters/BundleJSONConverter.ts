@@ -1,5 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
-import {IAnnotJSON, OAnnotJSON, OAudiofile} from '../Annotation/AnnotJSON';
+import {IAnnotJSON, OAnnotJSON, OAudiofile} from '../Annotation';
 import {base64ToArrayBuffer, contains} from '../../shared/Functions';
 
 export interface Bundle {
@@ -36,15 +36,15 @@ export class BundleJSONConverter extends Converter {
 
     if (!(annotation === null || annotation === undefined)) {
       const bundle = {
-        'ssffFiles': [],
-        'mediaFile': {
-          'encoding': 'BASE654',
-          'data': btoa(
+        ssffFiles: [],
+        mediaFile: {
+          encoding: 'BASE654',
+          data: btoa(
             new Uint8Array(audiofile.arraybuffer)
               .reduce((data, byte) => data + String.fromCharCode(byte), '')
           )
         },
-        'annotation': annotation
+        annotation
       };
       result = JSON.stringify(bundle, null, 2);
       filename = annotation.name + this._extension;
@@ -71,18 +71,18 @@ export class BundleJSONConverter extends Converter {
       const annotation: IAnnotJSON = json.annotation;
       const buffer = base64ToArrayBuffer(data);
 
-      const audio_result: OAudiofile = new OAudiofile();
-      audio_result.name = annotation.name + annotation.annotates.substr(annotation.annotates.lastIndexOf('.'));
+      const audioResult: OAudiofile = new OAudiofile();
+      audioResult.name = annotation.name + annotation.annotates.substr(annotation.annotates.lastIndexOf('.'));
 
-      if (contains(audio_result.name, '.wav') || contains(audio_result.name, '.ogg')) {
-        audio_result.size = buffer.byteLength;
-        audio_result.samplerate = annotation.sampleRate;
-        audio_result.arraybuffer = buffer;
+      if (contains(audioResult.name, '.wav') || contains(audioResult.name, '.ogg')) {
+        audioResult.size = buffer.byteLength;
+        audioResult.samplerate = annotation.sampleRate;
+        audioResult.arraybuffer = buffer;
 
 
         return {
           annotjson: new OAnnotJSON(annotation.name, annotation.sampleRate, annotation.levels, annotation.links),
-          audiofile: audio_result
+          audiofile: audioResult
         };
       }
     }

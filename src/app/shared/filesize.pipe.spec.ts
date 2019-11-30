@@ -1,4 +1,4 @@
-import { FilesizePipe } from './filesize.pipe';
+import {FilesizePipe} from './filesize.pipe';
 
 describe('FilesizePipe', () => {
   it('create an instance', () => {

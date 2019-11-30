@@ -63,15 +63,15 @@ export const ANIMATIONS = [
   trigger('comeIn', [
     state('closed', style({
       'margin-left': '{{ procWidth }}%',
-      'width': '{{ toolWidth }}%'
+      width: '{{ toolWidth }}%'
     }), {params: {toolWidth: 70, procWidth: 30}}),
     state('opened', style({
       'margin-left': '100%',
-      'width': '{{ toolWidth }}%'
+      width: '{{ toolWidth }}%'
     }), {params: {toolWidth: 70}}),
     state('*', style({
       'margin-left': '100%',
-      'width': '{{ toolWidth }}%'
+      width: '{{ toolWidth }}%'
     }), {params: {toolWidth: 70}}),
     transition('* => closed', animate('600ms ease-in')),
     transition('opened => closed', animate('600ms ease-in')),

@@ -1,4 +1,4 @@
-import {Component, OnInit, TemplateRef, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {FileInfo} from '../../obj/fileInfo';
 import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap';
@@ -11,11 +11,10 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 })
 export class FilePreviewModalComponent implements OnInit {
   @ViewChild('previewModal', {static: true}) previewModal: ModalDirective;
-  private modalRef: BsModalRef;
-
   public selectedFile: FileInfo;
   public fileContent = '';
   public downloadURL: SafeResourceUrl;
+  private modalRef: BsModalRef;
   private subscrmanager = new SubscriptionManager();
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
@@ -38,6 +37,14 @@ export class FilePreviewModalComponent implements OnInit {
     this.previewModal.show();
   }
 
+  onDismiss() {
+  }
+
+  cancelEvent($event) {
+    $event.stopPropagation();
+    $event.preventDefault();
+  }
+
   private loadFileContent() {
     if (!(this.selectedFile === null || this.selectedFile === undefined)) {
       FileInfo.getFileContent(this.selectedFile.file).then((text) => {
@@ -48,13 +55,5 @@ export class FilePreviewModalComponent implements OnInit {
     } else {
       console.error(`selectedFile is null!`);
     }
-  }
-
-  onDismiss() {
-  }
-
-  cancelEvent($event) {
-    $event.stopPropagation();
-    $event.preventDefault();
   }
 }

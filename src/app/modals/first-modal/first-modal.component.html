@@ -1,36 +1,36 @@
 <ng-template #content>
-    <div class="modal-header">
-        <h4 class="modal-title pull-left">Notice</h4>
-        <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
-            <span aria-hidden="true">&times;</span>
+  <div class="modal-header">
+    <h4 class="modal-title pull-left">Notice</h4>
+    <button (click)="bsModalRef.hide()" aria-label="Close" class="close pull-right" type="button">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <p> Please notice:</p>
+    <ol>
+      <li>
+        <b>Please do not close this tab or browser window while processing</b>. The processes are running only
+        while this web
+        application is opened. If you use this app on a laptop you need to keep the laptop opened while
+        processing.
+      </li>
+      <li>After closing and re-opening this page <b>you can only continue cancelled tasks from the last finished
+        step</b>.
+      </li>
+      <li>
+        Audio files are saved only for the time of processing. In some situation you could be asked to add the
+        audio file again.
+      </li>
+      <li>
+        <b>Please do not clear the browser's application cache</b>
+      </li>
+    </ol>
+    <div class="row">
+      <div class="col-12">
+        <button (click)="understandClick.next(); bsModalRef.hide();" class="btn btn-info" style="width:100%;">
+          I understand
         </button>
+      </div>
     </div>
-    <div class="modal-body">
-        <p> Please notice:</p>
-        <ol>
-            <li>
-                <b>Please do not close this tab or browser window while processing</b>. The processes are running only
-                while this web
-                application is opened. If you use this app on a laptop you need to keep the laptop opened while
-                processing.
-            </li>
-            <li>After closing and re-opening this page <b>you can only continue cancelled tasks from the last finished
-                step</b>.
-            </li>
-            <li>
-                Audio files are saved only for the time of processing. In some situation you could be asked to add the
-                audio file again.
-            </li>
-            <li>
-                <b>Please do not clear the browser's application cache</b>
-            </li>
-        </ol>
-        <div class="row">
-            <div class="col-12">
-                <button class="btn btn-info" style="width:100%;" (click)="understandClick.next(); bsModalRef.hide();">
-                    I understand
-                </button>
-            </div>
-        </div>
-    </div>
+  </div>
 </ng-template>

@@ -1,18 +1,18 @@
-<div class="queue" [ngStyle]="{
+<div [ngStyle]="{
     display: (queue.length > 0) ? 'inherit': 'none'
-}">
-    <ng-container *ngFor="let entry of queue">
-        <div class="alert alert-{{entry.type}} alert-dismissible fade show" [@fadeToggle]="entry.animation"
-             role="alert">
-            {{entry.message}}
-            <ng-container *ngIf="entry.duration > -1"> (dismissed in {{entry.duration}}s)</ng-container>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close" (click)="onClose(entry)">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    </ng-container>
-    <button [@fadeToggle]="animation" class="btn btn-secondary"
-            style="width:100%;background-color:lightgray;border:none;" (click)="clear()"><i
-            class="fa fa-trash-o"></i> Clear all
-    </button>
+}" class="queue">
+  <ng-container *ngFor="let entry of queue">
+    <div [@fadeToggle]="entry.animation" class="alert alert-{{entry.type}} alert-dismissible fade show"
+         role="alert">
+      {{entry.message}}
+      <ng-container *ngIf="entry.duration > -1"> (dismissed in {{entry.duration}}s)</ng-container>
+      <button (click)="onClose(entry)" aria-label="Close" class="close" data-dismiss="alert" type="button">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </ng-container>
+  <button (click)="clear()" [@fadeToggle]="animation"
+          class="btn btn-secondary" style="width:100%;background-color:lightgray;border:none;"><i
+    class="fa fa-trash-o"></i> Clear all
+  </button>
 </div>

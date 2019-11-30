@@ -77,8 +77,7 @@ export class CompatibilityService {
 
   public isValidBrowser(allowedBrowsers: any[]): boolean {
 
-    for (let i = 0; i < allowedBrowsers.length; i++) {
-      const browser = allowedBrowsers[i];
+    for (const browser of allowedBrowsers) {
       if (browser.name === BrowserInfo.browser) {
         return true;
       }
@@ -93,8 +92,7 @@ export class CompatibilityService {
       let valid = true;
 
       const promises = [];
-      for (let i = 0; i < this.rules.length; i++) {
-        const rule = this.rules[i];
+      for (const rule of this.rules) {
         promises.push(this.checkFeature(rule.name));
       }
 

@@ -2,24 +2,25 @@ import {DataInfo} from './dataInfo';
 import {FileInfo} from './fileInfo';
 
 export class DirectoryInfo extends DataInfo {
-  set entries(value: (FileInfo | DirectoryInfo)[]) {
-    this._entries = value;
-  }
+  private readonly _path: string;
 
-  get entries(): (FileInfo | DirectoryInfo)[] {
-    return this._entries;
+  public constructor(path: string, size?: number) {
+    super(DirectoryInfo.extractFolderName(path), 'folder', size);
+    this._path = path;
   }
 
   get path(): string {
     return this._path;
   }
 
-  private readonly _path: string;
   private _entries: (FileInfo | DirectoryInfo)[] = [];
 
-  public constructor(path: string, size?: number) {
-    super(DirectoryInfo.extractFolderName(path), 'folder', size);
-    this._path = path;
+  get entries(): (FileInfo | DirectoryInfo)[] {
+    return this._entries;
+  }
+
+  set entries(value: (FileInfo | DirectoryInfo)[]) {
+    this._entries = value;
   }
 
   public static fromFolderObject(folder: DataTransferItem): Promise<DirectoryInfo> {
@@ -27,7 +28,7 @@ export class DirectoryInfo extends DataInfo {
       if (folder) {
         DirectoryInfo.traverseFileTree(folder, '').then((result) => {
           if (!(result === null || result === undefined) && result[0] instanceof DirectoryInfo) {
-            resolve(<DirectoryInfo> result[0]);
+            resolve(result[0] as DirectoryInfo);
           } else {
             reject('could not parse directory');
           }
@@ -40,22 +41,42 @@ export class DirectoryInfo extends DataInfo {
     });
   }
 
+  public static extractFolderName(path: string): string {
+    if (path !== '') {
+      let extensionBegin = path.lastIndexOf('/');
+      if (extensionBegin > -1) {
+        // split name and extension
+        let foldername = path.substr(0, extensionBegin);
+
+        extensionBegin = foldername.lastIndexOf('/');
+        if (extensionBegin > -1) {
+          foldername = foldername.substr(extensionBegin + 1);
+        }
+
+        return foldername;
+      } else {
+        throw new Error('invalid folder path.');
+      }
+    }
+    return null;
+  }
+
   private static traverseFileTree(item: (DataTransferItem | any), path): Promise<(FileInfo | DirectoryInfo)[]> {
     // console.log(`search path: ${path}`);
     return new Promise<(FileInfo | DirectoryInfo)[]>((resolve, reject) => {
-        path = path || '';
+      path = path || '';
       if (!(item === null || item === undefined)) {
         let webKitEntry: any;
 
-          if (item instanceof DataTransferItem) {
-            webKitEntry = item.webkitGetAsEntry();
-          } else {
-            webKitEntry = <any> item;
-          }
+        if (item instanceof DataTransferItem) {
+          webKitEntry = item.webkitGetAsEntry();
+        } else {
+          webKitEntry = item as any;
+        }
 
-          if (webKitEntry.isFile) {
-            // console.log(`isFile ${item.fullPath}`);
-            // Get file
+        if (webKitEntry.isFile) {
+          // console.log(`isFile ${item.fullPath}`);
+          // Get file
 
             if (item instanceof DataTransferItem) {
               const file = item.getAsFile();
@@ -73,7 +94,7 @@ export class DirectoryInfo extends DataInfo {
             } else {
               // item is FileEntry
 
-              (<any> webKitEntry).file((file: any) => {
+              (webKitEntry as any).file((file: any) => {
                 if (file.name.indexOf('.') > -1) {
                   const fileInfo = new FileInfo(file.name, file.type, file.size, file);
                   resolve([fileInfo]);
@@ -85,36 +106,32 @@ export class DirectoryInfo extends DataInfo {
           } else if (webKitEntry.isDirectory) {
             // Get folder contents
             // console.log(`is dir ${item.fullPath}`);
-            const dirEntry: any = <any> webKitEntry;
-            const dirReader = dirEntry.createReader();
+          const dirEntry: any = webKitEntry as any;
+          const dirReader = dirEntry.createReader();
             dirReader.readEntries((entries: any) => {
               const promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
-              for (let i = 0; i < entries.length; i++) {
-                promises.push(this.traverseFileTree(entries[i], path + dirEntry.name + '/'));
+              for (const entry of entries) {
+                promises.push(this.traverseFileTree(entry, path + dirEntry.name + '/'));
               }
               Promise.all(promises).then((values: (FileInfo | DirectoryInfo)[][]) => {
                 const dir = new DirectoryInfo(path + dirEntry.name + '/');
                 let result: (FileInfo | DirectoryInfo)[] = [];
 
-                for (let i = 0; i < values.length; i++) {
-                  const value = values[i];
-
-                  for (let j = 0; j < value.length; j++) {
-                    const val = value[j];
-
+                for (const value of values) {
+                  for (const val of value) {
                     result.push(val);
                   }
                 }
 
                 result = result.sort((a, b) => {
                   if (a instanceof FileInfo && b instanceof FileInfo) {
-                    const a2 = <FileInfo> a;
-                    const b2 = <FileInfo> b;
+                    const a2 = a as FileInfo;
+                    const b2 = b as FileInfo;
 
                     return a2.name.localeCompare(b2.name);
                   } else if (a instanceof DirectoryInfo && b instanceof DirectoryInfo) {
-                    const a2 = <DirectoryInfo> a;
-                    const b2 = <DirectoryInfo> b;
+                    const a2 = a as DirectoryInfo;
+                    const b2 = b as DirectoryInfo;
 
                     return a2.path.localeCompare(b2.path);
                   } else {
@@ -136,29 +153,8 @@ export class DirectoryInfo extends DataInfo {
     );
   }
 
-  public static extractFolderName(path: string): string {
-    if (path !== '') {
-      let extension_begin;
-      if ((extension_begin = path.lastIndexOf('/')) > -1) {
-        // split name and extension
-        let foldername = path.substr(0, extension_begin);
-
-        if ((extension_begin = foldername.lastIndexOf('/')) > -1) {
-          foldername = foldername.substr(extension_begin + 1);
-        }
-
-        return foldername;
-      } else {
-        throw new Error('invalid folder path.');
-      }
-    }
-    return null;
-  }
-
   public addEntries(entries: (FileInfo | DirectoryInfo)[]) {
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-
+    for (const entry of entries) {
       this._entries.push(entry);
     }
   }

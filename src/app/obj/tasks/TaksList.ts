@@ -9,12 +9,13 @@ export interface EntryChangeEvent {
 
 export class TaskList {
 
+  constructor() {
+  }
+
   public get length(): number {
     let result = 0;
 
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-
+    for (const entry of this.entries) {
       if (entry instanceof Task) {
         result++;
       } else {
@@ -26,18 +27,16 @@ export class TaskList {
     return result;
   }
 
-  get entryChanged(): Subject<EntryChangeEvent> {
-    return this._entryChanged;
-  }
+  private _entries: (Task | TaskDirectory)[] = [];
 
   get entries(): (Task | TaskDirectory)[] {
     return this._entries;
   }
 
-  private _entries: (Task | TaskDirectory)[] = [];
   private _entryChanged: Subject<EntryChangeEvent> = new Subject<EntryChangeEvent>();
 
-  constructor() {
+  get entryChanged(): Subject<EntryChangeEvent> {
+    return this._entryChanged;
   }
 
   public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
@@ -46,7 +45,7 @@ export class TaskList {
         this._entries.push(newEntry);
         this._entryChanged.next({
           state: 'added',
-          saveToDB: saveToDB,
+          saveToDB,
           entry: newEntry
         });
         resolve();
@@ -89,12 +88,11 @@ export class TaskList {
   public getAllTasks(): Task[] {
     let result: Task[] = [];
 
-    for (let i = 0; i < this._entries.length; i++) {
-      const entry = this._entries[i];
+    for (const entry of this._entries) {
       if (entry instanceof Task) {
         result.push(entry);
       } else {
-        result = result.concat((<TaskDirectory> entry).getAllTasks());
+        result = result.concat((entry as TaskDirectory).getAllTasks());
       }
     }
 
@@ -104,9 +102,7 @@ export class TaskList {
   public getIndexByEntry(selectedEntry: Task | TaskDirectory): number {
     let result = -1;
 
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-
+    for (const entry of this.entries) {
       if (entry instanceof Task) {
         if (entry.id === selectedEntry.id) {
           return result + 1;
@@ -136,10 +132,8 @@ export class TaskList {
   public getEntryByIndex(index: number) {
     let counter = -1;
 
-    for (let i = 0; i < this.entries.length; i++) {
+    for (const entry of this.entries) {
       counter++;
-      const entry = this.entries[i];
-
       if (entry instanceof Task) {
         if (counter === index) {
           return entry;
@@ -167,8 +161,7 @@ export class TaskList {
   public getAllTaskDirectories(): TaskDirectory[] {
     const result: TaskDirectory[] = [];
 
-    for (let i = 0; i < this._entries.length; i++) {
-      const entry = this._entries[i];
+    for (const entry of this._entries) {
       if (entry instanceof TaskDirectory) {
         result.push(entry);
       }
@@ -182,8 +175,8 @@ export class TaskList {
       const sendEvent = () => {
         this._entryChanged.next({
           state: 'removed',
-          saveToDB: saveToDB,
-          entry: entry
+          saveToDB,
+          entry
         });
       };
       if (!(entry === null || entry === undefined)) {
@@ -196,14 +189,14 @@ export class TaskList {
               reject(error);
             });
           } else {
-            const task_index = this.entries.findIndex((a) => {
-              if (a instanceof Task && (<Task> a).id === entry.id) {
+            const taskIndex = this.entries.findIndex((a) => {
+              if (a instanceof Task && (a as Task).id === entry.id) {
                 return true;
               }
             });
 
-            if (task_index > -1) {
-              this._entries.splice(task_index, 1);
+            if (taskIndex > -1) {
+              this._entries.splice(taskIndex, 1);
             } else {
               console.log(`entry not found with ID ${entry.id}`);
             }
@@ -212,14 +205,14 @@ export class TaskList {
             sendEvent();
           }
         } else {
-          const task_index = this.entries.findIndex((a) => {
-            if (a instanceof TaskDirectory && (<TaskDirectory> a).id === entry.id) {
+          const taskIndex = this.entries.findIndex((a) => {
+            if (a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id) {
               return true;
             }
           });
 
-          if (task_index > -1) {
-            this._entries.splice(task_index, 1);
+          if (taskIndex > -1) {
+            this._entries.splice(taskIndex, 1);
           } else {
             console.log(`entry not found with ID ${entry.id}`);
           }
@@ -238,7 +231,7 @@ export class TaskList {
         return this.removeEntry(entry, saveToDB);
       } else if (entry.entries.length === 1) {
         // move entry task to upper level and remove dir
-        const entryTask = <Task> entry.entries[0];
+        const entryTask = entry.entries[0] as Task;
         entryTask.directory = null;
         return this.removeEntry(entryTask, saveToDB).then(() => {
           return this.removeEntry(entry, saveToDB);

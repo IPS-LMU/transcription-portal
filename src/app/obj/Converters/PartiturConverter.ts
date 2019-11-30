@@ -1,5 +1,5 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
-import {OAnnotJSON, OAudiofile, OItem, OLabel, OLevel, OSegment} from '../Annotation/AnnotJSON';
+import {OAnnotJSON, OAudiofile, OItem, OLabel, OLevel, OSegment} from '../Annotation';
 
 export class PartiturConverter extends Converter {
 
@@ -37,23 +37,22 @@ LBD:\n`;
       let ort = [];
       const trn = [];
 
-      let ort_counter = 0;
+      let ortCounter = 0;
 
-      for (let i = 0; i < annotation.levels[levelnum].items.length; i++) {
-        const item = annotation.levels[levelnum].items[i];
+      for (const item of annotation.levels[levelnum].items) {
         const words = item.labels[0].value.split(' ');
         ort = ort.concat(words);
-        let trn_line = `TRN: ${item.sampleStart} ${item.sampleDur} `;
+        let trnLine = `TRN: ${item.sampleStart} ${item.sampleDur} `;
 
         for (let k = 0; k < words.length; k++) {
-          trn_line += `${ort_counter + k}`;
+          trnLine += `${ortCounter + k}`;
           if (k < words.length - 1) {
-            trn_line += ',';
+            trnLine += ',';
           }
         }
-        ort_counter += words.length;
-        trn_line += ` ${item.labels[0].value}\n`;
-        trn.push(trn_line);
+        ortCounter += words.length;
+        trnLine += ` ${item.labels[0].value}\n`;
+        trn.push(trnLine);
       }
 
       const kanLevel = annotation.levels.find((a) => {
@@ -62,8 +61,7 @@ LBD:\n`;
 
       let j = 0;
       if (!(kanLevel === null || kanLevel === undefined)) {
-        for (let i = 0; i < kanLevel.items.length; i++) {
-          const kLevelItem = kanLevel.items[i];
+        for (const kLevelItem of kanLevel.items) {
           if (kLevelItem.labels[0].value !== '') {
             content += `KAN: ${j} ${kLevelItem.labels[0].value}\n`;
             j++;
@@ -72,14 +70,14 @@ LBD:\n`;
       }
       j = 0;
 
-      for (let i = 0; i < ort.length; i++) {
-        if (ort[i] !== '') {
-          content += `ORT: ${j} ${ort[i]}\n`;
+      for (const ortElem of ort) {
+        if (ortElem !== '') {
+          content += `ORT: ${j} ${ortElem}\n`;
           j++;
         }
       }
-      for (let i = 0; i < trn.length; i++) {
-        content += trn[i];
+      for (const trnElem of trn) {
+        content += trnElem;
       }
 
       j = 0;
@@ -89,8 +87,7 @@ LBD:\n`;
       });
 
       if (!(mausLevel === null || mausLevel === undefined)) {
-        for (let i = 0; i < mausLevel.items.length; i++) {
-          const mausItem = mausLevel.items[i];
+        for (const mausItem of mausLevel.items) {
           if (mausItem.labels[0].value !== '') {
             content += `MAU: ${j} ${mausItem.labels[0].value}\n`;
             j++;
@@ -131,7 +128,7 @@ LBD:\n`;
       const tiers = {};
 
       // skip not needed information and read needed information
-      let previous_tier = '';
+      let previousTier = '';
       let level = null;
       let counter = 1;
       const start = 0;
@@ -145,26 +142,27 @@ LBD:\n`;
 
           if (search[0] === 'SAM') {
             if (audiofile.samplerate !== Number(columns[1])) {
-              console.error(`Sample Rate of audio file is not equal to the value from Partitur file! ${audiofile.samplerate} !== ${columns[1]}`);
+              console.error(`Sample Rate of audio file is not equal to the value from Partitur file!`
+                + `${audiofile.samplerate} !== ${columns[1]}`);
             }
           }
 
           if (search[0] === 'TRN') {
-            if (previous_tier !== search[0]) {
+            if (previousTier !== search[0]) {
               if (level !== null) {
                 result.levels.push(level);
               }
               level = (search[0] !== 'TRN') ? new OLevel(search[0], 'ITEM', []) : new OLevel(search[0], 'SEGMENT', []);
-              previous_tier = search[0];
-              tiers[`${previous_tier}`] = [];
+              previousTier = search[0];
+              tiers[`${previousTier}`] = [];
             }
-            if (previous_tier !== 'TRN') {
-              level.items.push(new OItem(counter, [new OLabel(previous_tier, columns[2])]));
-              tiers[`${previous_tier}`].push(columns[2]);
+            if (previousTier !== 'TRN') {
+              level.items.push(new OItem(counter, [new OLabel(previousTier, columns[2])]));
+              tiers[`${previousTier}`].push(columns[2]);
             } else {
               const transcript = lines[pointer].match(new RegExp('TRN: ([0-9]+) ([0-9]+) ([0-9]+,?)+ (.*)'));
               level.items.push(new OSegment(
-                counter, Number(transcript[1]), Number(transcript[2]), [new OLabel(previous_tier, transcript[4])]
+                counter, Number(transcript[1]), Number(transcript[2]), [new OLabel(previousTier, transcript[4])]
                 )
               );
             }

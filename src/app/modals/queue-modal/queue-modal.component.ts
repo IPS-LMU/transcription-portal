@@ -36,23 +36,31 @@ export class QueueModalComponent implements OnInit {
   @Input() tasks: Task[] = [];
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-
-  public get AppSettings() {
-    return AppSettings;
-  }
-
   public mouseInDropdown = false;
-
   public serviceProviders = {};
   private subscrManager = new SubscriptionManager();
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer,
               public taskService: TaskService, private storage: StorageService,
               private cd: ChangeDetectorRef) {
-    for (let i = 0; i < AppSettings.configuration.api.services.length; i++) {
-      const provider = AppSettings.configuration.api.services[i];
+    for (const provider of AppSettings.configuration.api.services) {
       this.serviceProviders['' + provider.provider] = provider;
     }
+  }
+
+  public get AppSettings() {
+    return AppSettings;
+  }
+
+  public get orangeCount(): number {
+    if (!(this.tasks.filter === null || this.tasks.filter === undefined)) {
+      return this.tasks.filter((a) => {
+        return a.state === TaskState.QUEUED && (a.files[0].file === undefined
+          || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
+      }).length;
+    }
+
+    return 0;
   }
 
   ngOnInit() {
@@ -80,8 +88,7 @@ export class QueueModalComponent implements OnInit {
 
   onSubmit() {
     this.changeLanguageforAllQueuedTasks();
-    for (let i = 0; i < this.tasks.length; i++) {
-      const task = this.tasks[i];
+    for (const task of this.tasks) {
       if (task.files[0].file !== undefined) {
         task.changeState(TaskState.PENDING);
       }
@@ -89,17 +96,6 @@ export class QueueModalComponent implements OnInit {
     this.queueModal.hide();
     this.cd.markForCheck();
     this.cd.detectChanges();
-  }
-
-  public get orangeCount(): number {
-    if (!(this.tasks.filter === null || this.tasks.filter === undefined)) {
-      return this.tasks.filter((a) => {
-        return a.state === TaskState.QUEUED && (a.files[0].file === undefined
-          || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined));
-      }).length;
-    }
-
-    return 0;
   }
 
   onASRLangChanged(lang: OHLanguageObject) {
@@ -116,8 +112,7 @@ export class QueueModalComponent implements OnInit {
       return a.state === TaskState.QUEUED;
     });
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
+    for (const task of tasks) {
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
         task.asr = this.taskService.selectedlanguage.asr;
@@ -149,9 +144,8 @@ export class QueueModalComponent implements OnInit {
       if (!previous.enabled && !operation.enabled) {
         previous.enabled = true;
 
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
-          const task_operation = task.operations[index - 1];
+        for (const task of tasks) {
+          const taskOperation = task.operations[index - 1];
           const currOperation = task.operations[index];
 
           // check if transcript was added to the task
@@ -160,8 +154,8 @@ export class QueueModalComponent implements OnInit {
           }) > -1;
 
           if (!hasTranscript) {
-            if (task_operation.state === TaskState.PENDING) {
-              task_operation.enabled = previous.enabled;
+            if (taskOperation.state === TaskState.PENDING) {
+              taskOperation.enabled = previous.enabled;
             }
 
             if (currOperation.state === TaskState.PENDING) {
@@ -175,13 +169,12 @@ export class QueueModalComponent implements OnInit {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
-        for (let i = 0; i < tasks.length; i++) {
-          const task = tasks[i];
-          const task_operation = task.operations[index + 1];
+        for (const task of tasks) {
+          const taskOperation = task.operations[index + 1];
           const currOperation = task.operations[index];
 
-          if (task_operation.state === TaskState.PENDING) {
-            task_operation.enabled = next.enabled;
+          if (taskOperation.state === TaskState.PENDING) {
+            taskOperation.enabled = next.enabled;
           }
           if (currOperation.state === TaskState.PENDING) {
             currOperation.enabled = operation.enabled;
@@ -191,13 +184,12 @@ export class QueueModalComponent implements OnInit {
     } else if (operation instanceof G2pMausOperation) {
       next.enabled = !next.enabled;
 
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-        const task_operation = task.operations[index + 1];
+      for (const task of tasks) {
+        const taskOperation = task.operations[index + 1];
         const currOperation = task.operations[index];
 
-        if (task_operation.state === TaskState.PENDING) {
-          task_operation.enabled = next.enabled;
+        if (taskOperation.state === TaskState.PENDING) {
+          taskOperation.enabled = next.enabled;
         }
         if (currOperation.state === TaskState.PENDING) {
           currOperation.enabled = operation.enabled;
@@ -219,8 +211,7 @@ export class QueueModalComponent implements OnInit {
     for (let j = 0; j < this.taskService.operations.length; j++) {
       const operation = this.taskService.operations[j];
 
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
+      for (const task of tasks) {
         const currOperation = task.operations[j];
 
         // check if transcript was added to the task

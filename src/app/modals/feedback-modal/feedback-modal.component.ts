@@ -13,7 +13,7 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BugReportService} from '../../shared/bug-report.service';
 import {AppSettings} from '../../shared/app.settings';
-import {BsModalRef, BsModalService, ModalDirective, PopoverDirective} from 'ngx-bootstrap';
+import {BsModalService, ModalDirective} from 'ngx-bootstrap';
 
 @Component({
   selector: 'app-feedback',
@@ -26,9 +26,7 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('content', {static: true}) content: TemplateRef<any>;
 
   public showThankYou = false;
-  private _subscrmanager: SubscriptionManager = new SubscriptionManager();
-  @ViewChild('feedbackModal', { static: false }) feedbackModal: ModalDirective;
-
+  @ViewChild('feedbackModal', {static: false}) feedbackModal: ModalDirective;
   public formData = {
     email: '',
     messsage: '',
@@ -37,11 +35,11 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
       protocol: ''
     }
   };
-
   public protocolText: SafeHtml = '';
+  private _subscrmanager: SubscriptionManager = new SubscriptionManager();
 
-  ngOnDestroy() {
-    this._subscrmanager.destroy();
+  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer, private bugService: BugReportService,
+              private cd: ChangeDetectorRef) {
   }
 
   public get allFilled(): boolean {
@@ -49,13 +47,13 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
       || this.formData.messsage.length > 10 || this.formData.protocol.append === true);
   }
 
+  ngOnDestroy() {
+    this._subscrmanager.destroy();
+  }
+
   public updateProtocolAsText() {
     const str = JSON.stringify(this.bugService.getPackage(), null, 2);
     this.protocolText = this.sanitizer.sanitize(SecurityContext.HTML, str);
-  }
-
-  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer, private bugService: BugReportService,
-              private cd: ChangeDetectorRef) {
   }
 
   ngOnInit() {

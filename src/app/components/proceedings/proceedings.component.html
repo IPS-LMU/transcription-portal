@@ -1,8 +1,9 @@
-<app-download-modal #content [selectedTasks]="selectedRows" [column]="selectedOperation"></app-download-modal>
+<app-download-modal #content [column]="selectedOperation" [selectedTasks]="selectedRows"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
-<div class="inner" #inner (mouseleave)="isDragging = false" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
-     (click)="onContextBlur()">
+<div #inner (click)="onContextBlur()" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
+     (mouseleave)="isDragging = false"
+     class="inner">
   <div *ngIf="!storage.tasksFound && taskService.taskList.entries.length === 0 && queue.length === 0"
        class="placeholder">
     <h1 style="margin-top: 10%;margin-bottom:40px;">Quickstart</h1>
@@ -43,34 +44,34 @@
       </div><!-- /.col-lg-4 -->
     </div>
   </div>
-  <div id="loading" *ngIf="storage.tasksFound && !storage.ready">
+  <div *ngIf="storage.tasksFound && !storage.ready" id="loading">
     <i class="fa fa-spinner fa-spin fa-5x"></i>
   </div>
   <ng-container *ngIf="storage.ready">
-    <app-context-menu [ngStyle]="{
+    <app-context-menu (optionselected)="onContextMenuOptionSelected($event)" [hid]="contextmenu.hidden" [ngStyle]="{
         'margin-top': contextmenu.y + 'px',
         'margin-left': contextmenu.x + 'px',
         'display': (contextmenu.hidden) ? 'none' : 'inherit'
-    }" [hid]="contextmenu.hidden" [selected_tasks]="selectedRows" [selectedOperationType]="selectedOperation"
-                      (optionselected)="onContextMenuOptionSelected($event)">
+    }" [selectedOperationType]="selectedOperation"
+                      [selectedTasks]="selectedRows">
     </app-context-menu>
-    <app-popover [@fadeToggleRow]="popover.state"
+    <app-popover #popoverRef
+                 (mouseenter)="popover.mouseIn = true"
+                 (mouseleave)="popover.state = 'closed'"
+                 [@fadeToggleRow]="popover.state" [borderColor]="getPopoverColor(popover.operation)"
                  [height]="popover.height"
-                 [width]="popover.width"
                  [ngStyle]="{
         'width': popover.width + 'px',
         'height': popover.height + 'px',
         'margin-top': popover.y + 'px',
         'margin-left': (popover.x + 4) + 'px'
-    }" (mouseenter)="popover.mouseIn = true"
-                 (mouseleave)="popover.state = 'closed'"
-                 [borderColor]="getPopoverColor(popover.operation)" [pointer]="popover.pointer" #popoverRef>
+    }" [pointer]="popover.pointer" [width]="popover.width">
       <ng-container *ngIf="popover.operation !== null">
         <ng-container *ngIf="popover.operation.time.start > 0">
 
-          <p style="color:red;" *ngIf="popover.operation.lastResult !== null &&
+          <p *ngIf="popover.operation.lastResult !== null &&
                 !popover.operation.lastResult.available
-                ">
+                " style="color:red;">
             The latest result does not exist anymore.
           </p>
 
@@ -78,7 +79,7 @@
             <tr>
               <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i>
                 {{popover.operation.time.start
-                      | date :"dd.MM.yyyy H:mm"}}
+                  | date :"dd.MM.yyyy H:mm"}}
               </td>
               <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
                 {{calculateDuration(popover.operation.time) | time:'true'}}
@@ -90,9 +91,9 @@
           *ngIf="popover.operation.results.length === 0 && popover.operation.providerInformation !== undefined">
           <div class="service-preview">
             <div class="provided-by">Service provided by</div>
-            <a href="https://www.eml.org/" target="_blank" style="display:block;vertical-align: middle;">
-              <img class="service-logo" [src]="popover.operation.providerInformation.logoURL"
-                   alt="EML Logo" style="border:1px solid lightgray;">
+            <a href="https://www.eml.org/" style="display:block;vertical-align: middle;" target="_blank">
+              <img [src]="popover.operation.providerInformation.logoURL" alt="EML Logo"
+                   class="service-logo" style="border:1px solid lightgray;">
             </a>
             <div class="service-terms">
               <a [href]="popover.operation.providerInformation.termsURL"
@@ -100,8 +101,8 @@
               <a [href]="popover.operation.providerInformation.homepageURL"
                  target="_blank"><i class="fa fa-globe"></i> Homepage</a><br/>
             </div>
-            <i class="fa fa-exclamation-circle report-issue"
-               (click)="onReportIconClick(popover.operation)"></i>
+            <i (click)="onReportIconClick(popover.operation)"
+               class="fa fa-exclamation-circle report-issue"></i>
           </div>
           <div class="service-remarks">
             <ul>
@@ -116,22 +117,22 @@
         </ng-container>
         <ng-container *ngIf="popover.operation.results.length > 0">
           <div style="overflow:auto;">
-            <app-results-table [operation]="popover.operation"
-                               (previewClick)="onPreviewClick($event)"></app-results-table>
+            <app-results-table (previewClick)="onPreviewClick($event)"
+                               [operation]="popover.operation"></app-results-table>
           </div>
         </ng-container>
-        <div id="output-area" *ngIf="popover.operation.parsedProtocol.length > 0">
+        <div *ngIf="popover.operation.parsedProtocol.length > 0" id="output-area">
           <div style="width:100%;text-align:right;padding:0;margin-bottom:0;">
-            <button class="btn btn-sm btn-outline-info" style="font-size:11px;cursor:pointer;margin-bottom:0;"
-                    (click)="copyProtocolToClipboard(popover.operation.protocol)">
+            <button (click)="copyProtocolToClipboard(popover.operation.protocol)" class="btn btn-sm btn-outline-info"
+                    style="font-size:11px;cursor:pointer;margin-bottom:0;">
               <i class="fa fa-clipboard"></i> Copy to clipboard
             </button>
           </div>
-          <table id="ouput-table" class="table table-sm table-striped">
+          <table class="table table-sm table-striped" id="ouput-table">
             <tbody>
             <tr *ngFor="let item of popover.operation.parsedProtocol">
               <td>
-                <i class="fa fa-exclamation-circle" style="color:red" *ngIf="item.type === 'ERROR'; else isWarning"></i>
+                <i *ngIf="item.type === 'ERROR'; else isWarning" class="fa fa-exclamation-circle" style="color:red"></i>
                 <ng-template #isWarning>
                   <i class="fa fa-warning" style="color:orange"></i>
                 </ng-template>
@@ -169,18 +170,18 @@
         </th>
         <th>File</th>
         <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-          <th style="padding-left:3px;padding-right:3px;" (mousemove)="updateChanges()">
+          <th (mousemove)="updateChanges()" style="padding-left:3px;padding-right:3px;">
             <div style="position: relative;">
               <div style="display:block;position: relative;height:25px;cursor:pointer;">
                 <app-operation-arrow [first]="(i === 0)"
                                      [type]="(i === operations.length - 1) ? 'circle': 'arrow'"></app-operation-arrow>
                 <div style="z-index:10;width:100%;text-align:center;">
                   <ng-template #tipContent>{{operation.description}}</ng-template>
-                  <div style="display:inline;padding:0 3px;"
-                       (click)="openArchiveDownload('column', operation)"
+                  <div (click)="openArchiveDownload('column', operation)"
                        [tooltip]="tipContent"
-                       placement="bottom"
                        containerClass="operation-tooltip"
+                       placement="bottom"
+                       style="display:inline;padding:0 3px;"
                   >
                     <ng-container *ngIf="shortstyle">
                       {{operation.shortTitle}}
@@ -201,15 +202,15 @@
         <th></th>
         <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
           <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'">
-            <input type="checkbox"
-                   class="header-checkbox"
-                   [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+            <input (click)="deactivateOperation(operation, i)"
+                   [checked]="operation.enabled"
+                   class="header-checkbox" type="checkbox"/>
           </th>
           <th *ngIf="operation.name === 'MAUS'" colspan="2" style="position: relative">
             <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
-            <input type="checkbox"
-                   class="header-checkbox"
-                   [checked]="operation.enabled" (click)="deactivateOperation(operation, i)"/>
+            <input (click)="deactivateOperation(operation, i)"
+                   [checked]="operation.enabled"
+                   class="header-checkbox" type="checkbox"/>
             <img src="assets/directory.png"
                  style="height:25px;-webkit-transform: scaleX(-1); transform: scaleX(-1);right:0;position:absolute"/>
           </th>
@@ -221,8 +222,8 @@
       <!-- TABLE BODY -->
       <tbody (contextmenu)="onContextMenu($event)">
       <ng-container *ngFor="let entry of taskList.entries; let i = index;">
-        <tr appProceedingsRow [entry]="entry" [toolSelectedOperation]="toolSelectedOperation"
-            [rowSelected]="isEntrySelected(entry)">
+        <tr [entry]="entry" [rowSelected]="isEntrySelected(entry)" [toolSelectedOperation]="toolSelectedOperation"
+            appProceedingsRow>
           <!-- filename/foldername column -->
           <!-- <td (click)="tagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
               <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'opened'"
@@ -230,46 +231,46 @@
               <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'closed'"
                  class="fa fa-angle-down"></i>
           </td> -->
-          <td appProcColIcon [entry]="entry" [shortStyle]="isClosed"
-              (appendingClick)="onPreviewClick($event)"
-              (click)="onRowSelected(entry)"
+          <td #nameCol="colIcon" (appendingClick)="onPreviewClick($event)" (click)="onRowSelected(entry)"
+              (deleteIconClick)="removeEntry($event, entry)"
               (infoMouseEnter)="onInfoMouseEnter($event, entry)"
               (infoMouseLeave)="onInfoMouseLeave($event, entry)"
               (infoMouseOver)="onInfoMouseOver($event, entry)"
-              (deleteIconClick)="removeEntry($event, entry)"
               (mouseenter)="onNameMouseEnter($event, entry)"
               (mouseleave)="onNameMouseLeave($event, entry)"
               (mouseover)="onNameMouseOver($event, entry)"
-              [mouseOver]="entry.mouseover"
-              #nameCol="colIcon"
-              [dirOpened]="allDirOpened"
               (tagClicked)="onTagClicked($event)"
+              [dirOpened]="allDirOpened"
+              [entry]="entry"
+              [mouseOver]="entry.mouseover"
+              [shortStyle]="isClosed"
+              appProcColIcon
           >
           </td>
           <!-- Task operations-->
           <ng-container *ngIf="entry.type === 'task'">
-            <td *ngFor="let operation of entry.operations" appProcColOperation
+            <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
 
+                (operationMouseEnter)="onOperationMouseEnter($event, operation)"
+                (operationMouseLeave)="onOperationMouseLeave($event, operation)"
+
+                (operationMouseOver)="onOperationMouseOver($event, operation)"
+                *ngFor="let operation of entry.operations"
                 [entry]="entry"
-                [operation]="operation"
-
-                (onOperationMouseEnter)="onOperationMouseEnter($event, operation)"
-                (onOperationMouseLeave)="onOperationMouseLeave($event, operation)"
-                (onOperationMouseOver)="onOperationMouseOver($event, operation)"
-                (mousedown)="onOperationClick($event, operation)"
-                (click)="onRowSelected(entry, operation)"
                 [ngStyle]="{
                         'width': (operation.name === 'Upload' && !isClosed)? '120px': 'auto'
                     }"
+                [operation]="operation"
+                appProcColOperation
             >
             </td>
           </ng-container>
           <ng-container *ngIf="entry.type === 'folder'">
-            <td *ngFor="let operation of taskService.operations; let opIndex = index"
-                (click)="onRowSelected(entry)">
+            <td (click)="onRowSelected(entry)"
+                *ngFor="let operation of taskService.operations; let opIndex = index">
               <div class="progress">
-                <div appDirProgress [dir]="entry" [opIndex]="opIndex" class="progress-bar"
-                     role="progressbar" aria-valuemin="0" aria-valuemax="100">25%
+                <div [dir]="entry" [opIndex]="opIndex" appDirProgress aria-valuemax="100"
+                     aria-valuemin="0" class="progress-bar" role="progressbar">25%
                 </div>
               </div>
             </td>
@@ -277,50 +278,50 @@
         </tr>
         <ng-container *ngIf="entry.type === 'folder'">
           <!-- folder row -->
-          <tr *ngFor="let dirEntry of entry.entries" appProceedingsRow
+          <tr *ngFor="let dirEntry of entry.entries" [@fadeToggleRow]="nameCol.dirOpened"
               [entry]="dirEntry"
-              [toolSelectedOperation]="toolSelectedOperation"
               [rowSelected]="isEntrySelected(dirEntry)"
-              [@fadeToggleRow]="nameCol.dirOpened"
+              [toolSelectedOperation]="toolSelectedOperation"
+              appProceedingsRow
           >
-            <td appProcColIcon
-                [shortStyle]="shortstyle"
-                (click)="onRowSelected(dirEntry)" #td
-                [entry]="dirEntry"
-                (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
+            <td #td
+                (click)="onRowSelected(dirEntry)"
+                (deleteIconClick)="removeEntry($event, dirEntry)" (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
                 (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
                 (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
-                (deleteIconClick)="removeEntry($event, dirEntry)"
                 (mouseenter)="onNameMouseEnter($event, dirEntry)"
                 (mouseleave)="onNameMouseLeave($event, dirEntry)"
                 (mouseover)="onNameMouseOver($event, dirEntry)"
+                [entry]="dirEntry"
                 [mouseOver]="dirEntry.mouseover"
+                [shortStyle]="shortstyle"
+                appProcColIcon
             >
             </td>
             <ng-container *ngIf="entry.type === 'task'">
-              <td *ngFor="let operation of entry.operations" appProcColOperation
+              <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
 
+                  (operationMouseEnter)="onOperationMouseEnter($event, operation)"
+                  (operationMouseLeave)="onOperationMouseLeave($event, operation)"
+
+                  (operationMouseOver)="onOperationMouseOver($event, operation)"
+                  *ngFor="let operation of entry.operations"
                   [entry]="entry"
                   [operation]="operation"
-
-                  (onOperationMouseEnter)="onOperationMouseEnter($event, operation)"
-                  (onOperationMouseLeave)="onOperationMouseLeave($event, operation)"
-                  (onOperationMouseOver)="onOperationMouseOver($event, operation)"
-                  (mousedown)="onOperationClick($event, operation)"
-                  (click)="onRowSelected(entry, operation)"
+                  appProcColOperation
               >
               </td>
             </ng-container>
-            <td *ngFor="let operation of dirEntry.operations" appProcColOperation
+            <td (click)="onRowSelected(dirEntry, operation)" (mousedown)="onOperationClick($event, operation)"
 
+                (operationMouseEnter)="onOperationMouseEnter($event, operation)"
+                (operationMouseLeave)="onOperationMouseLeave($event, operation)"
+
+                (operationMouseOver)="onOperationMouseOver($event, operation)"
+                *ngFor="let operation of dirEntry.operations"
                 [entry]="dirEntry"
                 [operation]="operation"
-
-                (onOperationMouseEnter)="onOperationMouseEnter($event, operation)"
-                (onOperationMouseLeave)="onOperationMouseLeave($event, operation)"
-                (onOperationMouseOver)="onOperationMouseOver($event, operation)"
-                (mousedown)="onOperationClick($event, operation)"
-                (click)="onRowSelected(dirEntry, operation)">
+                appProcColOperation>
             </td>
           </tr>
         </ng-container>
@@ -329,16 +330,16 @@
       <ng-container *ngFor="let entry of queue; let i = index;">
         <tr style="cursor:pointer;">
           <td *ngIf="entry.file.entries === undefined"
-              [ngClass]="{'shorten': shortstyle}" [attr.colspan]="taskService.operations.length + 1">
+              [attr.colspan]="taskService.operations.length + 1" [ngClass]="{'shorten': shortstyle}">
             <ng-container *ngIf="entry.file.entries === undefined">
-              <i class="fa fa-database op-50"
-                 aria-hidden="true">
+              <i aria-hidden="true"
+                 class="fa fa-database op-50">
               </i>
             </ng-container>
             <ng-container *ngIf="entry.file.entries !== undefined" [ngClass]="{
                             'shorten': shortstyle
                         }">
-              <i class="fa fa-folder-open blue op-50" aria-hidden="true"></i>
+              <i aria-hidden="true" class="fa fa-folder-open blue op-50"></i>
             </ng-container>
             <span class="op-50"
                   title="{{entry.file.fullname}}"
@@ -347,7 +348,7 @@
                         </span>
           </td>
           <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 1">
-                        <span title="{{entry.file.name}}" class="op-50">{{entry.file.name}}  <i
+                        <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
                           class="fa fa-spinner fa-spin"></i>
                         </span>
           </td>
@@ -358,7 +359,7 @@
         <ng-container *ngIf="entry.file.entries !== undefined">
           <tr *ngFor="let dirEntry of entry.file.entries">
             <td>
-              <i class="fa fa-database op-50" aria-hidden="true"></i>
+              <i aria-hidden="true" class="fa fa-database op-50"></i>
               <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
             </td>
             <td [attr.colspan]="taskService.operations.length + 1"></td>

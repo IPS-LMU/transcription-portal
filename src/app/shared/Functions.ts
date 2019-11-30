@@ -26,9 +26,9 @@ export function equalProperties(elem: any, elem2: any) {
 
   for (const el in elem) {
     if (elem.hasOwnProperty(el)) {
-      const prop_str = '' + el + '';
+      const propStr = '' + el + '';
       result = true;
-      if (!(prop_str in elem2)) {
+      if (!(propStr in elem2)) {
         return false;
       }
     }
@@ -77,9 +77,9 @@ export function placeAtEnd(element: HTMLElement) {
   }
 }
 
-export function escapeRegex(regex_str: string) {
+export function escapeRegex(regexStr: string) {
   // escape special chars in regex
-  return regex_str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  return regexStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 export function getFileSize(bytes: number): FileSize {
@@ -148,11 +148,11 @@ export function uniqueHTTPRequest(http: HttpClient, post: boolean = false, reque
     const options = (!(requestoptions === null || requestoptions === undefined)) ? requestoptions : {};
 
     if (!options.hasOwnProperty('params')) {
-      options['params'] = {};
+      options.params = {};
     }
 
     const d = Date.now();
-    options['params']['v'] = d.toString();
+    options.params.v = d.toString();
     return http.get(url, options);
   } else {
     return http.post(url, body, requestoptions);
@@ -181,13 +181,13 @@ export function setCursor(node, pos) {
 }
 
 export function base64ToArrayBuffer(base64): ArrayBuffer {
-  const binary_string = window.atob(base64);
-  const len = binary_string.length;
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
   const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
+    bytes[i] = binaryString.charCodeAt(i);
   }
-  return (<ArrayBuffer>bytes.buffer);
+  return (bytes.buffer as ArrayBuffer);
 }
 
 export function isNullOrUndefined(elem: any) {

@@ -33,62 +33,15 @@ declare var window: any;
   animations: [ANIMATIONS]
 })
 export class AppComponent implements OnDestroy {
-  get showtool(): boolean {
-    return this._showtool;
-  }
-
-  set showtool(value: boolean) {
-    this.sidebarExpand = (value) ? 'closed' : 'opened';
-    this._showtool = value;
-  }
-
   @ViewChild('feedbackModal', {static: true}) feedbackModal: FeedbackModalComponent;
-
-  private _showtool = false;
   public sidebarstate = 'hidden';
   public tool_url: SafeResourceUrl;
-  private firstModalShown = false;
   isCollapsed = false;
-
-  public allTasks(): Task[] {
-    if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
-      return this.taskService.taskList.getAllTasks();
-    }
-
-    return [];
-  }
-
-  public get isdevelopment(): boolean {
-    return environment.development;
-  }
-
-  public get toolSelectedOperation(): Operation {
-    return (!(this.proceedings === null || this.proceedings === undefined)) ? this.proceedings.toolSelectedOperation : undefined;
-  }
-
-  public set toolSelectedOperation(value: Operation) {
-    this.proceedings.toolSelectedOperation = value;
-  }
-
   public test = 'inactive';
   public sidebarExpand = 'opened';
-  private blockLeaving = true;
-  private subscrmanager = new SubscriptionManager();
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
-
-
-  public get animationObject(): any {
-    const width = 100 - this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}}
-  }
-
-  public get animationObject2(): any {
-    const width = this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {width: width}}
-  }
-
   @ViewChild('fileinput', {static: false}) fileinput: ElementRef;
   @ViewChild('folderinput', {static: false}) folderinput: ElementRef;
   @ViewChild('proceedings', {static: false}) proceedings: ProceedingsComponent;
@@ -98,6 +51,9 @@ export class AppComponent implements OnDestroy {
   @ViewChild('protocolFooter', {static: false}) protocolFooter: ProtocolFooterComponent;
   @ViewChild('toolLoader', {static: true}) toolLoader: ToolLoaderComponent;
   @ViewChild('statisticsModal', {static: true}) statisticsModal: StatisticsModalComponent;
+  private firstModalShown = false;
+  private blockLeaving = true;
+  private subscrmanager = new SubscriptionManager();
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -169,6 +125,47 @@ export class AppComponent implements OnDestroy {
     this.subscrmanager.add(this.modalService.onFeedBackRequested.subscribe(() => {
       this.feedbackModal.open();
     }))
+  }
+
+  private _showtool = false;
+
+  get showtool(): boolean {
+    return this._showtool;
+  }
+
+  set showtool(value: boolean) {
+    this.sidebarExpand = (value) ? 'closed' : 'opened';
+    this._showtool = value;
+  }
+
+  public get isdevelopment(): boolean {
+    return environment.development;
+  }
+
+  public get toolSelectedOperation(): Operation {
+    return (!(this.proceedings === null || this.proceedings === undefined)) ? this.proceedings.toolSelectedOperation : undefined;
+  }
+
+  public set toolSelectedOperation(value: Operation) {
+    this.proceedings.toolSelectedOperation = value;
+  }
+
+  public get animationObject(): any {
+    const width = 100 - this.newProceedingsWidth;
+    return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}}
+  }
+
+  public get animationObject2(): any {
+    const width = this.newProceedingsWidth;
+    return {value: this.sidebarExpand, params: {width: width}}
+  }
+
+  public allTasks(): Task[] {
+    if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
+      return this.taskService.taskList.getAllTasks();
+    }
+
+    return [];
   }
 
   ngOnDestroy(): void {

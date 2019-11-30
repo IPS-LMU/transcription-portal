@@ -43,7 +43,7 @@ declare var window: any;
 })
 export class MainComponent implements OnDestroy {
   public sidebarstate = 'hidden';
-  public tool_url: SafeResourceUrl;
+  public toolURL: SafeResourceUrl;
   isCollapsed = false;
   public test = 'inactive';
   public sidebarExpand = 'opened';
@@ -60,10 +60,10 @@ export class MainComponent implements OnDestroy {
   @ViewChild('protocolFooter', {static: false}) protocolFooter: ProtocolFooterComponent;
   @ViewChild('toolLoader', {static: true}) toolLoader: ToolLoaderComponent;
   @ViewChild('statisticsModal', {static: true}) statisticsModal: StatisticsModalComponent;
+  public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
-  public settingsCollapsed = true;
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -115,7 +115,7 @@ export class MainComponent implements OnDestroy {
           resolve([null]);
         }
       }).then((results) => {
-        //idb loaded
+        // idb loaded
         this.taskService.init();
         this.taskService.importDBData(results);
         this.cd.markForCheck();
@@ -135,9 +135,7 @@ export class MainComponent implements OnDestroy {
 
         if (!(results[1] === null || results[1] === undefined)) {
           // read userSettings
-          for (let i = 0; i < results[1].length; i++) {
-            const userSetting = results[1][i];
-
+          for (const userSetting of results[1]) {
             switch (userSetting.name) {
               case ('sidebarWidth'):
                 this.newProceedingsWidth = userSetting.value;
@@ -188,7 +186,7 @@ export class MainComponent implements OnDestroy {
 
   public get animationObject2(): any {
     const width = this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {width: width}};
+    return {value: this.sidebarExpand, params: {width}};
   }
 
   public get AppInfo() {
@@ -212,22 +210,17 @@ export class MainComponent implements OnDestroy {
   }
 
   onVerifyButtonClick() {
-    new Promise<void>((resolve, reject) => {
-        const tasks = this.taskService.taskList.getAllTasks().filter((a) => {
-          return a.state === TaskState.QUEUED;
-        });
+    // TODO any change needed?
+    const tasks = this.taskService.taskList.getAllTasks().filter((a) => {
+      return a.state === TaskState.QUEUED;
+    });
 
-        if (tasks.length > 0) {
-          this.queueModal.open(() => {
-            return true;
-          }, () => {
-            resolve();
-          });
-        } else {
-          resolve();
-        }
-      }
-    );
+    if (tasks.length > 0) {
+      this.queueModal.open(() => {
+        return true;
+      }, () => {
+      });
+    }
   }
 
   onMissedDrop(event) {
@@ -245,22 +238,24 @@ export class MainComponent implements OnDestroy {
 
   onFileChange($event) {
     const files: FileList = $event.target.files;
-    const test = $event.target.items;
-    const file_infos: FileInfo[] = [];
+    const fileInfos: FileInfo[] = [];
 
+    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < files.length; i++) {
       const file: File = files[i];
-      file_infos.push(new FileInfo(file.name, file.type, file.size, file));
+      fileInfos.push(new FileInfo(file.name, file.type, file.size, file));
     }
 
-    this.readNewFiles(file_infos);
+    this.readNewFiles(fileInfos);
   }
 
   onOperationClick(operation: Operation) {
     if (operation instanceof ToolOperation) {
-      const tool = <ToolOperation>operation;
+      const tool = operation as ToolOperation;
 
-      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available) || (!(tool.previousOperation === null || tool.previousOperation === undefined) && tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
+      if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available)
+        || (!(tool.previousOperation === null || tool.previousOperation === undefined) &&
+          tool.previousOperation.results.length > 0 && !tool.previousOperation.lastResult.available)) {
         if (!tool.task.operations[0].results[0].available) {
           if ((tool.task.files[0].file === null || tool.task.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
@@ -269,11 +264,13 @@ export class MainComponent implements OnDestroy {
             tool.task.changeState(TaskState.PENDING);
           } else {
             // start upload process
-            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname} being uploaded and do '${tool.title}' again.`);
+            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname}` +
+              ` being uploaded and do '${tool.title}' again.`);
             tool.task.operations[0].statechange.subscribe(
               (state) => {
                 if (state.newState === 'FINISHED') {
-                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname} successfully uploaded. You can do '${tool.title}' for this file.`);
+                  this.alertService.showAlert('success', `file ${tool.task.files[0].fullname}` +
+                    +` successfully uploaded. You can do '${tool.title}' for this file.`);
                   this.storage.saveTask(tool.task);
                 }
               },
@@ -300,7 +297,7 @@ export class MainComponent implements OnDestroy {
             const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
             subj.subscribe((obj) => {
               if (obj.type === 'loadend') {
-                const result = <string>obj.result;
+                const result = obj.result as string;
                 const x2js = new X2JS();
                 let json: any = x2js.xml2js(result);
                 json = json.UploadFileMultiResponse;
@@ -317,18 +314,19 @@ export class MainComponent implements OnDestroy {
                     tool.lastResult.url = json.fileList.entry[0].value;
                   } else {
                     // json attribute entry is an object
-                    tool.lastResult.url = json.fileList.entry['value'];
+                    tool.lastResult.url = json.fileList.entry.value;
                   }
                   this.storage.saveTask(tool.task);
                   resolve();
                 } else {
-                  reject(json['message']);
+                  reject(json.message);
                 }
               }
             }, (err) => {
               reject(err);
             });
-          } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined) && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+          } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
+            && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
             // reupload result from previous operation
             // local available, re upload
 
@@ -339,7 +337,7 @@ export class MainComponent implements OnDestroy {
             const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
             subj.subscribe((obj) => {
               if (obj.type === 'loadend') {
-                const result = <string>obj.result;
+                const result = obj.result as string;
                 const x2js = new X2JS();
                 let json: any = x2js.xml2js(result);
                 json = json.UploadFileMultiResponse;
@@ -356,12 +354,12 @@ export class MainComponent implements OnDestroy {
                     tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
                   } else {
                     // json attribute entry is an object
-                    tool.previousOperation.lastResult.url = json.fileList.entry['value'];
+                    tool.previousOperation.lastResult.url = json.fileList.entry.value;
                   }
                   this.storage.saveTask(tool.task);
                   resolve();
                 } else {
-                  reject(json['message']);
+                  reject(json.message);
                 }
               }
             }, (err) => {
@@ -382,13 +380,14 @@ export class MainComponent implements OnDestroy {
             tool.changeState(TaskState.PROCESSING);
           }
 
-          this.tool_url = tool.getToolURL();
+          this.toolURL = tool.getToolURL();
 
-          if (this.tool_url !== '') {
+          if (this.toolURL !== '') {
             this.proceedings.cd.markForCheck();
             this.proceedings.cd.detectChanges();
             this.toolLoader.url = tool.getToolURL();
-            if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined) && operation.id !== this.toolSelectedOperation.id) {
+            if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined)
+              && operation.id !== this.toolSelectedOperation.id) {
               // some operation already initialized
               this.leaveToolOption();
             }
@@ -433,10 +432,9 @@ export class MainComponent implements OnDestroy {
   }
 
   changeLanguageforAllQueuedTasks() {
-    let tasks = this.taskService.taskList.getAllTasks();
+    const tasks = this.taskService.taskList.getAllTasks();
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
+    for (const task of tasks) {
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
         task.asr = this.taskService.selectedlanguage.asr;
@@ -479,7 +477,8 @@ export class MainComponent implements OnDestroy {
 
         setTimeout(() => {
           if (this.toolSelectedOperation.task.state === 'FINISHED') {
-            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language, this.toolSelectedOperation.task.operations[1].providerInformation.provider);
+            const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language,
+              this.toolSelectedOperation.task.operations[1].providerInformation.provider);
             this.toolSelectedOperation.task.restart(langObj, this.httpclient, [{
               name: 'GoogleASR',
               value: this.taskService.accessCode
@@ -523,7 +522,7 @@ export class MainComponent implements OnDestroy {
   }
 
   public getTime(): number {
-    let elem: AudioInfo = <AudioInfo>this.toolSelectedOperation.task.files[0];
+    const elem: AudioInfo = this.toolSelectedOperation.task.files[0] as AudioInfo;
 
     if (!(elem.duration === null || elem.duration === undefined)) {
       return elem.duration.unix;
@@ -537,7 +536,7 @@ export class MainComponent implements OnDestroy {
       this.taskService.splitPrompt = reason;
       this.taskService.checkFiles();
     });
-  };
+  }
 
   public dragBorder($event: any, part: string) {
     if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
@@ -599,7 +598,7 @@ export class MainComponent implements OnDestroy {
   onFeedbackRequest(operation: Operation) {
     this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
       + `operation: ${operation.name}, ${operation.state}\n`
-      + `protocol: ${operation.protocol}\n`)
+      + `protocol: ${operation.protocol}\n`);
     this.feedbackModal.open();
   }
 
@@ -622,13 +621,12 @@ export class MainComponent implements OnDestroy {
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    if (!(entries === null || entries === undefined) && !(this.taskService.operations === null || this.taskService.operations === undefined)) {
+    if (!(entries === null || entries === undefined) &&
+      !(this.taskService.operations === null || this.taskService.operations === undefined)) {
       // filter and re-structure entries array to supported files and directories
-      let filteredEntries = this.taskService.cleanUpInputArray(entries);
+      const filteredEntries = this.taskService.cleanUpInputArray(entries);
 
-      for (let i = 0; i < filteredEntries.length; i++) {
-        const entry = filteredEntries[i];
-
+      for (const entry of filteredEntries) {
         this.taskService.preprocessor.addToQueue(entry);
       }
     }

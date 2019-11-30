@@ -1,9 +1,8 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 import {FileInfo} from '../fileInfo';
-import {Task} from '../tasks/index';
+import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
-import {TaskState} from '../tasks/task';
 import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {OHLanguageObject} from '../oh-config';
@@ -18,7 +17,8 @@ export class EmuOperation extends ToolOperation {
       ' a sentence or phrase.';
   }
 
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
     this.time.duration = 0;
@@ -92,22 +92,15 @@ export class EmuOperation extends ToolOperation {
     return result;
   }
 
-  public getToolURL(): string {
-    if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
-      const uploadOP = <UploadOperation>this.operations[0];
-      const audio = encodeURIComponent(uploadOP.wavFile.url);
-      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-      const labelType = (this.previousOperation.lastResult.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
-      return `${this._commands[0]}?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=${labelType}`;
-    }
-    return ``;
+  public clone(task?: Task): EmuOperation {
+    const selectedTask = ((task === null || task === undefined)) ? this.task : task;
+    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state);
   }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
     const result = new EmuOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const result2 = operationObj.results[k];
-      result.results.push(FileInfo.fromAny(result2));
+    for (const resultElement of operationObj.results) {
+      result.results.push(FileInfo.fromAny(resultElement));
     }
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
@@ -116,8 +109,14 @@ export class EmuOperation extends ToolOperation {
     return result;
   }
 
-  public clone(task?: Task): EmuOperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
+  public getToolURL(): string {
+    if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
+      const uploadOP = this.operations[0] as UploadOperation;
+      const audio = encodeURIComponent(uploadOP.wavFile.url);
+      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
+      const labelType = (this.previousOperation.lastResult.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
+      return `${this._commands[0]}?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=${labelType}`;
+    }
+    return ``;
   }
 }

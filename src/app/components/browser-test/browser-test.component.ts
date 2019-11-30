@@ -11,12 +11,12 @@ import {OHModalService} from '../../shared/ohmodal.service';
 })
 export class BrowserTestComponent implements OnInit {
 
-  public get browserName(): string {
-    return BrowserInfo.browser;
-  }
-
   constructor(private router: Router, public compatibility: CompatibilityService,
               public modalService: OHModalService) {
+  }
+
+  public get browserName(): string {
+    return BrowserInfo.browser;
   }
 
   ngOnInit() {

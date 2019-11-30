@@ -10,6 +10,18 @@ export class WavFormat extends AudioFormat {
     this.setBlockAlign(buffer);
   }
 
+  public isValid(buffer: ArrayBuffer): boolean {
+    let bufferPart = buffer.slice(0, 4);
+    let test1 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
+
+    bufferPart = buffer.slice(8, 12);
+    let test2 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
+    test1 = test1.slice(0, 4);
+    test2 = test2.slice(0, 4);
+    const byteCheck = new Uint8Array(buffer.slice(20, 21))[0] === 1;
+    return (byteCheck && '' + test1 + '' === 'RIFF' && test2 === 'WAVE');
+  }
+
   protected setSampleRate(buffer: ArrayBuffer) {
     const bufferPart = buffer.slice(24, 28);
     const bufferView = new Uint32Array(bufferPart);
@@ -38,38 +50,8 @@ export class WavFormat extends AudioFormat {
     this._byteRate = bufferView[0];
   }
 
-  protected setBlockAlign(buffer: ArrayBuffer) {
-    const bufferPart = buffer.slice(32, 34);
-    const bufferView = new Uint16Array(bufferPart);
-
-    this.blockAlign = bufferView[0];
-  }
-
-  protected getDataChunkSize(buffer: ArrayBuffer): number {
-    const bufferPart = buffer.slice(40, 44);
-    const bufferView = new Uint32Array(bufferPart);
-
-    return bufferView[0];
-  }
-
-  protected getDataChunk(buffer: ArrayBuffer): ArrayBuffer {
-    return buffer.slice(44, buffer.byteLength);
-  }
-
   protected setDuration(buffer: ArrayBuffer) {
     this._duration = this.getDataChunkSize(buffer) / (this._channels * this._bitsPerSample) * 8;
-  }
-
-  public isValid(buffer: ArrayBuffer): boolean {
-    let bufferPart = buffer.slice(0, 4);
-    let test1 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
-
-    bufferPart = buffer.slice(8, 12);
-    let test2 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
-    test1 = test1.slice(0, 4);
-    test2 = test2.slice(0, 4);
-    const byteCheck = new Uint8Array(buffer.slice(20, 21))[0] === 1;
-    return (byteCheck && '' + test1 + '' === 'RIFF' && test2 === 'WAVE');
   }
 
   public splitChannelsToFiles(filename: string, type: string, buffer: ArrayBuffer): File[] {
@@ -110,6 +92,24 @@ export class WavFormat extends AudioFormat {
     }
 
     return result;
+  }
+
+  protected setBlockAlign(buffer: ArrayBuffer) {
+    const bufferPart = buffer.slice(32, 34);
+    const bufferView = new Uint16Array(bufferPart);
+
+    this.blockAlign = bufferView[0];
+  }
+
+  protected getDataChunkSize(buffer: ArrayBuffer): number {
+    const bufferPart = buffer.slice(40, 44);
+    const bufferView = new Uint32Array(bufferPart);
+
+    return bufferView[0];
+  }
+
+  protected getDataChunk(buffer: ArrayBuffer): ArrayBuffer {
+    return buffer.slice(44, buffer.byteLength);
   }
 
   private getFileFromBufferPart(data: Uint8Array, filename: string): File {

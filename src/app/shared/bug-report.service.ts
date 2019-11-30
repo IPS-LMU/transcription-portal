@@ -23,18 +23,16 @@ export interface ConsoleEntry {
 
 @Injectable()
 export class BugReportService {
-  get console(): ConsoleEntry[] {
-    return this._console;
-  }
-
-  private _console: ConsoleEntry[] = [];
   private reporter: BugReporter;
 
   constructor(private appStorage: StorageService,
               private http: HttpClient) {
   }
 
-  public init() {
+  private _console: ConsoleEntry[] = [];
+
+  get console(): ConsoleEntry[] {
+    return this._console;
   }
 
   public get hasErrors(): boolean {
@@ -45,15 +43,18 @@ export class BugReportService {
     return (errors.length > 0);
   }
 
+  public init() {
+  }
+
   public addEntry(type: ConsoleType, message: any) {
     if (typeof message !== 'string') {
       message = JSON.stringify(message);
     }
 
     const consoleItem: ConsoleEntry = {
-      type: type,
+      type,
       timestamp: moment().format('DD.MM.YY HH:mm:ss'),
-      message: message
+      message
     };
 
     this._console.push(consoleItem);
@@ -89,8 +90,8 @@ export class BugReportService {
     const auth_token = credentials.auth_token;
     const url = credentials.url;
     const form = {
-      email: email,
-      description: description
+      email,
+      description
     };
 
     return new EmailBugReporter().sendBugReport(this.http, this.getPackage(), form, url, auth_token, sendbugreport);

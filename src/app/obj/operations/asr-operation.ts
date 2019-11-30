@@ -1,7 +1,7 @@
 import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
-import {Task, TaskState} from '../tasks/task';
+import {Task, TaskState} from '../tasks';
 import * as X2JS from 'x2js';
 import {OHLanguageObject} from '../oh-config';
 import {UploadOperation} from './upload-operation';
@@ -11,14 +11,8 @@ export class ASROperation extends Operation {
   public webService = '';
   public resultType = 'BAS Partitur Format';
 
-  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
-    super(name, commands, title, shortTitle, task, state, id);
-    this._description = 'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
-      'The result of this process is a text file with a literal transcription of the audio file. \n' +
-      'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
-  }
-
-  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode: string) => {
+  public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
+                  httpclient: HttpClient, accessCode: string) => {
     this.webService = languageObject.asr;
     this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
@@ -46,13 +40,17 @@ export class ASROperation extends Operation {
         console.error(error);
       });
     }, 2000);
-  };
+  }
+
+  public clone(task?: Task): ASROperation {
+    const selectedTask = ((task === null || task === undefined)) ? this.task : task;
+    return new ASROperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state);
+  }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
     const result = new ASROperation(operationObj.name, commands, this.title,
       this.shortTitle, task, operationObj.state, operationObj.id);
-    for (let k = 0; k < operationObj.results.length; k++) {
-      const resultObj = operationObj.results[k];
+    for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
       result.results.push(resultClass);
     }
@@ -86,14 +84,14 @@ export class ASROperation extends Operation {
         time: this.time,
         enabled: this.enabled,
         webService: this.webService,
-        serviceProvider: (!(this._providerInformation === null || this._providerInformation === undefined)) ? this._providerInformation.provider : undefined,
+        serviceProvider: (!(this._providerInformation === null || this._providerInformation === undefined))
+          ? this._providerInformation.provider : undefined,
         results: []
       };
 
       // result data
       const promises: Promise<any>[] = [];
-      for (let i = 0; i < this.results.length; i++) {
-        const resultObj = this.results[i];
+      for (const resultObj of this.results) {
         promises.push(resultObj.toAny());
       }
 
@@ -108,6 +106,13 @@ export class ASROperation extends Operation {
         resolve(result);
       }
     });
+  }
+
+  public constructor(name: string, commands: string[], title?: string, shortTitle?: string, task?: Task, state?: TaskState, id?: number) {
+    super(name, commands, title, shortTitle, task, state, id);
+    this._description = 'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
+      'The result of this process is a text file with a literal transcription of the audio file. \n' +
+      'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
   private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any, accessCode: string): Promise<FileInfo> {
@@ -168,7 +173,7 @@ export class ASROperation extends Operation {
         UploadOperation.upload([asrResult], languageObject.host + 'uploadFileMulti', httpClient).subscribe(
           (event) => {
             if (event.type === 'loadend') {
-              const result = <string>event.result;
+              const result = event.result as string;
               const x2js = new X2JS();
               let json: any = x2js.xml2js(result);
               json = json.UploadFileMultiResponse;
@@ -179,7 +184,7 @@ export class ASROperation extends Operation {
                 url = json.fileList.entry[0].value;
               } else {
                 // json attribute entry is an object
-                url = json.fileList.entry['value'];
+                url = json.fileList.entry.value;
               }
 
               resolve2(url);
@@ -241,10 +246,5 @@ export class ASROperation extends Operation {
         reject(error);
       });
     });
-  }
-
-  public clone(task?: Task): ASROperation {
-    const selected_task = ((task === null || task === undefined)) ? this.task : task;
-    return new ASROperation(this.name, this._commands, this.title, this.shortTitle, selected_task, this.state);
   }
 }

@@ -2,7 +2,7 @@
 
 buildDir="dist/oh-portal/"
 targetFolder="assets"
-baseHref="https://www.phonetik.uni-muenchen.de/apps/oh-portal/"
+baseHref="https://www.phonetik.uni-muenchen.de/apps/octra/oh-portal/"
 dev=""
 #dev="-c dev"
 
@@ -10,12 +10,12 @@ dev=""
 excludedList='"config" "LICENCE.txt" "media"'
 
 # 1 = disable indexing, 0 = enable
-disableRobots=0
+disableRobots=1
 # 1 = enable isUpdate, 0 = disable
 isUpdate=1
 
 timeNow=`date "+%Y-%m-%d %H:%M:%S"`
-version="1.0.2"
+version="1.0.3"
 
 echo "Remove cache..."
 rm -rf ./node_modules/.cache

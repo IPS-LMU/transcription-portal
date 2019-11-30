@@ -1,54 +1,55 @@
 body {
-    padding: 0;
-    overflow: hidden;
+  padding: 0;
+  overflow: hidden;
 }
+
 html, body {
-    height:100%;
+  height: 100%;
 }
 
 .fa.fa-angle-down,
 .fa.fa-angle-up {
-    font-size: 1.5em;
-    margin-right: 5px;
-    margin-bottom: 5px;
+  font-size: 1.5em;
+  margin-right: 5px;
+  margin-bottom: 5px;
 }
 
 tbody .fa.fa-check {
-    color: forestgreen;
+  color: forestgreen;
 }
 
 tbody .fa.fa-times {
-    color: red;
+  color: red;
 }
 
 tbody .fa.fa-pencil-square-o {
-    color: cornflowerblue;
+  color: cornflowerblue;
 }
 
 tbody .fa.fa-arrow-up {
-    color: cornflowerblue;
+  color: cornflowerblue;
 }
 
 .green {
-    color: forestgreen;
+  color: forestgreen;
 }
 
 .red {
-    color: red;
+  color: red;
 }
 
 .blue {
-    color: cornflowerblue;
+  color: cornflowerblue;
 }
 
 .yellow {
-    color: #ffc33b;
+  color: #ffc33b;
 }
 
 .tool-selected {
-    background-color: lightyellow;
+  background-color: lightyellow;
 }
 
-.tooltip.show{
-    opacity: 1 !important;
+.tooltip.show {
+  opacity: 1 !important;
 }

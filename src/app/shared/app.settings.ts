@@ -2,11 +2,11 @@ import {OHConfiguration, OHLanguageObject} from '../obj/oh-config';
 
 export class AppSettings {
 
+  private static _configuration: OHConfiguration;
+
   public static get configuration(): OHConfiguration {
     return AppSettings._configuration;
   }
-
-  private static _configuration: OHConfiguration;
 
   public static init(configuration: OHConfiguration) {
     this._configuration = configuration;

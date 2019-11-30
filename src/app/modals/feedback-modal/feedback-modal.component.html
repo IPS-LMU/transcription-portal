@@ -1,56 +1,57 @@
-<div bsModal #feedbackModal="bs-modal" class="modal fade" tabindex="-1"
-     role="dialog" aria-labelledby="dialog-sizes-name1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title pull-left">Feedback</h4>
-                <span class="green" style="margin-left:10px; margin-top:9px;" *ngIf="showThankYou">Thank you for your feedback! :)</span>
-                <button type="button" class="close pull-right" aria-label="Close" (click)="feedbackModal.hide()">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Did you find any bugs? Or do you have any suggestions or questions? Then don't hesitate to write us.</p>
-                <form>
-                    <div class="form-group">
-                        <label for="exampleFormControlInput1">Your email address:</label>
-                        <input type="email" name="email" [(ngModel)]="formData.email" class="form-control"
-                               id="exampleFormControlInput1" placeholder="name@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="exampleFormControlTextarea1">Message:</label>
-                        <textarea class="form-control" name="message" [(ngModel)]="formData.messsage"
-                                  id="exampleFormControlTextarea1"
-                                  placeholder="Type in a message"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <table>
-                            <tr>
-                                <td style="vertical-align: top"><input class="form-control-lg form-check-inline" type="checkbox"
-                                                                       id="send-protocol" name="protocollCheckbox"
-                                                                       [(ngModel)]="formData.protocol.append"
-                                                                       [checked]="formData.protocol.append"/></td>
-                                <td>
-                                    <label for="send-protocol" style="margin-bottom:0;">Append protocol (optional)</label>
-                                    <span style="color:gray; font-size: 12px;"><br/>If you have found some bugs or problems the protocol gives us additional technical information that help us to find a solution.</span>
-                                </td>
-                            </tr>
-                        </table>
+<div #feedbackModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
+     role="dialog" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title pull-left">Feedback</h4>
+        <span *ngIf="showThankYou" class="green" style="margin-left:10px; margin-top:9px;">Thank you for your feedback! :)</span>
+        <button (click)="feedbackModal.hide()" aria-label="Close" class="close pull-right" type="button">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Did you find any bugs? Or do you have any suggestions or questions? Then don't hesitate to write us.</p>
+        <form>
+          <div class="form-group">
+            <label for="exampleFormControlInput1">Your email address:</label>
+            <input [(ngModel)]="formData.email" class="form-control" id="exampleFormControlInput1" name="email"
+                   placeholder="name@example.com" type="email">
+          </div>
+          <div class="form-group">
+            <label for="exampleFormControlTextarea1">Message:</label>
+            <textarea [(ngModel)]="formData.messsage" class="form-control" id="exampleFormControlTextarea1"
+                      name="message"
+                      placeholder="Type in a message"></textarea>
+          </div>
+          <div class="form-group">
+            <table>
+              <tr>
+                <td style="vertical-align: top"><input [(ngModel)]="formData.protocol.append"
+                                                       [checked]="formData.protocol.append"
+                                                       class="form-control-lg form-check-inline" id="send-protocol"
+                                                       name="protocollCheckbox"
+                                                       type="checkbox"/></td>
+                <td>
+                  <label for="send-protocol" style="margin-bottom:0;">Append protocol (optional)</label>
+                  <span style="color:gray; font-size: 12px;"><br/>If you have found some bugs or problems the protocol gives us additional technical information that help us to find a solution.</span>
+                </td>
+              </tr>
+            </table>
 
-                    </div>
-                    <div class="form-group" *ngIf="formData.protocol.append">
-                        <label for="exampleFormControlTextarea1">Protocol:</label>
-                        <textarea class="form-control" id="protocol" name="protocol"
-                                  [innerHTML]="protocolText" readonly></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-dark" (click)="feedbackModal.hide()">Cancel</button>
-                <button type="button" class="btn btn-outline-primary" (click)="onSubmit()" [disabled]="!allFilled">Send
-                    Feedback
-                </button>
-            </div>
-        </div>
+          </div>
+          <div *ngIf="formData.protocol.append" class="form-group">
+            <label for="exampleFormControlTextarea1">Protocol:</label>
+            <textarea [innerHTML]="protocolText" class="form-control" id="protocol"
+                      name="protocol" readonly></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button (click)="feedbackModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
+        <button (click)="onSubmit()" [disabled]="!allFilled" class="btn btn-outline-primary" type="button">Send
+          Feedback
+        </button>
+      </div>
     </div>
+  </div>
 </div>

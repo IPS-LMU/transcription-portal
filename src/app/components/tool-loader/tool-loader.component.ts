@@ -19,25 +19,23 @@ import {Operation} from '../../obj/operations/operation';
   styleUrls: ['./tool-loader.component.css']
 })
 export class ToolLoaderComponent implements OnInit, OnChanges {
-  @ViewChild('iframe', { static: true }) iframe: ElementRef;
+  @ViewChild('iframe', {static: true}) iframe: ElementRef;
 
   public selectedtool: {
     url: SafeUrl
   } = {
     url: undefined
   };
+  @Input() public operation: Operation = null;
+  @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
+
+  constructor(private sanitizer: DomSanitizer) {
+  }
 
   public set url(url: string) {
     if (!(url === null || url === undefined) && url !== '') {
       this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     }
-  }
-
-  @Input() public operation: Operation = null;
-
-  @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
-
-  constructor(private sanitizer: DomSanitizer) {
   }
 
   ngOnChanges(changes: SimpleChanges) {

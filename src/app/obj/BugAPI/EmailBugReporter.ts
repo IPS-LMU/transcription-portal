@@ -9,7 +9,7 @@ export class EmailBugReporter extends BugReporter {
   }
 
   public sendBugReport(http: HttpClient, pkg: any, form: any, url: string,
-                       auth_token: string, sendbugreport: boolean): Observable<HttpResponse<any>> {
+                       authToken: string, sendbugreport: boolean): Observable<HttpResponse<any>> {
 
     const report = (sendbugreport) ? pkg : {};
 
@@ -24,12 +24,12 @@ export class EmailBugReporter extends BugReporter {
       os_build: json.system.os.version,
       platform: json.system.browser,
       version: json.ohportal.version,
-      report: report
+      report
     };
 
     return http.post(url, JSON.stringify(body), {
       headers: {
-        Authorization: auth_token
+        Authorization: authToken
       },
       observe: 'response',
       responseType: 'json'
@@ -54,11 +54,11 @@ export class EmailBugReporter extends BugReporter {
           result += attr + '\n';
           result += '---------\n';
 
-          for (let i = 0; i < pkg[attr].length; i++) {
-            if (typeof pkg[attr][i].message === 'string') {
-              result += '  ' + pkg[attr][i].type + '  ' + pkg[attr][i].message + '\n';
-            } else if (typeof pkg[attr][i].message === 'object') {
-              result += '  ' + pkg[attr][i].type + '\n' + JSON.stringify(pkg[attr][i].message, null, 2) + '\n';
+          for (const pkgElement of pkg[attr]) {
+            if (typeof pkgElement.message === 'string') {
+              result += '  ' + pkgElement.type + '  ' + pkgElement.message + '\n';
+            } else if (typeof pkgElement.message === 'object') {
+              result += '  ' + pkgElement.type + '\n' + JSON.stringify(pkgElement.message, null, 2) + '\n';
             }
           }
         }

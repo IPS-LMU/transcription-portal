@@ -1,4 +1,4 @@
-import { ExpandRowDirective } from './expand-row.directive';
+import {ExpandRowDirective} from './expand-row.directive';
 
 describe('ExpandRowDirective', () => {
   it('should create an instance', () => {
