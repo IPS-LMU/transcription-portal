@@ -64,7 +64,7 @@ export class Task {
 
     // clone operations param
     for (const operation of operations) {
-      this.operations.push(operation);
+      this.operations.push(operation.clone(this));
     }
 
     this.listenToOperationChanges();
