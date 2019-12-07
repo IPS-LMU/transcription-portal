@@ -6,8 +6,9 @@
   "scripts": {
     "ng": "ng",
     "start": "npm run modernizr && node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng serve",
-    "build": "node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build",
-    "build-public": "node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng build -c dev2 --prod --base-href 'https://www.phonetik.uni-muenchen.de/apps/oh-portal/'",
+    "build": " node ./build.js dev=false isUpdate=false url=/",
+    "build-dev": "node ./build.js dev=true isUpdate=true url=/apps/oh-portal/",
+    "build-prod": "node ./build.js dev=false isUpdate=false url=/apps/oh-portal/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
