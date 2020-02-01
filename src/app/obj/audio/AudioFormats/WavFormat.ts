@@ -12,14 +12,14 @@ export class WavFormat extends AudioFormat {
 
   public isValid(buffer: ArrayBuffer): boolean {
     let bufferPart = buffer.slice(0, 4);
-    let test1 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
+    const riffStr = String.fromCharCode.apply(null, new Uint8Array(bufferPart)).slice(0, 4);
 
     bufferPart = buffer.slice(8, 12);
-    let test2 = String.fromCharCode.apply(null, new Uint8Array(bufferPart));
-    test1 = test1.slice(0, 4);
-    test2 = test2.slice(0, 4);
-    const byteCheck = new Uint8Array(buffer.slice(20, 21))[0] === 1;
-    return (byteCheck && '' + test1 + '' === 'RIFF' && test2 === 'WAVE');
+    const wavStr = String.fromCharCode.apply(null, new Uint8Array(bufferPart)).slice(0, 4);
+    const isPCM = new Uint8Array(buffer.slice(20, 21))[0] === 1;
+
+    console.log(`(${isPCM} === true && ${riffStr} === 'RIFF' && ${wavStr} === 'WAVE')`);
+    return (isPCM && riffStr === 'RIFF' && wavStr === 'WAVE');
   }
 
   protected setSampleRate(buffer: ArrayBuffer) {
