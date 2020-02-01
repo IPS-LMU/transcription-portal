@@ -10,6 +10,13 @@ export interface OHConfiguration {
     'emailSender': {
       'authKey': string;
       'url': string;
+    },
+    'tracking'?: {
+      'active': string,
+      'matomo': {
+        'host': 'https://stats.clarin.eu/',
+        'siteID': 34
+      }
     }
   };
   'allowed_browsers': {

@@ -22,6 +22,8 @@ import {AlertService} from './shared/alert.service';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {SettingsService} from './shared/settings.service';
 import {OHModalService} from './shared/ohmodal.service';
+import {isNullOrUndefined} from './shared/Functions';
+import {AppSettings} from './shared/app.settings';
 
 declare var window: any;
 
@@ -124,7 +126,16 @@ export class AppComponent implements OnDestroy {
 
     this.subscrmanager.add(this.modalService.onFeedBackRequested.subscribe(() => {
       this.feedbackModal.open();
-    }))
+    }));
+
+    this.subscrmanager.add(this.settingsService.settingsload.subscribe(() => {
+      // add tracking code
+      if (!isNullOrUndefined(AppSettings.configuration.plugins.tracking)
+        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.active)
+        && AppSettings.configuration.plugins.tracking.active !== '') {
+        this.appendTrackingCode(AppSettings.configuration.plugins.tracking.active);
+      }
+    }));
   }
 
   private _showtool = false;
@@ -170,5 +181,38 @@ export class AppComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.subscrmanager.destroy();
+  }
+
+  private appendTrackingCode(type: string) {
+    if (type === 'matomo') {
+      if (!isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo)
+        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo.host)
+        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo.siteID)) {
+        const matomoSettings = AppSettings.configuration.plugins.tracking.matomo;
+
+        const trackingCode = `
+<!-- Matomo -->
+<script type="text/javascript">
+  var _paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="${matomoSettings.host}";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '${matomoSettings.siteID}']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->`;
+
+        jQuery(trackingCode).insertAfter(jQuery('body').children().last());
+      } else {
+        console.error(`attributes for matomo tracking in appconfig.json are invalid.`);
+      }
+    } else {
+      console.error(`tracking type ${type} is not supported.`);
+    }
   }
 }

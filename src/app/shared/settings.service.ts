@@ -11,6 +11,7 @@ export class SettingsService {
       responseType: 'json'
     }).subscribe((json) => {
       AppSettings.init(json as OHConfiguration);
+
       this._settingsload.next();
       this._allLoaded = true;
     }, (err) => {
