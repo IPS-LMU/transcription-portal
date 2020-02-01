@@ -184,6 +184,7 @@ export class AppComponent implements OnDestroy {
   }
 
   private appendTrackingCode(type: string) {
+    // check if matomo is activated
     if (type === 'matomo') {
       if (!isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo)
         && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo.host)
