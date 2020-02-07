@@ -17,15 +17,15 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^8.2.14",
-    "@angular/common": "^8.2.14",
-    "@angular/compiler": "^8.2.14",
-    "@angular/core": "^8.2.14",
-    "@angular/forms": "^8.2.14",
-    "@angular/platform-browser": "^8.2.14",
-    "@angular/platform-browser-dynamic": "^8.2.14",
-    "@angular/platform-server": "^8.2.14",
-    "@angular/router": "^8.2.14",
+    "@angular/animations": "^9.0.0",
+    "@angular/common": "^9.0.0",
+    "@angular/compiler": "^9.0.0",
+    "@angular/core": "^9.0.0",
+    "@angular/forms": "^9.0.0",
+    "@angular/platform-browser": "^9.0.0",
+    "@angular/platform-browser-dynamic": "^9.0.0",
+    "@angular/platform-server": "^9.0.0",
+    "@angular/router": "^9.0.0",
     "bootstrap": "^4.4.1",
     "chart.js": "^2.9.3",
     "clipboard-polyfill": "^2.8.6",
@@ -46,13 +46,13 @@
     "tslib": "^1.10.0",
     "web-animations-js": "^2.3.2",
     "x2js": "^3.4.0",
-    "zone.js": "~0.9.1"
+    "zone.js": "~0.10.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.803.25",
-    "@angular/cli": "^8.3.25",
-    "@angular/compiler-cli": "^8.2.14",
-    "@angular/language-service": "^8.2.14",
+    "@angular-devkit/build-angular": "^0.900.1",
+    "@angular/cli": "^9.0.1",
+    "@angular/compiler-cli": "^9.0.0",
+    "@angular/language-service": "^9.0.0",
     "@types/jasmine": "^3.5.2",
     "@types/jasminewd2": "^2.0.8",
     "@types/node": "^12.12.26",
@@ -69,7 +69,7 @@
     "protractor": "^5.4.3",
     "ts-node": "~8.3.0",
     "tslint": "~5.18.0",
-    "typescript": "3.5.3"
+    "typescript": "3.7.5"
   },
   "config": {
     "commitizen": {
