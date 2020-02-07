@@ -26,7 +26,7 @@ export class FeedbackModalComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('content', {static: true}) content: TemplateRef<any>;
 
   public showThankYou = false;
-  @ViewChild('feedbackModal', {static: false}) feedbackModal: ModalDirective;
+  @ViewChild('feedbackModal') feedbackModal: ModalDirective;
   public formData = {
     email: '',
     messsage: '',

@@ -92,7 +92,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @Output() public feedbackRequested = new EventEmitter<Operation>();
   @ViewChild('content', {static: true}) content: DownloadModalComponent;
   @ViewChild('inner', {static: true}) inner: ElementRef;
-  @ViewChild('popoverRef', {static: false}) public popoverRef: PopoverComponent;
+  @ViewChild('popoverRef') public popoverRef: PopoverComponent;
   @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
