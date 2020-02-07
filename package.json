@@ -49,14 +49,14 @@
     "zone.js": "~0.10.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^0.900.1",
+    "@angular-devkit/build-angular": "~0.900.1",
     "@angular/cli": "^9.0.1",
     "@angular/compiler-cli": "^9.0.0",
     "@angular/language-service": "^9.0.0",
     "@types/jasmine": "^3.5.2",
     "@types/jasminewd2": "^2.0.8",
-    "@types/node": "^12.12.26",
-    "codelyzer": "^5.2.1",
+    "@types/node": "^12.11.1",
+    "codelyzer": "^5.1.2",
     "conventional-changelog": "^3.1.18",
     "cz-conventional-changelog": "^2.1.0",
     "jasmine-core": "~3.4.0",
