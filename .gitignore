@@ -45,3 +45,4 @@ deployment/
 /dist/
 /doc/PH-PortalASR.html
 /doc/test_deutsch.wav
+deploy.config.json

@@ -6,7 +6,7 @@ const targetFolder = "assets";
 let baseHref = "";
 let dev = '';
 
-const excludedList = ["config", "LICENSE.txt"];
+const excludedList = ["config", "LICENSE.txt", "contents"];
 
 let disabledRobots = true;
 let isUpdate = false;
