@@ -66,11 +66,13 @@ export class AppComponent implements OnDestroy {
               private cd: ChangeDetectorRef,
               private modalService: OHModalService
   ) {
+
+    // overwrite console.log
     if (!AppInfo.debugging) {
-      // overwrite console.log
       const oldLog = console.log;
       const serv = this.bugService;
       (() => {
+        // tslint:disable-next-line:only-arrow-functions
         console.log = function (message) {
           serv.addEntry(ConsoleType.LOG, message);
           oldLog.apply(console, arguments);
@@ -80,43 +82,45 @@ export class AppComponent implements OnDestroy {
       // overwrite console.err
       const oldError = console.error;
       (() => {
-        console.error = function (message) {
+        // tslint:disable-next-line:only-arrow-functions
+        console.error = function (error, context) {
           let debug = '';
+          let stack = '';
 
-          if (typeof debug === 'string') {
-            debug = message;
+          if (typeof error === 'string') {
+            debug = error;
+
+            if (error === 'ERROR' && !isNullOrUndefined(context) && context.hasOwnProperty('stack') && context.hasOwnProperty('message')) {
+              debug = context.message;
+              stack = context.stack;
+            }
           } else {
-            debug = (
-              arguments.length > 1
-              && !(arguments[1].message === null || arguments[1].message === undefined)
-            ) ? arguments[1].message : '';
+            if (error instanceof Error) {
+              debug = error.message;
+              stack = error.stack;
+            } else {
+              if (typeof error === 'object') {
+                // some other type of object
+                debug = 'OBJECT';
+                stack = JSON.stringify(error);
+              } else {
+                debug = error;
+              }
+            }
           }
 
-          const stack = (
-            arguments.length > 1
-            && !(arguments[1].stack === null || arguments[1].stack === undefined)
-          ) ? arguments[1].stack : '';
-
           if (debug !== '') {
-            serv.addEntry(ConsoleType.ERROR, `${debug}: ${stack}`);
+            serv.addEntry(ConsoleType.ERROR, `${debug}${(stack !== '') ? ' ' + stack : ''}`);
           }
 
           oldError.apply(console, arguments);
         };
       })();
 
-      // overwrite console.info
-      const oldInfo = console.info;
-      (() => {
-        console.info = function (message) {
-          serv.addEntry(ConsoleType.INFO, message);
-          oldInfo.apply(console, arguments);
-        };
-      })();
-
       // overwrite console.warn
       const oldWarn = console.warn;
       (() => {
+        // tslint:disable-next-line:only-arrow-functions
         console.warn = function (message) {
           serv.addEntry(ConsoleType.WARN, message);
           oldWarn.apply(console, arguments);

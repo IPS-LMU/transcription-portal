@@ -1,12 +1,14 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
+import {SettingsService} from './settings.service';
 import {HttpClient} from '@angular/common/http';
+import * as moment from 'moment';
 import {BugReporter} from '../obj/BugAPI/BugReporter';
+import {StorageService} from '../storage.service';
 import {AppInfo} from '../app.info';
 import {BrowserInfo} from '../obj/BrowserInfo';
-import {StorageService} from '../storage.service';
+import {isNullOrUndefined} from './Functions';
 import {EmailBugReporter} from '../obj/BugAPI/EmailBugReporter';
-import * as moment from 'moment';
 
 export enum ConsoleType {
   LOG,
@@ -24,15 +26,16 @@ export interface ConsoleEntry {
 @Injectable()
 export class BugReportService {
   private reporter: BugReporter;
-
-  constructor(private appStorage: StorageService,
-              private http: HttpClient) {
-  }
-
   private _console: ConsoleEntry[] = [];
 
   get console(): ConsoleEntry[] {
     return this._console;
+  }
+
+  constructor(private appStorage: StorageService,
+              private settService: SettingsService,
+              private http: HttpClient) {
+    this.reporter = new EmailBugReporter();
   }
 
   public get hasErrors(): boolean {
@@ -43,14 +46,7 @@ export class BugReportService {
     return (errors.length > 0);
   }
 
-  public init() {
-  }
-
   public addEntry(type: ConsoleType, message: any) {
-    if (typeof message !== 'string') {
-      message = JSON.stringify(message);
-    }
-
     const consoleItem: ConsoleEntry = {
       type,
       timestamp: moment().format('DD.MM.YY HH:mm:ss'),
@@ -83,18 +79,24 @@ export class BugReportService {
     };
   }
 
-  sendReport(email: string, description: string, sendbugreport: boolean, credentials: {
+  sendReport(name: string, email: string, description: string, sendbugreport: boolean, credentials: {
     auth_token: string,
     url: string
-  }): Observable<any> {
-    const auth_token = credentials.auth_token;
-    const url = credentials.url;
-    const form = {
-      email,
-      description
-    };
+  }, screenshots: any[]): Observable<any> {
 
-    return new EmailBugReporter().sendBugReport(this.http, this.getPackage(), form, url, auth_token, sendbugreport);
+    if (!(isNullOrUndefined(credentials))) {
+      const auth_token = credentials.auth_token;
+      const url = credentials.url;
+      const form = {
+        email,
+        name,
+        description
+      };
+
+      return this.reporter.sendBugReport(this.http, this.getPackage(), form, url, auth_token, sendbugreport, screenshots);
+    }
+
+    return null;
   }
 
 }

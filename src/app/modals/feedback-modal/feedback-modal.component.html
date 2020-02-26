@@ -1,55 +1,111 @@
-<div #feedbackModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
-     role="dialog" tabindex="-1">
+<div bsModal #modal="bs-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="dialog-sizes-name1"
+     id="bugreport" (onHide)="hide()" (onShown)="onShown()" (onHidden)="onHidden()">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title pull-left">Feedback</h4>
-        <span *ngIf="showThankYou" class="green" style="margin-left:10px; margin-top:9px;">Thank you for your feedback! :)</span>
-        <button (click)="feedbackModal.hide()" aria-label="Close" class="close pull-right" type="button">
+        <h3 id="dialog-sizes-name1" class="modal-title pull-left">Send feedback</h3>
+        <button type="button" class="close pull-right" aria-label="Close" (click)="close()">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-        <p>Did you find any bugs? Or do you have any suggestions or questions? Then don't hesitate to write us.</p>
-        <form>
-          <div class="form-group">
-            <label for="exampleFormControlInput1">Your email address:</label>
-            <input [(ngModel)]="formData.email" class="form-control" id="exampleFormControlInput1" name="email"
-                   placeholder="name@example.com" type="email">
-          </div>
-          <div class="form-group">
-            <label for="exampleFormControlTextarea1">Message:</label>
-            <textarea [(ngModel)]="formData.messsage" class="form-control" id="exampleFormControlTextarea1"
-                      name="message"
-                      placeholder="Type in a message"></textarea>
-          </div>
-          <div class="form-group">
-            <table>
-              <tr>
-                <td style="vertical-align: top"><input [(ngModel)]="formData.protocol.append"
-                                                       [checked]="formData.protocol.append"
-                                                       class="form-control-lg form-check-inline" id="send-protocol"
-                                                       name="protocollCheckbox"
-                                                       type="checkbox"/></td>
-                <td>
-                  <label for="send-protocol" style="margin-bottom:0;">Append protocol (optional)</label>
-                  <span style="color:gray; font-size: 12px;"><br/>If you have found some bugs or problems the protocol gives us additional technical information that help us to find a solution.</span>
-                </td>
-              </tr>
-            </table>
+        <p>
+          Please tell us what you are thinking about the OH-Portal. What can we do better? Did you find any bugs?
+        </p>
+        <div *ngIf="sendStatus === 'error'" class="alert alert-danger bugsent"
+             [innerHTML]="'Unfortunately your feedback could not be sent to us. Please send us an e-mail to <a target=\'_blank\' href=\'mailto:octra@phonetik.uni-muenchen.de?body=' + bgdescr +'\'>octra@phonetik.uni-muenchen.de</a>.'"></div>
+        <div *ngIf="sendStatus === 'success'"
+             class="alert alert-success bugsent">Your feedback was successfully reported 🙂
+        </div>
 
+        <form>
+          <div class="form-row">
+            <div class="col-6">
+              <div class="form-group" [ngClass]="{
+              'is-filled': userName !== ''
+              }">
+                <label for="inputName" class="bmd-label-floating">Name:</label>
+                <input type="text" [(ngModel)]="userName" name="name" class="form-control" id="inputName" email>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-group" [ngClass]="{
+              'is-filled': email !== ''
+              }">
+                <label for="inputEmail" class="bmd-label-floating">Email:</label>
+
+                <input [(ngModel)]="email" name="email" class="form-control" id="inputEmail"
+                       type="email" email>
+              </div>
+            </div>
           </div>
-          <div *ngIf="formData.protocol.append" class="form-group">
-            <label for="exampleFormControlTextarea1">Protocol:</label>
-            <textarea [innerHTML]="protocolText" class="form-control" id="protocol"
-                      name="protocol" readonly></textarea>
+          <div class="form-row">
+            <div class="col-12">
+              <div class="form-group">
+                <label for="bgDescr" class="bmd-label-floating">Message:</label>
+
+                <textarea [(ngModel)]="bgdescr" name="bgdescr" class="form-control" rows="3" id="bgDescr"
+                          maxlength="1000" aria-describedby="descrHelp"></textarea>
+                <small id="descrHelp" class="form-text text-muted">(German or English)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="col-12">
+              <div class="form-group">
+                <label>Screenshots (optional):</label><br/>
+                <div class="preview-images">
+                  <div *ngFor="let screenshot of screenshots; let i = index;"
+                       class="upload-screenshot" (click)="selectFileForUpload(uploadInput2)">
+                    <span class="cross rounded-circle" (click)="removeScreenshot(i)">X</span>
+                    <input #uploadInput2 type="file" name="upload" (change)="onFileChange($event)"
+                           style="display: none;" accept=".jpg, .png, .jpeg|image/*"/>
+                    <img class="preview-image"
+                         *ngIf="screenshot.previewURL !== ''"
+                         [src]="screenshot.previewURL"/>
+                  </div>
+                  <div *ngIf="screenshots.length < 4"
+                       class="upload-screenshot" (click)="selectFileForUpload(uploadInput)">
+                    <input #uploadInput type="file" name="upload" (change)="onFileChange($event)"
+                           style="display: none;"/>
+                    <i class="fa fa-plus fa-2x"></i>
+                  </div>
+                </div>
+                <div class="clearfix"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="col-12">
+              <div class="form-group">
+                <div class="checkbox">
+                  <label>
+                    <input [(ngModel)]="sendProObj" name="sendpro" #sendpro type="checkbox"
+                           checked>
+                    Append protocol (recommended):
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" [hidden]="!sendpro.checked">
+                <span>Protocol:</span>
+                <textarea class="form-control" id="bgProtocol"
+                          [innerHTML]="(visible) ? protocolText : ''"
+                          disabled>
+                </textarea>
+              </div>
+            </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button (click)="feedbackModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
-        <button (click)="onSubmit()" [disabled]="!allFilled" class="btn btn-outline-primary" type="button">Send
-          Feedback
+        <button type="button" class="btn btn-secondary" (click)="close()">
+          Abort
+        </button>
+        <button type="button" class="btn btn-primary" (click)="sendBugReport();"
+                [disabled]="!isvalid || sendStatus === 'sending'">
+          <i class="fa fa-paper-plane"></i><span> Send Feedback</span>
         </button>
       </div>
     </div>

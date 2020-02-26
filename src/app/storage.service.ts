@@ -5,6 +5,7 @@ import {Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
 import {TaskEntry} from './obj/tasks/task-entry';
 import {Operation} from './obj/operations/operation';
+import {isNullOrUndefined} from './shared/Functions';
 
 @Injectable()
 export class StorageService {
@@ -13,6 +14,29 @@ export class StorageService {
   public allloaded: EventEmitter<any[]> = new EventEmitter<any[]>();
   private idbm: IndexedDBManager;
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  private userProfile = {
+    name: '',
+    email: ''
+  };
+
+  public get userEmail(): string {
+    return this.userProfile.email;
+  }
+
+  public set userEmail(value: string) {
+    this.userProfile.email = value;
+    this.idbm.save('userSettings', 'userProfile', {value: this.userProfile});
+  }
+
+  public get userName(): string {
+    return this.userProfile.name;
+  }
+
+  public set userName(value: string) {
+    this.userProfile.name = value;
+    this.idbm.save('userSettings', 'userProfile', {value: this.userProfile});
+  }
 
   constructor() {
     this.idbm = new IndexedDBManager('oh-portal');
@@ -42,6 +66,17 @@ export class StorageService {
               TaskEntry.counter = results[0].value;
               Operation.counter = results[1].value;
               this.ready = true;
+
+              if (!isNullOrUndefined(results[3])) {
+                const userProfile = results[3].find((a) => {
+                  return a.name === 'userProfile';
+                });
+
+                if (!isNullOrUndefined(userProfile) && !isNullOrUndefined(userProfile.value)) {
+                  this.userProfile = userProfile.value;
+                }
+              }
+
               this.allloaded.emit([results[2], results[3]]);
             }).catch((err) => {
               console.error(err);
