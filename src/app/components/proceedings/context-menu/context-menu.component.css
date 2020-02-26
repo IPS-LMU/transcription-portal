@@ -14,7 +14,8 @@
 
 tr {
   border-bottom: 1px solid #c0c0c0;
-  padding: 3px auto;
+  padding-top: 3px;
+  padding-bottom: 3px;
   text-align: left;
 }
 

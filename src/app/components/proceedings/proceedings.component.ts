@@ -62,7 +62,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     operation: Operation,
     task: Task,
     directory: TaskDirectory,
-    pointer: string,
+    pointer: 'left' | 'right' | 'bottom-left',
     mouseIn: boolean
   } = {
     x: 0,

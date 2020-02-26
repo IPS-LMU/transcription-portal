@@ -202,7 +202,7 @@ export class IndexedDBManager {
           }
         };
 
-        wrapper(0);
+      wrapper(0);
       }
     );
   }

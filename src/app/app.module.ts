@@ -110,5 +110,8 @@ import {OHModalService} from './shared/ohmodal.service';
   ],
   bootstrap: [AppComponent]
 })
+
 export class AppModule {
+  constructor() {
+  }
 }

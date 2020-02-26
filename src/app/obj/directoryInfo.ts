@@ -108,17 +108,17 @@ export class DirectoryInfo extends DataInfo {
             // console.log(`is dir ${item.fullPath}`);
           const dirEntry: any = webKitEntry as any;
           const dirReader = dirEntry.createReader();
-            dirReader.readEntries((entries: any) => {
-              const promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
-              for (const entry of entries) {
-                promises.push(this.traverseFileTree(entry, path + dirEntry.name + '/'));
-              }
-              Promise.all(promises).then((values: (FileInfo | DirectoryInfo)[][]) => {
-                const dir = new DirectoryInfo(path + dirEntry.name + '/');
-                let result: (FileInfo | DirectoryInfo)[] = [];
+          dirReader.readEntries((entries: any) => {
+            const promises: Promise<(FileInfo | DirectoryInfo)[]>[] = [];
+            for (const entry of entries) {
+              promises.push(this.traverseFileTree(entry, path + dirEntry.name + '/'));
+            }
+            Promise.all(promises).then((values: (FileInfo | DirectoryInfo)[][]) => {
+              const dir = new DirectoryInfo(path + dirEntry.name + '/');
+              let result: (FileInfo | DirectoryInfo)[] = [];
 
-                for (const value of values) {
-                  for (const val of value) {
+              for (const value of values) {
+                for (const val of value) {
                     result.push(val);
                   }
                 }
