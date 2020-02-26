@@ -129,7 +129,11 @@ export class AppComponent implements OnDestroy {
     }
 
     this.subscrmanager.add(this.modalService.onFeedBackRequested.subscribe(() => {
-      this.feedbackModal.open();
+      this.settingsService.shortCutsEnabled = false;
+
+      this.feedbackModal.open().then(() => {
+        this.settingsService.shortCutsEnabled = true;
+      });
     }));
 
     this.subscrmanager.add(this.settingsService.settingsload.subscribe(() => {

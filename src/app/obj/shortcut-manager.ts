@@ -13,6 +13,7 @@ export class ShortcutManager {
       remove: 'CTRL + BACKSPACE'
     }
   };
+
   private table: any = [
     {
       name: 'CMD',
@@ -69,6 +70,8 @@ export class ShortcutManager {
 
   }
 
+  public shortcutsEnabled = true;
+
   private _pressedKey = {
     code: -1,
     name: ''
@@ -80,28 +83,32 @@ export class ShortcutManager {
 
   public checkKeyEvent(event: KeyboardEvent): Promise<{ command: string, platform: string }> {
     return new Promise<{ command: string, platform: string }>((resolve) => {
-      if (event.type === 'keydown') {
-        const shortcut = this.getShorcutCombination(event);
+      if (this.shortcutsEnabled) {
+        if (event.type === 'keydown') {
+          const shortcut = this.getShorcutCombination(event);
 
-        if (this._pressedKey.code < 0) {
-          this._pressedKey.code = event.keyCode;
-          this._pressedKey.name = this.getNameByCode(event.keyCode);
-        }
+          if (this._pressedKey.code < 0) {
+            this._pressedKey.code = event.keyCode;
+            this._pressedKey.name = this.getNameByCode(event.keyCode);
+          }
 
-        const command = this.getCommand(shortcut, BrowserInfo.platform);
+          const command = this.getCommand(shortcut, BrowserInfo.platform);
 
-        if (!(command === null || command === undefined)) {
-          event.preventDefault();
-          resolve({
-            platform: BrowserInfo.platform,
-            command
-          });
+          if (!(command === null || command === undefined)) {
+            event.preventDefault();
+            resolve({
+              platform: BrowserInfo.platform,
+              command
+            });
+          }
+        } else if (event.type === 'keyup') {
+          if (event.keyCode === this._pressedKey.code) {
+            this._pressedKey.code = -1;
+            this._pressedKey.name = '';
+          }
         }
-      } else if (event.type === 'keyup') {
-        if (event.keyCode === this._pressedKey.code) {
-          this._pressedKey.code = -1;
-          this._pressedKey.name = '';
-        }
+      } else {
+        resolve(null);
       }
     });
   }

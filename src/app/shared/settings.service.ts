@@ -31,4 +31,6 @@ export class SettingsService {
   get settingsload(): Subject<void> {
     return this._settingsload;
   }
+
+  public shortCutsEnabled = true;
 }

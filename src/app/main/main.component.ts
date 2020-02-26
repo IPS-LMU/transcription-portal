@@ -65,6 +65,8 @@ export class MainComponent implements OnDestroy {
   private blockLeaving = true;
   private subscrmanager = new SubscriptionManager();
 
+  public shortcutsEnabled = true;
+
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
               private storage: StorageService,
@@ -630,5 +632,9 @@ export class MainComponent implements OnDestroy {
         this.taskService.preprocessor.addToQueue(entry);
       }
     }
+  }
+
+  public openFeedbackModal() {
+    this.modalService.openFeedbackModal();
   }
 }

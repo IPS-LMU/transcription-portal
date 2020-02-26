@@ -34,6 +34,7 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
+import {isNullOrUndefined} from '../../shared/Functions';
 
 declare var window: any;
 
@@ -86,6 +87,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   public allDirOpened: 'opened' | 'closed' = 'closed';
   @Input() shortstyle = false;
   @Input() isClosed = false;
+
+  @Output()
+  public get shortcutsEnabled(): boolean {
+    return this.shortcutManager.shortcutsEnabled;
+  }
+
+  @Input()
+  public set shorcutsEnabled(value: boolean) {
+    this.shortcutManager.shortcutsEnabled = value;
+  }
+
   @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
@@ -94,6 +106,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('inner', {static: true}) inner: ElementRef;
   @ViewChild('popoverRef') public popoverRef: PopoverComponent;
   @ViewChild('filePreview', {static: true}) public filePreview: FilePreviewModalComponent;
+
+
   public selectedOperation: Operation;
   public toolSelectedOperation: Operation;
   private readonly fileAPIsupported: boolean = false;
@@ -631,25 +645,27 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     this.shortcutManager.checkKeyEvent(event).then((result) => {
-      if (result.command === 'remove') {
-        this.popover.state = 'closed';
-        this.deleteSelectedTasks();
-      } else if (result.command === 'select all') {
-        this.selectedRows = [];
-        if (!this.allSelected) {
-          // select all
-          const length = this.taskList.length;
+      if (!isNullOrUndefined(result)) {
+        if (result.command === 'remove') {
+          this.popover.state = 'closed';
+          this.deleteSelectedTasks();
+        } else if (result.command === 'select all') {
+          this.selectedRows = [];
+          if (!this.allSelected) {
+            // select all
+            const length = this.taskList.length;
 
-          for (let i = 0; i < length; i++) {
-            this.selectedRows.push(i);
+            for (let i = 0; i < length; i++) {
+              this.selectedRows.push(i);
+            }
+            this.allSelected = true;
+          } else {
+            this.allSelected = false;
           }
-          this.allSelected = true;
-        } else {
-          this.allSelected = false;
         }
+        this.cd.markForCheck();
+        this.cd.detectChanges();
       }
-      this.cd.markForCheck();
-      this.cd.detectChanges();
     }).catch((error) => {
       console.error(error);
     });
