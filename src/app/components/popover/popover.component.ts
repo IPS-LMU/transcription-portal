@@ -12,7 +12,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('inner', {static: true}) inner: ElementRef;
 
   @Input() borderColor = '#3a70dd';
-  @Input() pointer: 'left' | 'right' | 'bottom-left' = 'left';
+  @Input() pointer: 'left' | 'right' | 'bottom-left' | 'bottom-right' = 'left';
 
   @Input() public width = 200;
   @Input() public height = 300;
