@@ -49,7 +49,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.hasOwnProperty('pointer')) {
-      this.updatePolygins();
+      this.updatePolygons();
 
       if (changes.pointer.currentValue === 'left') {
         this.polygon = this.leftTopPolygon;
@@ -66,7 +66,7 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
   }
 
-  updatePolygins() {
+  updatePolygons() {
 
     this.leftTopPolygon = {
       koord1: {

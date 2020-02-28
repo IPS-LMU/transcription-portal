@@ -1,10 +1,13 @@
 import {DataInfo} from './dataInfo';
 import {unescape} from 'querystring';
 import {HttpClient} from '@angular/common/http';
+import {isNullOrUndefined} from '../shared/Functions';
 
 export class FileInfo extends DataInfo {
-  public constructor(fullname: string, type: string, size: number, file?: File) {
+  public constructor(fullname: string, type: string, size: number, file?: File, createdAt?: number) {
     super(FileInfo.extractFileName(fullname).name, type, size);
+    this._createdAt = (isNullOrUndefined(createdAt)) ? 0 : createdAt;
+
     const extraction = FileInfo.extractFileName(fullname);
     if (!(extraction === null || extraction === undefined)) {
       this._extension = extraction.extension;
@@ -20,6 +23,12 @@ export class FileInfo extends DataInfo {
   get available(): boolean {
     return this.online || !(this._file === undefined || this._file === null);
   }
+
+  public get createdAt(): number {
+    return this._createdAt;
+  }
+
+  private _createdAt = 0;
 
   public get fullname(): string {
     return `${this._name}${this._extension}`;
@@ -73,10 +82,10 @@ export class FileInfo extends DataInfo {
   }
 
   public static fromFileObject(file: File) {
-    return new FileInfo(file.name, file.type, file.size, file);
+    return new FileInfo(file.name, file.type, file.size, file, file.lastModified);
   }
 
-  public static fromURL(url: string, name: string = null, type: string) {
+  public static fromURL(url: string, name: string = null, type: string, createdAt = 0) {
     let fullname = '';
     if (name != null) {
       const extension = url.substr(url.lastIndexOf('.') + 1);
@@ -84,7 +93,7 @@ export class FileInfo extends DataInfo {
     } else {
       fullname = url.substr(url.lastIndexOf('/') + 1);
     }
-    const result = new FileInfo(fullname, type, 0);
+    const result = new FileInfo(fullname, type, 0, undefined, createdAt);
     result.url = url;
 
     return result;
@@ -137,13 +146,13 @@ export class FileInfo extends DataInfo {
     return null;
   }
 
-  public static fromAny(object): FileInfo {
+  public static fromAny(object: any): FileInfo {
     let file;
     if (object.content !== undefined && object.content !== '') {
-      file = this.getFileFromContent(object.content, object.fullname);
+      file = this.getFileFromContent(object.content, object.fullname, object.type, object.createdAt);
     }
 
-    const result = new FileInfo(object.fullname, object.type, object.size, file);
+    const result = new FileInfo(object.fullname, object.type, object.size, file, object.createdAt);
     result.attributes = object.attributes;
     result.url = object.url;
     return result;
@@ -158,14 +167,11 @@ export class FileInfo extends DataInfo {
     });
   }
 
-  public static getFileFromContent(content: string, filename: string, type?: string): File {
+  public static getFileFromContent(content: string, filename: string, type?: string, createdAt?: number): File {
     const properties = {
-      type: ''
+      lastModified: (isNullOrUndefined(createdAt)) ? Date.now() : createdAt,
+      type: (!isNullOrUndefined(type)) ? type : ''
     };
-
-    if (type !== undefined && type !== '') {
-      properties.type = type;
-    }
 
     return new File([content], filename, properties);
   }
@@ -201,6 +207,7 @@ export class FileInfo extends DataInfo {
         type: this.type,
         url: this.url,
         attributes: this.attributes,
+        createdAt: this._createdAt,
         content: ''
       };
 

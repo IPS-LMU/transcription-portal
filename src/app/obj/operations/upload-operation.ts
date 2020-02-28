@@ -109,12 +109,12 @@ export class UploadOperation extends Operation {
             for (let i = 0; i < files.length; i++) {
               files[i].url = json.fileList.entry[i].value;
               const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
-              this.results.push(FileInfo.fromURL(files[i].url, files[i].fullname, type));
+              this.results.push(FileInfo.fromURL(files[i].url, files[i].fullname, type, Date.now()));
             }
           } else {
             // json attribute entry is an object
             files[0].url = json.fileList.entry.value;
-            this.results.push(FileInfo.fromURL(json.fileList.entry.value, null, 'audio/wav'));
+            this.results.push(FileInfo.fromURL(json.fileList.entry.value, null, 'audio/wav', Date.now()));
           }
           this.changeState(TaskState.FINISHED);
         } else {

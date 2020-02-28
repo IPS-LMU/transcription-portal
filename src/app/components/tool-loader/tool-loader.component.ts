@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Operation} from '../../obj/operations/operation';
+import {isNullOrUndefined} from '../../shared/Functions';
 
 @Component({
   selector: 'app-tool-loader',
@@ -22,9 +23,11 @@ export class ToolLoaderComponent implements OnInit, OnChanges {
   @ViewChild('iframe', {static: true}) iframe: ElementRef;
 
   public selectedtool: {
-    url: SafeUrl
+    url: SafeUrl,
+    name: string
   } = {
-    url: undefined
+    url: undefined,
+    name: ''
   };
   @Input() public operation: Operation = null;
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
@@ -35,6 +38,12 @@ export class ToolLoaderComponent implements OnInit, OnChanges {
   public set url(url: string) {
     if (!(url === null || url === undefined) && url !== '') {
       this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    }
+  }
+
+  public set name(name: string) {
+    if (!isNullOrUndefined(name)) {
+      this.selectedtool.name = name;
     }
   }
 
@@ -50,6 +59,6 @@ export class ToolLoaderComponent implements OnInit, OnChanges {
 
   @HostListener('window:message', ['$event'])
   onMessage(e) {
-    this.datareceived.emit(e);
+    this.datareceived.emit({event: e, name: this.selectedtool.name});
   }
 }

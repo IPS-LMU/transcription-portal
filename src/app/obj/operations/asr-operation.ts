@@ -144,7 +144,7 @@ export class ASROperation extends Operation {
           json = json.WebServiceResponseLink;
 
           if (json.success === 'true') {
-            const file = FileInfo.fromURL(json.downloadLink, input.name, 'text/plain');
+            const file = FileInfo.fromURL(json.downloadLink, input.name, 'text/plain', Date.now());
             file.updateContentFromURL(httpClient).then(() => {
               // add messages to protocol
               if (json.warnings !== '') {
@@ -220,7 +220,7 @@ export class ASROperation extends Operation {
             json = json.WebServiceResponseLink;
 
             if (json.success === 'true') {
-              const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain');
+              const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain', Date.now());
 
               setTimeout(() => {
                 file.updateContentFromURL(httpClient).then(() => {

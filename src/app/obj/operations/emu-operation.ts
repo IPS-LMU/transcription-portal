@@ -6,6 +6,8 @@ import {Operation} from './operation';
 import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {OHLanguageObject} from '../oh-config';
+import {AppSettings} from '../../shared/app.settings';
+import {isNullOrUndefined} from '../../shared/Functions';
 
 export class EmuOperation extends ToolOperation {
   protected operations: Operation[];
@@ -17,14 +19,14 @@ export class EmuOperation extends ToolOperation {
       ' a sentence or phrase.';
   }
 
+  public resultType = 'AnnotJSON';
+
   public start = (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
                   httpclient: HttpClient, accessCode: string) => {
-    this._time.start = Date.now();
-    this.changeState(TaskState.PROCESSING);
-    this.time.duration = 0;
+    this.updateProtocol('');
     this.operations = operations;
-    this.changeState(TaskState.FINISHED);
-  }
+    this.changeState(TaskState.READY);
+  };
 
   public getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
@@ -71,12 +73,11 @@ export class EmuOperation extends ToolOperation {
           '<span class="sr-only">Loading...</span>';
         break;
       case(TaskState.PROCESSING):
-        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Loading...</span>';
+        result = '<i class="fa fa-cog fa-spin link" aria-hidden="true"></i>';
         break;
       case(TaskState.FINISHED):
         if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult.available) {
-          result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
+          result = '<i class="fa fa-check" aria-hidden="true"></i>';
         } else {
           result = '<i class="fa fa-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
         }
@@ -110,13 +111,36 @@ export class EmuOperation extends ToolOperation {
   }
 
   public getToolURL(): string {
-    if (!(this.previousOperation.lastResult === null || this.previousOperation.lastResult === undefined)) {
-      const uploadOP = this.operations[0] as UploadOperation;
-      const audio = encodeURIComponent(uploadOP.wavFile.url);
-      const transcript = encodeURIComponent(this.previousOperation.lastResult.url);
-      const labelType = (this.previousOperation.lastResult.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
-      return `${this._commands[0]}?audioGetUrl=${audio}&labelGetUrl=${transcript}&labelType=${labelType}`;
+    if (!((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
+      const audio = `audioGetUrl=${encodeURIComponent((this.operations[0] as UploadOperation).wavFile.url)}`;
+      let transcript = `labelGetUrl=`;
+      const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);
+      let result = null;
+      const lastResultMaus = this.previousOperation.lastResult;
+      const lastResultEMU = this.lastResult;
+
+      if (!isNullOrUndefined(lastResultEMU) && lastResultEMU.createdAt >= lastResultMaus.createdAt) {
+        result = lastResultEMU;
+      } else {
+        result = lastResultMaus;
+      }
+
+      // TODO check if result from MAUS is newer than from EMU Webapp
+
+      const labelType = (result.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
+
+      if (!(langObj === null || langObj === undefined)) {
+        transcript += encodeURIComponent(result.url);
+
+        return `${this._commands[0]}?` +
+          `${audio}&` +
+          `${transcript}&` +
+          `&labelType=${labelType}` +
+          `&saveToWindowParent=true`;
+      } else {
+        console.log(`langObj not found in octra operation lang:${this.task.language} and ${this.task.asr}`);
+      }
     }
-    return ``;
+    return '';
   }
 }

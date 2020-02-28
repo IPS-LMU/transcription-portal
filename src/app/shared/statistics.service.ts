@@ -16,8 +16,8 @@ export class StatisticsService {
   };
 
   public averageDurations = {
-    labels: ['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment'],
-    data: [0, 0, 0, 0]
+    labels: ['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment', 'Phonetic Detail'],
+    data: [0, 0, 0, 0, 0]
   };
 
   private subscrmanager = new SubscriptionManager();
@@ -47,17 +47,15 @@ export class StatisticsService {
   public updateAverageDurations() {
     const tasks = this.taskService.taskList.getAllTasks();
 
-    const durations = [0, 0, 0, 0];
+    const durations = [0, 0, 0, 0, 0];
 
     for (const task of tasks) {
-      for (let j = 0; j < task.operations.length - 1; j++) {
+      for (let j = 0; j < task.operations.length; j++) {
         const operation = task.operations[j];
 
         durations[j] += operation.time.duration;
       }
     }
-
-    const sum = durations[0] + durations[1] + durations[2] + durations[3];
 
     for (let i = 0; i < this.averageDurations.data.length; i++) {
       this.averageDurations.data[i] = Math.ceil(durations[i] / 1000 / 60 * 100) / 100;

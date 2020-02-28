@@ -31,6 +31,7 @@ import {SettingsService} from '../shared/settings.service';
 import {AppSettings} from '../shared/app.settings';
 import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
+import {EmuOperation} from '../obj/operations/emu-operation';
 
 declare var window: any;
 
@@ -287,97 +288,46 @@ export class MainComponent implements OnDestroy {
             `Please run ${tool.previousOperation.name} for this task again.`, 12);
         }
       } else {
+        let file: FileInfo = null;
+        if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
+          // reupload result from tool operation
+          file = tool.lastResult;
+        } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
+          && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+          // reupload result from previous operation
+          // local available, reupload
+          file = tool.previousOperation.lastResult;
+        }
+
         new Promise<void>((resolve, reject) => {
-          // check if tool results exist
-          if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
-            // reupload result from tool operation
-
-            // TODO make uploading easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
-            const url = `${langObj.host}uploadFileMulti`;
-
-            const subj = UploadOperation.upload([tool.lastResult], url, this.httpclient);
-            subj.subscribe((obj) => {
-              if (obj.type === 'loadend') {
-                const result = obj.result as string;
-                const x2js = new X2JS();
-                let json: any = x2js.xml2js(result);
-                json = json.UploadFileMultiResponse;
-
-
-                // add messages to protocol
-                if (json.warnings !== '') {
-                  console.warn(json.warnings);
-                }
-
-                if (json.success === 'true') {
-                  // TODO set urls to results only
-                  if (Array.isArray(json.fileList.entry)) {
-                    tool.lastResult.url = json.fileList.entry[0].value;
-                  } else {
-                    // json attribute entry is an object
-                    tool.lastResult.url = json.fileList.entry.value;
-                  }
-                  this.storage.saveTask(tool.task);
-                  resolve();
-                } else {
-                  reject(json.message);
-                }
+          if (file !== null) {
+            console.log(`reupload...`);
+            this.upload(tool, file).then((url: string) => {
+              console.log(`uploaded: ${url}`);
+              if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
+                // reupload result from tool operation
+                tool.lastResult.url = url;
+              } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
+                && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+                tool.previousOperation.lastResult.url = url;
               }
-            }, (err) => {
-              reject(err);
-            });
-          } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
-            && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
-            // reupload result from previous operation
-            // local available, re upload
-
-            // TODO make using upload easier!
-            const langObj = AppSettings.getLanguageByCode(tool.task.language, tool.task.operations[1].providerInformation.provider);
-            const url = `${langObj.host}uploadFileMulti`;
-
-            const subj = UploadOperation.upload([tool.previousOperation.lastResult], url, this.httpclient);
-            subj.subscribe((obj) => {
-              if (obj.type === 'loadend') {
-                const result = obj.result as string;
-                const x2js = new X2JS();
-                let json: any = x2js.xml2js(result);
-                json = json.UploadFileMultiResponse;
-
-
-                // add messages to protocol
-                if (json.warnings !== '') {
-                  console.warn(json.warnings);
-                }
-
-                if (json.success === 'true') {
-                  // TODO set urls to results only
-                  if (Array.isArray(json.fileList.entry)) {
-                    tool.previousOperation.lastResult.url = json.fileList.entry[0].value;
-                  } else {
-                    // json attribute entry is an object
-                    tool.previousOperation.lastResult.url = json.fileList.entry.value;
-                  }
-                  this.storage.saveTask(tool.task);
-                  resolve();
-                } else {
-                  reject(json.message);
-                }
-              }
-            }, (err) => {
-              reject(err);
+              this.storage.saveTask(tool.task);
+              resolve();
+            }).catch((e) => {
+              reject(e);
             });
           } else {
             resolve();
           }
         }).then(() => {
+          // continue after upload
           const index = tool.task.operations.findIndex((op) => {
             if (op.id === tool.id) {
               return true;
             }
           });
 
-          if (index < tool.task.operations.length - 1) {
+          if (index < tool.task.operations.length) {
             // start processing
             tool.changeState(TaskState.PROCESSING);
           }
@@ -388,6 +338,8 @@ export class MainComponent implements OnDestroy {
             this.proceedings.cd.markForCheck();
             this.proceedings.cd.detectChanges();
             this.toolLoader.url = tool.getToolURL();
+            this.toolLoader.name = tool.name;
+
             if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined)
               && operation.id !== this.toolSelectedOperation.id) {
               // some operation already initialized
@@ -402,6 +354,8 @@ export class MainComponent implements OnDestroy {
 
             this.showtool = true;
             if (operation instanceof OCTRAOperation) {
+              operation.time.start = Date.now();
+            } else if (operation instanceof EmuOperation) {
               operation.time.start = Date.now();
             }
             this.proceedings.togglePopover(false);
@@ -449,11 +403,43 @@ export class MainComponent implements OnDestroy {
     return code.substring(code.length - 2);
   }
 
-  onToolDataReceived($event) {
-    if ($event.data.data !== undefined && $event.data.hasOwnProperty('data') && $event.data.data.hasOwnProperty('transcript_url')) {
-      const result: string = $event.data.data.transcript_url;
-      const file = FileInfo.fromURL(result, null, 'text/plain');
-      file.updateContentFromURL(this.httpclient).then(() => {
+  onToolDataReceived(data) {
+    const $event = data.event;
+
+    if ($event.data.data !== undefined && $event.data.hasOwnProperty('data')) {
+      const promise = new Promise<FileInfo>((resolve, reject) => {
+        if (data.name === 'OCTRA') {
+          if ($event.data.data.hasOwnProperty('transcript_url')) {
+            const result: string = $event.data.data.transcript_url;
+            const file = FileInfo.fromURL(result, null, 'text/plain', Date.now());
+            file.updateContentFromURL(this.httpclient).then(() => {
+              resolve(file);
+            }).catch((e) => {
+              reject(e);
+            });
+          } else {
+            reject(`missing transcript url`);
+          }
+        } else if (data.name === 'Emu WebApp') {
+          const fileName = this.toolSelectedOperation.task.files[0].name;
+          this.toolSelectedOperation.changeState(TaskState.FINISHED);
+          this._showtool = false;
+          let jsonText = '';
+          if ($event.data.data.hasOwnProperty('annotation')) {
+            const json = $event.data.data.annotation;
+            json.name = fileName;
+            json.annotates = `${fileName}_annot.json`;
+            jsonText = JSON.stringify(json, null, 2);
+          }
+
+          const file: File = FileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
+          const fileInfo = new FileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
+          fileInfo.online = false;
+          resolve(fileInfo);
+        } else {
+          reject('unknown tool!');
+        }
+      }).then((file: FileInfo) => {
         this.toolSelectedOperation.results.push(file);
 
         const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
@@ -471,6 +457,8 @@ export class MainComponent implements OnDestroy {
         }
 
         if (this.toolSelectedOperation instanceof OCTRAOperation) {
+          this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
+        } else if (this.toolSelectedOperation instanceof EmuOperation) {
           this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
         }
 
@@ -636,5 +624,41 @@ export class MainComponent implements OnDestroy {
 
   public openFeedbackModal() {
     this.modalService.openFeedbackModal();
+  }
+
+  private upload(operation: Operation, file: FileInfo): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const langObj = AppSettings.getLanguageByCode(operation.task.language, operation.task.operations[1].providerInformation.provider);
+      const url = `${langObj.host}uploadFileMulti`;
+
+      const subj = UploadOperation.upload([file], url, this.httpclient);
+      subj.subscribe((obj) => {
+        if (obj.type === 'loadend') {
+          const result = obj.result as string;
+          const x2js = new X2JS();
+          let json: any = x2js.xml2js(result);
+          json = json.UploadFileMultiResponse;
+
+
+          // add messages to protocol
+          if (json.warnings !== '') {
+            console.warn(json.warnings);
+          }
+
+          if (json.success === 'true') {
+            if (Array.isArray(json.fileList.entry)) {
+              resolve(json.fileList.entry[0].value);
+            } else {
+              // json attribute entry is an object
+              resolve(json.fileList.entry.value);
+            }
+          } else {
+            reject(json.message);
+          }
+        }
+      }, (err) => {
+        reject(err);
+      });
+    });
   }
 }

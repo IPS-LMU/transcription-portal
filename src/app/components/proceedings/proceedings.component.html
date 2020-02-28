@@ -82,7 +82,7 @@
                   | date :"dd.MM.yyyy H:mm"}}
               </td>
               <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
-                {{calculateDuration(popover.operation.time) | time:'true'}}
+                {{calculateDuration(popover.operation.time, popover.operation) | time:'true'}}
               </td>
             </tr>
           </table>
@@ -117,7 +117,7 @@
         </ng-container>
         <ng-container *ngIf="popover.operation.results.length > 0">
           <div style="overflow:auto;">
-            <app-results-table (previewClick)="onPreviewClick($event)"
+            <app-results-table [visible]="popover.state === 'opened'" (previewClick)="onPreviewClick($event)"
                                [operation]="popover.operation"></app-results-table>
           </div>
         </ng-container>

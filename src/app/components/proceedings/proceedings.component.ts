@@ -394,8 +394,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
 
   onOperationMouseEnter($event, operation: Operation) {
     // show Popover for normal operations only
-    if (!(operation instanceof EmuOperation) &&
-      !(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
+    if (!(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
       const icon = $event.target;
       const parentNode = icon.parentNode;
 
@@ -492,11 +491,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     task.mouseover = true;
   }
 
-  calculateDuration(time) {
-    if (time.duration > 0) {
-      return time.duration;
+  calculateDuration(time, operation: Operation) {
+    if (operation.state === TaskState.PROCESSING) {
+      return operation.time.duration + Math.max(0, Date.now() - operation.time.start);
     } else {
-      return Date.now() - time.start;
+      if (time.duration > 0) {
+        return time.duration;
+      } else {
+        return Date.now() - time.start;
+      }
     }
   }
 

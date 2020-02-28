@@ -17,6 +17,7 @@ import {AudioInfo} from '../../obj/audio';
 import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../../obj/fileInfo';
 import {DomSanitizer} from '@angular/platform-browser';
+import {isNullOrUndefined} from '../../shared/Functions';
 
 @Component({
   selector: 'app-results-table',
@@ -27,6 +28,8 @@ import {DomSanitizer} from '@angular/platform-browser';
 export class ResultsTableComponent implements OnInit, OnChanges {
 
   @Input() operation: Operation;
+  @Input() visible = false;
+
   public convertedArray: {
     input: any,
     number: number,
@@ -51,12 +54,13 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.hasOwnProperty('operation') && !changes.operation.isFirstChange()) {
+    if (changes.hasOwnProperty('visible') && !changes.visible.isFirstChange() && changes.visible.currentValue === true) {
       this.generateTable();
     }
   }
 
   ngOnInit() {
+    console.log(`init!`);
     this.generateTable();
   }
 
@@ -68,7 +72,10 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   public isEqualConverterName(converter: any) {
-    return this.conversionExtension.indexOf(converter.obj.name) < 0;
+    if (!isNullOrUndefined(this.conversionExtension)) {
+      return this.conversionExtension.indexOf(converter.obj.name) < 0;
+    }
+    return false;
   }
 
   private generateTable() {
