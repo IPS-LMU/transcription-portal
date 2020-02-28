@@ -58,6 +58,10 @@
   font-size: 0.9em;
 }
 
+.table.table-striped td {
+  vertical-align: middle;
+}
+
 .op-deactivated {
 }
 
@@ -255,4 +259,8 @@ table thead tr th:hover {
   margin-top: 10px;
   border: 1px solid aliceblue;
   padding: 5px;
+}
+
+.export-col {
+  text-align: center;
 }

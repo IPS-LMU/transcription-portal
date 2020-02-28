@@ -225,14 +225,21 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   onContextMenu(event) {
     event.preventDefault();
 
-    if (this.selectedRows.length <= 1) {
-      this.selectedRows = [];
-      const index = this.taskList.getIndexByEntry(this.popover.task);
-      this.selectedRows.push(index);
+    let task: Task | TaskDirectory = this.popover.task;
+    if (isNullOrUndefined(task)) {
+      task = this.popover.directory;
     }
-    this.contextmenu.x = event.layerX - 20;
-    this.contextmenu.y = event.layerY;
-    this.contextmenu.hidden = false;
+
+    if (!isNullOrUndefined(task)) {
+      if (this.selectedRows.length <= 1) {
+        this.selectedRows = [];
+        const index = this.taskList.getIndexByEntry(task);
+        this.selectedRows.push(index);
+      }
+      this.contextmenu.x = event.layerX - 20;
+      this.contextmenu.y = event.layerY;
+      this.contextmenu.hidden = false;
+    }
   }
 
   onContextBlur() {
@@ -782,5 +789,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.shiftStart = -1;
     this.cd.markForCheck();
     this.cd.detectChanges();
+  }
+
+  onExportButtonClick(task: Task | TaskDirectory, operation: Operation) {
+    this.selectedRows = [task.id];
+    this.selectedOperation = operation;
+    this.openArchiveDownload('line', operation);
   }
 }

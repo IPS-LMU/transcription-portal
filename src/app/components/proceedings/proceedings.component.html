@@ -174,7 +174,7 @@
             <div style="position: relative;">
               <div style="display:block;position: relative;height:25px;cursor:pointer;">
                 <app-operation-arrow [first]="(i === 0)"
-                                     [type]="(i === operations.length - 1) ? 'circle': 'arrow'"></app-operation-arrow>
+                                     [type]="'arrow'"></app-operation-arrow>
                 <div style="z-index:10;width:100%;text-align:center;">
                   <ng-template #tipContent>{{operation.description}}</ng-template>
                   <div (click)="openArchiveDownload('column', operation)"
@@ -195,6 +195,20 @@
             </div>
           </th>
         </ng-container>
+        <th>
+          <div style="position: relative;" class="ng-tns-c118-4">
+            <div style="display: block; position: relative; height: 25px; cursor: pointer;"
+                 class="ng-tns-c118-4">
+              <app-operation-arrow [first]="false" [type]="'circle'"></app-operation-arrow>
+              <div style="z-index: 10; width: 100%; text-align: center;" class="ng-tns-c118-4">
+                <div style="display: inline; padding: 0 3px;" class="operation-tooltip" aria-describedby="tooltip-9">
+                  <span *ngIf="!shortstyle">Export</span>
+                  <span *ngIf="shortstyle"><i class="fa fa-cloud-download"></i></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </th>
       </tr>
       <tr class="subTableHeader">
         <th style="width:15px; padding-right:0;text-align:center;">
@@ -216,6 +230,7 @@
           </th>
           <th *ngIf="i === 0"></th>
         </ng-container>
+        <th></th>
       </tr>
       </thead>
 
@@ -264,6 +279,10 @@
                 appProcColOperation
             >
             </td>
+            <td class="export-col">
+              <button class="btn  btn-outline-success" (click)="onExportButtonClick(entry, entry.operations[1])"><i
+                class="fa fa-cloud-download"></i></button>
+            </td>
           </ng-container>
           <ng-container *ngIf="entry.type === 'folder'">
             <td (click)="onRowSelected(entry)"
@@ -274,6 +293,7 @@
                 </div>
               </div>
             </td>
+            <td></td>
           </ng-container>
         </tr>
         <ng-container *ngIf="entry.type === 'folder'">
@@ -298,20 +318,6 @@
                 appProcColIcon
             >
             </td>
-            <ng-container *ngIf="entry.type === 'task'">
-              <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
-
-                  (operationMouseEnter)="onOperationMouseEnter($event, operation)"
-                  (operationMouseLeave)="onOperationMouseLeave($event, operation)"
-
-                  (operationMouseOver)="onOperationMouseOver($event, operation)"
-                  *ngFor="let operation of entry.operations"
-                  [entry]="entry"
-                  [operation]="operation"
-                  appProcColOperation
-              >
-              </td>
-            </ng-container>
             <td (click)="onRowSelected(dirEntry, operation)" (mousedown)="onOperationClick($event, operation)"
 
                 (operationMouseEnter)="onOperationMouseEnter($event, operation)"
@@ -323,14 +329,18 @@
                 [operation]="operation"
                 appProcColOperation>
             </td>
+            <td class="export-col">
+              <button class="btn btn-outline-success"><i class="fa fa-cloud-download"></i></button>
+            </td>
           </tr>
         </ng-container>
       </ng-container>
       <!-- Queue rows -->
       <ng-container *ngFor="let entry of queue; let i = index;">
         <tr style="cursor:pointer;">
-          <td *ngIf="entry.file.entries === undefined"
-              [attr.colspan]="taskService.operations.length + 1" [ngClass]="{'shorten': shortstyle}">
+          <td *ngIf="entry.file.entries === undefined" [attr.colspan]="taskService.operations.length + 3"
+              [ngClass]="{'shorten': shortstyle}">
+            empty
             <ng-container *ngIf="entry.file.entries === undefined">
               <i aria-hidden="true"
                  class="fa fa-database op-50">
@@ -347,14 +357,11 @@
                             {{entry.file.fullname}}  <i class="fa fa-spinner fa-spin"></i>
                         </span>
           </td>
-          <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 1">
+          <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 3">
                         <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
-                          class="fa fa-spinner fa-spin"></i>
+                          class="fa fa-spinner fa-spin"></i> not empty
                         </span>
           </td>
-          <ng-container *ngIf="entry.file.entries === undefined">
-            <td [attr.colspan]="taskService.operations.length + 1"></td>
-          </ng-container>
         </tr>
         <ng-container *ngIf="entry.file.entries !== undefined">
           <tr *ngFor="let dirEntry of entry.file.entries">
@@ -362,7 +369,7 @@
               <i aria-hidden="true" class="fa fa-database op-50"></i>
               <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
             </td>
-            <td [attr.colspan]="taskService.operations.length + 1"></td>
+            <td [attr.colspan]="taskService.operations.length + 2"></td>
           </tr>
         </ng-container>
       </ng-container>
