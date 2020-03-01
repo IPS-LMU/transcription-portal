@@ -330,20 +330,22 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
+          console.log(operation.name);
           if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
             const opResult = operation.lastResult;
-
+            const folderName = this.getFolderName(operation);
             entryResult.push({
-              path: `${task.files[0].name}/${operation.name}/${opResult.file.name}`,
+              path: `${task.files[0].name}/${folderName}/${opResult.file.name}`,
               file: opResult.file
             });
 
 
             promises.push(new Promise<void>((resolve2, reject2) => {
               this.getConversionFiles(operation).then((entries) => {
+                const folderName2 = this.getFolderName(operation);
                 for (const entry of entries) {
                   entryResult.push({
-                    path: `${task.files[0].name}/${operation.name}/${entry.fullname}`,
+                    path: `${task.files[0].name}/${folderName2}/${entry.fullname}`,
                     file: entry.file
                   });
                   resolve2();
@@ -386,6 +388,19 @@ export class DownloadModalComponent implements OnInit, OnChanges {
     for (const index of this.selectedTasks) {
       const entry = this.taskService.taskList.getEntryByIndex(index);
       this.taskService.taskList.removeEntry(entry, true);
+    }
+  }
+
+  getFolderName(operation: Operation) {
+    switch (operation.name) {
+      case ('ASR'):
+        return '1_Speech Recognition';
+      case ('OCTRA'):
+        return '2_Manual Transcription';
+      case ('MAUS'):
+        return '3_Word Alignment';
+      case ('Emu WebApp'):
+        return '4_Phonetic Detail';
     }
   }
 }
