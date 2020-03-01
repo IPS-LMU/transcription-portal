@@ -96,6 +96,15 @@ export class OCTRAOperation extends ToolOperation {
       const resultClass = FileInfo.fromAny(operationResult);
       result.results.push(resultClass);
     }
+
+    if (result.state === TaskState.PROCESSING) {
+      if (result.results.length > 0) {
+        result.changeState(TaskState.FINISHED);
+      } else {
+        result.changeState(TaskState.READY);
+      }
+    }
+
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
     result.operations = task.operations;

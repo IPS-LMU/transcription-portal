@@ -27,7 +27,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
 
   @ViewChild('content', {static: true}) content: TemplateRef<any>;
   @Input() type: 'line' | 'column' = 'column';
-  @Input() selectedTasks: number[];
+  private selectedTasks: number[];
   @Input() taskList: Task[];
   @Input() column: Operation;
 
@@ -67,9 +67,10 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges) {
   }
 
-  public open(type: 'column' | 'line') {
+  public open(type: 'column' | 'line', selectedTasks: number[]) {
     this.uncheckAll();
     this.type = type;
+    this.selectedTasks = selectedTasks;
 
     this.subscrManager.add(this.modalService.onHidden.subscribe((e) => {
       this.state = 'inactive';

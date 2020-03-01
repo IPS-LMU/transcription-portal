@@ -76,14 +76,10 @@ export class EmuOperation extends ToolOperation {
         result = '<i class="fa fa-cog fa-spin link" aria-hidden="true"></i>';
         break;
       case(TaskState.FINISHED):
-        if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult.available) {
-          result = '<i class="fa fa-check" aria-hidden="true"></i>';
-        } else {
-          result = '<i class="fa fa-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
-        }
+        result = '<i class="fa fa-check" aria-hidden="true"></i>';
         break;
       case(TaskState.READY):
-        result = '<a href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>';
+        result = '<i class="fa fa-pencil-square-o link" aria-hidden="true"></i>';
         break;
       case(TaskState.ERROR):
         result = '<i class="fa fa-times" aria-hidden="true"></i>';
@@ -99,10 +95,20 @@ export class EmuOperation extends ToolOperation {
   }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
-    const result = new EmuOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
+    const result = new EmuOperation(operationObj.name, commands, this.title,
+      this.shortTitle, task, operationObj.state, operationObj.id);
     for (const resultElement of operationObj.results) {
       result.results.push(FileInfo.fromAny(resultElement));
     }
+
+    if (result.state === TaskState.PROCESSING) {
+      if (result.results.length > 0) {
+        result.changeState(TaskState.FINISHED);
+      } else {
+        result.changeState(TaskState.READY);
+      }
+    }
+
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
     result.operations = task.operations;

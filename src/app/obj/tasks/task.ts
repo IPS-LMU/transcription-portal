@@ -464,9 +464,9 @@ export class TaskDirectory {
     return this._path;
   }
 
-  private _entries: (Task | TaskDirectory)[] = [];
+  private _entries: Task[] = [];
 
-  get entries(): (Task | TaskDirectory)[] {
+  get entries(): Task[] {
     return this._entries;
   }
 
@@ -546,7 +546,7 @@ export class TaskDirectory {
     });
   }
 
-  public addEntries(entries: (Task | TaskDirectory)[]) {
+  public addEntries(entries: Task[]) {
     for (const entry of entries) {
       if (entry instanceof Task) {
         entry.directory = this;

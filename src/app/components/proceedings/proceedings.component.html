@@ -1,4 +1,4 @@
-<app-download-modal #content [column]="selectedOperation" [selectedTasks]="selectedRows"></app-download-modal>
+<app-download-modal #content [column]="selectedOperation"></app-download-modal>
 
 <app-file-preview-modal #filePreview></app-file-preview-modal>
 <div #inner (click)="onContextBlur()" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
@@ -177,7 +177,7 @@
                                      [type]="'arrow'"></app-operation-arrow>
                 <div style="z-index:10;width:100%;text-align:center;">
                   <ng-template #tipContent>{{operation.description}}</ng-template>
-                  <div (click)="openArchiveDownload('column', operation)"
+                  <div (click)="openArchiveDownload('column', operation, selectedRows)"
                        [tooltip]="tipContent"
                        containerClass="operation-tooltip"
                        placement="bottom"
@@ -280,7 +280,8 @@
             >
             </td>
             <td class="export-col">
-              <button class="btn  btn-outline-success" (click)="onExportButtonClick(entry, entry.operations[1])"><i
+              <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success"
+                      (click)="onExportButtonClick(entry, entry.operations[1])"><i
                 class="fa fa-cloud-download"></i></button>
             </td>
           </ng-container>
@@ -293,7 +294,11 @@
                 </div>
               </div>
             </td>
-            <td></td>
+            <td class="export-col">
+              <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success"
+                      (click)="onExportButtonClick(entry, null)"><i class="fa fa-cloud-download"></i>
+              </button>
+            </td>
           </ng-container>
         </tr>
         <ng-container *ngIf="entry.type === 'folder'">
@@ -330,7 +335,9 @@
                 appProcColOperation>
             </td>
             <td class="export-col">
-              <button class="btn btn-outline-success"><i class="fa fa-cloud-download"></i></button>
+              <button *ngIf="isOneOperationFinished(dirEntry)" class="btn  btn-outline-success"
+                      (click)="onExportButtonClick(dirEntry, null)"><i class="fa fa-cloud-download"></i>
+              </button>
             </td>
           </tr>
         </ng-container>
@@ -340,7 +347,6 @@
         <tr style="cursor:pointer;">
           <td *ngIf="entry.file.entries === undefined" [attr.colspan]="taskService.operations.length + 3"
               [ngClass]="{'shorten': shortstyle}">
-            empty
             <ng-container *ngIf="entry.file.entries === undefined">
               <i aria-hidden="true"
                  class="fa fa-database op-50">
@@ -359,7 +365,7 @@
           </td>
           <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 3">
                         <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
-                          class="fa fa-spinner fa-spin"></i> not empty
+                          class="fa fa-spinner fa-spin"></i>
                         </span>
           </td>
         </tr>

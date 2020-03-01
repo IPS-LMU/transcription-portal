@@ -339,7 +339,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     } else if (option === 'appendings-remove') {
       this.removeAppendings();
     } else if (option === 'download') {
-      this.openArchiveDownload('line', this.selectedOperation);
+      this.openArchiveDownload('line', this.selectedOperation, this.selectedRows);
     }
     this.contextmenu.hidden = true;
   }
@@ -642,12 +642,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     this.operationclick.emit(operation);
   }
 
-  openArchiveDownload(type: 'column' | 'line', operation: Operation) {
+  openArchiveDownload(type: 'column' | 'line', operation: Operation, selectedLines: number[]) {
     if (operation !== null && operation !== undefined && operation.name !== 'Upload') {
       this.selectedOperation = operation;
-      this.content.open(type);
+      this.content.open(type, selectedLines);
     } else if (type === 'line') {
-      this.content.open(type);
+      this.content.open(type, selectedLines);
     }
   }
 
@@ -792,8 +792,40 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onExportButtonClick(task: Task | TaskDirectory, operation: Operation) {
-    this.selectedRows = [task.id];
-    this.selectedOperation = operation;
-    this.openArchiveDownload('line', operation);
+    const index = this.taskList.getIndexByEntry(task);
+    if (index > -1) {
+      const selectedRows = [index];
+      this.selectedOperation = operation;
+      this.openArchiveDownload('line', operation, selectedRows);
+    } else {
+      console.error(`can't find task or directory of id ${task.id}`);
+    }
+  }
+
+  isOneOperationFinished(entry: Task | TaskDirectory): boolean {
+    if (!isNullOrUndefined(entry)) {
+      const checkTask = (task: Task) => {
+        for (const operation of task.operations) {
+          if (!(operation instanceof UploadOperation)) {
+            if (operation.state === TaskState.FINISHED || operation.results.length > 0) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      if (entry instanceof Task) {
+        return checkTask(entry);
+      } else {
+        for (const dirEntry of entry.entries) {
+          if (checkTask(dirEntry)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
   }
 }
