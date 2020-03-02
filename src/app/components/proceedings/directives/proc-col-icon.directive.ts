@@ -41,7 +41,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes.hasOwnProperty('shortStyle') && changes.shortStyle.currentValue !== undefined) {
-      this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'auto');
+      this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'inherit');
     }
     this.updateView();
   }
@@ -92,6 +92,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       if (!(this.entry === null || this.entry === undefined)) {
         this.clearContents();
         const wrapper: HTMLElement = this.renderer.createElement('div');
+        this.renderer.removeClass(wrapper, 'shorten');
         if (this.shortStyle) {
           this.renderer.addClass(wrapper, 'shorten');
         }
@@ -231,6 +232,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   private appendFileNameSpan(wrapper) {
     const result: HTMLElement = this.renderer.createElement('span');
 
+    this.renderer.removeClass(this.elementRef.nativeElement, 'shorten');
     if (this.shortStyle) {
       this.renderer.addClass(this.elementRef.nativeElement, 'shorten');
     }
