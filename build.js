@@ -6,7 +6,7 @@ const targetFolder = "assets";
 let baseHref = "";
 let dev = '';
 
-const excludedList = ["config", "LICENSE.txt", "contents"];
+const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess"];
 
 let disabledRobots = true;
 let isUpdate = false;
@@ -61,8 +61,8 @@ node.on('exit', function (code) {
   indexHTML = indexHTML.replace(/(runtime-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(runtime-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(styles\.[0-9a-z]*\.css)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(const octraLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
-  indexHTML = indexHTML.replace(/(const octraVersion = ").*(";)/g, `$1${version}$2`);
+  indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
+  indexHTML = indexHTML.replace(/(const ohPortalVersion = ").*(";)/g, `$1${version}$2`);
 
   if (!disabledRobots) {
     indexHTML = indexHTML.replace(/(<meta name="robots" content="noindex">)/g, "");
