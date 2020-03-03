@@ -80,6 +80,8 @@ export class ResultsTableComponent implements OnInit, OnChanges {
 
   private generateTable() {
     this.convertedArray = [];
+    this.cd.markForCheck();
+    this.cd.detectChanges();
 
     this.conversionExtension = this.operation.resultType;
     if (this.operation.resultType !== '.wav') {
@@ -191,7 +193,9 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           });
           console.error(err);
           this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
+
           this.cd.markForCheck();
+          this.cd.detectChanges();
         });
       }
     } else {

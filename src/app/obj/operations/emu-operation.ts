@@ -117,7 +117,7 @@ export class EmuOperation extends ToolOperation {
   }
 
   public getToolURL(): string {
-    if (!((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
+    if (!isNullOrUndefined(this.operations) && !((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
       const audio = `audioGetUrl=${encodeURIComponent((this.operations[0] as UploadOperation).wavFile.url)}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);

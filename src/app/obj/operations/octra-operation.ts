@@ -7,6 +7,7 @@ import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
+import {isNullOrUndefined} from '../../shared/Functions';
 
 export class OCTRAOperation extends ToolOperation {
 
@@ -113,7 +114,8 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public getToolURL(): string {
-    if (!((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
+    if (!isNullOrUndefined(this.operations) && !((this.operations[0] as UploadOperation).wavFile === null
+      || (this.operations[0] as UploadOperation).wavFile === undefined)) {
       const audio = `audio=${encodeURIComponent((this.operations[0] as UploadOperation).wavFile.url)}`;
       let transcript = `transcript=`;
       const embedded = `embedded=1`;
