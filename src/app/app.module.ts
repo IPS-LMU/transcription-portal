@@ -38,12 +38,15 @@ import {StatisticsModalComponent} from './modals/statistics-modal/statistics-mod
 import {ChartsModule} from 'ng2-charts';
 import {SettingsService} from './shared/settings.service';
 import {TooltipModule} from 'ngx-bootstrap/tooltip';
-import {BsDropdownModule, CollapseModule, ModalModule, PopoverModule} from 'ngx-bootstrap';
 import {BrowserTestComponent} from './components/browser-test/browser-test.component';
 import {CompatibilityService} from './shared/compatibility.service';
 import {routing} from './app.routes';
 import {MainComponent} from './main/main.component';
 import {OHModalService} from './shared/ohmodal.service';
+import {ModalModule} from 'ngx-bootstrap/modal';
+import {CollapseModule} from 'ngx-bootstrap/collapse';
+import {PopoverModule} from 'ngx-bootstrap/popover';
+import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
 
 @NgModule({
   declarations: [
