@@ -18,8 +18,10 @@ import {StorageService} from '../../storage.service';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../../obj/oh-config';
-import {BsDropdownDirective, BsModalService, ModalDirective, PopoverDirective} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
+import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
+import {BsDropdownDirective} from 'ngx-bootstrap/dropdown';
+import {PopoverDirective} from 'ngx-bootstrap/popover';
 
 @Component({
   selector: 'app-queue-modal',

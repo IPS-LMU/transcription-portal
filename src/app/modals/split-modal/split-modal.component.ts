@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
-import {BsModalService, ModalDirective} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
+import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-split-modal',

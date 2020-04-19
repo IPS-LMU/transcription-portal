@@ -2,8 +2,8 @@ import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {StatisticsService} from '../../shared/statistics.service';
 import {TaskService} from '../../obj/tasks/task.service';
-import {ModalDirective} from 'ngx-bootstrap';
 import {ChartType} from 'chart.js';
+import {ModalDirective} from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-statistics',

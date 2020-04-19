@@ -1,8 +1,8 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {FileInfo} from '../../obj/fileInfo';
-import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
+import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-file-preview-modal',

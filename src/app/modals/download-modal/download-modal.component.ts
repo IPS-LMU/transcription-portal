@@ -12,9 +12,9 @@ import * as moment from 'moment';
 import {OAudiofile} from '../../obj/Annotation';
 import {AudioInfo} from '../../obj/audio';
 import {Converter, ImportResult} from '../../obj/Converters';
-import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 
 declare var JSZip;
 

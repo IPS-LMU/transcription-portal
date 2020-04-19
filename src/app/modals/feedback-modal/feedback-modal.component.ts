@@ -1,5 +1,4 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, SecurityContext, ViewChild} from '@angular/core';
-import {BsModalRef, BsModalService, ModalOptions} from 'ngx-bootstrap';
 import {Subject} from 'rxjs';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BugReportService} from '../../shared/bug-report.service';
@@ -7,6 +6,7 @@ import {SettingsService} from '../../shared/settings.service';
 import {StorageService} from '../../storage.service';
 import {AppSettings} from '../../shared/app.settings';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import {BsModalRef, BsModalService, ModalOptions} from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-feedback-modal',

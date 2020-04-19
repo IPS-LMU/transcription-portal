@@ -1,8 +1,7 @@
 import {Component, OnInit, Output, TemplateRef, ViewChild} from '@angular/core';
-import {DomSanitizer} from '@angular/platform-browser';
 import {Subject} from 'rxjs';
-import {BsModalRef, BsModalService} from 'ngx-bootstrap';
 import {SubscriptionManager} from '../../shared/subscription-manager';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-first-modal',
@@ -18,7 +17,7 @@ export class FirstModalComponent implements OnInit {
   bsModalRef: BsModalRef;
   private subscrmanager = new SubscriptionManager();
 
-  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
+  constructor(private modalService: BsModalService) {
   }
 
   ngOnInit() {
