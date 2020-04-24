@@ -590,7 +590,7 @@ export class MainComponent implements OnDestroy {
     this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
       + `operation: ${operation.name}, ${operation.state}\n`
       + `protocol: ${operation.protocol}\n`);
-    this.feedbackModal.open();
+    this.modalService.openFeedbackModal();
   }
 
   private loadFirstModal() {
