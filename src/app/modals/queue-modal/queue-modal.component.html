@@ -67,19 +67,20 @@
                                         && (taskService.selectedlanguage.asr === lang.asr)
                             }"
                 >
-                  <td (click)="onASRLangChanged(lang)"
-                      class="col-language">
-                    <ng-container
-                      *ngIf="lang !== undefined && lang.state === 'active'">
+                  <td (click)="onASRItemClicked(lang)"
+                      class="col-language" [ngStyle]="{
+                        'opacity': (lang.state === 'inactive') ? 0.33 : 1
+                      }">
+                    <ng-container>
                       {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                    </ng-container>
-                    <ng-container
-                      *ngIf="lang !== undefined && lang.state === 'inactive'">
-                      {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}] (currently not
-                      available)
+                      <ng-container *ngIf="lang !== undefined && lang.state === 'inactive'">
+                        <span> (currently not available)</span>
+                      </ng-container>
                     </ng-container>
                   </td>
-                  <td class="col-asr">
+                  <td class="col-asr" [ngStyle]="{
+                        'opacity': (lang.state === 'inactive') ? 0.33 : 1
+                      }">
                     <img #pop="bs-popover" (click)="pop.toggle();"
                          [outsideClick]="true"
                          [popover]="asrDescription" [src]="serviceProviders[lang.asr]?.logoURL" class="logo"

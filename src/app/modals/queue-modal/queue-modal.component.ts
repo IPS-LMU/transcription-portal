@@ -100,9 +100,11 @@ export class QueueModalComponent implements OnInit {
     this.cd.detectChanges();
   }
 
-  onASRLangChanged(lang: OHLanguageObject) {
-    this.taskService.selectedlanguage = lang;
-    this.changeLanguageforAllQueuedTasks();
+  onASRItemClicked(lang: OHLanguageObject) {
+    if (lang.state === 'active') {
+      this.taskService.selectedlanguage = lang;
+      this.changeLanguageforAllQueuedTasks();
+    }
   }
 
   getShortCode(code) {
