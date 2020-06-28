@@ -51,12 +51,12 @@ node.on('exit', function (code) {
 
   indexHTML = indexHTML.replace(/(scripts\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(polyfills-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(src=")(-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
+  indexHTML = indexHTML.replace(/(polyfills-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(src=")(-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
   indexHTML = indexHTML.replace(/(src=")(-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(main-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(main-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(main-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(runtime-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(styles\.[0-9a-z]*\.css)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
