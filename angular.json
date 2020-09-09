@@ -31,6 +31,10 @@
               "node_modules/chart.js/dist/Chart.min.css",
               "src/styles.css"
             ],
+            "allowedCommonJsDependencies": [
+              "x2js",
+              "chart.js"
+            ],
             "scripts": [
               "src/assets/js/modernizr.js",
               "node_modules/platform/platform.js",
