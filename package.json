@@ -28,6 +28,8 @@
     "@angular/router": "^10.1.0",
     "@ngrx/effects": "^10.0.0",
     "@ngrx/store": "^10.0.0",
+    "@octra/annotation": "file:../octra/dist/libs/annotation",
+    "@octra/media": "file:../octra/dist/libs/media",
     "@octra/utilities": "file:../octra/dist/libs/utilities",
     "bootstrap": "^4.5.2",
     "chart.js": "^2.9.3",

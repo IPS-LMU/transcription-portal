@@ -1,12 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {TimePipe} from '../../shared/time.pipe';
-import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks';
 import * as X2JS from 'x2js';
 import {Subject} from 'rxjs';
 import {OHLanguageObject} from '../oh-config';
+import {FileInfo} from '@octra/utilities';
 
 export class UploadOperation extends Operation {
 

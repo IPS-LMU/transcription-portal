@@ -1,5 +1,4 @@
-import {DataInfo} from './dataInfo';
-import {FileInfo} from './fileInfo';
+import {DataInfo, FileInfo} from '@octra/utilities';
 
 export class DirectoryInfo extends DataInfo {
   private readonly _path: string;
@@ -78,15 +77,15 @@ export class DirectoryInfo extends DataInfo {
           // console.log(`isFile ${item.fullPath}`);
           // Get file
 
-            if (item instanceof DataTransferItem) {
-              const file = item.getAsFile();
+          if (item instanceof DataTransferItem) {
+            const file = item.getAsFile();
 
-              if (!(file === null || file === undefined)) {
-                if (file.name.indexOf('.') > -1) {
-                  const fileInfo = new FileInfo(file.name, file.type, file.size, file);
-                  resolve([fileInfo]);
-                } else {
-                  resolve([]);
+            if (!(file === null || file === undefined)) {
+              if (file.name.indexOf('.') > -1) {
+                const fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                resolve([fileInfo]);
+              } else {
+                resolve([]);
                 }
               } else {
                 reject(`could not read file`);
@@ -104,8 +103,8 @@ export class DirectoryInfo extends DataInfo {
               });
             }
           } else if (webKitEntry.isDirectory) {
-            // Get folder contents
-            // console.log(`is dir ${item.fullPath}`);
+          // Get folder contents
+          // console.log(`is dir ${item.fullPath}`);
           const dirEntry: any = webKitEntry as any;
           const dirReader = dirEntry.createReader();
           dirReader.readEntries((entries: any) => {
@@ -119,16 +118,16 @@ export class DirectoryInfo extends DataInfo {
 
               for (const value of values) {
                 for (const val of value) {
-                    result.push(val);
-                  }
+                  result.push(val);
                 }
+              }
 
-                result = result.sort((a, b) => {
-                  if (a instanceof FileInfo && b instanceof FileInfo) {
-                    const a2 = a as FileInfo;
-                    const b2 = b as FileInfo;
+              result = result.sort((a, b) => {
+                if (a instanceof FileInfo && b instanceof FileInfo) {
+                  const a2 = a as FileInfo;
+                  const b2 = b as FileInfo;
 
-                    return a2.name.localeCompare(b2.name);
+                  return a2.name.localeCompare(b2.name);
                   } else if (a instanceof DirectoryInfo && b instanceof DirectoryInfo) {
                     const a2 = a as DirectoryInfo;
                     const b2 = b as DirectoryInfo;

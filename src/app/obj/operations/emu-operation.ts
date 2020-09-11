@@ -1,13 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
-import {FileInfo} from '../fileInfo';
 import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
 import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {OHLanguageObject} from '../oh-config';
 import {AppSettings} from '../../shared/app.settings';
-import {isUnset} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
 
 export class EmuOperation extends ToolOperation {
   protected operations: Operation[];

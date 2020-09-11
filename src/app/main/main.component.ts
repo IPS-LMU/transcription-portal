@@ -7,12 +7,11 @@ import {ANIMATIONS} from '../shared/Animations';
 import {NotificationService} from '../shared/notification.service';
 import {SubscriptionManager} from '../shared/subscription-manager';
 import {Task, TaskState} from '../obj/tasks';
-import {AudioInfo} from '../obj/audio';
+import {AudioInfo} from '@octra/media';
 import {ProceedingsComponent} from '../components/proceedings/proceedings.component';
 import {TaskService} from '../obj/tasks/task.service';
 import {DirectoryInfo} from '../obj/directoryInfo';
 import {StorageService} from '../storage.service';
-import {FileInfo} from '../obj/fileInfo';
 import {ToolOperation} from '../obj/operations/tool-operation';
 import {Operation} from '../obj/operations/operation';
 import {OCTRAOperation} from '../obj/operations/octra-operation';
@@ -32,7 +31,7 @@ import {AppSettings} from '../shared/app.settings';
 import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
-import {isUnset} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
 
 declare var window: any;
 
@@ -412,7 +411,7 @@ export class MainComponent implements OnDestroy {
         if (data.name === 'OCTRA') {
           if ($event.data.data.hasOwnProperty('transcript_url')) {
             const result: string = $event.data.data.transcript_url;
-            const file = FileInfo.fromURL(result, null, 'text/plain', Date.now());
+            const file = FileInfo.fromURL(result, null, 'text/plain');
             file.updateContentFromURL(this.httpclient).then(() => {
               resolve(file);
             }).catch((e) => {

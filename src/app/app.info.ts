@@ -6,7 +6,7 @@ import {
   PraatTableConverter,
   PraatTextgridConverter,
   TextConverter
-} from './obj/Converters';
+} from '@octra/annotation';
 
 declare var ohPortalVersion: string;
 declare var ohPortalLastUpdated: string;

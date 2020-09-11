@@ -1,15 +1,6 @@
-import {
-  AfterViewInit,
-  Directive,
-  ElementRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  Renderer2,
-  SimpleChanges
-} from '@angular/core';
+import {AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges} from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
-import {SubscriptionManager} from '../../../shared/subscription-manager';
+import {SubscriptionManager} from '@octra/utilities';
 import {interval} from 'rxjs';
 
 @Directive({

@@ -1,13 +1,12 @@
 import {HttpClient} from '@angular/common/http';
 import {Observable, ReplaySubject, Subject} from 'rxjs';
 import {SubscriptionManager} from '../../shared/subscription-manager';
-import {FileInfo} from '../fileInfo';
-import {AudioInfo} from '../audio';
 import {TaskEntry} from './task-entry';
 import {IAccessCode, Operation} from '../operations/operation';
 import {OHCommand, OHLanguageObject} from '../oh-config';
 import {DirectoryInfo} from '../directoryInfo';
-import {isUnset} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
+import {AudioInfo} from '@octra/media';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -285,7 +284,7 @@ export class Task {
           if (file instanceof AudioInfo) {
             const audioFile = file as AudioInfo;
 
-            fileObj.sampleRate = audioFile.samplerate;
+            fileObj.sampleRate = audioFile.sampleRate;
             fileObj.bitsPerSecond = audioFile.bitrate;
             fileObj.channels = audioFile.channels;
             fileObj.duration = audioFile.duration.samples;

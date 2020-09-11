@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FileInfo} from '../../obj/fileInfo';
-import {AudioInfo} from '../../obj/audio';
+import {FileInfo} from '@octra/utilities';
+import {AudioInfo} from '@octra/media';
 
 @Component({
   selector: 'app-file-info-table',

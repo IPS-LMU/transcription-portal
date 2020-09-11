@@ -1,9 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import * as X2JS from 'x2js';
-import {FileInfo} from '../fileInfo';
 import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
 import {OHLanguageObject} from '../oh-config';
+import {FileInfo} from '@octra/utilities';
 
 export class G2pMausOperation extends Operation {
   // TODO change for the next version

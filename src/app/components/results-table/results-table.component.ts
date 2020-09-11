@@ -11,13 +11,11 @@ import {
 } from '@angular/core';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
-import {Converter, IFile} from '../../obj/Converters';
-import {OAudiofile} from '../../obj/Annotation';
-import {AudioInfo} from '../../obj/audio';
 import {HttpClient} from '@angular/common/http';
-import {FileInfo} from '../../obj/fileInfo';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isUnset} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
+import {Converter, IFile, OAudiofile} from '@octra/annotation';
+import {AudioInfo} from '@octra/media';
 
 @Component({
   selector: 'app-results-table',
@@ -119,7 +117,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
         };
 
         const audio: OAudiofile = new OAudiofile();
-        audio.samplerate = (this.operation.task.files[0] as AudioInfo).samplerate;
+        audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
         audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
         audio.name = (this.operation.task.files[0] as AudioInfo).fullname;
         audio.size = (this.operation.task.files[0] as AudioInfo).size;

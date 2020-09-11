@@ -3,18 +3,18 @@ import {Task, TaskDirectory, TaskState} from '../../obj/tasks';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {FileInfo} from '../../obj/fileInfo';
+import {FileInfo} from '@octra/utilities';
 import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
 import {StorageService} from '../../storage.service';
 import * as moment from 'moment';
-import {OAudiofile} from '../../obj/Annotation';
-import {AudioInfo} from '../../obj/audio';
-import {Converter, ImportResult} from '../../obj/Converters';
+import {AudioInfo} from '@octra/media';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
+import {Converter, ImportResult} from '@octra/annotation/src/lib/converters';
+import {OAudiofile} from '@octra/annotation';
 
 declare var JSZip;
 
@@ -265,7 +265,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         const audiofile = new OAudiofile();
         audiofile.duration = (operation.task.files[0] as AudioInfo).duration.samples;
         audiofile.name = (operation.task.files[0] as AudioInfo).name;
-        audiofile.samplerate = (operation.task.files[0] as AudioInfo).samplerate;
+        audiofile.sampleRate = (operation.task.files[0] as AudioInfo).sampleRate;
         audiofile.size = (operation.task.files[0] as AudioInfo).size;
 
 

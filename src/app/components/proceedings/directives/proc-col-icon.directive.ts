@@ -11,9 +11,8 @@ import {
   SimpleChanges
 } from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
-import {FileInfo} from '../../../obj/fileInfo';
+import {FileInfo, SubscriptionManager} from '@octra/utilities';
 import {TaskService} from '../../../obj/tasks/task.service';
-import {SubscriptionManager} from '../../../shared/subscription-manager';
 
 @Directive({
   selector: '[appProcColIcon]',
@@ -84,7 +83,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     }
     this.updateView();
     this.tagClicked.emit(this.dirOpened);
-  }
+  };
 
   private updateView() {
     if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {

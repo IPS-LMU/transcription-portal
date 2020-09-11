@@ -1,6 +1,6 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {FileInfo} from '../../obj/fileInfo';
+import {FileInfo} from '@octra/utilities';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalRef, BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 

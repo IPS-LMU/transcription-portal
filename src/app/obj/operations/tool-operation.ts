@@ -1,9 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
-import {FileInfo} from '../fileInfo';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks';
 import {OHLanguageObject} from '../oh-config';
+import {FileInfo} from '@octra/utilities';
 
 export class ToolOperation extends Operation {
 

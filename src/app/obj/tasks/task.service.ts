@@ -6,12 +6,9 @@ import {EntryChangeEvent, Task, TaskDirectory, TaskList, TaskState} from './inde
 import {OCTRAOperation} from '../operations/octra-operation';
 import {UploadOperation} from '../operations/upload-operation';
 import {G2pMausOperation} from '../operations/g2p-maus-operation';
-import {FileInfo} from '../fileInfo';
 import {DirectoryInfo} from '../directoryInfo';
 import {StorageService} from '../../storage.service';
 import {Preprocessor, QueueItem} from '../preprocessor';
-import {WavFormat} from '../audio/AudioFormats';
-import {AudioInfo} from '../audio';
 import {AppInfo} from '../../app.info';
 import {TaskEntry} from './task-entry';
 import {ASROperation} from '../operations/asr-operation';
@@ -23,6 +20,8 @@ import {AlertService} from '../../shared/alert.service';
 import {interval} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
+import {AudioInfo, WavFormat} from '@octra/media';
+import {FileInfo} from '@octra/utilities';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -625,11 +624,11 @@ export class TaskService implements OnDestroy {
       const dir = queueItem.file as DirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem);
     }
-  }
+  };
 
   public openSplitModal = () => {
 
-  }
+  };
 
   public existsFile(url: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -764,16 +763,16 @@ export class TaskService implements OnDestroy {
       new Promise<void>((res) => {
         if (newName !== file.fullname) {
           // no valid name, replace
-            FileInfo.renameFile(file.file, newName, {
-              type: file.type,
-              lastModified: file.file.lastModified
-            }).then((newfile: File) => {
-              newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
-              newFileInfo.attributes = queueItem.file.attributes;
-              newFileInfo.attributes.originalFileName = file.fullname;
-              file.attributes.originalFileName = file.fullname;
-              res();
-            });
+          FileInfo.renameFile(file.file, newName, {
+            type: file.type,
+            lastModified: file.file.lastModified
+          }).then((newfile: File) => {
+            newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
+            newFileInfo.attributes = queueItem.file.attributes;
+            newFileInfo.attributes.originalFileName = file.fullname;
+            file.attributes.originalFileName = file.fullname;
+            res();
+          });
           } else {
           newFileInfo = new FileInfo(file.fullname, (file.type !== '')
             ? file.type : file.file.type, file.size, file.file);
@@ -790,7 +789,8 @@ export class TaskService implements OnDestroy {
         setTimeout(() => {
           const reader = new FileReader();
           reader.onload = (event: any) => {
-            const format = new WavFormat(event.target.result);
+            const format = new WavFormat();
+            format.init(file.fullname, event.target.result);
             const isValidFormat = format.isValid(event.target.result);
             const isValidTranscript = this.validTranscript(file.extension);
 

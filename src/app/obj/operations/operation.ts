@@ -1,9 +1,9 @@
 import {HttpClient} from '@angular/common/http';
 import {SafeHtml} from '@angular/platform-browser';
 import {Observable, Subject} from 'rxjs';
-import {FileInfo} from '../fileInfo';
 import {Task, TaskState} from '../tasks';
 import {OHLanguageObject, OHService} from '../oh-config';
+import {FileInfo} from '@octra/utilities';
 
 export abstract class Operation {
   static counter = 0;

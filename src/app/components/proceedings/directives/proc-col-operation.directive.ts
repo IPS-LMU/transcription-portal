@@ -11,11 +11,10 @@ import {
   SimpleChanges
 } from '@angular/core';
 import {Task} from '../../../obj/tasks';
-import {FileInfo} from '../../../obj/fileInfo';
+import {FileInfo, SubscriptionManager} from '@octra/utilities';
 import {Operation} from '../../../obj/operations/operation';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TaskService} from '../../../obj/tasks/task.service';
-import {SubscriptionManager} from '../../../shared/subscription-manager';
 import {AppSettings} from '../../../shared/app.settings';
 
 @Directive({

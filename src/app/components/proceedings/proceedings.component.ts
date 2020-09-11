@@ -19,7 +19,7 @@ import {ANIMATIONS} from '../../shared/Animations';
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {FileInfo} from '../../obj/fileInfo';
+import {FileInfo, isUnset} from '@octra/utilities';
 import {TaskService} from '../../obj/tasks/task.service';
 import {DirectoryInfo} from '../../obj/directoryInfo';
 import {OCTRAOperation} from '../../obj/operations/octra-operation';
@@ -34,7 +34,6 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
-import {isUnset} from '@octra/utilities';
 
 declare var window: any;
 
