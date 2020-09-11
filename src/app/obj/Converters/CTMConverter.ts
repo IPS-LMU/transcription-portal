@@ -1,6 +1,6 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {OAnnotJSON, OAudiofile, OLabel, OLevel, OSegment} from '../Annotation';
-import {contains} from '../../shared/Functions';
+import {contains} from '@octra/utilities';
 
 export class CTMConverter extends Converter {
 

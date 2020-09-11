@@ -7,8 +7,8 @@ import {BugReporter} from '../obj/BugAPI/BugReporter';
 import {StorageService} from '../storage.service';
 import {AppInfo} from '../app.info';
 import {BrowserInfo} from '../obj/BrowserInfo';
-import {isNullOrUndefined} from './Functions';
 import {EmailBugReporter} from '../obj/BugAPI/EmailBugReporter';
+import {isUnset} from '@octra/utilities';
 
 export enum ConsoleType {
   LOG,
@@ -84,7 +84,7 @@ export class BugReportService {
     url: string
   }, screenshots: any[]): Observable<any> {
 
-    if (!(isNullOrUndefined(credentials))) {
+    if (!(isUnset(credentials))) {
       const auth_token = credentials.auth_token;
       const url = credentials.url;
       const form = {

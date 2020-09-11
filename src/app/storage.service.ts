@@ -5,7 +5,7 @@ import {Task, TaskDirectory} from './obj/tasks';
 import {AppInfo} from './app.info';
 import {TaskEntry} from './obj/tasks/task-entry';
 import {Operation} from './obj/operations/operation';
-import {isNullOrUndefined} from './shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 @Injectable()
 export class StorageService {
@@ -67,12 +67,12 @@ export class StorageService {
               Operation.counter = results[1].value;
               this.ready = true;
 
-              if (!isNullOrUndefined(results[3])) {
+              if (!isUnset(results[3])) {
                 const userProfile = results[3].find((a) => {
                   return a.name === 'userProfile';
                 });
 
-                if (!isNullOrUndefined(userProfile) && !isNullOrUndefined(userProfile.value)) {
+                if (!isUnset(userProfile) && !isUnset(userProfile.value)) {
                   this.userProfile = userProfile.value;
                 }
               }

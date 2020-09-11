@@ -7,7 +7,7 @@ import {TaskEntry} from './task-entry';
 import {IAccessCode, Operation} from '../operations/operation';
 import {OHCommand, OHLanguageObject} from '../oh-config';
 import {DirectoryInfo} from '../directoryInfo';
-import {isset} from '../../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -142,7 +142,7 @@ export class Task {
 
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
-    task._asr = (isset(taskObj.operations[1].webService)) ? taskObj.operations[1].webService : taskObj.asr;
+    task._asr = (!isUnset(taskObj.operations[1].webService)) ? taskObj.operations[1].webService : taskObj.asr;
 
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);

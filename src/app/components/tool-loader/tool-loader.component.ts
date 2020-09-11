@@ -1,18 +1,7 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  SimpleChanges,
-  ViewChild
-} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Operation} from '../../obj/operations/operation';
-import {isNullOrUndefined} from '../../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 @Component({
   selector: 'app-tool-loader',
@@ -42,7 +31,7 @@ export class ToolLoaderComponent implements OnInit, OnChanges {
   }
 
   public set name(name: string) {
-    if (!isNullOrUndefined(name)) {
+    if (!isUnset(name)) {
       this.selectedtool.name = name;
     }
   }

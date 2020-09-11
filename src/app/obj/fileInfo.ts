@@ -1,12 +1,12 @@
 import {DataInfo} from './dataInfo';
 import {unescape} from 'querystring';
 import {HttpClient} from '@angular/common/http';
-import {isNullOrUndefined} from '../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 export class FileInfo extends DataInfo {
   public constructor(fullname: string, type: string, size: number, file?: File, createdAt?: number) {
     super(FileInfo.extractFileName(fullname).name, type, size);
-    this._createdAt = (isNullOrUndefined(createdAt)) ? 0 : createdAt;
+    this._createdAt = (isUnset(createdAt)) ? 0 : createdAt;
 
     const extraction = FileInfo.extractFileName(fullname);
     if (!(extraction === null || extraction === undefined)) {
@@ -169,8 +169,8 @@ export class FileInfo extends DataInfo {
 
   public static getFileFromContent(content: string, filename: string, type?: string, createdAt?: number): File {
     const properties = {
-      lastModified: (isNullOrUndefined(createdAt)) ? Date.now() : createdAt,
-      type: (!isNullOrUndefined(type)) ? type : ''
+      lastModified: (isUnset(createdAt)) ? Date.now() : createdAt,
+      type: (!isUnset(type)) ? type : ''
     };
 
     return new File([content], filename, properties);

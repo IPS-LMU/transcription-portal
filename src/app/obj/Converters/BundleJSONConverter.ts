@@ -1,6 +1,6 @@
 import {Converter, ExportResult, IFile, ImportResult} from './Converter';
 import {IAnnotJSON, OAnnotJSON, OAudiofile} from '../Annotation';
-import {base64ToArrayBuffer, contains} from '../../shared/Functions';
+import {base64ToArrayBuffer, contains} from '@octra/utilities';
 
 export interface Bundle {
   ssffFiles: {

@@ -7,7 +7,7 @@ import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {OHLanguageObject} from '../oh-config';
 import {AppSettings} from '../../shared/app.settings';
-import {isNullOrUndefined} from '../../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 export class EmuOperation extends ToolOperation {
   protected operations: Operation[];
@@ -117,7 +117,7 @@ export class EmuOperation extends ToolOperation {
   }
 
   public getToolURL(): string {
-    if (!isNullOrUndefined(this.operations) && !((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
+    if (!isUnset(this.operations) && !((this.operations[0] as UploadOperation).wavFile === null || (this.operations[0] as UploadOperation).wavFile === undefined)) {
       const audio = `audioGetUrl=${encodeURIComponent((this.operations[0] as UploadOperation).wavFile.url)}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);
@@ -125,7 +125,7 @@ export class EmuOperation extends ToolOperation {
       const lastResultMaus = this.previousOperation.lastResult;
       const lastResultEMU = this.lastResult;
 
-      if (!isNullOrUndefined(lastResultEMU) && lastResultEMU.createdAt >= lastResultMaus.createdAt) {
+      if (!isUnset(lastResultEMU) && lastResultEMU.createdAt >= lastResultMaus.createdAt) {
         result = lastResultEMU;
       } else {
         result = lastResultMaus;

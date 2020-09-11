@@ -34,7 +34,7 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
-import {isNullOrUndefined} from '../../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 declare var window: any;
 
@@ -226,11 +226,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
     event.preventDefault();
 
     let task: Task | TaskDirectory = this.popover.task;
-    if (isNullOrUndefined(task)) {
+    if (isUnset(task)) {
       task = this.popover.directory;
     }
 
-    if (!isNullOrUndefined(task)) {
+    if (!isUnset(task)) {
       if (this.selectedRows.length <= 1) {
         this.selectedRows = [];
         const index = this.taskList.getIndexByEntry(task);
@@ -655,7 +655,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     this.shortcutManager.checkKeyEvent(event).then((result) => {
-      if (!isNullOrUndefined(result)) {
+      if (!isUnset(result)) {
         if (result.command === 'remove') {
           this.popover.state = 'closed';
           this.deleteSelectedTasks();
@@ -803,7 +803,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   isOneOperationFinished(entry: Task | TaskDirectory): boolean {
-    if (!isNullOrUndefined(entry)) {
+    if (!isUnset(entry)) {
       const checkTask = (task: Task) => {
         for (const operation of task.operations) {
           if (!(operation instanceof UploadOperation)) {

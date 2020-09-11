@@ -17,7 +17,7 @@ import {AudioInfo} from '../../obj/audio';
 import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '../../obj/fileInfo';
 import {DomSanitizer} from '@angular/platform-browser';
-import {isNullOrUndefined} from '../../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 @Component({
   selector: 'app-results-table',
@@ -72,7 +72,7 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   public isEqualConverterName(converter: any) {
-    if (!isNullOrUndefined(this.conversionExtension)) {
+    if (!isUnset(this.conversionExtension)) {
       return this.conversionExtension.indexOf(converter.obj.name) < 0;
     }
     return false;

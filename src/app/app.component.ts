@@ -22,8 +22,8 @@ import {AlertService} from './shared/alert.service';
 import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
 import {SettingsService} from './shared/settings.service';
 import {OHModalService} from './shared/ohmodal.service';
-import {isNullOrUndefined} from './shared/Functions';
 import {AppSettings} from './shared/app.settings';
+import {isUnset} from '@octra/utilities';
 
 declare var window: any;
 
@@ -90,7 +90,7 @@ export class AppComponent implements OnDestroy {
           if (typeof error === 'string') {
             debug = error;
 
-            if (error === 'ERROR' && !isNullOrUndefined(context) && context.hasOwnProperty('stack') && context.hasOwnProperty('message')) {
+            if (error === 'ERROR' && !isUnset(context) && context.hasOwnProperty('stack') && context.hasOwnProperty('message')) {
               debug = context.message;
               stack = context.stack;
             }
@@ -138,8 +138,8 @@ export class AppComponent implements OnDestroy {
 
     this.subscrmanager.add(this.settingsService.settingsload.subscribe(() => {
       // add tracking code
-      if (!isNullOrUndefined(AppSettings.configuration.plugins.tracking)
-        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.active)
+      if (!isUnset(AppSettings.configuration.plugins.tracking)
+        && !isUnset(AppSettings.configuration.plugins.tracking.active)
         && AppSettings.configuration.plugins.tracking.active !== '') {
         this.appendTrackingCode(AppSettings.configuration.plugins.tracking.active);
       }
@@ -194,9 +194,9 @@ export class AppComponent implements OnDestroy {
   private appendTrackingCode(type: string) {
     // check if matomo is activated
     if (type === 'matomo') {
-      if (!isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo)
-        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo.host)
-        && !isNullOrUndefined(AppSettings.configuration.plugins.tracking.matomo.siteID)) {
+      if (!isUnset(AppSettings.configuration.plugins.tracking.matomo)
+        && !isUnset(AppSettings.configuration.plugins.tracking.matomo.host)
+        && !isUnset(AppSettings.configuration.plugins.tracking.matomo.siteID)) {
         const matomoSettings = AppSettings.configuration.plugins.tracking.matomo;
 
         const trackingCode = `

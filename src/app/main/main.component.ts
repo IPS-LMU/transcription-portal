@@ -32,7 +32,7 @@ import {AppSettings} from '../shared/app.settings';
 import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
-import {isNullOrUndefined} from '../shared/Functions';
+import {isUnset} from '@octra/utilities';
 
 declare var window: any;
 
@@ -254,7 +254,7 @@ export class MainComponent implements OnDestroy {
   }
 
   onOperationClick(operation: Operation) {
-    if (!isNullOrUndefined(operation) && operation instanceof ToolOperation) {
+    if (!isUnset(operation) && operation instanceof ToolOperation) {
       const tool = operation as ToolOperation;
 
       if ((tool.task.operations[0].results.length > 0 && !tool.task.operations[0].lastResult.available)
