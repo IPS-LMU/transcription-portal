@@ -6,7 +6,6 @@ import {EntryChangeEvent, Task, TaskDirectory, TaskList, TaskState} from './inde
 import {OCTRAOperation} from '../operations/octra-operation';
 import {UploadOperation} from '../operations/upload-operation';
 import {G2pMausOperation} from '../operations/g2p-maus-operation';
-import {DirectoryInfo} from '../directoryInfo';
 import {StorageService} from '../../storage.service';
 import {Preprocessor, QueueItem} from '../preprocessor';
 import {AppInfo} from '../../app.info';
@@ -21,7 +20,7 @@ import {interval} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 import {AudioInfo, WavFormat} from '@octra/media';
-import {FileInfo} from '@octra/utilities';
+import {DirectoryInfo, FileInfo} from '@octra/utilities';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -624,11 +623,11 @@ export class TaskService implements OnDestroy {
       const dir = queueItem.file as DirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem);
     }
-  };
+  }
 
   public openSplitModal = () => {
 
-  };
+  }
 
   public existsFile(url: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
@@ -835,8 +834,7 @@ export class TaskService implements OnDestroy {
                 // it's an audio file
                 newFileInfo = new AudioInfo(
                   newName, file.file.type, file.file.size, format.sampleRate,
-                  format.duration, format.channels, format.bitsPerSample, newFileInfo.file
-                );
+                  format.duration, format.channels, format.bitsPerSample);
               } else {
               }
 

@@ -1,7 +1,6 @@
 import {Subject} from 'rxjs';
-import {DirectoryInfo} from './directoryInfo';
 import {Task, TaskDirectory} from './tasks';
-import {FileInfo} from '@angular-devkit/build-angular/src/angular-cli-files/utilities/index-file/augment-index-html';
+import {DirectoryInfo, FileInfo} from '@octra/utilities';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks

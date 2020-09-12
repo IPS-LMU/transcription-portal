@@ -10,7 +10,6 @@ import {Task, TaskState} from '../obj/tasks';
 import {AudioInfo} from '@octra/media';
 import {ProceedingsComponent} from '../components/proceedings/proceedings.component';
 import {TaskService} from '../obj/tasks/task.service';
-import {DirectoryInfo} from '../obj/directoryInfo';
 import {StorageService} from '../storage.service';
 import {ToolOperation} from '../obj/operations/tool-operation';
 import {Operation} from '../obj/operations/operation';
@@ -31,7 +30,7 @@ import {AppSettings} from '../shared/app.settings';
 import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
-import {FileInfo, isUnset} from '@octra/utilities';
+import {DirectoryInfo, FileInfo, isUnset} from '@octra/utilities';
 
 declare var window: any;
 
