@@ -13,8 +13,7 @@ import {AudioInfo} from '@octra/media';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
-import {Converter, ImportResult} from '@octra/annotation/src/lib/converters';
-import {OAudiofile} from '@octra/annotation';
+import {Converter, ImportResult, OAudiofile} from '@octra/annotation';
 
 declare var JSZip;
 

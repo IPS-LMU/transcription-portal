@@ -2,7 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [],
+    "paths": {
+      "@octra/annotation": [
+        "../octra/dist/libs/annotation"
+      ],
+      "@octra/utilities": [
+        "../octra/dist/libs/utilities"
+      ],
+      "@octra/media": [
+        "../octra/dist/libs/media"
+      ]
+    }
   },
   "files": [
     "src/main.ts",
