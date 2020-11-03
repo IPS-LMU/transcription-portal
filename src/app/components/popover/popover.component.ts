@@ -30,7 +30,21 @@ export class PopoverComponent implements OnInit, OnChanges, OnDestroy {
   };
 
 
-  private leftTopPolygon;
+  private leftTopPolygon = {
+    koord1: {
+      x: 0,
+      y: 0
+    },
+    koord2: {
+      x: 20,
+      y: this.margin.top
+    },
+    koord3: {
+      x: this.margin.left,
+      y: 20
+    }
+  };
+
   public polygon = this.leftTopPolygon;
   private leftBottomPolygon;
   private rightTopPolygon;
