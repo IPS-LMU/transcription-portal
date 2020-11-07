@@ -121,7 +121,7 @@ export class OCTRAOperation extends ToolOperation {
 
       const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);
 
-      if (!(langObj === null || langObj === undefined)) {
+      if (!isUnset(langObj)) {
         const host = `host=${encodeURIComponent(langObj.host)}`;
 
         if (this.results.length < 1) {

@@ -140,7 +140,8 @@ export class Task {
 
     const task = new Task([], operations, null, taskObj.id);
     task.language = taskObj.language;
-    task._asr = (!isUnset(taskObj.operations[1].webService)) ? taskObj.operations[1].webService : taskObj.asr;
+    task._asr = (!isUnset(taskObj.operations[1].webService) && taskObj.operations[1].webService !== '')
+      ? taskObj.operations[1].webService : taskObj.asr;
 
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
