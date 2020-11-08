@@ -1,4 +1,5 @@
 import {OHConfiguration, OHLanguageObject} from '../obj/oh-config';
+import {isUnset} from '@octra/utilities';
 
 export class AppSettings {
 
@@ -13,7 +14,7 @@ export class AppSettings {
   }
 
   public static getLanguageByCode(code: string, asr: string): OHLanguageObject {
-    if ((asr === null || asr === undefined)) {
+    if (isUnset(asr)) {
       return null;
     }
 

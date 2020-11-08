@@ -1,14 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  SimpleChanges
-} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {HttpClient} from '@angular/common/http';
@@ -23,7 +13,7 @@ import {AudioInfo} from '@octra/media';
   styleUrls: ['./results-table.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ResultsTableComponent implements OnInit, OnChanges {
+export class ResultsTableComponent implements OnChanges {
 
   @Input() operation: Operation;
   @Input() visible = false;
@@ -52,14 +42,9 @@ export class ResultsTableComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.hasOwnProperty('visible') && !changes.visible.isFirstChange() && changes.visible.currentValue === true) {
+    if ((changes.hasOwnProperty('operation') && !isUnset(changes.operation.currentValue))) {
       this.generateTable();
     }
-  }
-
-  ngOnInit() {
-    console.log(`init!`);
-    this.generateTable();
   }
 
   public onPreviewClick(file: File) {
@@ -69,69 +54,77 @@ export class ResultsTableComponent implements OnInit, OnChanges {
     this.cd.detectChanges();
   }
 
-  public isEqualConverterName(converter: any) {
+  public isUnequalResultType(converter: any) {
     if (!isUnset(this.conversionExtension)) {
-      return this.conversionExtension.indexOf(converter.obj.name) < 0;
+      return this.conversionExtension !== `${converter.obj.name}`;
     }
     return false;
   }
 
   private generateTable() {
     this.convertedArray = [];
+    this.conversionExtension = this.operation.resultType.replace('/json', '');
     this.cd.markForCheck();
     this.cd.detectChanges();
 
-    this.conversionExtension = this.operation.resultType;
     if (this.operation.resultType !== '.wav') {
-      for (let i = 0; i < this.operation.results.length; i++) {
-        const result = this.operation.results[i];
-        let from: Converter = null;
+      const promises: Promise<string>[] = [];
 
-        // TODO change this!
-        for (const converter of AppInfo.converters) {
-          if (converter.obj.extension.indexOf(result.extension) > -1) {
-            this.originalLabel = converter.obj.extension;
-            from = converter.obj;
-            break;
+      for (const result of this.operation.results) {
+        promises.push(FileInfo.getFileContent(result.file));
+      }
+
+      // read all file contents of results
+      Promise.all(promises).then((promiseResults: string[]) => {
+        for (let j = 0; j < promiseResults.length; j++) {
+          const result = this.operation.results[j];
+          let from: Converter = null;
+
+          // TODO change this!
+          for (const converter of AppInfo.converters) {
+            if (converter.obj.extension.indexOf(result.extension) > -1) {
+              this.originalLabel = converter.obj.extension;
+              from = converter.obj;
+              break;
+            }
           }
-        }
 
-        let originalFileName: any = this.operation.task.files[0].attributes.originalFileName;
-        originalFileName = FileInfo.extractFileName(originalFileName);
+          let originalFileName: any = this.operation.task.files[0].attributes.originalFileName;
+          originalFileName = FileInfo.extractFileName(originalFileName);
 
-        const resultObj = {
-          url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)),
-          name: originalFileName.name,
-          type: result.type,
-          available: result.available,
-          fullname: originalFileName.name + result.extension,
-          extension: result.extension,
-          file: result.file
-        };
+          const resultObj = {
+            url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)),
+            name: originalFileName.name,
+            type: result.type,
+            available: result.available,
+            fullname: originalFileName.name + result.extension,
+            extension: result.extension,
+            file: result.file
+          };
 
-        const file: IFile = {
-          name: result.name,
-          content: '',
-          type: result.type,
-          encoding: 'UTF-8'
-        };
+          const audio: OAudiofile = new OAudiofile();
+          audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
+          audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
+          audio.name = (this.operation.task.files[0] as AudioInfo).fullname;
+          audio.size = (this.operation.task.files[0] as AudioInfo).size;
 
-        const audio: OAudiofile = new OAudiofile();
-        audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
-        audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
-        audio.name = (this.operation.task.files[0] as AudioInfo).fullname;
-        audio.size = (this.operation.task.files[0] as AudioInfo).size;
+          const file: IFile = {
+            name: result.name,
+            content: '',
+            type: result.type,
+            encoding: 'UTF-8'
+          };
 
-        FileInfo.getFileContent(result.file).then((text) => {
+          const text = promiseResults[j];
           file.content = text;
 
           const convElem = {
             input: resultObj,
             conversions: [],
-            number: i
+            number: j
           };
           this.convertedArray.push(convElem);
-          this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
+          this.convertedArray.sort(this.sortAlgorithm);
 
           for (const converter of AppInfo.converters) {
             if (converter.obj.extension.indexOf(result.extension) < 0) {
@@ -149,7 +142,16 @@ export class ResultsTableComponent implements OnInit, OnChanges {
               let annotJSON;
 
               if (from.name !== 'AnnotJSON') {
-                annotJSON = from.import(file, audio).annotjson;
+                const importResult = from.import(file, audio);
+                if (!isUnset(importResult)) {
+                  if (!isUnset(importResult.error !== '')) {
+                    annotJSON = from.import(file, audio).annotjson;
+                  } else {
+                    console.error(`importResult Error from ${from.name}: ${importResult.error}`);
+                  }
+                } else {
+                  console.error(`importResult for import ${from.name} is undefined!`);
+                }
               } else {
                 annotJSON = JSON.parse(text);
               }
@@ -175,32 +177,27 @@ export class ResultsTableComponent implements OnInit, OnChanges {
                 const url = URL.createObjectURL(expFile);
                 res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
                 res.state = 'FINISHED';
-                this.cd.markForCheck();
-                this.cd.detectChanges();
               }
             }
           }
+        }
 
-          this.cd.markForCheck();
-          this.cd.detectChanges();
-        }).catch((err) => {
-          this.convertedArray.push({
-            input: result,
-            conversions: [],
-            number: i
-          });
-          console.error(err);
-          this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      }).catch((error) => {
+        console.error(error);
 
-          this.cd.markForCheck();
-          this.cd.detectChanges();
+        this.convertedArray.push({
+          input: null,
+          conversions: [],
+          number: 0
         });
-      }
-    } else {
-      const from = {
-        extension: '.wav'
-      };
+        this.convertedArray.sort(this.sortAlgorithm);
 
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      });
+    } else {
       for (let i = 0; i < this.operation.results.length; i++) {
         const result = this.operation.results[i];
         this.convertedArray.push({
@@ -209,11 +206,11 @@ export class ResultsTableComponent implements OnInit, OnChanges {
           number: i
         });
       }
-      this.convertedArray = this.convertedArray.sort(this.sortAlgorithm);
-    }
+      this.convertedArray.sort(this.sortAlgorithm);
 
-    this.cd.markForCheck();
-    this.cd.detectChanges();
+      this.cd.markForCheck();
+      this.cd.detectChanges();
+    }
   }
 
   private downloadResult(result: FileInfo): Promise<string> {
