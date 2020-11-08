@@ -40,13 +40,13 @@ import {SettingsService} from './shared/settings.service';
 import {TooltipModule} from 'ngx-bootstrap/tooltip';
 import {BrowserTestComponent} from './components/browser-test/browser-test.component';
 import {CompatibilityService} from './shared/compatibility.service';
-import {routing} from './app.routes';
 import {MainComponent} from './main/main.component';
 import {OHModalService} from './shared/ohmodal.service';
 import {ModalModule} from 'ngx-bootstrap/modal';
 import {CollapseModule} from 'ngx-bootstrap/collapse';
 import {PopoverModule} from 'ngx-bootstrap/popover';
 import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
+import {AppRoutingModule} from './app-routing.module';
 
 @NgModule({
   declarations: [
@@ -80,7 +80,7 @@ import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
   ],
   imports: [
     BrowserModule,
-    routing,
+    AppRoutingModule,
     BrowserAnimationsModule,
     HttpClientModule,
     ChartsModule,
@@ -113,8 +113,5 @@ import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
   ],
   bootstrap: [AppComponent]
 })
-
 export class AppModule {
-  constructor() {
-  }
 }

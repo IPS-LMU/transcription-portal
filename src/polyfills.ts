@@ -27,11 +27,6 @@
  * Standard animation support in Angular DOES NOT require any polyfills (as of Angular 6.0).
  */
 import 'web-animations-js'; // Run `npm install --save web-animations-js`.
-/***************************************************************************************************
- * Zone JS is required by default for Angular itself.
- */
-import 'zone.js/dist/zone'; // Included with Angular CLI.
-
 /**
  * By default, zone.js will patch all possible macroTask and DomEvents
  * user can disable parts of macroTask/DomEvents patch by setting following flags
@@ -39,7 +34,7 @@ import 'zone.js/dist/zone'; // Included with Angular CLI.
  * will put import in the top of bundle, so user need to create a separate file
  * in this directory (for example: zone-flags.ts), and put the following flags
  * into that file, and then add the following code before importing zone.js.
- * import './zone-flags.ts';
+ * import './zone-flags';
  *
  * The flags allowed in zone-flags.ts are listed here.
  *
@@ -55,6 +50,10 @@ import 'zone.js/dist/zone'; // Included with Angular CLI.
  *  (window as any).__Zone_enable_cross_context_check = true;
  *
  */
+/***************************************************************************************************
+ * Zone JS is required by default for Angular itself.
+ */
+import 'zone.js/dist/zone'; // Included with Angular CLI.
 
 
 /***************************************************************************************************
