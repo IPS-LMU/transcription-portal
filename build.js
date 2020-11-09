@@ -8,7 +8,6 @@ let dev = '';
 
 const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess"];
 
-let disabledRobots = true;
 let isUpdate = false;
 
 let timeNow = getDateTimeString();
@@ -33,7 +32,15 @@ if (process.argv[4].indexOf("url=") > -1) {
 }
 
 console.log(`Building OH-Portal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
-const node = spawn('node', ['--max-old-space-size=12000', './node_modules/@angular/cli/bin/ng', '--prod', 'build', '--base-href', baseHref]);
+console.log(`Remove dist...`);
+execSync(`rm -rf "./${buildDir}"`);
+const command = ['--max-old-space-size=12000', './node_modules/@angular/cli/bin/ng', 'build', '--prod', '-c', 'dev', '--base-href', baseHref];
+
+if (dev === "") {
+  command.splice(4, 2);
+}
+
+const node = spawn('node', command);
 node.stdout.on('data', function (data) {
   console.log(data.toString());
 });
@@ -41,7 +48,6 @@ node.stdout.on('data', function (data) {
 node.stderr.on('data', function (data) {
   console.log(data.toString());
 });
-
 node.on('exit', function (code) {
   console.log('child process exited with code ' + code.toString());
   console.log(`Change index.html...`);
@@ -51,20 +57,20 @@ node.on('exit', function (code) {
 
   indexHTML = indexHTML.replace(/(scripts\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(polyfills-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(src=")(-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
+  indexHTML = indexHTML.replace(/(polyfills-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(polyfills\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(src=")(-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
   indexHTML = indexHTML.replace(/(src=")(-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(main-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(main-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(main-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es2018\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(main\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(runtime-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(styles\.[0-9a-z]*\.css)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
   indexHTML = indexHTML.replace(/(const ohPortalVersion = ").*(";)/g, `$1${version}$2`);
 
-  if (!disabledRobots) {
-    indexHTML = indexHTML.replace(/(<meta name="robots" content="noindex">)/g, "");
-  }
   fs.writeFileSync(`${buildDir}index.html`, indexHTML, {
     encoding: "utf8"
   });
@@ -89,6 +95,12 @@ node.on('exit', function (code) {
     if (item !== "index.html" && item !== targetFolder && !found) {
       execSync(`mv "./${buildDir}${item}" "./${buildDir}${targetFolder}/${item}"`);
     }
+  }
+
+  if (!isUpdate) {
+    execSync(`mv "./${buildDir}assets/.htaccess" "./${buildDir}.htaccess"`);
+  } else {
+    execSync(`rm "./${buildDir}assets/.htaccess"`);
   }
 });
 

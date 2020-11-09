@@ -1,9 +1,9 @@
 const fs = require("fs");
 
 const path = require('path');
-const node_ssh = require('node-ssh');
+const {NodeSSH} = require('node-ssh');
 const process = require('process');
-ssh = new node_ssh();
+const ssh = new NodeSSH();
 
 const configText = fs.readFileSync("./deploy.config.json", {
   encoding: "utf8"
@@ -41,11 +41,17 @@ async function start() {
       for (const group of config.groups) {
         // replace base-href
 
+        let indexHTMLOriginal = fs.readFileSync(`${config.distPath}index.html`, {
+          encoding: "utf8"
+        });
+
         for (const listElement of group.list) {
-          let indexHTML = fs.readFileSync(`${config.distPath}index.html`, {
-            encoding: "utf8"
-          });
+          let indexHTML = indexHTMLOriginal;
           indexHTML = indexHTML.replace(/(<base href=")[^"]+(">)/g, `$1${listElement.baseHref}$2`);
+
+          if (listElement.hasOwnProperty("robots") && listElement.robots === true) {
+            indexHTML = indexHTML.replace(/(<meta name="robots" content="noindex">)/g, "");
+          }
 
           fs.writeFileSync(`${config.distPath}index.html`, indexHTML, {
             encoding: "utf8"
