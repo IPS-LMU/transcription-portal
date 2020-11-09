@@ -5,7 +5,9 @@ import {
   PartiturConverter,
   PraatTableConverter,
   PraatTextgridConverter,
-  TextConverter
+  SRTConverter,
+  TextConverter,
+  WebVTTConverter
 } from '@octra/annotation';
 
 declare var ohPortalVersion: string;
@@ -20,17 +22,22 @@ export class AppInfo {
     return this._version;
   }
 
-  private static _converters: {
-    obj: Converter;
-    color: string;
-  }[] = [
+  private static _converters: ConverterData[] = [
     {
       obj: new CTMConverter(),
-      color: 'red'
+      color: 'red',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
     },
     {
       obj: new PartiturConverter(),
-      color: 'forestgreen'
+      color: 'forestgreen',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
     },
     {
       obj: new AnnotJSONConverter(),
@@ -42,18 +49,45 @@ export class AppInfo {
     },
     {
       obj: new PraatTableConverter(),
-      color: 'purple'
+      color: 'purple',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
     },
     {
       obj: new TextConverter(),
-      color: 'darkblue'
+      color: 'darkblue',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
+    },
+    {
+      obj: new SRTConverter(),
+      color: 'pink',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
+    },
+    {
+      obj: new WebVTTConverter(),
+      color: 'black',
+      tierNameMatches: [
+        '^TRN$',
+        '^OCTRA'
+      ]
     }
   ];
 
-  static get converters(): {
-    obj: Converter,
-    color: string
-  }[] {
+  static get converters(): ConverterData[] {
     return this._converters;
   }
+}
+
+export interface ConverterData {
+  obj: Converter;
+  color: string;
+  tierNameMatches?: string[];
 }

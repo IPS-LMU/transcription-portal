@@ -1,10 +1,10 @@
 import {ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from '@angular/core';
 import {Operation} from '../../obj/operations/operation';
-import {AppInfo} from '../../app.info';
+import {AppInfo, ConverterData} from '../../app.info';
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer} from '@angular/platform-browser';
 import {FileInfo, isUnset} from '@octra/utilities';
-import {Converter, IFile, OAudiofile} from '@octra/annotation';
+import {Converter, IFile, OAnnotJSON, OAudiofile} from '@octra/annotation';
 import {AudioInfo} from '@octra/media';
 
 @Component({
@@ -137,7 +137,6 @@ export class ResultsTableComponent implements OnChanges {
                 state: 'PENDING',
                 result: null
               };
-              convElem.conversions.push(res);
 
               let annotJSON;
 
@@ -156,7 +155,7 @@ export class ResultsTableComponent implements OnChanges {
                 annotJSON = JSON.parse(text);
               }
 
-              const levelnum = 0;
+              const levelnum = this.getLevelNumforConverter(converter, annotJSON);
 
               let preResult = null;
 
@@ -177,6 +176,7 @@ export class ResultsTableComponent implements OnChanges {
                 const url = URL.createObjectURL(expFile);
                 res.result.url = this.sanitizer.bypassSecurityTrustUrl(url);
                 res.state = 'FINISHED';
+                convElem.conversions.push(res);
               }
             }
           }
@@ -240,6 +240,24 @@ export class ResultsTableComponent implements OnChanges {
       return 0;
     } else if (a.number > b.number) {
       return -1;
+    }
+  }
+
+  private getLevelNumforConverter(converterData: ConverterData, annotJSON: OAnnotJSON) {
+    if (!isUnset(converterData.tierNameMatches)) {
+      for (const tierNameMatch of converterData.tierNameMatches) {
+        const regex = new RegExp(tierNameMatch, 'g');
+
+        for (let i = 0; i < annotJSON.levels.length; i++) {
+          const level = annotJSON.levels[i];
+          if (regex.exec(level.name) !== null) {
+            return i;
+          }
+        }
+      }
+      return -1;
+    } else {
+      return 0;
     }
   }
 
