@@ -6,13 +6,13 @@
     "types": [],
     "paths": {
       "@octra/annotation": [
-        "../octra/dist/libs/annotation"
+        "../octra/extern/libs/annotation"
       ],
       "@octra/utilities": [
-        "../octra/dist/libs/utilities"
+        "../octra/extern/libs/utilities"
       ],
       "@octra/media": [
-        "../octra/dist/libs/media"
+        "../octra/extern/libs/media"
       ]
     }
   },
