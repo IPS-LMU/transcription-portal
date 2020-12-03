@@ -760,26 +760,26 @@ export class TaskService implements OnDestroy {
       this.newfiles = true;
 
       new Promise<void>((res) => {
-        if (newName !== file.fullname) {
-          // no valid name, replace
-          FileInfo.renameFile(file.file, newName, {
-            type: file.type,
-            lastModified: file.file.lastModified
-          }).then((newfile: File) => {
-            newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
+          if (newName !== file.fullname) {
+            // no valid name, replace
+            FileInfo.renameFile(file.file, newName, {
+              type: file.type,
+              lastModified: file.file.lastModified
+            }).then((newfile: File) => {
+              newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
+              newFileInfo.attributes = queueItem.file.attributes;
+              newFileInfo.attributes.originalFileName = file.fullname;
+              file.attributes.originalFileName = file.fullname;
+              res();
+            });
+          } else {
+            newFileInfo = new FileInfo(file.fullname, (file.type !== '')
+              ? file.type : file.file.type, file.size, file.file);
             newFileInfo.attributes = queueItem.file.attributes;
             newFileInfo.attributes.originalFileName = file.fullname;
             file.attributes.originalFileName = file.fullname;
             res();
-          });
-          } else {
-          newFileInfo = new FileInfo(file.fullname, (file.type !== '')
-            ? file.type : file.file.type, file.size, file.file);
-          newFileInfo.attributes = queueItem.file.attributes;
-          newFileInfo.attributes.originalFileName = file.fullname;
-          file.attributes.originalFileName = file.fullname;
-          res();
-        }
+          }
         }
       ).then(() => {
         const hash = this.preprocessor.getHashString(file.fullname, file.size);
@@ -795,39 +795,43 @@ export class TaskService implements OnDestroy {
 
             if (isValidFormat && format.channels > 1) {
               const directory = new DirectoryInfo(path + file.name + '_dir/');
-              const files: File[] = format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result);
+              console.log(`split channels`);
+              format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result).then((files) => {
 
-              if (this._splitPrompt === 'PENDING') {
-                this.openSplitModal();
-                this._splitPrompt = 'ASKED';
-              } else if (this._splitPrompt !== 'ASKED') {
-                if (this._splitPrompt === 'FIRST') {
-                  files.splice(1, 1);
-                } else if (this._splitPrompt === 'SECOND') {
-                  files.splice(0, 1);
+                if (this._splitPrompt === 'PENDING') {
+                  this.openSplitModal();
+                  this._splitPrompt = 'ASKED';
+                } else if (this._splitPrompt !== 'ASKED') {
+                  if (this._splitPrompt === 'FIRST') {
+                    files.splice(1, 1);
+                  } else if (this._splitPrompt === 'SECOND') {
+                    files.splice(0, 1);
+                  }
                 }
-              }
 
-              const fileInfos: FileInfo[] = [];
+                const fileInfos: FileInfo[] = [];
 
-              if (files.length > 1) {
-                for (let i = 0; i < files.length; i++) {
-                  const fileObj = files[i];
-                  const fileInfo = FileInfo.fromFileObject(fileObj);
-                  fileInfo.attributes.originalFileName = `${file.name}_${i + 1}.${file.extension}`;
-                  fileInfos.push(fileInfo);
+                if (files.length > 1) {
+                  for (let i = 0; i < files.length; i++) {
+                    const fileObj = files[i];
+                    const fileInfo = FileInfo.fromFileObject(fileObj);
+                    fileInfo.attributes.originalFileName = `${file.name}_${i + 1}.${file.extension}`;
+                    fileInfos.push(fileInfo);
+                  }
+                  directory.addEntries(fileInfos);
+                  this.processDirectoryInfo(directory, queueItem).then((result) => {
+                    resolve(result);
+                  }).catch((err) => {
+                    reject(err);
+                  });
+                } else {
+                  // TODO ?
+                  // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
+                  this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
                 }
-                directory.addEntries(fileInfos);
-                this.processDirectoryInfo(directory, queueItem).then((result) => {
-                  resolve(result);
-                }).catch((err) => {
-                  reject(err);
-                });
-              } else {
-                // TODO ?
-                // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
-                this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
-              }
+              }).catch((error) => {
+                console.error(error);
+              });
 
             } else if (isValidFormat || isValidTranscript) {
               if (!isValidTranscript) {
