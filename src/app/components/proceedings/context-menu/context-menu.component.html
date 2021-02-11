@@ -18,10 +18,6 @@
     <td></td>
     <td (click)="onRemoveAppendings()">Remove appendings</td>
   </tr>
-  <tr (click)="onCompress()" *ngIf="selectedOperationType != undefined">
-    <td><i class="fa fa-file-archive-o"></i></td>
-    <td>Save all {{selectedOperationType.name}} results</td>
-  </tr>
   <ng-content></ng-content>
   </tbody>
 </table>

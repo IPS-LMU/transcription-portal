@@ -322,6 +322,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       const entry = this.taskService.taskList.getEntryByIndex(index);
       this.taskService.taskList.removeEntry(entry, true);
     }
+    this.downloadModal.hide();
   }
 
   getFolderName(operation: Operation) {
