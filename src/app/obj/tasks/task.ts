@@ -170,7 +170,7 @@ export class Task {
             operation.changeState(TaskState.PENDING);
           } else {
             if (operation.state === TaskState.PROCESSING) {
-              if (operation.name === 'OCTRA') {
+              if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
                 operation.changeState(TaskState.READY);
               } else {
                 operation.changeState(TaskState.PENDING);
@@ -181,6 +181,14 @@ export class Task {
           break;
         }
       }
+    }
+    const isSomethingPending = task.operations.findIndex(a => a.state === TaskState.PENDING) > -1;
+    const isSomethingReady = task.operations.findIndex(a => a.state === TaskState.READY) > -1;
+
+    if (isSomethingPending) {
+      task.changeState(TaskState.PENDING);
+    } else if (isSomethingReady) {
+      task.changeState(TaskState.READY);
     }
 
     task.listenToOperationChanges();
@@ -384,7 +392,7 @@ export class Task {
       } else {
         const operation = this.operations[nextoperation];
         if (operation.state !== TaskState.FINISHED) {
-          if (operation.name === 'OCTRA' && operation.state === TaskState.READY) {
+          if ((operation.name === 'OCTRA' || operation.name === 'Emu WebApp') && operation.state === TaskState.READY) {
             this.changeState(TaskState.READY);
           } else {
             this.changeState(TaskState.PROCESSING);

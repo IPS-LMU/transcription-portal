@@ -473,7 +473,6 @@ export class TaskService implements OnDestroy {
 
   public start() {
     // look for pending tasks
-
     if (this.overallState === 'processing') {
       this.updateStatistics();
       const uploadingTask = this._taskList.getAllTasks().findIndex((task) => {
@@ -532,9 +531,9 @@ export class TaskService implements OnDestroy {
       } else if (entry.state === TaskState.READY) {
         for (const operation of entry.operations) {
           if (operation.state !== TaskState.SKIPPED && operation.enabled) {
-            if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && operation.name !== 'OCTRA') {
+            if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')) {
               return entry;
-            } else if (operation.state !== TaskState.FINISHED && operation.name === 'OCTRA') {
+            } else if (operation.state !== TaskState.FINISHED && (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')) {
               break;
             }
           }

@@ -270,14 +270,15 @@ export abstract class Operation {
       });
     }
 
+    // check if there is any runable operation after this one.
     let nextOP = this.nextOperation;
 
     while (nextOP !== null) {
-      nextOP = this.nextOperation;
-      nextOP = (nextOP.enabled && nextOP.state !== TaskState.SKIPPED) ? nextOP : null;
-      if (nextOP !== null) {
+      const nextOP2 = (nextOP.enabled && nextOP.state !== TaskState.SKIPPED) ? nextOP : null;
+      if (nextOP2 !== null) {
         break;
       }
+      nextOP = nextOP.nextOperation;
     }
 
     if (state === TaskState.FINISHED && nextOP === null) {
