@@ -85,7 +85,7 @@ export abstract class Operation {
     return this._parsedProtocol;
   }
 
-  public get previousOperation(): Operation {
+  public get previousOperation(): Operation | null {
     const index = this.task.operations.findIndex((op) => {
         if (op.id === this.id) {
           return true;

@@ -58,7 +58,7 @@ export class EmuOperation extends ToolOperation {
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  }
+  };
 
   public getStateIcon2 = () => {
     let result = '';
@@ -86,7 +86,7 @@ export class EmuOperation extends ToolOperation {
     }
 
     return result;
-  }
+  };
 
   public clone(task?: Task): EmuOperation {
     const selectedTask = ((task === null || task === undefined)) ? this.task : task;
@@ -130,11 +130,11 @@ export class EmuOperation extends ToolOperation {
         result = lastResultMaus;
       }
 
-      // TODO check if result from MAUS is newer than from EMU Webapp
-
       const labelType = (result.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
 
-      if (!(langObj === null || langObj === undefined)) {
+      if (!(langObj === null || langObj === undefined) && !isUnset(result.url)) {
+        console.log(`result is`);
+        console.log(result);
         transcript += encodeURIComponent(result.url);
 
         return `${this._commands[0]}?` +
@@ -142,6 +142,8 @@ export class EmuOperation extends ToolOperation {
           `${transcript}&` +
           `&labelType=${labelType}` +
           `&saveToWindowParent=true`;
+      } else if (isUnset(result.url)) {
+        console.error(`result url is null or undefined`);
       } else {
         console.log(`langObj not found in octra operation lang:${this.task.language} and ${this.task.asr}`);
       }

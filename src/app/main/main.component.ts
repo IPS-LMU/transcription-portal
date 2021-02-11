@@ -291,7 +291,7 @@ export class MainComponent implements OnDestroy {
         if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
           // reupload result from tool operation
           file = tool.lastResult;
-        } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
+        } else if (!isUnset(tool.previousOperation) && !isUnset(tool.previousOperation.lastResult)
           && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
           // reupload result from previous operation
           // local available, reupload
@@ -306,9 +306,11 @@ export class MainComponent implements OnDestroy {
               if (tool.results.length > 0 && !tool.lastResult.online && tool.lastResult.available) {
                 // reupload result from tool operation
                 tool.lastResult.url = url;
+                tool.lastResult.online = true;
               } else if (!(tool.previousOperation.lastResult === null || tool.previousOperation.lastResult === undefined)
                 && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
                 tool.previousOperation.lastResult.url = url;
+                tool.previousOperation.lastResult.online = true;
               }
               this.storage.saveTask(tool.task);
               resolve();

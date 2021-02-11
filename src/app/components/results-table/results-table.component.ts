@@ -33,6 +33,13 @@ export class ResultsTableComponent implements OnChanges {
   }[] = [];
   public originalLabel = '';
   public conversionExtension = '';
+  private oldOperation = {
+    id: -1,
+    numOfResults: -1
+  };
+
+  private generationRunning = false;
+
   @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
   constructor(private http: HttpClient, private sanitizer: DomSanitizer,
@@ -44,8 +51,18 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if ((changes.hasOwnProperty('operation') && !isUnset(changes.operation.currentValue))) {
-      this.generateTable();
+    if (
+      (changes.hasOwnProperty('operation') && !isUnset(changes.operation.currentValue))
+      || (changes.hasOwnProperty('visible') && !isUnset(changes.visible.currentValue) && changes.visible.currentValue)
+    ) {
+      if (this.oldOperation.id !== this.operation.id || this.oldOperation.numOfResults !== this.operation.results.length) {
+        if (!this.generationRunning) {
+          this.generationRunning = true;
+          this.generateTable();
+        }
+      }
+    } else if (changes.hasOwnProperty('visible') && !isUnset(changes.visible.currentValue) && !changes.visible.currentValue) {
+      this.generationRunning = false;
     }
   }
 
@@ -66,8 +83,6 @@ export class ResultsTableComponent implements OnChanges {
   private generateTable() {
     this.convertedArray = [];
     this.conversionExtension = this.operation.resultType.replace('/json', '');
-    this.cd.markForCheck();
-    this.cd.detectChanges();
 
     if (this.operation.resultType !== '.wav') {
       const promises: Promise<FileInfo[]>[] = [];
@@ -153,8 +168,7 @@ export class ResultsTableComponent implements OnChanges {
           }
         }
 
-        this.cd.markForCheck();
-        this.cd.detectChanges();
+        this.updateGUI();
       }).catch((error) => {
         console.error(error);
 
@@ -165,8 +179,7 @@ export class ResultsTableComponent implements OnChanges {
           number: 0
         });
 
-        this.cd.markForCheck();
-        this.cd.detectChanges();
+        this.updateGUI();
       });
     } else {
       for (let i = 0; i < this.operation.results.length; i++) {
@@ -178,30 +191,18 @@ export class ResultsTableComponent implements OnChanges {
         });
       }
       this.convertedArray.sort(this.sortAlgorithm);
-
-      this.cd.markForCheck();
-      this.cd.detectChanges();
+      this.updateGUI();
     }
   }
 
-  private downloadResult(result: FileInfo): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-
-      if (result.online) {
-        this.http.get(result.url, {
-          responseType: 'text'
-        }).subscribe(
-          (text) => {
-            resolve(text);
-          },
-          (err) => {
-            reject(err);
-          }
-        );
-      } else {
-        reject('result is not online!');
-      }
-    });
+  private updateGUI() {
+    this.cd.markForCheck();
+    this.cd.detectChanges();
+    this.oldOperation = {
+      id: this.operation.id,
+      numOfResults: this.operation.results.length
+    };
+    this.generationRunning = false;
   }
 
   private sortAlgorithm(a, b): number {

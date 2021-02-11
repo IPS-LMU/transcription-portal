@@ -330,6 +330,8 @@ export class TaskService implements OnDestroy {
                 }).catch(() => {
                   opResult.online = false;
                 });
+              } else {
+                opResult.online = false;
               }
             }
           }
