@@ -47,6 +47,7 @@ import {CollapseModule} from 'ngx-bootstrap/collapse';
 import {PopoverModule} from 'ngx-bootstrap/popover';
 import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
 import {AppRoutingModule} from './app-routing.module';
+import {DownloadService} from './shared/download.service';
 
 @NgModule({
   declarations: [
@@ -109,7 +110,8 @@ import {AppRoutingModule} from './app-routing.module';
     AlertService,
     SettingsService,
     CompatibilityService,
-    OHModalService
+    OHModalService,
+    DownloadService
   ],
   bootstrap: [AppComponent]
 })

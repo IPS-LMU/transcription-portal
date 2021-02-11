@@ -3,17 +3,16 @@ import {Task, TaskDirectory, TaskState} from '../../obj/tasks';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
 import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
 import {StorageService} from '../../storage.service';
 import * as moment from 'moment';
-import {AudioInfo} from '@octra/media';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
-import {Converter, ImportResult, OAudiofile} from '@octra/annotation';
+import {DownloadService} from '../../shared/download.service';
 
 declare var JSZip;
 
@@ -41,7 +40,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   private subscrManager = new SubscriptionManager();
 
   constructor(private taskService: TaskService, private http: HttpClient, private storage: StorageService,
-              private modalService: BsModalService, private sanitizer: DomSanitizer) {
+              private modalService: BsModalService, private sanitizer: DomSanitizer, private downloadService: DownloadService) {
 
   }
 
@@ -81,7 +80,102 @@ export class DownloadModalComponent implements OnInit, OnChanges {
   process() {
     this.state = 'processing';
     if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
-      // get url for resulty by column
+      this.doColumnZipping();
+    } else if (this.type === 'line') {
+      this.doLineZipping();
+    }
+  }
+
+  doColumnZipping() {
+    // get url for resulty by column
+    // prepare package
+    const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+    const requestPackage: {
+      entries: {
+        path: string,
+        file: File
+      }[]
+    } = {
+      entries: []
+    };
+    const tasks = this.taskService.taskList.getAllTasks();
+
+    const promises: Promise<void>[] = [];
+
+    const opIndex = this.taskService.operations.findIndex((a) => {
+      return a.name === this.column.name;
+    });
+
+    if (opIndex > -1) {
+      // operation found
+
+      for (const task of tasks) {
+        const operation = task.operations[opIndex];
+
+        if (operation.results.length > 0 && operation.state === TaskState.FINISHED) {
+          const result: FileInfo = operation.lastResult;
+          if (result.online) {
+            requestPackage.entries.push({
+              path: result.fullname,
+              file: result.file
+            });
+
+
+            const selectedConverters = AppInfo.converters.filter((a, i) => {
+              return this.checkboxes[i];
+            });
+
+            const promise = new Promise<void>((resolve, reject) => {
+              this.downloadService.getConversionFiles(operation, result, selectedConverters).then((files) => {
+                files = files.filter(a => !isUnset(a));
+                for (const fileInfo of files) {
+                  requestPackage.entries.push({
+                    path: fileInfo.file.name,
+                    file: fileInfo.file
+                  });
+                }
+                resolve();
+              }).catch((error) => {
+                reject(error);
+              });
+            });
+
+            promises.push(promise);
+          }
+        }
+      }
+    } else {
+      console.error('opIndex is less than 0!');
+    }
+
+    // TODO check if this is required
+    new Promise<void>((resolve, reject) => {
+      if (promises.length === 0) {
+        resolve();
+      } else {
+        Promise.all(promises).then(() => {
+            resolve();
+          },
+          (error) => {
+            reject(error);
+          });
+      }
+    }).then(() => {
+      if (requestPackage.entries.length > 0) {
+        this.archiveName = `${this.column.name}Results_${dateStr}`;
+        this.doZipping(requestPackage.entries);
+      } else {
+        this.state = 'inactive';
+        this.archiveURL = '';
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  doLineZipping() {
+    // get results url by lines
+    if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
       // prepare package
       const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
       const requestPackage: {
@@ -92,224 +186,59 @@ export class DownloadModalComponent implements OnInit, OnChanges {
       } = {
         entries: []
       };
-      const tasks = this.taskService.taskList.getAllTasks();
 
-      const promises: Promise<void>[] = [];
+      this.archiveName = `oh-portal_results_${dateStr}`;
 
-      const opIndex = this.taskService.operations.findIndex((a) => {
-        return a.name === this.column.name;
-      });
+      const promises = [];
 
-      if (opIndex > -1) {
-        // operation found
+      for (const index of this.selectedTasks) {
+        const entry = this.taskService.taskList.getEntryByIndex(index);
 
-        for (const task of tasks) {
-          const operation = task.operations[opIndex];
+        if (entry instanceof TaskDirectory) {
 
-          // TODO improve code!
-          if (operation.results.length > 0 && operation.state === TaskState.FINISHED) {
-            const result: FileInfo = operation.lastResult;
-            if (result.online) {
-              requestPackage.entries.push({
-                path: result.fullname,
-                file: result.file
-              });
+          promises.push(new Promise<void>((resolve, reject) => {
+            const dirPromises = [];
 
-              const promise = new Promise<void>((resolve, reject) => {
-                this.getConversionFiles(operation).then((files) => {
-                  for (const fileInfo of files) {
-                    requestPackage.entries.push({
-                      path: fileInfo.file.name,
-                      file: fileInfo.file
-                    });
-                  }
-                  resolve();
-                }).catch((error) => {
-                  reject(error);
-                });
-              });
-
-              promises.push(promise);
+            for (const dirEntry of entry.entries) {
+              dirPromises.push(this.processTask(dirEntry as Task));
             }
-          }
-        }
-      } else {
-        console.error('opIndex is less than 0!');
-      }
 
-      // TODO check if this is required
-      new Promise<void>((resolve, reject) => {
-        if (promises.length === 0) {
-          resolve();
-        } else {
-          Promise.all(promises).then(() => {
-              resolve();
-            },
-            (error) => {
-              reject(error);
-            });
-        }
-      }).then(() => {
-        if (requestPackage.entries.length > 0) {
-          this.archiveName = `${this.column.name}Results_${dateStr}`;
-          this.doZipping(requestPackage.entries);
-        } else {
-          this.state = 'inactive';
-          this.archiveURL = '';
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
-    } else if (this.type === 'line') {
-      // get results url by lines
-      if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
-        // prepare package
-        const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
-        const requestPackage: {
-          entries: {
-            path: string,
-            file: File
-          }[]
-        } = {
-          entries: []
-        };
-
-        this.archiveName = `oh-portal_results_${dateStr}`;
-
-        const promises = [];
-
-        for (const index of this.selectedTasks) {
-          const entry = this.taskService.taskList.getEntryByIndex(index);
-
-          if (entry instanceof TaskDirectory) {
-
-            promises.push(new Promise<void>((resolve, reject) => {
-              const dirPromises = [];
-
-              for (const dirEntry of entry.entries) {
-                dirPromises.push(this.processTask(dirEntry as Task));
+            Promise.all(dirPromises).then((values) => {
+              for (const value of values) {
+                for (const val of value) {
+                  val.path = `${entry.foldername}/${val.path}`;
+                  requestPackage.entries.push(val);
+                }
               }
-
-              Promise.all(dirPromises).then((values) => {
-                for (const value of values) {
-                  for (const val of value) {
-                    val.path = `${entry.foldername}/${val.path}`;
-                    requestPackage.entries.push(val);
-                  }
+              resolve();
+            }).catch((error) => {
+              console.error(error);
+            });
+          }));
+        } else {
+          // task
+          promises.push(
+            new Promise<void>((resolve, reject) => {
+              this.processTask(entry).then((entries) => {
+                for (const entry2 of entries) {
+                  requestPackage.entries.push(entry2);
                 }
                 resolve();
               }).catch((error) => {
                 console.error(error);
+                reject(error);
               });
             }));
-          } else {
-            // task
-            promises.push(
-              new Promise<void>((resolve, reject) => {
-                this.processTask(entry).then((entries) => {
-                  for (const entry2 of entries) {
-                    requestPackage.entries.push(entry2);
-                  }
-                  resolve();
-                }).catch((error) => {
-                  console.error(error);
-                  reject(error);
-                });
-              }));
-          }
         }
-
-        Promise.all(promises).then(() => {
-          this.doZipping(requestPackage.entries);
-        }).catch((error) => {
-          this.state = 'error';
-          console.error(error);
-        });
       }
+
+      Promise.all(promises).then(() => {
+        this.doZipping(requestPackage.entries);
+      }).catch((error) => {
+        this.state = 'error';
+        console.error(error);
+      });
     }
-  }
-
-  getConversionFiles(operation: Operation): Promise<FileInfo[]> {
-    return new Promise<FileInfo[]>((resolve, reject) => {
-
-      const promises = [];
-
-      for (let i = 0; i < this.checkboxes.length; i++) {
-        const checkbox = this.checkboxes[i];
-
-        if (checkbox) {
-          const exportConverter = AppInfo.converters[i].obj;
-
-          for (const opResult of operation.results) {
-            if (opResult.fullname.indexOf(exportConverter.extension) < 0) {
-              promises.push(this.getResultConversion(exportConverter, operation, opResult));
-            }
-          }
-        }
-      }
-
-      Promise.all(promises).then((values) => {
-        resolve(values.filter((a) => {
-          return !(a === null || a === undefined);
-        }));
-      }).catch((error) => {
-        reject(error);
-      });
-    });
-  }
-
-  getResultConversion(exportConverter: Converter, operation: Operation, opResult: FileInfo): Promise<FileInfo> {
-    return new Promise<FileInfo>((resolve, reject) => {
-      FileInfo.getFileContent(opResult.file).then((content) => {
-        const audiofile = new OAudiofile();
-        audiofile.duration = (operation.task.files[0] as AudioInfo).duration.samples;
-        audiofile.name = (operation.task.files[0] as AudioInfo).name;
-        audiofile.sampleRate = (operation.task.files[0] as AudioInfo).sampleRate;
-        audiofile.size = (operation.task.files[0] as AudioInfo).size;
-
-
-        let annotJSON = null;
-
-        // TODO change after next versions
-        if (opResult.fullname.indexOf('_annot.json') > -1 || opResult.fullname.indexOf('.json') > -1) {
-          annotJSON = JSON.parse(content);
-        }
-
-        if ((annotJSON === null || annotJSON === undefined)) {
-          // get annotJSON via import
-          const importConverter = AppInfo.converters.find((a) => {
-            return opResult.fullname.indexOf(a.obj.extension) > -1;
-          });
-
-          if (!(importConverter === null || importConverter === undefined)) {
-            const result: ImportResult = importConverter.obj.import({
-              name: opResult.fullname,
-              content,
-              encoding: 'utf-8',
-              type: 'text/plain'
-            }, audiofile);
-            annotJSON = result.annotjson;
-          } else {
-            console.error(`found no importConverter for ${opResult.fullname}`);
-          }
-        }
-
-        const conversion = exportConverter.export(annotJSON, audiofile, 0);
-
-        if (!(conversion === null || conversion === undefined)) {
-          const file: File = FileInfo.getFileFromContent(conversion.file.content,
-            operation.task.files[0].name + exportConverter.extension, conversion.file.type);
-
-          const fileInfo = new FileInfo(file.name, file.type, file.size, file);
-          resolve(fileInfo);
-        } else {
-          // ignore
-          resolve(null);
-        }
-      }).catch((error) => {
-        reject(error);
-      });
-    });
   }
 
   processTask(task: Task): Promise<{
@@ -338,17 +267,22 @@ export class DownloadModalComponent implements OnInit, OnChanges {
               file: opResult.file
             });
 
+            const selectedConverters = AppInfo.converters.filter((a, i) => {
+              return this.checkboxes[i];
+            });
 
             promises.push(new Promise<void>((resolve2, reject2) => {
-              this.getConversionFiles(operation).then((entries) => {
+              this.downloadService.getConversionFiles(operation, operation.lastResult, selectedConverters).then((entries) => {
                 const folderName2 = this.getFolderName(operation);
+                entries = entries.filter(a => !isUnset(a));
+
                 for (const entry of entries) {
                   entryResult.push({
                     path: `${task.files[0].name}/${folderName2}/${entry.fullname}`,
                     file: entry.file
                   });
-                  resolve2();
                 }
+                resolve2();
               }).catch((error) => {
                 reject2(error);
               });
