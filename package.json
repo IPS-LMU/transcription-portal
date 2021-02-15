@@ -39,6 +39,7 @@
     "intl": "^1.2.5",
     "jquery": "^3.5.1",
     "jszip": "^3.5.0",
+    "maintenance-warning-snackbar": "git+https://github.com/IPS-LMU/maintenanceWarningSnackbar.git",
     "modernizr": "^3.11.3",
     "moment": "^2.27.0",
     "ng-circle-progress": "^1.5.1",

@@ -42,7 +42,8 @@
               "node_modules/notifyjs/dist/notify.js",
               "node_modules/moment/min/moment.min.js",
               "node_modules/chart.js/dist/Chart.min.js",
-              "node_modules/jszip/dist/jszip.min.js"
+              "node_modules/jszip/dist/jszip.min.js",
+              "node_modules/maintenance-warning-snackbar/maintenanceWarningSnackbar.js"
             ]
           },
           "configurations": {
