@@ -1,3 +1,21 @@
+## [1.0.5](https://github.com/IPS-LMU/oh-portal/compare/v1.0.4...v1.0.5) (2021-02-15)
+
+
+### Bug Fixes
+
+* **downloads:** fixed download by line bug and improved generation of downloads ([39c9a1d](https://github.com/IPS-LMU/oh-portal/commit/39c9a1d85144506c979236a6888fa9f2671ad4a7)), closes [#56](https://github.com/IPS-LMU/oh-portal/issues/56)
+* **emu-webApp:** fixed issue that transcript is not loaded in EMU webApp, fixed retrieving its result ([d038f38](https://github.com/IPS-LMU/oh-portal/commit/d038f38e73486ef4a9f20155eea15b2c903ba8b6))
+* **operations:** fixed status behaviour of operations ([5a73bf0](https://github.com/IPS-LMU/oh-portal/commit/5a73bf0a2d80bb94fa4e9c8ed4b438d3fba62e6e))
+* **preprocessing:** fixed issue that audio split into channels is not working ([a015e0b](https://github.com/IPS-LMU/oh-portal/commit/a015e0b7a667ccbefb164e4f4640424b36e50a0e))
+
+
+### Features
+
+* **download-modal:** close modal after selected lines were removed ([ebc6e85](https://github.com/IPS-LMU/oh-portal/commit/ebc6e85a0bfef98ffb540b394332ac264dd02e3d))
+* **maintenance:** added maintenance snackbar ([8cbab8e](https://github.com/IPS-LMU/oh-portal/commit/8cbab8e3eb6a3408f1aaad90febd14e4957d36ee))
+
+
+
 ## [1.0.4](https://github.com/IPS-LMU/oh-portal/compare/v1.0.2...v1.0.4) (2020-11-09)
 
 
