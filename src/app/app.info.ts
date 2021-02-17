@@ -14,7 +14,7 @@ declare var ohPortalVersion: string;
 declare var ohPortalLastUpdated: string;
 
 export class AppInfo {
-  public static readonly debugging = true;
+  public static readonly debugging = false;
   static readonly _version = ohPortalVersion;
   static readonly lastUpdated = ohPortalLastUpdated;
 
