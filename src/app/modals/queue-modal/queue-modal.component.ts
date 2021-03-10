@@ -3,7 +3,6 @@ import {
   ChangeDetectorRef,
   Component,
   Input,
-  OnInit,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -17,11 +16,13 @@ import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {AppSettings} from '../../shared/app.settings';
-import {OHLanguageObject} from '../../obj/oh-config';
+import {OHConfiguration, OHLanguageObject, OHService} from '../../obj/oh-config';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 import {BsDropdownDirective} from 'ngx-bootstrap/dropdown';
 import {PopoverDirective} from 'ngx-bootstrap/popover';
+import {AudioInfo} from '@octra/media';
+import {FileInfo, isUnset} from '@octra/utilities';
 
 @Component({
   selector: 'app-queue-modal',
@@ -30,9 +31,9 @@ import {PopoverDirective} from 'ngx-bootstrap/popover';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None
 })
-export class QueueModalComponent implements OnInit {
+export class QueueModalComponent {
   @ViewChild('queueModal', {static: true}) queueModal: ModalDirective;
-  @ViewChild('dropdown', {static: true}) dropdown: BsDropdownDirective;
+  @ViewChild('dropdown', {static: false}) dropdown: BsDropdownDirective;
   @ViewChild('pop', {static: true}) popover: PopoverDirective;
 
   @Input() tasks: Task[] = [];
@@ -41,6 +42,19 @@ export class QueueModalComponent implements OnInit {
   public mouseInDropdown = false;
   public serviceProviders = {};
   private subscrManager = new SubscriptionManager();
+  public visible = false;
+
+  public compatibleTable: {
+    fileName: string;
+    checks: CompatibleResult[];
+  }[] = [];
+
+  public get selectedASRInfo(): OHService {
+    if (!isUnset(this.serviceProviders) && !isUnset(this.taskService.selectedlanguage)) {
+      return this.serviceProviders[this.taskService.selectedlanguage.asr];
+    }
+    return undefined;
+  }
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer,
               public taskService: TaskService, private storage: StorageService,
@@ -50,8 +64,8 @@ export class QueueModalComponent implements OnInit {
     }
   }
 
-  public get AppSettings() {
-    return AppSettings;
+  public get AppConfiguration(): OHConfiguration {
+    return AppSettings.configuration;
   }
 
   public get orangeCount(): number {
@@ -65,13 +79,13 @@ export class QueueModalComponent implements OnInit {
     return 0;
   }
 
-  ngOnInit() {
-  }
-
-  public open(beforeDismiss: () => boolean = () => {
-    return true;
-  }, onDismiss: () => void = () => {
-  }) {
+  public open(
+    beforeDismiss: () => boolean = () => {
+      return true;
+    },
+    onDismiss: () => void = () => {
+    }
+  ): void {
     this.subscrManager.add(this.queueModal.onHide.subscribe(() => {
       beforeDismiss();
     }));
@@ -81,18 +95,35 @@ export class QueueModalComponent implements OnInit {
       this.onHidden();
     }));
 
+    this.compatibleTable = [];
+    for (const task of this.tasks) {
+      if (task.state === TaskState.QUEUED) {
+        this.compatibleTable.push({
+          fileName: task.files[0].fullname,
+          checks: this.checkAudioFileCompatibility((task.files[0] as AudioInfo), task.asr)
+        });
+      }
+    }
+    this.visible = true;
     this.queueModal.show();
   }
 
   onHidden() {
+    this.visible = false;
     this.subscrManager.destroy();
   }
 
   onSubmit() {
     this.changeLanguageforAllQueuedTasks();
+    let j = 0;
+
     for (const task of this.tasks) {
-      if (task.files[0].file !== undefined) {
-        task.changeState(TaskState.PENDING);
+      if (task.state === TaskState.QUEUED) {
+        if (task.files[0] instanceof AudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(j)) {
+          task.changeState(TaskState.PENDING);
+        }
+
+        j++;
       }
     }
     this.queueModal.hide();
@@ -112,6 +143,8 @@ export class QueueModalComponent implements OnInit {
   }
 
   changeLanguageforAllQueuedTasks() {
+    this.compatibleTable = [];
+
     const tasks = this.tasks.filter((a) => {
       return a.state === TaskState.QUEUED;
     });
@@ -120,9 +153,14 @@ export class QueueModalComponent implements OnInit {
       if (task.state === TaskState.QUEUED) {
         task.language = this.taskService.selectedlanguage.code;
         task.asr = this.taskService.selectedlanguage.asr;
-        console.log(`SET TO ${this.taskService.selectedlanguage.asr}`);
         task.operations[1].providerInformation = AppSettings.getServiceInformation(this.taskService.selectedlanguage.asr);
         this.storage.saveTask(task);
+
+        const audioInfo = (task.files[0] instanceof AudioInfo) ? task.files[0] as AudioInfo : undefined;
+        this.compatibleTable.push({
+          fileName: task.files[0].file.name,
+          checks: this.checkAudioFileCompatibility(audioInfo, task.asr)
+        });
       }
     }
     this.storage.saveUserSettings('defaultTaskOptions', {
@@ -130,7 +168,9 @@ export class QueueModalComponent implements OnInit {
       asr: this.taskService.selectedlanguage.asr
     });
 
-    this.dropdown.hide();
+    if (!isUnset(this.dropdown)) {
+      this.dropdown.hide();
+    }
 
     this.cd.markForCheck();
     this.cd.detectChanges();
@@ -262,11 +302,88 @@ export class QueueModalComponent implements OnInit {
 
   onMouseOut() {
     setTimeout(() => {
-      if (!this.mouseInDropdown) {
+      if (!this.mouseInDropdown && !isUnset(this.dropdown)) {
         this.dropdown.hide();
       }
     }, 500);
 
     this.mouseInDropdown = false;
   }
+
+  checkAudioFileCompatibility(audioInfo: AudioInfo, asrName: string) {
+    const result: {
+      name: string,
+      isValid: boolean,
+      value: string
+    }[] = [];
+
+    const serviceInfo = AppSettings.configuration.api.services.find(a => a.provider === asrName);
+    if (!isUnset(serviceInfo) && audioInfo instanceof AudioInfo) {
+      if (!isUnset(serviceInfo.maxSignalDuration)) {
+        if (audioInfo.duration.seconds > serviceInfo.maxSignalDuration) {
+          result.push({
+            name: 'Signal duration',
+            isValid: false,
+            value: `max ${serviceInfo.maxSignalDuration} seconds`
+          });
+        } else {
+          result.push({
+            name: 'Signal duration',
+            isValid: true,
+            value: `max ${serviceInfo.maxSignalDuration} seconds`
+          });
+        }
+      }
+
+      if (!isUnset(serviceInfo.maxSignalSize)) {
+        if ((audioInfo as FileInfo).size / 1000 / 1000 > serviceInfo.maxSignalSize) {
+          result.push({
+            name: 'Signal length',
+            isValid: false,
+            value: `${serviceInfo.maxSignalSize} MB`
+          });
+        } else {
+          result.push({
+            name: 'Signal length',
+            isValid: true,
+            value: `${serviceInfo.maxSignalSize} MB`
+          });
+        }
+      }
+    }
+
+    return result;
+  }
+
+  isSomethingInvalid(index: number) {
+    const googleWithAccessCode = this.selectedASRInfo.provider === 'Google' && this.taskService.accessCode.trim() !== '';
+    if (index > -1 && this.compatibleTable.length > index && this.isASRSelected() && !googleWithAccessCode
+    ) {
+      return this.compatibleTable[index].checks.findIndex(a => !a.isValid) > -1;
+    }
+
+    return false;
+  }
+
+  onValidationResultMouseEnter(popoverResult: PopoverDirective, index: number) {
+    if (this.isSomethingInvalid(index)) {
+      popoverResult.show();
+    }
+  }
+
+  isOneAudiofileInvalid(): boolean {
+    return this.compatibleTable.findIndex((a, i) => {
+      return this.isSomethingInvalid(i);
+    }) > -1;
+  }
+
+  isASRSelected() {
+    return (this.taskService.operations.find(a => a.name === 'ASR').enabled);
+  }
+}
+
+interface CompatibleResult {
+  name: string;
+  isValid: boolean;
+  value: string;
 }

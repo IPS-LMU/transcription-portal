@@ -5,6 +5,7 @@ export interface OHConfiguration {
     'commands': OHCommand[];
     'languages': OHLanguageObject[];
     'services': OHService[];
+    'asrInfoURL'?: string;
   };
   'plugins': {
     'emailSender': {
@@ -40,6 +41,11 @@ export interface OHCommand {
 
 export interface OHService {
   provider: string;
+  basName?: string;
+  maxSignalDuration?: number;
+  maxSignalSize?: number;
+  quotaPerMonth?: number;
+  knownIssues?: string;
   type: string;
   termsURL: string;
   dataStoragePolicy: string;
