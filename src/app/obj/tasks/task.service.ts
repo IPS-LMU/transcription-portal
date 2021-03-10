@@ -721,6 +721,7 @@ export class TaskService implements OnDestroy {
   }
 
   private listenToTaskEvents(task: Task) {
+    console.log(`listen to task events`);
     this.subscrmanager.add(task.opstatechange.subscribe((event) => {
       const operation = task.getOperationByID(event.opID);
       const opName = operation.name;

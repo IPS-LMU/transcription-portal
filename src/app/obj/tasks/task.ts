@@ -185,10 +185,12 @@ export class Task {
     const isSomethingPending = task.operations.findIndex(a => a.state === TaskState.PENDING) > -1;
     const isSomethingReady = task.operations.findIndex(a => a.state === TaskState.READY) > -1;
 
-    if (isSomethingPending) {
-      task.changeState(TaskState.PENDING);
-    } else if (isSomethingReady) {
-      task.changeState(TaskState.READY);
+    if (task.state !== TaskState.QUEUED) {
+      if (isSomethingPending) {
+        task.changeState(TaskState.PENDING);
+      } else if (isSomethingReady) {
+        task.changeState(TaskState.READY);
+      }
     }
 
     task.listenToOperationChanges();
