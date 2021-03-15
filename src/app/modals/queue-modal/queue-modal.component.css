@@ -56,3 +56,7 @@
 .modal {
   overflow-y: scroll !important;
 }
+
+.compatible-col{
+  text-align: center;
+}
