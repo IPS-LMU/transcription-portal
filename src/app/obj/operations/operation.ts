@@ -3,7 +3,7 @@ import {SafeHtml} from '@angular/platform-browser';
 import {Observable, Subject} from 'rxjs';
 import {Task, TaskState} from '../tasks';
 import {OHLanguageObject, OHService} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo, isUnset} from '@octra/utilities';
 
 export abstract class Operation {
   static counter = 0;
@@ -348,7 +348,8 @@ export abstract class Operation {
       while (match !== null) {
         result.push({
           type: match[1],
-          message: match[2]
+          message: (match.length < 3 || isUnset(match[2])) ? ''
+            : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****')
         });
         match = regex.exec(text);
       }
