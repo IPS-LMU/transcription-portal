@@ -211,6 +211,6 @@ nav li {
   font-size: 14px;
 }
 
-#accessCode {
-  margin-bottom: 10px;
+#accessCodeGroup span{
+  cursor: pointer;
 }

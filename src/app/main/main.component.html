@@ -102,7 +102,7 @@
               <i (click)="settingsCollapsed = !settingsCollapsed;" class="fa fa-cog" dropdownToggle id="dropdownBasic2"
                  style="cursor: pointer;"></i>
 
-              <div (mouseleave)="settingsCollapsed = true;" *dropdownMenu [collapse]="settingsCollapsed"
+              <div (mouseleave)="settingsCollapsed = true;accessCodeInputFieldType = 'password'" *dropdownMenu [collapse]="settingsCollapsed"
                    class="dropdown-menu" id="settings-dropdown"
                    role="menu"
               >
@@ -114,9 +114,20 @@
                   </tr>
                   <tr>
                     <td></td>
-                    <td><input [(ngModel)]="taskService.accessCode" id="accessCode" name="accessCode"
-                               style="width:100%; padding:5px;"
-                               type="text"/></td>
+                    <td>
+                      <div class="input-group mb-3" id="accessCodeGroup">
+                        <input class="form-control" [(ngModel)]="taskService.accessCode" id="accessCode" name="accessCode" placeholder="Enter access code..."
+                               [type]="accessCodeInputFieldType"/>
+                        <div class="input-group-append">
+                          <span class="input-group-text" (click)="toggleAccessCodeInputType()">
+                            <i class="fa" [ngClass]="{
+                               'fa-eye-slash': accessCodeInputFieldType === 'text',
+                               'fa-eye': accessCodeInputFieldType === 'password'
+                               }"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                   <tr>
                     <td><i class="fa fa-columns"></i></td>

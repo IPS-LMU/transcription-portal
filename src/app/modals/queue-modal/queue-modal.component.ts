@@ -152,19 +152,17 @@ export class QueueModalComponent {
     });
 
     for (const task of tasks) {
-      if (task.state === TaskState.QUEUED) {
-        task.language = this.taskService.selectedlanguage.code;
-        task.asr = this.taskService.selectedlanguage.asr;
-        task.operations[1].providerInformation = AppSettings.getServiceInformation(this.taskService.selectedlanguage.asr);
-        this.storage.saveTask(task);
+      task.language = this.taskService.selectedlanguage.code;
+      task.asr = this.taskService.selectedlanguage.asr;
+      task.operations[1].providerInformation = AppSettings.getServiceInformation(this.taskService.selectedlanguage.asr);
+      this.storage.saveTask(task);
 
-        const audioInfo = (task.files[0] instanceof AudioInfo) ? task.files[0] as AudioInfo : undefined;
-        this.compatibleTable.push({
-          id: task.id,
-          fileName: task.files[0].file.name,
-          checks: this.checkAudioFileCompatibility(audioInfo, task.asr)
-        });
-      }
+      const audioInfo: AudioInfo = (!isUnset(task.files[0]) && task.files[0] instanceof AudioInfo) ? task.files[0] as AudioInfo : undefined;
+      this.compatibleTable.push({
+        id: task.id,
+        fileName: (isUnset(audioInfo)) ? '' : audioInfo.name,
+        checks: this.checkAudioFileCompatibility(audioInfo, task.asr)
+      });
     }
     this.storage.saveUserSettings('defaultTaskOptions', {
       language: this.taskService.selectedlanguage.code,
@@ -321,7 +319,7 @@ export class QueueModalComponent {
     }[] = [];
 
     const serviceInfo = AppSettings.configuration.api.services.find(a => a.provider === asrName);
-    if (!isUnset(serviceInfo) && audioInfo instanceof AudioInfo) {
+    if (!isUnset(serviceInfo) && !isUnset(audioInfo) && audioInfo instanceof AudioInfo) {
       if (!isUnset(serviceInfo.maxSignalDuration)) {
         if (audioInfo.duration.seconds > serviceInfo.maxSignalDuration) {
           result.push({
@@ -382,6 +380,15 @@ export class QueueModalComponent {
 
   isASRSelected() {
     return (this.taskService.operations.find(a => a.name === 'ASR').enabled);
+  }
+
+  getChecksByID(id: number): CompatibleResult[] {
+    const compatibleItem = this.compatibleTable.find(a => a.id === id);
+    if (!isUnset(compatibleItem)) {
+      return compatibleItem.checks;
+    }
+
+    return [];
   }
 }
 

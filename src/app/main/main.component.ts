@@ -66,6 +66,7 @@ export class MainComponent implements OnDestroy {
   private subscrmanager = new SubscriptionManager();
 
   public shortcutsEnabled = true;
+  public accessCodeInputFieldType: 'password' | 'text' = 'password';
 
   constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
               private httpclient: HttpClient, public notification: NotificationService,
@@ -661,5 +662,13 @@ export class MainComponent implements OnDestroy {
         reject(err);
       });
     });
+  }
+
+  toggleAccessCodeInputType() {
+    if (this.accessCodeInputFieldType === 'password') {
+      this.accessCodeInputFieldType = 'text';
+    } else {
+      this.accessCodeInputFieldType = 'password';
+    }
   }
 }

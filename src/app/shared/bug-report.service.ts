@@ -20,7 +20,7 @@ export enum ConsoleType {
 export interface ConsoleEntry {
   type: ConsoleType;
   timestamp: string;
-  message: string;
+  message: any;
 }
 
 @Injectable()
@@ -47,10 +47,22 @@ export class BugReportService {
   }
 
   public addEntry(type: ConsoleType, message: any) {
+    let sanitizedMessage: any = message;
+
+    if (typeof message === 'string') {
+      sanitizedMessage = sanitizedMessage.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
+    } else {
+      if (sanitizedMessage.hasOwnProperty(message)) {
+        sanitizedMessage.message = sanitizedMessage.message.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
+      } else if (sanitizedMessage.hasOwnProperty('text')) {
+        sanitizedMessage.text = sanitizedMessage.text.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
+      }
+    }
+
     const consoleItem: ConsoleEntry = {
       type,
       timestamp: moment().format('DD.MM.YY HH:mm:ss'),
-      message
+      message: sanitizedMessage
     };
 
     this._console.push(consoleItem);
@@ -82,7 +94,7 @@ export class BugReportService {
   sendReport(name: string, email: string, description: string, sendbugreport: boolean, credentials: {
     auth_token: string,
     url: string
-  }, screenshots: any[]): Observable<any> {
+  },         screenshots: any[]): Observable<any> {
 
     if (!(isUnset(credentials))) {
       const auth_token = credentials.auth_token;

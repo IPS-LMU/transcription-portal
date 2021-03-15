@@ -206,13 +206,13 @@
             </tr>
             </thead>
             <tbody>
-            <ng-container *ngFor="let task of tasks; let k = index;">
+            <ng-container *ngFor="let task of tasks;">
               <tr *ngIf="task.state === 'QUEUED'">
                 <td class="compatible-col">
                   <ng-template #validationResult>
-                    <table class="table table-sm table-striped" *ngIf="k < compatibleTable.length">
+                    <table class="table table-sm table-striped">
                       <tbody>
-                      <tr *ngFor="let check of compatibleTable[k].checks; ">
+                      <tr *ngFor="let check of getChecksByID(task.id); ">
                         <td><i class="fa" [ngClass]="{
                       'fa-check': check.isValid,
                       'fa-times': !check.isValid
