@@ -1,5 +1,5 @@
 {
-  "name": "oh-portal",
+  "name": "transcription-portal",
   "version": "1.0.5",
   "license": "MIT",
   "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU MÜnchen",
@@ -7,8 +7,8 @@
     "ng": "ng",
     "start": "npm run modernizr && node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng serve",
     "build": " node ./build.js dev=false isUpdate=false url=/",
-    "build-dev": "node ./build.js dev=true isUpdate=true url=/apps/octra/oh-portal/",
-    "build-prod": "node ./build.js dev=false isUpdate=true url=/apps/oh-portal/",
+    "build-dev": "node ./build.js dev=true isUpdate=true url=/apps/octra/transcription-portal/",
+    "build-prod": "node ./build.js dev=false isUpdate=true url=/apps/transcription-portal/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",

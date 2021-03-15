@@ -1,7 +1,7 @@
 const fs = require("fs");
 const {execSync, spawn} = require('child_process');
 
-const buildDir = "dist/oh-portal/";
+const buildDir = "dist/transcription-portal/";
 const targetFolder = "assets";
 let baseHref = "";
 let dev = '';
@@ -31,7 +31,7 @@ if (process.argv[4].indexOf("url=") > -1) {
   baseHref = process.argv[4].replace("url=", "");
 }
 
-console.log(`Building OH-Portal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
+console.log(`Building TranscriptionPortal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
 console.log(`Remove dist...`);
 execSync(`rm -rf "./${buildDir}"`);
 const command = ['--max-old-space-size=12000', './node_modules/@angular/cli/bin/ng', 'build', '--prod', '-c', 'dev', '--base-href', baseHref];

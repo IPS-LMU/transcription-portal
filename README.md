@@ -1,8 +1,8 @@
-<h1 align="center">OH-Portal</h1>
+<h1 align="center">TranscriptionPortal</h1>
 <p align="center">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal01.png">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal02.png" alt="OH-Portal OCTRA">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/oh-portal/raw/master/screenshots/oh-portal03.png" alt="OH-Portal EMU-webApp">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal01.png">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
 </p>
 <p align="center">
 Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
@@ -10,11 +10,11 @@ Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-w
 
 ### Website
 
-You can use OH-Portal without installation here: https://www.phonetik.uni-muenchen.de/apps/oh-portal/
+You can use TranscriptionPortal without installation here: https://www.phonetik.uni-muenchen.de/apps/TranscriptionPortal/
 
 ### Installation
 
-You can install OH-Portal on your own web server. Just download the repository and copy the contents from the `dist` folder to your web server.
+You can install TranscriptionPortal on your own web server. Just download the repository and copy the contents from the `dist` folder to your web server.
 
 ## Development
 
@@ -34,4 +34,4 @@ Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app w
 
 ### Build
 
-Run `sh ./build.sh` to build the project. The build artifacts will be stored in the `dist/oh-portal` directory. Adapt the configuration in the build.sh script as you need.
+Run `sh ./build.sh` to build the project. The build artifacts will be stored in the `dist/transcription-portal` directory. Adapt the configuration in the build.sh script as you need.
