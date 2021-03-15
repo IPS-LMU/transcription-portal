@@ -1,8 +1,8 @@
 <h1 align="center">TranscriptionPortal</h1>
 <p align="center">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal01.png">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/TranscriptionPortal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal01.png">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
+  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
 </p>
 <p align="center">
 Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
