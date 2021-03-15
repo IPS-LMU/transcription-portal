@@ -226,17 +226,17 @@
                     </table>
                   </ng-template>
                   <span
-                    #popoverResult="bs-popover" (mouseenter)="onValidationResultMouseEnter(popoverResult, k)"
+                    #popoverResult="bs-popover" (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
                     (mouseleave)="popoverResult.hide()"
                     triggers=""
                     [popover]="validationResult"
                     [placement]="'right'"
                   >
                 <i class="fa" [ngClass]="{
-                'fa-check': !isSomethingInvalid(k),
-                'fa-times': isSomethingInvalid(k)
+                'fa-check': !isSomethingInvalid(task.id),
+                'fa-times': isSomethingInvalid(task.id)
                 }" [ngStyle]="{
-                'color': isSomethingInvalid(k) ? 'red' : 'green'
+                'color': isSomethingInvalid(task.id) ? 'red' : 'green'
                 }"></i>
                 </span>
                 </td>
@@ -245,7 +245,7 @@
                                 'green': ((task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
                                          (task.operations[0].results.length > 0 && task.operations[0].lastResult.online)),
                                 'yellow': ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') && task.operations[0].state !== 'FINISHED',
-                                'red': isSomethingInvalid(k)
+                                'red': isSomethingInvalid(task.id)
                                 }" title="{{task.files[0].attributes.originalFileName}}">
                                         {{task.files[0].name.replace('_annot', '') + '.wav'}}
                         </span>

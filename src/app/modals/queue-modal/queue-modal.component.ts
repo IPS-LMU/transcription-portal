@@ -45,6 +45,7 @@ export class QueueModalComponent {
   public visible = false;
 
   public compatibleTable: {
+    id: number;
     fileName: string;
     checks: CompatibleResult[];
   }[] = [];
@@ -99,6 +100,7 @@ export class QueueModalComponent {
     for (const task of this.tasks) {
       if (task.state === TaskState.QUEUED) {
         this.compatibleTable.push({
+          id: task.id,
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility((task.files[0] as AudioInfo), task.asr)
         });
@@ -119,7 +121,7 @@ export class QueueModalComponent {
 
     for (const task of this.tasks) {
       if (task.state === TaskState.QUEUED) {
-        if (task.files[0] instanceof AudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(j)) {
+        if (task.files[0] instanceof AudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
           task.changeState(TaskState.PENDING);
         }
 
@@ -158,6 +160,7 @@ export class QueueModalComponent {
 
         const audioInfo = (task.files[0] instanceof AudioInfo) ? task.files[0] as AudioInfo : undefined;
         this.compatibleTable.push({
+          id: task.id,
           fileName: task.files[0].file.name,
           checks: this.checkAudioFileCompatibility(audioInfo, task.asr)
         });
@@ -355,25 +358,25 @@ export class QueueModalComponent {
     return result;
   }
 
-  isSomethingInvalid(index: number) {
+  isSomethingInvalid(taskID: number) {
     const googleWithAccessCode = this.selectedASRInfo.provider === 'Google' && this.taskService.accessCode.trim() !== '';
-    if (index > -1 && this.compatibleTable.length > index && this.isASRSelected() && !googleWithAccessCode
-    ) {
-      return this.compatibleTable[index].checks.findIndex(a => !a.isValid) > -1;
+    const compatibleItem = this.compatibleTable.find(a => a.id === taskID);
+    if (!isUnset(compatibleItem) && this.isASRSelected() && !googleWithAccessCode) {
+      return compatibleItem.checks.findIndex(a => !a.isValid) > -1;
     }
 
     return false;
   }
 
-  onValidationResultMouseEnter(popoverResult: PopoverDirective, index: number) {
-    if (this.isSomethingInvalid(index)) {
+  onValidationResultMouseEnter(popoverResult: PopoverDirective, id: number) {
+    if (this.isSomethingInvalid(id)) {
       popoverResult.show();
     }
   }
 
   isOneAudiofileInvalid(): boolean {
     return this.compatibleTable.findIndex((a, i) => {
-      return this.isSomethingInvalid(i);
+      return this.isSomethingInvalid(a.id);
     }) > -1;
   }
 
