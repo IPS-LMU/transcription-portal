@@ -187,7 +187,7 @@ export class DownloadModalComponent implements OnInit, OnChanges {
         entries: []
       };
 
-      this.archiveName = `oh-portal_results_${dateStr}`;
+      this.archiveName = `transcription-portal_results_${dateStr}`;
 
       const promises = [];
 

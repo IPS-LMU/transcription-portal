@@ -17,7 +17,7 @@
         <p *ngIf="rule.state === 'failed' && rule.help !== ''" [innerHTML]="rule.help" style="color:red;"></p>
         <p *ngIf="rule.state === 'failed' && rule.name === 'cookies'" style="color:red;">
           <ng-container *ngIf="browserName === 'Chrome'">
-            To use OH-Portal with this browser please follow the instructions:
+            To use TranscriptionPortal with this browser please follow the instructions:
             <ul>
               <li>Open a new tab.</li>
               <li>Type in "chrome://settings/content/cookies" in the address bar.</li>
@@ -26,7 +26,7 @@
             </ul>
           </ng-container>
           <ng-container *ngIf="browserName === 'Firefox'">
-            To use OH-Portal with this browser please follow the instructions:
+            To use TranscriptionPortal with this browser please follow the instructions:
             <ul>
               <li>Open a new tab.</li>
               <li>Type in "about:preferences#privacy" in the address bar.</li>

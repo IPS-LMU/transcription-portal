@@ -511,7 +511,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy, OnChanges {
   getMailToLink(task: Task) {
     if (task.state === TaskState.FINISHED) {
       const toolURL = (task.operations[4] as EmuOperation).getToolURL();
-      let subject = 'OH-Portal Links';
+      let subject = 'TranscriptionPortal Links';
       let body = '' +
         'Pipeline ASR->G2P->CHUNKER:\n' + task.operations[1].results[0].url + '\n\n' +
         'MAUS:\n' + task.operations[3].results[0].url + '\n\n' +
