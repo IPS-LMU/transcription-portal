@@ -1,3 +1,19 @@
+## [1.0.6](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.5...v1.0.6) (2021-03-16)
+
+
+### Bug Fixes
+
+* **verify:** verify button disabled after restart with queued files ([9b252f6](https://github.com/IPS-LMU/transcription-portal/commit/9b252f67db8b2e139f8a203e7038b84545a94375))
+
+
+### Features
+
+* **general:** hide access code in logs and in settings ([d6130a8](https://github.com/IPS-LMU/transcription-portal/commit/d6130a8902a4a2d48ce961b4cada0f55b6808ab4)), closes [#58](https://github.com/IPS-LMU/transcription-portal/issues/58)
+* **general:** renamed OH-Portal to TranscriptionPortal ([3c65fce](https://github.com/IPS-LMU/transcription-portal/commit/3c65fce837989438b7c414daad5836b0bff8db5e))
+* **verify-step:** portal checks audio file if it fits the ASR provider's requirements automatically ([9bed9a1](https://github.com/IPS-LMU/transcription-portal/commit/9bed9a1e3b417f01dfda2b05c83d5e7a9e144eba)), closes [#46](https://github.com/IPS-LMU/transcription-portal/issues/46)
+
+
+
 ## [1.0.5](https://github.com/IPS-LMU/oh-portal/compare/v1.0.4...v1.0.5) (2021-02-15)
 
 
