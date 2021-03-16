@@ -6,9 +6,10 @@
   "scripts": {
     "ng": "ng",
     "start": "npm run modernizr && node --max-old-space-size=12000 ./node_modules/@angular/cli/bin/ng serve",
-    "build": " node ./build.js dev=false isUpdate=false url=/",
+    "build": "node ./build.js dev=false isUpdate=false url=/",
     "build-dev": "node ./build.js dev=true isUpdate=true url=/apps/octra/transcription-portal/",
     "build-prod": "node ./build.js dev=false isUpdate=true url=/apps/transcription-portal/",
+    "release": "node ./build.js dev=false isUpdate=false url=/ && cp LICENSE.txt dist/transcription-portal && cd dist && rm transcription-portal/config/config.json && zip -r transcription-portal-v.zip transcription-portal",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
