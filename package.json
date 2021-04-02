@@ -27,8 +27,6 @@
     "@angular/platform-browser-dynamic": "11.2.8",
     "@angular/platform-server": "^11.2.8",
     "@angular/router": "^11.2.8",
-    "@ngrx/effects": "^11.0.0",
-    "@ngrx/store": "^11.0.0",
     "@octra/annotation": "file:../octra/extern/libs/annotation",
     "@octra/media": "file:../octra/extern/libs/media",
     "@octra/utilities": "file:../octra/extern/libs/utilities",
@@ -54,7 +52,7 @@
     "ssh2": "^0.8.9",
     "tslib": "^2.0.1",
     "web-animations-js": "^2.3.2",
-    "x2js": "^3.4.0",
+    "x2js": "^3.4.1",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {

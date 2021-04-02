@@ -16,6 +16,7 @@ import {Operation} from '../../../obj/operations/operation';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {AppSettings} from '../../../shared/app.settings';
+import {Subscription} from 'rxjs';
 
 @Directive({
   selector: '[appProcColOperation]'
@@ -35,7 +36,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private subscrmanager = new SubscriptionManager<Subscription>();
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2,
               private sanitizer: DomSanitizer, private taskService: TaskService) {

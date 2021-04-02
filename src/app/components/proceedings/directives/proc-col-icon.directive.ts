@@ -13,6 +13,7 @@ import {
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
 import {FileInfo, SubscriptionManager} from '@octra/utilities';
 import {TaskService} from '../../../obj/tasks/task.service';
+import {Subscription} from 'rxjs';
 
 @Directive({
   selector: '[appProcColIcon]',
@@ -33,7 +34,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Input() public dirOpened: 'opened' | 'closed' = 'opened';
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private subscrmanager = new SubscriptionManager<Subscription>();
 
   constructor(private elementRef: ElementRef, private renderer: Renderer2, private taskService: TaskService) {
   }
@@ -83,7 +84,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     }
     this.updateView();
     this.tagClicked.emit(this.dirOpened);
-  };
+  }
 
   private updateView() {
     if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
