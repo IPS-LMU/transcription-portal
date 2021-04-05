@@ -6,6 +6,7 @@ export interface OHConfiguration {
     'languages': OHLanguageObject[];
     'services': OHService[];
     'asrInfoURL'?: string;
+    'asrQuotaInfoURL'?: string;
   };
   'plugins': {
     'emailSender': {
@@ -46,6 +47,7 @@ export interface OHService {
   maxSignalSize?: number;
   quotaPerMonth?: number;
   knownIssues?: string;
+  usedQuota?: number;
   type: string;
   termsURL: string;
   dataStoragePolicy: string;

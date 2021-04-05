@@ -4,6 +4,8 @@ import {OHConfiguration} from '../obj/oh-config';
 import {AppSettings} from './app.settings';
 import {Injectable} from '@angular/core';
 import {isUnset} from '@octra/utilities';
+import * as X2JS from 'x2js';
+import {isNumeric} from 'rxjs/internal-compatibility';
 
 @Injectable()
 export class SettingsService {
@@ -24,12 +26,17 @@ export class SettingsService {
     this.http.get('config/config.json', {
       responseType: 'json'
     }).subscribe((json: OHConfiguration) => {
-      const initSettings = () => {
-        AppSettings.init(json);
-        this._settingsload.next();
-        this._allLoaded = true;
-      };
+      AppSettings.init(json);
+      this._settingsload.next();
+      this._allLoaded = true;
+    }, (err) => {
+      alert('Error: app configuration not loaded. Please check the config.json');
+      console.error(err);
+    });
+  }
 
+  updateASRInfo(json: OHConfiguration): Promise<void> {
+    return new Promise<void>((resolve) => {
       if (!isUnset(json.api.asrInfoURL) && json.api.asrInfoURL.trim() !== '') {
         this.http.get(
           json.api.asrInfoURL,
@@ -112,18 +119,79 @@ export class SettingsService {
                 }
               }
             }
-            initSettings();
+            this.updateASRQuotaInfo(json).then(() => {
+              resolve();
+            });
           },
           (e) => {
             console.error(e);
-            initSettings();
+            resolve(e);
           });
       } else {
-        initSettings();
+        resolve();
       }
-    }, (err) => {
-      alert('Error: app configuration not loaded. Please check the config.json');
-      console.error(err);
+    });
+  }
+
+  public async updateASRQuotaInfo(json: OHConfiguration): Promise<void> {
+    const results = [];
+    for (const service of json.api.services) {
+      if (service.type === 'ASR') {
+        results.push(await this.getASRQuotaInfo(json.api.asrQuotaInfoURL, service.provider));
+      }
+    }
+
+    for (const result of results) {
+      const serviceIndex = json.api.services.findIndex(a => a.provider === result.asrName);
+
+      if (serviceIndex > -1) {
+        json.api.services[serviceIndex].usedQuota = result.usedQuota;
+        json.api.services[serviceIndex].quotaPerMonth = result.monthlyQuota;
+      } else {
+        console.error(`could not find ${result.asrName}`);
+      }
+    }
+
+    return;
+  }
+
+  getASRQuotaInfo(url: string, asrName: string) {
+    return new Promise<{
+      asrName: string;
+      monthlyQuota: number;
+      usedQuota: number;
+    }>((resolve, reject) => {
+      this.http.get(
+        `${url}?ASRType=call${asrName}ASR`,
+        {responseType: 'text'}
+      ).subscribe((result) => {
+        const x2js = new X2JS();
+        const response: any = x2js.xml2js(result);
+        const asrQuotaInfo = {
+          asrName,
+          monthlyQuota: null,
+          usedQuota: null
+        };
+
+        if (response.basQuota) {
+          const info = {
+            monthlyQuota: (response.basQuota && response.basQuota.monthlyQuota && isNumeric(response.basQuota.monthlyQuota))
+              ? Number(response.basQuota.monthlyQuota) : null,
+            secsAvailable: (response.basQuota && response.basQuota.secsAvailable && isNumeric(response.basQuota.secsAvailable))
+              ? Number(response.basQuota.secsAvailable) : null
+          };
+
+          if (info.monthlyQuota && info.monthlyQuota !== 999999) {
+            asrQuotaInfo.monthlyQuota = info.monthlyQuota;
+          }
+
+          if (info.monthlyQuota && info.secsAvailable && info.secsAvailable !== 999999) {
+            asrQuotaInfo.usedQuota = asrQuotaInfo.monthlyQuota - info.secsAvailable;
+          }
+        }
+
+        resolve(asrQuotaInfo);
+      });
     });
   }
 }

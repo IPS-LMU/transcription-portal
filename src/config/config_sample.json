@@ -79,12 +79,14 @@
         "host": ""
       }
     ],
-    "plugins": {
-      "emailSender": {
-        "url": "",
-        "old": "",
-        "authKey": ""
-      }
+    "asrInfoURL": "",
+    "asrQuotaInfoURL": ""
+  },
+  "plugins": {
+    "emailSender": {
+      "url": "",
+      "old": "",
+      "authKey": ""
     }
   }
 }

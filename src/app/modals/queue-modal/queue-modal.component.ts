@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   Input,
+  OnInit,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -23,6 +24,7 @@ import {BsDropdownDirective} from 'ngx-bootstrap/dropdown';
 import {PopoverDirective} from 'ngx-bootstrap/popover';
 import {AudioInfo} from '@octra/media';
 import {FileInfo, isUnset} from '@octra/utilities';
+import {SettingsService} from '../../shared/settings.service';
 
 @Component({
   selector: 'app-queue-modal',
@@ -31,7 +33,7 @@ import {FileInfo, isUnset} from '@octra/utilities';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None
 })
-export class QueueModalComponent {
+export class QueueModalComponent implements OnInit {
   @ViewChild('queueModal', {static: true}) queueModal: ModalDirective;
   @ViewChild('dropdown', {static: false}) dropdown: BsDropdownDirective;
   @ViewChild('pop', {static: true}) popover: PopoverDirective;
@@ -59,10 +61,13 @@ export class QueueModalComponent {
 
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer,
               public taskService: TaskService, private storage: StorageService,
-              private cd: ChangeDetectorRef) {
+              private cd: ChangeDetectorRef, private settingsService: SettingsService) {
     for (const provider of AppSettings.configuration.api.services) {
       this.serviceProviders['' + provider.provider] = provider;
     }
+  }
+
+  ngOnInit() {
   }
 
   public get AppConfiguration(): OHConfiguration {
@@ -87,6 +92,12 @@ export class QueueModalComponent {
     onDismiss: () => void = () => {
     }
   ): void {
+    this.settingsService.updateASRInfo(AppSettings.configuration).then((result) => {
+      console.log(`LOADED and updated!`);
+    }).catch((error) => {
+      console.error(error);
+    });
+
     this.subscrManager.add(this.queueModal.onHide.subscribe(() => {
       beforeDismiss();
     }));
@@ -389,6 +400,27 @@ export class QueueModalComponent {
     }
 
     return [];
+  }
+
+  getQuotaPercentage(langAsr: string) {
+    if (!isUnset(this.serviceProviders[langAsr])) {
+      const ohService: OHService = this.serviceProviders[langAsr] as OHService;
+      if (!isUnset(ohService.usedQuota) && !isUnset(ohService.quotaPerMonth)) {
+        return Math.round(ohService.usedQuota / ohService.quotaPerMonth * 100);
+      }
+    }
+    return 0;
+  }
+
+
+  getQuotaLabel(langAsr: string) {
+    if (!isUnset(this.serviceProviders[langAsr])) {
+      const ohService: OHService = this.serviceProviders[langAsr] as OHService;
+      if (!isUnset(ohService.usedQuota) && !isUnset(ohService.quotaPerMonth)) {
+        return 'Free quota in minutes: ' + ((ohService.quotaPerMonth - ohService.usedQuota) / 60).toFixed(2);
+      }
+    }
+    return '';
   }
 }
 

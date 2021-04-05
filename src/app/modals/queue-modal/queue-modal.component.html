@@ -59,6 +59,7 @@
                 <tr>
                   <th>Language</th>
                   <th>Speech Recognition</th>
+                  <th style="width:100px">Free Quota (monthly)</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -138,6 +139,19 @@
                         </table>
                       </ng-template>
                     </td>
+                    <td style="width:100px">
+                      <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" [tooltip]="getQuotaLabel(lang.asr)"
+                             [ngStyle]="{
+                            width: (100 - getQuotaPercentage(lang.asr)) + '%'
+                          }" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
+                          {{(100 - getQuotaPercentage(lang.asr)) + '%'}}
+                        </div>
+                        <div class="progress-bar bg-danger" role="progressbar" [ngStyle]="{
+                            width: getQuotaPercentage(lang.asr) + '%'
+                          }" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </td>
                   </tr>
                 </ng-container>
                 </tbody>
@@ -149,7 +163,7 @@
             One or more audio files do not fit the ASR provider's requirements:
             <ul *ngIf="this.selectedASRInfo !== undefined">
               <li *ngIf="this.selectedASRInfo.maxSignalSize">Maximum size of audio
-                file: {{this.selectedASRInfo.maxSignalSize / 1000 / 1000}} MB
+                file: {{this.selectedASRInfo.maxSignalSize}} MB
               </li>
               <li *ngIf="this.selectedASRInfo.maxSignalDuration">Maximum audio
                 duration: {{this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']}} (H:m:s)
