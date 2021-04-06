@@ -141,7 +141,9 @@
                     </td>
                     <td style="width:100px">
                       <div class="progress">
-                        <div class="progress-bar bg-success" role="progressbar" [tooltip]="getQuotaLabel(lang.asr)"
+                        <ng-template #popTemplate><div id="quota-tooltip" [innerHtml]="getQuotaLabel(lang.asr)"></div></ng-template>
+                        <div class="progress-bar bg-success" role="progressbar"  [popover]="popTemplate"
+                             triggers="mouseenter:mouseleave"
                              [ngStyle]="{
                             width: (100 - getQuotaPercentage(lang.asr)) + '%'
                           }" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">

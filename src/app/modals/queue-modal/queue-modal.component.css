@@ -57,6 +57,11 @@
   overflow-y: scroll !important;
 }
 
-.compatible-col{
+.compatible-col {
+  text-align: center;
+}
+
+#quota-tooltip {
+  font-size: 0.9em;
   text-align: center;
 }

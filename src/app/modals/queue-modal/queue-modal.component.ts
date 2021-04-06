@@ -417,7 +417,15 @@ export class QueueModalComponent implements OnInit {
     if (!isUnset(this.serviceProviders[langAsr])) {
       const ohService: OHService = this.serviceProviders[langAsr] as OHService;
       if (!isUnset(ohService.usedQuota) && !isUnset(ohService.quotaPerMonth)) {
-        return 'Free quota in minutes: ' + ((ohService.quotaPerMonth - ohService.usedQuota) / 60).toFixed(2);
+        const remainingQuota = (ohService.quotaPerMonth - ohService.usedQuota) / 60;
+        let label = '';
+        if (remainingQuota > 60) {
+          label = `${Math.round(remainingQuota / 60)} hours`;
+        } else {
+          label = `${Math.round(remainingQuota)} minutes`;
+        }
+
+        return `Free quota: Approx.<br/><b>${label}</b><br/>of recording time shared among all BAS users.`;
       }
     }
     return '';
