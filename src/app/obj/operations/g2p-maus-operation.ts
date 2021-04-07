@@ -47,7 +47,7 @@ export class G2pMausOperation extends Operation {
         }
 
         if (json.success === 'true') {
-          const file = FileInfo.fromURL(json.downloadLink, null, 'text/plain', Date.now());
+          const file = FileInfo.fromURL(json.downloadLink, 'text/plain', null, Date.now());
           file.updateContentFromURL(httpclient).then(() => {
             this.results.push(file);
             this.changeState(TaskState.FINISHED);

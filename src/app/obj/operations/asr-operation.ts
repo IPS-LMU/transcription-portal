@@ -220,7 +220,7 @@ export class ASROperation extends Operation {
             json = json.WebServiceResponseLink;
 
             if (json.success === 'true') {
-              const file = FileInfo.fromURL(json.downloadLink, asrResult.name, 'text/plain', Date.now());
+              const file = FileInfo.fromURL(json.downloadLink, 'text/plain', asrResult.name, Date.now());
 
               setTimeout(() => {
                 file.updateContentFromURL(httpClient).then(() => {

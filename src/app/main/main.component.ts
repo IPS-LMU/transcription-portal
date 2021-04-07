@@ -413,7 +413,7 @@ export class MainComponent implements OnDestroy {
         if (data.name === 'OCTRA') {
           if ($event.data.data.hasOwnProperty('transcript_url')) {
             const result: string = $event.data.data.transcript_url;
-            const file = FileInfo.fromURL(result, null, 'text/plain');
+            const file = FileInfo.fromURL(result, 'text/plain', null);
             file.updateContentFromURL(this.httpclient).then(() => {
               resolve(file);
             }).catch((e) => {
