@@ -1,9 +1,8 @@
 import {Injectable} from '@angular/core';
-import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from '@angular/router';
-import {Observable} from 'rxjs';
 import {CompatibilityService} from './compatibility.service';
 import {SettingsService} from './settings.service';
 import {AppSettings} from './app.settings';
+import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -13,10 +12,7 @@ export class CompatibilityGuard implements CanActivate {
 
   }
 
-  canActivate(
-    next: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       new Promise<void>((resolve2, reject2) => {
         if (!(AppSettings.configuration === null || AppSettings.configuration === undefined)) {
@@ -30,12 +26,12 @@ export class CompatibilityGuard implements CanActivate {
       }).then(() => {
         this.compatibility.testCompability().then((result) => {
           if (result) {
-            if (next.url.length > 0) {
+            if (route.url.length > 0) {
               this.router.navigate(['']);
             }
             resolve(true);
           } else {
-            if (next.url.length === 0) {
+            if (route.url.length === 0) {
               this.router.navigate(['test']);
               resolve(result);
             } else {
