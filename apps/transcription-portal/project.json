@@ -1,0 +1,113 @@
+{
+  "projectType": "application",
+  "root": "apps/transcription-portal",
+  "sourceRoot": "apps/transcription-portal/src",
+  "prefix": "tportal",
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/transcription-portal",
+        "index": "apps/transcription-portal/src/index.html",
+        "main": "apps/transcription-portal/src/main.ts",
+        "polyfills": "apps/transcription-portal/src/polyfills.ts",
+        "tsConfig": "apps/transcription-portal/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          "apps/transcription-portal/src/favicon.ico",
+          "apps/transcription-portal/src/assets",
+          "apps/transcription-portal/src/contents",
+          "apps/transcription-portal/src/config"
+        ],
+        "styles": [
+          "node_modules/font-awesome/css/font-awesome.min.css",
+          "node_modules/bootstrap/dist/css/bootstrap.min.css",
+          "apps/transcription-portal/src/styles.scss"
+        ],
+        "allowedCommonJsDependencies": [
+          "x2js",
+          "chart.js"
+        ],
+        "scripts": [
+          "apps/transcription-portal/src/assets/js/modernizr.js",
+          "node_modules/platform/platform.js",
+          "node_modules/jquery/dist/jquery.min.js",
+          "node_modules/notifyjs/dist/notify.js",
+          "node_modules/moment/min/moment.min.js",
+          "node_modules/chart.js/dist/Chart.min.js",
+          "node_modules/jszip/dist/jszip.min.js",
+          "node_modules/maintenance-warning-snackbar/maintenanceWarningSnackbar.js"
+        ]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "2kb",
+              "maximumError": "4kb"
+            }
+          ],
+          "fileReplacements": [
+            {
+              "replace": "apps/transcription-portal/src/environments/environment.ts",
+              "with": "apps/transcription-portal/src/environments/environment.prod.ts"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "transcription-portal:build:production"
+        },
+        "development": {
+          "browserTarget": "transcription-portal:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "transcription-portal:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/transcription-portal/src/**/*.ts",
+          "apps/transcription-portal/src/**/*.html"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/transcription-portal"],
+      "options": {
+        "jestConfig": "apps/transcription-portal/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@octra/annotation": [
+        "../octra/extern/libs/annotation"
+      ],
+      "@octra/utilities": [
+        "../octra/extern/libs/utilities"
+      ],
+      "@octra/media": [
+        "../octra/extern/libs/media"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

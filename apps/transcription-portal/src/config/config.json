@@ -1,0 +1,234 @@
+{
+  "name": "TranscriptionPortal Configuration",
+  "version": "1.0.0",
+  "api": {
+    "commands": [
+      {
+        "name": "Upload",
+        "calls": [
+          "{{host}}uploadFileMulti"
+        ]
+      },
+      {
+        "name": "ASR",
+        "calls": [
+          "{{host}}runASRWebLink?SIGNAL={{audioURL}}&ASRType=call{{asrType}}ASR&LANGUAGE={{language}}&OUTFORMAT=bpf",
+          "{{host}}runPipelineWebLink?TEXT={{transcriptURL}}&SIGNAL={{audioURL}}&PIPE=G2P_CHUNKER&ASRType=call{{asrType}}ASR&LANGUAGE={{language}}&OUTFORMAT=bpf"
+        ]
+      },
+      {
+        "name": "OCTRA",
+        "calls": [
+          "http://localhost/octra/"
+        ]
+      },
+      {
+        "name": "MAUS",
+        "calls": [
+          "{{host}}runPipelineWebLink?TEXT={{transcriptURL}}&SIGNAL={{audioURL}}&PIPE=G2P_CHUNKER_MAUS&LANGUAGE={{language}}&OUTFORMAT=TextGrid"
+        ]
+      },
+      {
+        "name": "Emu WebApp",
+        "calls": [
+          "http://localhost/emu-temp/"
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "code": "deu-DE",
+        "name": "German",
+        "asr": "Google",
+        "state": "active",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "deu-DE",
+        "name": "German",
+        "state": "active",
+        "asr": "Fraunhofer",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "deu-DE",
+        "name": "German",
+        "asr": "EML",
+        "state": "active",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "active",
+        "asr": "Google",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "active",
+        "asr": "Watson",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "inactive",
+        "asr": "EML",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "active",
+        "asr": "LSTEnglish",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "eng-GB",
+        "name": "English",
+        "state": "active",
+        "asr": "Web",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "ita-IT",
+        "name": "Italian",
+        "state": "active",
+        "asr": "Google",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "ita-IT",
+        "name": "Italian",
+        "state": "active",
+        "asr": "Watson",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "ita-IT",
+        "name": "Italian",
+        "state": "inactive",
+        "asr": "EML",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "nld-NL-OH",
+        "name": "Dutch",
+        "state": "active",
+        "asr": "LSTDutch",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      },
+      {
+        "code": "nld-NL",
+        "name": "Dutch",
+        "state": "active",
+        "asr": "LSTDutch",
+        "host": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/services/"
+      }
+    ],
+    "services": [
+      {
+        "provider": "Google",
+        "basName": "Google",
+        "type": "ASR",
+        "termsURL": "https://cloud.google.com/terms",
+        "dataStoragePolicy": "User data are not stored, 'data logging' disabled",
+        "homepageURL": "https://cloud.google.com/speech/",
+        "logoURL": "assets/img/google-cloud-platform-logo.png"
+      },
+      {
+        "provider": "Watson",
+        "basName": "IBM Watson",
+        "type": "ASR",
+        "termsURL": "https://www-03.ibm.com/software/sla/sladb.nsf/sla/bm",
+        "dataStoragePolicy": "User data are stored for improvement of service",
+        "homepageURL": "https://www.ibm.com/watson/services/speech-to-text/",
+        "logoURL": "assets/img/ibm_PNG19655.jpeg"
+      },
+      {
+        "provider": "EML",
+        "basName": "European Media Lab (EML)",
+        "type": "ASR",
+        "termsURL": "https://start.eml.org/quickstart/data-protection-policy",
+        "dataStoragePolicy": "User data are stored for improvement of service (anonymised)",
+        "homepageURL": "https://www.eml.org/english/application-areas/",
+        "logoURL": "assets/img/emlLogoRedBG.png"
+      },
+      {
+        "provider": "LSTDutch",
+        "basName": "CLST Radboud University",
+        "type": "ASR",
+        "termsURL": "https://www.phonetik.uni-muenchen.de/Bas/BasLSTRadboutUniDisclaimer.txt",
+        "dataStoragePolicy": "User data are not stored, see terms",
+        "homepageURL": "https://webservices-lst.science.ru.nl/portal/",
+        "logoURL": "assets/img/RUlogoA5plusCLSTENG.jpg"
+      },
+      {
+        "provider": "LSTEnglish",
+        "basName": "CLST Radboud University",
+        "type": "ASR",
+        "termsURL": "https://www.phonetik.uni-muenchen.de/Bas/BasLSTRadboutUniDisclaimer.txt",
+        "dataStoragePolicy": "User data are not stored, see terms",
+        "homepageURL": "https://webservices-lst.science.ru.nl/portal/",
+        "logoURL": "assets/img/RUlogoA5plusCLSTENG.jpg"
+      },
+      {
+        "provider": "Web",
+        "basName": "WebASR Sheffield University",
+        "type": "ASR",
+        "termsURL": "http://www.webasr.org/conditions",
+        "dataStoragePolicy": "User data are stored for improvement of service (completeley anonymised)",
+        "homepageURL": "http://www.webasr.org/",
+        "logoURL": "assets/img/webASRLogo.png"
+      },
+      {
+        "provider": "BAS",
+        "type": "Others",
+        "termsURL": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/help/termsOfUsage#termsofusage",
+        "dataStoragePolicy": "User data are stored for 24h remotely. Additionally the results are stored in the user's browser until the data are deleted.",
+        "homepageURL": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/interface",
+        "logoURL": "assets/img/BASLogo.jpg"
+      },
+      {
+        "provider": "Fraunhofer",
+        "basName": "Fraunhofer IAIS",
+        "type": "ASR",
+        "termsURL": "https://www.iais.fraunhofer.de/",
+        "dataStoragePolicy": "User data are not stored",
+        "homepageURL": "https://cloud.google.com/speech/",
+        "logoURL": "assets/img/Fraunhofer.png"
+      }
+    ],
+    "asrInfoURL": "https://clarin.phonetik.uni-muenchen.de/BASWebServices/views/partials/ASR.html",
+    "asrQuotaInfoURL": "http://clarin.phonetik.uni-muenchen.de/BASWebServices/services/runASRGetQuota"
+  },
+  "plugins": {
+    "emailSender": {
+      "url": "https://clarin.phonetik.uni-muenchen.de/apps/octra/oh-email/index2.php",
+      "authKey": "asdf3245234q234t2c3v"
+    },
+    "tracking": {
+      "active": "",
+      "matomo": {
+        "host": "https://stats.clarin.eu/",
+        "siteID": 34
+      }
+    }
+  },
+  "allowed_browsers": [
+    {
+      "name": "Chrome",
+      "version": ""
+    },
+    {
+      "name": "Firefox",
+      "version": ""
+    },
+    {
+      "name": "Opera",
+      "version": ""
+    }
+  ]
+}
