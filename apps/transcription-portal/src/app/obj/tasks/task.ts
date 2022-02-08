@@ -116,9 +116,9 @@ export class Task {
     this._directory = value;
   }
 
-  private _type = 'task';
+  private _type: 'task' | 'folder' = 'task';
 
-  get type(): string {
+  get type(): 'task' | 'folder' {
     return this._type;
   }
 
@@ -471,9 +471,9 @@ export class TaskDirectory {
     return this._entries;
   }
 
-  private _type = 'folder';
+  private _type: 'task' | 'folder' = 'folder';
 
-  get type(): string {
+  get type(): 'task' | 'folder' {
     return this._type;
   }
 

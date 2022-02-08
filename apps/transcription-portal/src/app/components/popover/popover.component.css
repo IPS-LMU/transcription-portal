@@ -1,6 +1,7 @@
 :host {
-  position: absolute;
-  z-index: 30;
+  position: fixed;
+  z-index: 10000;
+  top:0;
 }
 
 svg {

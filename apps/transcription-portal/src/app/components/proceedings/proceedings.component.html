@@ -1,10 +1,113 @@
 <tportal-download-modal #content [column]="selectedOperation"></tportal-download-modal>
+<tportal-popover #popoverRef
+                 (mouseenter)="popover.mouseIn = true"
+                 (mouseleave)="popover.state = 'closed'"
+                 [@fadeToggleRow]="popover.state" [borderColor]="getPopoverColor(popover.operation!)"
+                 [height]="popover.height"
+                 [ngStyle]="{
+        'width': popover.width + 'px',
+        'height': popover.height + 'px',
+        'margin-top': popover.y + 'px',
+        'margin-left': (popover.x + 4) + 'px'
+    }" [pointer]="popover.pointer" [width]="popover.width">
+  <ng-container *ngIf="popover.operation !== undefined">
+    <ng-container *ngIf="popover.operation.time.start > 0">
+
+      <p *ngIf="popover.operation.lastResult !== undefined &&
+                !popover.operation.lastResult.available
+                " style="color:red;">
+        The latest result does not exist anymore.
+      </p>
+
+      <table class="timer">
+        <tr>
+          <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i>
+            {{popover.operation.time.start
+              | date :"dd.MM.yyyy H:mm"}}
+          </td>
+          <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
+            {{calculateDuration(popover.operation.time, popover.operation) | time:'true'}}
+          </td>
+        </tr>
+      </table>
+    </ng-container>
+    <ng-container
+      *ngIf="popover.operation.results.length === 0 && popover.operation.providerInformation !== undefined">
+      <div class="service-preview">
+        <div class="provided-by">Service provided by</div>
+        <a href="https://www.eml.org/" style="display:block;vertical-align: middle;" target="_blank">
+          <img [src]="popover.operation.providerInformation.logoURL" alt="EML Logo"
+               class="service-logo" style="border:1px solid lightgray;">
+        </a>
+        <div class="service-terms">
+          <a [href]="popover.operation.providerInformation.termsURL"
+             target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a><br/>
+          <a [href]="popover.operation.providerInformation.homepageURL"
+             target="_blank"><i class="fa fa-globe"></i> Homepage</a><br/>
+        </div>
+        <i (click)="onReportIconClick(popover.operation)"
+           class="fa fa-exclamation-circle report-issue"></i>
+      </div>
+      <div class="service-remarks">
+        <ul>
+          <li>The processing time depends on the properties of the audio file and the service
+            provider.
+          </li>
+          <li>As soon as the service has finished processing the result appears here.</li>
+          <li>{{popover.operation.providerInformation.dataStoragePolicy}}</li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    </ng-container>
+    <ng-container *ngIf="popover.operation.results.length > 0">
+      <div style="overflow:auto;">
+        <tportal-results-table [visible]="popover.state === 'opened'" (previewClick)="onPreviewClick($event)"
+                               [operation]="popover.operation"></tportal-results-table>
+      </div>
+    </ng-container>
+    <div *ngIf="popover.operation.parsedProtocol.length > 0" id="output-area">
+      <div style="width:100%;text-align:right;padding:0;margin-bottom:0;">
+        <button (click)="copyProtocolToClipboard(popover.operation.protocol)" class="btn btn-sm btn-outline-info"
+                style="font-size:11px;cursor:pointer;margin-bottom:0;">
+          <i class="fa fa-clipboard"></i> Copy to clipboard
+        </button>
+      </div>
+      <table class="table table-sm table-striped" id="ouput-table">
+        <tbody>
+        <tr *ngFor="let item of popover.operation.parsedProtocol">
+          <td>
+            <i *ngIf="item.type === 'ERROR'; else isWarning" class="fa fa-exclamation-circle" style="color:red"></i>
+            <ng-template #isWarning>
+              <i class="fa fa-warning" style="color:orange"></i>
+            </ng-template>
+          </td>
+          <td [ngClass]="{
+                      error: item.type === 'ERROR',
+                      warning: item.type === 'WARNING'
+                      }">{{item.message}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+  <ng-container
+    *ngIf="popover.operation === undefined && popover.task !== undefined && popover.task !== undefined">
+    <span>Language: {{popover.task.language}}</span>
+    <span *ngIf="popover.task && popover.task.asr !== undefined && popover.task.asr !== undefined">
+                    , ASR: {{popover.task.asr}}
+                </span>
+    <br/><br/>
+    <span>File information:</span>
+    <tportal-file-info-table
+      [fileinfo]="(popover.task.files) ? popover.task.files[0] : undefined"></tportal-file-info-table>
+  </ng-container>
+</tportal-popover>
 
 <tportal-file-preview-modal #filePreview></tportal-file-preview-modal>
 <div #inner (click)="onContextBlur()" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
      (mouseleave)="isDragging = false"
      class="inner">
-  <div *ngIf="!storage.tasksFound && taskService.taskList.entries.length === 0 && queue.length === 0"
+  <div *ngIf="!storage.tasksFound && taskService.taskList!.entries.length === 0 && queue.length === 0"
        class="placeholder">
     <h1 style="margin-top: 10%;margin-bottom:40px;">Quickstart</h1>
     <div class="row quickstart" style="padding:20px 20px;">
@@ -53,111 +156,8 @@
         'margin-left': contextmenu.x + 'px',
         'display': (contextmenu.hidden) ? 'none' : 'inherit'
     }" [selectedOperationType]="selectedOperation"
-                      [selectedTasks]="selectedRows">
+                          [selectedTasks]="selectedRows">
     </tportal-context-menu>
-    <tportal-popover #popoverRef
-                 (mouseenter)="popover.mouseIn = true"
-                 (mouseleave)="popover.state = 'closed'"
-                 [@fadeToggleRow]="popover.state" [borderColor]="getPopoverColor(popover.operation)"
-                 [height]="popover.height"
-                 [ngStyle]="{
-        'width': popover.width + 'px',
-        'height': popover.height + 'px',
-        'margin-top': popover.y + 'px',
-        'margin-left': (popover.x + 4) + 'px'
-    }" [pointer]="popover.pointer" [width]="popover.width">
-      <ng-container *ngIf="popover.operation !== null">
-        <ng-container *ngIf="popover.operation.time.start > 0">
-
-          <p *ngIf="popover.operation.lastResult !== null &&
-                !popover.operation.lastResult.available
-                " style="color:red;">
-            The latest result does not exist anymore.
-          </p>
-
-          <table class="timer">
-            <tr>
-              <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i>
-                {{popover.operation.time.start
-                  | date :"dd.MM.yyyy H:mm"}}
-              </td>
-              <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
-                {{calculateDuration(popover.operation.time, popover.operation) | time:'true'}}
-              </td>
-            </tr>
-          </table>
-        </ng-container>
-        <ng-container
-          *ngIf="popover.operation.results.length === 0 && popover.operation.providerInformation !== undefined">
-          <div class="service-preview">
-            <div class="provided-by">Service provided by</div>
-            <a href="https://www.eml.org/" style="display:block;vertical-align: middle;" target="_blank">
-              <img [src]="popover.operation.providerInformation.logoURL" alt="EML Logo"
-                   class="service-logo" style="border:1px solid lightgray;">
-            </a>
-            <div class="service-terms">
-              <a [href]="popover.operation.providerInformation.termsURL"
-                 target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a><br/>
-              <a [href]="popover.operation.providerInformation.homepageURL"
-                 target="_blank"><i class="fa fa-globe"></i> Homepage</a><br/>
-            </div>
-            <i (click)="onReportIconClick(popover.operation)"
-               class="fa fa-exclamation-circle report-issue"></i>
-          </div>
-          <div class="service-remarks">
-            <ul>
-              <li>The processing time depends on the properties of the audio file and the service
-                provider.
-              </li>
-              <li>As soon as the service has finished processing the result appears here.</li>
-              <li>{{popover.operation.providerInformation.dataStoragePolicy}}</li>
-            </ul>
-          </div>
-          <div class="clearfix"></div>
-        </ng-container>
-        <ng-container *ngIf="popover.operation.results.length > 0">
-          <div style="overflow:auto;">
-            <tportal-results-table [visible]="popover.state === 'opened'" (previewClick)="onPreviewClick($event)"
-                               [operation]="popover.operation"></tportal-results-table>
-          </div>
-        </ng-container>
-        <div *ngIf="popover.operation.parsedProtocol.length > 0" id="output-area">
-          <div style="width:100%;text-align:right;padding:0;margin-bottom:0;">
-            <button (click)="copyProtocolToClipboard(popover.operation.protocol)" class="btn btn-sm btn-outline-info"
-                    style="font-size:11px;cursor:pointer;margin-bottom:0;">
-              <i class="fa fa-clipboard"></i> Copy to clipboard
-            </button>
-          </div>
-          <table class="table table-sm table-striped" id="ouput-table">
-            <tbody>
-            <tr *ngFor="let item of popover.operation.parsedProtocol">
-              <td>
-                <i *ngIf="item.type === 'ERROR'; else isWarning" class="fa fa-exclamation-circle" style="color:red"></i>
-                <ng-template #isWarning>
-                  <i class="fa fa-warning" style="color:orange"></i>
-                </ng-template>
-              </td>
-              <td [ngClass]="{
-                      error: item.type === 'ERROR',
-                      warning: item.type === 'WARNING'
-                      }">{{item.message}}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      </ng-container>
-      <ng-container
-        *ngIf="popover.operation === null && popover.task !== null && popover.task !== undefined">
-        <span>Language: {{popover.task.language}}</span>
-        <span *ngIf="popover.task && popover.task.asr !== undefined && popover.task.asr !== null">
-                    , ASR: {{popover.task.asr}}
-                </span>
-        <br/><br/>
-        <span>File information:</span>
-        <tportal-file-info-table
-          [fileinfo]="(popover.task.files) ? popover.task.files[0] : null"></tportal-file-info-table>
-      </ng-container>
-    </tportal-popover>
 
     <!-- Big proceedings table -->
     <table class="table table-striped">
@@ -174,7 +174,7 @@
             <div style="position: relative;">
               <div style="display:block;position: relative;height:25px;cursor:pointer;">
                 <tportal-operation-arrow [first]="(i === 0)"
-                                     [type]="'arrow'"></tportal-operation-arrow>
+                                         [type]="'arrow'"></tportal-operation-arrow>
                 <div style="z-index:10;width:100%;text-align:center;">
                   <ng-template #tipContent>{{operation.description}}</ng-template>
                   <div (click)="openArchiveDownload('column', operation, selectedRows)"
@@ -247,17 +247,17 @@
                  class="fa fa-angle-down"></i>
           </td> -->
           <td #nameCol="colIcon" (appendingClick)="onPreviewClick($event)" (click)="onRowSelected(entry)"
-              (deleteIconClick)="removeEntry($event, entry)"
-              (infoMouseEnter)="onInfoMouseEnter($event, entry)"
-              (infoMouseLeave)="onInfoMouseLeave($event, entry)"
-              (infoMouseOver)="onInfoMouseOver($event, entry)"
-              (mouseenter)="onNameMouseEnter($event, entry)"
-              (mouseleave)="onNameMouseLeave($event, entry)"
-              (mouseover)="onNameMouseOver($event, entry)"
-              (tagClicked)="onTagClicked($event)"
+              (deleteIconClick)="removeEntry($event, getTask(entry))"
+              (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+              (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+              (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+              (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+              (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+              (mouseover)="onNameMouseOver($event, getTask(entry))"
+              (tagClicked)="onTagClicked()"
               [dirOpened]="allDirOpened"
               [entry]="entry"
-              [mouseOver]="entry.mouseover"
+              [mouseOver]="(getTask(entry)) ? getTask(entry)!.mouseover : false"
               [shortStyle]="isClosed"
               tportalProcColIcon
           >
@@ -270,8 +270,8 @@
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 
                 (operationMouseOver)="onOperationMouseOver($event, operation)"
-                *ngFor="let operation of entry.operations"
-                [entry]="entry"
+                *ngFor="let operation of getTask(entry)!.operations"
+                [entry]="getTask(entry)"
                 [ngStyle]="{
                         'width': (operation.name === 'Upload' && !isClosed)? '120px': 'auto'
                     }"
@@ -280,8 +280,8 @@
             >
             </td>
             <td class="export-col">
-              <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success"
-                      (click)="onExportButtonClick(entry, entry.operations[1])"><i
+              <button *ngIf="isOneOperationFinished(entry) && getTask(entry) !== undefined" class="btn  btn-outline-success"
+                      (click)="onExportButtonClick(entry, getTask(entry)!.operations[1])"><i
                 class="fa fa-cloud-download"></i></button>
             </td>
           </ng-container>
@@ -289,21 +289,21 @@
             <td (click)="onRowSelected(entry)"
                 *ngFor="let operation of taskService.operations; let opIndex = index">
               <div class="progress">
-                <div [dir]="entry" [opIndex]="opIndex" tportalDirProgress aria-valuemax="100"
+                <div [dir]="getTaskDirectory(entry)" [opIndex]="opIndex" tportalDirProgress aria-valuemax="100"
                      aria-valuemin="0" class="progress-bar" role="progressbar">25%
                 </div>
               </div>
             </td>
             <td class="export-col">
               <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success"
-                      (click)="onExportButtonClick(entry, null)"><i class="fa fa-cloud-download"></i>
+                      (click)="onExportButtonClick(entry)"><i class="fa fa-cloud-download"></i>
               </button>
             </td>
           </ng-container>
         </tr>
         <ng-container *ngIf="entry.type === 'folder'">
           <!-- folder row -->
-          <tr *ngFor="let dirEntry of entry.entries" [@fadeToggleRow]="nameCol.dirOpened"
+          <tr *ngFor="let dirEntry of getTaskDirEntries(entry)" [@fadeToggleRow]="nameCol.dirOpened"
               [entry]="dirEntry"
               [rowSelected]="isEntrySelected(dirEntry)"
               [toolSelectedOperation]="toolSelectedOperation"
@@ -336,7 +336,7 @@
             </td>
             <td class="export-col">
               <button *ngIf="isOneOperationFinished(dirEntry)" class="btn  btn-outline-success"
-                      (click)="onExportButtonClick(dirEntry, null)"><i class="fa fa-cloud-download"></i>
+                      (click)="onExportButtonClick(dirEntry, undefined)"><i class="fa fa-cloud-download"></i>
               </button>
             </td>
           </tr>
@@ -344,40 +344,36 @@
       </ng-container>
       <!-- Queue rows -->
       <ng-container *ngFor="let entry of queue; let i = index;">
-        <tr style="cursor:pointer;">
-          <td *ngIf="entry.file.entries === undefined" [attr.colspan]="taskService.operations.length + 3"
+        <tr style="cursor:pointer;" *ngIf="entry.file !== undefined">
+          <td *ngIf="getDirEntriesFromItem(entry).length === 0" [attr.colspan]="taskService.operations.length + 3"
               [ngClass]="{'shorten': shortstyle}">
-            <ng-container *ngIf="entry.file.entries === undefined">
               <i aria-hidden="true"
                  class="fa fa-database op-50">
               </i>
-            </ng-container>
-            <ng-container *ngIf="entry.file.entries !== undefined" [ngClass]="{
+            <ng-container *ngIf="getDirEntriesFromItem(entry).length > 0" [ngClass]="{
                             'shorten': shortstyle
                         }">
               <i aria-hidden="true" class="fa fa-folder-open blue op-50"></i>
             </ng-container>
             <span class="op-50"
-                  title="{{entry.file.fullname}}"
+                  title="{{getFileInfo(entry)?.fullname}}"
             >
-                            {{entry.file.fullname}}  <i class="fa fa-spinner fa-spin"></i>
+                            {{getFileInfo(entry)?.fullname}}  <i class="fa fa-spinner fa-spin"></i>
                         </span>
           </td>
-          <td *ngIf="entry.file.entries !== undefined" [attr.colspan]="taskService.operations.length + 3">
+          <td *ngIf="getDirEntriesFromItem(entry).length > 0" [attr.colspan]="taskService.operations.length + 3">
                         <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
                           class="fa fa-spinner fa-spin"></i>
                         </span>
           </td>
         </tr>
-        <ng-container *ngIf="entry.file.entries !== undefined">
-          <tr *ngFor="let dirEntry of entry.file.entries">
-            <td>
-              <i aria-hidden="true" class="fa fa-database op-50"></i>
-              <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
-            </td>
-            <td [attr.colspan]="taskService.operations.length + 2"></td>
-          </tr>
-        </ng-container>
+        <tr *ngFor="let dirEntry of getDirEntriesFromItem(entry)">
+          <td>
+            <i aria-hidden="true" class="fa fa-database op-50"></i>
+            <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
+          </td>
+          <td [attr.colspan]="taskService.operations.length + 2"></td>
+        </tr>
       </ng-container>
       </tbody>
     </table>

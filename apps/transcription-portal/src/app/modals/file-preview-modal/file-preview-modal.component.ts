@@ -39,7 +39,7 @@ export class FilePreviewModalComponent {
   onDismiss() {
   }
 
-  cancelEvent($event: DropEvent) {
+  cancelEvent($event: DragEvent) {
     $event.stopPropagation();
     $event.preventDefault();
   }

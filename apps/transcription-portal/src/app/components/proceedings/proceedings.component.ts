@@ -414,9 +414,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
         this.updateChanges();
 
-        const top = icon.offsetTop + parentNode.offsetTop - this.inner.nativeElement.scrollTop + icon.offsetHeight;
+        console.dir(this.inner.nativeElement);
+        const top = icon.offsetTop + parentNode.offsetTop + this.inner.nativeElement.parentElement.parentElement.parentElement.offsetTop - this.inner.nativeElement.scrollTop + icon.offsetHeight;
         this.popover.y = (top + this.popoverRef.height + 20 > window.innerHeight)
-          ? top - this.popover.height : top;
+          ? top - this.popover.height - icon.offsetHeight + 10 : top;
       }
 
       this.togglePopover(true);
@@ -445,7 +446,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.operationhover.emit();
   }
 
-  onNameMouseEnter($event: MouseEvent, entry: (Task | TaskDirectory)) {
+  onNameMouseEnter($event: MouseEvent, entry?: (Task | TaskDirectory)) {
+    if (!entry) {
+      return;
+    }
     if (entry instanceof Task) {
       this.popover.directory = undefined;
       this.popover.task = entry;
@@ -456,19 +460,28 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.popover.operation = undefined;
   }
 
-  onNameMouseLeave($event: MouseEvent, entry: (Task | TaskDirectory)) {
+  onNameMouseLeave($event: MouseEvent, entry?: (Task | TaskDirectory)) {
+    if (!entry) {
+      return;
+    }
     if (entry instanceof Task) {
       entry.mouseover = false;
     }
   }
 
-  onNameMouseOver($event: MouseEvent, entry: (Task | TaskDirectory)) {
+  onNameMouseOver($event: MouseEvent, entry?: (Task | TaskDirectory)) {
+    if (!entry) {
+      return;
+    }
     if (entry instanceof Task) {
       entry.mouseover = true;
     }
   }
 
-  onInfoMouseEnter($event: MouseEvent, task: Task) {
+  onInfoMouseEnter($event: MouseEvent, task?: Task) {
+    if (!task) {
+      return;
+    }
     // show Popover for normal operations only
     if (this.popoverRef) {
       const y = $event.clientY + 10;
@@ -477,19 +490,25 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.popover.width = 600;
       this.popover.height = 320;
       this.popover.pointer = (y + this.popoverRef.height > window.innerHeight) ? 'bottom-left' : 'left';
-      this.popover.y = (y + this.popoverRef.height > window.innerHeight) ? y - this.popoverRef.height : y;
+      this.popover.y = (y + this.popoverRef.height > window.innerHeight) ? y - this.popoverRef.height - 10 : y;
       this.togglePopover(true);
 
       this.popover.operation = undefined;
     }
   }
 
-  onInfoMouseLeave($event: MouseEvent, task: Task) {
+  onInfoMouseLeave($event: MouseEvent, task?: Task) {
+    if (!task) {
+      return;
+    }
     this.togglePopover(false);
     task.mouseover = false;
   }
 
-  onInfoMouseOver($event: MouseEvent, task: Task) {
+  onInfoMouseOver($event: MouseEvent, task?: Task) {
+    if (!task) {
+      return;
+    }
     task.mouseover = true;
   }
 
@@ -641,7 +660,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.operationclick.emit(operation);
   }
 
-  openArchiveDownload(type: 'column' | 'line', operation: Operation, selectedLines: number[]) {
+  openArchiveDownload(type: 'column' | 'line', operation: Operation | undefined, selectedLines: number[]) {
     if (operation !== null && operation !== undefined && operation.name !== 'Upload') {
       this.selectedOperation = operation;
       this.content?.open(type, selectedLines);
@@ -680,8 +699,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public removeEntry(event: MouseEvent, entry: Task | TaskDirectory) {
-    if (this.taskService.taskList) {
+  public removeEntry(event: MouseEvent, entry?: Task | TaskDirectory) {
+    if (this.taskService.taskList && entry) {
       this.taskService.taskList.removeEntry(entry, true).catch((error) => {
         console.error(error);
       });
@@ -792,7 +811,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.cd.detectChanges();
   }
 
-  onExportButtonClick(task: Task | TaskDirectory, operation: Operation) {
+  onExportButtonClick(task: Task | TaskDirectory, operation?: Operation) {
     const index = this.taskList.getIndexByEntry(task);
     if (index > -1) {
       const selectedRows = [index];
@@ -828,5 +847,37 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
 
     return false;
+  }
+
+  public getDirEntriesFromItem(entry: QueueItem): (FileInfo)[] {
+    if (entry.file instanceof DirectoryInfo) {
+      return entry.file.entries as FileInfo[];
+    }
+    return [];
+  }
+
+  public getTaskDirEntries(entry: (Task | TaskDirectory)): Task[] {
+    if (entry instanceof TaskDirectory) {
+      return entry.entries as Task[];
+    }
+    return [];
+  }
+
+  public getFileInfo(entry: QueueItem) {
+    return entry.file instanceof FileInfo ? entry.file as FileInfo : undefined;
+  }
+
+  public getTaskDirectory(entry: (Task | TaskDirectory)): TaskDirectory | undefined {
+    if (entry instanceof TaskDirectory) {
+      return entry as TaskDirectory
+    }
+    return undefined;
+  }
+
+  public getTask(entry: (Task | TaskDirectory)): Task | undefined {
+    if (entry instanceof Task) {
+      return entry as Task
+    }
+    return undefined;
   }
 }

@@ -226,7 +226,7 @@ export class MainComponent implements OnDestroy {
     }
   }
 
-  onMissedDrop(event: DropEvent) {
+  onMissedDrop(event: DragEvent) {
     event.stopPropagation();
     event.preventDefault();
   }

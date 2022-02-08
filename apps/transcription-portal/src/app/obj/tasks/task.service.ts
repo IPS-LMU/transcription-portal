@@ -20,7 +20,7 @@ import {firstValueFrom, interval, of} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 import {AudioInfo, WavFormat} from '@octra/media';
-import {DirectoryInfo, FileInfo} from '@octra/utilities';
+import {DirectoryInfo, FileInfo, flatten} from '@octra/utilities';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -134,7 +134,7 @@ export class TaskService implements OnDestroy {
       }
       return 'Stopped';
     }
-    return "";
+    return '';
   }
 
   public init() {
@@ -149,14 +149,13 @@ export class TaskService implements OnDestroy {
 
     this._preprocessor.process = this.process;
     if (!this.taskList || !this._taskList) {
-      throw new Error("taksList not defined");
+      throw new Error('taksList not defined');
     }
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
       (item) => {
         for (const result of item.results) {
           let foundTask: Task | undefined;
-
           if (result instanceof Task) {
             result.changeState(TaskState.QUEUED);
             foundTask = this.taskList?.getAllTasks().find((a) => {
@@ -252,10 +251,10 @@ export class TaskService implements OnDestroy {
 
     this.subscrmanager.add(this.taskList?.entryChanged.subscribe((event: EntryChangeEvent) => {
         if (event.state === 'added') {
-          if (event.entry instanceof Task) {
-            this.listenToTaskEvents(event.entry);
+          if (event.entry.type === 'task') {
+            this.listenToTaskEvents(event.entry as Task);
           } else {
-            for (const entry of event.entry.entries) {
+            for (const entry of (event.entry as TaskDirectory).entries) {
               const task = entry as Task;
               this.listenToTaskEvents(task);
             }
@@ -340,7 +339,7 @@ export class TaskService implements OnDestroy {
           }
 
           if (!this._taskList) {
-            throw new Error("taskList not defined");
+            throw new Error('taskList not defined');
           }
 
           this._taskList.addEntry(task).catch((err) => {
@@ -375,7 +374,7 @@ export class TaskService implements OnDestroy {
           }
 
           if (!this._taskList) {
-            throw new Error("undefined tasklist");
+            throw new Error('undefined tasklist');
           }
           this._taskList.addEntry(taskDir).catch((err) => {
             console.error(err);
@@ -424,7 +423,7 @@ export class TaskService implements OnDestroy {
       const promises = [];
 
       if (!this.taskList) {
-        throw new Error("undefined tasklist");
+        throw new Error('undefined tasklist');
       }
 
       for (const entryElem of this.taskList.entries) {
@@ -468,12 +467,12 @@ export class TaskService implements OnDestroy {
 
   public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
 
     this.taskList.addEntry(entry, saveToDB).then(() => {
       if (!this.taskList) {
-        throw new Error("undefined tasklist");
+        throw new Error('undefined tasklist');
       }
       return this.taskList.cleanup(entry, saveToDB);
     }).catch((err) => {
@@ -496,7 +495,7 @@ export class TaskService implements OnDestroy {
     if (this.overallState === 'processing') {
       this.updateStatistics();
       if (!this.taskList) {
-        throw new Error("undefined tasklist");
+        throw new Error('undefined tasklist');
       }
       const uploadingTask = this.taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
@@ -527,7 +526,7 @@ export class TaskService implements OnDestroy {
               }
             ]);
           } else {
-            console.error("langObj is undefined");
+            console.error('langObj is undefined');
           }
           setTimeout(() => {
             this.start();
@@ -547,7 +546,7 @@ export class TaskService implements OnDestroy {
 
   public findNextWaitingTask(): Task | undefined {
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
     const tasks = this.taskList.getAllTasks();
     for (const entry of tasks) {
@@ -575,7 +574,7 @@ export class TaskService implements OnDestroy {
   public updateProtocolURL(): Promise<SafeResourceUrl> {
     return new Promise<SafeResourceUrl>((resolve, reject) => {
       if (!this.taskList) {
-        throw new Error("undefined tasklist");
+        throw new Error('undefined tasklist');
       }
       const promises: Promise<any>[] = [];
       for (const entry of this.taskList.entries) {
@@ -605,7 +604,7 @@ export class TaskService implements OnDestroy {
 
   ngOnDestroy() {
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
     const tasks = this.taskList.getAllTasks();
 
@@ -695,7 +694,7 @@ export class TaskService implements OnDestroy {
   public toggleProcessing() {
     this.overallState = (this.overallState === 'processing') ? 'stopped' : 'processing';
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
     const tasks = this.taskList.getAllTasks();
     if (this.overallState === 'processing') {
@@ -721,7 +720,7 @@ export class TaskService implements OnDestroy {
       errors: 0
     };
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
     const tasks = this.taskList.getAllTasks();
 
@@ -918,7 +917,7 @@ export class TaskService implements OnDestroy {
                   resolve([task]);
                 }
               } else {
-                reject("fileinfo is undefined");
+                reject('fileinfo is undefined');
               }
             } else {
               this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid.
@@ -953,7 +952,7 @@ export class TaskService implements OnDestroy {
 
         let content = [];
 
-        values = [...values];
+        values = flatten(values);
         for (const value of values) {
           if (value instanceof Task) {
             // set state
@@ -989,7 +988,7 @@ export class TaskService implements OnDestroy {
 
   private getTaskWithHash(hash: string): Task | undefined {
     if (!this.taskList) {
-      throw new Error("undefined tasklist");
+      throw new Error('undefined tasklist');
     }
 
     const tasks: Task[] = this.taskList.getAllTasks();

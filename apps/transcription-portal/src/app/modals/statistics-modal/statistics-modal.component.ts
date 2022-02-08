@@ -2,7 +2,7 @@ import {Component, OnDestroy, ViewChild} from '@angular/core';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {StatisticsService} from '../../shared/statistics.service';
 import {TaskService} from '../../obj/tasks/task.service';
-import {ChartType} from 'chart.js';
+import {ChartConfiguration} from 'chart.js';
 import {ModalDirective} from 'ngx-bootstrap/modal';
 
 @Component({
@@ -14,8 +14,18 @@ export class StatisticsModalComponent implements OnDestroy {
 
   @ViewChild('statisticsModal', {static: true}) statisticsModal?: ModalDirective;
   // Pie
-  public pieChartType: ChartType = 'pie';
+  public pieChartType: ChartConfiguration['type'] = 'pie';
   private _subscrmanager: SubscriptionManager = new SubscriptionManager();
+
+  public pieChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+      }
+    }
+  };
 
   constructor(public statisticsService: StatisticsService, public taskService: TaskService) {
   }

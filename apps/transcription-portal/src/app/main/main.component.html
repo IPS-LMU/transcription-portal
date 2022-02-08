@@ -203,19 +203,20 @@
     </div>
     <div class="col-8" style="text-align: center;">
       <p style="margin: 10px 0 0;">
-        <ng-container *ngIf="toolSelectedOperation.previousOperation.results.length > 0">
-          {{toolSelectedOperation.name}}: {{toolSelectedOperation.previousOperation.results[0].fullname}}
+        <ng-container *ngIf="toolSelectedOperation!.previousOperation!.results.length > 0">
+          {{toolSelectedOperation!.name}}: {{toolSelectedOperation!.previousOperation!.results[0].fullname}}
 
-          , Language: {{toolSelectedOperation.task.language}}
+          , Language: {{toolSelectedOperation?.task?.language}}
 
           , Audio duration: {{getTime() |time}}
 
         </ng-container>
-        <ng-container *ngIf="toolSelectedOperation.previousOperation.results.length < 1">
-          {{toolSelectedOperation.name}}:
-          {{toolSelectedOperation.previousOperation.previousOperation.results[0].fullname}}
+        <ng-container *ngIf="toolSelectedOperation !== undefined && toolSelectedOperation.previousOperation!.results.length < 1
+        && toolSelectedOperation !== undefined && toolSelectedOperation!.previousOperation!.previousOperation !== undefined">
+          {{toolSelectedOperation?.name}}:
+          {{toolSelectedOperation!.previousOperation!.previousOperation!.results[0]!.fullname}}
 
-          , Language: {{toolSelectedOperation.task.language}}
+          , Language: {{toolSelectedOperation?.task?.language}}
 
           , Audio duration: {{getTime() | time}}
         </ng-container>

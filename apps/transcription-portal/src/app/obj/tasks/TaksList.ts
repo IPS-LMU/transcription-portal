@@ -82,7 +82,7 @@ export class TaskList {
     for (const entry of this._entries) {
       if (entry instanceof Task) {
         result.push(entry);
-      } else {
+      } else if (entry instanceof TaskDirectory) {
         result = result.concat((entry as TaskDirectory).getAllTasks());
       }
     }

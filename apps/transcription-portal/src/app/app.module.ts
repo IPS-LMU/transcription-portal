@@ -84,7 +84,7 @@ import {DownloadService} from './shared/download.service';
     AppRoutingModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    NgChartsModule.forRoot(),
+    NgChartsModule,
     TooltipModule.forRoot(),
     ModalModule.forRoot(),
     CollapseModule.forRoot(),

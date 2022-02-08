@@ -40,12 +40,12 @@
             <button aria-controls="dropdown-basic" class="btn btn-outline-secondary dropdown-toggle" dropdownToggle
                     id="button-basic"
                     type="button">
-              <ng-container *ngIf="taskService.selectedlanguage === null">
+              <ng-container *ngIf="taskService.selectedlanguage === undefined">
                 {{AppConfiguration.api.languages[0].code | uppercase}}
                 ({{getShortCode(AppConfiguration.api.languages[0].code)}})
                 [{{AppConfiguration.api.languages[0].asr}}]
               </ng-container>
-              <ng-container *ngIf="taskService.selectedlanguage !== null">
+              <ng-container *ngIf="taskService.selectedlanguage !== undefined">
                 {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
                 [{{taskService.selectedlanguage.asr}}]
               </ng-container>
@@ -65,9 +65,9 @@
                 <tbody>
                 <ng-container *ngFor="let lang of AppConfiguration.api.languages; let i = index;">
                   <tr [ngClass]="{
-                            selected:  !(taskService.selectedlanguage === null)
-                                        && (taskService.selectedlanguage.code === lang.code)
-                                        && (taskService.selectedlanguage.asr === lang.asr)
+                            selected:  !(taskService.selectedlanguage === undefined)
+                                        && (taskService.selectedlanguage?.code === lang.code)
+                                        && (taskService.selectedlanguage?.asr === lang.asr)
                             }"
                   >
                     <td (click)="onASRItemClicked(lang)"
@@ -259,7 +259,7 @@
                 <td>
                         <span [ngClass]="{
                                 'green': ((task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                                         (task.operations[0].results.length > 0 && task.operations[0].lastResult.online)),
+                                         (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online)),
                                 'yellow': ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') && task.operations[0].state !== 'FINISHED',
                                 'red': isSomethingInvalid(task.id)
                                 }" title="{{task.files[0].attributes.originalFileName}}">

@@ -1,7 +1,7 @@
 <ng-template #content>
   <div class="modal-header">
     <h4 class="modal-title pull-left">Download results by {{type}}</h4>
-    <button (click)="downloadModal.hide(); archiveURL = '';state = 'inactive';" aria-label="Close"
+    <button (click)="downloadModal?.hide(); archiveURL = '';state = 'inactive';" aria-label="Close"
             class="close pull-right"
             type="button">
       <span aria-hidden="true">&times;</span>
@@ -48,7 +48,7 @@
     </ng-container>
   </div>
   <div class="modal-footer">
-    <button (click)="downloadModal.hide();archiveURL = '';state = 'inactive';" class="btn btn-outline-dark"
+    <button (click)="downloadModal?.hide();archiveURL = '';state = 'inactive';" class="btn btn-outline-dark"
             type="button">Close
     </button>
   </div>

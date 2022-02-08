@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {TaskService} from '../obj/tasks/task.service';
 import {SubscriptionManager} from './subscription-manager';
 import {interval} from 'rxjs';
+import {ChartConfiguration, ChartData} from 'chart.js';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,11 @@ export class StatisticsService {
     failed: 0
   };
 
-  public averageDurations = {
-    labels: ['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment', 'Phonetic Detail'],
-    data: [0, 0, 0, 0, 0]
+  public averageDurations: ChartData<'pie', number[], string | string[]> = {
+    labels: [['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment', 'Phonetic Detail']],
+    datasets: [{
+      data: [0, 0, 0, 0, 0]
+    }]
   };
 
   private subscrmanager = new SubscriptionManager();
@@ -58,8 +61,8 @@ export class StatisticsService {
         }
       }
 
-      for (let i = 0; i < this.averageDurations.data.length; i++) {
-        this.averageDurations.data[i] = Math.ceil(durations[i] / 1000 / 60 * 100) / 100;
+      for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
+        this.averageDurations.datasets[0].data[i] = Math.ceil(durations[i] / 1000 / 60 * 100) / 100;
       }
     }
   }

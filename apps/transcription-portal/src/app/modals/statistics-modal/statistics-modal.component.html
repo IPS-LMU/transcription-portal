@@ -85,11 +85,8 @@
 
         <div style="display: block">
           <h4>Processing duration (minutes)</h4>
-          <canvas (chartClick)="chartClicked($event)"
-                  (chartHover)="chartHovered($event)"
-                  [chartType]="pieChartType"
-                  [data]="statisticsService.averageDurations.data"
-                  [labels]="statisticsService.averageDurations.labels"
+          <canvas [type]="pieChartType"
+                  [data]="statisticsService.averageDurations"
                   baseChart></canvas>
         </div>
       </div>

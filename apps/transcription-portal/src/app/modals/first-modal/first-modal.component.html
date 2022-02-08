@@ -1,7 +1,7 @@
 <ng-template #content>
   <div class="modal-header">
     <h4 class="modal-title pull-left">Notice</h4>
-    <button (click)="bsModalRef.hide()" aria-label="Close" class="close pull-right" type="button">
+    <button (click)="bsModalRef?.hide()" aria-label="Close" class="close pull-right" type="button">
       <span aria-hidden="true">&times;</span>
     </button>
   </div>
@@ -27,7 +27,7 @@
     </ol>
     <div class="row">
       <div class="col-12">
-        <button (click)="understandClick.next(); bsModalRef.hide();" class="btn btn-info" style="width:100%;">
+        <button (click)="understandClick?.next(); bsModalRef?.hide();" class="btn btn-info" style="width:100%;">
           I understand
         </button>
       </div>
