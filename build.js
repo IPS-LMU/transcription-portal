@@ -1,10 +1,10 @@
 const fs = require("fs");
 const {execSync, spawn} = require('child_process');
 
-const buildDir = "dist/transcription-portal/";
+const buildDir = "dist/apps/transcription-portal/";
 const targetFolder = "assets";
 let baseHref = "";
-let dev = '';
+let dev = false;
 
 const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess", "3rdpartylicenses.txt"];
 
@@ -20,7 +20,8 @@ const json = JSON.parse(packageText);
 version = json.version;
 
 if (process.argv[2] === "dev=true") {
-  dev = "-c dev";
+  console.log("dev is true!");
+  dev = true;
 }
 
 if (process.argv[3] === "isUpdate=true") {
@@ -34,10 +35,12 @@ if (process.argv[4].indexOf("url=") > -1) {
 console.log(`Building TranscriptionPortal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
 console.log(`Remove dist...`);
 execSync(`rm -rf "./${buildDir}"`);
-const command = ['--max-old-space-size=12000', './node_modules/@angular/cli/bin/ng', 'build', '--prod', '-c', 'dev', '--base-href', baseHref];
+const command = ['node_modules/@nrwl/cli/bin/nx.js', 'build', 'transcription-portal', '--base-href', baseHref];
 
-if (dev === "") {
-  command.splice(4, 2);
+if (dev) {
+  command.push('--configuration', 'development');
+} else {
+  command.push('--configuration', 'production');
 }
 
 const node = spawn('node', command);
@@ -55,21 +58,22 @@ node.on('exit', function (code) {
     encoding: "utf8"
   });
 
-  indexHTML = indexHTML.replace(/(scripts\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(src=")(-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(src=")(-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(main-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(main-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(main\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es2015\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es5\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime\.[0-9a-z]*\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(styles\.[0-9a-z]*\.css)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
-  indexHTML = indexHTML.replace(/(const ohPortalVersion = ").*(";)/g, `$1${version}$2`);
+  indexHTML = indexHTML.replace(/(scripts(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(polyfills-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(polyfills-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(polyfills(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(src=")(-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$2`);
+  indexHTML = indexHTML.replace(/(src=")(-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$2`);
+  indexHTML = indexHTML.replace(/(main-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(main-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(main(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(runtime(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(styles(?:\.[0-9a-z]*)?\.css)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(vendor(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
+  indexHTML = indexHTML.replace(/(const octraLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
+  indexHTML = indexHTML.replace(/(const octraVersion = ").*(";)/g, `$1${version}$2`);
 
   fs.writeFileSync(`${buildDir}index.html`, indexHTML, {
     encoding: "utf8"
