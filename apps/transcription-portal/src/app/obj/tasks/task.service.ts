@@ -509,6 +509,7 @@ export class TaskService implements OnDestroy {
           }
 
           task.statechange.subscribe((obj) => {
+            console.log(`task ${task.id} changed from ${obj.oldState} to ${obj.newState}`);
             this.storage.saveTask(task);
 
             this.updateProtocolURL().then((url) => {

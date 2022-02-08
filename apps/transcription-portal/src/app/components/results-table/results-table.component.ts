@@ -11,7 +11,7 @@ import {
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo, ConverterData} from '../../app.info';
 import {HttpClient} from '@angular/common/http';
-import {DomSanitizer} from '@angular/platform-browser';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {FileInfo, hasProperty} from '@octra/utilities';
 import {Converter, OAudiofile} from '@octra/annotation';
 import {AudioInfo} from '@octra/media';
@@ -29,7 +29,15 @@ export class ResultsTableComponent implements OnChanges {
   @Input() visible = false;
 
   public convertedArray: {
-    input: any,
+    input?: {
+      url: SafeUrl,
+      name: string
+      type: string,
+      available: boolean,
+      fullname: string,
+      extension: string,
+      file: File
+    },
     number: number,
     conversions: {
       converter: {
@@ -188,7 +196,6 @@ export class ResultsTableComponent implements OnChanges {
 
           this.convertedArray = [];
           this.convertedArray.push({
-            input: null,
             conversions: [],
             number: 0
           });

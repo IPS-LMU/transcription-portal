@@ -4,6 +4,7 @@ import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
 import {OHLanguageObject} from '../oh-config';
 import {FileInfo} from '@octra/utilities';
+import {AppSettings} from '../../shared/app.settings';
 
 export class G2pMausOperation extends Operation {
   // TODO change for the next version
@@ -83,6 +84,9 @@ export class G2pMausOperation extends Operation {
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
+
+    result._providerInformation = AppSettings.getServiceInformation('BAS');
+
     return result;
   }
 

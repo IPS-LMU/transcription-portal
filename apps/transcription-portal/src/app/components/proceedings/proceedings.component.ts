@@ -732,6 +732,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onPreviewClick(file: FileInfo) {
+    this.popover.state = 'closed';
     this.filePreview?.open(file);
   }
 

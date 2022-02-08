@@ -218,6 +218,7 @@ export abstract class Operation {
         break;
     }
 
+    console.log(`state icon of ${this._name} is "${result}"`);
     return sanitizer.bypassSecurityTrustHtml(result);
   }
 
@@ -246,6 +247,7 @@ export abstract class Operation {
         result = '<i class="fa fa-times" aria-hidden="true"></i>';
         break;
     }
+    console.log(`state2 icon of ${this._name} is "${result}"`);
 
     return result;
   }

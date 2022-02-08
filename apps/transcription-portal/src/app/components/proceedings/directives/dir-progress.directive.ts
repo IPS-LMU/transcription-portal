@@ -40,7 +40,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     if (!this.dir) {
       throw new Error("dir is undefined");
     }
-    if (!this.opIndex) {
+    if (this.opIndex == undefined) {
       return;
     }
     const allEntries = this.dir.entries.length;

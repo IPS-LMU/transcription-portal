@@ -83,6 +83,7 @@ export class ShortcutManager {
       if (this.shortcutsEnabled) {
         if (event.type === 'keydown') {
           const shortcut = this.getShorcutCombination(event);
+          console.log(`shortcode ${shortcut}`);
 
           if (this._pressedKey.code < 0) {
             this._pressedKey.code = event.keyCode;
@@ -90,7 +91,7 @@ export class ShortcutManager {
           }
 
           const command = this.getCommand(shortcut, BrowserInfo.platform);
-
+          console.log(command);
           if (!(command === null || command === undefined)) {
             event.preventDefault();
             resolve({
@@ -112,8 +113,8 @@ export class ShortcutManager {
 
   private getCommand(shorcut: string, platform: string) {
     for (const command in (this.keyMap as any)[platform]) {
-      if (hasProperty((this.keyMap as any), command)) {
-        const entry = (this.keyMap as any)[command];
+      if (hasProperty((this.keyMap as any)[platform], command)) {
+        const entry = (this.keyMap as any)[platform][command];
 
         if (entry === shorcut) {
           return command;

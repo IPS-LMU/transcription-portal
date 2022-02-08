@@ -42,7 +42,7 @@ Thumbs.db
 
 /documents/
 deployment/
-/src/config/config.json
+/apps/transcription-portal/src/config/config.json
 /dist/
 /doc/PH-PortalASR.html
 /doc/test_deutsch.wav

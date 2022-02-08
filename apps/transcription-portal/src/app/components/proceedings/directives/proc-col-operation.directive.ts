@@ -79,13 +79,14 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   private updateView() {
     if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
+      console.log(`update view for ${this.operation?.task?.id}`);
       this.clearContents();
 
       if (this.entry) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
-        if (this.operation && this.operation.lastResult) {
-          if (this.operation.state === 'FINISHED' && this.operation.results.length > 0 && !this.operation.lastResult.available) {
+        if (this.operation) {
+          if (this.operation.state === 'FINISHED' && this.operation.results.length > 0 && this.operation.lastResult && !this.operation.lastResult.available) {
             // result is not available
             const icon = this.renderer.createElement('i');
 
@@ -95,7 +96,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
             this.renderer.appendChild(this.elementRef.nativeElement, icon);
           } else {
             // result is available
-
             if (this.operation.enabled) {
               let icon = null;
               if (!(this.operation.mouseover && this.operation.state === 'ERROR')) {
