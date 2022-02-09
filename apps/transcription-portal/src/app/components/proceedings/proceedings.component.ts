@@ -414,7 +414,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
         this.updateChanges();
 
-        console.dir(this.inner.nativeElement);
         const top = icon.offsetTop + parentNode.offsetTop + this.inner.nativeElement.parentElement.parentElement.parentElement.offsetTop - this.inner.nativeElement.scrollTop + icon.offsetHeight;
         this.popover.y = (top + this.popoverRef.height + 20 > window.innerHeight)
           ? top - this.popover.height - icon.offsetHeight + 10 : top;

@@ -85,8 +85,6 @@ export class G2pMausOperation extends Operation {
     result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
 
-    result._providerInformation = AppSettings.getServiceInformation('BAS');
-
     return result;
   }
 
@@ -94,5 +92,6 @@ export class G2pMausOperation extends Operation {
     super(name, commands, title, shortTitle, task, state, id);
     this._description = 'The transcript text is time-aligned with the signal, i. e. for every word in the text we get ' +
       'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
+    this._providerInformation = AppSettings.getServiceInformation('BAS');
   }
 }

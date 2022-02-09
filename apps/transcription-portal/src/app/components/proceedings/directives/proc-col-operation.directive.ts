@@ -79,7 +79,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   private updateView() {
     if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
-      console.log(`update view for ${this.operation?.task?.id}`);
       this.clearContents();
 
       if (this.entry) {

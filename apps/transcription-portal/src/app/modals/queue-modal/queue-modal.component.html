@@ -54,7 +54,7 @@
             <div (mouseleave)="onMouseOut();" (mousemove)="onMouseMove()" *dropdownMenu aria-labelledby="button-basic"
                  class="dropdown-menu"
                  id="dropdown-basic" role="menu" style="padding:5px;">
-              <table class="table table-hover languageTable">
+              <table class="table table-responsive-md table-hover languageTable">
                 <thead>
                 <tr>
                   <th>Language</th>
@@ -180,7 +180,7 @@
           isASRSelected() && selectedASRInfo.knownIssues !== undefined">
             <b>Known Issues for {{selectedASRInfo.provider}} ASR:</b> {{selectedASRInfo.knownIssues}}
           </div>
-          <table class="table table-responsive-lg table-striped" id="queue">
+          <table class="table table-responsive table-striped" id="queue">
             <thead>
             <tr>
               <th>Valid?</th>
@@ -263,7 +263,7 @@
                                 'yellow': ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') && task.operations[0].state !== 'FINISHED',
                                 'red': isSomethingInvalid(task.id)
                                 }" title="{{task.files[0].attributes.originalFileName}}">
-                                        {{task.files[0].name.replace('_annot', '') + '.wav'}}
+                                        {{task.files[0].attributes.originalFileName.replace('_annot.json', '.wav')}}
                         </span>
 
                   <ng-container *ngIf=" task.files.length > 1 || task.files[0].extension !== '.wav'">

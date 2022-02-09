@@ -56,10 +56,12 @@ export class DownloadService {
         if (!operation.task) {
           throw new Error('operation task is undefined');
         }
-        audiofile.duration = (operation.task.files[0] as AudioInfo).duration.samples;
-        audiofile.name = (operation.task.files[0] as AudioInfo).fullname;
-        audiofile.sampleRate = (operation.task.files[0] as AudioInfo).sampleRate;
-        audiofile.size = (operation.task.files[0] as AudioInfo).size;
+        const audioinfo = (operation.task.files[0] as AudioInfo);
+
+        audiofile.duration = audioinfo.duration.samples;
+        audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+        audiofile.sampleRate = audioinfo.sampleRate;
+        audiofile.size = audioinfo.size;
 
 
         let annotJSON;
@@ -73,7 +75,7 @@ export class DownloadService {
 
           if (importConverter.name !== 'AnnotJSON') {
             const importResult = importConverter.import({
-              name: opResult.fullname,
+              name: audiofile.name ?? opResult.fullname,
               content,
               encoding: 'utf-8',
               type: 'text/plain'
@@ -98,7 +100,7 @@ export class DownloadService {
 
             if (!(conversion === null || conversion === undefined)) {
               const file: File = FileInfo.getFileFromContent(conversion.file.content,
-                operation.task.files[0].name + exportConverter.obj.extension, conversion.file.type);
+                audiofile.name.replace(/\..+$/g, '') + exportConverter.obj.extension, conversion.file.type);
 
               const fileInfo = new FileInfo(file.name, file.type, file.size, file);
               resolve(fileInfo);

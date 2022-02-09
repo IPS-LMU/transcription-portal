@@ -1,8 +1,12 @@
 <table class="table table-responsive-md table-striped" *ngIf="audioInfo !== undefined && audioInfo !== null">
   <tbody>
   <tr>
-    <td>Filename:</td>
+    <td>Original filename:</td>
     <td>{{audioInfo.attributes?.originalFileName}}</td>
+  </tr>
+  <tr>
+    <td>Escaped filename:</td>
+    <td>{{audioInfo.fullname}}</td>
   </tr>
   <tr>
     <td>Type:</td>

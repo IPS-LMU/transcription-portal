@@ -83,7 +83,6 @@ export class ShortcutManager {
       if (this.shortcutsEnabled) {
         if (event.type === 'keydown') {
           const shortcut = this.getShorcutCombination(event);
-          console.log(`shortcode ${shortcut}`);
 
           if (this._pressedKey.code < 0) {
             this._pressedKey.code = event.keyCode;

@@ -17,7 +17,7 @@ export class StatisticsService {
   };
 
   public averageDurations: ChartData<'pie', number[], string | string[]> = {
-    labels: [['Upload', 'Speech Recognition', 'Manual Transcription', 'Word alignment', 'Phonetic Detail']],
+    labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'],[ 'Word alignment'], ['Phonetic Detail']],
     datasets: [{
       data: [0, 0, 0, 0, 0]
     }]

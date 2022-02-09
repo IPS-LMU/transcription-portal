@@ -262,7 +262,6 @@ export class DownloadModalComponent implements OnInit {
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
-          console.log(operation.name);
           if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
             const opResult = operation.lastResult;
             const folderName = this.getFolderName(operation);

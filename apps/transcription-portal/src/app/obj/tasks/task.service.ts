@@ -509,7 +509,6 @@ export class TaskService implements OnDestroy {
           }
 
           task.statechange.subscribe((obj) => {
-            console.log(`task ${task.id} changed from ${obj.oldState} to ${obj.newState}`);
             this.storage.saveTask(task);
 
             this.updateProtocolURL().then((url) => {
@@ -756,7 +755,6 @@ export class TaskService implements OnDestroy {
   }
 
   private listenToTaskEvents(task: Task) {
-    console.log(`listen to task events`);
     this.subscrmanager.add(task.opstatechange.subscribe((event) => {
       const operation = task.getOperationByID(event.opID);
       if (!operation) {
@@ -809,7 +807,7 @@ export class TaskService implements OnDestroy {
               newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
               newFileInfo.attributes.originalFileName = file.fullname;
-              file.attributes.originalFileName = file.fullname;
+              file = newFileInfo;
               res();
             });
           } else {

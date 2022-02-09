@@ -124,7 +124,7 @@ export class ResultsTableComponent implements OnChanges {
                 this.originalLabel = importConverter.extension;
 
 
-                let originalFileName: any = this.operation?.task?.files[0].attributes.originalFileName;
+                let originalFileName: any = this.operation?.task?.files[0].attributes.originalFileName ?? this.operation?.task?.files[0].fullname;
                 originalFileName = FileInfo.extractFileName(originalFileName);
 
                 const resultObj = {
@@ -132,7 +132,7 @@ export class ResultsTableComponent implements OnChanges {
                   name: originalFileName.name,
                   type: result.type,
                   available: result.available,
-                  fullname: originalFileName.name + result.extension,
+                  fullname: originalFileName.name + originalFileName.extension,
                   extension: result.extension,
                   file: result.file
                 };
@@ -141,7 +141,7 @@ export class ResultsTableComponent implements OnChanges {
                 if (this.operation.task) {
                   audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
                   audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
-                  audio.name = (this.operation.task.files[0] as AudioInfo).fullname;
+                  audio.name = resultObj.fullname;
                   audio.size = (this.operation.task.files[0] as AudioInfo).size;
                 }
 
