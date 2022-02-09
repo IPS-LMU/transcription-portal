@@ -1,3 +1,18 @@
+## [1.0.7](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.6...v1.0.7) (2022-02-09)
+
+
+### Bug Fixes
+
+* **results:** fixed problem with retrieving results ([f41b430](https://github.com/IPS-LMU/transcription-portal/commit/f41b43077f7bbc5b66e89eb63508aadfb498bc24))
+
+
+### Features
+
+* **proceedings:** format timestamps to local ones ([4152f10](https://github.com/IPS-LMU/transcription-portal/commit/4152f10e288c1dc55563a714df90eb32090a1960)), closes [#55](https://github.com/IPS-LMU/transcription-portal/issues/55)
+* **queue-modal:** added information about remaining quota ([9862529](https://github.com/IPS-LMU/transcription-portal/commit/9862529673839d5d3a89693b56ca7a6d8299bc80))
+
+
+
 ## [1.0.6](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.5...v1.0.6) (2021-03-16)
 
 
