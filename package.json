@@ -13,7 +13,7 @@
     "release": "node ./build.js dev=false isUpdate=false url=/ && cp LICENSE.txt dist/transcription-portal && cd dist && rm transcription-portal/config/config.json && zip -r transcription-portal-v.zip transcription-portal",
     "test": "nx test",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "modernizr": "modernizr -d src/assets/js/modernizr.js -c ./modernizr.json"
+    "modernizr": "modernizr -d apps/transcription-portal/src/assets/js/modernizr.js -c ./modernizr.json"
   },
   "private": true,
   "dependencies": {
@@ -36,6 +36,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "^3.5.1",
     "jszip": "^3.5.0",
+    "luxon": "^2.3.0",
     "maintenance-warning-snackbar": "git+https://github.com/IPS-LMU/maintenanceWarningSnackbar.git",
     "modernizr": "^3.11.3",
     "moment": "^2.27.0",
@@ -69,6 +70,7 @@
     "@nrwl/workspace": "13.7.3",
     "@types/jest": "27.0.2",
     "@types/jquery": "^3.5.13",
+    "@types/luxon": "^2.0.9",
     "@types/node": "16.11.7",
     "@typescript-eslint/eslint-plugin": "~5.10.0",
     "@typescript-eslint/parser": "~5.10.0",

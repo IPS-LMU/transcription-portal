@@ -48,6 +48,7 @@ import {PopoverModule} from 'ngx-bootstrap/popover';
 import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
 import {AppRoutingModule} from './app-routing.module';
 import {DownloadService} from './shared/download.service';
+import { LuxonFormatPipe } from './obj/luxon-format.pipe';
 
 @NgModule({
   declarations: [
@@ -77,7 +78,8 @@ import {DownloadService} from './shared/download.service';
     DirProgressDirective,
     StatisticsModalComponent,
     BrowserTestComponent,
-    MainComponent
+    MainComponent,
+    LuxonFormatPipe
   ],
   imports: [
     BrowserModule,

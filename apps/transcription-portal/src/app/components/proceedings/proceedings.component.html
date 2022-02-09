@@ -20,10 +20,9 @@
       </p>
 
       <table class="timer">
-        <tr>
+        <tr class="action-time">
           <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i>
-            {{popover.operation.time.start
-              | date :"dd.MM.yyyy H:mm"}}
+            {{popover.operation.time.start | luxonFormat: "DATETIME_SHORT" }}
           </td>
           <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
             {{calculateDuration(popover.operation.time, popover.operation) | time:'true'}}
@@ -280,7 +279,8 @@
             >
             </td>
             <td class="export-col">
-              <button *ngIf="isOneOperationFinished(entry) && getTask(entry) !== undefined" class="btn  btn-outline-success"
+              <button *ngIf="isOneOperationFinished(entry) && getTask(entry) !== undefined"
+                      class="btn  btn-outline-success"
                       (click)="onExportButtonClick(entry, getTask(entry)!.operations[1])"><i
                 class="fa fa-cloud-download"></i></button>
             </td>
@@ -347,9 +347,9 @@
         <tr style="cursor:pointer;" *ngIf="entry.file !== undefined">
           <td *ngIf="getDirEntriesFromItem(entry).length === 0" [attr.colspan]="taskService.operations.length + 3"
               [ngClass]="{'shorten': shortstyle}">
-              <i aria-hidden="true"
-                 class="fa fa-database op-50">
-              </i>
+            <i aria-hidden="true"
+               class="fa fa-database op-50">
+            </i>
             <ng-container *ngIf="getDirEntriesFromItem(entry).length > 0" [ngClass]="{
                             'shorten': shortstyle
                         }">

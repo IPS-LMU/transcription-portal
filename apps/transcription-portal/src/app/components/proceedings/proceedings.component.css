@@ -264,3 +264,7 @@ table thead tr th:hover {
 .export-col {
   text-align: center;
 }
+
+.action-time td {
+  font-size: 0.9em;
+}
