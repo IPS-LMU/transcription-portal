@@ -793,7 +793,7 @@ export class TaskService implements OnDestroy {
 
   private processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
-      const newName = FileInfo.escapeFileName(file.fullname);
+      const newName = Date.now() + file.extension;
       let newFileInfo: FileInfo | undefined;
       this.newfiles = true;
 
@@ -820,7 +820,7 @@ export class TaskService implements OnDestroy {
           }
         }
       ).then(() => {
-        const hash = this.preprocessor.getHashString(file.fullname, file.size);
+        const hash = this.preprocessor.getHashString(file.attributes.originalFileName, file.size);
         const foundOldFile = this.getTaskWithHash(hash);
 
         setTimeout(() => {
@@ -832,9 +832,9 @@ export class TaskService implements OnDestroy {
             const isValidTranscript = this.validTranscript(file.extension);
 
             if (isValidFormat && format.channels > 1) {
-              const directory = new DirectoryInfo(path + file.name + '_dir/');
+              const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
               console.log(`split channels`);
-              format.splitChannelsToFiles(file.name, 'audio/wav', event.target.result).then((files) => {
+              format.splitChannelsToFiles(file.attributes.originalFileName.replace(/\..+$/g, ''), 'audio/wav', event.target.result).then((files) => {
 
                 if (this._splitPrompt === 'PENDING') {
                   this.openSplitModal();
@@ -853,7 +853,7 @@ export class TaskService implements OnDestroy {
                   for (let i = 0; i < files.length; i++) {
                     const fileObj = files[i];
                     const fileInfo = FileInfo.fromFileObject(fileObj);
-                    fileInfo.attributes.originalFileName = `${file.name}_${i + 1}.${file.extension}`;
+                    fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
                     fileInfos.push(fileInfo);
                   }
                   directory.addEntries(fileInfos);
@@ -893,7 +893,7 @@ export class TaskService implements OnDestroy {
 
                   if (!isValidTranscript || foundOldFile.files.length === 1) {
                     const oldFileIndex = foundOldFile.files.findIndex((a) => {
-                      return a.fullname === newFileInfo?.fullname && a.size === newFileInfo.size;
+                      return a.attributes.originalFileName === newFileInfo?.attributes.originalFileName && a.size === newFileInfo?.size;
                     });
                     foundOldFile.setFileObj(oldFileIndex, newFileInfo);
                   } else {
