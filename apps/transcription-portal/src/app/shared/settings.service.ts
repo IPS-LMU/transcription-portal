@@ -188,7 +188,7 @@ export class SettingsService {
             asrQuotaInfo.monthlyQuota = info.monthlyQuota;
           }
 
-          if (info.monthlyQuota && info.secsAvailable && info.secsAvailable !== 999999) {
+          if (info.monthlyQuota && info.secsAvailable !== undefined && info.secsAvailable !== null && info.secsAvailable !== 999999) {
             asrQuotaInfo.usedQuota = info.monthlyQuota - info.secsAvailable;
           }
         }

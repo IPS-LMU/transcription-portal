@@ -151,7 +151,8 @@
                         </div>
                         <div class="progress-bar bg-danger" role="progressbar" [ngStyle]="{
                             width: getQuotaPercentage(lang.asr) + '%'
-                          }" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
+                          }" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+                          <ng-container *ngIf="getQuotaPercentage(lang.asr) > 90">{{(100 - getQuotaPercentage(lang.asr)) + '%'}}</ng-container></div>
                       </div>
                     </td>
                   </tr>
