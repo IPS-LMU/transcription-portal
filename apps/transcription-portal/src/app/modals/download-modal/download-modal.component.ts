@@ -70,7 +70,9 @@ export class DownloadModalComponent implements OnInit {
       this.state = 'inactive';
     }));
 
-    this.downloadModal = this.modalService.show(this.content);
+    if (this.content) {
+      this.downloadModal = this.modalService.show(this.content);
+    }
   }
 
   process() {
@@ -131,7 +133,7 @@ export class DownloadModalComponent implements OnInit {
               this.downloadService.getConversionFiles(operation, result, selectedConverters).then((files) => {
                 files = files.filter(a => a);
                 for (const fileInfo of files) {
-                  if(fileInfo?.file) {
+                  if (fileInfo?.file) {
                     requestPackage.entries.push({
                       path: fileInfo.file.name,
                       file: fileInfo.file

@@ -32,7 +32,9 @@ export class FirstModalComponent {
       this.onHidden();
     }));
 
-    this.bsModalRef = this.modalService.show(this.content);
+    if (this.content) {
+      this.bsModalRef = this.modalService.show(this.content);
+    }
   }
 
   onHidden() {
