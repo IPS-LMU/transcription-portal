@@ -1,6 +1,7 @@
 {
+  "name": "transcription-portal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "root": "apps/transcription-portal",
   "sourceRoot": "apps/transcription-portal/src",
   "prefix": "tportal",
   "targets": {
@@ -13,7 +14,6 @@
         "main": "apps/transcription-portal/src/main.ts",
         "polyfills": "apps/transcription-portal/src/polyfills.ts",
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
-        "inlineStyleLanguage": "scss",
         "assets": [
           "apps/transcription-portal/src/favicon.ico",
           "apps/transcription-portal/src/assets",
@@ -23,7 +23,7 @@
         "styles": [
           "node_modules/font-awesome/css/font-awesome.min.css",
           "node_modules/bootstrap/dist/css/bootstrap.min.css",
-          "apps/transcription-portal/src/styles.scss"
+          "apps/transcription-portal/src/styles.css"
         ],
         "allowedCommonJsDependencies": [
           "x2js",
@@ -33,8 +33,6 @@
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
           "node_modules/jquery/dist/jquery.min.js",
-          "node_modules/notifyjs/dist/notify.js",
-          "node_modules/moment/min/moment.min.js",
           "node_modules/chart.js/dist/Chart.min.js",
           "node_modules/jszip/dist/jszip.min.js",
           "node_modules/maintenance-warning-snackbar/maintenanceWarningSnackbar.js"
@@ -94,17 +92,14 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": [
-          "apps/transcription-portal/src/**/*.ts",
-          "apps/transcription-portal/src/**/*.html"
-        ]
+        "lintFilePatterns": ["apps/transcription-portal/**/*.ts", "apps/transcription-portal/**/*.html"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/transcription-portal"],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/transcription-portal/jest.config.js",
+        "jestConfig": "apps/transcription-portal/jest.config.ts",
         "passWithNoTests": true
       }
     }

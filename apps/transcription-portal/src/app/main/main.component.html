@@ -206,17 +206,17 @@
         <ng-container *ngIf="toolSelectedOperation!.previousOperation!.results.length > 0">
           {{toolSelectedOperation!.name}}: {{toolSelectedOperation!.previousOperation!.results[0].fullname}}
 
-          , Language: {{toolSelectedOperation?.task?.language}}
+          , Language: <ng-container *ngIf="toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined && toolSelectedOperation.task.language !== undefined">{{toolSelectedOperation.task.language}}</ng-container>
 
           , Audio duration: {{getTime() |time}}
 
         </ng-container>
         <ng-container *ngIf="toolSelectedOperation !== undefined && toolSelectedOperation.previousOperation!.results.length < 1
         && toolSelectedOperation !== undefined && toolSelectedOperation!.previousOperation!.previousOperation !== undefined">
-          {{toolSelectedOperation?.name}}:
+          <ng-container *ngIf="toolSelectedOperation !== undefined && toolSelectedOperation.name !== undefined">{{toolSelectedOperation.name}}</ng-container>:
           {{toolSelectedOperation!.previousOperation!.previousOperation!.results[0]!.fullname}}
 
-          , Language: {{toolSelectedOperation?.task?.language}}
+          , Language: <ng-container *ngIf="toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined && toolSelectedOperation.task.language !== undefined">{{toolSelectedOperation.task.language}}</ng-container>
 
           , Audio duration: {{getTime() | time}}
         </ng-container>

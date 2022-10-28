@@ -1,5 +1,6 @@
-module.exports = {
-  displayName: 'transcription-portal',
+/* eslint-disable */
+export default {
+  displayName: 'tportal',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -8,7 +9,7 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     },
   },
-  coverageDirectory: '../../coverage/apps/transcription-portal',
+  coverageDirectory: '../../coverage/apps/tportal',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
   },

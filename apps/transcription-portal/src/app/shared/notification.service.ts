@@ -1,7 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Subject} from 'rxjs';
-
-declare var Notify: any;
+import * as Notify from 'notifyjs';
 
 @Injectable()
 export class NotificationService {

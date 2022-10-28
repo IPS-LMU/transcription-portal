@@ -13,7 +13,6 @@ import {TaskEntry} from './task-entry';
 import {ASROperation} from '../operations/asr-operation';
 import {EmuOperation} from '../operations/emu-operation';
 import {Operation} from '../operations/operation';
-import * as moment from 'moment';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {AlertService} from '../../shared/alert.service';
 import {firstValueFrom, interval, of} from 'rxjs';
@@ -21,6 +20,7 @@ import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 import {AudioInfo, WavFormat} from '@octra/media';
 import {DirectoryInfo, FileInfo, flatten} from '@octra/utilities';
+import {DateTime} from 'luxon';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -585,7 +585,7 @@ export class TaskService implements OnDestroy {
         const json = {
           version: '1.0.0',
           encoding: 'UTF-8',
-          created: moment().format(),
+          created: DateTime.now().toISO(),
           entries: values
         };
 
@@ -797,26 +797,35 @@ export class TaskService implements OnDestroy {
       let newFileInfo: FileInfo | undefined;
       this.newfiles = true;
 
-      new Promise<void>((res) => {
-          if (newName !== file.fullname) {
-            // no valid name, replace
-            FileInfo.renameFile(file.file!, newName, {
-              type: file.type,
-              lastModified: file.file!.lastModified
-            }).then((newfile: File) => {
-              newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
-              newFileInfo.attributes = queueItem.file.attributes;
-              newFileInfo.attributes.originalFileName = file.fullname;
-              file = newFileInfo;
-              res();
-            });
+      new Promise<void>((res, rej) => {
+          if (file?.file) {
+            if (newName !== file.fullname) {
+              // no valid name, replace
+              FileInfo.renameFile(file.file, newName, {
+                type: file.type,
+                lastModified: file.file.lastModified
+              }).then((newfile: File) => {
+                newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
+                newFileInfo.attributes = queueItem.file.attributes;
+                newFileInfo.attributes.originalFileName = file.fullname;
+                file = newFileInfo;
+                res();
+              });
+            } else {
+              if (file?.file) {
+
+                newFileInfo = new FileInfo(file.fullname, (file.type !== '')
+                  ? file.type : file.file.type, file.size, file.file);
+                newFileInfo.attributes = queueItem.file.attributes;
+                newFileInfo.attributes.originalFileName = file.fullname;
+                file.attributes.originalFileName = file.fullname;
+                res();
+              } else {
+                rej('file is null');
+              }
+            }
           } else {
-            newFileInfo = new FileInfo(file.fullname, (file.type !== '')
-              ? file.type : file.file!.type, file.size, file.file);
-            newFileInfo.attributes = queueItem.file.attributes;
-            newFileInfo.attributes.originalFileName = file.fullname;
-            file.attributes.originalFileName = file.fullname;
-            res();
+            reject('file is null');
           }
         }
       ).then(() => {
@@ -825,106 +834,110 @@ export class TaskService implements OnDestroy {
 
         setTimeout(() => {
           const reader = new FileReader();
-          reader.onload = (event: any) => {
-            const format = new WavFormat();
-            format.init(file.fullname, event.target.result);
-            const isValidFormat = format.isValid(event.target.result);
-            const isValidTranscript = this.validTranscript(file.extension);
+          if (file?.file) {
+            reader.onload = (event: any) => {
+              const format = new WavFormat();
+              format.init(file.fullname, event.target.result);
+              const isValidFormat = format.isValid(event.target.result);
+              const isValidTranscript = this.validTranscript(file.extension);
 
-            if (isValidFormat && format.channels > 1) {
-              const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
-              console.log(`split channels`);
-              format.splitChannelsToFiles(file.attributes.originalFileName.replace(/\..+$/g, ''), 'audio/wav', event.target.result).then((files) => {
+              if (isValidFormat && format.channels > 1) {
+                const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
+                console.log(`split channels`);
+                format.splitChannelsToFiles(file.attributes.originalFileName.replace(/\..+$/g, ''), 'audio/wav', event.target.result).then((files) => {
 
-                if (this._splitPrompt === 'PENDING') {
-                  this.openSplitModal();
-                  this._splitPrompt = 'ASKED';
-                } else if (this._splitPrompt !== 'ASKED') {
-                  if (this._splitPrompt === 'FIRST') {
-                    files.splice(1, 1);
-                  } else if (this._splitPrompt === 'SECOND') {
-                    files.splice(0, 1);
+                  if (this._splitPrompt === 'PENDING') {
+                    this.openSplitModal();
+                    this._splitPrompt = 'ASKED';
+                  } else if (this._splitPrompt !== 'ASKED') {
+                    if (this._splitPrompt === 'FIRST') {
+                      files.splice(1, 1);
+                    } else if (this._splitPrompt === 'SECOND') {
+                      files.splice(0, 1);
+                    }
                   }
-                }
 
-                const fileInfos: FileInfo[] = [];
+                  const fileInfos: FileInfo[] = [];
 
-                if (files.length > 1) {
-                  for (let i = 0; i < files.length; i++) {
-                    const fileObj = files[i];
-                    const fileInfo = FileInfo.fromFileObject(fileObj);
-                    fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
-                    fileInfos.push(fileInfo);
-                  }
-                  directory.addEntries(fileInfos);
-                  this.processDirectoryInfo(directory, queueItem).then((result) => {
-                    resolve(result);
-                  }).catch((err) => {
-                    reject(err);
-                  });
-                } else {
-                  // TODO ?
-                  // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
-                  this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
-                }
-              }).catch((error) => {
-                console.error(error);
-              });
-
-            } else if (isValidFormat || isValidTranscript) {
-              if (!isValidTranscript) {
-                // it's an audio file
-                newFileInfo = new AudioInfo(
-                  newName, file.file!.type, file.file!.size, format.sampleRate,
-                  format.duration, format.channels, format.bitsPerSample);
-              } else {
-                // TODO do we need this?
-              }
-
-              if (newFileInfo) {
-                if ((newFileInfo.file === null || newFileInfo.file === undefined)) {
-                  newFileInfo.file = file.file;
-                }
-
-                newFileInfo.attributes = file.attributes;
-                queueItem.file = newFileInfo;
-
-                if (!(foundOldFile === null || foundOldFile === undefined)) {
-
-                  if (!isValidTranscript || foundOldFile.files.length === 1) {
-                    const oldFileIndex = foundOldFile.files.findIndex((a) => {
-                      return a.attributes.originalFileName === newFileInfo?.attributes.originalFileName && a.size === newFileInfo?.size;
+                  if (files.length > 1) {
+                    for (let i = 0; i < files.length; i++) {
+                      const fileObj = files[i];
+                      const fileInfo = FileInfo.fromFileObject(fileObj);
+                      fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
+                      fileInfos.push(fileInfo);
+                    }
+                    directory.addEntries(fileInfos);
+                    this.processDirectoryInfo(directory, queueItem).then((result) => {
+                      resolve(result);
+                    }).catch((err) => {
+                      reject(err);
                     });
-                    foundOldFile.setFileObj(oldFileIndex, newFileInfo);
                   } else {
-                    // a transcript file already exists
-                    foundOldFile.files.splice(1, 1);
-                    foundOldFile.files.push(newFileInfo);
+                    // TODO ?
+                    // fileInfo.attributes['originalFileName'] = `${file.name}_${i + 1}.${file.extension}`;
+                    this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem).then(resolve).catch(reject);
                   }
-                  resolve([]);
+                }).catch((error) => {
+                  console.error(error);
+                });
+
+              } else if (isValidFormat || isValidTranscript) {
+                if (!isValidTranscript && file?.file) {
+                  // it's an audio file
+                  newFileInfo = new AudioInfo(
+                    newName, file.file.type, file.file.size, format.sampleRate,
+                    format.duration, format.channels, format.bitsPerSample);
                 } else {
-                  const task = new Task([queueItem.file as FileInfo], this.operations);
-                  task.language = this.selectedlanguage?.code;
-                  task.asr = this.selectedlanguage?.asr;
+                  // TODO do we need this?
+                }
 
-                  // set state
-                  for (let i = 0; i < this.operations.length; i++) {
-                    const operation = this.operations[i];
-                    task.operations[i].enabled = operation.enabled;
+                if (newFileInfo) {
+                  if ((newFileInfo.file === null || newFileInfo.file === undefined)) {
+                    newFileInfo.file = file.file;
                   }
 
-                  resolve([task]);
+                  newFileInfo.attributes = file.attributes;
+                  queueItem.file = newFileInfo;
+
+                  if (!(foundOldFile === null || foundOldFile === undefined)) {
+
+                    if (!isValidTranscript || foundOldFile.files.length === 1) {
+                      const oldFileIndex = foundOldFile.files.findIndex((a) => {
+                        return a.attributes.originalFileName === newFileInfo?.attributes.originalFileName && a.size === newFileInfo?.size;
+                      });
+                      foundOldFile.setFileObj(oldFileIndex, newFileInfo);
+                    } else {
+                      // a transcript file already exists
+                      foundOldFile.files.splice(1, 1);
+                      foundOldFile.files.push(newFileInfo);
+                    }
+                    resolve([]);
+                  } else {
+                    const task = new Task([queueItem.file as FileInfo], this.operations);
+                    task.language = this.selectedlanguage?.code;
+                    task.asr = this.selectedlanguage?.asr;
+
+                    // set state
+                    for (let i = 0; i < this.operations.length; i++) {
+                      const operation = this.operations[i];
+                      task.operations[i].enabled = operation.enabled;
+                    }
+
+                    resolve([task]);
+                  }
+                } else {
+                  reject('fileinfo is undefined');
                 }
               } else {
-                reject('fileinfo is undefined');
-              }
-            } else {
-              this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid.
+                this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid.
               Only Wave (*.wav) files with 16 Bit signed Int are supported.`, -1);
-              reject('no valid wave format!');
-            }
-          };
-          reader.readAsArrayBuffer(file.file!);
+                reject('no valid wave format!');
+              }
+            };
+            reader.readAsArrayBuffer(file.file);
+          } else {
+            console.error('file is null');
+          }
         }, 1000);
       });
     });

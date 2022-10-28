@@ -8,12 +8,12 @@ import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
 import {StorageService} from '../../storage.service';
-import * as moment from 'moment';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {DownloadService} from '../../shared/download.service';
 import * as JSZip from 'jszip';
+import {DateTime} from 'luxon';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -88,7 +88,7 @@ export class DownloadModalComponent implements OnInit {
     }
     // get url for resulty by column
     // prepare package
-    const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+    const dateStr = DateTime.now().toFormat('YYYY-MM-DD_H-mm-ss');
     const requestPackage: {
       entries: {
         path: string,
@@ -116,10 +116,10 @@ export class DownloadModalComponent implements OnInit {
 
         if (operation.results.length > 0 && operation.state === TaskState.FINISHED) {
           const result: FileInfo | undefined = operation.lastResult;
-          if (result?.online) {
+          if (result?.online && result.file) {
             requestPackage.entries.push({
               path: result.fullname,
-              file: result.file!
+              file: result.file
             });
 
 
@@ -131,10 +131,12 @@ export class DownloadModalComponent implements OnInit {
               this.downloadService.getConversionFiles(operation, result, selectedConverters).then((files) => {
                 files = files.filter(a => a);
                 for (const fileInfo of files) {
-                  requestPackage.entries.push({
-                    path: fileInfo.file!.name,
-                    file: fileInfo.file!
-                  });
+                  if(fileInfo?.file) {
+                    requestPackage.entries.push({
+                      path: fileInfo.file.name,
+                      file: fileInfo.file
+                    });
+                  }
                 }
                 resolve();
               }).catch((error) => {
@@ -179,7 +181,7 @@ export class DownloadModalComponent implements OnInit {
     // get results url by lines
     if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
       // prepare package
-      const dateStr = moment().format('YYYY-MM-DD_H-mm-ss');
+      const dateStr = DateTime.now().toFormat('YYYY-MM-DD_H-mm-ss');
       const requestPackage: {
         entries: {
           path: string,
@@ -265,10 +267,13 @@ export class DownloadModalComponent implements OnInit {
           if (operation.name !== task.operations[0].name && operation.state === TaskState.FINISHED && operation.results.length > 0) {
             const opResult = operation.lastResult;
             const folderName = this.getFolderName(operation);
-            entryResult.push({
-              path: `${task.files[0].name}/${folderName}/${opResult?.file!.name}`,
-              file: opResult?.file
-            });
+
+            if (opResult?.file) {
+              entryResult.push({
+                path: `${task.files[0].name}/${folderName}/${opResult.file.name}`,
+                file: opResult?.file
+              });
+            }
 
             const selectedConverters = AppInfo.converters.filter((a, i) => {
               return this.checkboxes[i];

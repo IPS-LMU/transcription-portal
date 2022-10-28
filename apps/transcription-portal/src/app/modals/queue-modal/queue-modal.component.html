@@ -66,8 +66,8 @@
                 <ng-container *ngFor="let lang of AppConfiguration.api.languages; let i = index;">
                   <tr [ngClass]="{
                             selected:  !(taskService.selectedlanguage === undefined)
-                                        && (taskService.selectedlanguage?.code === lang.code)
-                                        && (taskService.selectedlanguage?.asr === lang.asr)
+                                        && (taskService.selectedlanguage.code === lang.code)
+                                        && (taskService.selectedlanguage.asr === lang.asr)
                             }"
                   >
                     <td (click)="onASRItemClicked(lang)"

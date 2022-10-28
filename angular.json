@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "projects": {
-    "transcription-portal": "apps/transcription-portal",
-    "transcription-portal-e2e": "apps/transcription-portal-e2e"
-  }
-}

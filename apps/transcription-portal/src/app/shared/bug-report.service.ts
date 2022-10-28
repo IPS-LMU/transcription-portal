@@ -2,13 +2,13 @@ import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {SettingsService} from './settings.service';
 import {HttpClient} from '@angular/common/http';
-import * as moment from 'moment';
 import {BugReporter} from '../obj/BugAPI/BugReporter';
 import {StorageService} from '../storage.service';
 import {AppInfo} from '../app.info';
 import {BrowserInfo} from '../obj/BrowserInfo';
 import {EmailBugReporter} from '../obj/BugAPI/EmailBugReporter';
 import {hasProperty} from '@octra/utilities';
+import {DateTime} from 'luxon';
 
 export enum ConsoleType {
   LOG,
@@ -61,7 +61,7 @@ export class BugReportService {
 
     const consoleItem: ConsoleEntry = {
       type,
-      timestamp: moment().format('DD.MM.YY HH:mm:ss'),
+      timestamp: DateTime.now().toFormat('DD.MM.YY HH:mm:ss'),
       message: sanitizedMessage
     };
 

@@ -1,6 +1,6 @@
 import { getGreeting } from '../support/app.po';
 
-describe('transcription-portal', () => {
+describe('tportal', () => {
   beforeEach(() => cy.visit('/'));
 
   it('should display welcome message', () => {
@@ -8,6 +8,6 @@ describe('transcription-portal', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome transcription-portal');
+    getGreeting().contains('Welcome tportal');
   });
 });
