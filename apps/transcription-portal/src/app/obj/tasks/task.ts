@@ -446,7 +446,7 @@ export class TaskDirectory {
     } else {
       this._id = ++TaskEntry.counter;
     }
-    this._foldername = DirectoryInfo.extractFolderName(path);
+    this._foldername = DirectoryInfo.extractFolderName(path)!;
   }
 
   get foldername(): string {

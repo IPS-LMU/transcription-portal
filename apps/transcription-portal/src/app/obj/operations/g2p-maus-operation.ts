@@ -18,7 +18,7 @@ export class G2pMausOperation extends Operation {
 
     let url = this._commands[0].replace('{{host}}', languageObject.host)
       .replace('{{language}}', this.task?.language)
-      .replace('{{audioURL}}', operations[0].results[0].url);
+      .replace('{{audioURL}}', operations[0]!.results[0]!.url!);
 
     // use G2P -> MAUS Pipe
     if (this.previousOperation?.enabled && this.previousOperation?.lastResult?.url) {

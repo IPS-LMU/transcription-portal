@@ -128,13 +128,13 @@ export class ResultsTableComponent implements OnChanges {
                 originalFileName = FileInfo.extractFileName(originalFileName);
 
                 const resultObj = {
-                  url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)),
+                  url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file!)),
                   name: originalFileName.name,
                   type: result.type,
                   available: result.available,
                   fullname: originalFileName.name + originalFileName.extension,
                   extension: result.extension,
-                  file: result.file
+                  file: result.file!
                 };
 
                 const audio: OAudiofile = new OAudiofile();
@@ -176,7 +176,7 @@ export class ResultsTableComponent implements OnChanges {
 
                   if (conversion) {
                     res.result = conversion;
-                    const url = URL.createObjectURL(conversion.file);
+                    const url = URL.createObjectURL(conversion.file!);
                     res.result.url = this.sanitizer.bypassSecurityTrustUrl(url) as any;
                     res.state = 'FINISHED';
                     convElem.conversions.push(res);
@@ -206,7 +206,15 @@ export class ResultsTableComponent implements OnChanges {
         for (let i = 0; i < this.operation.results.length; i++) {
           const result = this.operation.results[i];
           this.convertedArray.push({
-            input: result,
+            input: {
+              url: result.url!,
+              name: result.name,
+              type: result.type,
+              available: result.available,
+              fullname: result.fullname,
+              extension: result.extension,
+              file: result.file!
+            },
             conversions: [],
             number: i
           });

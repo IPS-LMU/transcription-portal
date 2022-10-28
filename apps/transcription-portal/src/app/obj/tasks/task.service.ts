@@ -800,9 +800,9 @@ export class TaskService implements OnDestroy {
       new Promise<void>((res) => {
           if (newName !== file.fullname) {
             // no valid name, replace
-            FileInfo.renameFile(file.file, newName, {
+            FileInfo.renameFile(file.file!, newName, {
               type: file.type,
-              lastModified: file.file.lastModified
+              lastModified: file.file!.lastModified
             }).then((newfile: File) => {
               newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
               newFileInfo.attributes = queueItem.file.attributes;
@@ -812,7 +812,7 @@ export class TaskService implements OnDestroy {
             });
           } else {
             newFileInfo = new FileInfo(file.fullname, (file.type !== '')
-              ? file.type : file.file.type, file.size, file.file);
+              ? file.type : file.file!.type, file.size, file.file);
             newFileInfo.attributes = queueItem.file.attributes;
             newFileInfo.attributes.originalFileName = file.fullname;
             file.attributes.originalFileName = file.fullname;
@@ -875,7 +875,7 @@ export class TaskService implements OnDestroy {
               if (!isValidTranscript) {
                 // it's an audio file
                 newFileInfo = new AudioInfo(
-                  newName, file.file.type, file.file.size, format.sampleRate,
+                  newName, file.file!.type, file.file!.size, format.sampleRate,
                   format.duration, format.channels, format.bitsPerSample);
               } else {
                 // TODO do we need this?
@@ -924,7 +924,7 @@ export class TaskService implements OnDestroy {
               reject('no valid wave format!');
             }
           };
-          reader.readAsArrayBuffer(file.file);
+          reader.readAsArrayBuffer(file.file!);
         }, 1000);
       });
     });

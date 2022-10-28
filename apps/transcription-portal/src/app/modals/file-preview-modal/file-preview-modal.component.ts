@@ -3,7 +3,7 @@ import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {FileInfo} from '@octra/utilities';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
-import DropEvent = JQuery.DropEvent;
+
 
 @Component({
   selector: 'tportal-file-preview-modal',
@@ -24,7 +24,7 @@ export class FilePreviewModalComponent {
   }) {
     if (this.previewModal) {
       this.selectedFile = file;
-      this.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file.file));
+      this.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file.file!));
       this.loadFileContent();
       this.onDismiss = onDismiss;
 
@@ -46,7 +46,7 @@ export class FilePreviewModalComponent {
 
   private loadFileContent() {
     if (!(this.selectedFile === null || this.selectedFile === undefined)) {
-      FileInfo.getFileContent(this.selectedFile.file).then((text) => {
+      FileInfo.getFileContent(this.selectedFile.file!).then((text) => {
         this.fileContent = text;
       }).catch((error) => {
         console.error(error);

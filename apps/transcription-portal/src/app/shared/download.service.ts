@@ -51,7 +51,7 @@ export class DownloadService {
 
   public getResultConversion(exportConverter: ConverterData, operation: Operation, opResult: FileInfo): Promise<FileInfo | undefined> {
     return new Promise<FileInfo | undefined>((resolve, reject) => {
-      FileInfo.getFileContent(opResult.file).then((content) => {
+      FileInfo.getFileContent(opResult.file!).then((content) => {
         const audiofile = new OAudiofile();
         if (!operation.task) {
           throw new Error('operation task is undefined');

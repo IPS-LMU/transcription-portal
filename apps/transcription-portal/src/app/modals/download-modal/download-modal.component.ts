@@ -119,7 +119,7 @@ export class DownloadModalComponent implements OnInit {
           if (result?.online) {
             requestPackage.entries.push({
               path: result.fullname,
-              file: result.file
+              file: result.file!
             });
 
 
@@ -132,8 +132,8 @@ export class DownloadModalComponent implements OnInit {
                 files = files.filter(a => a);
                 for (const fileInfo of files) {
                   requestPackage.entries.push({
-                    path: fileInfo.file.name,
-                    file: fileInfo.file
+                    path: fileInfo.file!.name,
+                    file: fileInfo.file!
                   });
                 }
                 resolve();
@@ -266,7 +266,7 @@ export class DownloadModalComponent implements OnInit {
             const opResult = operation.lastResult;
             const folderName = this.getFolderName(operation);
             entryResult.push({
-              path: `${task.files[0].name}/${folderName}/${opResult?.file.name}`,
+              path: `${task.files[0].name}/${folderName}/${opResult?.file!.name}`,
               file: opResult?.file
             });
 

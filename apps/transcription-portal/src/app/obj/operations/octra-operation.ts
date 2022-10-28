@@ -128,17 +128,17 @@ export class OCTRAOperation extends ToolOperation {
         if (this.results.length < 1 && this.previousOperation) {
           if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult) {
             const url = this.previousOperation.lastResult.url;
-            transcript += encodeURIComponent(url);
+            transcript += encodeURIComponent(url!);
           } else if (this.previousOperation.previousOperation && this.previousOperation.previousOperation.lastResult &&
             this.previousOperation.previousOperation.results.length > 1) {
             const url = this.previousOperation.previousOperation.lastResult.url;
-            transcript += encodeURIComponent(url);
+            transcript += encodeURIComponent(url!);
           } else {
             transcript = '';
           }
         } else if (this.lastResult) {
           const url = this.lastResult.url;
-          transcript += encodeURIComponent(url);
+          transcript += encodeURIComponent(url!);
         }
 
         return `${this._commands[0]}/user/load?` +

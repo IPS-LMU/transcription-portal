@@ -42,7 +42,7 @@ export class UploadOperation extends Operation {
     const form: FormData = new FormData();
 
     for (let i = 0; i < files.length; i++) {
-      form.append('file' + i, files[i].file);
+      form.append('file' + i, files[i]!.file!);
     }
 
     const xhr = new XMLHttpRequest();
@@ -109,7 +109,7 @@ export class UploadOperation extends Operation {
             for (let i = 0; i < files.length; i++) {
               files[i].url = json.fileList.entry[i].value;
               const type = (files[i].extension.indexOf('wav') > 0) ? 'audio/wav' : 'text/plain';
-              this.results.push(FileInfo.fromURL(files[i].url, type, files[i].fullname, Date.now()));
+              this.results.push(FileInfo.fromURL(files[i]!.url!, type, files[i]!.fullname, Date.now()));
             }
           } else {
             // json attribute entry is an object
