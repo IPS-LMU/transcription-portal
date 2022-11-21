@@ -9,12 +9,13 @@ import {
   TextConverter,
   WebVTTConverter
 } from '@octra/annotation';
+import {environment} from '../environments/environment';
 
 declare var ohPortalVersion: string;
 declare var ohPortalLastUpdated: string;
 
 export class AppInfo {
-  public static readonly debugging = true;
+  public static readonly debugging = environment.development;
   static readonly _version = ohPortalVersion;
   static readonly lastUpdated = ohPortalLastUpdated;
 
