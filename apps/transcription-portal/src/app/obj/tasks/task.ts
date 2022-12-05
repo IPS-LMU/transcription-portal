@@ -148,6 +148,7 @@ export class Task {
       if (file.fullname.indexOf('wav') > 0) {
         info = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
         info.attributes = file.attributes;
+        info.hash = file.hash;
       } else {
         info = FileInfo.fromAny(file);
       }

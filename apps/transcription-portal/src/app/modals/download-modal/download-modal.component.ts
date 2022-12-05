@@ -90,7 +90,7 @@ export class DownloadModalComponent implements OnInit {
     }
     // get url for resulty by column
     // prepare package
-    const dateStr = DateTime.now().toFormat('YYYY-MM-DD_H-mm-ss');
+    const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
     const requestPackage: {
       entries: {
         path: string,
@@ -168,7 +168,7 @@ export class DownloadModalComponent implements OnInit {
       }
     }).then(() => {
       if (requestPackage.entries.length > 0) {
-        this.archiveName = `${this.column?.name}Results_${dateStr}`;
+        this.archiveName = `${this.column?.name}Results_${dateStr}.zip`;
         this.doZipping(requestPackage.entries);
       } else {
         this.state = 'inactive';
@@ -183,7 +183,8 @@ export class DownloadModalComponent implements OnInit {
     // get results url by lines
     if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
       // prepare package
-      const dateStr = DateTime.now().toFormat('YYYY-MM-DD_H-mm-ss');
+      const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
+      console.log(dateStr);
       const requestPackage: {
         entries: {
           path: string,

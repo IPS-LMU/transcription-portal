@@ -1,6 +1,7 @@
 import {Subject} from 'rxjs';
 import {Task, TaskDirectory} from './tasks';
 import {DirectoryInfo, FileInfo} from '@octra/utilities';
+import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks
@@ -92,7 +93,8 @@ export class Preprocessor {
   }
 
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = () => {
-    return new Promise<(Task | TaskDirectory)[]>(()=>{});
+    return new Promise<(Task | TaskDirectory)[]>(() => {
+    });
   }
 
   public changeState(item: QueueItem, state: State) {
@@ -107,6 +109,15 @@ export class Preprocessor {
 
   public addToQueue(file: (FileInfo | DirectoryInfo)) {
     const queueItem = new QueueItem(file);
+    const fileBlob = (file as FileInfo).file;
+
+    if (fileBlob) {
+      calcSHA256FromFile(fileBlob).then((hash) => {
+        console.log('TEST HASH: ' + hash);
+      }).catch((e) => {
+        console.error(e);
+      })
+    }
 
     this._queue.push(queueItem);
     this._itemAdded.next(queueItem);
@@ -132,12 +143,14 @@ export class Preprocessor {
     this._itemRemoved.complete();
   }
 
-  public getHashString(filename: string, size: number) {
-    return `${filename}_${size}`;
+  public async getHashString(fileBlob: File) {
+    if (cryptoSupported()) {
+      return calcSHA256FromFile(fileBlob);
+    }
+    return `${fileBlob.name}_${fileBlob.size}`;
   }
 
   private onItemAdded = (newItem: QueueItem) => {
-
     this.changeState(newItem, State.PROCESSING);
     this.process(newItem).then((result) => {
         if (!(result === null || result === undefined)) {
