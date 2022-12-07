@@ -40,33 +40,29 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (hasProperty(changes, 'shortStyle') && changes["shortStyle"].currentValue !== undefined) {
+    if (hasProperty(changes, 'shortStyle') && changes['shortStyle'].currentValue !== undefined) {
       this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', (this.shortStyle) ? '150px' : 'inherit');
+    }
+    if (hasProperty(changes, 'entry') && changes['entry'].currentValue !== undefined) {
+      // entry set
+
+      // changes of entry must be observed specifically
+      if (this.entry instanceof Task) {
+        this.subscrmanager.removeByTag('update');
+        this.subscrmanager.add(this.entry.statechange.subscribe(() => {
+          this.updateView();
+        }), 'update');
+
+        this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
+          this.updateView();
+        }), 'update');
+      }
     }
     this.updateView();
   }
 
   ngAfterViewInit() {
     if (!(this.entry === null || this.entry === undefined)) {
-      // entry set
-      if (this.entry instanceof Task) {
-        if (!(this.entry.files === null || this.entry.files === undefined)) {
-          this.updateView();
-        } else {
-          throw new Error('ProcColDirective error: entry of type Task does not have any files');
-        }
-      }
-
-      // changes of entry must be observed specifically
-      if (this.entry instanceof Task) {
-        this.subscrmanager.add(this.entry.statechange.subscribe(() => {
-          this.updateView();
-        }));
-
-        this.subscrmanager.add(this.entry.fileschange.subscribe(() => {
-          this.updateView();
-        }));
-      }
     } else {
       throw new Error('ProcColDirective error: no entry set');
     }
@@ -260,7 +256,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       // this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
 
       // set filename
-      if(this.entry){
+      if (this.entry) {
         this.renderer.setAttribute(result, 'title', this.entry.foldername);
         const filename = this.renderer.createText(' ' + this.entry.foldername);
         this.renderer.appendChild(result, filename);

@@ -52,6 +52,24 @@ export class TaskList {
     });
   }
 
+  public changeEntry(id: number, newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const foundEntry = this._entries.findIndex(a => a.id === id);
+
+      if (foundEntry > -1) {
+        this._entries[foundEntry] = newEntry;
+        this._entryChanged.next({
+          state: 'changed',
+          saveToDB,
+          entry: newEntry
+        });
+        resolve();
+      } else {
+        reject(`entry not found`);
+      }
+    });
+  }
+
   public findTaskByState(state: TaskState): Task | undefined {
     const tasks = this.getAllTasks();
 

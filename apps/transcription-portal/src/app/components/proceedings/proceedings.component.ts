@@ -17,7 +17,7 @@ import {ANIMATIONS} from '../../shared/Animations';
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {DirectoryInfo, FileInfo} from '@octra/utilities';
+import {DirectoryInfo, FileInfo, SubscriptionManager} from '@octra/utilities';
 import {TaskService} from '../../obj/tasks/task.service';
 import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
@@ -106,6 +106,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private allSelected = false;
   private selectionBlocked = false;
   private shortcutManager = new ShortcutManager();
+  private subscrManager = new SubscriptionManager();
 
   constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService,
               public storage: StorageService) {
@@ -113,6 +114,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
+
+    this.subscrManager.add(this.taskService.taskList?.entryChanged.subscribe({
+      next: (event) => {
+        console.log(`${event.state} ${event.entry.type} ${event.entry.id}`);
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      }
+    }));
   }
 
   public get d() {

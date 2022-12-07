@@ -1,6 +1,6 @@
-import {Subject} from 'rxjs';
+import {Subject, timer} from 'rxjs';
 import {Task, TaskDirectory} from './tasks';
-import {DirectoryInfo, FileInfo} from '@octra/utilities';
+import {DirectoryInfo, FileInfo, SubscriptionManager} from '@octra/utilities';
 import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
 
 /**
@@ -92,6 +92,8 @@ export class Preprocessor {
     return this._itemRemoved;
   }
 
+  private subscrManager = new SubscriptionManager();
+
   public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = () => {
     return new Promise<(Task | TaskDirectory)[]>(() => {
     });
@@ -152,17 +154,21 @@ export class Preprocessor {
 
   private onItemAdded = (newItem: QueueItem) => {
     this.changeState(newItem, State.PROCESSING);
-    this.process(newItem).then((result) => {
-        if (!(result === null || result === undefined)) {
-          newItem.results = result;
-          this.changeState(newItem, State.FINISHED);
+    this.subscrManager.add(timer(100).subscribe({
+      next: () => {
+        this.process(newItem).then((result) => {
+            if (!(result === null || result === undefined)) {
+              newItem.results = result;
+              this.changeState(newItem, State.FINISHED);
+              this.removeFromQueue(newItem.id);
+              this._itemProcessed.next(newItem);
+            }
+          }
+        ).catch((err) => {
           this.removeFromQueue(newItem.id);
-          this._itemProcessed.next(newItem);
-        }
+        })
       }
-    ).catch((err) => {
-      this.removeFromQueue(newItem.id);
-    })
+    }));
     ;
   }
 }

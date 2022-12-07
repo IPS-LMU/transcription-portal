@@ -19,7 +19,7 @@ import {firstValueFrom, interval, of} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 import {AudioInfo, WavFormat} from '@octra/media';
-import {DirectoryInfo, FileInfo, flatten} from '@octra/utilities';
+import {DirectoryInfo, escapeRegex, FileInfo, flatten} from '@octra/utilities';
 import {DateTime} from 'luxon';
 import {readFileAsArray} from '../functions';
 import {calcSHA256FromFile} from '../CryptoHelper';
@@ -155,29 +155,40 @@ export class TaskService implements OnDestroy {
     }
 
     this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
-      (item) => {
+      async (item) => {
         for (const result of item.results) {
           let foundTask: Task | undefined;
           if (result instanceof Task) {
-            result.changeState(TaskState.QUEUED);
-            foundTask = this.taskList?.getAllTasks().find((a) => {
-              const foundIt = a.files.find((b) => {
-                // TODO CHANGE!
-                return b.name.replace('_annot', '') === result.files[0].name;
-              });
-              return a.state === TaskState.QUEUED && !(foundIt === null || foundIt === undefined);
-            });
+            for (const file of result.files) {
+              const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/.[^.]+$/g, ''));
+              foundTask = this.getTaskWithOriginalFileName(new RegExp(`${escapedName}(.[^.]+)$`));
 
-            if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
-              && result.files[0].extension === '.wav')) {
-              foundTask.addFile(result.files[0]);
-              if (foundTask.files.length > 1) {
-                // TODO change if other than transcript files are needed
-                foundTask.operations[1].enabled = false;
-                foundTask.operations[1].changeState(TaskState.SKIPPED);
+              if (foundTask) {
+                // found a task
+                // file with this hash already exists, overwrite
+                const oldFileIndex = foundTask.files.findIndex((a) => file && a.hash === file.hash);
+
+                if (oldFileIndex > -1) {
+                  foundTask.setFileObj(oldFileIndex, file);
+                } else {
+                  if (foundTask.files.length > 1) {
+                    const index = file.type.indexOf('audio') > -1 ? 0 : 1;
+                    foundTask.files[index] = file;
+                  } else {
+                    if (file.type.indexOf('audio') > -1) {
+                      foundTask.files = [
+                        file,
+                        ...foundTask.files
+                      ];
+                    } else {
+                      foundTask.files.push(file);
+                    }
+                  }
+                }
+                await this.storage.saveTask(foundTask);
               }
-              this.storage.saveTask(foundTask);
             }
+            result.changeState(TaskState.QUEUED);
           } else {
             for (let j = 0; j < result.entries.length; j++) {
               const entry = result.entries[j] as Task;
@@ -241,6 +252,8 @@ export class TaskService implements OnDestroy {
 
           if ((foundTask === null || foundTask === undefined)) {
             this.addEntry(result, true);
+          } else {
+            foundTask.fileschange.next();
           }
         }
 
@@ -487,6 +500,26 @@ export class TaskService implements OnDestroy {
     });
   }
 
+  public changeEntry(id: number, entry: (Task | TaskDirectory), saveToDB: boolean = false) {
+    if (!this.taskList) {
+      throw new Error('undefined tasklist');
+    }
+
+    this.taskList.changeEntry(id, entry, saveToDB).then(() => {
+      if (!this.taskList) {
+        throw new Error('undefined tasklist');
+      }
+      return this.taskList.cleanup(entry, saveToDB);
+    }).catch((err) => {
+      console.error(`${err}`);
+    }).then(() => {
+      this.saveCounters();
+    }).catch((err) => {
+      console.error(`could not add via taskService!`);
+      console.error(`${err}`);
+    });
+  }
+
   public saveCounters() {
     this.storage.saveCounter('taskCounter', TaskEntry.counter);
     this.storage.saveCounter('operationCounter', Operation.counter);
@@ -648,10 +681,10 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  public process: (queueItem: QueueItem) => (Promise<(Task | TaskDirectory)[]>) = (queueItem: QueueItem) => {
+  public process: (queueItem: QueueItem) => (Promise<(Task | TaskDirectory)[]>) = async (queueItem: QueueItem) => {
     if (queueItem.file instanceof FileInfo) {
       const file = queueItem.file as FileInfo;
-      return this.processFileInfo(file, '', queueItem);
+      return await this.processFileInfo(file, '', queueItem);
     } else if (queueItem.file instanceof DirectoryInfo) {
       const dir = queueItem.file as DirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem);
@@ -794,13 +827,15 @@ export class TaskService implements OnDestroy {
   }
 
   private async processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
-    const newName = Date.now() + file.extension;
-    let newFileInfo: FileInfo | undefined;
-    this.newfiles = true;
-
     if (!(file?.file)) {
       throw new Error('file is undefined');
     }
+
+    file.hash = await this.preprocessor.getHashString(file.file);
+    const hashString = file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
+    const newName = `${hashString}${file.extension}`;
+    let newFileInfo: FileInfo | undefined;
+    this.newfiles = true;
 
     if (newName !== file.fullname) {
       // no valid name, replace
@@ -811,21 +846,26 @@ export class TaskService implements OnDestroy {
       newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
+      newFileInfo.hash = file.hash;
       file = newFileInfo;
     } else {
       newFileInfo = new FileInfo(file.fullname, (file.type !== '')
         ? file.type : file.file.type, file.size, file.file);
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
-      file.attributes.originalFileName = file.fullname;
+      newFileInfo.hash = file.hash;
+      newFileInfo.attributes.originalFileName = file.fullname;
+      file = newFileInfo;
     }
 
     if (!(file?.file)) {
       throw new Error('file is undefined');
     }
+    if (!(file?.hash)) {
+      throw new Error('hash is undefined');
+    }
 
-    file.hash = await this.preprocessor.getHashString(file.file);
-    const foundOldFile = this.getTaskWithHash(file.hash);
+    const foundOldFile = this.getTaskWithHashAndName(file.hash, file.attributes.originalFileName);
 
     if (file?.file) {
       const arrayBuffer = await readFileAsArray(file.file);
@@ -888,34 +928,19 @@ export class TaskService implements OnDestroy {
         newFileInfo.attributes = {
           ...file.attributes
         };
-        // queueItem.file = newFileInfo;
 
-        if (!(foundOldFile === null || foundOldFile === undefined)) {
+        // new file
+        const task = new Task([newFileInfo], this.operations);
+        task.language = this.selectedlanguage?.code;
+        task.asr = this.selectedlanguage?.asr;
 
-          if (!isValidTranscript || foundOldFile.files.length === 1) {
-            const oldFileIndex = foundOldFile.files.findIndex((a) => {
-              return a.attributes.originalFileName === newFileInfo?.attributes.originalFileName && a.size === newFileInfo?.size;
-            });
-            foundOldFile.setFileObj(oldFileIndex, newFileInfo);
-          } else {
-            // a transcript file already exists
-            foundOldFile.files.splice(1, 1);
-            foundOldFile.files.push(newFileInfo);
-          }
-          return [];
-        } else {
-          const task = new Task([newFileInfo], this.operations);
-          task.language = this.selectedlanguage?.code;
-          task.asr = this.selectedlanguage?.asr;
-
-          // set state
-          for (let i = 0; i < this.operations.length; i++) {
-            const operation = this.operations[i];
-            task.operations[i].enabled = operation.enabled;
-          }
-
-          return [task];
+        // set state
+        for (let i = 0; i < this.operations.length; i++) {
+          const operation = this.operations[i];
+          task.operations[i].enabled = operation.enabled;
         }
+
+        return [task];
       } else {
         throw new Error('fileinfo is undefined');
       }
@@ -972,7 +997,7 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  private getTaskWithHash(hash: string): Task | undefined {
+  private getTaskWithHashAndName(hash: string, name: string): Task | undefined {
     if (!this.taskList) {
       throw new Error('undefined tasklist');
     }
@@ -984,8 +1009,32 @@ export class TaskService implements OnDestroy {
         for (const file of task.files) {
           const cmpHash = file.hash ?? `${file.name}_${file.size}`;
           // console.log(`${cmpHash} === ${hash}`);
-          if (cmpHash === hash && (task.operations[0].state === TaskState.PENDING
+          if (cmpHash === hash && file.attributes.originalFileName === name && (task.operations[0].state === TaskState.PENDING
             || task.operations[0].state === TaskState.ERROR)) {
+            return task;
+          }
+        }
+      } else {
+        console.error('could not find originalFilename');
+      }
+    }
+
+    return undefined;
+  }
+
+  private getTaskWithOriginalFileName(regex: RegExp): Task | undefined {
+    if (!this.taskList) {
+      throw new Error('undefined tasklist');
+    }
+
+    const tasks: Task[] = this.taskList.getAllTasks();
+
+    for (const task of tasks) {
+      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
+        for (const file of task.files) {
+          // console.log(`${cmpHash} === ${hash}`);
+          if ((task.operations[0].state === TaskState.PENDING || task.operations[0].state === TaskState.QUEUED
+            || task.operations[0].state === TaskState.ERROR) && regex.exec(file.attributes.originalFileName) !== null) {
             return task;
           }
         }
