@@ -174,6 +174,9 @@ export class TaskService implements OnDestroy {
                   if (foundTask.files.length > 1) {
                     const index = file.type.indexOf('audio') > -1 ? 0 : 1;
                     foundTask.files[index] = file;
+                    if (index === 1) {
+                      foundTask.operations[1].enabled = false;
+                    }
                   } else {
                     if (file.type.indexOf('audio') > -1) {
                       foundTask.files = [
@@ -182,6 +185,7 @@ export class TaskService implements OnDestroy {
                       ];
                     } else {
                       foundTask.files.push(file);
+                      foundTask.operations[1].enabled = false;
                     }
                   }
                 }

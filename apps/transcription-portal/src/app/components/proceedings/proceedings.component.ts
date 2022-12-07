@@ -75,7 +75,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
-  public allDirOpened: 'opened' | 'closed' = 'closed';
+  public allDirOpened: 'opened' | 'closed' = 'opened';
   @Input() shortstyle = false;
   @Input() isClosed = false;
 
