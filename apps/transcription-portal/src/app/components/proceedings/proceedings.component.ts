@@ -31,6 +31,7 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
+import {AudioInfo} from '@octra/media';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -886,6 +887,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public getTask(entry: (Task | TaskDirectory)): Task | undefined {
     if (entry instanceof Task) {
       return entry as Task
+    }
+    return undefined;
+  }
+
+  getAudioFileOfTask(task: Task): AudioInfo | undefined {
+    if (task.files.length > 0 && task.files[0] instanceof AudioInfo) {
+      return task.files[0];
     }
     return undefined;
   }

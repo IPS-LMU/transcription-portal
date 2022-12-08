@@ -9,17 +9,13 @@ import {AudioInfo} from '@octra/media';
 })
 export class FileInfoTableComponent implements OnInit {
 
-  @Input() fileinfo?: FileInfo;
+  @Input() fileinfo?: AudioInfo;
 
   constructor() {
   }
 
-  get audioInfo(): AudioInfo | undefined {
-    // TODO change this
-    if (this.fileinfo instanceof AudioInfo) {
-      return this.fileinfo;
-    }
-    return undefined;
+  isWavFile() {
+    return this.fileinfo?.type?.includes('wav') ?? false;
   }
 
   ngOnInit() {

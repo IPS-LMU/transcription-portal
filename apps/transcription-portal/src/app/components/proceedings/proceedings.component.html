@@ -98,7 +98,7 @@
     <br/><br/>
     <span>File information:</span>
     <tportal-file-info-table
-      [fileinfo]="(popover.task.files) ? popover.task.files[0] : undefined"></tportal-file-info-table>
+      [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
   </ng-container>
 </tportal-popover>
 
@@ -227,7 +227,8 @@
 
       <!-- TABLE BODY -->
       <tbody>
-      <tportal-context-menu (optionselected)="onContextMenuOptionSelected($event)" [hid]="contextmenu.hidden" [ngStyle]="{
+      <tportal-context-menu (optionselected)="onContextMenuOptionSelected($event)" [hid]="contextmenu.hidden"
+                            [ngStyle]="{
         'margin-top': contextmenu.y + 'px',
         'margin-left': contextmenu.x + 'px',
         'display': (contextmenu.hidden) ? 'none' : 'initial'

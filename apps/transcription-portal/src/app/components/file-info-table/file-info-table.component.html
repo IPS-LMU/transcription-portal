@@ -1,43 +1,43 @@
-<table class="table table-responsive-md table-striped" *ngIf="audioInfo !== undefined && audioInfo !== null">
+<table class="table table-responsive-md table-striped" *ngIf="fileinfo">
   <tbody>
   <tr>
     <td>Original filename:</td>
-    <td>{{audioInfo.attributes?.originalFileName}}</td>
+    <td>{{fileinfo?.attributes?.originalFileName}}</td>
   </tr>
   <tr>
     <td>Escaped filename:</td>
-    <td>{{audioInfo.fullname}}</td>
+    <td>{{fileinfo.fullname}}</td>
   </tr>
   <tr>
     <td>Type:</td>
-    <td>{{audioInfo.type}}</td>
+    <td>{{fileinfo.type}}</td>
   </tr>
   <tr>
     <td>Size:</td>
-    <td>{{audioInfo.size | filesize}}</td>
+    <td>{{fileinfo.size | filesize}}</td>
   </tr>
-  <ng-container *ngIf="audioInfo.type === 'audio/wav'">
+  <ng-container *ngIf="isWavFile()">
     <tr>
       <td>Sampling rate:</td>
-      <td>{{audioInfo.sampleRate}}</td>
+      <td>{{fileinfo.sampleRate}}</td>
     </tr>
     <tr>
       <td>Bits per Second:</td>
-      <td>{{audioInfo.bitrate}}</td>
+      <td>{{fileinfo.bitrate}}</td>
     </tr>
     <tr>
       <td [ngClass]="{
-                'red': audioInfo.channels > 1
+                'red': fileinfo.channels > 1
             }">Channels:
       </td>
       <td [ngClass]="{
-                'red': audioInfo.channels > 1
-            }">{{audioInfo.channels}}
+                'red': fileinfo.channels > 1
+            }">{{fileinfo.channels}}
       </td>
     </tr>
     <tr>
       <td>Duration:</td>
-      <td>{{audioInfo.duration.unix | time}}</td>
+      <td>{{fileinfo.duration.unix | time}}</td>
     </tr>
   </ng-container>
   </tbody>
