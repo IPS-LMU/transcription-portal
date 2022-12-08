@@ -17,6 +17,10 @@ export class FilePreviewModalComponent {
   public downloadURL?: SafeResourceUrl;
   private subscrmanager = new SubscriptionManager();
 
+  get fileName(): string {
+    return this.selectedFile?.attributes.originalFileName ?? this.selectedFile?.fullname;
+  }
+
   constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
   }
 

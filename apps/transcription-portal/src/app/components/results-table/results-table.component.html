@@ -19,26 +19,26 @@
   <ng-container *ngFor="let elem of convertedArray;let i = index">
     <tr *ngIf="elem.input !== undefined">
       <td>#{{elem.number + 1}}</td>
-      <td *ngIf="elem.input.available === true" style="border-right: 1px solid lightgray;">
-        <a [attr.download]="elem.input.fullname"
+      <td *ngIf="elem.input.info.available === true" style="border-right: 1px solid lightgray;">
+        <a [attr.download]="elem.input.info.attributes.originalFileName"
            [attr.href]="elem.input.url">
           <i class="fa fa-file-text"></i>
         </a>
-        <i (click)="onPreviewClick(elem.input.file)" *ngIf="elem.input.extension !== '.wav'" class="fa fa-eye"
+        <i (click)="onPreviewClick(elem.input.info)" *ngIf="elem.input.info.extension !== '.wav'" class="fa fa-eye"
            style="margin-left:3px;cursor: pointer;"></i>
       </td>
-      <td *ngIf="!elem.input?.available" style="border-right: 1px solid lightgray;">
+      <td *ngIf="elem.input?.info && !elem.input.info.available" style="border-right: 1px solid lightgray;">
         <i class="fa fa-unlink" style="color:red;"></i>
       </td>
-      <ng-container *ngIf="elem.input.extension !== '.wav'">
+      <ng-container *ngIf="elem.input.info.extension !== '.wav'">
         <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
-          <ng-container *ngIf="elem.input !== undefined && elem.input.available && converter.result !== null">
+          <ng-container *ngIf="elem.input !== undefined && elem.input.info.available && converter.result !== null">
             <a [attr.download]="converter.result.fullname"
                [attr.href]="converter.result.url"
             >
               <i [ngStyle]="{ color: converter.converter.color}" class="fa fa-file-text"></i>
             </a>
-            <i (click)="onPreviewClick(converter.result.file!)" [ngStyle]="{ color: converter.converter.color}"
+            <i (click)="onPreviewClick(converter.result)" [ngStyle]="{ color: converter.converter.color}"
                class="fa fa-eye" style="cursor: pointer;margin-left:3px;"></i>
           </ng-container>
         </td>

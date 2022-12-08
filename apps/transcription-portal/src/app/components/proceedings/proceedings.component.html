@@ -150,14 +150,6 @@
     <i class="fa fa-spinner fa-spin fa-5x"></i>
   </div>
   <ng-container *ngIf="storage.ready">
-    <tportal-context-menu (optionselected)="onContextMenuOptionSelected($event)" [hid]="contextmenu.hidden" [ngStyle]="{
-        'margin-top': contextmenu.y + 'px',
-        'margin-left': contextmenu.x + 'px',
-        'display': (contextmenu.hidden) ? 'none' : 'inherit'
-    }" [selectedOperationType]="selectedOperation"
-                          [selectedTasks]="selectedRows">
-    </tportal-context-menu>
-
     <!-- Big proceedings table -->
     <table class="table table-striped">
       <!-- TABLE HEADER -->
@@ -234,7 +226,14 @@
       </thead>
 
       <!-- TABLE BODY -->
-      <tbody (contextmenu)="onContextMenu($event)">
+      <tbody>
+      <tportal-context-menu (optionselected)="onContextMenuOptionSelected($event)" [hid]="contextmenu.hidden" [ngStyle]="{
+        'margin-top': contextmenu.y + 'px',
+        'margin-left': contextmenu.x + 'px',
+        'display': (contextmenu.hidden) ? 'none' : 'initial'
+    }" [selectedOperationType]="selectedOperation"
+                            [selectedTasks]="selectedRows">
+      </tportal-context-menu>
       <ng-container *ngFor="let entry of taskList.entries; let i = index;">
         <tr [entry]="entry" [rowSelected]="isEntrySelected(entry)" [toolSelectedOperation]="toolSelectedOperation"
             tportalProceedingsRow>
@@ -246,6 +245,7 @@
                  class="fa fa-angle-down"></i>
           </td> -->
           <td #nameCol="colIcon" (appendingClick)="onPreviewClick($event)" (click)="onRowSelected(entry)"
+              (contextmenu)="onContextMenu($event)"
               (deleteIconClick)="removeEntry($event, getTask(entry))"
               (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
               (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
@@ -264,7 +264,7 @@
           <!-- Task operations-->
           <ng-container *ngIf="entry.type === 'task'">
             <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
-
+                (contextmenu)="onContextMenu($event)"
                 (operationMouseEnter)="onOperationMouseEnter($event, operation)"
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 
@@ -280,7 +280,7 @@
             </td>
             <td class="export-col">
               <button *ngIf="isOneOperationFinished(entry) && getTask(entry) !== undefined"
-                      class="btn  btn-outline-success"
+                      class="btn btn-outline-success" style="padding: 0px 5px"
                       (click)="onExportButtonClick(entry, getTask(entry)!.operations[1])"><i
                 class="fa fa-cloud-download"></i></button>
             </td>
@@ -295,7 +295,7 @@
               </div>
             </td>
             <td class="export-col">
-              <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success"
+              <button *ngIf="isOneOperationFinished(entry)" class="btn  btn-outline-success" style="padding: 0px 5px"
                       (click)="onExportButtonClick(entry)"><i class="fa fa-cloud-download"></i>
               </button>
             </td>
@@ -335,7 +335,7 @@
                 tportalProcColOperation>
             </td>
             <td class="export-col">
-              <button *ngIf="isOneOperationFinished(dirEntry)" class="btn  btn-outline-success"
+              <button *ngIf="isOneOperationFinished(dirEntry)" class="btn btn-outline-success" style="padding: 0px 5px"
                       (click)="onExportButtonClick(dirEntry, undefined)"><i class="fa fa-cloud-download"></i>
               </button>
             </td>

@@ -264,7 +264,7 @@ export class MainComponent implements OnDestroy {
         if (!tool.task?.operations[0].results[0].available) {
           if ((tool.task?.files[0].file === null || tool.task?.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
-              `Please add the audio file "${tool.task?.operations[0].results[0].fullname}" and run "${tool.title}" again.`, 10);
+              `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`, 10);
             tool.task?.operations[0].changeState(TaskState.PENDING);
             tool.task?.changeState(TaskState.PENDING);
           } else {

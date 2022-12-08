@@ -24,8 +24,17 @@ export class ASROperation extends Operation {
           this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
             this.time.duration = Date.now() - this.time.start;
 
-            this.results.push(finalResult);
-            this.changeState(TaskState.FINISHED);
+            if (finalResult.file) {
+              const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+
+              finalResult.attributes = {
+                originalFileName: `${name}${finalResult.extension}`
+              };
+              this.results.push(finalResult);
+              this.changeState(TaskState.FINISHED);
+            } else {
+              this.changeState(TaskState.ERROR);
+            }
           }).catch((error) => {
             this.updateProtocol(this.protocol + '<br/>' + error.replace('¶'));
             this.time.duration = Date.now() - this.time.start;

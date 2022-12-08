@@ -224,8 +224,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onContextMenu(event: MouseEvent) {
-    event.preventDefault();
+  onContextMenu($event: MouseEvent) {
+    $event.preventDefault();
     const task = this.popover.task ?? this.popover.directory;
 
     if (task) {
@@ -234,8 +234,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         const index = this.taskList.getIndexByEntry(task);
         this.selectedRows.push(index);
       }
-      this.contextmenu.x = event.x - 20;
-      this.contextmenu.y = event.y;
+      this.contextmenu.x = $event.x - 20;
+      this.contextmenu.y = $event.offsetY;
       this.contextmenu.hidden = false;
     }
   }
@@ -332,7 +332,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
 
   onContextMenuOptionSelected(option: string) {
-    if (this.selectedOperation) {
+    if (this.selectedRows.length > 0) {
       if (option === 'delete') {
         this.deleteSelectedTasks();
       } else if (option === 'appendings-remove') {

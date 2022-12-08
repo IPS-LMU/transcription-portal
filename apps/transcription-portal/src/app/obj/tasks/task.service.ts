@@ -183,6 +183,7 @@ export class TaskService implements OnDestroy {
                         file,
                         ...foundTask.files
                       ];
+                      foundTask.operations[1].enabled = false;
                     } else {
                       foundTask.files.push(file);
                       foundTask.operations[1].enabled = false;

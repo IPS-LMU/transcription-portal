@@ -31,12 +31,7 @@ export class ResultsTableComponent implements OnChanges {
   public convertedArray: {
     input?: {
       url: SafeUrl,
-      name: string
-      type: string,
-      available: boolean,
-      fullname: string,
-      extension: string,
-      file: File
+      info: FileInfo
     },
     number: number,
     conversions: {
@@ -84,8 +79,8 @@ export class ResultsTableComponent implements OnChanges {
     }
   }
 
-  public onPreviewClick(file: File) {
-    this.previewClick.emit(FileInfo.fromFileObject(file));
+  public onPreviewClick(file: FileInfo) {
+    this.previewClick.emit(file);
 
     this.cd.markForCheck();
     this.cd.detectChanges();
@@ -123,25 +118,29 @@ export class ResultsTableComponent implements OnChanges {
                 const importConverter = from.obj;
                 this.originalLabel = importConverter.extension;
 
+                if (!result.file) {
+                  throw new Error(`result file is undefined`);
+                }
 
                 let originalFileName: any = this.operation?.task?.files[0].attributes.originalFileName ?? this.operation?.task?.files[0].fullname;
                 originalFileName = FileInfo.extractFileName(originalFileName);
 
+                const fileInfo = new FileInfo(result.file.name, result.type, result.size, result.file, result.createdAt);
+                fileInfo.url = result.file ? URL.createObjectURL(result.file) : '';
+                fileInfo.attributes = {
+                  originalFileName: `${originalFileName.name}${result.extension}`
+                };
+
                 const resultObj = {
-                  url: this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file!)),
-                  name: originalFileName.name,
-                  type: result.type,
-                  available: result.available,
-                  fullname: originalFileName.name + originalFileName.extension,
-                  extension: result.extension,
-                  file: result.file!
+                  url: result.file ? this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)) : '',
+                  info: fileInfo
                 };
 
                 const audio: OAudiofile = new OAudiofile();
                 if (this.operation.task) {
                   audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
                   audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
-                  audio.name = resultObj.fullname;
+                  audio.name = resultObj.info.fullname;
                   audio.size = (this.operation.task.files[0] as AudioInfo).size;
                 }
 
@@ -176,7 +175,7 @@ export class ResultsTableComponent implements OnChanges {
 
                   if (conversion) {
                     res.result = conversion;
-                    const url = URL.createObjectURL(conversion.file!);
+                    const url = conversion.file ? URL.createObjectURL(conversion.file) : '';
                     res.result.url = this.sanitizer.bypassSecurityTrustUrl(url) as any;
                     res.state = 'FINISHED';
                     convElem.conversions.push(res);
@@ -207,13 +206,8 @@ export class ResultsTableComponent implements OnChanges {
           const result = this.operation.results[i];
           this.convertedArray.push({
             input: {
-              url: result.url!,
-              name: result.name,
-              type: result.type,
-              available: result.available,
-              fullname: result.fullname,
-              extension: result.extension,
-              file: result.file!
+              url: result.url ?? '',
+              info: result
             },
             conversions: [],
             number: i

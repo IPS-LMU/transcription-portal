@@ -135,7 +135,7 @@ export class DownloadModalComponent implements OnInit {
                 for (const fileInfo of files) {
                   if (fileInfo?.file) {
                     requestPackage.entries.push({
-                      path: fileInfo.file.name,
+                      path: fileInfo.attributes.originalFileName ?? fileInfo.file.name,
                       file: fileInfo.file
                     });
                   }
@@ -272,8 +272,11 @@ export class DownloadModalComponent implements OnInit {
             const folderName = this.getFolderName(operation);
 
             if (opResult?.file) {
+              const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+              const originalName = opResult.attributes.originalFileName ?? opResult.fullname;
+
               entryResult.push({
-                path: `${task.files[0].name}/${folderName}/${opResult.file.name}`,
+                path: `${fileName}/${folderName}/${originalName}`,
                 file: opResult?.file
               });
             }
@@ -288,8 +291,11 @@ export class DownloadModalComponent implements OnInit {
                 entries = entries.filter(a => a);
 
                 for (const entry of entries) {
+                  const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+                  const originalName = entry.attributes.originalFileName ?? entry.fullname;
+
                   entryResult.push({
-                    path: `${task.files[0].name}/${folderName2}/${entry.fullname}`,
+                    path: `${fileName}/${folderName2}/${originalName}`,
                     file: entry.file
                   });
                 }
