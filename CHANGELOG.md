@@ -1,3 +1,16 @@
+## [1.0.8](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.7...v1.0.8) (2022-12-08)
+
+
+### Bug Fixes
+
+* **asr:** fixed quota progress bars ([b7b67bf](https://github.com/IPS-LMU/transcription-portal/commit/b7b67bf46775ca1fbebb5aa5a66df8037211469f))
+* **preprocessing:** pairs of audio and transcript are not combined to tasks correctly ([5bd6825](https://github.com/IPS-LMU/transcription-portal/commit/5bd68253f7ec66f46ef1ffc5ce7f4b8e6094d227))
+* **preprocessing:** splitting audio files into channels doesn't work correctly ([38cef0a](https://github.com/IPS-LMU/transcription-portal/commit/38cef0a8825236a48a2953a1c4e60261323e5b67))
+* **proceedings:** missing audio information in file info popover ([5113d2b](https://github.com/IPS-LMU/transcription-portal/commit/5113d2b96f601fb00377d6a34517a69c6aa5237f))
+* **processing:** several wrong naming issues ([cf9306d](https://github.com/IPS-LMU/transcription-portal/commit/cf9306dcedec70d00190ef4d3f844dada8e1fbef))
+
+
+
 ## [1.0.7](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.6...v1.0.7) (2022-02-09)
 
 

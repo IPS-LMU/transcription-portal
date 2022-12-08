@@ -1,8 +1,8 @@
 {
   "name": "transcription-portal",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "license": "MIT",
-  "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU MÜnchen",
+  "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU München",
   "scripts": {
     "ng": "nx",
     "postinstall": "node ./decorate-angular-cli.js",
