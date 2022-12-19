@@ -37,13 +37,14 @@
       <i class="fa fa-spinner fa-spin"></i> PLEASE WAIT...
     </a>
     <a *ngIf="state === 'finished'" [attr.download]="archiveName" [attr.href]="archiveURL"
-       class="btn btn-outline-success"
+       class="btn btn-outline-success" (click)="showRemoveLine = true"
        style="width:100%;">
       DOWNLOAD
     </a>
-    <ng-container *ngIf="type === 'line' && state === 'finished'">
+    <ng-container *ngIf="type === 'line' && state === 'finished' && showRemoveLine">
+      <p class="mt-3 text-center">Optional:</p>
       <button (click)="removeSelected()" class="btn btn-outline-danger" id="remove-check" style="width:100%;">
-        Remove selected lines from table
+        Remove selected lines from transcription portal (permanently)
       </button>
     </ng-container>
   </div>

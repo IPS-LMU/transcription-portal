@@ -34,6 +34,8 @@ export class DownloadModalComponent implements OnInit {
   public archiveName = '';
   public checkboxes: boolean[] = [];
 
+  showRemoveLine = false;
+
   public state = 'inactive';
 
   private subscrManager = new SubscriptionManager();
