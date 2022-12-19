@@ -52,6 +52,12 @@ export class G2pMausOperation extends Operation {
         if (json.success === 'true') {
           const file = FileInfo.fromURL(json.downloadLink, 'text/plain', undefined, Date.now());
           file.updateContentFromURL(httpclient).then(() => {
+            const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+
+            file.attributes = {
+              originalFileName: `${name}${file.extension}`
+            };
+
             this.results.push(file);
             this.changeState(TaskState.FINISHED);
           }).catch((error) => {

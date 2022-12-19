@@ -801,14 +801,16 @@ export class TaskService implements OnDestroy {
         return;
       }
       const opName = operation.name;
+      const fileName = (task.files[0].attributes?.originalFileName ?? task.files[0].fullname).replace(/\.[^.]+$/g, '');
+
       if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${task.files[0].name} manually.`);
+        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`);
       } else if (event.newState === TaskState.ERROR) {
-        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${task.files[0].name}.
+        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`);
       } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
         this.notification.showNotification(`"${operation.title}" successful`, `You can now open phonetic
-  details of ${task.files[0].name}.`);
+  details of ${fileName}.`);
       }
 
       this.updateStatistics();

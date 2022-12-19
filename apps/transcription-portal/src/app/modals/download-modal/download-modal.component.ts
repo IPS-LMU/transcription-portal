@@ -121,11 +121,12 @@ export class DownloadModalComponent implements OnInit {
         if (operation.results.length > 0 && operation.state === TaskState.FINISHED) {
           const result: FileInfo | undefined = operation.lastResult;
           if (result?.online && result.file) {
+            const originalName = result.attributes.originalFileName ?? result.fullname;
+
             requestPackage.entries.push({
-              path: result.fullname,
+              path: originalName,
               file: result.file
             });
-
 
             const selectedConverters = AppInfo.converters.filter((a, i) => {
               return this.checkboxes[i];
@@ -137,7 +138,7 @@ export class DownloadModalComponent implements OnInit {
                 for (const fileInfo of files) {
                   if (fileInfo?.file) {
                     requestPackage.entries.push({
-                      path: fileInfo.attributes.originalFileName ?? fileInfo.file.name,
+                      path: fileInfo.fullname,
                       file: fileInfo.file
                     });
                   }

@@ -31,7 +31,6 @@ import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
 import {DirectoryInfo, FileInfo, hasProperty} from '@octra/utilities';
-import DropEvent = JQuery.DropEvent;
 
 @Component({
   selector: 'tportal-main',
@@ -427,6 +426,18 @@ export class MainComponent implements OnDestroy {
             const result: string = $event.data.data.transcript_url;
             const file = FileInfo.fromURL(result, 'text/plain');
             file.updateContentFromURL(this.httpclient).then(() => {
+              const inputs = this.toolSelectedOperation?.task?.files;
+              if (!inputs) {
+                resolve(file);
+                return;
+              }
+
+              const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+
+              file.attributes = {
+                originalFileName: `${name}${file.extension}`
+              };
+
               resolve(file);
             }).catch((e) => {
               reject(e);
@@ -436,7 +447,14 @@ export class MainComponent implements OnDestroy {
           }
         } else if (data.name === 'Emu WebApp') {
           if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
-            const fileName = this.toolSelectedOperation.task.files[0].name;
+            const inputs = this.toolSelectedOperation?.task?.files;
+            if (!inputs) {
+              reject(`Can't find any inputs for this task.`);
+              return;
+            }
+
+            const fileName = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+
             this.toolSelectedOperation.changeState(TaskState.FINISHED);
             this._showtool = false;
             let jsonText = '';
@@ -449,6 +467,11 @@ export class MainComponent implements OnDestroy {
 
             const file: File = FileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
             const fileInfo = new FileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
+
+            fileInfo.attributes = {
+              originalFileName: `${fileName}_annot.json`
+            };
+
             fileInfo.online = false;
             resolve(fileInfo);
           }
