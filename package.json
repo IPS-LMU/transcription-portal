@@ -27,7 +27,7 @@
     "@angular/platform-browser": "~14.2.0",
     "@angular/platform-browser-dynamic": "~14.2.0",
     "@angular/router": "~14.2.0",
-    "@nrwl/angular": "15.0.4",
+    "@nrwl/angular": "15.4.2",
     "@octra/annotation": "file:../octra/extern/libs/annotation",
     "@octra/media": "file:../octra/extern/libs/media",
     "@octra/utilities": "file:../octra/extern/libs/utilities",
