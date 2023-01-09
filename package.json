@@ -38,7 +38,7 @@
     "font-awesome": "^4.7.0",
     "jquery": "^3.5.1",
     "jszip": "^3.5.0",
-    "luxon": "^3.0.4",
+    "luxon": "^3.2.1",
     "maintenance-warning-snackbar": "git+https://github.com/IPS-LMU/maintenanceWarningSnackbar.git",
     "modernizr": "^3.11.3",
     "ng-circle-progress": "^1.5.1",
