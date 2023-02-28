@@ -120,7 +120,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private subscrManager = new SubscriptionManager();
 
   maxColumnWidths = [
-    5,
+    10,
     15,
     15,
     15,
@@ -451,11 +451,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.cd.detectChanges();
   }
 
-  onOperationMouseEnter($event: MouseEvent, operation: Operation) {
+  onOperationMouseEnter($event: MouseEvent, operation: Operation, td: HTMLTableCellElement) {
     // show Popover for normal operations only
     if (!(operation.state === TaskState.PENDING || operation.state === TaskState.SKIPPED || operation.state === TaskState.READY)) {
       const icon: HTMLElement = $event.target as HTMLElement;
-      const parentNode = icon?.parentNode as HTMLElement;
+      const parentNode = td;
 
       if (parentNode && this.popoverRef && this.inner) {
         this.popover.operation = operation;
@@ -465,7 +465,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           this.popover.width = 400;
         }
         this.popover.height = 230;
-        if ((parentNode.offsetLeft + this.popover.width) < window.innerWidth) {
+        if ((parentNode.offsetLeft + this.popover.width) < window.innerWidth - 100) {
           this.popover.x = parentNode.offsetLeft + (parentNode.offsetWidth / 2);
           this.popover.pointer = ($event.clientY + this.popoverRef.height + 20 > window.innerHeight) ? 'bottom-left' : 'left';
         } else {
@@ -484,6 +484,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
     this.popover.task = undefined;
     operation.onMouseEnter();
+    console.log(this.popover.pointer);
   }
 
   onOperationMouseLeave($event: MouseEvent, operation: Operation) {

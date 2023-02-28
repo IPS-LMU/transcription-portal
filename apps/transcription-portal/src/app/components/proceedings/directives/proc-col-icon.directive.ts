@@ -232,7 +232,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   private appendFileNameSpan(wrapper: HTMLElement) {
     const result: HTMLElement = this.renderer.createElement('span');
-    this.renderer.addClass(result, 'flex-grow-1');
     this.renderer.addClass(result, 'text-truncate');
 
     this.renderer.removeClass(this.elementRef.nativeElement, 'shorten');
@@ -286,6 +285,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     if (this.entry instanceof Task) {
       if (this.entry.files.length > 1 || this.entry.files[0].extension !== '.wav') {
         const badgeObj = this.getBadge(this.entry);
+        this.renderer.addClass(result, 'ml-1');
         this.renderer.addClass(result, 'badge');
         this.renderer.addClass(result, 'badge-' + badgeObj.type);
         this.renderer.listen(result, 'click', () => {

@@ -151,7 +151,9 @@
   </div>
   <ng-container *ngIf="storage.ready">
     <!-- Big proceedings table -->
-    <table class="table table-striped" id="main-table">
+    <table class="table table-striped" [ngClass]="{
+       'fixed-table-layout': !shortstyle
+    }">
       <!-- TABLE HEADER -->
       <thead>
       <tr class="tableHeaderTop">
@@ -273,8 +275,8 @@
           </td>
           <!-- Task operations-->
           <ng-container *ngIf="entry.type === 'task'">
-            <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
-                (operationMouseEnter)="onOperationMouseEnter($event, operation)"
+            <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)" #td
+                (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 
                 (operationMouseOver)="onOperationMouseOver($event, operation)"
@@ -332,9 +334,9 @@
                 tportalProcColIcon
             >
             </td>
-            <td (click)="onRowSelected(dirEntry, operation)" (mousedown)="onOperationClick($event, operation)"
+            <td (click)="onRowSelected(dirEntry, operation)" (mousedown)="onOperationClick($event, operation)" #td
 
-                (operationMouseEnter)="onOperationMouseEnter($event, operation)"
+                (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 
                 (operationMouseOver)="onOperationMouseOver($event, operation)"
@@ -359,11 +361,6 @@
             <i aria-hidden="true"
                class="fa fa-database op-50">
             </i>
-            <ng-container *ngIf="getDirEntriesFromItem(entry).length > 0" [ngClass]="{
-                            'shorten': shortstyle
-                        }">
-              <i aria-hidden="true" class="fa fa-folder-open blue op-50"></i>
-            </ng-container>
             <span class="op-50"
                   title="{{getFileInfo(entry)?.fullname}}"
             >
@@ -371,6 +368,7 @@
                         </span>
           </td>
           <td *ngIf="getDirEntriesFromItem(entry).length > 0" [attr.colspan]="taskService.operations.length + 3">
+            <i aria-hidden="true" class="fa fa-folder-open blue op-50"></i>
                         <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
                           class="fa fa-spinner fa-spin"></i>
                         </span>
@@ -378,8 +376,11 @@
         </tr>
         <tr *ngFor="let dirEntry of getDirEntriesFromItem(entry)">
           <td>
-            <i aria-hidden="true" class="fa fa-database op-50"></i>
-            <span class="op-50">{{dirEntry.fullname}}</span> <i class="fa fa-spinner fa-spin"></i>
+            <div class="d-flex">
+              <i aria-hidden="true" class="fa fa-database op-50 mr-1"></i>
+              <span class="op-50 mr-1">{{dirEntry.fullname}}</span>
+              <i class="fa fa-spinner fa-spin"></i>
+            </div>
           </td>
           <td [attr.colspan]="taskService.operations.length + 2"></td>
         </tr>

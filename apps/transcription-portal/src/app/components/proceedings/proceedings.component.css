@@ -269,6 +269,6 @@ table thead tr th:hover {
   font-size: 0.9em;
 }
 
-#main-table {
+.fixed-table-layout {
   table-layout: fixed;
 }
