@@ -131,7 +131,7 @@ export class EmuOperation extends ToolOperation {
         result = lastResultMaus;
       }
 
-      const labelType = (result?.extension === '.json') ? 'annotJSON' : 'TEXTGRID';
+      const labelType = (result?.extension === '_annot.json') ? 'annotJSON' : 'TEXTGRID';
 
       if (!(langObj === null || langObj === undefined) && result?.url) {
         transcript += encodeURIComponent(result.url);

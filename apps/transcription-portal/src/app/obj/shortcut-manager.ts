@@ -25,6 +25,10 @@ export class ShortcutManager {
       keyCode: 93
     },
     {
+      name: 'CMD',
+      keyCode: 224
+    },
+    {
       name: 'ALT',
       keyCode: 18
     }, {
@@ -137,8 +141,16 @@ export class ShortcutManager {
     return '';
   }
 
+  private getKeyCode(event: KeyboardEvent): string | undefined {
+    let key = (event.key || event.keyCode || event.which);
+    if (!key) {
+      return undefined;
+    }
+    return ((typeof key === "string") ? key : String.fromCharCode(key)).toUpperCase();
+  }
+
   private getShorcutCombination(event: KeyboardEvent) {
-    const keycode = event.which; // which has better browser compatibility
+    const keycode = event.which || event.keyCode; // which has better browser compatibility
     const alt = event.altKey;
     const ctrl = event.ctrlKey;
     const meta = event.metaKey;

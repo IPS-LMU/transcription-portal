@@ -533,9 +533,11 @@ export class MainComponent implements OnDestroy {
     this.showtool = false;
     setTimeout(() => {
       this.sidebarstate = 'hidden';
-      if (this.toolLoader) {
-        this.toolLoader.url = undefined;
-      }
+      setTimeout(() => {
+        if (this.toolLoader) {
+          this.toolLoader.url = undefined;
+        }
+      }, 1000);
     }, 200);
     this.leaveToolOption();
   }
