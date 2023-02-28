@@ -15,15 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@octra/annotation": [
-        "../octra/extern/libs/annotation"
-      ],
-      "@octra/utilities": [
-        "../octra/extern/libs/utilities"
-      ],
-      "@octra/media": [
-        "../octra/extern/libs/media"
-      ]
+      "@octra/annotation": ["../octra/extern/libs/annotation"],
+      "@octra/media": ["../octra/extern/libs/media"],
+      "@octra/utilities": ["../octra/extern/libs/utilities"]
     }
   },
   "exclude": ["node_modules", "tmp"]

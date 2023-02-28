@@ -185,7 +185,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             if (item.isDirectory) {
               // TODO fix order!
               promises.push(new Promise<void>((resolve, reject) => {
-                DirectoryInfo.fromFolderObject(droppedfiles[i]).then((dir) => {
+                DirectoryInfo.fromFolderObject(item).then((dir) => {
                   // check added directory
                   files.push(dir);
                   resolve();
