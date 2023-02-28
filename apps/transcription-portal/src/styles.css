@@ -53,3 +53,7 @@ tbody .fa.fa-arrow-up {
 .tooltip.show {
   opacity: 1 !important;
 }
+
+.pointer{
+  cursor: pointer;
+}

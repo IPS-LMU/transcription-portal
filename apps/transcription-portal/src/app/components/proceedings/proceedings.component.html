@@ -103,8 +103,8 @@
 </tportal-popover>
 
 <tportal-file-preview-modal #filePreview></tportal-file-preview-modal>
-<div #inner (click)="onContextBlur()" (dragover)="onDragOver($event)" (drop)="onDrop($event)"
-     (mouseleave)="isDragging = false"
+<div #inner (dragover)="onDragOver($event)" (drop)="onDrop($event)" (contextmenu)="cancelContextMenu($event)"
+     (mouseleave)="isDragging = false" (scroll)="onTableScroll()" (mousedown)="onTableMouseDown($event)" (mouseup)="onTableMouseUp()"
      class="inner">
   <div *ngIf="!storage.tasksFound && taskService.taskList!.entries.length === 0 && queue.length === 0"
        class="placeholder">
@@ -231,13 +231,14 @@
                             [ngStyle]="{
         'margin-top': contextmenu.y + 'px',
         'margin-left': contextmenu.x + 'px',
-        'display': (contextmenu.hidden) ? 'none' : 'initial'
+        'display': (contextmenu.hidden || selectedRows.length === 0) ? 'none' : 'initial'
     }" [selectedOperationType]="selectedOperation"
                             [selectedTasks]="selectedRows">
       </tportal-context-menu>
       <ng-container *ngFor="let entry of taskList.entries; let i = index;">
         <tr [entry]="entry" [rowSelected]="isEntrySelected(entry)" [toolSelectedOperation]="toolSelectedOperation"
-            tportalProceedingsRow>
+            (contextmenu)="onContextMenu($event, row)" (click)="onContextBlur()" (scroll)="cancelScroll($event)"
+            tportalProceedingsRow #row>
           <!-- filename/foldername column -->
           <!-- <td (click)="tagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
               <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'opened'"
@@ -246,7 +247,6 @@
                  class="fa fa-angle-down"></i>
           </td> -->
           <td #nameCol="colIcon" (appendingClick)="onPreviewClick($event)" (click)="onRowSelected(entry)"
-              (contextmenu)="onContextMenu($event)"
               (deleteIconClick)="removeEntry($event, getTask(entry))"
               (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
               (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
@@ -265,7 +265,6 @@
           <!-- Task operations-->
           <ng-container *ngIf="entry.type === 'task'">
             <td (click)="onRowSelected(entry, operation)" (mousedown)="onOperationClick($event, operation)"
-                (contextmenu)="onContextMenu($event)"
                 (operationMouseEnter)="onOperationMouseEnter($event, operation)"
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 

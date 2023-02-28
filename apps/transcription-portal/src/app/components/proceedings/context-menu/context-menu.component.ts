@@ -34,7 +34,7 @@ export class ContextMenuComponent implements OnInit {
     this.hid = false;
   }
 
-  public onRemoveAppendings() {
+  public onRemoveAttachments() {
     this.optionselected.emit('appendings-remove');
   }
 }

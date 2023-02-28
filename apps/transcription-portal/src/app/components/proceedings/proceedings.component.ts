@@ -69,6 +69,16 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     mouseIn: false
   };
 
+  scrolling = {
+    position: {
+      x: 0,
+      y: 0
+    },
+    lastscroll: 0
+  }
+
+  rightMouseButtonPressed = false;
+
   @Input() taskList: TaskList = new TaskList();
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
@@ -160,6 +170,27 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.cd.detectChanges();
   }
 
+  onTableScroll() {
+    if (!this.rightMouseButtonPressed) {
+      this.contextmenu.hidden = true;
+      console.log('scroll ' + this.inner?.nativeElement.scrollTop);
+    }
+  }
+
+  onTableMouseDown($event: MouseEvent) {
+    this.rightMouseButtonPressed = ($event.which === 3 || $event.button === 2);
+    console.log(`set mouse pressed to ${this.rightMouseButtonPressed}`);
+  }
+
+  onTableMouseUp() {
+    this.rightMouseButtonPressed = false;
+  }
+
+  cancelScroll($event: Event) {
+    $event.stopPropagation();
+    $event.preventDefault();
+  }
+
   public getStateIcon(operation: Operation) {
     return operation.getStateIcon(this.sanitizer, operation.state);
   }
@@ -225,8 +256,20 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onContextMenu($event: MouseEvent) {
+  onContextBlur() {
+    this.contextmenu.hidden = true;
+    this.cd.markForCheck();
+  }
+
+  cancelContextMenu($event: MouseEvent) {
+    if (!this.contextmenu.hidden) {
+      $event.preventDefault();
+    }
+  }
+
+  onContextMenu($event: MouseEvent, row: HTMLTableRowElement) {
     $event.preventDefault();
+    $event.stopPropagation();
     const task = this.popover.task ?? this.popover.directory;
 
     if (task) {
@@ -236,13 +279,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.selectedRows.push(index);
       }
       this.contextmenu.x = $event.x - 20;
-      this.contextmenu.y = $event.offsetY;
+      this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
       this.contextmenu.hidden = false;
+      console.log(`show menu at (${this.contextmenu.x}, ${this.contextmenu.y})`);
+      this.cd.markForCheck();
+      this.cd.detectChanges();
     }
-  }
-
-  onContextBlur() {
-    this.contextmenu.hidden = true;
   }
 
   onRowSelected(entry: (Task | TaskDirectory), operation?: Operation) {
@@ -343,6 +385,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       }
     }
     this.contextmenu.hidden = true;
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   removeAppendings() {
@@ -817,8 +861,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
     this.selectedRows = [];
     this.shiftStart = -1;
-    this.cd.markForCheck();
-    this.cd.detectChanges();
   }
 
   onExportButtonClick(task: Task | TaskDirectory, operation?: Operation) {

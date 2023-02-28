@@ -1,7 +1,7 @@
-<table class="table table-hover">
+<table class="table mb-0">
   <tbody>
   <ng-container *ngIf="entriesCount > 0 ">
-    <tr (click)="onAction('delete')">
+    <tr class="pointer" (click)="onAction('delete')">
       <td><i class="fa fa-times"></i></td>
       <td>
         <ng-container *ngIf="entriesCount > 0">
@@ -14,9 +14,9 @@
       <td>Download selected lines</td>
     </tr>
   </ng-container>
-  <tr *ngIf="selectedTasks.length > 0">
+  <tr *ngIf="selectedTasks.length > 0" class="pointer" (click)="onRemoveAttachments()">
     <td></td>
-    <td (click)="onRemoveAppendings()">Remove appendings</td>
+    <td>Remove attachments</td>
   </tr>
   <ng-content></ng-content>
   </tbody>
