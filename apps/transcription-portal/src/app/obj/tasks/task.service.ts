@@ -570,16 +570,16 @@ export class TaskService implements OnDestroy {
           }
           setTimeout(() => {
             this.start();
-          }, 1000);
+          }, 100);
         } else {
           setTimeout(() => {
             this.start();
-          }, 1000);
+          }, 100);
         }
       } else {
         setTimeout(() => {
           this.start();
-        }, 1000);
+        }, 250);
       }
     }
   }

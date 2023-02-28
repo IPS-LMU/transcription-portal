@@ -254,13 +254,16 @@ export class MainComponent implements OnDestroy {
   }
 
   onOperationClick(operation: Operation) {
-    if (operation && operation instanceof ToolOperation) {
+    if (operation && operation instanceof ToolOperation && operation.state !== TaskState.PENDING) {
       const tool = operation as ToolOperation;
+      const task = tool.task!;
+      const uploadOperation = task.operations[0];
+      const previousOperation = tool.previousOperation;
 
-      if (tool.task && (tool.task.operations[0].results.length > 0 && !tool?.task?.operations[0]?.lastResult?.available)
-        || (!(tool.previousOperation === null || tool.previousOperation === undefined) &&
-          tool.previousOperation.results.length > 0 && !tool?.previousOperation?.lastResult?.available)) {
-        if (!tool.task?.operations[0].results[0].available) {
+      if (tool.task && (uploadOperation.results.length > 0 && !uploadOperation.lastResult?.available)
+        || (!(previousOperation === null || previousOperation === undefined) &&
+          previousOperation.results.length > 0 && !previousOperation.lastResult?.available)) {
+        if (!uploadOperation.results[0].available) {
           if ((tool.task?.files[0].file === null || tool.task?.files[0].file === undefined)) {
             this.alertService.showAlert('warning',
               `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`, 10);
@@ -270,7 +273,7 @@ export class MainComponent implements OnDestroy {
             // start upload process
             this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname}` +
               ` being uploaded and do '${tool.title}' again.`);
-            tool.task.operations[0].statechange.subscribe(
+            uploadOperation.statechange.subscribe(
               (state) => {
                 if (state.newState === 'FINISHED') {
                   this.alertService.showAlert('success', `file ${tool.task?.files[0].fullname}` +
@@ -286,20 +289,20 @@ export class MainComponent implements OnDestroy {
             );
             this.taskService.start();
           }
-        } else if (tool?.task?.operations[0]?.lastResult?.available && !tool.previousOperation?.lastResult?.available) {
+        } else if (uploadOperation?.lastResult?.available && !previousOperation?.lastResult?.available) {
           this.alertService.showAlert('info',
-            `Please run ${tool.previousOperation?.name} for this task again.`, 12);
+            `Please run ${previousOperation?.name} for this task again.`, 12);
         }
       } else {
         let file: FileInfo;
         if (tool.results.length > 0 && !tool.lastResult?.online && tool.lastResult?.available) {
           // reupload result from tool operation
           file = tool.lastResult;
-        } else if (tool.previousOperation && tool.previousOperation.lastResult
-          && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
+        } else if (previousOperation && previousOperation.lastResult
+          && !previousOperation.lastResult.online && previousOperation.lastResult.available) {
           // reupload result from previous operation
           // local available, reupload
-          file = tool.previousOperation.lastResult;
+          file = previousOperation.lastResult;
         }
 
         new Promise<void>((resolve, reject) => {
@@ -311,10 +314,10 @@ export class MainComponent implements OnDestroy {
                 // reupload result from tool operation
                 tool.lastResult.url = url;
                 tool.lastResult.online = true;
-              } else if (!(tool.previousOperation?.lastResult === null || tool.previousOperation?.lastResult === undefined)
-                && !tool.previousOperation.lastResult.online && tool.previousOperation.lastResult.available) {
-                tool.previousOperation.lastResult.url = url;
-                tool.previousOperation.lastResult.online = true;
+              } else if (!(previousOperation?.lastResult === null || previousOperation?.lastResult === undefined)
+                && !previousOperation.lastResult.online && previousOperation.lastResult.available) {
+                previousOperation.lastResult.url = url;
+                previousOperation.lastResult.online = true;
               }
               if (tool.task) {
                 this.storage.saveTask(tool.task);
