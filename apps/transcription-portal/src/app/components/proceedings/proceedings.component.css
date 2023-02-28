@@ -268,3 +268,7 @@ table thead tr th:hover {
 .action-time td {
   font-size: 0.9em;
 }
+
+#main-table {
+  table-layout: fixed;
+}

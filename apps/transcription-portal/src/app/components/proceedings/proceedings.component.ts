@@ -119,6 +119,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private shortcutManager = new ShortcutManager();
   private subscrManager = new SubscriptionManager();
 
+  maxColumnWidths = [
+    5,
+    15,
+    15,
+    15,
+    15,
+    10
+  ];
+
   constructor(public sanitizer: DomSanitizer, public cd: ChangeDetectorRef, public taskService: TaskService,
               public storage: StorageService) {
     // Check for the various FileInfo API support.

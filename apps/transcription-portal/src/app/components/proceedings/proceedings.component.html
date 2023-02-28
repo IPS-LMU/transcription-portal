@@ -151,7 +151,7 @@
   </div>
   <ng-container *ngIf="storage.ready">
     <!-- Big proceedings table -->
-    <table class="table table-striped">
+    <table class="table table-striped" id="main-table">
       <!-- TABLE HEADER -->
       <thead>
       <tr class="tableHeaderTop">
@@ -159,9 +159,10 @@
           <i *ngIf="allDirOpened === 'opened'" class="fa fa-angle-up"></i>
           <i *ngIf="allDirOpened === 'closed'" class="fa fa-angle-down"></i>
         </th>
-        <th>File</th>
+        <th style="width:20%;">File</th>
         <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-          <th (mousemove)="updateChanges()" style="padding-left:3px;padding-right:3px;">
+          <th (mousemove)="updateChanges()" style="padding-left:3px;padding-right:3px;"
+              [ngStyle]="{ 'width': (!isClosed)? maxColumnWidths[i] + '%': 'auto'}">
             <div style="position: relative;">
               <div style="display:block;position: relative;height:25px;cursor:pointer;">
                 <tportal-operation-arrow [first]="(i === 0)"
@@ -186,7 +187,7 @@
             </div>
           </th>
         </ng-container>
-        <th>
+        <th [ngStyle]="{ 'width': (!isClosed)? maxColumnWidths[5] + '%': 'auto'}">
           <div style="position: relative;" class="ng-tns-c118-4">
             <div style="display: block; position: relative; height: 25px; cursor: pointer;"
                  class="ng-tns-c118-4">
@@ -204,14 +205,18 @@
       <tr class="subTableHeader">
         <th style="width:15px; padding-right:0;text-align:center;">
         </th>
-        <th></th>
+        <th style="width:20%;"></th>
         <ng-container *ngFor="let operation of operations; let i = index" style="text-align: center;">
-          <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'">
+          <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'" [ngStyle]="{
+                        'width': (!isClosed)? maxColumnWidths[i] + '%': 'auto'
+                    }">
             <input (click)="deactivateOperation(operation, i)"
                    [checked]="operation.enabled"
                    class="header-checkbox" type="checkbox"/>
           </th>
-          <th *ngIf="operation.name === 'MAUS'" colspan="2" style="position: relative">
+          <th *ngIf="operation.name === 'MAUS'" colspan="2" style="position: relative" [ngStyle]="{
+                        'width': (!isClosed)? maxColumnWidths[i] + '%': 'auto'
+                    }">
             <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
             <input (click)="deactivateOperation(operation, i)"
                    [checked]="operation.enabled"
@@ -221,7 +226,11 @@
           </th>
           <th *ngIf="i === 0"></th>
         </ng-container>
-        <th></th>
+        <th [ngStyle]="{
+                        'width': (!isClosed)? maxColumnWidths[5] + '%': 'auto'
+                    }"
+        >
+        </th>
       </tr>
       </thead>
 
@@ -269,10 +278,10 @@
                 (operationMouseLeave)="onOperationMouseLeave($event, operation)"
 
                 (operationMouseOver)="onOperationMouseOver($event, operation)"
-                *ngFor="let operation of getTask(entry)!.operations"
+                *ngFor="let operation of getTask(entry)!.operations; let opIndex = index;"
                 [entry]="getTask(entry)"
                 [ngStyle]="{
-                        'width': (operation.name === 'Upload' && !isClosed)? '120px': 'auto'
+                        'width': (!isClosed)? maxColumnWidths[opIndex] + '%': 'auto'
                     }"
                 [operation]="operation"
                 tportalProcColOperation

@@ -88,6 +88,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       if (!(this.entry === null || this.entry === undefined)) {
         this.clearContents();
         const wrapper: HTMLElement = this.renderer.createElement('div');
+        this.renderer.addClass(wrapper, 'd-flex');
+        this.renderer.addClass(wrapper, 'align-items-center');
         this.renderer.removeClass(wrapper, 'shorten');
         if (this.shortStyle) {
           this.renderer.addClass(wrapper, 'shorten');
@@ -146,6 +148,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       if (this.entry.directory === null || this.entry.directory === undefined) {
         // normal line
         icon = this.renderer.createElement('i');
+        this.renderer.addClass(icon, "mr-1");
         this.renderer.addClass(icon, 'fa');
         this.renderer.addClass(icon, 'fa-file-audio-o');
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
@@ -176,6 +179,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.appendChild(wrapper, img);
 
         icon = this.renderer.createElement('i');
+        this.renderer.addClass(icon, "mr-1");
         this.renderer.addClass(icon, 'fa');
         this.renderer.addClass(icon, 'fa-file-audio-o');
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
@@ -212,6 +216,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       this.renderer.listen(tag, 'click', this.afterTagClicked);
 
       icon = this.renderer.createElement('i');
+      this.renderer.addClass(icon, "mr-1");
       this.renderer.addClass(icon, 'fa');
 
       if (this.dirOpened === 'opened') {
@@ -227,6 +232,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   private appendFileNameSpan(wrapper: HTMLElement) {
     const result: HTMLElement = this.renderer.createElement('span');
+    this.renderer.addClass(result, 'flex-grow-1');
+    this.renderer.addClass(result, 'text-truncate');
 
     this.renderer.removeClass(this.elementRef.nativeElement, 'shorten');
     if (this.shortStyle) {
