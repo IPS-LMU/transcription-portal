@@ -1,1 +1,1 @@
-<iframe #iframe [attr.src]="selectedtool.url"></iframe>
+<iframe #iframe *ngIf="selectedtool.url !== undefined" [attr.src]="selectedtool.url"></iframe>

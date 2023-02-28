@@ -173,13 +173,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onTableScroll() {
     if (!this.rightMouseButtonPressed) {
       this.contextmenu.hidden = true;
-      console.log('scroll ' + this.inner?.nativeElement.scrollTop);
     }
   }
 
   onTableMouseDown($event: MouseEvent) {
     this.rightMouseButtonPressed = ($event.which === 3 || $event.button === 2);
-    console.log(`set mouse pressed to ${this.rightMouseButtonPressed}`);
   }
 
   onTableMouseUp() {
@@ -281,7 +279,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.contextmenu.x = $event.x - 20;
       this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
       this.contextmenu.hidden = false;
-      console.log(`show menu at (${this.contextmenu.x}, ${this.contextmenu.y})`);
       this.cd.markForCheck();
       this.cd.detectChanges();
     }

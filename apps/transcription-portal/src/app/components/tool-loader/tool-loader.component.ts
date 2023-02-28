@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Operation} from '../../obj/operations/operation';
 
@@ -23,9 +23,11 @@ export class ToolLoaderComponent {
   constructor(private sanitizer: DomSanitizer) {
   }
 
-  public set url(url: string) {
+  public set url(url: string | undefined) {
     if (!(url === null || url === undefined) && url !== '') {
       this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    } else {
+      this.selectedtool.url = undefined;
     }
   }
 
