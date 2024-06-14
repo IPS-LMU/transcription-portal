@@ -23,7 +23,7 @@ import {StatisticsModalComponent} from './modals/statistics-modal/statistics-mod
 import {SettingsService} from './shared/settings.service';
 import {OHModalService} from './shared/ohmodal.service';
 import {AppSettings} from './shared/app.settings';
-import {hasProperty} from "@octra/utilities";
+import {hasProperty} from '@octra/utilities';
 
 @Component({
   selector: 'tportal-root',

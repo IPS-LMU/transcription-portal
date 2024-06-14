@@ -49,3 +49,4 @@ deployment/
 deploy.config.json
 
 .nx/cache
+.nx/workspace-data

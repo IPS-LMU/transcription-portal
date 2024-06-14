@@ -1,4 +1,4 @@
-import {HttpClientModule} from '@angular/common/http';
+import {provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
 import {NgModule} from '@angular/core';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -48,74 +48,68 @@ import {PopoverModule} from 'ngx-bootstrap/popover';
 import {BsDropdownModule} from 'ngx-bootstrap/dropdown';
 import {AppRoutingModule} from './app-routing.module';
 import {DownloadService} from './shared/download.service';
-import { LuxonFormatPipe } from './obj/luxon-format.pipe';
+import {LuxonFormatPipe} from './obj/luxon-format.pipe';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    ToolLoaderComponent,
-    ProceedingsComponent,
-    TimePipe,
-    ExpandRowDirective,
-    FilesizePipe,
-    ContextMenuComponent,
-    ExpandDirective,
-    PopoverComponent,
-    FileInfoTableComponent,
-    ResultsTableComponent,
-    FeedbackModalComponent,
-    SplitModalComponent,
-    FirstModalComponent,
-    QueueModalComponent,
-    ProtocolFooterComponent,
-    FilePreviewModalComponent,
-    AlertComponent,
-    DownloadModalComponent,
-    OperationArrowComponent,
-    ProceedingsRowDirective,
-    ProcColIconDirective,
-    ProcColOperationDirective,
-    DirProgressDirective,
-    StatisticsModalComponent,
-    BrowserTestComponent,
-    MainComponent,
-    LuxonFormatPipe
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    NgChartsModule,
-    TooltipModule.forRoot(),
-    ModalModule.forRoot(),
-    CollapseModule.forRoot(),
-    PopoverModule.forRoot(),
-    BsDropdownModule.forRoot(),
-    NgCircleProgressModule.forRoot({
-      // set defaults here
-      radius: 40,
-      outerStrokeWidth: 16,
-      innerStrokeWidth: 8,
-      outerStrokeColor: '#78C000',
-      innerStrokeColor: '#C7E596',
-      animationDuration: 300
-    }),
-    FormsModule,
-    ReactiveFormsModule
-  ],
-  providers: [
-    TaskService,
-    NotificationService,
-    StorageService,
-    BugReportService,
-    AlertService,
-    SettingsService,
-    CompatibilityService,
-    OHModalService,
-    DownloadService
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        ToolLoaderComponent,
+        ProceedingsComponent,
+        TimePipe,
+        ExpandRowDirective,
+        FilesizePipe,
+        ContextMenuComponent,
+        ExpandDirective,
+        PopoverComponent,
+        FileInfoTableComponent,
+        ResultsTableComponent,
+        FeedbackModalComponent,
+        SplitModalComponent,
+        FirstModalComponent,
+        QueueModalComponent,
+        ProtocolFooterComponent,
+        FilePreviewModalComponent,
+        AlertComponent,
+        DownloadModalComponent,
+        OperationArrowComponent,
+        ProceedingsRowDirective,
+        ProcColIconDirective,
+        ProcColOperationDirective,
+        DirProgressDirective,
+        StatisticsModalComponent,
+        BrowserTestComponent,
+        MainComponent,
+        LuxonFormatPipe
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        NgChartsModule,
+        TooltipModule.forRoot(),
+        ModalModule.forRoot(),
+        CollapseModule.forRoot(),
+        PopoverModule.forRoot(),
+        BsDropdownModule.forRoot(),
+        NgCircleProgressModule.forRoot({
+            // set defaults here
+            radius: 40,
+            outerStrokeWidth: 16,
+            innerStrokeWidth: 8,
+            outerStrokeColor: '#78C000',
+            innerStrokeColor: '#C7E596',
+            animationDuration: 300
+        }),
+        FormsModule,
+        ReactiveFormsModule], providers: [
+        TaskService,
+        NotificationService,
+        StorageService,
+        BugReportService,
+        AlertService,
+        SettingsService,
+        CompatibilityService,
+        OHModalService,
+        DownloadService,
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule {
 }
