@@ -1,3 +1,24 @@
+## [1.0.9](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.8...v1.0.9) (2024-06-14)
+
+
+### Bug Fixes
+
+* **download-modal:** fixed incorrect base names in zip archive ([c651ca8](https://github.com/IPS-LMU/transcription-portal/commit/c651ca86d4364366db932b822c733b614416b5e3))
+* **table:** cogs appear on pending operations ([1aaf7dd](https://github.com/IPS-LMU/transcription-portal/commit/1aaf7dd116ec4b5d933d2025eb29c9575668185e))
+* **table:** context menu does not appear correctly ([6de7a0b](https://github.com/IPS-LMU/transcription-portal/commit/6de7a0ba7a2900eb31e2ee848eeea5e627653081))
+* **tools:** audio playback does not stop when leaving tool ([a97b990](https://github.com/IPS-LMU/transcription-portal/commit/a97b99015c3be2df6bcd26bfad6131ea77ffa31c))
+* **tools:** EMUWebApp doesn't read TextGrid file ([e8c4ff6](https://github.com/IPS-LMU/transcription-portal/commit/e8c4ff6ba8c36974a1f60bfac47f11bdfd3ba67d))
+* **tportal:** fix several issues from migration ([8028f41](https://github.com/IPS-LMU/transcription-portal/commit/8028f410fefc33f2b976e818444e481a2d15d2ac))
+
+
+### Features
+
+* **download-modal:** show remove lines button only if something downloaded ([ca37004](https://github.com/IPS-LMU/transcription-portal/commit/ca37004d4ae428434ae6963df0105e02e8e9c5fb))
+* **table:** file names are truncated ([20cf3e3](https://github.com/IPS-LMU/transcription-portal/commit/20cf3e3c8befe32072ab5658a8cde714a4e35147))
+* **tportal:** add WhisperX to the list of supported ASR providers ([3c09908](https://github.com/IPS-LMU/transcription-portal/commit/3c09908e2b31a8929b0b596fb12092d4030544c3))
+
+
+
 ## [1.0.8](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.7...v1.0.8) (2022-12-08)
 
 

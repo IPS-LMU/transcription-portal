@@ -1,6 +1,6 @@
 {
   "name": "transcription-portal",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "license": "MIT",
   "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU München",
   "scripts": {
