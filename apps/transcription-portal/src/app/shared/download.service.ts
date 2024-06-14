@@ -73,9 +73,10 @@ export class DownloadService {
         if (!(from === null || from === undefined)) {
           const importConverter = from.obj;
 
+          console.log(`AudioFileName: ${audiofile.name ? audiofile.name + opResult.extension : opResult.fullname}`);
           if (importConverter.name !== 'AnnotJSON') {
             const importResult = importConverter.import({
-              name: audiofile.name ?? opResult.fullname,
+              name: audiofile.name ? audiofile.name.replace(/\.[^.]+$/g, "") + opResult.extension : opResult.fullname,
               content,
               encoding: 'utf-8',
               type: 'text/plain'
@@ -90,17 +91,16 @@ export class DownloadService {
               console.error(`importResult for import ${importConverter.name} is undefined!`);
             }
           } else {
-            annotJSON = JSON.parse(content);
+            annotJSON = OAnnotJSON.deserialize(JSON.parse(content));
           }
 
-          if (!(annotJSON === null || annotJSON === undefined)) {
+          if (annotJSON) {
             const levelnum = this.getLevelNumforConverter(exportConverter, annotJSON);
-
             const conversion = exportConverter.obj.export(annotJSON, audiofile, levelnum);
 
             if (conversion?.file) {
               const file: File = FileInfo.getFileFromContent(conversion.file.content,
-                audiofile.name.replace(/\..+$/g, '') + exportConverter.obj.extension, conversion.file.type);
+                audiofile.name.replace(/\.[^.]+$/g, "") + exportConverter.obj.extension, conversion.file.type);
 
               const fileInfo = new FileInfo(file.name, file.type, file.size, file);
               resolve(fileInfo);

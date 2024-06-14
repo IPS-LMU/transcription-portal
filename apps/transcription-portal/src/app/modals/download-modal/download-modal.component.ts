@@ -187,7 +187,6 @@ export class DownloadModalComponent implements OnInit {
     if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
       // prepare package
       const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
-      console.log(dateStr);
       const requestPackage: {
         entries: {
           path: string,

@@ -484,7 +484,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
     this.popover.task = undefined;
     operation.onMouseEnter();
-    console.log(this.popover.pointer);
   }
 
   onOperationMouseLeave($event: MouseEvent, operation: Operation) {

@@ -94,7 +94,6 @@ export class ShortcutManager {
           }
 
           const command = this.getCommand(shortcut, BrowserInfo.platform);
-          console.log(command);
           if (!(command === null || command === undefined)) {
             event.preventDefault();
             resolve({

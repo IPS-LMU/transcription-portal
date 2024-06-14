@@ -5,6 +5,7 @@ import {Operation} from './operation';
 import {OHLanguageObject} from '../oh-config';
 import {AppSettings} from '../../shared/app.settings';
 import {FileInfo} from '@octra/web-media';
+import {extractFileNameFromURL} from '@octra/utilities';
 
 export class G2pMausOperation extends Operation {
   // TODO change for the next version
@@ -50,7 +51,13 @@ export class G2pMausOperation extends Operation {
         }
 
         if (json.success === 'true') {
+          const {extension} = extractFileNameFromURL(json.downloadLink)
+          console.log("g2p");
+          console.log(inputs);
+          console.log(inputs[0].name + extension)
           const file = FileInfo.fromURL(json.downloadLink, 'text/plain', undefined, Date.now());
+          console.log("file1");
+          console.log(file);
           file.updateContentFromURL(httpclient).then(() => {
             const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
 
@@ -60,6 +67,9 @@ export class G2pMausOperation extends Operation {
 
             this.results.push(file);
             this.changeState(TaskState.FINISHED);
+
+            console.log("file2");
+            console.log(file);
           }).catch((error: any) => {
             this.updateProtocol(error);
             this.changeState(TaskState.ERROR);

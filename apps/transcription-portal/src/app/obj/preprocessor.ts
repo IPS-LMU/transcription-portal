@@ -115,9 +115,7 @@ export class Preprocessor {
     const fileBlob = (file as FileInfo).file;
 
     if (fileBlob) {
-      calcSHA256FromFile(fileBlob).then((hash) => {
-        console.log('TEST HASH: ' + hash);
-      }).catch((e) => {
+      calcSHA256FromFile(fileBlob).catch((e) => {
         console.error(e);
       })
     }

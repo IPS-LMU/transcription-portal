@@ -160,8 +160,8 @@ export class TaskService implements OnDestroy {
           let foundTask: Task | undefined;
           if (result instanceof Task) {
             for (const file of result.files) {
-              const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/.[^.]+$/g, ''));
-              foundTask = this.getTaskWithOriginalFileName(new RegExp(`${escapedName}(.[^.]+)$`));
+              const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/(_annot)?\.[^.]+$/g, ''));
+              foundTask = this.getTaskWithOriginalFileName(new RegExp(`^${escapedName}((_annot)?.[^.]+)$`));
 
               if (foundTask) {
                 // found a task
@@ -326,7 +326,6 @@ export class TaskService implements OnDestroy {
 
             if (!(firstLangObj === null || firstLangObj === undefined)) {
               taskObj.asr = firstLangObj.asr;
-              console.log(`ASR NULL found: ${taskObj.asr}`);
             }
           }
           const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
@@ -884,7 +883,6 @@ export class TaskService implements OnDestroy {
         format.init(file.fullname, arrayBuffer);
         if (format.channels > 1) {
           const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
-          console.log(`split channels`);
           const files = await format.splitChannelsToFiles(file.attributes.originalFileName.replace(/\..+$/g, ''), 'audio/wav', arrayBuffer);
 
           if (this._splitPrompt === 'PENDING') {
@@ -1037,7 +1035,7 @@ export class TaskService implements OnDestroy {
     const tasks: Task[] = this.taskList.getAllTasks();
 
     for (const task of tasks) {
-      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
+      if (task.files[0].attributes.originalFileName) {
         for (const file of task.files) {
           // console.log(`${cmpHash} === ${hash}`);
           if ((task.operations[0].state === TaskState.PENDING || task.operations[0].state === TaskState.QUEUED

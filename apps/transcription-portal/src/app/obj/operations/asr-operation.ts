@@ -6,6 +6,8 @@ import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {HttpClient} from '@angular/common/http';
 import {FileInfo} from '@octra/web-media';
+import {extractFileNameFromURL} from '@octra/utilities';
+import {input} from '@angular/core';
 
 export class ASROperation extends Operation {
   public webService = '';
@@ -20,7 +22,7 @@ export class ASROperation extends Operation {
 
     setTimeout(() => {
       this.callASR(languageObject, httpclient, inputs[0], accessCode).then((file: FileInfo) => {
-        if (!(file === null || file === undefined)) {
+        if (file) {
           this.callG2PChunker(languageObject, httpclient, file).then((finalResult) => {
             this.time.duration = Date.now() - this.time.start;
 
@@ -124,7 +126,7 @@ export class ASROperation extends Operation {
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: any, accessCode: string): Promise<FileInfo> {
+  private callASR(languageObject: OHLanguageObject, httpClient: HttpClient, input: FileInfo, accessCode: string): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       this.webService = languageObject.asr;
 
@@ -137,23 +139,21 @@ export class ASROperation extends Operation {
         url += `&ACCESSCODE=${accessCode}`;
       }
 
-      console.log(`Call ${languageObject.asr}ASR:`);
-      console.log(url);
       httpClient.post(url, {}, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
         responseType: 'text'
-      }).subscribe((result: string) => {
-          console.log(`XML Result:`);
-          console.log(result);
+      }).subscribe({
+        next: (result: string) => {
           // convert result to json
           const x2js = new X2JS();
           let json: any = x2js.xml2js(result);
           json = json.WebServiceResponseLink;
 
           if (json.success === 'true') {
-            const file = FileInfo.fromURL(json.downloadLink, input.name, 'text/plain', Date.now());
+            const {extension} = extractFileNameFromURL(json.downloadLink)
+            const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
             file.updateContentFromURL(httpClient).then(() => {
               // add messages to protocol
               if (json.warnings !== '') {
@@ -169,9 +169,10 @@ export class ASROperation extends Operation {
             reject(json.output);
           }
         },
-        (error) => {
+        error: (error) => {
           reject(error.message);
-        });
+        }
+      });
     });
   }
 
@@ -204,7 +205,6 @@ export class ASROperation extends Operation {
           }
         );
       }).then((asrURL) => {
-        console.log(`CALL G2P ${asrURL}`);
         this.webService = languageObject.asr;
 
         const url = this._commands[1].replace('{{host}}', languageObject.host)
@@ -212,10 +212,6 @@ export class ASROperation extends Operation {
           .replace('{{audioURL}}', this.previousOperation?.lastResult?.url ?? '')
           .replace('{{asrType}}', `${languageObject.asr}`)
           .replace('{{language}}', this.task?.language);
-
-
-        console.log(`Call G2P_CHUNKER:`);
-        console.log(url);
 
         httpClient.post(url, {}, {
           headers: {
@@ -229,8 +225,8 @@ export class ASROperation extends Operation {
             json = json.WebServiceResponseLink;
 
             if (json.success === 'true') {
-              const file = FileInfo.fromURL(json.downloadLink, 'text/plain', asrResult.name, Date.now());
-
+              const {extension} = extractFileNameFromURL(json.downloadLink)
+              const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
               setTimeout(() => {
                 file.updateContentFromURL(httpClient).then(() => {
                   // add messages to protocol
