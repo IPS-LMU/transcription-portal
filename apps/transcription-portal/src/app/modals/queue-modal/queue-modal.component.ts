@@ -21,9 +21,9 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 import {BsDropdownDirective} from 'ngx-bootstrap/dropdown';
 import {PopoverDirective} from 'ngx-bootstrap/popover';
-import {AudioInfo} from '@octra/media';
-import {FileInfo, hasProperty} from '@octra/utilities';
+import {hasProperty} from '@octra/utilities';
 import {SettingsService} from '../../shared/settings.service';
+import {AudioInfo, FileInfo} from '@octra/web-media';
 
 @Component({
   selector: 'tportal-queue-modal',

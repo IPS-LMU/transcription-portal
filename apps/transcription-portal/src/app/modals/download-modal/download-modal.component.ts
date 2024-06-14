@@ -3,7 +3,6 @@ import {Task, TaskDirectory, TaskState} from '../../obj/tasks';
 import {Operation} from '../../obj/operations/operation';
 import {AppInfo} from '../../app.info';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {FileInfo} from '@octra/utilities';
 import {EmuOperation} from '../../obj/operations/emu-operation';
 import {TaskService} from '../../obj/tasks/task.service';
 import {HttpClient} from '@angular/common/http';
@@ -14,6 +13,7 @@ import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {DownloadService} from '../../shared/download.service';
 import * as JSZip from 'jszip';
 import {DateTime} from 'luxon';
+import {FileInfo} from '@octra/web-media';
 
 @Component({
   selector: 'tportal-download-modal',

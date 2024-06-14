@@ -6,7 +6,7 @@ import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo} from '@octra/web-media';
 
 export class OCTRAOperation extends ToolOperation {
 

@@ -6,7 +6,7 @@ import {Task, TaskState} from '../tasks';
 import * as X2JS from 'x2js';
 import {Subject} from 'rxjs';
 import {OHLanguageObject} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo} from '@octra/web-media';
 
 export class UploadOperation extends Operation {
 

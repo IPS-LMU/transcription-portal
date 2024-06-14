@@ -3,7 +3,7 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {Observable, Subject} from 'rxjs';
 import {Task, TaskState} from '../tasks';
 import {OHLanguageObject, OHService} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo} from '@octra/web-media';
 
 export abstract class Operation {
   static counter = 0;

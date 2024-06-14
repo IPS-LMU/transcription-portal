@@ -4,8 +4,7 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {TaskEntry} from './task-entry';
 import {IAccessCode, Operation} from '../operations/operation';
 import {OHCommand, OHLanguageObject} from '../oh-config';
-import {DirectoryInfo, FileInfo} from '@octra/utilities';
-import {AudioInfo} from '@octra/media';
+import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',

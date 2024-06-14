@@ -18,11 +18,11 @@ import {AlertService} from '../../shared/alert.service';
 import {firstValueFrom, interval, of} from 'rxjs';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
-import {AudioInfo, WavFormat} from '@octra/media';
-import {DirectoryInfo, escapeRegex, FileInfo, flatten} from '@octra/utilities';
 import {DateTime} from 'luxon';
 import {readFileAsArray} from '../functions';
 import {calcSHA256FromFile} from '../CryptoHelper';
+import {AudioInfo, DirectoryInfo, FileInfo, WavFormat} from '@octra/web-media';
+import {escapeRegex, flatten} from '@octra/utilities';
 
 @Injectable()
 export class TaskService implements OnDestroy {
@@ -345,7 +345,7 @@ export class TaskService implements OnDestroy {
                     opResult.updateContentFromURL(this.httpclient).then(() => {
                       // TODO minimize task savings
                       this.storage.saveTask(task);
-                    }).catch((error) => {
+                    }).catch((error: any) => {
                       console.error(error);
                     });
                   }
@@ -381,7 +381,7 @@ export class TaskService implements OnDestroy {
                       opResult.updateContentFromURL(this.httpclient).then(() => {
                         // TODO minimize task savings
                         this.storage.saveTask(task);
-                      }).catch((error) => {
+                      }).catch((error: any) => {
                         console.error(error);
                       });
                     }
@@ -669,10 +669,10 @@ export class TaskService implements OnDestroy {
 
         const dir = directory.clone();
 
-        dir.entries = dir.entries.filter((a) => {
+        dir.entries = dir.entries.filter((a: any) => {
           return a instanceof FileInfo && ((a.extension === '.wav') || this.validTranscript(a.extension));
         });
-        const rest = directory.entries.filter((a) => {
+        const rest = directory.entries.filter((a: any) => {
           return a instanceof DirectoryInfo;
         });
 

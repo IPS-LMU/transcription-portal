@@ -12,10 +12,11 @@ import {Operation} from '../../obj/operations/operation';
 import {AppInfo, ConverterData} from '../../app.info';
 import {HttpClient} from '@angular/common/http';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {FileInfo, hasProperty} from '@octra/utilities';
-import {Converter, OAudiofile} from '@octra/annotation';
-import {AudioInfo} from '@octra/media';
+import {hasProperty} from '@octra/utilities';
+import {Converter} from '@octra/annotation';
 import {DownloadService} from '../../shared/download.service';
+import {AudioInfo, FileInfo} from '@octra/web-media';
+import {OAudiofile} from '@octra/media';
 
 @Component({
   selector: 'tportal-results-table',

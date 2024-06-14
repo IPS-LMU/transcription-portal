@@ -7,7 +7,6 @@ import {ANIMATIONS} from '../shared/Animations';
 import {NotificationService} from '../shared/notification.service';
 import {SubscriptionManager} from '../shared/subscription-manager';
 import {Task, TaskState} from '../obj/tasks';
-import {AudioInfo} from '@octra/media';
 import {ProceedingsComponent} from '../components/proceedings/proceedings.component';
 import {TaskService} from '../obj/tasks/task.service';
 import {StorageService} from '../storage.service';
@@ -30,7 +29,8 @@ import {AppSettings} from '../shared/app.settings';
 import {OHLanguageObject} from '../obj/oh-config';
 import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
-import {DirectoryInfo, FileInfo, hasProperty} from '@octra/utilities';
+import {hasProperty} from '@octra/utilities';
+import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
 
 @Component({
   selector: 'tportal-main',
@@ -442,7 +442,7 @@ export class MainComponent implements OnDestroy {
               };
 
               resolve(file);
-            }).catch((e) => {
+            }).catch((e: any) => {
               reject(e);
             });
           } else {

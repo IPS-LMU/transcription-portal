@@ -4,8 +4,8 @@ import * as X2JS from 'x2js';
 import {OHLanguageObject} from '../oh-config';
 import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
-import {FileInfo} from '@octra/utilities';
 import {HttpClient} from '@angular/common/http';
+import {FileInfo} from '@octra/web-media';
 
 export class ASROperation extends Operation {
   public webService = '';

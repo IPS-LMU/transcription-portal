@@ -11,12 +11,13 @@ import {
   SimpleChanges
 } from '@angular/core';
 import {Task} from '../../../obj/tasks';
-import {FileInfo, hasProperty, SubscriptionManager} from '@octra/utilities';
+import {hasProperty, SubscriptionManager} from '@octra/utilities';
 import {Operation} from '../../../obj/operations/operation';
 import {DomSanitizer} from '@angular/platform-browser';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {AppSettings} from '../../../shared/app.settings';
 import {Subscription} from 'rxjs';
+import {FileInfo} from '@octra/web-media';
 
 @Directive({
   selector: '[tportalProcColOperation]'

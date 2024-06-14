@@ -1,7 +1,8 @@
 import {Subject, timer} from 'rxjs';
 import {Task, TaskDirectory} from './tasks';
-import {DirectoryInfo, FileInfo, SubscriptionManager} from '@octra/utilities';
+import {SubscriptionManager} from '@octra/utilities';
 import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
+import {DirectoryInfo, FileInfo} from '@octra/web-media';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks

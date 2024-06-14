@@ -3,8 +3,8 @@ import * as X2JS from 'x2js';
 import {Task, TaskState} from '../tasks';
 import {Operation} from './operation';
 import {OHLanguageObject} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
 import {AppSettings} from '../../shared/app.settings';
+import {FileInfo} from '@octra/web-media';
 
 export class G2pMausOperation extends Operation {
   // TODO change for the next version
@@ -60,7 +60,7 @@ export class G2pMausOperation extends Operation {
 
             this.results.push(file);
             this.changeState(TaskState.FINISHED);
-          }).catch((error) => {
+          }).catch((error: any) => {
             this.updateProtocol(error);
             this.changeState(TaskState.ERROR);
           });

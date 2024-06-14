@@ -1,9 +1,9 @@
 import {Injectable} from '@angular/core';
 import {AppInfo, ConverterData} from '../app.info';
-import {OAnnotJSON, OAudiofile} from '@octra/annotation';
-import {FileInfo} from '@octra/utilities';
+import {OAnnotJSON} from '@octra/annotation';
 import {Operation} from '../obj/operations/operation';
-import {AudioInfo} from '@octra/media';
+import {AudioInfo, FileInfo} from '@octra/web-media';
+import {OAudiofile} from '@octra/media';
 
 @Injectable({
   providedIn: 'root'
@@ -98,7 +98,7 @@ export class DownloadService {
 
             const conversion = exportConverter.obj.export(annotJSON, audiofile, levelnum);
 
-            if (!(conversion === null || conversion === undefined)) {
+            if (conversion?.file) {
               const file: File = FileInfo.getFileFromContent(conversion.file.content,
                 audiofile.name.replace(/\..+$/g, '') + exportConverter.obj.extension, conversion.file.type);
 
@@ -118,7 +118,7 @@ export class DownloadService {
           console.error(`found no importConverter for ${opResult.fullname}`);
           resolve(undefined);
         }
-      }).catch((error) => {
+      }).catch((error: any) => {
         reject(error);
       });
     });

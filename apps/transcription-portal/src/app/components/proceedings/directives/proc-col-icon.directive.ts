@@ -11,9 +11,10 @@ import {
   SimpleChanges
 } from '@angular/core';
 import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
-import {FileInfo, hasProperty, SubscriptionManager} from '@octra/utilities';
+import {hasProperty, SubscriptionManager} from '@octra/utilities';
 import {TaskService} from '../../../obj/tasks/task.service';
 import {Subscription} from 'rxjs';
+import {FileInfo} from '@octra/web-media';
 
 @Directive({
   selector: '[tportalProcColIcon]',

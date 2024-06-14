@@ -1,8 +1,8 @@
 import {Component, ViewChild} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {FileInfo} from '@octra/utilities';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
+import {FileInfo} from '@octra/web-media';
 
 
 @Component({
@@ -52,7 +52,7 @@ export class FilePreviewModalComponent {
     if (!(this.selectedFile === null || this.selectedFile === undefined)) {
       FileInfo.getFileContent(this.selectedFile.file!).then((text) => {
         this.fileContent = text;
-      }).catch((error) => {
+      }).catch((error: any) => {
         console.error(error);
       });
     } else {

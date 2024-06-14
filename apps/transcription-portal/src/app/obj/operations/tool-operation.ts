@@ -3,7 +3,7 @@ import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
 import {Operation} from './operation';
 import {Task, TaskState} from '../tasks';
 import {OHLanguageObject} from '../oh-config';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo} from '@octra/web-media';
 
 export class ToolOperation extends Operation {
 

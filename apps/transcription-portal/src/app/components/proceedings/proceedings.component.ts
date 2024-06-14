@@ -17,7 +17,7 @@ import {ANIMATIONS} from '../../shared/Animations';
 import {PopoverComponent} from '../popover/popover.component';
 import {Task, TaskDirectory, TaskList, TaskState} from '../../obj/tasks';
 import {UploadOperation} from '../../obj/operations/upload-operation';
-import {DirectoryInfo, FileInfo, SubscriptionManager} from '@octra/utilities';
+import {SubscriptionManager} from '@octra/utilities';
 import {TaskService} from '../../obj/tasks/task.service';
 import {OCTRAOperation} from '../../obj/operations/octra-operation';
 import {StorageService} from '../../storage.service';
@@ -31,7 +31,7 @@ import {DownloadModalComponent} from '../../modals/download-modal/download-modal
 import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
-import {AudioInfo} from '@octra/media';
+import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
 
 @Component({
   selector: 'tportal-proceedings',

@@ -1,6 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {FileInfo} from '@octra/utilities';
-import {AudioInfo} from '@octra/media';
+import {AudioInfo} from '@octra/web-media';
 
 @Component({
   selector: 'tportal-file-info-table',

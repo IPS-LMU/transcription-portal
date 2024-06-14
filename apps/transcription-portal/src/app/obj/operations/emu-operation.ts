@@ -6,7 +6,7 @@ import {ToolOperation} from './tool-operation';
 import {UploadOperation} from './upload-operation';
 import {OHLanguageObject} from '../oh-config';
 import {AppSettings} from '../../shared/app.settings';
-import {FileInfo} from '@octra/utilities';
+import {FileInfo} from '@octra/web-media';
 
 export class EmuOperation extends ToolOperation {
   protected operations?: Operation[];
