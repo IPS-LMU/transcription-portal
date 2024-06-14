@@ -25,10 +25,7 @@
           "node_modules/bootstrap/dist/css/bootstrap.min.css",
           "apps/transcription-portal/src/styles.css"
         ],
-        "allowedCommonJsDependencies": [
-          "x2js",
-          "chart.js"
-        ],
+        "allowedCommonJsDependencies": ["x2js", "chart.js"],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
@@ -75,10 +72,10 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "browserTarget": "transcription-portal:build:production"
+          "buildTarget": "transcription-portal:build:production"
         },
         "development": {
-          "browserTarget": "transcription-portal:build:development"
+          "buildTarget": "transcription-portal:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -86,21 +83,17 @@
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "transcription-portal:build"
+        "buildTarget": "transcription-portal:build"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": ["apps/transcription-portal/**/*.ts", "apps/transcription-portal/**/*.html"]
-      }
+      "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/transcription-portal/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "apps/transcription-portal/jest.config.ts"
       }
     }
   },

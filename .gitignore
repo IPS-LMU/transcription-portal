@@ -47,3 +47,5 @@ deployment/
 /doc/PH-PortalASR.html
 /doc/test_deutsch.wav
 deploy.config.json
+
+.nx/cache
