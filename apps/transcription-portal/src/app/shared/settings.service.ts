@@ -61,6 +61,7 @@ export class SettingsService {
             }[] = [];
 
             jQuery.each(basASRInfoContainers, (key, elem) => {
+              const name = jQuery(elem).attr('data-bas-asr-info-provider-name');
               const isStringNumber = (str: string) => !isNaN(Number(str));
               const sanitizeNumberValue = (el: any, attr: string) => {
                 if (el[attr] && isStringNumber(el[attr])) {
@@ -86,7 +87,7 @@ export class SettingsService {
                 dataStoragePolicy?: string,
                 knownIssues?: string
               } = {
-                name: jQuery(elem).attr('data-bas-asr-info-provider-name'),
+                name,
                 maxSignalDuration: Number(jQuery(elem).find('.bas-asr-info-max-signal-duration-seconds').attr('data-value')),
                 maxSignalSize: Number(jQuery(elem).find('.bas-asr-info-max-signal-size-megabytes').attr('data-value')),
                 quotaPerMonth: Number(jQuery(elem).find('.bas-asr-info-quota-per-month-seconds').attr('data-value')),
