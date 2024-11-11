@@ -10,7 +10,8 @@ Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-w
 
 ### Website
 
-You can use TranscriptionPortal without installation here: https://www.phonetik.uni-muenchen.de/apps/TranscriptionPortal/
+You can use TranscriptionPortal without installation here: https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/
+(protected by shibboleth)
 
 ### Installation
 
