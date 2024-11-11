@@ -1,5 +1,5 @@
 <div #queueModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
-     role="dialog" tabindex="-1">
+  role="dialog" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -12,287 +12,321 @@
         </button>
       </div>
       <div class="modal-body">
-        <div *ngIf="visible">
-          <p style="font-size: 0.9em;text-align: justify;margin-bottom:0;">
-            The following files are going to be processed one after the other. Please check if all options are
-            set as
-            you wish. While you are selecting the language you can click on the logos of the service providers
-            for
-            further information like data storage policy and terms and
-            conditions.
-          </p>
-          <p style="font-size: 0.9em;text-align: justify;margin-top:5px;">
-            When you click "OK" you agree with the terms and conditions of the selected (third-party) services
-            and the
-            files are marked for further processing.
-          </p>
-          <p *ngIf="orangeCount > 0" class="alert alert-warning" style="text-align: center; font-size:0.9em;">
-            Please add the files with file names in orange again. Otherwise these files will be
-            skipped.
-          </p>
-
-          <div #dropdown="bs-dropdown" (mouseleave)="onMouseOut();" (mousemove)="onMouseMove()" [insideClick]="true"
-               class="btn-group"
-               dropdown placement="down right"
-               style="display: block;margin-bottom:10px;">
-            <label for="button-basic"
-                   style="vertical-align: middle;margin-top:10px;margin-right:10px;">Language: </label>
-            <button aria-controls="dropdown-basic" class="btn btn-outline-secondary dropdown-toggle" dropdownToggle
-                    id="button-basic"
-                    type="button">
-              <ng-container *ngIf="taskService.selectedlanguage === undefined">
-                {{AppConfiguration.api.languages[0].code | uppercase}}
-                ({{getShortCode(AppConfiguration.api.languages[0].code)}})
-                [{{AppConfiguration.api.languages[0].asr}}]
-              </ng-container>
-              <ng-container *ngIf="taskService.selectedlanguage !== undefined">
-                {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
-                [{{taskService.selectedlanguage.asr}}]
-              </ng-container>
-              <span class="caret"></span>
-            </button>
-            <div (mouseleave)="onMouseOut();" (mousemove)="onMouseMove()" *dropdownMenu aria-labelledby="button-basic"
-                 class="dropdown-menu"
-                 id="dropdown-basic" role="menu" style="padding:5px;">
-              <table class="table table-responsive-md table-hover languageTable">
-                <thead>
-                <tr>
-                  <th>Language</th>
-                  <th>Speech Recognition</th>
-                  <th style="width:100px">Free Quota (monthly)</th>
-                </tr>
-                </thead>
-                <tbody>
-                <ng-container *ngFor="let lang of AppConfiguration.api.languages; let i = index;">
+        @if (visible) {
+          <div>
+            <p style="font-size: 0.9em;text-align: justify;margin-bottom:0;">
+              The following files are going to be processed one after the other. Please check if all options are
+              set as
+              you wish. While you are selecting the language you can click on the logos of the service providers
+              for
+              further information like data storage policy and terms and
+              conditions.
+            </p>
+            <p style="font-size: 0.9em;text-align: justify;margin-top:5px;">
+              When you click "OK" you agree with the terms and conditions of the selected (third-party) services
+              and the
+              files are marked for further processing.
+            </p>
+            @if (orangeCount > 0) {
+              <p class="alert alert-warning" style="text-align: center; font-size:0.9em;">
+                Please add the files with file names in orange again. Otherwise these files will be
+                skipped.
+              </p>
+            }
+            <div #dropdown="bs-dropdown" (mouseleave)="onMouseOut();" (mousemove)="onMouseMove()" [insideClick]="true"
+              class="btn-group"
+              dropdown placement="down right"
+              style="display: block;margin-bottom:10px;">
+              <label for="button-basic"
+              style="vertical-align: middle;margin-top:10px;margin-right:10px;">Language: </label>
+              <button aria-controls="dropdown-basic" class="btn btn-outline-secondary dropdown-toggle" dropdownToggle
+                id="button-basic"
+                type="button">
+                @if (taskService.selectedlanguage === undefined) {
+                  {{AppConfiguration.api.languages[0].code | uppercase}}
+                  ({{getShortCode(AppConfiguration.api.languages[0].code)}})
+                  [{{AppConfiguration.api.languages[0].asr}}]
+                }
+                @if (taskService.selectedlanguage !== undefined) {
+                  {{taskService.selectedlanguage.name}} ({{getShortCode(taskService.selectedlanguage.code)}})
+                  [{{taskService.selectedlanguage.asr}}]
+                }
+                <span class="caret"></span>
+              </button>
+              <div (mouseleave)="onMouseOut();" (mousemove)="onMouseMove()" *dropdownMenu aria-labelledby="button-basic"
+                class="dropdown-menu"
+                id="dropdown-basic" role="menu" style="padding:5px;">
+                <table class="table table-responsive-md table-hover languageTable">
+                  <thead>
+                    <tr>
+                      <th>Language</th>
+                      <th>Speech Recognition</th>
+                      <th style="width:100px">Free Quota (monthly)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (lang of AppConfiguration.api.languages; track lang; let i = $index) {
                   <tr [ngClass]="{
                             selected:  !(taskService.selectedlanguage === undefined)
                                         && (taskService.selectedlanguage.code === lang.code)
                                         && (taskService.selectedlanguage.asr === lang.asr)
                             }"
-                  >
-                    <td (click)="onASRItemClicked(lang)"
+                        >
+                        <td (click)="onASRItemClicked(lang)"
                         class="col-language" [ngStyle]="{
                         'opacity': (lang.state === 'inactive') ? 0.33 : 1
                       }">
-                      <ng-container>
-                        {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
-                        <ng-container *ngIf="lang !== undefined && lang.state === 'inactive'">
-                          <span> (currently not available)</span>
-                        </ng-container>
-                      </ng-container>
-                    </td>
+                          <ng-container>
+                            {{lang.name}} ({{getShortCode(lang.code)}}) [{{lang.asr}}]
+                            @if (lang !== undefined && lang.state === 'inactive') {
+                              <span> (currently not available)</span>
+                            }
+                          </ng-container>
+                        </td>
                     <td class="col-asr" [ngStyle]="{
                         'opacity': (lang.state === 'inactive') ? 0.33 : 1
                       }">
-                      <img #pop="bs-popover" (click)="pop.toggle();"
-                           [outsideClick]="true"
-                           [popover]="asrDescription" [src]="serviceProviders[lang.asr]?.logoURL" class="logo"
-                           popoverTitle="Service Information"
-                           triggers="focus">
-                      <ng-template #asrDescription>
-                        <table class="table table-sm table-borderless">
-                          <tbody>
-                          <tr>
-                            <td>
-                              <i class="fa fa-database"></i>
-                            </td>
-                            <td>
-                              {{serviceProviders[lang.asr]?.dataStoragePolicy}}
-                            </td>
-                          </tr>
-                          <tr *ngIf="serviceProviders[lang.asr].maxSignalDuration !== undefined">
-                            <td>
-                              <i class="fa fa-exclamation-triangle"></i>
-                            </td>
-                            <td>
-                              max audio duration: {{serviceProviders[lang.asr].maxSignalDuration}} seconds
-                            </td>
-                          </tr>
-                          <tr *ngIf="serviceProviders[lang.asr].maxSignalSize !== undefined">
-                            <td>
-                              <i class="fa fa-exclamation-triangle"></i>
-                            </td>
-                            <td>
-                              max file size: {{serviceProviders[lang.asr].maxSignalSize}} MB
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <i class="fa fa-handshake-o"></i>
-                            </td>
-                            <td>
-                              <a [href]="serviceProviders[lang.asr]?.termsURL"
-                                 target="_blank">Terms
-                                &amp; Conditions</a>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <i class="fa fa-globe"></i>
-                            </td>
-                            <td>
-                              <a [href]="serviceProviders[lang.asr]?.homepageURL"
-                                 target="_blank">Homepage</a>
-                            </td>
-                          </tr>
-                          </tbody>
-                        </table>
-                      </ng-template>
-                    </td>
-                    <td style="width:100px">
-                      <div class="progress">
-                        <ng-template #popTemplate><div id="quota-tooltip" [innerHtml]="getQuotaLabel(lang.asr)"></div></ng-template>
-                        <div class="progress-bar bg-success" role="progressbar"  [popover]="popTemplate"
-                             triggers="mouseenter:mouseleave"
+                          <img #pop="bs-popover" (click)="pop.toggle();"
+                            [outsideClick]="true"
+                            [popover]="asrDescription" [src]="serviceProviders[lang.asr]?.logoURL" class="logo"
+                            popoverTitle="Service Information"
+                            triggers="focus">
+                          <ng-template #asrDescription>
+                            <table class="table table-sm table-borderless">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <i class="fa fa-database"></i>
+                                  </td>
+                                  <td>
+                                    {{serviceProviders[lang.asr]?.dataStoragePolicy}}
+                                  </td>
+                                </tr>
+                                @if (serviceProviders[lang.asr].maxSignalDuration !== undefined) {
+                                  <tr>
+                                    <td>
+                                      <i class="fa fa-exclamation-triangle"></i>
+                                    </td>
+                                    <td>
+                                      max audio duration: {{serviceProviders[lang.asr].maxSignalDuration}} seconds
+                                    </td>
+                                  </tr>
+                                }
+                                @if (serviceProviders[lang.asr].maxSignalSize !== undefined) {
+                                  <tr>
+                                    <td>
+                                      <i class="fa fa-exclamation-triangle"></i>
+                                    </td>
+                                    <td>
+                                      max file size: {{serviceProviders[lang.asr].maxSignalSize}} MB
+                                    </td>
+                                  </tr>
+                                }
+                                <tr>
+                                  <td>
+                                    <i class="fa fa-handshake-o"></i>
+                                  </td>
+                                  <td>
+                                    <a [href]="serviceProviders[lang.asr]?.termsURL"
+                                      target="_blank">Terms
+                                    &amp; Conditions</a>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td>
+                                    <i class="fa fa-globe"></i>
+                                  </td>
+                                  <td>
+                                    <a [href]="serviceProviders[lang.asr]?.homepageURL"
+                                    target="_blank">Homepage</a>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </ng-template>
+                        </td>
+                        <td style="width:100px">
+                          <div class="progress">
+                            <ng-template #popTemplate><div id="quota-tooltip" [innerHtml]="getQuotaLabel(lang.asr)"></div></ng-template>
+                            <div class="progress-bar bg-success" role="progressbar"  [popover]="popTemplate"
+                              triggers="mouseenter:mouseleave"
                              [ngStyle]="{
                             width: (100 - getQuotaPercentage(lang.asr)) + '%'
                           }" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
-                          {{(100 - getQuotaPercentage(lang.asr)) + '%'}}
-                        </div>
+                              {{(100 - getQuotaPercentage(lang.asr)) + '%'}}
+                            </div>
                         <div class="progress-bar bg-danger" role="progressbar" [ngStyle]="{
                             width: getQuotaPercentage(lang.asr) + '%'
                           }" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
-                          <ng-container *ngIf="getQuotaPercentage(lang.asr) > 90">{{(100 - getQuotaPercentage(lang.asr)) + '%'}}</ng-container></div>
-                      </div>
-                    </td>
-                  </tr>
-                </ng-container>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="alert alert-danger" style="font-size: 0.9em;" *ngIf="isOneAudiofileInvalid()">
-            One or more audio files do not fit the ASR provider's requirements:
-            <ul *ngIf="this.selectedASRInfo !== undefined">
-              <li *ngIf="this.selectedASRInfo.maxSignalSize">Maximum size of audio
-                file: {{this.selectedASRInfo.maxSignalSize}} MB
-              </li>
-              <li *ngIf="this.selectedASRInfo.maxSignalDuration">Maximum audio
-                duration: {{this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']}} (H:m:s)
-              </li>
-            </ul>
-            <p>
-              Incompatible audio files are marked with a red cross on the left. These audio files are not going to be
-              processed.
-            </p>
-          </div>
-          <div class="alert alert-info" style="font-size: 0.9em;" *ngIf="selectedASRInfo !== undefined &&
-          isASRSelected() && selectedASRInfo.knownIssues !== undefined">
-            <b>Known Issues for {{selectedASRInfo.provider}} ASR:</b> {{selectedASRInfo.knownIssues}}
-          </div>
-          <table class="table table-responsive table-striped" id="queue">
-            <thead>
-            <tr>
-              <th>Valid?</th>
-              <th>File</th>
-              <th>Language</th>
-              <th *ngFor="let operation of operations; let i = index">
-                <div>
-                <span *ngIf="operation.title === ''; else showIcon" style="display:block;">
-                    <ng-container>
-                        {{operation.name}}
-                    </ng-container>
-                </span>
-                  <ng-template #showIcon>
-                    <div [innerHTML]="operation.title"></div>
-                  </ng-template>
+                              @if (getQuotaPercentage(lang.asr) > 90) {
+                                {{(100 - getQuotaPercentage(lang.asr)) + '%'}}
+                              }</div>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
                 </div>
-              </th>
-            </tr>
-            <tr>
-              <th class="compatible-col"></th>
-              <th></th>
-              <th></th>
-              <th></th>
-              <ng-container *ngFor="let operation of operations; let i = index">
-                <th *ngIf="operation.name === 'OCTRA' || operation.name === 'ASR'">
-                  <input (click)="deactivateOperation(operation, i)"
-                         [checked]="operation.enabled"
-                         class="header-checkbox" type="checkbox"/>
-                </th>
-                <th *ngIf="operation.name === 'MAUS'" colspan="2" style="position: relative">
-                  <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
-                  <input (click)="deactivateOperation(operation, i)"
-                         [checked]="operation.enabled"
-                         class="header-checkbox" type="checkbox"/>
-                  <img src="assets/directory.png"
-                       style="height:25px;-webkit-transform: scaleX(-1); transform: scaleX(-1);right:0;position:absolute"/>
-                </th>
-              </ng-container>
-            </tr>
-            </thead>
-            <tbody>
-            <ng-container *ngFor="let task of tasks;">
-              <tr *ngIf="task.state === 'QUEUED'">
-                <td class="compatible-col">
-                  <ng-template #validationResult>
-                    <table class="table table-sm table-striped">
-                      <tbody>
-                      <tr *ngFor="let check of getChecksByID(task.id); ">
+              </div>
+              @if (isOneAudiofileInvalid()) {
+                <div class="alert alert-danger" style="font-size: 0.9em;">
+                  One or more audio files do not fit the ASR provider's requirements:
+                  @if (this.selectedASRInfo !== undefined) {
+                    <ul>
+                      @if (this.selectedASRInfo.maxSignalSize) {
+                        <li>Maximum size of audio
+                          file: {{this.selectedASRInfo.maxSignalSize}} MB
+                        </li>
+                      }
+                      @if (this.selectedASRInfo.maxSignalDuration) {
+                        <li>Maximum audio
+                          duration: {{this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']}} (H:m:s)
+                        </li>
+                      }
+                    </ul>
+                  }
+                  <p>
+                    Incompatible audio files are marked with a red cross on the left. These audio files are not going to be
+                    processed.
+                  </p>
+                </div>
+              }
+              @if (selectedASRInfo !== undefined &&
+                isASRSelected() && selectedASRInfo.knownIssues !== undefined) {
+                <div class="alert alert-info" style="font-size: 0.9em;">
+                  <b>Known Issues for {{selectedASRInfo.provider}} ASR:</b> {{selectedASRInfo.knownIssues}}
+                </div>
+              }
+              <table class="table table-responsive table-striped" id="queue">
+                <thead>
+                  <tr>
+                    <th>Valid?</th>
+                    <th>File</th>
+                    <th>Language</th>
+                    @for (operation of operations; track operation; let i = $index) {
+                      <th>
+                        <div>
+                          @if (operation.title === '') {
+                            <span style="display:block;">
+                              <ng-container>
+                                {{operation.name}}
+                              </ng-container>
+                            </span>
+                          } @else {
+                            <div [innerHTML]="operation.title"></div>
+                          }
+                        </div>
+                      </th>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="compatible-col"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    @for (operation of operations; track operation; let i = $index) {
+                      @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+                        <th>
+                          <input (click)="deactivateOperation(operation, i)"
+                            [checked]="operation.enabled"
+                            class="header-checkbox" type="checkbox"/>
+                        </th>
+                      }
+                      @if (operation.name === 'MAUS') {
+                        <th colspan="2" style="position: relative">
+                          <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
+                          <input (click)="deactivateOperation(operation, i)"
+                            [checked]="operation.enabled"
+                            class="header-checkbox" type="checkbox"/>
+                          <img src="assets/directory.png"
+                            style="height:25px;-webkit-transform: scaleX(-1); transform: scaleX(-1);right:0;position:absolute"/>
+                        </th>
+                      }
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (task of tasks; track task) {
+                    @if (task.state === 'QUEUED') {
+                      <tr>
+                        <td class="compatible-col">
+                          <ng-template #validationResult>
+                            <table class="table table-sm table-striped">
+                              <tbody>
+                                @for (check of getChecksByID(task.id); track check) {
+                                  <tr>
                         <td><i class="fa" [ngClass]="{
                       'fa-check': check.isValid,
                       'fa-times': !check.isValid
                       }" [ngStyle]="{
                       'color': (check.isValid) ? 'green' : 'red'
                       }"></i></td>
-                        <td style="text-align: left">{{check.name}}:</td>
-                        <td style="text-align: left">{{check.value}}</td>
-                      </tr>
-                      </tbody>
-                    </table>
-                  </ng-template>
-                  <span
-                    #popoverResult="bs-popover" (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
-                    (mouseleave)="popoverResult.hide()"
-                    triggers=""
-                    [popover]="validationResult"
-                    [placement]="'right'"
-                  >
+                                    <td style="text-align: left">{{check.name}}:</td>
+                                    <td style="text-align: left">{{check.value}}</td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                          </ng-template>
+                          <span
+                            #popoverResult="bs-popover" (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                            (mouseleave)="popoverResult.hide()"
+                            triggers=""
+                            [popover]="validationResult"
+                            [placement]="'right'"
+                            >
                 <i class="fa" [ngClass]="{
                 'fa-check': !isSomethingInvalid(task.id),
                 'fa-times': isSomethingInvalid(task.id)
                 }" [ngStyle]="{
                 'color': isSomethingInvalid(task.id) ? 'red' : 'green'
                 }"></i>
-                </span>
-                </td>
-                <td>
+                          </span>
+                        </td>
+                        <td>
                         <span [ngClass]="{
                                 'green': ((task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
                                          (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online)),
                                 'yellow': ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') && task.operations[0].state !== 'FINISHED',
                                 'red': isSomethingInvalid(task.id)
                                 }" title="{{task.files[0].attributes.originalFileName}}">
-                                        {{task.files[0].attributes.originalFileName.replace('_annot.json', '.wav')}}
-                        </span>
-
-                  <ng-container *ngIf=" task.files.length > 1 || task.files[0].extension !== '.wav'">
+                            {{task.files[0].attributes.originalFileName.replace('_annot.json', '.wav')}}
+                          </span>
+                          @if ( task.files.length > 1 || task.files[0].extension !== '.wav') {
                             <span [ngClass]="{
                                 'badge-info': getBadge(task).type === 'info',
                                 'badge-warning': getBadge(task).type === 'warning'
                             }" class="badge">
-                                {{getBadge(task).label}}
+                              {{getBadge(task).label}}
                             </span>
-                  </ng-container>
-                </td>
-                <td>{{task.language}}</td>
-                <td *ngFor="let operation of task.operations">
-                  <span *ngIf="operation.enabled"><i class="fa fa-check" style="color:black;"></i></span>
-                  <span *ngIf="!operation.enabled">skip</span>
-                </td>
-              </tr>
-            </ng-container>
-            </tbody>
-          </table>
+                          }
+                        </td>
+                        <td>{{task.language}}</td>
+                        @for (operation of task.operations; track operation) {
+                          <td>
+                            @if (operation.enabled) {
+                              <span><i class="fa fa-check" style="color:black;"></i></span>
+                            }
+                            @if (!operation.enabled) {
+                              <span>skip</span>
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
-      </div>
-      <div class="modal-footer">
-        <button (click)="queueModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
-        <button (click)="onSubmit()" class="btn btn-outline-primary" type="button">
-          OK
-        </button>
+        <div class="modal-footer">
+          <button (click)="queueModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
+          <button (click)="onSubmit()" class="btn btn-outline-primary" type="button">
+            OK
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>

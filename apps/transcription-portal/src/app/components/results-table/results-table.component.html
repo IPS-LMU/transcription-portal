@@ -1,49 +1,63 @@
-<table class="table table-striped" *ngIf="convertedArray.length > 0">
-  <thead>
-  <tr>
-    <th colspan="2">Results</th>
-    <ng-container *ngIf="conversionExtension !== '.wav'">
-      <th [attr.colspan]="converters.length">Conversions</th>
-    </ng-container>
-  </tr>
-  <tr>
-    <th>#</th>
-    <th>{{originalLabel}}</th>
-    <ng-container *ngIf="conversionExtension !== '.wav'">
-      <ng-container *ngFor="let converter of converters">
-        <th *ngIf="isUnequalResultType(converter);">*{{converter.obj.extension}}</th>
-      </ng-container>
-    </ng-container>
-  </tr>
-  </thead>
-  <ng-container *ngFor="let elem of convertedArray;let i = index">
-    <tr *ngIf="elem.input !== undefined">
-      <td>#{{elem.number + 1}}</td>
-      <td *ngIf="elem.input.info.available === true" style="border-right: 1px solid lightgray;">
-        <a [attr.download]="elem.input.info.attributes.originalFileName"
-           [attr.href]="elem.input.url">
-          <i class="fa fa-file-text"></i>
-        </a>
-        <i (click)="onPreviewClick(elem.input.info)" *ngIf="elem.input.info.extension !== '.wav'" class="fa fa-eye"
-           style="margin-left:3px;cursor: pointer;"></i>
-      </td>
-      <td *ngIf="elem.input?.info && !elem.input.info.available" style="border-right: 1px solid lightgray;">
-        <i class="fa fa-unlink" style="color:red;"></i>
-      </td>
-      <ng-container *ngIf="elem.input.info.extension !== '.wav'">
-        <td *ngFor="let converter of elem.conversions" style="border-right: 1px solid lightgray;">
-          <ng-container *ngIf="elem.input !== undefined && elem.input.info.available && converter.result !== null">
-            <a [attr.download]="converter.result.fullname"
-               [attr.href]="converter.result.url"
-            >
-              <i [ngStyle]="{ color: converter.converter.color}" class="fa fa-file-text"></i>
-            </a>
-            <i (click)="onPreviewClick(converter.result)" [ngStyle]="{ color: converter.converter.color}"
-               class="fa fa-eye" style="cursor: pointer;margin-left:3px;"></i>
-          </ng-container>
-        </td>
-      </ng-container>
-    </tr>
-  </ng-container>
-</table>
+@if (convertedArray.length > 0) {
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th colspan="2">Results</th>
+        @if (conversionExtension !== '.wav') {
+          <th [attr.colspan]="converters.length">Conversions</th>
+        }
+      </tr>
+      <tr>
+        <th>#</th>
+        <th>{{originalLabel}}</th>
+        @if (conversionExtension !== '.wav') {
+          @for (converter of converters; track converter) {
+            @if (isUnequalResultType(converter);) {
+              <th>*{{converter.obj.extension}}</th>
+            }
+          }
+        }
+      </tr>
+    </thead>
+    @for (elem of convertedArray; track elem; let i = $index) {
+      @if (elem.input !== undefined) {
+        <tr>
+          <td>#{{elem.number + 1}}</td>
+          @if (elem.input.info.available === true) {
+            <td style="border-right: 1px solid lightgray;">
+              <a [attr.download]="elem.input.info.attributes.originalFileName"
+                [attr.href]="elem.input.url">
+                <i class="fa fa-file-text"></i>
+              </a>
+              @if (elem.input.info.extension !== '.wav') {
+                <i (click)="onPreviewClick(elem.input.info)" class="fa fa-eye"
+                style="margin-left:3px;cursor: pointer;"></i>
+              }
+            </td>
+          }
+          @if (elem.input?.info && !elem.input.info.available) {
+            <td style="border-right: 1px solid lightgray;">
+              <i class="fa fa-unlink" style="color:red;"></i>
+            </td>
+          }
+          @if (elem.input.info.extension !== '.wav') {
+            @for (converter of elem.conversions; track converter) {
+              <td style="border-right: 1px solid lightgray;">
+                @if (elem.input !== undefined && elem.input.info.available && converter.result !== null) {
+                  <a [attr.download]="converter.result.fullname"
+                    [attr.href]="converter.result.url"
+                    >
+                    <i [ngStyle]="{ color: converter.converter.color}" class="fa fa-file-text"></i>
+                  </a>
+                  <i (click)="onPreviewClick(converter.result)" [ngStyle]="{ color: converter.converter.color}"
+                  class="fa fa-eye" style="cursor: pointer;margin-left:3px;"></i>
+                }
+              </td>
+            }
+          }
+        </tr>
+      }
+    }
+  </table>
+}
 <span class="remark">On Windows please use right-click and "Save as" to download a result</span>

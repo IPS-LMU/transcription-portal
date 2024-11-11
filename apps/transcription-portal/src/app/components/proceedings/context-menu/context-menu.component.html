@@ -1,23 +1,25 @@
 <table class="table mb-0">
   <tbody>
-  <ng-container *ngIf="entriesCount > 0 ">
-    <tr class="pointer" (click)="onAction('delete')">
-      <td><i class="fa fa-times"></i></td>
-      <td>
-        <ng-container *ngIf="entriesCount > 0">
-          Delete selected lines
-        </ng-container>
-      </td>
-    </tr>
-    <tr (click)="onAction('download')">
-      <td><i class="fa fa-download"></i></td>
-      <td>Download selected lines</td>
-    </tr>
-  </ng-container>
-  <tr *ngIf="selectedTasks.length > 0" class="pointer" (click)="onRemoveAttachments()">
-    <td></td>
-    <td>Remove attachments</td>
-  </tr>
-  <ng-content></ng-content>
+    @if (entriesCount > 0 ) {
+      <tr class="pointer" (click)="onAction('delete')">
+        <td><i class="fa fa-times"></i></td>
+        <td>
+          @if (entriesCount > 0) {
+            Delete selected lines
+          }
+        </td>
+      </tr>
+      <tr (click)="onAction('download')">
+        <td><i class="fa fa-download"></i></td>
+        <td>Download selected lines</td>
+      </tr>
+    }
+    @if (selectedTasks.length > 0) {
+      <tr class="pointer" (click)="onRemoveAttachments()">
+        <td></td>
+        <td>Remove attachments</td>
+      </tr>
+    }
+    <ng-content></ng-content>
   </tbody>
 </table>
