@@ -24,13 +24,16 @@ import {SettingsService} from './shared/settings.service';
 import {OHModalService} from './shared/ohmodal.service';
 import {AppSettings} from './shared/app.settings';
 import {hasProperty} from '@octra/utilities';
+import {RouterOutlet} from '@angular/router';
 
 @Component({
-  selector: 'tportal-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-  providers: [],
-  animations: [ANIMATIONS]
+    selector: 'tportal-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.css'],
+    providers: [],
+    animations: [ANIMATIONS],
+    standalone: true,
+    imports: [FeedbackModalComponent, RouterOutlet]
 })
 export class AppComponent implements OnDestroy {
   @ViewChild('feedbackModal', {static: true}) feedbackModal!: FeedbackModalComponent;

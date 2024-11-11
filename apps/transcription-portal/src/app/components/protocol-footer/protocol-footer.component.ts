@@ -3,10 +3,11 @@ import {TaskService} from '../../obj/tasks/task.service';
 import {ANIMATIONS} from '../../shared/Animations';
 
 @Component({
-  selector: 'tportal-protocol-footer',
-  templateUrl: './protocol-footer.component.html',
-  styleUrls: ['./protocol-footer.component.css'],
-  animations: [ANIMATIONS]
+    selector: 'tportal-protocol-footer',
+    templateUrl: './protocol-footer.component.html',
+    styleUrls: ['./protocol-footer.component.css'],
+    animations: [ANIMATIONS],
+    standalone: true
 })
 export class ProtocolFooterComponent implements OnInit {
 

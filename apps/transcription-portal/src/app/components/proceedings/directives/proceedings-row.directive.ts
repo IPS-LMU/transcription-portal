@@ -4,7 +4,8 @@ import {Task, TaskDirectory} from '../../../obj/tasks';
 import {hasProperty} from '@octra/utilities';
 
 @Directive({
-  selector: '[tportalProceedingsRow]'
+    selector: '[tportalProceedingsRow]',
+    standalone: true
 })
 export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
 

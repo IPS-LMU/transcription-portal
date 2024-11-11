@@ -4,9 +4,10 @@ import {Operation} from '../../obj/operations/operation';
 
 
 @Component({
-  selector: 'tportal-tool-loader',
-  templateUrl: './tool-loader.component.html',
-  styleUrls: ['./tool-loader.component.css']
+    selector: 'tportal-tool-loader',
+    templateUrl: './tool-loader.component.html',
+    styleUrls: ['./tool-loader.component.css'],
+    standalone: true
 })
 export class ToolLoaderComponent {
   @ViewChild('iframe', {static: true}) iframe?: ElementRef;

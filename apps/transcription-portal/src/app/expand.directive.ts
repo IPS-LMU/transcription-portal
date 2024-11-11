@@ -1,7 +1,8 @@
 import {Directive, ElementRef, OnInit, Renderer2} from '@angular/core';
 
 @Directive({
-  selector: '[appExpand]'
+    selector: '[appExpand]',
+    standalone: true
 })
 export class ExpandDirective implements OnInit {
 

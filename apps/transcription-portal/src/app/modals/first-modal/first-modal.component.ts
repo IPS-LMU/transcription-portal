@@ -4,9 +4,10 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: 'tportal-first-modal',
-  templateUrl: './first-modal.component.html',
-  styleUrls: ['./first-modal.component.css']
+    selector: 'tportal-first-modal',
+    templateUrl: './first-modal.component.html',
+    styleUrls: ['./first-modal.component.css'],
+    standalone: true
 })
 export class FirstModalComponent {
 

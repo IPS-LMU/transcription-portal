@@ -17,12 +17,15 @@ import {Converter} from '@octra/annotation';
 import {DownloadService} from '../../shared/download.service';
 import {AudioInfo, FileInfo} from '@octra/web-media';
 import {OAudiofile} from '@octra/media';
+import {NgStyle} from '@angular/common';
 
 @Component({
-  selector: 'tportal-results-table',
-  templateUrl: './results-table.component.html',
-  styleUrls: ['./results-table.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tportal-results-table',
+    templateUrl: './results-table.component.html',
+    styleUrls: ['./results-table.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [NgStyle]
 })
 export class ResultsTableComponent implements OnChanges {
 

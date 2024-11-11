@@ -6,9 +6,11 @@ import {FileInfo} from '@octra/web-media';
 
 
 @Component({
-  selector: 'tportal-file-preview-modal',
-  templateUrl: './file-preview-modal.component.html',
-  styleUrls: ['./file-preview-modal.component.css']
+    selector: 'tportal-file-preview-modal',
+    templateUrl: './file-preview-modal.component.html',
+    styleUrls: ['./file-preview-modal.component.css'],
+    standalone: true,
+    imports: [ModalDirective]
 })
 export class FilePreviewModalComponent {
   @ViewChild('previewModal', {static: true}) previewModal?: ModalDirective;

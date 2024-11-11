@@ -1,10 +1,15 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {AudioInfo} from '@octra/web-media';
+import {NgClass} from '@angular/common';
+import {TimePipe} from '../../shared/time.pipe';
+import {FilesizePipe} from '../../shared/filesize.pipe';
 
 @Component({
-  selector: 'tportal-file-info-table',
-  templateUrl: './file-info-table.component.html',
-  styleUrls: ['./file-info-table.component.css']
+    selector: 'tportal-file-info-table',
+    templateUrl: './file-info-table.component.html',
+    styleUrls: ['./file-info-table.component.css'],
+    standalone: true,
+    imports: [NgClass, TimePipe, FilesizePipe]
 })
 export class FileInfoTableComponent implements OnInit {
 

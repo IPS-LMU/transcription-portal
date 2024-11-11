@@ -2,7 +2,8 @@ import {Pipe, PipeTransform} from '@angular/core';
 import {DateTime} from 'luxon';
 
 @Pipe({
-  name: 'luxonFormat'
+    name: 'luxonFormat',
+    standalone: true
 })
 export class LuxonFormatPipe implements PipeTransform {
 

@@ -2,6 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {AlertService} from '../../shared/alert.service';
 import {ANIMATIONS} from '../../shared/Animations';
 import {interval, Subject, Subscription} from 'rxjs';
+import {NgStyle} from '@angular/common';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';
@@ -12,10 +13,12 @@ export interface AlertEntry {
 }
 
 @Component({
-  selector: 'tportal-alert',
-  templateUrl: './alert.component.html',
-  styleUrls: ['./alert.component.css'],
-  animations: ANIMATIONS
+    selector: 'tportal-alert',
+    templateUrl: './alert.component.html',
+    styleUrls: ['./alert.component.css'],
+    animations: ANIMATIONS,
+    standalone: true,
+    imports: [NgStyle]
 })
 
 export class AlertComponent implements OnInit, OnDestroy {

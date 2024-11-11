@@ -31,13 +31,22 @@ import {OHModalService} from '../shared/ohmodal.service';
 import {EmuOperation} from '../obj/operations/emu-operation';
 import {hasProperty} from '@octra/utilities';
 import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
+import {AlertComponent} from '../components/alert/alert.component';
+import {CollapseDirective} from 'ngx-bootstrap/collapse';
+import {TooltipDirective} from 'ngx-bootstrap/tooltip';
+import {DatePipe, NgClass, NgStyle} from '@angular/common';
+import {BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective} from 'ngx-bootstrap/dropdown';
+import {FormsModule} from '@angular/forms';
+import {TimePipe} from '../shared/time.pipe';
 
 @Component({
-  selector: 'tportal-main',
-  templateUrl: './main.component.html',
-  styleUrls: ['./main.component.css'],
-  providers: [],
-  animations: [ANIMATIONS]
+    selector: 'tportal-main',
+    templateUrl: './main.component.html',
+    styleUrls: ['./main.component.css'],
+    providers: [],
+    animations: [ANIMATIONS],
+    standalone: true,
+    imports: [FirstModalComponent, SplitModalComponent, QueueModalComponent, StatisticsModalComponent, AlertComponent, CollapseDirective, TooltipDirective, NgClass, BsDropdownDirective, BsDropdownToggleDirective, BsDropdownMenuDirective, FormsModule, NgStyle, ProceedingsComponent, ToolLoaderComponent, DatePipe, TimePipe]
 })
 export class MainComponent implements OnDestroy {
   public sidebarstate = 'hidden';

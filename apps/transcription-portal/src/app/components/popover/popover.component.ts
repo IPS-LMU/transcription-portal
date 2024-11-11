@@ -3,9 +3,10 @@ import {SubscriptionManager} from '../../shared/subscription-manager';
 import {hasProperty} from '@octra/utilities';
 
 @Component({
-  selector: 'tportal-popover',
-  templateUrl: './popover.component.html',
-  styleUrls: ['./popover.component.css']
+    selector: 'tportal-popover',
+    templateUrl: './popover.component.html',
+    styleUrls: ['./popover.component.css'],
+    standalone: true
 })
 export class PopoverComponent implements OnChanges, OnDestroy {
 

@@ -2,9 +2,10 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Operation} from '../../../obj/operations/operation';
 
 @Component({
-  selector: 'tportal-context-menu',
-  templateUrl: './context-menu.component.html',
-  styleUrls: ['./context-menu.component.css']
+    selector: 'tportal-context-menu',
+    templateUrl: './context-menu.component.html',
+    styleUrls: ['./context-menu.component.css'],
+    standalone: true
 })
 export class ContextMenuComponent implements OnInit {
 

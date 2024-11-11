@@ -1,12 +1,14 @@
-import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {DomSanitizer} from '@angular/platform-browser';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: 'tportal-split-modal',
-  templateUrl: './split-modal.component.html',
-  styleUrls: ['./split-modal.component.css']
+    selector: 'tportal-split-modal',
+    templateUrl: './split-modal.component.html',
+    styleUrls: ['./split-modal.component.css'],
+    standalone: true,
+    imports: [ModalDirective]
 })
 export class SplitModalComponent {
   @ViewChild('splitModal', {static: true}) splitModal?: ModalDirective;

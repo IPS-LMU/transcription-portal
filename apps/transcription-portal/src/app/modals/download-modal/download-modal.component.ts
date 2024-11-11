@@ -14,11 +14,15 @@ import {DownloadService} from '../../shared/download.service';
 import * as JSZip from 'jszip';
 import {DateTime} from 'luxon';
 import {FileInfo} from '@octra/web-media';
+import {FormsModule} from '@angular/forms';
+import {NgStyle} from '@angular/common';
 
 @Component({
-  selector: 'tportal-download-modal',
-  templateUrl: './download-modal.component.html',
-  styleUrls: ['./download-modal.component.css']
+    selector: 'tportal-download-modal',
+    templateUrl: './download-modal.component.html',
+    styleUrls: ['./download-modal.component.css'],
+    standalone: true,
+    imports: [FormsModule, NgStyle]
 })
 export class DownloadModalComponent implements OnInit {
 

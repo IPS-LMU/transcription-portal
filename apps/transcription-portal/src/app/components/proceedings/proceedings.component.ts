@@ -32,13 +32,27 @@ import {G2pMausOperation} from '../../obj/operations/g2p-maus-operation';
 import {ShortcutManager} from '../../obj/shortcut-manager';
 import * as clipboard from 'clipboard-polyfill';
 import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
+import {NgClass, NgStyle} from '@angular/common';
+import {ResultsTableComponent} from '../results-table/results-table.component';
+import {FileInfoTableComponent} from '../file-info-table/file-info-table.component';
+import {OperationArrowComponent} from '../operation-arrow/operation-arrow.component';
+import {TooltipDirective} from 'ngx-bootstrap/tooltip';
+import {ContextMenuComponent} from './context-menu/context-menu.component';
+import {ProceedingsRowDirective} from './directives/proceedings-row.directive';
+import {ProcColIconDirective} from './directives/proc-col-icon.directive';
+import {ProcColOperationDirective} from './directives/proc-col-operation.directive';
+import {DirProgressDirective} from './directives/dir-progress.directive';
+import {TimePipe} from '../../shared/time.pipe';
+import {LuxonFormatPipe} from '../../obj/luxon-format.pipe';
 
 @Component({
-  selector: 'tportal-proceedings',
-  templateUrl: './proceedings.component.html',
-  styleUrls: ['./proceedings.component.css'],
-  animations: ANIMATIONS,
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tportal-proceedings',
+    templateUrl: './proceedings.component.html',
+    styleUrls: ['./proceedings.component.css'],
+    animations: ANIMATIONS,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [DownloadModalComponent, PopoverComponent, NgStyle, ResultsTableComponent, NgClass, FileInfoTableComponent, FilePreviewModalComponent, OperationArrowComponent, TooltipDirective, ContextMenuComponent, ProceedingsRowDirective, ProcColIconDirective, ProcColOperationDirective, DirProgressDirective, TimePipe, LuxonFormatPipe]
 })
 export class ProceedingsComponent implements OnInit, OnDestroy {
 

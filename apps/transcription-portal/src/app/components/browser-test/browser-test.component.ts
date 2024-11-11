@@ -3,11 +3,14 @@ import {Router} from '@angular/router';
 import {CompatibilityService} from '../../shared/compatibility.service';
 import {BrowserInfo} from '../../obj/BrowserInfo';
 import {OHModalService} from '../../shared/ohmodal.service';
+import {NgClass, NgStyle} from '@angular/common';
 
 @Component({
-  selector: 'tportal-browser-test',
-  templateUrl: './browser-test.component.html',
-  styleUrls: ['./browser-test.component.css']
+    selector: 'tportal-browser-test',
+    templateUrl: './browser-test.component.html',
+    styleUrls: ['./browser-test.component.css'],
+    standalone: true,
+    imports: [NgClass, NgStyle]
 })
 export class BrowserTestComponent implements OnInit {
 

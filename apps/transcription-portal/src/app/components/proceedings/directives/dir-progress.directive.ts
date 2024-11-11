@@ -13,7 +13,8 @@ import {SubscriptionManager} from '@octra/utilities';
 import {interval, Subscription} from 'rxjs';
 
 @Directive({
-  selector: '[tportalDirProgress]'
+    selector: '[tportalDirProgress]',
+    standalone: true
 })
 export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy {
 

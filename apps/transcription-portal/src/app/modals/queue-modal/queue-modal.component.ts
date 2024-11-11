@@ -19,18 +19,22 @@ import {AppSettings} from '../../shared/app.settings';
 import {OHConfiguration, OHLanguageObject, OHService} from '../../obj/oh-config';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
-import {BsDropdownDirective} from 'ngx-bootstrap/dropdown';
+import {BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective} from 'ngx-bootstrap/dropdown';
 import {PopoverDirective} from 'ngx-bootstrap/popover';
 import {hasProperty} from '@octra/utilities';
 import {SettingsService} from '../../shared/settings.service';
 import {AudioInfo, FileInfo} from '@octra/web-media';
+import {NgClass, NgStyle, UpperCasePipe} from '@angular/common';
+import {TimePipe} from '../../shared/time.pipe';
 
 @Component({
-  selector: 'tportal-queue-modal',
-  templateUrl: './queue-modal.component.html',
-  styleUrls: ['./queue-modal.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.None
+    selector: 'tportal-queue-modal',
+    templateUrl: './queue-modal.component.html',
+    styleUrls: ['./queue-modal.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    encapsulation: ViewEncapsulation.None,
+    standalone: true,
+    imports: [ModalDirective, BsDropdownDirective, BsDropdownToggleDirective, BsDropdownMenuDirective, NgClass, NgStyle, PopoverDirective, UpperCasePipe, TimePipe]
 })
 export class QueueModalComponent {
   @ViewChild('queueModal', {static: true}) queueModal?: ModalDirective;

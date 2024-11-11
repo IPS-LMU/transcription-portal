@@ -17,8 +17,9 @@ import {Subscription} from 'rxjs';
 import {FileInfo} from '@octra/web-media';
 
 @Directive({
-  selector: '[tportalProcColIcon]',
-  exportAs: 'colIcon'
+    selector: '[tportalProcColIcon]',
+    exportAs: 'colIcon',
+    standalone: true
 })
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
 

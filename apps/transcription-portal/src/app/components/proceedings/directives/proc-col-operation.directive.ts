@@ -20,7 +20,8 @@ import {Subscription} from 'rxjs';
 import {FileInfo} from '@octra/web-media';
 
 @Directive({
-  selector: '[tportalProcColOperation]'
+    selector: '[tportalProcColOperation]',
+    standalone: true
 })
 export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
 

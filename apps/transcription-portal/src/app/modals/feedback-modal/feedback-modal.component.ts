@@ -1,4 +1,4 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, SecurityContext, ViewChild} from '@angular/core';
+import {ChangeDetectionStrategy, ChangeDetectorRef, Component, SecurityContext, ViewChild} from '@angular/core';
 import {Subject} from 'rxjs';
 import {SubscriptionManager} from '../../shared/subscription-manager';
 import {BugReportService} from '../../shared/bug-report.service';
@@ -6,13 +6,17 @@ import {SettingsService} from '../../shared/settings.service';
 import {StorageService} from '../../storage.service';
 import {AppSettings} from '../../shared/app.settings';
 import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {BsModalRef, BsModalService, ModalOptions} from 'ngx-bootstrap/modal';
+import {BsModalRef, BsModalService, ModalDirective, ModalOptions} from 'ngx-bootstrap/modal';
+import {FormsModule} from '@angular/forms';
+import {NgClass} from '@angular/common';
 
 @Component({
-  selector: 'tportal-feedback-modal',
-  templateUrl: './feedback-modal.component.html',
-  styleUrls: ['./feedback-modal.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tportal-feedback-modal',
+    templateUrl: './feedback-modal.component.html',
+    styleUrls: ['./feedback-modal.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [ModalDirective, FormsModule, NgClass]
 })
 export class FeedbackModalComponent {
   modalRef?: BsModalRef;
