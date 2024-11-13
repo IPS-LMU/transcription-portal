@@ -289,7 +289,7 @@
   <div [@comeIn]="animationObject"
     [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
     style="position:absolute; height:100%; border-top: 1px solid gray;">
-    <tportal-tool-loader #toolLoader (datareceived)="onToolDataReceived($event)"
+    <tportal-tool-loader #toolLoader (datareceived)="onToolDataReceived($event, toolLoader)"
       [operation]="toolSelectedOperation"
       style="height:100%;"
     ></tportal-tool-loader>

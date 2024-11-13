@@ -73,7 +73,6 @@ export class DownloadService {
         if (!(from === null || from === undefined)) {
           const importConverter = from.obj;
 
-          console.log(`AudioFileName: ${audiofile.name ? audiofile.name + opResult.extension : opResult.fullname}`);
           if (importConverter.name !== 'AnnotJSON') {
             const importResult = importConverter.import({
               name: audiofile.name ? audiofile.name.replace(/\.[^.]+$/g, "") + opResult.extension : opResult.fullname,

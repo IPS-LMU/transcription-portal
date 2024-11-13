@@ -1,5 +1,5 @@
 import {HttpClient} from '@angular/common/http';
-import {ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, ViewChild,} from '@angular/core';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {environment} from '../../environments/environment';
 import {AppInfo} from '../app.info';
@@ -35,18 +35,38 @@ import {AlertComponent} from '../components/alert/alert.component';
 import {CollapseDirective} from 'ngx-bootstrap/collapse';
 import {TooltipDirective} from 'ngx-bootstrap/tooltip';
 import {DatePipe, NgClass, NgStyle} from '@angular/common';
-import {BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective} from 'ngx-bootstrap/dropdown';
+import {BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective,} from 'ngx-bootstrap/dropdown';
 import {FormsModule} from '@angular/forms';
 import {TimePipe} from '../shared/time.pipe';
+import {AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter,} from '@octra/annotation';
+import {OAudiofile} from '@octra/media';
 
 @Component({
-    selector: 'tportal-main',
-    templateUrl: './main.component.html',
-    styleUrls: ['./main.component.css'],
-    providers: [],
-    animations: [ANIMATIONS],
-    standalone: true,
-    imports: [FirstModalComponent, SplitModalComponent, QueueModalComponent, StatisticsModalComponent, AlertComponent, CollapseDirective, TooltipDirective, NgClass, BsDropdownDirective, BsDropdownToggleDirective, BsDropdownMenuDirective, FormsModule, NgStyle, ProceedingsComponent, ToolLoaderComponent, DatePipe, TimePipe]
+  selector: 'tportal-main',
+  templateUrl: './main.component.html',
+  styleUrls: ['./main.component.css'],
+  providers: [],
+  animations: [ANIMATIONS],
+  standalone: true,
+  imports: [
+    FirstModalComponent,
+    SplitModalComponent,
+    QueueModalComponent,
+    StatisticsModalComponent,
+    AlertComponent,
+    CollapseDirective,
+    TooltipDirective,
+    NgClass,
+    BsDropdownDirective,
+    BsDropdownToggleDirective,
+    BsDropdownMenuDirective,
+    FormsModule,
+    NgStyle,
+    ProceedingsComponent,
+    ToolLoaderComponent,
+    DatePipe,
+    TimePipe,
+  ],
 })
 export class MainComponent implements OnDestroy {
   public sidebarstate = 'hidden';
@@ -60,13 +80,15 @@ export class MainComponent implements OnDestroy {
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('folderinput') folderinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('splitModal', {static: true}) splitModal?: SplitModalComponent;
-  @ViewChild('firstModal', {static: true}) firstModal?: FirstModalComponent;
-  @ViewChild('feedbackModal', {static: true}) feedbackModal?: FeedbackModalComponent;
+  @ViewChild('splitModal', { static: true }) splitModal?: SplitModalComponent;
+  @ViewChild('firstModal', { static: true }) firstModal?: FirstModalComponent;
+  @ViewChild('feedbackModal', { static: true })
+  feedbackModal?: FeedbackModalComponent;
   @ViewChild('queueModal') queueModal?: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
-  @ViewChild('toolLoader', {static: true}) toolLoader?: ToolLoaderComponent;
-  @ViewChild('statisticsModal', {static: true}) statisticsModal?: StatisticsModalComponent;
+  @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
+  @ViewChild('statisticsModal', { static: true })
+  statisticsModal?: StatisticsModalComponent;
   public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
@@ -75,52 +97,58 @@ export class MainComponent implements OnDestroy {
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
 
-  constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
-              private httpclient: HttpClient, public notification: NotificationService,
-              private storage: StorageService,
-              public bugService: BugReportService,
-              private alertService: AlertService,
-              public settingsService: SettingsService,
-              private cd: ChangeDetectorRef,
-              public modalService: OHModalService
+  constructor(
+    public taskService: TaskService,
+    private sanitizer: DomSanitizer,
+    private httpclient: HttpClient,
+    public notification: NotificationService,
+    private storage: StorageService,
+    public bugService: BugReportService,
+    private alertService: AlertService,
+    public settingsService: SettingsService,
+    private cd: ChangeDetectorRef,
+    public modalService: OHModalService
   ) {
-    this.subscrmanager.add(this.notification.onPermissionChange.subscribe(
-      (result) => {
+    this.subscrmanager.add(
+      this.notification.onPermissionChange.subscribe((result) => {
         if (this.storage.ready) {
           this.storage.saveUserSettings('notification', {
-            enabled: result
+            enabled: result,
           });
         }
-      }
-    ));
+      })
+    );
 
-    this.subscrmanager.add(this.taskService.errorscountchange.subscribe(
-      () => {
+    this.subscrmanager.add(
+      this.taskService.errorscountchange.subscribe(() => {
         this.protocolFooter?.blop();
-      }
-    ));
+      })
+    );
 
     new Promise<void>((resolve, reject) => {
       if (this.settingsService.allLoaded) {
         resolve();
       } else {
-        this.subscrmanager.add(this.settingsService.settingsload.subscribe(
-          () => {
+        this.subscrmanager.add(
+          this.settingsService.settingsload.subscribe(() => {
             resolve();
-          }
-        ));
+          })
+        );
       }
     }).then(() => {
       // configuration loaded
       this.cd.markForCheck();
       this.cd.detectChanges();
-      this.taskService.selectedlanguage = AppSettings.configuration.api.languages[0];
+      this.taskService.selectedlanguage =
+        AppSettings.configuration.api.languages[0];
 
       new Promise<any>((resolve, reject) => {
         if (!this.storage.ready) {
-          this.subscrmanager.add(this.storage.allloaded.subscribe((results) => {
-            resolve(results);
-          }));
+          this.subscrmanager.add(
+            this.storage.allloaded.subscribe((results) => {
+              resolve(results);
+            })
+          );
         } else {
           resolve([null]);
         }
@@ -131,26 +159,27 @@ export class MainComponent implements OnDestroy {
         this.cd.markForCheck();
         this.cd.detectChanges();
 
-        this.storage.getIntern('firstModalShown').then(
-          (result) => {
+        this.storage
+          .getIntern('firstModalShown')
+          .then((result) => {
             if (!(result === null || result === undefined)) {
               this.firstModalShown = result.value;
             }
             this.loadFirstModal();
-          }
-        ).catch((err) => {
-          console.error(err);
-          this.loadFirstModal();
-        });
+          })
+          .catch((err) => {
+            console.error(err);
+            this.loadFirstModal();
+          });
 
         if (!(results[1] === null || results[1] === undefined)) {
           // read userSettings
           for (const userSetting of results[1]) {
             switch (userSetting.name) {
-              case ('sidebarWidth'):
+              case 'sidebarWidth':
                 this.newProceedingsWidth = userSetting.value;
                 break;
-              case ('accessCode'):
+              case 'accessCode':
                 this.taskService.accessCode = userSetting.value;
                 break;
             }
@@ -173,7 +202,7 @@ export class MainComponent implements OnDestroy {
   }
 
   set showtool(value: boolean) {
-    this.sidebarExpand = (value) ? 'closed' : 'opened';
+    this.sidebarExpand = value ? 'closed' : 'opened';
     this._showtool = value;
   }
 
@@ -182,7 +211,9 @@ export class MainComponent implements OnDestroy {
   }
 
   public get toolSelectedOperation(): Operation | undefined {
-    return this.proceedings ? this.proceedings.toolSelectedOperation : undefined;
+    return this.proceedings
+      ? this.proceedings.toolSelectedOperation
+      : undefined;
   }
 
   public set toolSelectedOperation(value: Operation | undefined) {
@@ -193,12 +224,15 @@ export class MainComponent implements OnDestroy {
 
   public get animationObject(): any {
     const width = 100 - this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}};
+    return {
+      value: this.sidebarExpand,
+      params: { toolWidth: width, procWidth: this.newProceedingsWidth },
+    };
   }
 
   public get animationObject2(): any {
     const width = this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {width}};
+    return { value: this.sidebarExpand, params: { width } };
   }
 
   public get AppInfo() {
@@ -206,7 +240,12 @@ export class MainComponent implements OnDestroy {
   }
 
   public allTasks(): Task[] {
-    if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
+    if (
+      !(
+        this.taskService.taskList === null ||
+        this.taskService.taskList === undefined
+      )
+    ) {
       return this.taskService.taskList.getAllTasks();
     }
 
@@ -263,30 +302,51 @@ export class MainComponent implements OnDestroy {
   }
 
   onOperationClick(operation: Operation) {
-    if (operation && operation instanceof ToolOperation && operation.state !== TaskState.PENDING) {
+    if (
+      operation &&
+      operation instanceof ToolOperation &&
+      operation.state !== TaskState.PENDING
+    ) {
       const tool = operation as ToolOperation;
       const task = tool.task!;
       const uploadOperation = task.operations[0];
       const previousOperation = tool.previousOperation;
 
-      if (tool.task && (uploadOperation.results.length > 0 && !uploadOperation.lastResult?.available)
-        || (!(previousOperation === null || previousOperation === undefined) &&
-          previousOperation.results.length > 0 && !previousOperation.lastResult?.available)) {
+      if (
+        (tool.task &&
+          uploadOperation.results.length > 0 &&
+          !uploadOperation.lastResult?.available) ||
+        (!(previousOperation === null || previousOperation === undefined) &&
+          previousOperation.results.length > 0 &&
+          !previousOperation.lastResult?.available)
+      ) {
         if (!uploadOperation.results[0].available) {
-          if ((tool.task?.files[0].file === null || tool.task?.files[0].file === undefined)) {
-            this.alertService.showAlert('warning',
-              `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`, 10);
+          if (
+            tool.task?.files[0].file === null ||
+            tool.task?.files[0].file === undefined
+          ) {
+            this.alertService.showAlert(
+              'warning',
+              `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
+              10
+            );
             tool.task?.operations[0].changeState(TaskState.PENDING);
             tool.task?.changeState(TaskState.PENDING);
           } else {
             // start upload process
-            this.alertService.showAlert('info', `Please wait until file ${tool.task.files[0].fullname}` +
-              ` being uploaded and do '${tool.title}' again.`);
+            this.alertService.showAlert(
+              'info',
+              `Please wait until file ${tool.task.files[0].fullname}` +
+                ` being uploaded and do '${tool.title}' again.`
+            );
             uploadOperation.statechange.subscribe(
               (state) => {
                 if (state.newState === 'FINISHED') {
-                  this.alertService.showAlert('success', `file ${tool.task?.files[0].fullname}` +
-                    +` successfully uploaded. You can do '${tool.title}' for this file.`);
+                  this.alertService.showAlert(
+                    'success',
+                    `file ${tool.task?.files[0].fullname}` +
+                      +` successfully uploaded. You can do '${tool.title}' for this file.`
+                  );
                   if (tool.task) {
                     this.storage.saveTask(tool.task);
                   }
@@ -298,17 +358,31 @@ export class MainComponent implements OnDestroy {
             );
             this.taskService.start();
           }
-        } else if (uploadOperation?.lastResult?.available && !previousOperation?.lastResult?.available) {
-          this.alertService.showAlert('info',
-            `Please run ${previousOperation?.name} for this task again.`, 12);
+        } else if (
+          uploadOperation?.lastResult?.available &&
+          !previousOperation?.lastResult?.available
+        ) {
+          this.alertService.showAlert(
+            'info',
+            `Please run ${previousOperation?.name} for this task again.`,
+            12
+          );
         }
       } else {
         let file: FileInfo;
-        if (tool.results.length > 0 && !tool.lastResult?.online && tool.lastResult?.available) {
+        if (
+          tool.results.length > 0 &&
+          !tool.lastResult?.online &&
+          tool.lastResult?.available
+        ) {
           // reupload result from tool operation
           file = tool.lastResult;
-        } else if (previousOperation && previousOperation.lastResult
-          && !previousOperation.lastResult.online && previousOperation.lastResult.available) {
+        } else if (
+          previousOperation &&
+          previousOperation.lastResult &&
+          !previousOperation.lastResult.online &&
+          previousOperation.lastResult.available
+        ) {
           // reupload result from previous operation
           // local available, reupload
           file = previousOperation.lastResult;
@@ -317,93 +391,114 @@ export class MainComponent implements OnDestroy {
         new Promise<void>((resolve, reject) => {
           if (file && tool) {
             console.log(`reupload...`);
-            this.upload(tool as Operation, file).then((url: string) => {
-              console.log(`uploaded: ${url}`);
-              if (tool.results.length > 0 && !tool.lastResult?.online && tool.lastResult?.available) {
-                // reupload result from tool operation
-                tool.lastResult.url = url;
-                tool.lastResult.online = true;
-              } else if (!(previousOperation?.lastResult === null || previousOperation?.lastResult === undefined)
-                && !previousOperation.lastResult.online && previousOperation.lastResult.available) {
-                previousOperation.lastResult.url = url;
-                previousOperation.lastResult.online = true;
-              }
-              if (tool.task) {
-                this.storage.saveTask(tool.task);
-              }
-              resolve();
-            }).catch((e) => {
-              reject(e);
-            });
+            this.upload(tool as Operation, file)
+              .then((url: string) => {
+                console.log(`uploaded: ${url}`);
+                if (
+                  tool.results.length > 0 &&
+                  !tool.lastResult?.online &&
+                  tool.lastResult?.available
+                ) {
+                  // reupload result from tool operation
+                  tool.lastResult.url = url;
+                  tool.lastResult.online = true;
+                } else if (
+                  !(
+                    previousOperation?.lastResult === null ||
+                    previousOperation?.lastResult === undefined
+                  ) &&
+                  !previousOperation.lastResult.online &&
+                  previousOperation.lastResult.available
+                ) {
+                  previousOperation.lastResult.url = url;
+                  previousOperation.lastResult.online = true;
+                }
+                if (tool.task) {
+                  this.storage.saveTask(tool.task);
+                }
+                resolve();
+              })
+              .catch((e) => {
+                reject(e);
+              });
           } else {
             resolve();
           }
-        }).then(() => {
-          // continue after upload
-          if (tool.task) {
-            const index = tool.task.operations.findIndex((op) => {
-              return op.id === tool.id;
-            });
+        })
+          .then(() => {
+            // continue after upload
+            if (tool.task) {
+              const index = tool.task.operations.findIndex((op) => {
+                return op.id === tool.id;
+              });
 
-            if (index < tool.task.operations.length) {
-              // start processing
-              tool.changeState(TaskState.PROCESSING);
-            }
-          }
-
-          this.toolURL = tool.getToolURL();
-
-          if (this.toolURL !== '') {
-            if (this.proceedings && this.toolLoader) {
-              this.proceedings.cd.markForCheck();
-              this.proceedings.cd.detectChanges();
-              this.toolLoader.url = tool.getToolURL();
-              this.toolLoader.name = tool.name;
-
-              if (!(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined)
-                && operation.id !== this.toolSelectedOperation.id) {
-                // some operation already initialized
-                this.leaveToolOption();
+              if (index < tool.task.operations.length) {
+                // start processing
+                tool.changeState(TaskState.PROCESSING);
               }
-
-              this.toolSelectedOperation = operation;
-
-              setTimeout(() => {
-                this.sidebarstate = 'opened';
-              }, 400);
-
-              this.showtool = true;
-              if (operation instanceof OCTRAOperation) {
-                operation.time.start = Date.now();
-              } else if (operation instanceof EmuOperation) {
-                operation.time.start = Date.now();
-              }
-              this.proceedings.togglePopover(false);
-              this.cd.markForCheck();
-              this.cd.detectChanges();
-              this.proceedings.cd.markForCheck();
-              this.proceedings.cd.detectChanges();
             }
-          } else {
-            console.warn(`tool url is empty`);
-          }
-        }).catch((error) => {
-          console.error(error);
-        });
+
+            this.toolURL = tool.getToolURL();
+
+            if (this.toolURL !== '') {
+              if (this.proceedings && this.toolLoader) {
+                this.proceedings.cd.markForCheck();
+                this.proceedings.cd.detectChanges();
+                this.toolLoader.url = tool.getToolURL();
+                this.toolLoader.name = tool.name;
+
+                if (
+                  !(
+                    this.toolSelectedOperation === null ||
+                    this.toolSelectedOperation === undefined
+                  ) &&
+                  operation.id !== this.toolSelectedOperation.id
+                ) {
+                  // some operation already initialized
+                  this.leaveToolOption();
+                }
+
+                this.toolSelectedOperation = operation;
+
+                setTimeout(() => {
+                  this.sidebarstate = 'opened';
+                }, 400);
+
+                this.showtool = true;
+                if (operation instanceof OCTRAOperation) {
+                  operation.time.start = Date.now();
+                } else if (operation instanceof EmuOperation) {
+                  operation.time.start = Date.now();
+                }
+                this.proceedings.togglePopover(false);
+                this.cd.markForCheck();
+                this.cd.detectChanges();
+                this.proceedings.cd.markForCheck();
+                this.proceedings.cd.detectChanges();
+              }
+            } else {
+              console.warn(`tool url is empty`);
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
     }
   }
 
-  onOperationHover(operation: Operation) {
-  }
+  onOperationHover(operation: Operation) {}
 
   onASRLangChanged(lang: OHLanguageObject) {
-    if (lang.code !== this.taskService.selectedlanguage?.code || lang.asr !== this.taskService.selectedlanguage.asr) {
+    if (
+      lang.code !== this.taskService.selectedlanguage?.code ||
+      lang.asr !== this.taskService.selectedlanguage.asr
+    ) {
       this.taskService.selectedlanguage = lang;
       this.changeLanguageforAllQueuedTasks();
       this.storage.saveUserSettings('defaultTaskOptions', {
         language: lang.code,
-        asr: lang.asr
+        asr: lang.asr,
       });
     }
   }
@@ -428,44 +523,100 @@ export class MainComponent implements OnDestroy {
     return code.substring(code.length - 2);
   }
 
-  onToolDataReceived(data: any) {
+  onToolDataReceived(data: any, toolLoader: ToolLoaderComponent) {
     const $event = data.event;
 
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
-      const promise = new Promise<FileInfo>((resolve, reject) => {
+      (async () => {
         if (data.name === 'OCTRA') {
-          if (hasProperty($event.data.data, 'transcript_url')) {
-            const result: string = $event.data.data.transcript_url;
-            const file = FileInfo.fromURL(result, 'text/plain');
-            file.updateContentFromURL(this.httpclient).then(() => {
-              const inputs = this.toolSelectedOperation?.task?.files;
-              if (!inputs) {
-                resolve(file);
-                return;
+          if (hasProperty($event.data.data, 'annotation')) {
+            const result: any = $event.data.data.annotation;
+            let annotation: IFile | undefined;
+
+            try {
+              const converter = new AnnotJSONConverter();
+              const audio = this.toolSelectedOperation?.task!.files.find((a) =>
+                a.type.includes('audio')
+              ) as AudioInfo;
+              const audiofile = new OAudiofile();
+              audiofile.url = audio.url;
+              audiofile.name = audio.fullname;
+              audiofile.type = audio.type;
+              audiofile.size = audio.size;
+              audiofile.duration = audio.duration.samples;
+              audiofile.sampleRate = (audio as AudioInfo).sampleRate;
+              const importResult = converter.import(result, audiofile);
+
+              if (importResult.annotjson && !importResult.error) {
+                const exportConverter = new PartiturConverter();
+                const oAnnotJSON = OAnnotJSON.deserialize(
+                  importResult.annotjson
+                );
+                const exportResult = exportConverter.export(
+                  oAnnotJSON!,
+                  audiofile,
+                  0
+                );
+
+                if (exportResult.file && !exportResult.error) {
+                  annotation = exportResult.file;
+                } else {
+                  throw new Error(`Export: ${exportResult.error}`);
+                }
+              } else {
+                throw new Error(`Import: ${importResult.error}`);
               }
+            } catch (e) {
+              console.error(e);
+              throw new Error('Converting to TextGrid failed!');
+            }
 
-              const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+            if (!annotation) {
+              throw new Error('Annotation is undefined.');
+            }
 
-              file.attributes = {
-                originalFileName: `${name}${file.extension}`
-              };
-
-              resolve(file);
-            }).catch((e: any) => {
-              reject(e);
+            const blob = new File([annotation.content], annotation.name, {
+              type: annotation?.type,
             });
-          } else {
-            reject(`missing transcript url`);
+            const file = new FileInfo(
+              annotation.name,
+              annotation.type,
+              blob.size,
+              blob
+            );
+            const inputs = this.toolSelectedOperation?.task?.files;
+
+            const url = await this.upload(
+              toolLoader.operation as ToolOperation,
+              file
+            );
+            file.url = url;
+
+            if (!inputs) {
+              return file;
+            }
+
+            const name = (
+              inputs[0].attributes?.originalFileName ?? inputs[0].fullname
+            ).replace(/\.[^.]+$/g, '');
+
+            file.attributes = {
+              originalFileName: `${name}${file.extension}`,
+            };
+
+            return file;
           }
+          throw new Error(`missing transcript url`);
         } else if (data.name === 'Emu WebApp') {
           if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
             const inputs = this.toolSelectedOperation?.task?.files;
             if (!inputs) {
-              reject(`Can't find any inputs for this task.`);
-              return;
+              throw new Error(`Can't find any inputs for this task.`);
             }
 
-            const fileName = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
+            const fileName = (
+              inputs[0].attributes?.originalFileName ?? inputs[0].fullname
+            ).replace(/\.[^.]+$/g, '');
 
             this.toolSelectedOperation.changeState(TaskState.FINISHED);
             this._showtool = false;
@@ -477,64 +628,101 @@ export class MainComponent implements OnDestroy {
               jsonText = JSON.stringify(json, null, 2);
             }
 
-            const file: File = FileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
-            const fileInfo = new FileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
+            const file: File = FileInfo.getFileFromContent(
+              jsonText,
+              `${fileName}_annot.json`,
+              'text/plain'
+            );
+            const fileInfo = new FileInfo(
+              `${fileName}_annot.json`,
+              'text/plain',
+              file.size,
+              file,
+              Date.now()
+            );
 
             fileInfo.attributes = {
-              originalFileName: `${fileName}_annot.json`
+              originalFileName: `${fileName}_annot.json`,
             };
 
             fileInfo.online = false;
-            resolve(fileInfo);
+            return fileInfo;
           }
-        } else {
-          reject('unknown tool!');
         }
-      }).then((file: FileInfo) => {
-        if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
-          this.toolSelectedOperation.results.push(file);
+        throw new Error('unknown tool!');
+      })()
+        .then((file: FileInfo) => {
+          if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
+            this.toolSelectedOperation.results.push(file);
 
-          const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
-            return this.toolSelectedOperation && op.id === this.toolSelectedOperation.id;
-          });
+            const index = this.toolSelectedOperation.task.operations.findIndex(
+              (op) => {
+                return (
+                  this.toolSelectedOperation &&
+                  op.id === this.toolSelectedOperation.id
+                );
+              }
+            );
 
-          // reset next operations
-          if (index > -1) {
-            for (let i = index + 1; i < this.toolSelectedOperation.task.operations.length; i++) {
-              const operation = this.toolSelectedOperation.task.operations[i];
-              operation.changeState(TaskState.PENDING);
-            }
-          }
-
-          if (this.toolSelectedOperation instanceof OCTRAOperation) {
-            this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
-          } else if (this.toolSelectedOperation instanceof EmuOperation) {
-            this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
-          }
-
-          this.toolSelectedOperation.changeState(TaskState.FINISHED);
-          this.storage.saveTask(this.toolSelectedOperation.task);
-
-          setTimeout(() => {
-            if (this.toolSelectedOperation && this.toolSelectedOperation.task && this.toolSelectedOperation.task.state === 'FINISHED'
-              && this.toolSelectedOperation.task.operations[1] && this.toolSelectedOperation.task.operations[1].providerInformation) {
-              const langObj = AppSettings.getLanguageByCode(this.toolSelectedOperation.task.language,
-                this.toolSelectedOperation.task.operations[1].providerInformation.provider);
-              if (langObj) {
-                this.toolSelectedOperation.task.restart(langObj, this.httpclient, [{
-                  name: 'GoogleASR',
-                  value: this.taskService.accessCode
-                }]);
-              } else {
-                throw new Error('langObj is undefined');
+            // reset next operations
+            if (index > -1) {
+              for (
+                let i = index + 1;
+                i < this.toolSelectedOperation.task.operations.length;
+                i++
+              ) {
+                const operation = this.toolSelectedOperation.task.operations[i];
+                operation.changeState(TaskState.PENDING);
               }
             }
-            this.onBackButtonClicked();
-          }, 1000);
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
+
+            if (this.toolSelectedOperation instanceof OCTRAOperation) {
+              this.toolSelectedOperation.time.duration +=
+                Date.now() - this.toolSelectedOperation.time.start;
+            } else if (this.toolSelectedOperation instanceof EmuOperation) {
+              this.toolSelectedOperation.time.duration +=
+                Date.now() - this.toolSelectedOperation.time.start;
+            }
+
+            this.toolSelectedOperation.changeState(TaskState.FINISHED);
+            this.storage.saveTask(this.toolSelectedOperation.task);
+
+            setTimeout(() => {
+              if (
+                this.toolSelectedOperation &&
+                this.toolSelectedOperation.task &&
+                this.toolSelectedOperation.task.state === 'FINISHED' &&
+                this.toolSelectedOperation.task.operations[1] &&
+                this.toolSelectedOperation.task.operations[1]
+                  .providerInformation
+              ) {
+                const langObj = AppSettings.getLanguageByCode(
+                  this.toolSelectedOperation.task.language,
+                  this.toolSelectedOperation.task.operations[1]
+                    .providerInformation.provider
+                );
+                if (langObj) {
+                  this.toolSelectedOperation.task.restart(
+                    langObj,
+                    this.httpclient,
+                    [
+                      {
+                        name: 'GoogleASR',
+                        value: this.taskService.accessCode,
+                      },
+                    ]
+                  );
+                } else {
+                  throw new Error('langObj is undefined');
+                }
+              }
+              this.onBackButtonClicked();
+            }, 1000);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
   }
 
@@ -553,7 +741,10 @@ export class MainComponent implements OnDestroy {
 
   leaveToolOption() {
     if (this.toolSelectedOperation) {
-      if (this.toolSelectedOperation.nextOperation && this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED) {
+      if (
+        this.toolSelectedOperation.nextOperation &&
+        this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED
+      ) {
         this.toolSelectedOperation.changeState(TaskState.FINISHED);
       } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
         if (this.toolSelectedOperation.results.length > 0) {
@@ -576,7 +767,8 @@ export class MainComponent implements OnDestroy {
 
   public getTime(): number {
     if (this.toolSelectedOperation?.task) {
-      const elem: AudioInfo = this.toolSelectedOperation.task.files[0] as AudioInfo;
+      const elem: AudioInfo = this.toolSelectedOperation.task
+        .files[0] as AudioInfo;
 
       if (!(elem.duration === null || elem.duration === undefined)) {
         return elem.duration.unix;
@@ -591,12 +783,20 @@ export class MainComponent implements OnDestroy {
       this.taskService.splitPrompt = reason;
       this.taskService.checkFiles();
     });
-  }
+  };
 
   public dragBorder($event: any, part: string) {
-    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
+    if (
+      $event.type === 'mousemove' ||
+      $event.type === 'mouseenter' ||
+      $event.type === 'mouseleave'
+    ) {
       if (this.dragborder !== 'dragging') {
-        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
+        if (
+          part === 'left' &&
+          $event.pageX >= $event.target.clientWidth - 3 &&
+          $event.pageX <= $event.target.clientWidth + 3
+        ) {
           this.dragborder = 'active';
         } else if (part === 'right' && $event.pageX <= 10) {
           this.dragborder = 'active';
@@ -605,7 +805,9 @@ export class MainComponent implements OnDestroy {
         }
       } else if ($event.type === 'mousemove') {
         // dragging
-        const procWidth = Math.floor(($event.pageX + 10) / window.innerWidth * 100);
+        const procWidth = Math.floor(
+          (($event.pageX + 10) / window.innerWidth) * 100
+        );
         const toolWidth = 100 - procWidth;
 
         this.newToolWidth = toolWidth;
@@ -619,12 +821,12 @@ export class MainComponent implements OnDestroy {
     }
 
     switch ($event.type) {
-      case ('mousedown'):
+      case 'mousedown':
         if (this.dragborder === 'active') {
           this.dragborder = 'dragging';
         }
         break;
-      case ('mouseup'):
+      case 'mouseup':
         this.dragborder = 'inactive';
         break;
     }
@@ -651,33 +853,43 @@ export class MainComponent implements OnDestroy {
   }
 
   onFeedbackRequest(operation: Operation) {
-    this.bugService.addEntry(ConsoleType.INFO, `user clicked on report issue:\n`
-      + `operation: ${operation.name}, ${operation.state}\n`
-      + `protocol: ${operation.protocol}\n`);
+    this.bugService.addEntry(
+      ConsoleType.INFO,
+      `user clicked on report issue:\n` +
+        `operation: ${operation.name}, ${operation.state}\n` +
+        `protocol: ${operation.protocol}\n`
+    );
     this.modalService.openFeedbackModal();
   }
 
   private loadFirstModal() {
     if (!this.firstModalShown && this.firstModal) {
-
-      this.subscrmanager.add(this.firstModal.understandClick.subscribe(
-        () => {
+      this.subscrmanager.add(
+        this.firstModal.understandClick.subscribe(() => {
           this.firstModalShown = true;
-        }
-      ));
+        })
+      );
       setTimeout(() => {
-        this.firstModal?.open(() => {
-          return this.firstModalShown;
-        }, () => {
-          this.storage.saveIntern('firstModalShown', true);
-        });
+        this.firstModal?.open(
+          () => {
+            return this.firstModalShown;
+          },
+          () => {
+            this.storage.saveIntern('firstModalShown', true);
+          }
+        );
       }, 1000);
     }
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    if (!(entries === null || entries === undefined) &&
-      !(this.taskService.operations === null || this.taskService.operations === undefined)) {
+    if (
+      !(entries === null || entries === undefined) &&
+      !(
+        this.taskService.operations === null ||
+        this.taskService.operations === undefined
+      )
+    ) {
       // filter and re-structure entries array to supported files and directories
       const filteredEntries = this.taskService.cleanUpInputArray(entries);
 
@@ -693,38 +905,47 @@ export class MainComponent implements OnDestroy {
 
   private upload(operation: Operation, file: FileInfo): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      if (operation && operation.task && operation.task.operations[1].providerInformation) {
-        const langObj = AppSettings.getLanguageByCode(operation.task.language, operation.task.operations[1].providerInformation.provider);
+      if (
+        operation &&
+        operation.task &&
+        operation.task.operations[1].providerInformation
+      ) {
+        const langObj = AppSettings.getLanguageByCode(
+          operation.task.language,
+          operation.task.operations[1].providerInformation.provider
+        );
         const url = `${langObj?.host}uploadFileMulti`;
 
         const subj = UploadOperation.upload([file], url, this.httpclient);
-        subj.subscribe((obj) => {
-          if (obj.type === 'loadend') {
-            const result = obj.result as string;
-            const x2js = new X2JS();
-            let json: any = x2js.xml2js(result);
-            json = json.UploadFileMultiResponse;
+        subj.subscribe(
+          (obj) => {
+            if (obj.type === 'loadend') {
+              const result = obj.result as string;
+              const x2js = new X2JS();
+              let json: any = x2js.xml2js(result);
+              json = json.UploadFileMultiResponse;
 
-
-            // add messages to protocol
-            if (json.warnings !== '') {
-              console.warn(json.warnings);
-            }
-
-            if (json.success === 'true') {
-              if (Array.isArray(json.fileList.entry)) {
-                resolve(json.fileList.entry[0].value);
-              } else {
-                // json attribute entry is an object
-                resolve(json.fileList.entry.value);
+              // add messages to protocol
+              if (json.warnings !== '') {
+                console.warn(json.warnings);
               }
-            } else {
-              reject(json.message);
+
+              if (json.success === 'true') {
+                if (Array.isArray(json.fileList.entry)) {
+                  resolve(json.fileList.entry[0].value);
+                } else {
+                  // json attribute entry is an object
+                  resolve(json.fileList.entry.value);
+                }
+              } else {
+                reject(json.message);
+              }
             }
+          },
+          (err) => {
+            reject(err);
           }
-        }, (err) => {
-          reject(err);
-        });
+        );
       }
     });
   }

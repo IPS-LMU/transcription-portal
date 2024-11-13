@@ -7,6 +7,7 @@ import {UploadOperation} from './upload-operation';
 import {AppSettings} from '../../shared/app.settings';
 import {OHLanguageObject} from '../oh-config';
 import {FileInfo} from '@octra/web-media';
+import {stringifyQueryParams} from '@octra/utilities';
 
 export class OCTRAOperation extends ToolOperation {
 
@@ -116,36 +117,33 @@ export class OCTRAOperation extends ToolOperation {
     if (this.operations && !((this.operations[0] as UploadOperation).wavFile === null
       || (this.operations[0] as UploadOperation).wavFile === undefined) && this.task) {
       // @ts-ignore TODO CHECK
-      const audio = `audio=${encodeURIComponent((this.operations[0] as UploadOperation)?.wavFile?.url) as string}`;
-      let transcript = `transcript=`;
-      const embedded = `embedded=1`;
+      const audio_url = encodeURIComponent((this.operations[0] as UploadOperation)?.wavFile?.url) as string;
+      const audio_name = (this.operations[0] as UploadOperation)?.wavFile?.fullname;
+      let transcript: string | undefined;
+      const embedded = `1`;
 
       const langObj = AppSettings.getLanguageByCode(this.task.language, this.task.asr);
 
       if (langObj) {
-        const host = `host=${encodeURIComponent(langObj.host)}`;
+        const host = encodeURIComponent(langObj.host);
 
         if (this.results.length < 1 && this.previousOperation) {
           if (this.previousOperation.results.length > 0 && this.previousOperation.lastResult) {
             const url = this.previousOperation.lastResult.url;
-            transcript += encodeURIComponent(url!);
+            transcript = encodeURIComponent(url!);
           } else if (this.previousOperation.previousOperation && this.previousOperation.previousOperation.lastResult &&
             this.previousOperation.previousOperation.results.length > 1) {
             const url = this.previousOperation.previousOperation.lastResult.url;
-            transcript += encodeURIComponent(url!);
-          } else {
-            transcript = '';
+            transcript = encodeURIComponent(url!);
           }
         } else if (this.lastResult) {
           const url = this.lastResult.url;
-          transcript += encodeURIComponent(url!);
+          transcript = encodeURIComponent(url!);
         }
 
-        return `${this._commands[0]}/user/load?` +
-          `${audio}&` +
-          `${transcript}&` +
-          `${host}&` +
-          `${embedded}`;
+        return `${this._commands[0]}/${stringifyQueryParams({
+          audio_url, audio_name, transcript, host, embedded
+        })}`
       } else {
         console.log(`langObj not found in octra operation lang:${this.task.language} and ${this.task.asr}`);
       }
