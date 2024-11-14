@@ -30,7 +30,7 @@
   background-color: #007bff24;
 }
 
-.fa.fa.file-text {
+.bi.bi-file-text {
   font-size: 32px;
 }
 
@@ -41,7 +41,7 @@
   white-space: nowrap;
 }
 
-.fa.fa-arrow-up {
+.bi.bi-arrow-up {
   color: cornflowerblue;
 }
 
@@ -69,7 +69,7 @@
   opacity: 0.5;
 }
 
-.placeholder {
+.tportal-placeholder {
   text-align: center;
   position: absolute;
   width: 96%;
@@ -79,21 +79,21 @@
   border: 2px dashed cornflowerblue;
 }
 
-.placeholder .description {
+.tportal-placeholder .description {
   color: #007bff;
   opacity: 0.5;
 }
 
-.placeholder ul {
+.tportal-placeholder ul {
   max-width: 625px;
   margin: 0 auto;
 }
 
-.placeholder li {
+.tportal-placeholder li {
   text-align: left;
 }
 
-.placeholder i {
+.tportal-placeholder i {
   font-size: 6em;
   color: #007bff;
   font-weight: 100;
@@ -101,8 +101,7 @@
   opacity: 0.5;
 }
 
-.fa.fa-chain-broken,
-.fa.fa-unlink {
+.bi.bi-wifi-off {
   color: red;
   opacity: 0.5;
 }
@@ -136,7 +135,7 @@ table thead tr th:hover {
 #loading {
   text-align: center;
   margin-top: 10%;
-  color: rgba(104, 168, 255, 0.53)
+  color: rgba(104, 168, 255, 0.53);
 }
 
 .table-striped .tool-selected {
@@ -162,23 +161,23 @@ table thead tr th:hover {
   padding-bottom: 0;
 }
 
-.fa.fa-info-circle {
+.bi.bi-info-circle {
   color: lightskyblue;
   margin-left: 5px;
   cursor: pointer;
 }
 
-.fa.fa-info-circle:hover {
+.bi.bi-info-circle:hover {
   color: dodgerblue;
 }
 
-.fa.fa-minus-circle {
+.bi.bi-dash-circle {
   color: orangered;
   margin-left: 5px;
   cursor: pointer;
 }
 
-.fa.fa-minus-circle:hover {
+.bi.bi-dash-circle:hover {
   color: red;
 }
 

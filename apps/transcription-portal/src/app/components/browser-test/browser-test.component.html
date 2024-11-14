@@ -8,11 +8,11 @@
           <td style="width:40px;text-align:center;">
         <i [ngClass]="{
                          spin:(rule.state === 'processing'),
-                         'fa-spinner': getStateIcon(rule) === 'spinner',
-                         'fa-times': getStateIcon(rule) === 'times',
-                         'fa-check': getStateIcon(rule) === 'check'
+                         'bi-gear-fill': getStateIcon(rule) === 'spinner',
+                         'bi-x': getStateIcon(rule) === 'times',
+                         'bi-check': getStateIcon(rule) === 'check'
                          }" [ngStyle]="{color:getStateColor(rule)}"
-            class="fa"></i>
+            class="bi"></i>
           </td>
           <td>{{rule.description}}
             @if (rule.state === 'failed' && rule.help !== '') {

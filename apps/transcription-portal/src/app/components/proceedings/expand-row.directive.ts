@@ -1,13 +1,11 @@
-import {Directive, ElementRef, OnInit, Renderer2} from '@angular/core';
+import { Directive, ElementRef, OnInit, Renderer2 } from '@angular/core';
 
 @Directive({
-    selector: '[appExpandRow]',
-    standalone: true
+  selector: '[appExpandRow]',
+  standalone: true,
 })
 export class ExpandRowDirective implements OnInit {
-
-  constructor(private elRef: ElementRef, private renderer: Renderer2) {
-  }
+  constructor(private elRef: ElementRef, private renderer: Renderer2) {}
 
   ngOnInit() {
     const native = this.elRef.nativeElement;
@@ -24,9 +22,9 @@ export class ExpandRowDirective implements OnInit {
       }
 
       if (native.getAttribute('data-state') === 'closed') {
-        this.renderer.setAttribute(native, 'class', 'fa fa-angle-down');
+        this.renderer.setAttribute(native, 'class', 'bi bi-chevron-down');
       } else {
-        this.renderer.setAttribute(native, 'class', 'fa fa-angle-up');
+        this.renderer.setAttribute(native, 'class', 'bi bi-chevron-up');
       }
     });
   }

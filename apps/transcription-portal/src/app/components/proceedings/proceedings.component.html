@@ -1,4 +1,3 @@
-<tportal-download-modal #content [column]="selectedOperation"></tportal-download-modal>
 <tportal-popover #popoverRef
   (mouseenter)="popover.mouseIn = true"
   (mouseleave)="popover.state = 'closed'"
@@ -21,10 +20,10 @@
       }
       <table class="timer">
         <tr class="action-time">
-          <td><i class="fa fa-clock-o" style="color: cornflowerblue;"></i>
+          <td><i class="bi bi-clock" style="color: cornflowerblue;"></i>
           {{popover.operation.time.start | luxonFormat: "DATETIME_SHORT" }}
         </td>
-        <td><i class="fa fa-hourglass-start" style="color: cornflowerblue;"></i>
+        <td><i class="bi bi-hourglass" style="color: cornflowerblue;"></i>
         {{calculateDuration(popover.operation.time, popover.operation) | time:'true'}}
       </td>
     </tr>
@@ -39,12 +38,12 @@
     </a>
     <div class="service-terms">
       <a [href]="popover.operation.providerInformation.termsURL"
-        target="_blank"><i class="fa fa-handshake-o"></i> Service terms</a><br/>
+        target="_blank"><i class="bi bi-journal-text"></i> Service terms</a><br/>
         <a [href]="popover.operation.providerInformation.homepageURL"
-          target="_blank"><i class="fa fa-globe"></i> Homepage</a><br/>
+          target="_blank"><i class="bi bi-globe"></i> Homepage</a><br/>
         </div>
         <i (click)="onReportIconClick(popover.operation)"
-        class="fa fa-exclamation-circle report-issue"></i>
+        class="bi bi-exclamation-circle report-issue"></i>
       </div>
       <div class="service-remarks">
         <ul>
@@ -68,7 +67,7 @@
         <div style="width:100%;text-align:right;padding:0;margin-bottom:0;">
           <button (click)="copyProtocolToClipboard(popover.operation.protocol)" class="btn btn-sm btn-outline-info"
             style="font-size:11px;cursor:pointer;margin-bottom:0;">
-            <i class="fa fa-clipboard"></i> Copy to clipboard
+            <i class="bi bi-clipboard"></i> Copy to clipboard
           </button>
         </div>
         <table class="table table-sm table-striped" id="ouput-table">
@@ -77,9 +76,9 @@
               <tr>
                 <td>
                   @if (item.type === 'ERROR') {
-                    <i class="fa fa-exclamation-circle" style="color:red"></i>
+                    <i class="bi bi-exclamation-circle" style="color:red"></i>
                   } @else {
-                    <i class="fa fa-warning" style="color:orange"></i>
+                    <i class="bi bi-exclamation-triangle" style="color:orange"></i>
                   }
                 </td>
           <td [ngClass]="{
@@ -93,9 +92,9 @@
       </div>
     }
   }
-  @if (popover.operation === undefined && popover.task !== undefined && popover.task !== undefined) {
+  @if (popover.operation === undefined && popover.task) {
     <span>Language: {{popover.task.language}}</span>
-    @if (popover.task && popover.task.asr !== undefined && popover.task.asr !== undefined) {
+    @if (popover.task && popover.task.asr) {
       <span>
         , ASR: {{popover.task.asr}}
       </span>
@@ -107,13 +106,12 @@
   }
 </tportal-popover>
 
-<tportal-file-preview-modal #filePreview></tportal-file-preview-modal>
 <div #inner (dragover)="onDragOver($event)" (drop)="onDrop($event)" (contextmenu)="cancelContextMenu($event)"
   (mouseleave)="isDragging = false" (scroll)="onTableScroll()" (mousedown)="onTableMouseDown($event)" (mouseup)="onTableMouseUp()"
   class="inner">
   @if (!storage.tasksFound && taskService.taskList!.entries.length === 0 && queue.length === 0) {
     <div
-      class="placeholder">
+      class="tportal-placeholder">
       <h1 style="margin-top: 10%;margin-bottom:40px;">Quickstart</h1>
       <div class="row quickstart" style="padding:20px 20px;">
         <div class="col-4">
@@ -155,7 +153,9 @@
   }
   @if (storage.tasksFound && !storage.ready) {
     <div id="loading">
-      <i class="fa fa-spinner fa-spin fa-5x"></i>
+      <div class="spinner-border fs-1" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
     </div>
   }
   @if (storage.ready) {
@@ -166,12 +166,12 @@
       <!-- TABLE HEADER -->
       <thead>
         <tr class="tableHeaderTop">
-          <th (click)="onOpenAllRows()" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
+          <th (click)="onOpenAllRows()" style="width:25px; padding-right:0;text-align:center; cursor:pointer;">
             @if (allDirOpened === 'opened') {
-              <i class="fa fa-angle-up"></i>
+              <i class="bi bi-chevron-up"></i>
             }
             @if (allDirOpened === 'closed') {
-              <i class="fa fa-angle-down"></i>
+              <i class="bi bi-chevron-down"></i>
             }
           </th>
           <th style="width:20%;">File</th>
@@ -186,8 +186,8 @@
                     <div style="z-index:10;width:100%;text-align:center;">
                       <ng-template #tipContent>{{operation.description}}</ng-template>
                       <div (click)="openArchiveDownload('column', operation, selectedRows)"
-                        [tooltip]="tipContent"
-                        containerClass="operation-tooltip"
+                        [ngbTooltip]="tipContent"
+                        tooltipClass="operation-tooltip"
                         placement="bottom"
                         style="display:inline;padding:0 3px;"
                         >
@@ -215,7 +215,7 @@
                       <span>Export</span>
                     }
                     @if (shortstyle) {
-                      <span><i class="fa fa-cloud-download"></i></span>
+                      <span><i class="bi bi-cloud-download"></i></span>
                     }
                   </div>
                 </div>
@@ -276,13 +276,6 @@
           <tr [entry]="entry" [rowSelected]="isEntrySelected(entry)" [toolSelectedOperation]="toolSelectedOperation"
             (contextmenu)="onContextMenu($event, row)" (click)="onContextBlur()" (scroll)="cancelScroll($event)"
             tportalProceedingsRow #row>
-            <!-- filename/foldername column -->
-            <!-- <td (click)="tagClicked(nameCol)" style="width:15px; padding-right:0;text-align:center; cursor:pointer;">
-            <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'opened'"
-            class="fa fa-angle-up"></i>
-            <i *ngIf="entry.type === 'folder' && nameCol.dirOpened === 'closed'"
-            class="fa fa-angle-down"></i>
-          </td> -->
           <td #nameCol="colIcon" (appendingClick)="onPreviewClick($event)" (click)="onRowSelected(entry)"
             (deleteIconClick)="removeEntry($event, getTask(entry))"
             (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
@@ -318,9 +311,9 @@
             <td class="export-col">
               @if (isOneOperationFinished(entry) && getTask(entry) !== undefined) {
                 <button
-                  class="btn btn-outline-success" style="padding: 0px 5px"
+                  class="btn btn-outline-success" style="padding: 0 5px"
                   (click)="onExportButtonClick(entry, getTask(entry)!.operations[1])"><i
-                class="fa fa-cloud-download"></i></button>
+                class="bi bi-cloud-download"></i></button>
               }
             </td>
           }
@@ -337,8 +330,8 @@
             }
             <td class="export-col">
               @if (isOneOperationFinished(entry)) {
-                <button class="btn  btn-outline-success" style="padding: 0px 5px"
-                  (click)="onExportButtonClick(entry)"><i class="fa fa-cloud-download"></i>
+                <button class="btn  btn-outline-success" style="padding: 0 5px"
+                  (click)="onExportButtonClick(entry)"><i class="bi bi-cloud-download"></i>
                 </button>
               }
             </td>
@@ -353,7 +346,7 @@
               [toolSelectedOperation]="toolSelectedOperation"
               tportalProceedingsRow
               >
-              <td #td
+              <td
                 (click)="onRowSelected(dirEntry)"
                 (deleteIconClick)="removeEntry($event, dirEntry)" (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
                 (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
@@ -379,8 +372,8 @@
               }
               <td class="export-col">
                 @if (isOneOperationFinished(dirEntry)) {
-                  <button class="btn btn-outline-success" style="padding: 0px 5px"
-                    (click)="onExportButtonClick(dirEntry, undefined)"><i class="fa fa-cloud-download"></i>
+                  <button class="btn btn-outline-success" style="padding: 0 5px"
+                    (click)="onExportButtonClick(dirEntry, undefined)"><i class="bi bi-cloud-download"></i>
                   </button>
                 }
               </td>
@@ -396,20 +389,20 @@
               <td [attr.colspan]="taskService.operations.length + 3"
                 [ngClass]="{'shorten': shortstyle}">
                 <i aria-hidden="true"
-                  class="fa fa-database op-50">
+                  class="bi bi-database op-50">
                 </i>
                 <span class="op-50"
                   title="{{getFileInfo(entry)?.fullname}}"
                   >
-                  {{getFileInfo(entry)?.fullname}}  <i class="fa fa-spinner fa-spin"></i>
+                  {{getFileInfo(entry)?.fullname}}  <i class="bi bi-gear spin"></i>
                 </span>
               </td>
             }
             @if (getDirEntriesFromItem(entry).length > 0) {
               <td [attr.colspan]="taskService.operations.length + 3">
-                <i aria-hidden="true" class="fa fa-folder-open blue op-50"></i>
+                <i aria-hidden="true" class="bi bi-folder2-open blue op-50"></i>
                 <span class="op-50" title="{{entry.file.name}}">{{entry.file.name}}  <i
-                class="fa fa-spinner fa-spin"></i>
+                class="bi bi-gear-fill spin"></i>
               </span>
             </td>
           }
@@ -419,9 +412,9 @@
         <tr>
           <td>
             <div class="d-flex">
-              <i aria-hidden="true" class="fa fa-database op-50 mr-1"></i>
-              <span class="op-50 mr-1">{{dirEntry.fullname}}</span>
-              <i class="fa fa-spinner fa-spin"></i>
+              <i aria-hidden="true" class="bi bi-database op-50 me-1"></i>
+              <span class="op-50 me-1">{{dirEntry.fullname}}</span>
+              <i class="bi bi-gear-fill spin"></i>
             </div>
           </td>
           <td [attr.colspan]="taskService.operations.length + 2"></td>

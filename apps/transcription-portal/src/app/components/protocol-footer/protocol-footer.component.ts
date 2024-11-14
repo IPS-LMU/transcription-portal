@@ -1,24 +1,20 @@
-import {Component, OnInit} from '@angular/core';
-import {TaskService} from '../../obj/tasks/task.service';
-import {ANIMATIONS} from '../../shared/Animations';
+import { Component, OnInit } from '@angular/core';
+import { TaskService } from '../../obj/tasks/task.service';
+import { ANIMATIONS } from '../../shared/Animations';
 
 @Component({
-    selector: 'tportal-protocol-footer',
-    templateUrl: './protocol-footer.component.html',
-    styleUrls: ['./protocol-footer.component.css'],
-    animations: [ANIMATIONS],
-    standalone: true
+  selector: 'tportal-protocol-footer',
+  templateUrl: './protocol-footer.component.html',
+  styleUrls: ['./protocol-footer.component.scss'],
+  animations: [ANIMATIONS],
+  standalone: true,
 })
 export class ProtocolFooterComponent implements OnInit {
-
   public test = 'inactive';
 
-  constructor(public taskService: TaskService) {
-  }
+  constructor(public taskService: TaskService) {}
 
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 
   blop() {
     this.test = 'blopped';

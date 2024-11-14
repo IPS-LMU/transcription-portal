@@ -27,30 +27,30 @@
             <td style="border-right: 1px solid lightgray;">
               <a [attr.download]="elem.input.info.attributes.originalFileName"
                 [attr.href]="elem.input.url">
-                <i class="fa fa-file-text"></i>
+                <i class="bi bi-file-text"></i>
               </a>
               @if (elem.input.info.extension !== '.wav') {
-                <i (click)="onPreviewClick(elem.input.info)" class="fa fa-eye"
+                <i (click)="onPreviewClick(elem.input.info)" class="bi bi-eye"
                 style="margin-left:3px;cursor: pointer;"></i>
               }
             </td>
           }
-          @if (elem.input?.info && !elem.input.info.available) {
+          @if (elem.input.info && !elem.input.info.available) {
             <td style="border-right: 1px solid lightgray;">
-              <i class="fa fa-unlink" style="color:red;"></i>
+              <i class="bi bi-wifi-off" style="color:red;"></i>
             </td>
           }
           @if (elem.input.info.extension !== '.wav') {
             @for (converter of elem.conversions; track converter) {
               <td style="border-right: 1px solid lightgray;">
-                @if (elem.input !== undefined && elem.input.info.available && converter.result !== null) {
+                @if (elem.input?.info?.available && converter.result !== null) {
                   <a [attr.download]="converter.result.fullname"
                     [attr.href]="converter.result.url"
                     >
-                    <i [ngStyle]="{ color: converter.converter.color}" class="fa fa-file-text"></i>
+                    <i [ngStyle]="{ color: converter.converter.color}" class="bi bi-file-text"></i>
                   </a>
                   <i (click)="onPreviewClick(converter.result)" [ngStyle]="{ color: converter.converter.color}"
-                  class="fa fa-eye" style="cursor: pointer;margin-left:3px;"></i>
+                  class="bi bi-eye" style="cursor: pointer;margin-left:3px;"></i>
                 }
               </td>
             }

@@ -1,23 +1,33 @@
-import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {DomSanitizer} from '@angular/platform-browser';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  NgbActiveModal,
+  NgbModal,
+  NgbModalOptions,
+} from '@ng-bootstrap/ng-bootstrap';
+import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
-    selector: 'tportal-split-modal',
-    templateUrl: './split-modal.component.html',
-    styleUrls: ['./split-modal.component.css'],
-    standalone: true,
-    imports: [ModalDirective]
+  selector: 'tportal-split-modal',
+  templateUrl: './split-modal.component.html',
+  styleUrls: ['./split-modal.component.scss'],
+  standalone: true,
+  imports: [],
 })
-export class SplitModalComponent {
-  @ViewChild('splitModal', {static: true}) splitModal?: ModalDirective;
-  @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
-  private reason = '';
+export class SplitModalComponent implements OnInit {
+  @Output() dissmissedChange: EventEmitter<boolean> =
+    new EventEmitter<boolean>();
+  public static options: NgbModalOptions = {
+    size: 'lg',
+    backdrop: 'static',
+    keyboard: false,
+    fullscreen: 'mm',
+  };
   private subscrManager = new SubscriptionManager();
 
-  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
-  }
+  constructor(
+    private ngbModalService: NgbModal,
+    protected activeModal: NgbActiveModal
+  ) {}
 
   private _splitModalDismissedProperly = false;
 
@@ -30,30 +40,13 @@ export class SplitModalComponent {
     this.dissmissedChange.emit(this._splitModalDismissedProperly);
   }
 
-  public open(onDismiss?: (reason: string) => void) {
-    if (this.splitModal) {
-      this.subscrManager.add(this.splitModal.onHide.subscribe((e) => {
-        if (onDismiss) {
-          onDismiss(this.reason);
-        }
-        return this.splitModalDismissedProperly;
-      }));
-
-      this.subscrManager.add(this.splitModal.onHidden.subscribe((e) => {
-        this.onHidden();
-      }));
-
-      this.splitModal.config.backdrop = 'static';
-      this.splitModal.show();
-    }
-  }
+  ngOnInit() {}
 
   onHidden() {
     this.subscrManager.destroy();
   }
 
   dismiss(reason: string) {
-    this.reason = reason;
-    this.splitModal?.hide();
+    this.activeModal.dismiss(reason);
   }
 }

@@ -1,265 +1,429 @@
-<tportal-first-modal #firstModal></tportal-first-modal>
-<tportal-split-modal #splitModal></tportal-split-modal>
-@if (taskService.taskList !== undefined) {
-  <tportal-queue-modal #queueModal [operations]="taskService.operations"
-    [queue]="taskService.preprocessor.queue"
-  [tasks]="taskService.taskList.getAllTasks()"></tportal-queue-modal>
-}
-<tportal-statistics #statisticsModal></tportal-statistics>
 <tportal-alert></tportal-alert>
-<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded" id="app">
+<div
+  (dragover)="onMissedDrop($event)"
+  (drop)="onMissedDrop($event)"
+  [hidden]="!settingsService.allLoaded"
+  id="app"
+>
   <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top">
-    <div class="container justify-content-center" style="width:100%;margin:0;display: contents;">
-      <ul class="nav navbar-nav flex-fill w-100 flex-nowrap">
+    <div
+      class="container justify-content-center"
+      style="width: 100%; margin: 0; display: contents"
+    >
+      <ul
+        class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle"
+      >
         <li class="nav-item active">
-          <a [title]="AppInfo.lastUpdated| date:'dd.MM.yyyy H:mm z'" class="nav-link" href="#"><span
-            class="logo">TranscriptionPortal</span> <span class="version"> v{{AppInfo.version}}</span>
+          <a
+            [title]="AppInfo.lastUpdated | date : 'dd.MM.yyyy H:mm z'"
+            class="nav-link"
+            href="#"
+            ><span class="logo"
+              ><img
+                src="assets/TPortal-Logo_only.svg"
+                style="height: 40px; margin-top: -10px"
+              />
+              TranscriptionPortal</span
+            >
             @if (isdevelopment) {
-              <span
-                style="color:red;">
-                Beta
-              </span>
+            <span style="color: red"> Beta </span>
             }
-            <button (click)="isCollapsed = !isCollapsed" class="navbar-toggler" data-target=".dual-collapse2"
-              data-toggle="collapse" type="button">
+            <button
+              (click)="isCollapsed = !isCollapsed"
+              class="navbar-toggler"
+              data-target=".dual-collapse2"
+              data-toggle="collapse"
+              type="button"
+            >
               <span class="navbar-toggler-icon"></span>
             </button>
           </a>
         </li>
       </ul>
-      <div [collapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-        <ul class="nav navbar-nav flex-fill justify-content-center state-icons" style="min-width:300px;">
+      <div
+        [ngbCollapse]="!isCollapsed"
+        class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+      >
+        <ul
+          class="nav navbar-nav flex-fill justify-content-center state-icons"
+          style="min-width: 300px"
+        >
           <li class="nav-item">
-            <div [tooltip]="queuedTipp" class="totalState"
-              containerClass="state-tooltip"
-              placement="bottom">
-              <div class="number">{{taskService.statistics.queued}}</div>
-              <i class="fa fa-database" style="color:gray;"></i>
-              <ng-template #queuedTipp>{{taskService.statistics.queued}} audio files are waiting for
+            <div
+              [ngbTooltip]="queuedTipp"
+              class="totalState"
+              tooltipClass="state-tooltip"
+              placement="bottom"
+            >
+              <div class="number">{{ taskService.statistics.queued }}</div>
+              <i class="bi bi-database-fill" style="color: gray"></i>
+              <ng-template #queuedTipp
+                >{{ taskService.statistics.queued }} audio files are waiting for
                 verification.
               </ng-template>
             </div>
-            <div [tooltip]="waitingTipp" class="totalState"
-              containerClass="state-tooltip" placement="bottom">
-              <div class="number">{{taskService.statistics.waiting}}</div>
-              <i class="fa fa-clock-o" style="color:dodgerblue;"></i>
-              <ng-template #waitingTipp>{{taskService.statistics.waiting}} tasks are waiting for
+            <div
+              [ngbTooltip]="waitingTipp"
+              class="totalState"
+              tooltipClass="state-tooltip"
+              placement="bottom"
+            >
+              <div class="number">{{ taskService.statistics.waiting }}</div>
+              <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
+              <ng-template #waitingTipp
+                >{{ taskService.statistics.waiting }} tasks are waiting for
                 processing.
               </ng-template>
             </div>
-            <div [tooltip]="runningTipp" class="totalState"
-              containerClass="state-tooltip" placement="bottom">
-              <div class="number">{{taskService.statistics.running}}</div>
-              <i [ngClass]="{
-                        'fa-spin': (taskService.statistics.running > 0)
-                    }" class="fa fa-cog" style="color:orange;"></i>
-              <ng-template #runningTipp>{{taskService.statistics.running}} tasks are running.
+            <div
+              [ngbTooltip]="runningTipp"
+              class="totalState"
+              tooltipClass="state-tooltip"
+              placement="bottom"
+            >
+              <div class="number">{{ taskService.statistics.running }}</div>
+              <i
+                [ngClass]="{
+                  spin: taskService.statistics.running > 0
+                }"
+                class="bi bi-gear-fill"
+                style="color: orange"
+              ></i>
+              <ng-template #runningTipp
+                >{{ taskService.statistics.running }} tasks are running.
               </ng-template>
             </div>
-            <div [tooltip]="finishedTipp" class="totalState"
-              containerClass="state-tooltip" placement="bottom">
-              <div class="number">{{taskService.statistics.finished}}</div>
-              <i class="fa fa-check" style="color:forestgreen;"></i>
-              <ng-template #finishedTipp>{{taskService.statistics.finished}} tasks are finished.
+            <div
+              [ngbTooltip]="finishedTipp"
+              class="totalState"
+              tooltipClass="state-tooltip"
+              placement="bottom"
+            >
+              <div class="number">{{ taskService.statistics.finished }}</div>
+              <i
+                class="bi bi-check-lg"
+                style="color: forestgreen; font-weight: bold"
+              ></i>
+              <ng-template #finishedTipp
+                >{{ taskService.statistics.finished }} tasks are finished.
               </ng-template>
             </div>
-            <div [tooltip]="errorsTipp" class="totalState"
-              containerClass="state-tooltip" placement="bottom">
-              <div class="number">{{taskService.statistics.errors}}</div>
-              <i class="fa fa-times" style="color:red;"></i>
-              <ng-template #errorsTipp>{{taskService.statistics.errors}} tasks failed. For further details
-                please hover over the red "X" icon in a column.
+            <div
+              [ngbTooltip]="errorsTipp"
+              class="totalState"
+              tooltipClass="state-tooltip"
+              placement="bottom"
+            >
+              <div class="number">{{ taskService.statistics.errors }}</div>
+              <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
+              <ng-template #errorsTipp
+                >{{ taskService.statistics.errors }} tasks failed. For further
+                details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
           </li>
         </ul>
       </div>
-      <div [collapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
-        <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
+      <div
+        [ngbCollapse]="!isCollapsed"
+        class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
+      >
+        <ul
+          class="nav navbar-nav flex-fill w-100 justify-content-end right-icons"
+        >
           <li class="nav-item active">
-            <a href="https://www.phonetik.uni-muenchen.de/apps/TranscriptionPortal/contents/v1.0.0/help.html"
-              style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"
-              target="_blank"><i
-            class="fa fa-question-circle-o" style="color:cornflowerblue;"></i> Help</a>
+            <a
+              href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/contents/v1.0.0/help.html"
+              style="
+                text-align: left;
+                vertical-align: middle;
+                margin-top: 20px;
+                cursor: pointer;
+                text-decoration: none;
+              "
+              target="_blank"
+              ><i
+                class="bi bi-question-circle"
+                style="color: cornflowerblue"
+              ></i>
+              Help</a
+            >
           </li>
-          <li class="nav-item active" style="cursor: pointer;">
-            <span (click)="statisticsModal.open();"
-              style="text-align: left; vertical-align: middle;margin-top:20px; cursor: pointer;"><i
-            class="fa fa-line-chart"></i> Statistics</span>
+          <li class="nav-item active" style="cursor: pointer">
+            <span
+              (click)="openStatisticsModal()"
+              style="
+                text-align: left;
+                vertical-align: middle;
+                margin-top: 20px;
+                cursor: pointer;
+              "
+              ><i class="bi bi-bar-chart-line"></i> Statistics</span
+            >
           </li>
-          <li (click)="modalService.openFeedbackModal()" class="nav-item active">
-            <i [ngClass]="{
-                        'yellow': !bugService.hasErrors,
-                        'red': bugService.hasErrors
-                        }" class="fa fa-exclamation-circle"></i><span style="cursor: pointer;"> Feedback</span>
-            </li>
-            <li class="nav-item active">
-              @if (notification.permissionGranted) {
-                <i (click)="notification.permissionGranted = false"
-                  aria-hidden="true"
-                class="fa fa-bell-o" style="cursor: pointer;"></i>
-              }
-              @if (!notification.permissionGranted) {
-                <i (click)="notification.permissionGranted = true"
-                  aria-hidden="true"
-                class="fa fa-bell-slash-o" style="cursor: pointer;"></i>
-              }
-            </li>
-            <li class="nav-item active">
-              <div class="btn-group" dropdown>
-                <i (click)="settingsCollapsed = !settingsCollapsed;" class="fa fa-cog" dropdownToggle id="dropdownBasic2"
-                style="cursor: pointer;"></i>
-
-                <div (mouseleave)="settingsCollapsed = true;accessCodeInputFieldType = 'password'" *dropdownMenu [collapse]="settingsCollapsed"
-                  class="dropdown-menu" id="settings-dropdown"
-                  role="menu"
-                  >
-                  <table style="width:100%;">
-                    <tbody>
-                      <tr>
-                        <td><i class="fa fa-key"></i></td>
-                        <td style="font-size:0.9em;">Access Code (for Google ASR only):</td>
-                      </tr>
-                      <tr>
-                        <td></td>
-                        <td>
-                          <div class="input-group mb-3" id="accessCodeGroup">
-                            <input class="form-control" [(ngModel)]="taskService.accessCode" id="accessCode" name="accessCode" placeholder="Enter access code..."
-                              [type]="accessCodeInputFieldType"/>
-                            <div class="input-group-append">
-                              <span class="input-group-text" (click)="toggleAccessCodeInputType()">
-                            <i class="fa" [ngClass]="{
-                               'fa-eye-slash': accessCodeInputFieldType === 'text',
-                               'fa-eye': accessCodeInputFieldType === 'password'
-                               }"></i>
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td><i class="fa fa-columns"></i></td>
-                        <td><span (click)="resetSideBarWidth();" class="btn-link"
-                        style="cursor: pointer;">Reset sidebar width</span></td>
-                      </tr>
-                      <tr>
-                        <td style="padding-top:20px;"><i class="fa fa-eraser" style="color:red;"></i>
+          <li
+            (click)="modalService.openFeedbackModal()"
+            class="nav-item active"
+          >
+            <i
+              [ngClass]="{
+                yellow: !bugService.hasErrors,
+                red: bugService.hasErrors
+              }"
+              class="bi bi-exclamation-circle pointer"
+            ></i
+            ><span style="cursor: pointer"> Feedback</span>
+          </li>
+          <li class="nav-item active">
+            @if (notification.permissionGranted) {
+            <i
+              (click)="notification.permissionGranted = false"
+              aria-hidden="true"
+              class="bi bi-bell"
+              style="cursor: pointer"
+            ></i>
+            } @if (!notification.permissionGranted) {
+            <i
+              (click)="notification.permissionGranted = true"
+              aria-hidden="true"
+              class="bi bi-bell-slash"
+              style="cursor: pointer"
+            ></i>
+            }
+          </li>
+          <li class="nav-item active">
+            <div ngbDropdown class="d-inline-block">
+              <i
+                (click)="settingsCollapsed = !settingsCollapsed"
+                class="bi bi-gear-fill"
+                ngbDropdownToggle
+                id="dropdownBasic2"
+                style="cursor: pointer"
+              ></i>
+              <div
+                ngbDropdownMenu
+                aria-labelledby="dropdownBasic1"
+                (mouseleave)="
+                  settingsCollapsed = true;
+                  accessCodeInputFieldType = 'password'
+                "
+                id="settings-dropdown"
+              >
+                <table style="width: 100%">
+                  <tbody>
+                    <tr>
+                      <td><i class="bi bi-key"></i></td>
+                      <td style="font-size: 0.9em">
+                        Access Code (for Google ASR only):
                       </td>
-                      <td style="padding-top:20px;"><span (click)="onClearClick();"
-                        class="btn-link"
-                      style="cursor: pointer;color:red;">Clear all data</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td>
+                        <div class="input-group mb-3" id="accessCodeGroup">
+                          <form>
+                            <input
+                              class="form-control"
+                              [(ngModel)]="taskService.accessCode"
+                              id="accessCode"
+                              name="accessCode"
+                              placeholder="Enter access code..."
+                              [type]="accessCodeInputFieldType"
+                            />
+                          </form>
+                          <div class="input-group-append">
+                            <span
+                              class="input-group-text"
+                              (click)="toggleAccessCodeInputType()"
+                            >
+                              <i
+                                class="bi"
+                                [ngClass]="{
+                                  'bi-eye-slash':
+                                    accessCodeInputFieldType === 'text',
+                                  'bi-eye':
+                                    accessCodeInputFieldType === 'password'
+                                }"
+                              ></i>
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><i class="bi bi-layout-sidebar-inset"></i></td>
+                      <td>
+                        <span
+                          (click)="resetSideBarWidth()"
+                          style="cursor: pointer"
+                          >Reset sidebar width</span
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding-top: 20px">
+                        <i class="bi bi-eraser" style="color: red"></i>
+                      </td>
+                      <td style="padding-top: 20px">
+                        <span
+                          (click)="onClearClick()"
+                          style="cursor: pointer; color: red"
+                          >Clear all data</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </li>
-      </ul>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
-</nav>
-<!-- SUB-HEADER OVERVIEW -->
-@if (!showtool) {
-  <div class='row proceedings-header' style="padding-top:0;">
-    <div class="col-4" style="text-align: left;padding-top:5px;">
+  </nav>
+  <!-- SUB-HEADER OVERVIEW -->
+  @if (!showtool) {
+  <div class="row proceedings-header" style="padding-top: 0">
+    <div class="col-4" style="text-align: left; padding-top: 5px">
       <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-        <i class="fa fa-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
+        <i class="bi bi-plus"></i
+        ><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
       </button>
       <!-- webkitdirectory directory multiple -->
-      <input #fileinput (change)="onFileChange($event)" class="fileinput" multiple
-        style="display:none;"
+      <input
+        #fileinput
+        (change)="onFileChange($event)"
+        class="fileinput"
+        multiple
+        style="display: none"
         type="file"
-        value="Select audio file"/>
-      <button (click)="onVerifyButtonClick()" [disabled]="taskService.statistics.queued < 1" class="btn btn-primary"
-        style="margin-left:10px;"><i class="fa fa-database"></i> <span
-      class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
-      @if (taskService.statistics.queued > 0) {
-        ({{taskService.statistics.queued}})
-      }
-    </button>
-  </div>
-  <div class="col-4">
-    <div id="overall-state">
-      {{taskService.stateLabel}}
-    </div>
-  </div>
-  <div class="col-4" style="text-align:right;padding-top:5px;">
-    <button (click)="onStartClick()" [disabled]="!taskService.newfiles" class="btn btn-primary">
-        <i [ngClass]="{
-                    'fa-play': !taskService.isProcessing,
-                    'fa-stop': taskService.isProcessing
-                }" aria-hidden="true" class="fa"></i><span class="d-none d-lg-inline d-xl-inline">
-      @if (!taskService.isProcessing) {
-        3. START PROCESSING
-      }
-      @if (taskService.isProcessing) {
-        3. STOP PROCESSING
-      }
-    </span>
-  </button>
-</div>
-</div>
-}
-
-<!-- SUB-HEADER TOOL -->
-@if (showtool) {
-  <div class='row proceedings-header'
-    style="padding-top:0; height:50px;">
-    <div class="col-2" style="text-align: left;padding-top:5px;">
-      <button (click)="onBackButtonClicked();" class="btn btn-primary" style="width:100%;">
-        <i aria-hidden="true" class="fa fa-angle-double-left" style="font-size:20px;"></i>
+        value="Select audio file"
+      />
+      <button
+        (click)="onVerifyButtonClick()"
+        [disabled]="taskService.statistics.queued < 1"
+        class="btn btn-primary"
+        style="margin-left: 10px"
+      >
+        <i class="bi bi-database-fill"></i>
+        <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span> @if
+        (taskService.statistics.queued > 0) { ({{
+          taskService.statistics.queued
+        }}) }
       </button>
     </div>
-    <div class="col-8" style="text-align: center;">
-      <p style="margin: 10px 0 0;">
+    <div class="col-4">
+      <div id="overall-state">
+        {{ taskService.stateLabel }}
+      </div>
+    </div>
+    <div class="col-4" style="text-align: right; padding-top: 5px">
+      <button
+        (click)="onStartClick()"
+        [disabled]="!taskService.newfiles"
+        class="btn btn-primary"
+      >
+        <i
+          [ngClass]="{
+            'bi-play-fill': !taskService.isProcessing,
+            'bi-stop-fill': taskService.isProcessing
+          }"
+          aria-hidden="true"
+          class="bi"
+        ></i
+        ><span class="d-none d-lg-inline d-xl-inline">
+          @if (!taskService.isProcessing) { 3. START PROCESSING } @if
+          (taskService.isProcessing) { 3. STOP PROCESSING }
+        </span>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- SUB-HEADER TOOL -->
+  @if (showtool) {
+  <div class="row proceedings-header" style="padding-top: 0; height: 50px">
+    <div class="col-2" style="text-align: left; padding-top: 5px">
+      <button
+        (click)="onBackButtonClicked()"
+        class="btn btn-primary"
+        style="width: 100%"
+      >
+        <i
+          aria-hidden="true"
+          class="bi bi-chevron-double-left"
+          style="font-size: 20px"
+        ></i>
+      </button>
+    </div>
+    <div class="col-8" style="text-align: center">
+      <p style="margin: 10px 0 0">
         @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
-          {{toolSelectedOperation!.name}}: {{toolSelectedOperation!.previousOperation!.results[0].attributes?.originalFileName}}
-          , Language: @if (toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined && toolSelectedOperation.task.language !== undefined) {
-          {{toolSelectedOperation.task.language}}
+        {{ toolSelectedOperation!.name }}:
+        {{
+          toolSelectedOperation!.previousOperation!.results[0].attributes
+            ?.originalFileName
+        }}
+        , Language: @if (toolSelectedOperation !== undefined &&
+        toolSelectedOperation.task !== undefined &&
+        toolSelectedOperation.task.language !== undefined) {
+        {{ toolSelectedOperation.task.language }}
+        } , Audio duration: {{ getTime() | time }}
+        } @if ( toolSelectedOperation &&
+        toolSelectedOperation.previousOperation!.results.length < 1 &&
+        toolSelectedOperation!.previousOperation!.previousOperation !==
+        undefined ) { @if (toolSelectedOperation) {
+        {{ toolSelectedOperation.name }}
+        }:
+        {{
+          toolSelectedOperation!.previousOperation!.previousOperation!
+            .results[0]!.attributes?.originalFileName
+        }}
+        , Language: @if ( toolSelectedOperation.task?.language !== undefined) {
+        {{ toolSelectedOperation.task!.language }}
+        } , Audio duration: {{ getTime() | time }}
         }
-        , Audio duration: {{getTime() |time}}
-      }
-      @if (toolSelectedOperation !== undefined && toolSelectedOperation.previousOperation!.results.length < 1
-        && toolSelectedOperation !== undefined && toolSelectedOperation!.previousOperation!.previousOperation !== undefined) {
-        @if (toolSelectedOperation !== undefined && toolSelectedOperation.name !== undefined) {
-          {{toolSelectedOperation.name}}
-          }:
-          {{toolSelectedOperation!.previousOperation!.previousOperation!.results[0]!.attributes?.originalFileName}}
-          , Language: @if (toolSelectedOperation !== undefined && toolSelectedOperation.task !== undefined && toolSelectedOperation.task.language !== undefined) {
-          {{toolSelectedOperation.task.language}}
-        }
-        , Audio duration: {{getTime() | time}}
-      }
-    </p>
+      </p>
+    </div>
+    <div class="col-2" style="text-align: right; padding-top: 5px">
+      <button
+        (click)="onBackButtonClicked()"
+        class="btn btn-primary"
+        style="width: 100%"
+      >
+        <i
+          aria-hidden="true"
+          class="bi bi-chevron-double-right"
+          style="font-size: 20px"
+        ></i>
+      </button>
+    </div>
   </div>
-  <div class="col-2" style="text-align:right;padding-top:5px;">
-    <button (click)="onBackButtonClicked();" class="btn btn-primary" style="width:100%;">
-      <i aria-hidden="true" class="fa fa-angle-double-left" style="font-size:20px;"></i>
-    </button>
-  </div>
-</div>
-}
+  }
 
-<!-- WORKING AREA -->
-<div id="main" style="position: relative;">
-  <div (blur)="onBlur($event)" (mousedown)="dragBorder($event, 'left')"
-    (mouseenter)="dragBorder($event, 'left')"
-
-    (mouseleave)="dragBorder($event, 'left')" (mousemove)="dragBorder($event, 'left')"
-    (mouseup)="dragBorder($event, 'left')" [@expandLeft]="animationObject2"
-         [ngClass]="{
-                                    'dragborder': dragborder === 'active' || dragborder === 'dragging'
-                                }"
-         [ngStyle]="{
-            'width': newProceedingsWidth + '%',
-            'border-right': (sidebarExpand === 'closed') ? '2px solid lightgray' : 'none'
-        }"
-
-    style="float:right;"
+  <!-- WORKING AREA -->
+  <div id="main" style="position: relative">
+    <div
+      (blur)="onBlur($event)"
+      (mousedown)="dragBorder($event, 'left')"
+      (mouseenter)="dragBorder($event, 'left')"
+      (mouseleave)="dragBorder($event, 'left')"
+      (mousemove)="dragBorder($event, 'left')"
+      (mouseup)="dragBorder($event, 'left')"
+      [@expandLeft]="animationObject2"
+      [ngClass]="{
+        dragborder: dragborder === 'active' || dragborder === 'dragging'
+      }"
+      [ngStyle]="{
+        width: newProceedingsWidth + '%',
+        'border-right':
+          sidebarExpand === 'closed' ? '2px solid lightgray' : 'none'
+      }"
+      style="float: right"
     >
-    @if (settingsService.allLoaded && taskService.taskList !== undefined) {
-      <tportal-proceedings #proceedings
+      @if (settingsService.allLoaded && taskService.taskList !== undefined) {
+      <tportal-proceedings
+        #proceedings
         (afterdrop)="onAfterDrop($event)"
         (feedbackRequested)="onFeedbackRequest($event)"
         (operationclick)="onOperationClick($event)"
@@ -270,30 +434,43 @@
         [shortstyle]="sidebarstate === 'opened'"
         [taskList]="taskService.taskList"
         [shorcutsEnabled]="settingsService.shortCutsEnabled"
-        style="height:100%"
-        >
+        style="height: 100%"
+      >
       </tportal-proceedings>
-    }
+      }
+    </div>
+    <div
+      (mousedown)="dragBorder($event, 'right')"
+      (mouseenter)="dragBorder($event, 'right')"
+      (mouseleave)="dragBorder($event, 'right')"
+      (mousemove)="dragBorder($event, 'right')"
+      (mouseup)="dragBorder($event, 'right')"
+      [@comeIn]="animationObject"
+      [hidden]="dragborder === 'inactive'"
+      [ngClass]="{
+        dragborder: dragborder === 'active' || dragborder === 'dragging'
+      }"
+      [ngStyle]="{
+        'margin-left': newProceedingsWidth + '%',
+        width: newToolWidth + '%'
+      }"
+      style="position: absolute; height: 100%; z-index: 800"
+    ></div>
+    <div
+      [@comeIn]="animationObject"
+      [ngStyle]="{
+        'margin-left': newProceedingsWidth + '%',
+        width: newToolWidth + '%'
+      }"
+      style="position: absolute; height: 100%; border-top: 1px solid gray"
+    >
+      <tportal-tool-loader
+        #toolLoader
+        (datareceived)="onToolDataReceived($event, toolLoader)"
+        [operation]="toolSelectedOperation"
+        style="height: 100%"
+      ></tportal-tool-loader>
+    </div>
+    <div class="clearfix"></div>
   </div>
-  <div (mousedown)="dragBorder($event, 'right')"
-    (mouseenter)="dragBorder($event, 'right')"
-    (mouseleave)="dragBorder($event, 'right')"
-    (mousemove)="dragBorder($event, 'right')"
-    (mouseup)="dragBorder($event, 'right')" [@comeIn]="animationObject"
-         [hidden]="dragborder === 'inactive'" [ngClass]="{
-                                    'dragborder': dragborder === 'active' || dragborder === 'dragging'
-                                }"
-    [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
-    style="position:absolute; height:100%;z-index:800;"
-  ></div>
-  <div [@comeIn]="animationObject"
-    [ngStyle]="{'margin-left': newProceedingsWidth + '%', 'width': newToolWidth + '%'}"
-    style="position:absolute; height:100%; border-top: 1px solid gray;">
-    <tportal-tool-loader #toolLoader (datareceived)="onToolDataReceived($event, toolLoader)"
-      [operation]="toolSelectedOperation"
-      style="height:100%;"
-    ></tportal-tool-loader>
-  </div>
-  <div class="clearfix"></div>
-</div>
 </div>

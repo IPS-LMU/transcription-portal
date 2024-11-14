@@ -1,22 +1,13 @@
-<div #previewModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
-     role="dialog" tabindex="-1" style="z-index:10000;">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title pull-left">Preview: {{fileName}}</h4>
-        <button (click)="previewModal.hide()" aria-label="Close" class="close pull-right" type="button">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <textarea aria-readonly="true" readonly>{{fileContent}}</textarea>
-      </div>
-      <div (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)" class="modal-footer">
-        <button (click)="previewModal.hide();" class="btn btn-outline-dark" type="button">Cancel</button>
-        <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self">
-          DOWNLOAD
-        </a>
-      </div>
-    </div>
-  </div>
+<div class="modal-header">
+  <h4 class="modal-title" id="modal-basic-title">Preview: {{fileName}}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <textarea aria-readonly="true" readonly>{{fileContent}}</textarea>
+</div>
+<div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close('Save click')">Save</button>
+  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self">
+    DOWNLOAD
+  </a>
 </div>

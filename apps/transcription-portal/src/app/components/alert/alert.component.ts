@@ -1,8 +1,9 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {AlertService} from '../../shared/alert.service';
-import {ANIMATIONS} from '../../shared/Animations';
-import {interval, Subject, Subscription} from 'rxjs';
-import {NgStyle} from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AlertService } from '../../shared/alert.service';
+import { ANIMATIONS } from '../../shared/Animations';
+import { interval, Subject, Subscription } from 'rxjs';
+import { NgStyle } from '@angular/common';
+import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';
@@ -13,16 +14,14 @@ export interface AlertEntry {
 }
 
 @Component({
-    selector: 'tportal-alert',
-    templateUrl: './alert.component.html',
-    styleUrls: ['./alert.component.css'],
-    animations: ANIMATIONS,
-    standalone: true,
-    imports: [NgStyle]
+  selector: 'tportal-alert',
+  templateUrl: './alert.component.html',
+  styleUrls: ['./alert.component.scss'],
+  animations: ANIMATIONS,
+  standalone: true,
+  imports: [NgStyle, NgbAlert],
 })
-
 export class AlertComponent implements OnInit, OnDestroy {
-
   private static counter = 0;
   public duration = 20;
   public queue: AlertEntry[] = [];
@@ -32,23 +31,21 @@ export class AlertComponent implements OnInit, OnDestroy {
 
   constructor(private alert: AlertService) {
     this.alert.alertsend.subscribe(
-      obj => this.onAlertSend(obj),
+      (obj) => this.onAlertSend(obj),
       (err) => {
         console.error(err);
       }
     );
 
-    this.counter = interval(1000).subscribe(
-      () => {
-        for (const queueItem of this.queue) {
-          queueItem.duration--;
-          if (queueItem.duration === 0) {
-            queueItem.animation = 'closed';
-            this.removeFromQueue(queueItem);
-          }
+    this.counter = interval(1000).subscribe(() => {
+      for (const queueItem of this.queue) {
+        queueItem.duration--;
+        if (queueItem.duration === 0) {
+          queueItem.animation = 'closed';
+          this.removeFromQueue(queueItem);
         }
       }
-    );
+    });
   }
 
   ngOnDestroy() {
@@ -56,26 +53,30 @@ export class AlertComponent implements OnInit, OnDestroy {
   }
 
   onAlertSend(obj: {
-    type: 'danger' | 'warning' | 'info' | 'success',
-    message: string,
-    duration: number
+    type: 'danger' | 'warning' | 'info' | 'success';
+    message: string;
+    duration: number;
   }) {
     this.animation = 'opened';
-    if (obj.type === 'danger' || obj.type === 'warning' || obj.type === 'info' || obj.type === 'success') {
+    if (
+      obj.type === 'danger' ||
+      obj.type === 'warning' ||
+      obj.type === 'info' ||
+      obj.type === 'success'
+    ) {
       const entry: AlertEntry = {
         type: obj.type,
         animation: 'opened',
         duration: obj.duration,
         message: obj.message,
-        id: ++AlertComponent.counter
+        id: ++AlertComponent.counter,
       };
 
       this.queue.push(entry);
     }
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   onClose(entry: AlertEntry) {
     entry.animation = 'closed';

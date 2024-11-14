@@ -1,45 +1,51 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component, SecurityContext, ViewChild} from '@angular/core';
-import {Subject} from 'rxjs';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {BugReportService} from '../../shared/bug-report.service';
-import {SettingsService} from '../../shared/settings.service';
-import {StorageService} from '../../storage.service';
-import {AppSettings} from '../../shared/app.settings';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {BsModalRef, BsModalService, ModalDirective, ModalOptions} from 'ngx-bootstrap/modal';
-import {FormsModule} from '@angular/forms';
-import {NgClass} from '@angular/common';
+import { NgClass } from '@angular/common';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  SecurityContext,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import {
+  NgbActiveModal,
+  NgbModal,
+  NgbModalOptions,
+} from '@ng-bootstrap/ng-bootstrap';
+import { AppSettings } from '../../shared/app.settings';
+import { BugReportService } from '../../shared/bug-report.service';
+import { SubscriptionManager } from '../../shared/subscription-manager';
+import { StorageService } from '../../storage.service';
 
 @Component({
-    selector: 'tportal-feedback-modal',
-    templateUrl: './feedback-modal.component.html',
-    styleUrls: ['./feedback-modal.component.css'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [ModalDirective, FormsModule, NgClass]
+  selector: 'tportal-feedback-modal',
+  templateUrl: './feedback-modal.component.html',
+  styleUrls: ['./feedback-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [FormsModule, NgClass],
 })
-export class FeedbackModalComponent {
-  modalRef?: BsModalRef;
-  public visible = false;
+export class FeedbackModalComponent implements AfterViewInit {
   public bgdescr = '';
   public sendProObj = true;
   public bugsent = false;
-  config: ModalOptions = {
+
+  public static options: NgbModalOptions = {
     keyboard: false,
-    backdrop: false,
-    ignoreBackdropClick: false
+    size: 'xl',
+    fullscreen: 'md',
+    backdrop: 'static',
   };
-  @ViewChild('modal', {static: true}) modal: any;
 
   protected data = null;
-  private actionperformed: Subject<void> = new Subject<void>();
   private subscrmanager = new SubscriptionManager();
 
   public sendStatus: 'pending' | 'success' | 'error' | 'sending' = 'pending';
 
   public screenshots: {
-    blob: File,
-    previewURL: string
+    blob: File;
+    previewURL: string;
   }[] = [];
 
   public get email(): string {
@@ -64,49 +70,23 @@ export class FeedbackModalComponent {
     return this.sendProObj || this.bgdescr !== '';
   }
 
-  constructor(private modalService: BsModalService, private appStorage: StorageService,
-              public bugService: BugReportService, private settService: SettingsService,
-              private cd: ChangeDetectorRef, private sanitizer: DomSanitizer) {
-  }
+  constructor(
+    private modalService: NgbModal,
+    private appStorage: StorageService,
+    public bugService: BugReportService,
+    protected activeModal: NgbActiveModal,
+    private cd: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
+  ) {}
 
   public updateProtocolAsText() {
     const str = JSON.stringify(this.bugService.getPackage(), null, 2);
     this.protocolText = this.sanitizer.sanitize(SecurityContext.HTML, str);
   }
 
-  public open(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.modal.show(this.modal, this.config);
-      this.sendStatus = 'pending';
-      this.visible = true;
-      this.screenshots = [];
-      this.update();
-
-      const subscr = this.modal.onHide.subscribe(() => {
-        subscr.unsubscribe();
-        resolve();
-      });
-    });
-  }
-
-  public close() {
-    this.modal.hide();
-  }
-
-  public hide() {
-    this.actionperformed.next();
-  }
-
-  onShown() {
+  ngAfterViewInit() {
     // TODO check data and set focus
     jQuery('#bgDescr').focus();
-  }
-
-  onHidden() {
-    this.visible = false;
-    this.bugsent = false;
-    this.sendStatus = 'pending';
-    this.update();
   }
 
   sendBugReport() {
@@ -114,27 +94,36 @@ export class FeedbackModalComponent {
 
     this.sendStatus = 'sending';
     this.subscrmanager.add(
-      this.bugService.sendReport(this.userName, this.email, this.bgdescr, this.sendProObj, {
-        auth_token: AppSettings.configuration.plugins.emailSender.authKey,
-        url: AppSettings.configuration.plugins.emailSender.url
-      }, this.screenshots).subscribe(
-        () => {
-          this.sendStatus = 'success';
-          this.bugsent = true;
-          this.update();
-          console.log('Bugreport sent');
+      this.bugService
+        .sendReport(
+          this.userName,
+          this.email,
+          this.bgdescr,
+          this.sendProObj,
+          {
+            auth_token: AppSettings.configuration.plugins.emailSender.authKey,
+            url: AppSettings.configuration.plugins.emailSender.url,
+          },
+          this.screenshots
+        )
+        .subscribe(
+          () => {
+            this.sendStatus = 'success';
+            this.bugsent = true;
+            this.update();
+            console.log('Bugreport sent');
 
-          setTimeout(() => {
-            this.bgdescr = '';
-            this.modal.hide();
-          }, 2000);
-        },
-        (error) => {
-          console.error(error);
-          this.sendStatus = 'error';
-          this.update();
-        }
-      )
+            setTimeout(() => {
+              this.bgdescr = '';
+              this.activeModal.close();
+            }, 2000);
+          },
+          (error) => {
+            console.error(error);
+            this.sendStatus = 'error';
+            this.update();
+          }
+        )
     );
   }
 
@@ -143,24 +132,32 @@ export class FeedbackModalComponent {
   }
 
   public onFileChange($event: Event) {
-    const eventTarget = ($event.target as HTMLInputElement);
+    const eventTarget = $event.target as HTMLInputElement;
     if (eventTarget.files && eventTarget.files.length > 0) {
-      if (eventTarget.files[0].name.indexOf('.jpg') > -1 || eventTarget.files[0].name.indexOf('.jpeg') > -1
-        || eventTarget.files[0].name.indexOf('.png') > -1 || eventTarget.files[0].name.indexOf('.PNG') > -1
-        || eventTarget.files[0].name.indexOf('.JPG') > -1 || eventTarget.files[0].name.indexOf('.JPEG') > -1
+      if (
+        eventTarget.files[0].name.indexOf('.jpg') > -1 ||
+        eventTarget.files[0].name.indexOf('.jpeg') > -1 ||
+        eventTarget.files[0].name.indexOf('.png') > -1 ||
+        eventTarget.files[0].name.indexOf('.PNG') > -1 ||
+        eventTarget.files[0].name.indexOf('.JPG') > -1 ||
+        eventTarget.files[0].name.indexOf('.JPEG') > -1
       ) {
         this.screenshots.push({
           blob: eventTarget.files[0],
-          previewURL: ''
+          previewURL: '',
         });
         this.update();
-        this.createPreviewFromFile(this.screenshots.length - 1).then(() => {
-          this.update();
-        }).catch((error) => {
-          console.error(error);
-        });
+        this.createPreviewFromFile(this.screenshots.length - 1)
+          .then(() => {
+            this.update();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       } else {
-        alert('Only files with the extensions ".jpg, jpeg,.png" are supported.');
+        alert(
+          'Only files with the extensions ".jpg, jpeg,.png" are supported.'
+        );
       }
     }
   }

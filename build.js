@@ -35,7 +35,7 @@ if (process.argv[4].indexOf("url=") > -1) {
 console.log(`Building TranscriptionPortal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
 console.log(`Remove dist...`);
 execSync(`rm -rf "./${buildDir}"`);
-const command = ['node_modules/@nrwl/cli/bin/nx.js', 'build', 'transcription-portal', '--base-href', baseHref];
+const command = ['node_modules/@nrwl/cli/bin/nx.js', 'build', 'transcription-portal', '--base-href', baseHref, "--deploy-url=assets/"];
 
 if (dev) {
   command.push('--configuration', 'development');
@@ -58,20 +58,6 @@ node.on('exit', function (code) {
     encoding: "utf8"
   });
 
-  indexHTML = indexHTML.replace(/(scripts(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(polyfills(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(src=")(-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(src=")(-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$2`);
-  indexHTML = indexHTML.replace(/(main-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(main-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(main(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es2015(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime-es5(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(runtime(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(styles(?:\.[0-9a-z]*)?\.css)/g, `${targetFolder}/$1`);
-  indexHTML = indexHTML.replace(/(vendor(?:\.[0-9a-z]*)?\.js)/g, `${targetFolder}/$1`);
   indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
   indexHTML = indexHTML.replace(/(const ohPortalVersion = ").*(";)/g, `$1${version}$2`);
 

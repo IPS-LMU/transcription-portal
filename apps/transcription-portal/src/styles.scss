@@ -1,0 +1,102 @@
+@import 'node_modules/bootstrap';
+@import 'node_modules/bootstrap/scss/spinners';
+@import 'node_modules/bootstrap-icons';
+
+body {
+  padding: 0;
+  overflow: hidden;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+.bi.bi-chevron-compact-down,
+.bi.bi-chevron-compact-up {
+  font-size: 1.5em;
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+tbody .bi.bi-check {
+  color: forestgreen;
+}
+
+tbody .bi.bi-x {
+  color: red;
+}
+
+tbody .bi.bi-pencil-square {
+  color: cornflowerblue;
+}
+
+tbody .bi.bi-arrow-up {
+  color: cornflowerblue;
+}
+
+.green {
+  color: forestgreen;
+}
+
+.red {
+  color: red;
+}
+
+.blue {
+  color: cornflowerblue;
+}
+
+.yellow {
+  color: #ffc33b;
+}
+
+.tool-selected {
+  background-color: lightyellow;
+}
+
+.tooltip.show {
+  opacity: 1 !important;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.spin {
+  border-radius: 50%;
+  display: inline-block;
+  -webkit-animation: spin 2s linear infinite;
+  -moz-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-moz-keyframes spin {
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+.bi.bi-x-lg {
+  color: red;
+}
+
+.bi.bi-check-lg {
+  color: forestgreen;
+}
+
+.spinner-border-small {
+  border-width: 2px;
+  height: 1rem;
+  width: 1rem;
+}

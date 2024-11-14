@@ -1,42 +1,48 @@
-import {HttpClient} from '@angular/common/http';
-import {ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
-import {DomSanitizer} from '@angular/platform-browser';
-import {environment} from '../environments/environment';
-import {AppInfo} from './app.info';
-import {ANIMATIONS} from './shared/Animations';
-import {NotificationService} from './shared/notification.service';
-import {SubscriptionManager} from './shared/subscription-manager';
-import {Task} from './obj/tasks';
-import {ProceedingsComponent} from './components/proceedings/proceedings.component';
-import {TaskService} from './obj/tasks/task.service';
-import {StorageService} from './storage.service';
-import {Operation} from './obj/operations/operation';
-import {FeedbackModalComponent} from './modals/feedback-modal/feedback-modal.component';
-import {BugReportService, ConsoleType} from './shared/bug-report.service';
-import {SplitModalComponent} from './modals/split-modal/split-modal.component';
-import {FirstModalComponent} from './modals/first-modal/first-modal.component';
-import {QueueModalComponent} from './modals/queue-modal/queue-modal.component';
-import {ProtocolFooterComponent} from './components/protocol-footer/protocol-footer.component';
-import {ToolLoaderComponent} from './components/tool-loader/tool-loader.component';
-import {AlertService} from './shared/alert.service';
-import {StatisticsModalComponent} from './modals/statistics-modal/statistics-modal.component';
-import {SettingsService} from './shared/settings.service';
-import {OHModalService} from './shared/ohmodal.service';
-import {AppSettings} from './shared/app.settings';
-import {hasProperty} from '@octra/utilities';
-import {RouterOutlet} from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { environment } from '../environments/environment';
+import { AppInfo } from './app.info';
+import { ANIMATIONS } from './shared/Animations';
+import { NotificationService } from './shared/notification.service';
+import { SubscriptionManager } from './shared/subscription-manager';
+import { Task } from './obj/tasks';
+import { ProceedingsComponent } from './components/proceedings/proceedings.component';
+import { TaskService } from './obj/tasks/task.service';
+import { StorageService } from './storage.service';
+import { Operation } from './obj/operations/operation';
+import { FeedbackModalComponent } from './modals/feedback-modal/feedback-modal.component';
+import { BugReportService, ConsoleType } from './shared/bug-report.service';
+import { SplitModalComponent } from './modals/split-modal/split-modal.component';
+import { FirstModalComponent } from './modals/first-modal/first-modal.component';
+import { QueueModalComponent } from './modals/queue-modal/queue-modal.component';
+import { ProtocolFooterComponent } from './components/protocol-footer/protocol-footer.component';
+import { ToolLoaderComponent } from './components/tool-loader/tool-loader.component';
+import { AlertService } from './shared/alert.service';
+import { SettingsService } from './shared/settings.service';
+import { OHModalService } from './shared/ohmodal.service';
+import { AppSettings } from './shared/app.settings';
+import { hasProperty } from '@octra/utilities';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-    selector: 'tportal-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    providers: [],
-    animations: [ANIMATIONS],
-    standalone: true,
-    imports: [FeedbackModalComponent, RouterOutlet]
+  selector: 'tportal-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
+  providers: [],
+  animations: [ANIMATIONS],
+  standalone: true,
+  imports: [FeedbackModalComponent, RouterOutlet],
 })
 export class AppComponent implements OnDestroy {
-  @ViewChild('feedbackModal', {static: true}) feedbackModal!: FeedbackModalComponent;
+  @ViewChild('feedbackModal', { static: true })
+  feedbackModal!: FeedbackModalComponent;
   public sidebarstate = 'hidden';
   isCollapsed = false;
   public test = 'inactive';
@@ -47,26 +53,26 @@ export class AppComponent implements OnDestroy {
   @ViewChild('fileinput') fileinput!: ElementRef;
   @ViewChild('folderinput') folderinput!: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('splitModal', {static: true}) splitModal!: SplitModalComponent;
-  @ViewChild('firstModal', {static: true}) firstModal!: FirstModalComponent;
+  @ViewChild('splitModal', { static: true }) splitModal!: SplitModalComponent;
+  @ViewChild('firstModal', { static: true }) firstModal!: FirstModalComponent;
   @ViewChild('queueModal') queueModal!: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
-  @ViewChild('toolLoader', {static: true}) toolLoader!: ToolLoaderComponent;
-  @ViewChild('statisticsModal', {static: true}) statisticsModal!: StatisticsModalComponent;
-  private firstModalShown = false;
-  private blockLeaving = true;
+  @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
+
   private subscrmanager = new SubscriptionManager();
 
-  constructor(public taskService: TaskService, private sanitizer: DomSanitizer,
-              private httpclient: HttpClient, public notification: NotificationService,
-              private storage: StorageService,
-              public bugService: BugReportService,
-              private alertService: AlertService,
-              public settingsService: SettingsService,
-              private cd: ChangeDetectorRef,
-              private modalService: OHModalService
+  constructor(
+    public taskService: TaskService,
+    private sanitizer: DomSanitizer,
+    private httpclient: HttpClient,
+    public notification: NotificationService,
+    private storage: StorageService,
+    public bugService: BugReportService,
+    private alertService: AlertService,
+    public settingsService: SettingsService,
+    private cd: ChangeDetectorRef,
+    private modalService: OHModalService
   ) {
-
     // overwrite console.log
     if (!AppInfo.debugging) {
       const oldLog = console.log;
@@ -90,7 +96,12 @@ export class AppComponent implements OnDestroy {
           if (typeof error === 'string') {
             debug = error;
 
-            if (error === 'ERROR' && context && hasProperty(context, 'stack') && hasProperty(context, 'message')) {
+            if (
+              error === 'ERROR' &&
+              context &&
+              hasProperty(context, 'stack') &&
+              hasProperty(context, 'message')
+            ) {
               debug = context.message;
               stack = context.stack;
             }
@@ -110,7 +121,10 @@ export class AppComponent implements OnDestroy {
           }
 
           if (debug !== '') {
-            serv.addEntry(ConsoleType.ERROR, `${debug}${(stack !== '') ? ' ' + stack : ''}`);
+            serv.addEntry(
+              ConsoleType.ERROR,
+              `${debug}${stack !== '' ? ' ' + stack : ''}`
+            );
           }
 
           oldError.apply(console, args);
@@ -128,22 +142,20 @@ export class AppComponent implements OnDestroy {
       })();
     }
 
-    this.subscrmanager.add(this.modalService.onFeedBackRequested.subscribe(() => {
-      this.settingsService.shortCutsEnabled = false;
-
-      this.feedbackModal.open().then(() => {
-        this.settingsService.shortCutsEnabled = true;
-      });
-    }));
-
-    this.subscrmanager.add(this.settingsService.settingsload.subscribe(() => {
-      // add tracking code
-      if (AppSettings.configuration.plugins.tracking
-        && AppSettings.configuration.plugins.tracking.active
-        && AppSettings.configuration.plugins.tracking.active !== '') {
-        this.appendTrackingCode(AppSettings.configuration.plugins.tracking.active);
-      }
-    }));
+    this.subscrmanager.add(
+      this.settingsService.settingsload.subscribe(() => {
+        // add tracking code
+        if (
+          AppSettings.configuration.plugins.tracking &&
+          AppSettings.configuration.plugins.tracking.active &&
+          AppSettings.configuration.plugins.tracking.active !== ''
+        ) {
+          this.appendTrackingCode(
+            AppSettings.configuration.plugins.tracking.active
+          );
+        }
+      })
+    );
   }
 
   private _showtool = false;
@@ -153,7 +165,7 @@ export class AppComponent implements OnDestroy {
   }
 
   set showtool(value: boolean) {
-    this.sidebarExpand = (value) ? 'closed' : 'opened';
+    this.sidebarExpand = value ? 'closed' : 'opened';
     this._showtool = value;
   }
 
@@ -173,16 +185,24 @@ export class AppComponent implements OnDestroy {
 
   public get animationObject(): any {
     const width = 100 - this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {toolWidth: width, procWidth: this.newProceedingsWidth}}
+    return {
+      value: this.sidebarExpand,
+      params: { toolWidth: width, procWidth: this.newProceedingsWidth },
+    };
   }
 
   public get animationObject2(): any {
     const width = this.newProceedingsWidth;
-    return {value: this.sidebarExpand, params: {width: width}}
+    return { value: this.sidebarExpand, params: { width: width } };
   }
 
   public allTasks(): Task[] {
-    if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
+    if (
+      !(
+        this.taskService.taskList === null ||
+        this.taskService.taskList === undefined
+      )
+    ) {
       return this.taskService.taskList.getAllTasks();
     }
 
@@ -196,10 +216,13 @@ export class AppComponent implements OnDestroy {
   private appendTrackingCode(type: string) {
     // check if matomo is activated
     if (type === 'matomo') {
-      if (AppSettings.configuration?.plugins?.tracking?.matomo
-        && AppSettings.configuration?.plugins?.tracking?.matomo.host
-        && AppSettings.configuration?.plugins?.tracking?.matomo.siteID) {
-        const matomoSettings = AppSettings.configuration.plugins.tracking.matomo;
+      if (
+        AppSettings.configuration?.plugins?.tracking?.matomo &&
+        AppSettings.configuration?.plugins?.tracking?.matomo.host &&
+        AppSettings.configuration?.plugins?.tracking?.matomo.siteID
+      ) {
+        const matomoSettings =
+          AppSettings.configuration.plugins.tracking.matomo;
 
         const trackingCode = `
 <!-- Matomo -->
@@ -220,7 +243,9 @@ export class AppComponent implements OnDestroy {
 
         jQuery(trackingCode).insertAfter(jQuery('body').children().last());
       } else {
-        console.error(`attributes for matomo tracking in appconfig.json are invalid.`);
+        console.error(
+          `attributes for matomo tracking in appconfig.json are invalid.`
+        );
       }
     } else {
       console.error(`tracking type ${type} is not supported.`);

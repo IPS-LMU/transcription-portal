@@ -1,106 +1,112 @@
-<div #statisticsModal="bs-modal" aria-labelledby="dialog-sizes-name1" bsModal class="modal fade"
-     role="dialog" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title pull-left">Statistics</h4>
-        <button (click)="statisticsModal.hide()" aria-label="Close" class="close pull-right" type="button">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div style="text-align: right;">
-          <a [download]="taskService.protocolFileName" [href]="taskService.protocolURL">Download JSON</a>
-        </div>
-        <div class="row">
-          <div class="col-6 col-md-3" style="margin-left:-20px;">
-            <circle-progress
-              [animationDuration]="300"
-              [animation]="false"
-              [innerStrokeColor]="'lightgray'"
-              [innerStrokeWidth]="8"
-              [lazy]="false"
-              [outerStrokeColor]="'gray'"
-              [outerStrokeWidth]="16"
-              [percent]="statisticsService.overAllProgress.waiting"
-              [radius]="80"
-              [responsive]="true"
-              [subtitleFontSize]="'20px'"
-              [subtitle]="'waiting'"
-              [titleFontSize]="'30px'"
-            ></circle-progress>
-          </div>
-          <div class="col-6 col-md-3">
-            <circle-progress
-              [animationDuration]="300"
-              [animation]="false"
-              [innerStrokeColor]="'#82ade5'"
-              [innerStrokeWidth]="8"
-              [lazy]="false"
-              [outerStrokeColor]="'cornflowerblue'"
-              [outerStrokeWidth]="16"
-              [percent]="statisticsService.overAllProgress.processing"
-              [radius]="80"
-              [responsive]="true"
-              [subtitleFontSize]="'20px'"
-              [subtitle]="'processing'"
-              [titleFontSize]="'30px'"
-            ></circle-progress>
-          </div>
-          <div class="col-6 col-md-3">
-            <circle-progress
-              [animationDuration]="300"
-              [animation]="false"
-              [innerStrokeColor]="'#C7E596'"
-              [innerStrokeWidth]="8"
-              [lazy]="false"
-              [outerStrokeColor]="'#78C000'"
-              [outerStrokeWidth]="16"
-              [percent]="statisticsService.overAllProgress.finished"
-              [radius]="80"
-              [responsive]="true"
-              [subtitleFontSize]="'20px'"
-              [subtitle]="'finished'"
-              [titleFontSize]="'30px'"
-            ></circle-progress>
-          </div>
-          <div class="col-6 col-md-3">
-            <circle-progress
-              [animationDuration]="300"
-              [animation]="false"
-              [innerStrokeColor]="'#e56255'"
-              [innerStrokeWidth]="8"
-              [lazy]="false"
-              [outerStrokeColor]="'red'"
-              [outerStrokeWidth]="16"
-              [percent]="statisticsService.overAllProgress.failed"
-              [radius]="80"
-              [responsive]="true"
-              [subtitleFontSize]="'20px'"
-              [subtitle]="'failed'"
-              [titleFontSize]="'30px'"
-            ></circle-progress>
-          </div>
-        </div>
-
-        <h4>Processing duration (minutes)</h4>
-        <p>Move the mouse over the pie chart for more information.</p>
-        <div class="row">
-          <div class="col-md-1"></div>
-          <div class="col-md-10">
-            <canvas [type]="pieChartType"
-                    [data]="statisticsService.averageDurations"
-                    [options]="pieChartOptions"
-                    baseChart></canvas>
-          </div>
-          <div class="col-md-1"></div>
-
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button (click)="statisticsModal.hide()" class="btn btn-outline-dark" type="button">Cancel</button>
-      </div>
+<div class="modal-header">
+  <h4 class="modal-title" id="modal-basic-title">Statistics</h4>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="activeModal.dismiss('Cross click')"
+  ></button>
+</div>
+<div class="modal-body">
+  <div style="text-align: right">
+    <a
+      [download]="taskService.protocolFileName"
+      [href]="taskService.protocolURL"
+      >Download JSON</a
+    >
+  </div>
+  <div class="row">
+    <div class="col-6 col-md-3" style="margin-left: -20px">
+      <circle-progress
+        [animationDuration]="300"
+        [animation]="false"
+        [innerStrokeColor]="'lightgray'"
+        [innerStrokeWidth]="8"
+        [lazy]="false"
+        [outerStrokeColor]="'gray'"
+        [outerStrokeWidth]="16"
+        [percent]="statisticsService.overAllProgress.waiting"
+        [radius]="80"
+        [responsive]="true"
+        [subtitleFontSize]="'20px'"
+        [subtitle]="'waiting'"
+        [titleFontSize]="'30px'"
+      ></circle-progress>
+    </div>
+    <div class="col-6 col-md-3">
+      <circle-progress
+        [animationDuration]="300"
+        [animation]="false"
+        [innerStrokeColor]="'#82ade5'"
+        [innerStrokeWidth]="8"
+        [lazy]="false"
+        [outerStrokeColor]="'cornflowerblue'"
+        [outerStrokeWidth]="16"
+        [percent]="statisticsService.overAllProgress.processing"
+        [radius]="80"
+        [responsive]="true"
+        [subtitleFontSize]="'20px'"
+        [subtitle]="'processing'"
+        [titleFontSize]="'30px'"
+      ></circle-progress>
+    </div>
+    <div class="col-6 col-md-3">
+      <circle-progress
+        [animationDuration]="300"
+        [animation]="false"
+        [innerStrokeColor]="'#C7E596'"
+        [innerStrokeWidth]="8"
+        [lazy]="false"
+        [outerStrokeColor]="'#78C000'"
+        [outerStrokeWidth]="16"
+        [percent]="statisticsService.overAllProgress.finished"
+        [radius]="80"
+        [responsive]="true"
+        [subtitleFontSize]="'20px'"
+        [subtitle]="'finished'"
+        [titleFontSize]="'30px'"
+      ></circle-progress>
+    </div>
+    <div class="col-6 col-md-3">
+      <circle-progress
+        [animationDuration]="300"
+        [animation]="false"
+        [innerStrokeColor]="'#e56255'"
+        [innerStrokeWidth]="8"
+        [lazy]="false"
+        [outerStrokeColor]="'red'"
+        [outerStrokeWidth]="16"
+        [percent]="statisticsService.overAllProgress.failed"
+        [radius]="80"
+        [responsive]="true"
+        [subtitleFontSize]="'20px'"
+        [subtitle]="'failed'"
+        [titleFontSize]="'30px'"
+      ></circle-progress>
     </div>
   </div>
-</div>
 
+  <h4>Processing duration (minutes)</h4>
+  <p>Move the mouse over the pie chart for more information.</p>
+  <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+      <canvas
+        [type]="pieChartType"
+        [data]="statisticsService.averageDurations"
+        [options]="pieChartOptions"
+        baseChart
+      ></canvas>
+    </div>
+    <div class="col-md-1"></div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button
+    type="button"
+    class="btn btn-outline-secondary"
+    (click)="activeModal.close('Save click')"
+  >
+    Cancel
+  </button>
+</div>

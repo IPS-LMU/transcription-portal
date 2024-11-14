@@ -2,7 +2,7 @@
   <tbody>
     @if (entriesCount > 0 ) {
       <tr class="pointer" (click)="onAction('delete')">
-        <td><i class="fa fa-times"></i></td>
+        <td><i class="bi bi-x"></i></td>
         <td>
           @if (entriesCount > 0) {
             Delete selected lines
@@ -10,7 +10,7 @@
         </td>
       </tr>
       <tr (click)="onAction('download')">
-        <td><i class="fa fa-download"></i></td>
+        <td><i class="bi bi-download"></i></td>
         <td>Download selected lines</td>
       </tr>
     }

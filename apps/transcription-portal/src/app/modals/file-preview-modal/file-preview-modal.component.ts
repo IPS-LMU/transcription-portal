@@ -1,49 +1,54 @@
-import {Component, ViewChild} from '@angular/core';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {BsModalService, ModalDirective} from 'ngx-bootstrap/modal';
-import {FileInfo} from '@octra/web-media';
-
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { SafeResourceUrl } from '@angular/platform-browser';
+import {
+  NgbActiveModal,
+  NgbModal,
+  NgbModalOptions,
+} from '@ng-bootstrap/ng-bootstrap';
+import { FileInfo } from '@octra/web-media';
+import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
-    selector: 'tportal-file-preview-modal',
-    templateUrl: './file-preview-modal.component.html',
-    styleUrls: ['./file-preview-modal.component.css'],
-    standalone: true,
-    imports: [ModalDirective]
+  selector: 'tportal-file-preview-modal',
+  templateUrl: './file-preview-modal.component.html',
+  styleUrls: ['./file-preview-modal.component.scss'],
+  standalone: true,
+  imports: [],
 })
-export class FilePreviewModalComponent {
-  @ViewChild('previewModal', {static: true}) previewModal?: ModalDirective;
+export class FilePreviewModalComponent implements OnDestroy, OnInit {
   public selectedFile?: FileInfo;
   public fileContent = '';
   public downloadURL?: SafeResourceUrl;
+
   private subscrmanager = new SubscriptionManager();
 
+  public static options: NgbModalOptions = {
+    size: 'xl',
+    fullscreen: 'md',
+    backdrop: true,
+  };
+
   get fileName(): string {
-    return this.selectedFile?.attributes.originalFileName ?? this.selectedFile?.fullname;
+    return (
+      this.selectedFile?.attributes.originalFileName ??
+      this.selectedFile?.fullname
+    );
   }
 
-  constructor(private modalService: BsModalService, private sanitizer: DomSanitizer) {
+  constructor(
+    private modalService: NgbModal,
+    protected activeModal: NgbActiveModal
+  ) {}
+
+  ngOnDestroy(): void {
+    this.subscrmanager.destroy();
   }
 
-  public open(file: FileInfo, beforeDismiss?: () => boolean, onDismiss: () => void = () => {
-  }) {
-    if (this.previewModal) {
-      this.selectedFile = file;
-      this.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file.file!));
-      this.loadFileContent();
-      this.onDismiss = onDismiss;
-
-      const id = this.subscrmanager.add(this.previewModal.onHidden.subscribe(() => {
-        this.subscrmanager.remove(id);
-        this.onDismiss();
-      }));
-      this.previewModal.show();
-    }
+  ngOnInit() {
+    this.loadFileContent();
   }
 
-  onDismiss() {
-  }
+  onDismiss() {}
 
   cancelEvent($event: DragEvent) {
     $event.stopPropagation();
@@ -52,11 +57,13 @@ export class FilePreviewModalComponent {
 
   private loadFileContent() {
     if (!(this.selectedFile === null || this.selectedFile === undefined)) {
-      FileInfo.getFileContent(this.selectedFile.file!).then((text) => {
-        this.fileContent = text;
-      }).catch((error: any) => {
-        console.error(error);
-      });
+      FileInfo.getFileContent(this.selectedFile.file!)
+        .then((text) => {
+          this.fileContent = text;
+        })
+        .catch((error: any) => {
+          console.error(error);
+        });
     } else {
       console.error(`selectedFile is null!`);
     }

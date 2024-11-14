@@ -1,44 +1,33 @@
-import {Component, Output, TemplateRef, ViewChild} from '@angular/core';
-import {Subject} from 'rxjs';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
+import { Component, OnDestroy, Output } from '@angular/core';
+import {
+  NgbActiveModal,
+  NgbModalOptions,
+  NgbModalRef,
+} from '@ng-bootstrap/ng-bootstrap';
+import { Subject } from 'rxjs';
+import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
-    selector: 'tportal-first-modal',
-    templateUrl: './first-modal.component.html',
-    styleUrls: ['./first-modal.component.css'],
-    standalone: true
+  selector: 'tportal-first-modal',
+  templateUrl: './first-modal.component.html',
+  styleUrls: ['./first-modal.component.scss'],
+  standalone: true,
 })
-export class FirstModalComponent {
-
-
-  @ViewChild('content', {static: true}) content?: TemplateRef<any>;
+export class FirstModalComponent implements OnDestroy {
   @Output() understandClick: Subject<void> = new Subject<void>();
 
-  bsModalRef?: BsModalRef;
+  public static options: NgbModalOptions = {
+    size: 'sn',
+    backdrop: 'static',
+    keyboard: false,
+  };
+
+  bsModalRef?: NgbModalRef;
   private subscrmanager = new SubscriptionManager();
 
-  constructor(private modalService: BsModalService) {
-  }
+  constructor(protected activeModal: NgbActiveModal) {}
 
-  public open(beforeDismiss: () => boolean, onDismiss?: () => void) {
-    this.subscrmanager.add(this.modalService.onHide.subscribe(() => {
-      beforeDismiss();
-    }));
-
-    this.subscrmanager.add(this.modalService.onHidden.subscribe(() => {
-      if (onDismiss) {
-        onDismiss();
-      }
-      this.onHidden();
-    }));
-
-    if (this.content) {
-      this.bsModalRef = this.modalService.show(this.content);
-    }
-  }
-
-  onHidden() {
+  ngOnDestroy() {
     this.subscrmanager.destroy();
   }
 }

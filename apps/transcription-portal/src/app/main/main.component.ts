@@ -1,50 +1,67 @@
-import {HttpClient} from '@angular/common/http';
-import {ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, ViewChild,} from '@angular/core';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {environment} from '../../environments/environment';
-import {AppInfo} from '../app.info';
-import {ANIMATIONS} from '../shared/Animations';
-import {NotificationService} from '../shared/notification.service';
-import {SubscriptionManager} from '../shared/subscription-manager';
-import {Task, TaskState} from '../obj/tasks';
-import {ProceedingsComponent} from '../components/proceedings/proceedings.component';
-import {TaskService} from '../obj/tasks/task.service';
-import {StorageService} from '../storage.service';
-import {ToolOperation} from '../obj/operations/tool-operation';
-import {Operation} from '../obj/operations/operation';
-import {OCTRAOperation} from '../obj/operations/octra-operation';
-import {FeedbackModalComponent} from '../modals/feedback-modal/feedback-modal.component';
-import {BugReportService, ConsoleType} from '../shared/bug-report.service';
-import {SplitModalComponent} from '../modals/split-modal/split-modal.component';
-import {FirstModalComponent} from '../modals/first-modal/first-modal.component';
-import {QueueModalComponent} from '../modals/queue-modal/queue-modal.component';
-import {ProtocolFooterComponent} from '../components/protocol-footer/protocol-footer.component';
-import {ToolLoaderComponent} from '../components/tool-loader/tool-loader.component';
-import {AlertService} from '../shared/alert.service';
-import {UploadOperation} from '../obj/operations/upload-operation';
+import { DatePipe, NgClass, NgStyle } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { SafeResourceUrl } from '@angular/platform-browser';
+import {
+  NgbCollapse,
+  NgbDropdown,
+  NgbDropdownItem,
+  NgbDropdownMenu,
+  NgbDropdownToggle,
+  NgbModal,
+  NgbTooltip,
+} from '@ng-bootstrap/ng-bootstrap';
+import {
+  AnnotJSONConverter,
+  IFile,
+  OAnnotJSON,
+  PartiturConverter,
+} from '@octra/annotation';
+import { OAudiofile } from '@octra/media';
+import { hasProperty } from '@octra/utilities';
+import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
-import {StatisticsModalComponent} from '../modals/statistics-modal/statistics-modal.component';
-import {SettingsService} from '../shared/settings.service';
-import {AppSettings} from '../shared/app.settings';
-import {OHLanguageObject} from '../obj/oh-config';
-import {OHModalService} from '../shared/ohmodal.service';
-import {EmuOperation} from '../obj/operations/emu-operation';
-import {hasProperty} from '@octra/utilities';
-import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
-import {AlertComponent} from '../components/alert/alert.component';
-import {CollapseDirective} from 'ngx-bootstrap/collapse';
-import {TooltipDirective} from 'ngx-bootstrap/tooltip';
-import {DatePipe, NgClass, NgStyle} from '@angular/common';
-import {BsDropdownDirective, BsDropdownMenuDirective, BsDropdownToggleDirective,} from 'ngx-bootstrap/dropdown';
-import {FormsModule} from '@angular/forms';
-import {TimePipe} from '../shared/time.pipe';
-import {AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter,} from '@octra/annotation';
-import {OAudiofile} from '@octra/media';
+import { environment } from '../../environments/environment';
+import { AppInfo } from '../app.info';
+import { AlertComponent } from '../components/alert/alert.component';
+import { ProceedingsComponent } from '../components/proceedings/proceedings.component';
+import { ProtocolFooterComponent } from '../components/protocol-footer/protocol-footer.component';
+import { ToolLoaderComponent } from '../components/tool-loader/tool-loader.component';
+import { FirstModalComponent } from '../modals/first-modal/first-modal.component';
+import { QueueModalComponent } from '../modals/queue-modal/queue-modal.component';
+import { SplitModalComponent } from '../modals/split-modal/split-modal.component';
+import { StatisticsModalComponent } from '../modals/statistics-modal/statistics-modal.component';
+import { OHLanguageObject } from '../obj/oh-config';
+import { EmuOperation } from '../obj/operations/emu-operation';
+import { OCTRAOperation } from '../obj/operations/octra-operation';
+import { Operation } from '../obj/operations/operation';
+import { ToolOperation } from '../obj/operations/tool-operation';
+import { UploadOperation } from '../obj/operations/upload-operation';
+import { Task, TaskState } from '../obj/tasks';
+import { TaskService } from '../obj/tasks/task.service';
+import { AlertService } from '../shared/alert.service';
+import { ANIMATIONS } from '../shared/Animations';
+import { AppSettings } from '../shared/app.settings';
+import { BugReportService, ConsoleType } from '../shared/bug-report.service';
+import { NotificationService } from '../shared/notification.service';
+import { OHModalService } from '../shared/ohmodal.service';
+import { SettingsService } from '../shared/settings.service';
+import { SubscriptionManager } from '../shared/subscription-manager';
+import { TimePipe } from '../shared/time.pipe';
+import { StorageService } from '../storage.service';
 
 @Component({
   selector: 'tportal-main',
   templateUrl: './main.component.html',
-  styleUrls: ['./main.component.css'],
+  styleUrls: ['./main.component.scss'],
   providers: [],
   animations: [ANIMATIONS],
   standalone: true,
@@ -54,18 +71,19 @@ import {OAudiofile} from '@octra/media';
     QueueModalComponent,
     StatisticsModalComponent,
     AlertComponent,
-    CollapseDirective,
-    TooltipDirective,
     NgClass,
-    BsDropdownDirective,
-    BsDropdownToggleDirective,
-    BsDropdownMenuDirective,
     FormsModule,
     NgStyle,
     ProceedingsComponent,
     ToolLoaderComponent,
     DatePipe,
     TimePipe,
+    NgbCollapse,
+    NgbTooltip,
+    NgbDropdown,
+    NgbDropdownMenu,
+    NgbDropdownItem,
+    NgbDropdownToggle,
   ],
 })
 export class MainComponent implements OnDestroy {
@@ -80,15 +98,9 @@ export class MainComponent implements OnDestroy {
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('folderinput') folderinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('splitModal', { static: true }) splitModal?: SplitModalComponent;
-  @ViewChild('firstModal', { static: true }) firstModal?: FirstModalComponent;
-  @ViewChild('feedbackModal', { static: true })
-  feedbackModal?: FeedbackModalComponent;
-  @ViewChild('queueModal') queueModal?: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
   @ViewChild('statisticsModal', { static: true })
-  statisticsModal?: StatisticsModalComponent;
   public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
@@ -99,7 +111,7 @@ export class MainComponent implements OnDestroy {
 
   constructor(
     public taskService: TaskService,
-    private sanitizer: DomSanitizer,
+    private ngbModalService: NgbModal,
     private httpclient: HttpClient,
     public notification: NotificationService,
     private storage: StorageService,
@@ -267,10 +279,18 @@ export class MainComponent implements OnDestroy {
     });
 
     if (tasks && tasks.length > 0) {
-      this.queueModal?.open(() => {
-        return true;
-      });
+      this.openQueueModal();
     }
+  }
+
+  openQueueModal() {
+    const ref = this.ngbModalService.open(
+      QueueModalComponent,
+      QueueModalComponent.options
+    );
+    ref.componentInstance.queue = this.taskService.preprocessor.queue;
+    ref.componentInstance.tasks = this.taskService.taskList?.getAllTasks();
+    ref.componentInstance.operations = this.taskService.operations;
   }
 
   onMissedDrop(event: DragEvent) {
@@ -779,7 +799,11 @@ export class MainComponent implements OnDestroy {
   }
 
   public openSplitModal = () => {
-    this.splitModal?.open((reason) => {
+    const ref = this.ngbModalService.open(
+      SplitModalComponent,
+      SplitModalComponent.options
+    );
+    ref.result.then((reason) => {
       this.taskService.splitPrompt = reason;
       this.taskService.checkFiles();
     });
@@ -863,21 +887,15 @@ export class MainComponent implements OnDestroy {
   }
 
   private loadFirstModal() {
-    if (!this.firstModalShown && this.firstModal) {
-      this.subscrmanager.add(
-        this.firstModal.understandClick.subscribe(() => {
-          this.firstModalShown = true;
-        })
-      );
+    if (!this.firstModalShown) {
       setTimeout(() => {
-        this.firstModal?.open(
-          () => {
-            return this.firstModalShown;
-          },
-          () => {
-            this.storage.saveIntern('firstModalShown', true);
-          }
+        const ref = this.ngbModalService.open(
+          FirstModalComponent,
+          FirstModalComponent.options
         );
+        ref.result.then(() => {
+          this.storage.saveIntern('firstModalShown', true);
+        });
       }, 1000);
     }
   }
@@ -956,5 +974,12 @@ export class MainComponent implements OnDestroy {
     } else {
       this.accessCodeInputFieldType = 'password';
     }
+  }
+
+  openStatisticsModal() {
+    this.ngbModalService.open(
+      StatisticsModalComponent,
+      StatisticsModalComponent.options
+    );
   }
 }

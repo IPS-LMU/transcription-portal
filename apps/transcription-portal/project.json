@@ -7,12 +7,17 @@
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/apps/transcription-portal",
         "index": "apps/transcription-portal/src/index.html",
         "main": "apps/transcription-portal/src/main.ts",
-        "polyfills": "apps/transcription-portal/src/polyfills.ts",
+        "polyfills": [
+          "apps/transcription-portal/src/polyfills.ts",
+          "@angular/localize/init"
+        ],
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
         "assets": [
           "apps/transcription-portal/src/favicon.ico",
@@ -21,11 +26,12 @@
           "apps/transcription-portal/src/config"
         ],
         "styles": [
-          "node_modules/font-awesome/css/font-awesome.min.css",
-          "node_modules/bootstrap/dist/css/bootstrap.min.css",
-          "apps/transcription-portal/src/styles.css"
+          "apps/transcription-portal/src/styles.scss"
         ],
-        "allowedCommonJsDependencies": ["x2js", "chart.js"],
+        "allowedCommonJsDependencies": [
+          "x2js",
+          "chart.js"
+        ],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
@@ -91,7 +97,9 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "apps/transcription-portal/jest.config.ts"
       }

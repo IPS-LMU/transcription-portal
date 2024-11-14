@@ -1,5 +1,5 @@
 div {
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 h1 {
@@ -76,16 +76,17 @@ h1 {
   padding-right: 0;
 }
 
-.proceedings-header .fa-bell-o,
-.proceedings-header .fa-bell-slash-o,
-.proceedings-header .fa-cog,
-.proceedings-header .fa-question-circle-o {
+.proceedings-header .bi-bell,
+.proceedings-header .bi-bell-slash,
+.proceedings-header .bi-cog,
+.proceedings-header .bi bi-exclamation-circle,
+.proceedings-header .bi-question-circle {
   margin-top: 10px;
   font-size: 1.5em;
   cursor: pointer;
 }
 
-.fa-bell-slash-o {
+.bi-bell-slash {
   color: gray;
 }
 
@@ -153,10 +154,6 @@ nav li {
   padding-left: 20px;
 }
 
-.right-icons .fa-exclamation-circle {
-  text-shadow: 1px 1px gray;
-}
-
 .state-icons li {
   text-align: center;
   vertical-align: middle;
@@ -166,7 +163,7 @@ nav li {
 
 .state-icons i {
   opacity: 0.7;
-  font-size: 1.5em;
+  font-size: 1.3rem;
   margin-right: 10px;
 }
 
@@ -185,7 +182,7 @@ nav li {
 }
 
 .flex-fill {
-  flex: 1
+  flex: 1;
 }
 
 .totalState {
@@ -211,6 +208,10 @@ nav li {
   font-size: 14px;
 }
 
-#accessCodeGroup span{
+#accessCodeGroup span {
   cursor: pointer;
+}
+
+.bi-layout-sidebar-inset {
+  color: red;
 }

@@ -1,17 +1,20 @@
-import {EventEmitter, Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { FeedbackModalComponent } from '../modals/feedback-modal/feedback-modal.component';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OHModalService {
-
-  public onFeedBackRequested = new EventEmitter<void>();
-
-  constructor() {
-
-  }
+  constructor(private ngbModalService: NgbModal) {}
 
   public openFeedbackModal() {
-    this.onFeedBackRequested.emit();
+    const ref = this.ngbModalService.open(
+      FeedbackModalComponent,
+      FeedbackModalComponent.options
+    );
+    ref.componentInstance.sendStatus = 'pending';
+    ref.componentInstance.screenshots = [];
+    ref.componentInstance.update();
   }
 }

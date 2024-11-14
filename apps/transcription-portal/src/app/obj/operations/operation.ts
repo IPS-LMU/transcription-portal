@@ -1,37 +1,49 @@
-import {HttpClient} from '@angular/common/http';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {Observable, Subject} from 'rxjs';
-import {Task, TaskState} from '../tasks';
-import {OHLanguageObject, OHService} from '../oh-config';
-import {FileInfo} from '@octra/web-media';
+import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { FileInfo } from '@octra/web-media';
+import { Observable, Subject } from 'rxjs';
+import { OHLanguageObject, OHService } from '../oh-config';
+import { Task, TaskState } from '../tasks';
 
 export abstract class Operation {
   static counter = 0;
   public abstract resultType?: string;
   public mouseover = false;
   public changed: Subject<void> = new Subject<void>();
-  public abstract start: (languageObject: OHLanguageObject, inputs: FileInfo[], operations: Operation[],
-                          httpclient: HttpClient, accessCode: string) => void;
+  public abstract start: (
+    languageObject: OHLanguageObject,
+    inputs: FileInfo[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode: string
+  ) => void;
   private readonly _shortTitle: string | undefined;
   private statesubj: Subject<{
     opID: number;
     oldState: TaskState;
-    newState: TaskState
+    newState: TaskState;
   }> = new Subject<{
     opID: number;
     oldState: TaskState;
-    newState: TaskState
+    newState: TaskState;
   }>();
   public statechange: Observable<{
-    opID: number,
+    opID: number;
     oldState: TaskState;
-    newState: TaskState
+    newState: TaskState;
   }> = this.statesubj.asObservable();
   private readonly _id: number;
 
-  protected constructor(private _name: string, protected _commands: string[], title?: string, shortTitle?: string,
-                        private _task?: Task, state?: TaskState, id?: number) {
-    if ((id === null || id === undefined)) {
+  protected constructor(
+    private _name: string,
+    protected _commands: string[],
+    title?: string,
+    shortTitle?: string,
+    private _task?: Task,
+    state?: TaskState,
+    id?: number
+  ) {
+    if (id === null || id === undefined) {
       this._id = ++Operation.counter;
     } else {
       this._id = id;
@@ -72,8 +84,8 @@ export abstract class Operation {
   }
 
   protected _parsedProtocol: {
-    type: 'WARNING' | 'ERROR',
-    message: string
+    type: 'WARNING' | 'ERROR';
+    message: string;
   }[] = [];
 
   get parsedProtocol(): { type: 'WARNING' | 'ERROR'; message: string }[] {
@@ -82,12 +94,11 @@ export abstract class Operation {
 
   public get previousOperation(): Operation | undefined {
     if (!this.task) {
-      throw new Error("task is undefined");
+      throw new Error('task is undefined');
     }
     const index = this.task.operations.findIndex((op: Operation) => {
-        return op.id === this.id;
-      }
-    );
+      return op.id === this.id;
+    });
 
     if (index > 0) {
       return this.task.operations[index - 1];
@@ -99,9 +110,8 @@ export abstract class Operation {
   public get nextOperation(): Operation | undefined {
     if (this.task) {
       const index = this.task.operations.findIndex((op: Operation) => {
-          return op.id === this.id;
-        }
-      );
+        return op.id === this.id;
+      });
 
       if (index < this.task.operations.length - 1) {
         return this.task.operations[index + 1];
@@ -174,7 +184,7 @@ export abstract class Operation {
     duration: number;
   } = {
     start: 0,
-    duration: 0
+    duration: 0,
   };
 
   get time(): { start: number; duration: number } {
@@ -192,63 +202,72 @@ export abstract class Operation {
     this.changed.next();
   }
 
-  public getStateIcon = (sanitizer: DomSanitizer, state: TaskState): SafeHtml => {
+  public getStateIcon = (
+    sanitizer: DomSanitizer,
+    state: TaskState
+  ): SafeHtml => {
     let result = '';
 
     switch (state) {
-      case(TaskState.PENDING):
+      case TaskState.PENDING:
         result = '';
         break;
-      case(TaskState.UPLOADING):
-        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Loading...</span>';
+      case TaskState.UPLOADING:
+        result = `<div class="spinner-border spinner-border-small" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`;
         break;
-      case(TaskState.PROCESSING):
-        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Processing...</span>';
+      case TaskState.PROCESSING:
+        result = `<div class="spinner-border spinner-border-small" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`;
         break;
-      case(TaskState.FINISHED):
-        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+      case TaskState.FINISHED:
+        result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case(TaskState.READY):
-        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
+      case TaskState.READY:
+        result = `<div class="spinner-border spinner-border-small" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`;
         break;
-      case(TaskState.ERROR):
-        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+      case TaskState.ERROR:
+        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
 
     return sanitizer.bypassSecurityTrustHtml(result);
-  }
+  };
 
   public getStateIcon2 = (state: TaskState): string => {
     let result = '';
 
     switch (state) {
-      case(TaskState.PENDING):
+      case TaskState.PENDING:
         result = '';
         break;
-      case(TaskState.UPLOADING):
-        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Loading...</span>';
+      case TaskState.UPLOADING:
+        result = `<div class="spinner-border spinner-border-small" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`;
         break;
-      case(TaskState.PROCESSING):
-        result = '<i class="fa fa-cog fa-spin fa-fw"></i>\n' +
-          '<span class="sr-only">Processing...</span>';
+      case TaskState.PROCESSING:
+        result = `<i class="bi bi-gear-fill spin"></i>`;
         break;
-      case(TaskState.FINISHED):
-        result = '<i class="fa fa-check" aria-hidden="true"></i>';
+      case TaskState.FINISHED:
+        result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case(TaskState.READY):
-        result = '<i class="fa fa-spinner fa-spin fa-fw"></i>';
+      case TaskState.READY:
+        result = `<div class="spinner-border spinner-border-small" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>`;
         break;
-      case(TaskState.ERROR):
-        result = '<i class="fa fa-times" aria-hidden="true"></i>';
+      case TaskState.ERROR:
+        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
 
     return result;
-  }
+  };
 
   public changeState(state: TaskState) {
     const oldstate = this._state;
@@ -258,7 +277,7 @@ export abstract class Operation {
       this.statesubj.next({
         opID: this.id,
         oldState: oldstate,
-        newState: state
+        newState: state,
       });
     }
 
@@ -266,7 +285,8 @@ export abstract class Operation {
     let nextOP = this.nextOperation;
 
     while (nextOP) {
-      const nextOP2 = (nextOP.enabled && nextOP.state !== TaskState.SKIPPED) ? nextOP : null;
+      const nextOP2 =
+        nextOP.enabled && nextOP.state !== TaskState.SKIPPED ? nextOP : null;
       if (nextOP2 !== null) {
         break;
       }
@@ -280,7 +300,11 @@ export abstract class Operation {
 
   public abstract clone(task?: Task): Operation;
 
-  public abstract fromAny(operationObj: any, commands: string[], task: Task): Operation;
+  public abstract fromAny(
+    operationObj: any,
+    commands: string[],
+    task: Task
+  ): Operation;
 
   toAny(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
@@ -292,7 +316,7 @@ export abstract class Operation {
         time: this.time,
         enabled: this.enabled,
         webService: '',
-        results: []
+        results: [],
       };
 
       // result data
@@ -302,12 +326,14 @@ export abstract class Operation {
       }
 
       if (promises.length > 0) {
-        Promise.all(promises).then((values) => {
-          result.results = values as never[];
-          resolve(result);
-        }).catch((error) => {
-          reject(error);
-        });
+        Promise.all(promises)
+          .then((values) => {
+            result.results = values as never[];
+            resolve(result);
+          })
+          .catch((error) => {
+            reject(error);
+          });
       } else {
         resolve(result);
       }
@@ -324,8 +350,8 @@ export abstract class Operation {
       this._parsedProtocol = [];
     } else {
       const result: {
-        type: "WARNING" | "ERROR",
-        message: string
+        type: 'WARNING' | 'ERROR';
+        message: string;
       }[] = [];
       const text = protocol.replace(/<br\/>/g, '\n');
       const regex = /((?:ERROR)|(?:WARNING)): (.+)$/gm;
@@ -333,9 +359,11 @@ export abstract class Operation {
 
       while (match !== null) {
         result.push({
-          type: match[1] as "WARNING" | "ERROR",
-          message: (match.length < 3 || !match[2]) ? ''
-            : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****')
+          type: match[1] as 'WARNING' | 'ERROR',
+          message:
+            match.length < 3 || !match[2]
+              ? ''
+              : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****'),
         });
         match = regex.exec(text);
       }
@@ -344,9 +372,9 @@ export abstract class Operation {
     }
   }
 
-  public onMouseEnter(){};
-  public onMouseLeave(){};
-  public onMouseOver(){};
+  public onMouseEnter() {}
+  public onMouseLeave() {}
+  public onMouseOver() {}
 }
 
 export interface IAccessCode {
