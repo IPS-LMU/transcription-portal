@@ -47,6 +47,6 @@ export class SplitModalComponent implements OnInit {
   }
 
   dismiss(reason: string) {
-    this.activeModal.dismiss(reason);
+    this.activeModal.close(reason);
   }
 }

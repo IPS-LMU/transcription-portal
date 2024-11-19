@@ -11,7 +11,6 @@ import {
 import {
   NgbActiveModal,
   NgbDropdown,
-  NgbDropdownItem,
   NgbDropdownMenu,
   NgbDropdownToggle,
   NgbModal,
@@ -51,7 +50,6 @@ import { StorageService } from '../../storage.service';
     TimePipe,
     NgbDropdown,
     NgbDropdownMenu,
-    NgbDropdownItem,
     NgbDropdownToggle,
     NgbPopover,
   ],
@@ -140,7 +138,7 @@ export class QueueModalComponent implements OnDestroy {
         j++;
       }
     }
-    this.activeModal?.dismiss();
+    this.activeModal?.close();
     this.cd.markForCheck();
     this.cd.detectChanges();
   }

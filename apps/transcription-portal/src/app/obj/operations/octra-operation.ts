@@ -157,7 +157,7 @@ export class OCTRAOperation extends ToolOperation {
     ) {
       // @ts-ignore TODO CHECK
       const audio_url = encodeURIComponent(
-        (this.operations[0] as UploadOperation)?.wavFile?.url
+        (this.operations[0] as any)?.wavFile?.url
       ) as string;
       const audio_name = (this.operations[0] as UploadOperation)?.wavFile
         ?.fullname;

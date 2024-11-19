@@ -1,8 +1,8 @@
-import {Subject, timer} from 'rxjs';
-import {Task, TaskDirectory} from './tasks';
 import {SubscriptionManager} from '@octra/utilities';
-import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
 import {DirectoryInfo, FileInfo} from '@octra/web-media';
+import {Subject, timer} from 'rxjs';
+import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
+import {Task, TaskDirectory} from './tasks';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks
@@ -13,7 +13,7 @@ export enum State {
   PROCESSING = 'PROCESSING',
   FINISHED = 'FINISHED',
   REMOVED = 'REMOVED',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
 }
 
 export class QueueItem {
@@ -21,7 +21,7 @@ export class QueueItem {
   public results: (Task | TaskDirectory)[] = [];
   private readonly _id: number;
 
-  constructor(file: (FileInfo | DirectoryInfo)) {
+  constructor(file: FileInfo | DirectoryInfo) {
     this._file = file;
     this._id = ++QueueItem.counter;
     this._state = State.PENDING;
@@ -31,9 +31,9 @@ export class QueueItem {
     return this._id;
   }
 
-  private _file: (FileInfo | DirectoryInfo);
+  private _file: FileInfo | DirectoryInfo;
 
-  get file(): (FileInfo | DirectoryInfo) {
+  get file(): FileInfo | DirectoryInfo {
     return this._file;
   }
 
@@ -64,13 +64,13 @@ export class Preprocessor {
   }
 
   private _statechange = new Subject<{
-    item: QueueItem,
-    oldState: State
+    item: QueueItem;
+    oldState: State;
   }>();
 
   get statechange(): Subject<{
-    item: QueueItem,
-    oldState: State
+    item: QueueItem;
+    oldState: State;
   }> {
     return this._statechange;
   }
@@ -95,10 +95,10 @@ export class Preprocessor {
 
   private subscrManager = new SubscriptionManager();
 
-  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> = () => {
-    return new Promise<(Task | TaskDirectory)[]>(() => {
-    });
-  }
+  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> =
+    () => {
+      return new Promise<(Task | TaskDirectory)[]>(() => {});
+    };
 
   public changeState(item: QueueItem, state: State) {
     const oldState = item.state;
@@ -106,18 +106,18 @@ export class Preprocessor {
 
     this.statechange.next({
       item,
-      oldState
+      oldState,
     });
   }
 
-  public addToQueue(file: (FileInfo | DirectoryInfo)) {
+  public addToQueue(file: FileInfo | DirectoryInfo) {
     const queueItem = new QueueItem(file);
     const fileBlob = (file as FileInfo).file;
 
     if (fileBlob) {
       calcSHA256FromFile(fileBlob).catch((e) => {
         console.error(e);
-      })
+      });
     }
 
     this._queue.push(queueItem);
@@ -153,21 +153,24 @@ export class Preprocessor {
 
   private onItemAdded = (newItem: QueueItem) => {
     this.changeState(newItem, State.PROCESSING);
-    this.subscrManager.add(timer(100).subscribe({
-      next: () => {
-        this.process(newItem).then((result) => {
-            if (!(result === null || result === undefined)) {
-              newItem.results = result;
-              this.changeState(newItem, State.FINISHED);
+    this.subscrManager.add(
+      timer(100).subscribe({
+        next: () => {
+          this.process(newItem)
+            .then((result) => {
+              if (!(result === null || result === undefined)) {
+                newItem.results = result;
+                this.changeState(newItem, State.FINISHED);
+                this.removeFromQueue(newItem.id);
+                this._itemProcessed.next(newItem);
+              }
+            })
+            .catch((err) => {
+              console.error(err);
               this.removeFromQueue(newItem.id);
-              this._itemProcessed.next(newItem);
-            }
-          }
-        ).catch((err) => {
-          this.removeFromQueue(newItem.id);
-        })
-      }
-    }));
-    ;
-  }
+            });
+        },
+      })
+    );
+  };
 }

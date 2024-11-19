@@ -1,47 +1,65 @@
-import {HttpClient} from '@angular/common/http';
-import {EventEmitter, Injectable, OnDestroy} from '@angular/core';
-import {NotificationService} from '../../shared/notification.service';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {EntryChangeEvent, Task, TaskDirectory, TaskList, TaskState} from './index';
-import {OCTRAOperation} from '../operations/octra-operation';
-import {UploadOperation} from '../operations/upload-operation';
-import {G2pMausOperation} from '../operations/g2p-maus-operation';
-import {StorageService} from '../../storage.service';
-import {Preprocessor, QueueItem} from '../preprocessor';
-import {AppInfo} from '../../app.info';
-import {TaskEntry} from './task-entry';
-import {ASROperation} from '../operations/asr-operation';
-import {EmuOperation} from '../operations/emu-operation';
-import {Operation} from '../operations/operation';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {AlertService} from '../../shared/alert.service';
-import {firstValueFrom, interval, of} from 'rxjs';
-import {AppSettings} from '../../shared/app.settings';
-import {OHLanguageObject} from '../oh-config';
-import {DateTime} from 'luxon';
-import {readFileAsArray} from '../functions';
-import {calcSHA256FromFile} from '../CryptoHelper';
-import {AudioInfo, DirectoryInfo, FileInfo, WavFormat} from '@octra/web-media';
-import {escapeRegex, flatten} from '@octra/utilities';
+import { HttpClient } from '@angular/common/http';
+import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { escapeRegex, flatten } from '@octra/utilities';
+import {
+  AudioCutter,
+  AudioFormat,
+  AudioInfo,
+  AudioManager,
+  DirectoryInfo,
+  FileInfo,
+  getAudioInfo,
+} from '@octra/web-media';
+import { DateTime } from 'luxon';
+import { firstValueFrom, interval, of } from 'rxjs';
+import { AppInfo } from '../../app.info';
+import { AlertService } from '../../shared/alert.service';
+import { AppSettings } from '../../shared/app.settings';
+import { NotificationService } from '../../shared/notification.service';
+import { SubscriptionManager } from '../../shared/subscription-manager';
+import { StorageService } from '../../storage.service';
+import { calcSHA256FromFile } from '../CryptoHelper';
+import { readFileAsArray } from '../functions';
+import { OHLanguageObject } from '../oh-config';
+import { ASROperation } from '../operations/asr-operation';
+import { EmuOperation } from '../operations/emu-operation';
+import { G2pMausOperation } from '../operations/g2p-maus-operation';
+import { OCTRAOperation } from '../operations/octra-operation';
+import { Operation } from '../operations/operation';
+import { UploadOperation } from '../operations/upload-operation';
+import { Preprocessor, QueueItem } from '../preprocessor';
+import {
+  EntryChangeEvent,
+  Task,
+  TaskDirectory,
+  TaskList,
+  TaskState,
+} from './index';
+import { TaskEntry } from './task-entry';
 
 @Injectable()
 export class TaskService implements OnDestroy {
   public newfiles = false;
-  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' = 'not started';
+  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' =
+    'not started';
   public protocolURL: SafeResourceUrl | undefined;
   public protocolFileName = '';
   public errorscountchange = new EventEmitter<number>();
   public selectedlanguage: OHLanguageObject | undefined;
   private options = {
-    max_running_tasks: 3
+    max_running_tasks: 3,
   };
   private subscrmanager: SubscriptionManager = new SubscriptionManager();
   private state: TaskState = TaskState.READY;
 
-  constructor(public httpclient: HttpClient, private notification: NotificationService,
-              private storage: StorageService, private sanitizer: DomSanitizer,
-              private alertService: AlertService) {
-  }
+  constructor(
+    public httpclient: HttpClient,
+    private notification: NotificationService,
+    private storage: StorageService,
+    private sanitizer: DomSanitizer,
+    private alertService: AlertService
+  ) {}
 
   private _taskList: TaskList | undefined;
 
@@ -71,10 +89,16 @@ export class TaskService implements OnDestroy {
     waiting: 0,
     running: 0,
     finished: 0,
-    errors: 0
+    errors: 0,
   };
 
-  get statistics(): { queued: number; waiting: number; running: number; finished: number; errors: number } {
+  get statistics(): {
+    queued: number;
+    waiting: number;
+    running: number;
+    finished: number;
+    errors: number;
+  } {
     return this._statistics;
   }
 
@@ -101,12 +125,11 @@ export class TaskService implements OnDestroy {
   }
 
   public get isProcessing(): boolean {
-    return (this.overallState === 'processing');
+    return this.overallState === 'processing';
   }
 
   public get stateLabel(): string {
     if (this.overallState === 'processing') {
-
       if (this._statistics.running === 0) {
         if (this._statistics.waiting > 1) {
           return `${this._statistics.waiting} tasks need your attention`;
@@ -123,14 +146,12 @@ export class TaskService implements OnDestroy {
 
       return 'Processing...';
     } else if (this.overallState === 'not started') {
-
       if (this._statistics.queued > 0) {
         return `${this._statistics.queued} audio file(s) waiting to be verified by you.`;
       }
       return 'Ready';
     }
     if (this.overallState === 'stopped') {
-
       if (this._statistics.running > 0) {
         return `waiting for ${this._statistics.running} tasks to stop their work...`;
       }
@@ -142,11 +163,36 @@ export class TaskService implements OnDestroy {
   public init() {
     this._taskList = new TaskList();
     this._operations = [
-      new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
-      new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
-      new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
-      new G2pMausOperation('MAUS', AppSettings.configuration.api.commands[3].calls, 'Word alignment', 'WA'),
-      new EmuOperation('Emu WebApp', AppSettings.configuration.api.commands[4].calls, 'Phonetic detail', 'PD')
+      new UploadOperation(
+        'Upload',
+        AppSettings.configuration.api.commands[0].calls,
+        'Upload',
+        'UL'
+      ),
+      new ASROperation(
+        'ASR',
+        AppSettings.configuration.api.commands[1].calls,
+        'Speech Recognition',
+        'ASR'
+      ),
+      new OCTRAOperation(
+        'OCTRA',
+        AppSettings.configuration.api.commands[2].calls,
+        'Manual Transcription',
+        'MT'
+      ),
+      new G2pMausOperation(
+        'MAUS',
+        AppSettings.configuration.api.commands[3].calls,
+        'Word alignment',
+        'WA'
+      ),
+      new EmuOperation(
+        'Emu WebApp',
+        AppSettings.configuration.api.commands[4].calls,
+        'Phonetic detail',
+        'PD'
+      ),
     ];
 
     this._preprocessor.process = this.process;
@@ -154,19 +200,28 @@ export class TaskService implements OnDestroy {
       throw new Error('taksList not defined');
     }
 
-    this.subscrmanager.add(this._preprocessor.itemProcessed.subscribe(
-      async (item) => {
+    this.subscrmanager.add(
+      this._preprocessor.itemProcessed.subscribe(async (item) => {
         for (const result of item.results) {
           let foundTask: Task | undefined;
           if (result instanceof Task) {
             for (const file of result.files) {
-              const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/(_annot)?\.[^.]+$/g, ''));
-              foundTask = this.getTaskWithOriginalFileName(new RegExp(`^${escapedName}((_annot)?.[^.]+)$`));
+              const escapedName = escapeRegex(
+                result.files[0].attributes.originalFileName.replace(
+                  /(_annot)?\.[^.]+$/g,
+                  ''
+                )
+              );
+              foundTask = this.getTaskWithOriginalFileName(
+                new RegExp(`^${escapedName}((_annot)?.[^.]+)$`)
+              );
 
               if (foundTask) {
                 // found a task
                 // file with this hash already exists, overwrite
-                const oldFileIndex = foundTask.files.findIndex((a) => file && a.hash === file.hash);
+                const oldFileIndex = foundTask.files.findIndex(
+                  (a) => file && a.hash === file.hash
+                );
 
                 if (oldFileIndex > -1) {
                   foundTask.setFileObj(oldFileIndex, file);
@@ -179,10 +234,7 @@ export class TaskService implements OnDestroy {
                     }
                   } else {
                     if (file.type.indexOf('audio') > -1) {
-                      foundTask.files = [
-                        file,
-                        ...foundTask.files
-                      ];
+                      foundTask.files = [file, ...foundTask.files];
                       foundTask.operations[1].enabled = false;
                     } else {
                       foundTask.files.push(file);
@@ -211,9 +263,18 @@ export class TaskService implements OnDestroy {
                 });
 
                 if (!(foundIt === null || foundIt === undefined)) {
-                  if (!(task.files[0].extension === '.wav'
-                    && entry.files[0].extension === '.wav')) {
+                  const format1: AudioFormat | undefined =
+                    AudioManager.getFileFormat(
+                      task.files[0].extension,
+                      AppInfo.audioFormats
+                    );
+                  const format2: AudioFormat | undefined =
+                    AudioManager.getFileFormat(
+                      entry.files[0].extension,
+                      AppInfo.audioFormats
+                    );
 
+                  if (!(format1 && format2)) {
                     entry.addFile(task.files[0]);
 
                     (result as TaskDirectory).entries.splice(v, 1);
@@ -227,35 +288,49 @@ export class TaskService implements OnDestroy {
                 }
               }
 
-
               foundTask = this.taskList?.getAllTasks().find((a) => {
                 const foundIt = a.files.find((b) => {
                   // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
                   return b.name === entry.files[0].name;
                 });
 
-                return a.state === TaskState.QUEUED && !(foundIt === null || foundIt === undefined);
+                return (
+                  a.state === TaskState.QUEUED &&
+                  !(foundIt === null || foundIt === undefined)
+                );
               });
 
-              if (!(foundTask === null || foundTask === undefined) && !(foundTask.files[0].extension === '.wav'
-                && entry.files[0].extension === '.wav')) {
-                foundTask.setFileObj(0, entry.files[0]);
-                foundTask.setFileObj(1, entry.files[1]);
+              if (!(foundTask === null || foundTask === undefined)) {
+                const format1: AudioFormat | undefined =
+                  AudioManager.getFileFormat(
+                    foundTask.files[0].extension,
+                    AppInfo.audioFormats
+                  );
+                const format2: AudioFormat | undefined =
+                  AudioManager.getFileFormat(
+                    entry.files[0].extension,
+                    AppInfo.audioFormats
+                  );
 
-                if (foundTask.files.length > 1) {
-                  // TODO change if other than transcript files are needed
-                  foundTask.operations[1].enabled = false;
-                  foundTask.operations[1].changeState(TaskState.SKIPPED);
+                if (!(format1 && format2)) {
+                  foundTask.setFileObj(0, entry.files[0]);
+                  foundTask.setFileObj(1, entry.files[1]);
+
+                  if (foundTask.files.length > 1) {
+                    // TODO change if other than transcript files are needed
+                    foundTask.operations[1].enabled = false;
+                    foundTask.operations[1].changeState(TaskState.SKIPPED);
+                  }
+                } else {
+                  // TODO check this
                 }
-              } else {
-                // TODO check this
               }
 
               entry.changeState(TaskState.QUEUED);
             }
           }
 
-          if ((foundTask === null || foundTask === undefined)) {
+          if (foundTask === null || foundTask === undefined) {
             this.addEntry(result, true);
           } else {
             foundTask.fileschange.next();
@@ -266,10 +341,11 @@ export class TaskService implements OnDestroy {
           // check remaining unchecked files
           this.checkFiles();
         }
-      }
-    ));
+      })
+    );
 
-    this.subscrmanager.add(this.taskList?.entryChanged.subscribe((event: EntryChangeEvent) => {
+    this.subscrmanager.add(
+      this.taskList?.entryChanged.subscribe((event: EntryChangeEvent) => {
         if (event.state === 'added') {
           if (event.entry.type === 'task') {
             this.listenToTaskEvents(event.entry as Task);
@@ -296,17 +372,18 @@ export class TaskService implements OnDestroy {
         } else if (event.state === 'changed') {
           // not implemented yet
         }
-      }
-    ));
+      })
+    );
 
-    this.subscrmanager.add(interval(1000).subscribe(() => {
-      this.updateStatistics();
-    }));
+    this.subscrmanager.add(
+      interval(1000).subscribe(() => {
+        this.updateStatistics();
+      })
+    );
     this.updateStatistics();
   }
 
   public importDBData(dbEntries: any[]) {
-
     const idbTasks = dbEntries[0];
 
     if (!(idbTasks === null || idbTasks === undefined)) {
@@ -318,17 +395,22 @@ export class TaskService implements OnDestroy {
 
       for (const taskObj of idbTasks) {
         if (taskObj.type === 'task') {
-
-          if ((taskObj.asr === null || taskObj.asr === undefined)) {
-            const firstLangObj = AppSettings.configuration.api.languages.find((a) => {
-              return a.code === taskObj.language;
-            });
+          if (taskObj.asr === null || taskObj.asr === undefined) {
+            const firstLangObj = AppSettings.configuration.api.languages.find(
+              (a) => {
+                return a.code === taskObj.language;
+              }
+            );
 
             if (!(firstLangObj === null || firstLangObj === undefined)) {
               taskObj.asr = firstLangObj.asr;
             }
           }
-          const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
+          const task = Task.fromAny(
+            taskObj,
+            AppSettings.configuration.api.commands,
+            this.operations
+          );
 
           maxTaskCounter = Math.max(maxTaskCounter, task.id);
 
@@ -337,20 +419,33 @@ export class TaskService implements OnDestroy {
 
             for (const opResult of operation.results) {
               if (!(opResult.url === null || opResult.url === undefined)) {
-                this.existsFile(opResult.url).then(() => {
-                  opResult.online = true;
+                this.existsFile(opResult.url)
+                  .then(() => {
+                    opResult.online = true;
 
-                  if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
-                    opResult.updateContentFromURL(this.httpclient).then(() => {
-                      // TODO minimize task savings
-                      this.storage.saveTask(task);
-                    }).catch((error: any) => {
-                      console.error(error);
-                    });
-                  }
-                }).catch(() => {
-                  opResult.online = false;
-                });
+                    if (opResult.file === null || opResult.file === undefined) {
+                      const format: AudioFormat | undefined =
+                        AudioManager.getFileFormat(
+                          opResult.extension,
+                          AppInfo.audioFormats
+                        );
+
+                      if (!format) {
+                        opResult
+                          .updateContentFromURL(this.httpclient)
+                          .then(() => {
+                            // TODO minimize task savings
+                            this.storage.saveTask(task);
+                          })
+                          .catch((error: any) => {
+                            console.error(error);
+                          });
+                      }
+                    }
+                  })
+                  .catch(() => {
+                    opResult.online = false;
+                  });
               } else {
                 opResult.online = false;
               }
@@ -365,28 +460,40 @@ export class TaskService implements OnDestroy {
             console.error(err);
           });
         } else {
-          const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.operations);
+          const taskDir = TaskDirectory.fromAny(
+            taskObj,
+            AppSettings.configuration.api.commands,
+            this.operations
+          );
 
           for (const taskElem of taskDir.entries) {
             const task = taskElem as Task;
             for (const operation of task.operations) {
-
               for (const opResult of operation.results) {
                 if (!(opResult.url === null || opResult.url === undefined)) {
-                  this.existsFile(opResult.url).then(() => {
-                    opResult.online = true;
+                  this.existsFile(opResult.url)
+                    .then(() => {
+                      opResult.online = true;
 
-                    if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
-                      opResult.updateContentFromURL(this.httpclient).then(() => {
-                        // TODO minimize task savings
-                        this.storage.saveTask(task);
-                      }).catch((error: any) => {
-                        console.error(error);
-                      });
-                    }
-                  }).catch(() => {
-                    opResult.online = false;
-                  });
+                      if (
+                        (opResult.file === null ||
+                          opResult.file === undefined) &&
+                        opResult.extension.indexOf('wav') < 0
+                      ) {
+                        opResult
+                          .updateContentFromURL(this.httpclient)
+                          .then(() => {
+                            // TODO minimize task savings
+                            this.storage.saveTask(task);
+                          })
+                          .catch((error: any) => {
+                            console.error(error);
+                          });
+                      }
+                    })
+                    .catch(() => {
+                      opResult.online = false;
+                    });
                 }
               }
             }
@@ -402,12 +509,16 @@ export class TaskService implements OnDestroy {
       }
 
       if (TaskEntry.counter < maxTaskCounter) {
-        console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
+        console.warn(
+          `Warning: Task counter was less than the biggest id. Reset counter.`
+        );
         TaskEntry.counter = maxTaskCounter;
       }
 
       if (Operation.counter < maxOperationCounter) {
-        console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
+        console.warn(
+          `Warning: Operation counter was less than the biggest id. Reset counter.`
+        );
         Operation.counter = maxOperationCounter;
       }
 
@@ -418,13 +529,16 @@ export class TaskService implements OnDestroy {
     if (!(dbEntries[1] === null || dbEntries[1] === undefined)) {
       // read userSettings
       for (const userSetting of dbEntries[1]) {
-        const lang = AppSettings.getLanguageByCode(userSetting.value.language, userSetting.value.asr);
+        const lang = AppSettings.getLanguageByCode(
+          userSetting.value.language,
+          userSetting.value.asr
+        );
 
         switch (userSetting.name) {
-          case ('notification'):
+          case 'notification':
             this.notification.permissionGranted = userSetting.value.enabled;
             break;
-          case ('defaultTaskOptions'):
+          case 'defaultTaskOptions':
             // search lang obj
             if (!(lang === null || lang === undefined)) {
               this.selectedlanguage = lang;
@@ -454,12 +568,22 @@ export class TaskService implements OnDestroy {
               let nothingToDo = true;
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
-                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].attributes.originalFileName.indexOf('_2.') > -1) {
+                if (
+                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.files[0].available &&
+                  dirEntry.files[0].attributes.originalFileName.indexOf('_2.') >
+                    -1
+                ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
                 }
               } else if (this.splitPrompt === 'SECOND') {
-                if (dirEntry.state === TaskState.QUEUED && dirEntry.files[0].available && dirEntry.files[0].attributes.originalFileName.indexOf('_1.') > -1) {
+                if (
+                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.files[0].available &&
+                  dirEntry.files[0].attributes.originalFileName.indexOf('_1.') >
+                    -1
+                ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
                 }
@@ -484,44 +608,58 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  public addEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false) {
+  public addEntry(entry: Task | TaskDirectory, saveToDB: boolean = false) {
     if (!this.taskList) {
       throw new Error('undefined tasklist');
     }
 
-    this.taskList.addEntry(entry, saveToDB).then(() => {
-      if (!this.taskList) {
-        throw new Error('undefined tasklist');
-      }
-      return this.taskList.cleanup(entry, saveToDB);
-    }).catch((err) => {
-      console.error(`${err}`);
-    }).then(() => {
-      this.saveCounters();
-    }).catch((err) => {
-      console.error(`could not add via taskService!`);
-      console.error(`${err}`);
-    });
+    this.taskList
+      .addEntry(entry, saveToDB)
+      .then(() => {
+        if (!this.taskList) {
+          throw new Error('undefined tasklist');
+        }
+        return this.taskList.cleanup(entry, saveToDB);
+      })
+      .catch((err) => {
+        console.error(`${err}`);
+      })
+      .then(() => {
+        this.saveCounters();
+      })
+      .catch((err) => {
+        console.error(`could not add via taskService!`);
+        console.error(`${err}`);
+      });
   }
 
-  public changeEntry(id: number, entry: (Task | TaskDirectory), saveToDB: boolean = false) {
+  public changeEntry(
+    id: number,
+    entry: Task | TaskDirectory,
+    saveToDB: boolean = false
+  ) {
     if (!this.taskList) {
       throw new Error('undefined tasklist');
     }
 
-    this.taskList.changeEntry(id, entry, saveToDB).then(() => {
-      if (!this.taskList) {
-        throw new Error('undefined tasklist');
-      }
-      return this.taskList.cleanup(entry, saveToDB);
-    }).catch((err) => {
-      console.error(`${err}`);
-    }).then(() => {
-      this.saveCounters();
-    }).catch((err) => {
-      console.error(`could not add via taskService!`);
-      console.error(`${err}`);
-    });
+    this.taskList
+      .changeEntry(id, entry, saveToDB)
+      .then(() => {
+        if (!this.taskList) {
+          throw new Error('undefined tasklist');
+        }
+        return this.taskList.cleanup(entry, saveToDB);
+      })
+      .catch((err) => {
+        console.error(`${err}`);
+      })
+      .then(() => {
+        this.saveCounters();
+      })
+      .catch((err) => {
+        console.error(`could not add via taskService!`);
+        console.error(`${err}`);
+      });
   }
 
   public saveCounters() {
@@ -539,7 +677,10 @@ export class TaskService implements OnDestroy {
       const uploadingTask = this.taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
-      if (this._statistics.running < this.options.max_running_tasks && uploadingTask < 0) {
+      if (
+        this._statistics.running < this.options.max_running_tasks &&
+        uploadingTask < 0
+      ) {
         const task: Task | undefined = this.findNextWaitingTask();
 
         if (task && task.operations[1].providerInformation) {
@@ -555,14 +696,17 @@ export class TaskService implements OnDestroy {
             });
           });
           this.storage.saveTask(task);
-          const langObj = AppSettings.getLanguageByCode(task.language, task.operations[1].providerInformation.provider);
+          const langObj = AppSettings.getLanguageByCode(
+            task.language,
+            task.operations[1].providerInformation.provider
+          );
 
           if (langObj) {
             task.start(langObj, this.httpclient, [
               {
                 name: 'GoogleASR',
-                value: this._accessCode
-              }
+                value: this._accessCode,
+              },
             ]);
           } else {
             console.error('langObj is undefined');
@@ -589,17 +733,29 @@ export class TaskService implements OnDestroy {
     }
     const tasks = this.taskList.getAllTasks();
     for (const entry of tasks) {
-      if (entry.state === TaskState.PENDING &&
-        ((!(entry.files[0].file === null || entry.files[0].file === undefined)
-          && entry.files[0].extension === '.wav') || entry.operations[0].results.length > 0 && entry.operations[0]?.lastResult?.online)
+      if (
+        entry.state === TaskState.PENDING &&
+        ((!(
+          entry.files[0].file === null || entry.files[0].file === undefined
+        ) &&
+          entry.files[0].extension === '.wav') ||
+          (entry.operations[0].results.length > 0 &&
+            entry.operations[0]?.lastResult?.online))
       ) {
         return entry;
       } else if (entry.state === TaskState.READY) {
         for (const operation of entry.operations) {
           if (operation.state !== TaskState.SKIPPED && operation.enabled) {
-            if ((operation.state === TaskState.PENDING || operation.state === TaskState.READY) && !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')) {
+            if (
+              (operation.state === TaskState.PENDING ||
+                operation.state === TaskState.READY) &&
+              !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
+            ) {
               return entry;
-            } else if (operation.state !== TaskState.FINISHED && (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')) {
+            } else if (
+              operation.state !== TaskState.FINISHED &&
+              (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
+            ) {
               break;
             }
           }
@@ -620,24 +776,30 @@ export class TaskService implements OnDestroy {
         promises.push(entry.toAny());
       }
 
-      Promise.all(promises).then((values) => {
-        const json = {
-          version: '1.0.0',
-          encoding: 'UTF-8',
-          created: DateTime.now().toISO(),
-          entries: values
-        };
+      Promise.all(promises)
+        .then((values) => {
+          const json = {
+            version: '1.0.0',
+            encoding: 'UTF-8',
+            created: DateTime.now().toISO(),
+            entries: values,
+          };
 
-        this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
-        const file = new File([JSON.stringify(json, null, 2)], this.protocolFileName, {
-          type: 'text/plain'
+          this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
+          const file = new File(
+            [JSON.stringify(json, null, 2)],
+            this.protocolFileName,
+            {
+              type: 'text/plain',
+            }
+          );
+
+          const url = URL.createObjectURL(file);
+          resolve(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+        })
+        .catch((error) => {
+          reject(error);
         });
-
-        const url = URL.createObjectURL(file);
-        resolve(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-      }).catch((error) => {
-        reject(error);
-      });
     });
   }
 
@@ -653,23 +815,36 @@ export class TaskService implements OnDestroy {
     this.subscrmanager.destroy();
   }
 
-  public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
+  public cleanUpInputArray(
+    entries: (FileInfo | DirectoryInfo)[]
+  ): (FileInfo | DirectoryInfo)[] {
     let result: (FileInfo | DirectoryInfo)[] = [];
 
     for (const entry of entries) {
       if (entry instanceof FileInfo) {
         const file = entry as FileInfo;
-        if (file.extension === '.wav' || this.validTranscript(file.extension)) {
+        const format: AudioFormat | undefined = AudioManager.getFileFormat(
+          file.extension,
+          AppInfo.audioFormats
+        );
+
+        if (format || this.validTranscript(file.extension)) {
           result.push(file);
         }
-
       } else {
         const directory = entry as DirectoryInfo;
 
         const dir = directory.clone();
 
         dir.entries = dir.entries.filter((a: any) => {
-          return a instanceof FileInfo && ((a.extension === '.wav') || this.validTranscript(a.extension));
+          const format: AudioFormat | undefined = AudioManager.getFileFormat(
+            a.file.extension,
+            AppInfo.audioFormats
+          );
+          return (
+            a instanceof FileInfo &&
+            (format || this.validTranscript(a.extension))
+          );
         });
         const rest = directory.entries.filter((a: any) => {
           return a instanceof DirectoryInfo;
@@ -685,28 +860,30 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  public process: (queueItem: QueueItem) => (Promise<(Task | TaskDirectory)[]>) = async (queueItem: QueueItem) => {
-    if (queueItem.file instanceof FileInfo) {
-      const file = queueItem.file as FileInfo;
-      return await this.processFileInfo(file, '', queueItem);
-    } else if (queueItem.file instanceof DirectoryInfo) {
-      const dir = queueItem.file as DirectoryInfo;
-      return this.processDirectoryInfo(dir, queueItem);
-    }
-    return firstValueFrom(of([]));
-  }
+  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> =
+    async (queueItem: QueueItem) => {
+      if (queueItem.file instanceof FileInfo) {
+        const file = queueItem.file as FileInfo;
+        return await this.processFileInfo(file, '', queueItem);
+      } else if (queueItem.file instanceof DirectoryInfo) {
+        const dir = queueItem.file as DirectoryInfo;
+        return this.processDirectoryInfo(dir, queueItem);
+      }
+      return firstValueFrom(of([]));
+    };
 
-  public openSplitModal = () => {
-  }
+  public openSplitModal = () => {};
 
   public existsFile(url: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.httpclient.head(url).subscribe(() => {
+      this.httpclient.head(url).subscribe(
+        () => {
           resolve();
         },
         (err) => {
           reject(err);
-        });
+        }
+      );
     });
   }
 
@@ -731,7 +908,8 @@ export class TaskService implements OnDestroy {
   }
 
   public toggleProcessing() {
-    this.overallState = (this.overallState === 'processing') ? 'stopped' : 'processing';
+    this.overallState =
+      this.overallState === 'processing' ? 'stopped' : 'processing';
     if (!this.taskList) {
       throw new Error('undefined tasklist');
     }
@@ -743,7 +921,6 @@ export class TaskService implements OnDestroy {
 
       this.start();
     } else {
-
       for (const task of tasks) {
         task.stopTask();
       }
@@ -756,7 +933,7 @@ export class TaskService implements OnDestroy {
       waiting: 0,
       running: 0,
       finished: 0,
-      errors: 0
+      errors: 0,
     };
     if (!this.taskList) {
       throw new Error('undefined tasklist');
@@ -765,7 +942,10 @@ export class TaskService implements OnDestroy {
 
     for (const task of tasks) {
       // running
-      if (task.state === TaskState.PROCESSING || task.state === TaskState.UPLOADING) {
+      if (
+        task.state === TaskState.PROCESSING ||
+        task.state === TaskState.UPLOADING
+      ) {
         result.running++;
       }
 
@@ -794,51 +974,73 @@ export class TaskService implements OnDestroy {
   }
 
   private listenToTaskEvents(task: Task) {
-    this.subscrmanager.add(task.opstatechange.subscribe((event) => {
-      const operation = task.getOperationByID(event.opID);
-      if (!operation) {
-        return;
-      }
-      const opName = operation.name;
-      const fileName = (task.files[0].attributes?.originalFileName ?? task.files[0].fullname).replace(/\.[^.]+$/g, '');
-
-      if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`);
-      } else if (event.newState === TaskState.ERROR) {
-        this.notification.showNotification('"' + operation.title + '" Operation failed', `Operation failed for ${fileName}.
- For more information hover over the red "X" icon.`);
-      } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
-        this.notification.showNotification(`"${operation.title}" successful`, `You can now open phonetic
-  details of ${fileName}.`);
-      }
-
-      this.updateStatistics();
-      const lastOp = task.operations[task.operations.length - 1];
-      if (this._statistics.running > 1 || (this._statistics.running === 1
-        && (lastOp.state !== TaskState.FINISHED && lastOp.state !== TaskState.READY))) {
-        if (operation.state === TaskState.UPLOADING) {
-          this.state = TaskState.UPLOADING;
-        } else {
-          this.state = TaskState.PROCESSING;
+    this.subscrmanager.add(
+      task.opstatechange.subscribe((event) => {
+        const operation = task.getOperationByID(event.opID);
+        if (!operation) {
+          return;
         }
-      } else {
-        this.state = TaskState.READY;
-      }
-      this.storage.saveTask(task);
+        const opName = operation.name;
+        const fileName = (
+          task.files[0].attributes?.originalFileName ?? task.files[0].fullname
+        ).replace(/\.[^.]+$/g, '');
 
-      this.updateProtocolURL().then((url) => {
-        this.protocolURL = url;
-      });
-    }));
+        if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
+          this.notification.showNotification(
+            `"${operation.title}" successful`,
+            `You can now transcribe ${fileName} manually.`
+          );
+        } else if (event.newState === TaskState.ERROR) {
+          this.notification.showNotification(
+            '"' + operation.title + '" Operation failed',
+            `Operation failed for ${fileName}.
+ For more information hover over the red "X" icon.`
+          );
+        } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+          this.notification.showNotification(
+            `"${operation.title}" successful`,
+            `You can now open phonetic
+  details of ${fileName}.`
+          );
+        }
+
+        this.updateStatistics();
+        const lastOp = task.operations[task.operations.length - 1];
+        if (
+          this._statistics.running > 1 ||
+          (this._statistics.running === 1 &&
+            lastOp.state !== TaskState.FINISHED &&
+            lastOp.state !== TaskState.READY)
+        ) {
+          if (operation.state === TaskState.UPLOADING) {
+            this.state = TaskState.UPLOADING;
+          } else {
+            this.state = TaskState.PROCESSING;
+          }
+        } else {
+          this.state = TaskState.READY;
+        }
+        this.storage.saveTask(task);
+
+        this.updateProtocolURL().then((url) => {
+          this.protocolURL = url;
+        });
+      })
+    );
   }
 
-  private async processFileInfo(file: FileInfo, path: string, queueItem: QueueItem): Promise<(Task | TaskDirectory)[]> {
-    if (!(file?.file)) {
+  private async processFileInfo(
+    file: FileInfo,
+    path: string,
+    queueItem: QueueItem
+  ): Promise<(Task | TaskDirectory)[]> {
+    if (!file?.file) {
       throw new Error('file is undefined');
     }
 
     file.hash = await this.preprocessor.getHashString(file.file);
-    const hashString = file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
+    const hashString =
+      file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
     const newName = `${hashString}${file.extension}`;
     let newFileInfo: FileInfo | undefined;
     this.newfiles = true;
@@ -847,16 +1049,25 @@ export class TaskService implements OnDestroy {
       // no valid name, replace
       const newfile = await FileInfo.renameFile(file.file, newName, {
         type: file.type,
-        lastModified: file.file.lastModified
+        lastModified: file.file.lastModified,
       });
-      newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
+      newFileInfo = new FileInfo(
+        newfile.name,
+        file.type,
+        newfile.size,
+        newfile
+      );
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
       newFileInfo.hash = file.hash;
       file = newFileInfo;
     } else {
-      newFileInfo = new FileInfo(file.fullname, (file.type !== '')
-        ? file.type : file.file.type, file.size, file.file);
+      newFileInfo = new FileInfo(
+        file.fullname,
+        file.type !== '' ? file.type : file.file.type,
+        file.size,
+        file.file
+      );
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
       newFileInfo.hash = file.hash;
@@ -864,27 +1075,47 @@ export class TaskService implements OnDestroy {
       file = newFileInfo;
     }
 
-    if (!(file?.file)) {
+    if (!file?.file) {
       throw new Error('file is undefined');
     }
-    if (!(file?.hash)) {
+    if (!file?.hash) {
       throw new Error('hash is undefined');
     }
 
-    const foundOldFile = this.getTaskWithHashAndName(file.hash, file.attributes.originalFileName);
+    const foundOldFile = this.getTaskWithHashAndName(
+      file.hash,
+      file.attributes.originalFileName
+    );
 
     if (file?.file) {
       const arrayBuffer = await readFileAsArray(file.file);
-      const format = new WavFormat();
-      const isValidFormat = format.isValid(arrayBuffer);
+      const format: AudioFormat | undefined = AudioManager.getFileFormat(
+        file.extension,
+        AppInfo.audioFormats
+      );
       const isValidTranscript = this.validTranscript(file.extension);
 
-      if (isValidFormat) {
-        format.init(file.fullname, arrayBuffer);
-        if (format.channels > 1) {
-          const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
-          const files = await format.splitChannelsToFiles(file.attributes.originalFileName.replace(/\..+$/g, ''), 'audio/wav', arrayBuffer);
+      if (format !== undefined) {
+        await format.init(file.fullname, file.type, arrayBuffer);
+        const audioInfo = getAudioInfo(
+          format,
+          file.fullname,
+          file.type,
+          arrayBuffer
+        );
 
+        if (audioInfo.channels > 1) {
+          const directory = new DirectoryInfo(
+            path +
+              file.attributes.originalFileName.replace(/\..+$/g, '') +
+              '_dir/'
+          );
+          const cutter = new AudioCutter(audioInfo);
+          const files: File[] = await cutter.splitChannelsToFiles(
+            file.attributes.originalFileName,
+            [0, 1],
+            arrayBuffer
+          );
           if (this._splitPrompt === 'PENDING') {
             this.openSplitModal();
             this._splitPrompt = 'ASKED';
@@ -903,35 +1134,55 @@ export class TaskService implements OnDestroy {
               const fileObj = files[i];
               const fileInfo = FileInfo.fromFileObject(fileObj);
               fileInfo.hash = await calcSHA256FromFile(fileObj);
-              fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
+              fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(
+                /\..+$/g,
+                ''
+              )}_${i + 1}.${file.extension}`;
               fileInfos.push(fileInfo);
             }
             directory.addEntries(fileInfos);
-            const result = await this.processDirectoryInfo(directory, queueItem);
+            const result = await this.processDirectoryInfo(
+              directory,
+              queueItem
+            );
             return result;
           } else {
-            return this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem)
+            return this.processFileInfo(
+              FileInfo.fromFileObject(files[0]),
+              path,
+              queueItem
+            );
           }
         } else {
           // it's an audio file
           newFileInfo = new AudioInfo(
-            newName, file.file.type, file.file.size, format.sampleRate,
-            format.duration, format.channels, format.bitsPerSample);
+            newName,
+            file.file.type,
+            file.file.size,
+            format.sampleRate,
+            audioInfo.duration.samples,
+            audioInfo.channels,
+            audioInfo.bitrate
+          );
           newFileInfo.hash = file.hash;
         }
       } else if (!isValidTranscript) {
-        this.alertService.showAlert('danger', `The audio file '${file.fullname}' is invalid.
-              Only Wave (*.wav) files with 16 Bit signed Int are supported.`, -1);
+        this.alertService.showAlert(
+          'danger',
+          `The audio file '${file.fullname}' is invalid.
+              Only Wave (*.wav) files with 16 Bit signed Int are supported.`,
+          -1
+        );
         throw new Error('no valid wave format!');
       }
 
       if (newFileInfo) {
-        if ((newFileInfo.file === null || newFileInfo.file === undefined)) {
+        if (newFileInfo.file === null || newFileInfo.file === undefined) {
           newFileInfo.file = file.file;
         }
 
         newFileInfo.attributes = {
-          ...file.attributes
+          ...file.attributes,
         };
 
         // new file
@@ -954,14 +1205,19 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  private async processDirectoryInfo(dir: DirectoryInfo, queueItem: QueueItem): Promise<TaskDirectory[]> {
+  private async processDirectoryInfo(
+    dir: DirectoryInfo,
+    queueItem: QueueItem
+  ): Promise<TaskDirectory[]> {
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
 
     for (const dirEntry of dir.entries) {
       if (dirEntry instanceof FileInfo) {
         const file = dirEntry as FileInfo;
-        processedValues.push(await this.processFileInfo(file, dir.path, queueItem));
+        processedValues.push(
+          await this.processFileInfo(file, dir.path, queueItem)
+        );
       } else {
         throw new Error('file in dir is not a file!');
       }
@@ -1010,12 +1266,21 @@ export class TaskService implements OnDestroy {
     const tasks: Task[] = this.taskList.getAllTasks();
 
     for (const task of tasks) {
-      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
+      if (
+        !(
+          task.files[0].attributes.originalFileName === null ||
+          task.files[0].attributes.originalFileName === undefined
+        )
+      ) {
         for (const file of task.files) {
           const cmpHash = file.hash ?? `${file.name}_${file.size}`;
           // console.log(`${cmpHash} === ${hash}`);
-          if (cmpHash === hash && file.attributes.originalFileName === name && (task.operations[0].state === TaskState.PENDING
-            || task.operations[0].state === TaskState.ERROR)) {
+          if (
+            cmpHash === hash &&
+            file.attributes.originalFileName === name &&
+            (task.operations[0].state === TaskState.PENDING ||
+              task.operations[0].state === TaskState.ERROR)
+          ) {
             return task;
           }
         }
@@ -1038,8 +1303,12 @@ export class TaskService implements OnDestroy {
       if (task.files[0].attributes.originalFileName) {
         for (const file of task.files) {
           // console.log(`${cmpHash} === ${hash}`);
-          if ((task.operations[0].state === TaskState.PENDING || task.operations[0].state === TaskState.QUEUED
-            || task.operations[0].state === TaskState.ERROR) && regex.exec(file.attributes.originalFileName) !== null) {
+          if (
+            (task.operations[0].state === TaskState.PENDING ||
+              task.operations[0].state === TaskState.QUEUED ||
+              task.operations[0].state === TaskState.ERROR) &&
+            regex.exec(file.attributes.originalFileName) !== null
+          ) {
             return task;
           }
         }

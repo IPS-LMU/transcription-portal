@@ -167,7 +167,7 @@ export class EmuOperation extends ToolOperation {
     ) {
       // @ts-ignore TODO CHECK
       const audio = `audioGetUrl=${encodeURIComponent(
-        (this.operations[0] as UploadOperation).wavFile.url
+        (this.operations[0] as any).wavFile.url
       )}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(

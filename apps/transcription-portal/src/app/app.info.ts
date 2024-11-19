@@ -7,9 +7,10 @@ import {
   PraatTextgridConverter,
   SRTConverter,
   TextConverter,
-  WebVTTConverter
+  WebVTTConverter,
 } from '@octra/annotation';
-import {environment} from '../environments/environment';
+import { AudioFormat, WavFormat } from '@octra/web-media';
+import { environment } from '../environments/environment';
 
 declare var ohPortalVersion: string;
 declare var ohPortalLastUpdated: string;
@@ -23,63 +24,53 @@ export class AppInfo {
     return this._version;
   }
 
+  static get audioFormats(): AudioFormat[] {
+    return this._audioFormats;
+  }
+
+  private static _audioFormats: AudioFormat[] = [
+    new WavFormat()
+  ];
+
   private static _converters: ConverterData[] = [
     {
       obj: new CTMConverter(),
       color: 'red',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
+      tierNameMatches: ['^TRN$', '^OCTRA'],
     },
     {
       obj: new PartiturConverter(),
       color: 'forestgreen',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
+      tierNameMatches: ['^TRN$', '^OCTRA'],
     },
     {
       obj: new AnnotJSONConverter(),
-      color: 'gray'
+      color: 'gray',
     },
     {
       obj: new PraatTextgridConverter(),
-      color: 'orange'
+      color: 'orange',
     },
     {
       obj: new PraatTableConverter(),
       color: 'purple',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
+      tierNameMatches: ['^TRN$', '^OCTRA'],
     },
     {
       obj: new TextConverter(),
       color: 'darkblue',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
+      tierNameMatches: ['^TRN$', '^OCTRA'],
     },
     {
       obj: new SRTConverter(),
       color: 'pink',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
+      tierNameMatches: ['^TRN$', '^OCTRA'],
     },
     {
       obj: new WebVTTConverter(),
       color: 'black',
-      tierNameMatches: [
-        '^TRN$',
-        '^OCTRA'
-      ]
-    }
+      tierNameMatches: ['^TRN$', '^OCTRA'],
+    },
   ];
 
   static get converters(): ConverterData[] {

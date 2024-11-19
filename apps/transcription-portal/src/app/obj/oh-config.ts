@@ -7,6 +7,10 @@ export interface OHConfiguration {
     'services': OHService[];
     'asrInfoURL'?: string;
     'asrQuotaInfoURL'?: string;
+    "octraBackend"?: {
+      "url"?: "",
+      "key?"?: ""
+    }
   };
   'plugins': {
     'emailSender': {
@@ -16,8 +20,8 @@ export interface OHConfiguration {
     'tracking'?: {
       'active': string,
       'matomo': {
-        'host': 'https://stats.clarin.eu/',
-        'siteID': 34
+        'host': string,
+        'siteID': number
       }
     }
   };
