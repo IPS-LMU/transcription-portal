@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { escapeRegex, flatten } from '@octra/utilities';
+import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import {
   AudioCutter,
   AudioFormat,
@@ -12,12 +12,11 @@ import {
   getAudioInfo,
 } from '@octra/web-media';
 import { DateTime } from 'luxon';
-import { firstValueFrom, interval, of } from 'rxjs';
+import { firstValueFrom, interval, of, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
 import { AlertService } from '../../shared/alert.service';
 import { AppSettings } from '../../shared/app.settings';
 import { NotificationService } from '../../shared/notification.service';
-import { SubscriptionManager } from '../../shared/subscription-manager';
 import { StorageService } from '../../storage.service';
 import { calcSHA256FromFile } from '../CryptoHelper';
 import { readFileAsArray } from '../functions';
@@ -50,7 +49,7 @@ export class TaskService implements OnDestroy {
   private options = {
     max_running_tasks: 3,
   };
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private subscrmanager = new SubscriptionManager<Subscription>();
   private state: TaskState = TaskState.READY;
 
   constructor(
@@ -1113,7 +1112,7 @@ export class TaskService implements OnDestroy {
           const cutter = new AudioCutter(audioInfo);
           const files: File[] = await cutter.splitChannelsToFiles(
             file.attributes.originalFileName,
-            [0, 1],
+            file.type,
             arrayBuffer
           );
           if (this._splitPrompt === 'PENDING') {

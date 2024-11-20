@@ -1,10 +1,10 @@
-import {HttpClient} from '@angular/common/http';
-import {Observable, ReplaySubject, Subject} from 'rxjs';
-import {SubscriptionManager} from '../../shared/subscription-manager';
-import {TaskEntry} from './task-entry';
-import {IAccessCode, Operation} from '../operations/operation';
-import {OHCommand, OHLanguageObject} from '../oh-config';
-import {AudioInfo, DirectoryInfo, FileInfo} from '@octra/web-media';
+import { HttpClient } from '@angular/common/http';
+import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
+import { TaskEntry } from './task-entry';
+import { IAccessCode, Operation } from '../operations/operation';
+import { OHCommand, OHLanguageObject } from '../oh-config';
+import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
+import { SubscriptionManager } from '@octra/utilities';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -15,7 +15,7 @@ export enum TaskState {
   READY = 'READY',
   SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
 }
 
 export class Task {
@@ -39,7 +39,7 @@ export class Task {
     oldState: TaskState | undefined;
     newState: TaskState;
   }> = this.statesubj.asObservable();
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
+  private subscrmanager = new SubscriptionManager<Subscription>();
   private stopRequested = false;
   private readonly _id: number;
 

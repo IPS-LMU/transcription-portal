@@ -1,11 +1,7 @@
-import { Component, OnDestroy, Output } from '@angular/core';
-import {
-  NgbActiveModal,
-  NgbModalOptions,
-  NgbModalRef,
-} from '@ng-bootstrap/ng-bootstrap';
+import { Component, Output } from '@angular/core';
+import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs';
-import { SubscriptionManager } from '../../shared/subscription-manager';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 
 @Component({
   selector: 'tportal-first-modal',
@@ -13,7 +9,7 @@ import { SubscriptionManager } from '../../shared/subscription-manager';
   styleUrls: ['./first-modal.component.scss'],
   standalone: true,
 })
-export class FirstModalComponent implements OnDestroy {
+export class FirstModalComponent extends SubscriberComponent {
   @Output() understandClick: Subject<void> = new Subject<void>();
 
   public static options: NgbModalOptions = {
@@ -22,12 +18,7 @@ export class FirstModalComponent implements OnDestroy {
     keyboard: false,
   };
 
-  bsModalRef?: NgbModalRef;
-  private subscrmanager = new SubscriptionManager();
-
-  constructor(protected activeModal: NgbActiveModal) {}
-
-  ngOnDestroy() {
-    this.subscrmanager.destroy();
+  constructor(protected activeModal: NgbActiveModal) {
+    super();
   }
 }

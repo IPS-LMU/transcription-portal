@@ -3,6 +3,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
 import * as JSZip from 'jszip';
 import { DateTime } from 'luxon';
@@ -13,7 +14,6 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskDirectory, TaskState } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
-import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -22,7 +22,10 @@ import { SubscriptionManager } from '../../shared/subscription-manager';
   standalone: true,
   imports: [FormsModule, NgStyle],
 })
-export class DownloadModalComponent implements OnInit {
+export class DownloadModalComponent
+  extends SubscriberComponent
+  implements OnInit
+{
   @Input() type: 'line' | 'column' = 'column';
   private selectedTasks?: number[];
   @Input() taskList?: Task[];
@@ -41,14 +44,14 @@ export class DownloadModalComponent implements OnInit {
 
   public state = 'inactive';
 
-  private subscrManager = new SubscriptionManager();
-
   constructor(
     private taskService: TaskService,
     protected activeModal: NgbActiveModal,
     private sanitizer: DomSanitizer,
     private downloadService: DownloadService
-  ) {}
+  ) {
+    super();
+  }
 
   public get converters() {
     return AppInfo.converters;
@@ -57,9 +60,9 @@ export class DownloadModalComponent implements OnInit {
   ngOnInit() {
     this.checkboxes = [];
 
-    for (const converter of AppInfo.converters) {
+    AppInfo.converters.forEach(() => {
       this.checkboxes.push(false);
-    }
+    });
   }
 
   uncheckAll() {

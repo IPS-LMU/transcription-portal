@@ -1,35 +1,23 @@
-import { HttpClient } from '@angular/common/http';
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { SubscriberComponent } from '@octra/ngx-utilities';
+import { hasProperty } from '@octra/utilities';
 import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
-import { ANIMATIONS } from './shared/Animations';
-import { NotificationService } from './shared/notification.service';
-import { SubscriptionManager } from './shared/subscription-manager';
-import { Task } from './obj/tasks';
 import { ProceedingsComponent } from './components/proceedings/proceedings.component';
-import { TaskService } from './obj/tasks/task.service';
-import { StorageService } from './storage.service';
-import { Operation } from './obj/operations/operation';
-import { FeedbackModalComponent } from './modals/feedback-modal/feedback-modal.component';
-import { BugReportService, ConsoleType } from './shared/bug-report.service';
-import { SplitModalComponent } from './modals/split-modal/split-modal.component';
-import { FirstModalComponent } from './modals/first-modal/first-modal.component';
-import { QueueModalComponent } from './modals/queue-modal/queue-modal.component';
 import { ProtocolFooterComponent } from './components/protocol-footer/protocol-footer.component';
 import { ToolLoaderComponent } from './components/tool-loader/tool-loader.component';
-import { AlertService } from './shared/alert.service';
-import { SettingsService } from './shared/settings.service';
-import { OHModalService } from './shared/ohmodal.service';
+import { FirstModalComponent } from './modals/first-modal/first-modal.component';
+import { QueueModalComponent } from './modals/queue-modal/queue-modal.component';
+import { SplitModalComponent } from './modals/split-modal/split-modal.component';
+import { Operation } from './obj/operations/operation';
+import { Task } from './obj/tasks';
+import { TaskService } from './obj/tasks/task.service';
+import { ANIMATIONS } from './shared/Animations';
 import { AppSettings } from './shared/app.settings';
-import { hasProperty } from '@octra/utilities';
-import { RouterOutlet } from '@angular/router';
+import { BugReportService, ConsoleType } from './shared/bug-report.service';
+import { NotificationService } from './shared/notification.service';
+import { SettingsService } from './shared/settings.service';
 
 @Component({
   selector: 'tportal-root',
@@ -38,18 +26,13 @@ import { RouterOutlet } from '@angular/router';
   providers: [],
   animations: [ANIMATIONS],
   standalone: true,
-  imports: [FeedbackModalComponent, RouterOutlet],
+  imports: [RouterOutlet],
 })
-export class AppComponent implements OnDestroy {
-  @ViewChild('feedbackModal', { static: true })
-  feedbackModal!: FeedbackModalComponent;
+export class AppComponent extends SubscriberComponent implements OnDestroy {
   public sidebarstate = 'hidden';
-  isCollapsed = false;
   public test = 'inactive';
   public sidebarExpand = 'opened';
-  public dragborder = 'inactive';
   public newProceedingsWidth = 30;
-  public newToolWidth = 70;
   @ViewChild('fileinput') fileinput!: ElementRef;
   @ViewChild('folderinput') folderinput!: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
@@ -59,20 +42,13 @@ export class AppComponent implements OnDestroy {
   @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
 
-  private subscrmanager = new SubscriptionManager();
-
   constructor(
     public taskService: TaskService,
-    private sanitizer: DomSanitizer,
-    private httpclient: HttpClient,
     public notification: NotificationService,
-    private storage: StorageService,
     public bugService: BugReportService,
-    private alertService: AlertService,
-    public settingsService: SettingsService,
-    private cd: ChangeDetectorRef,
-    private modalService: OHModalService
+    public settingsService: SettingsService
   ) {
+    super();
     // overwrite console.log
     if (!AppInfo.debugging) {
       const oldLog = console.log;
@@ -142,8 +118,8 @@ export class AppComponent implements OnDestroy {
       })();
     }
 
-    this.subscrmanager.add(
-      this.settingsService.settingsload.subscribe(() => {
+    this.subscribe(this.settingsService.settingsload, {
+      next: () => {
         // add tracking code
         if (
           AppSettings.configuration.plugins.tracking &&
@@ -154,8 +130,8 @@ export class AppComponent implements OnDestroy {
             AppSettings.configuration.plugins.tracking.active
           );
         }
-      })
-    );
+      },
+    });
   }
 
   private _showtool = false;
@@ -207,10 +183,6 @@ export class AppComponent implements OnDestroy {
     }
 
     return [];
-  }
-
-  ngOnDestroy(): void {
-    this.subscrmanager.destroy();
   }
 
   private appendTrackingCode(type: string) {

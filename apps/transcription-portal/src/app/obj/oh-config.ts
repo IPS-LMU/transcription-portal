@@ -1,33 +1,33 @@
 export interface OHConfiguration {
-  'name': string;
-  'version': string;
-  'api': {
-    'commands': OHCommand[];
-    'languages': OHLanguageObject[];
-    'services': OHService[];
-    'asrInfoURL'?: string;
-    'asrQuotaInfoURL'?: string;
-    "octraBackend"?: {
-      "url"?: "",
-      "key?"?: ""
-    }
+  name: string;
+  version: string;
+  api: {
+    commands: OHCommand[];
+    languages: OHLanguageObject[];
+    services: OHService[];
+    asrInfoURL?: string;
+    asrQuotaInfoURL?: string;
+    octraBackend: {
+      url: '';
+      key: '';
+    };
   };
-  'plugins': {
-    'emailSender': {
-      'authKey': string;
-      'url': string;
-    },
-    'tracking'?: {
-      'active': string,
-      'matomo': {
-        'host': string,
-        'siteID': number
-      }
-    }
+  plugins: {
+    emailSender: {
+      authKey: string;
+      url: string;
+    };
+    tracking?: {
+      active: string;
+      matomo: {
+        host: string;
+        siteID: number;
+      };
+    };
   };
-  'allowed_browsers': {
-    'name': string,
-    'version': string
+  allowed_browsers: {
+    name: string;
+    version: string;
   }[];
 }
 
@@ -58,4 +58,3 @@ export interface OHService {
   homepageURL: string;
   logoURL: string;
 }
-

@@ -1,46 +1,67 @@
-import {Injectable} from '@angular/core';
-import {TaskService} from '../obj/tasks/task.service';
-import {SubscriptionManager} from './subscription-manager';
-import {interval} from 'rxjs';
-import {ChartConfiguration, ChartData} from 'chart.js';
+import { Injectable } from '@angular/core';
+import { TaskService } from '../obj/tasks/task.service';
+import { interval, Subscription } from 'rxjs';
+import { ChartData } from 'chart.js';
+import { SubscriptionManager } from '@octra/utilities';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StatisticsService {
-
   public overAllProgress = {
     waiting: 0,
     processing: 0,
     finished: 0,
-    failed: 0
+    failed: 0,
   };
 
   public averageDurations: ChartData<'pie', number[], string | string[]> = {
-    labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'],[ 'Word alignment'], ['Phonetic Detail']],
-    datasets: [{
-      data: [0, 0, 0, 0, 0]
-    }]
+    labels: [
+      ['Upload'],
+      ['Speech Recognition'],
+      ['Manual Transcription'],
+      ['Word alignment'],
+      ['Phonetic Detail'],
+    ],
+    datasets: [
+      {
+        data: [0, 0, 0, 0, 0],
+      },
+    ],
   };
 
-  private subscrmanager = new SubscriptionManager();
+  private subscrmanager = new SubscriptionManager<Subscription>();
 
   constructor(private taskService: TaskService) {
-    this.subscrmanager.add(interval(1000).subscribe(() => {
-      if (!(this.taskService.taskList === null || this.taskService.taskList === undefined)) {
-        const allTasks = this.taskService.taskList.getAllTasks();
+    this.subscrmanager.add(
+      interval(1000).subscribe(() => {
+        if (
+          !(
+            this.taskService.taskList === null ||
+            this.taskService.taskList === undefined
+          )
+        ) {
+          const allTasks = this.taskService.taskList.getAllTasks();
 
-        if (!(allTasks === null || allTasks === undefined)) {
-          const allTasksCount = allTasks.length;
-          this.overAllProgress.waiting = (this.taskService.statistics.waiting + this.taskService.statistics.queued) / allTasksCount * 100;
-          this.overAllProgress.failed = this.taskService.statistics.errors / allTasksCount * 100;
-          this.overAllProgress.processing = this.taskService.statistics.running / allTasksCount * 100;
-          this.overAllProgress.finished = this.taskService.statistics.finished / allTasksCount * 100;
+          if (!(allTasks === null || allTasks === undefined)) {
+            const allTasksCount = allTasks.length;
+            this.overAllProgress.waiting =
+              ((this.taskService.statistics.waiting +
+                this.taskService.statistics.queued) /
+                allTasksCount) *
+              100;
+            this.overAllProgress.failed =
+              (this.taskService.statistics.errors / allTasksCount) * 100;
+            this.overAllProgress.processing =
+              (this.taskService.statistics.running / allTasksCount) * 100;
+            this.overAllProgress.finished =
+              (this.taskService.statistics.finished / allTasksCount) * 100;
 
-          this.updateAverageDurations();
+            this.updateAverageDurations();
+          }
         }
-      }
-    }));
+      })
+    );
   }
 
   public destroy() {
@@ -62,7 +83,8 @@ export class StatisticsService {
       }
 
       for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
-        this.averageDurations.datasets[0].data[i] = Math.ceil(durations[i] / 1000 / 60 * 100) / 100;
+        this.averageDurations.datasets[0].data[i] =
+          Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
       }
     }
   }

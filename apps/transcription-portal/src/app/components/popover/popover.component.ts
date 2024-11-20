@@ -7,8 +7,8 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { SubscriptionManager } from '../../shared/subscription-manager';
 import { hasProperty } from '@octra/utilities';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 
 @Component({
   selector: 'tportal-popover',
@@ -16,7 +16,10 @@ import { hasProperty } from '@octra/utilities';
   styleUrls: ['./popover.component.scss'],
   standalone: true,
 })
-export class PopoverComponent implements OnChanges, OnDestroy {
+export class PopoverComponent
+  extends SubscriberComponent
+  implements OnChanges, OnDestroy
+{
   @ViewChild('svg', { static: true }) svg?: ElementRef;
   @ViewChild('inner', { static: true }) inner?: ElementRef;
 
@@ -57,7 +60,6 @@ export class PopoverComponent implements OnChanges, OnDestroy {
   private leftBottomPolygon?: any;
   private rightTopPolygon?: any;
   private rightBottomPolygon?: any;
-  private subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   public getPolygonString(): string {
     const p = this.polygon;
@@ -140,9 +142,5 @@ export class PopoverComponent implements OnChanges, OnDestroy {
         y: this.height - this.margin.bottom - 10,
       },
     };
-  }
-
-  ngOnDestroy() {
-    this.subscrmanager.destroy();
   }
 }

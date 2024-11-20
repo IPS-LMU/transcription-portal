@@ -1,20 +1,17 @@
-import {Injectable} from '@angular/core';
-import {Observable, of} from 'rxjs';
-import {SettingsService} from './settings.service';
-import {HttpClient} from '@angular/common/http';
-import {BugReporter} from '../obj/BugAPI/BugReporter';
-import {StorageService} from '../storage.service';
-import {AppInfo} from '../app.info';
-import {BrowserInfo} from '../obj/BrowserInfo';
-import {EmailBugReporter} from '../obj/BugAPI/EmailBugReporter';
-import {hasProperty} from '@octra/utilities';
-import {DateTime} from 'luxon';
+import { Injectable } from '@angular/core';
+import { FeedbackRequestPropertiesDto } from '@octra/api-types';
+import { OctraAPIService, removeProperties } from '@octra/ngx-octra-api';
+import { hasProperty } from '@octra/utilities';
+import { DateTime } from 'luxon';
+import { Observable } from 'rxjs';
+import { AppInfo } from '../app.info';
+import { BrowserInfo } from '../obj/BrowserInfo';
 
 export enum ConsoleType {
   LOG,
   INFO,
   WARN,
-  ERROR
+  ERROR,
 }
 
 export interface ConsoleEntry {
@@ -25,44 +22,50 @@ export interface ConsoleEntry {
 
 @Injectable()
 export class BugReportService {
-  private reporter: BugReporter;
   private _console: ConsoleEntry[] = [];
 
   get console(): ConsoleEntry[] {
     return this._console;
   }
 
-  constructor(private appStorage: StorageService,
-              private settService: SettingsService,
-              private http: HttpClient) {
-    this.reporter = new EmailBugReporter();
-  }
+  constructor(
+    private octraAPI: OctraAPIService
+  ) {}
 
   public get hasErrors(): boolean {
     const errors = this._console.filter((entry) => {
-      return (entry.type === ConsoleType.ERROR);
+      return entry.type === ConsoleType.ERROR;
     });
 
-    return (errors.length > 0);
+    return errors.length > 0;
   }
 
   public addEntry(type: ConsoleType, message: any) {
     let sanitizedMessage: any = message;
 
     if (typeof message === 'string') {
-      sanitizedMessage = sanitizedMessage.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
+      sanitizedMessage = sanitizedMessage.replace(
+        /(ACCESSCODE=)([^&\n]+)/g,
+        '$1****'
+      );
     } else {
-      if (hasProperty(sanitizedMessage, "message")) {
-        sanitizedMessage.message = sanitizedMessage.message.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
-      } else if (hasProperty(sanitizedMessage, "text")) {
-        sanitizedMessage.text = sanitizedMessage.text.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
+      if (hasProperty(sanitizedMessage, 'message')) {
+        sanitizedMessage.message = sanitizedMessage.message.replace(
+          /(ACCESSCODE=)([^&\n]+)/g,
+          '$1****'
+        );
+      } else if (hasProperty(sanitizedMessage, 'text')) {
+        sanitizedMessage.text = sanitizedMessage.text.replace(
+          /(ACCESSCODE=)([^&\n]+)/g,
+          '$1****'
+        );
       }
     }
 
     const consoleItem: ConsoleEntry = {
       type,
       timestamp: DateTime.now().toFormat('DD.MM.YY HH:mm:ss'),
-      message: sanitizedMessage
+      message: sanitizedMessage,
     };
 
     this._console.push(consoleItem);
@@ -77,38 +80,71 @@ export class BugReportService {
       ohportal: {
         version: AppInfo.version,
         url: window.location.href,
-        lastUpdated: AppInfo.lastUpdated
+        lastUpdated: AppInfo.lastUpdated,
       },
       system: {
         os: {
           name: BrowserInfo.os.family,
-          version: BrowserInfo.os.version
+          version: BrowserInfo.os.version,
         },
         browser: BrowserInfo.browser + ' ' + BrowserInfo.version,
-        version: BrowserInfo.os.version
+        version: BrowserInfo.os.version,
       },
-      entries: this._console
+      entries: this._console,
     };
   }
 
-  sendReport(name: string, email: string, description: string, sendbugreport: boolean, credentials: {
-    auth_token: string,
-    url: string
-  }, screenshots: any[]): Observable<any> {
-
-    if (credentials) {
-      const auth_token = credentials.auth_token;
-      const url = credentials.url;
-      const form = {
-        email,
+  sendBugReport(
+    name: string,
+    email: string,
+    message: string,
+    sendProtocol: boolean,
+    screenshots: any[]
+  ): Observable<any> {
+    let pkg: FeedbackRequestPropertiesDto = {
+      type: 'bug',
+      message,
+      requester: {
         name,
-        description
-      };
+        email,
+      },
+      technicalInformation: {
+        os: {
+          name: BrowserInfo.os.family,
+          version: BrowserInfo.os.version,
+        },
+        browser: {
+          name: BrowserInfo.browser,
+          version: BrowserInfo.version,
+        },
+      },
+    };
 
-      return this.reporter.sendBugReport(this.http, this.getPackage(), form, url, auth_token, sendbugreport, screenshots);
+    let protocol: File | undefined = new File(
+      [
+        JSON.stringify({
+          tool: {
+            version: AppInfo.version,
+            language: "en",
+            signed_in: true,
+            url: window.location.href,
+          },
+          entries: this.console,
+        }),
+      ],
+      `OCB_protocol_${Date.now()}.json`,
+      { type: 'application/json' }
+    );
+
+    if (!sendProtocol) {
+      pkg = removeProperties(pkg, ['technicalInformation']);
+      protocol = undefined;
     }
 
-    return of(null);
+    return this.octraAPI.sendFeedback(
+      pkg,
+      protocol,
+      screenshots.map((a) => a.blob)
+    );
   }
-
 }

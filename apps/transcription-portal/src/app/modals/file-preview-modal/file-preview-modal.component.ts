@@ -1,12 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
-import {
-  NgbActiveModal,
-  NgbModal,
-  NgbModalOptions,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
-import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
   selector: 'tportal-file-preview-modal',
@@ -15,12 +11,13 @@ import { SubscriptionManager } from '../../shared/subscription-manager';
   standalone: true,
   imports: [],
 })
-export class FilePreviewModalComponent implements OnDestroy, OnInit {
+export class FilePreviewModalComponent
+  extends SubscriberComponent
+  implements OnInit
+{
   public selectedFile?: FileInfo;
   public fileContent = '';
   public downloadURL?: SafeResourceUrl;
-
-  private subscrmanager = new SubscriptionManager();
 
   public static options: NgbModalOptions = {
     size: 'xl',
@@ -35,13 +32,8 @@ export class FilePreviewModalComponent implements OnDestroy, OnInit {
     );
   }
 
-  constructor(
-    private modalService: NgbModal,
-    protected activeModal: NgbActiveModal
-  ) {}
-
-  ngOnDestroy(): void {
-    this.subscrmanager.destroy();
+  constructor(protected activeModal: NgbActiveModal) {
+    super();
   }
 
   ngOnInit() {

@@ -80,7 +80,11 @@
       }
     ],
     "asrInfoURL": "",
-    "asrQuotaInfoURL": ""
+    "asrQuotaInfoURL": "",
+    "octraBackend": {
+      "url": "",
+      "key": ""
+    }
   },
   "plugins": {
     "emailSender": {

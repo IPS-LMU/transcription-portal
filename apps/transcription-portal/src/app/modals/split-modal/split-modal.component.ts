@@ -1,10 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import {
-  NgbActiveModal,
-  NgbModal,
-  NgbModalOptions,
-} from '@ng-bootstrap/ng-bootstrap';
-import { SubscriptionManager } from '../../shared/subscription-manager';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 
 @Component({
   selector: 'tportal-split-modal',
@@ -13,7 +9,7 @@ import { SubscriptionManager } from '../../shared/subscription-manager';
   standalone: true,
   imports: [],
 })
-export class SplitModalComponent implements OnInit {
+export class SplitModalComponent extends SubscriberComponent {
   @Output() dissmissedChange: EventEmitter<boolean> =
     new EventEmitter<boolean>();
   public static options: NgbModalOptions = {
@@ -22,12 +18,10 @@ export class SplitModalComponent implements OnInit {
     keyboard: false,
     fullscreen: 'mm',
   };
-  private subscrManager = new SubscriptionManager();
 
-  constructor(
-    private ngbModalService: NgbModal,
-    protected activeModal: NgbActiveModal
-  ) {}
+  constructor(protected activeModal: NgbActiveModal) {
+    super();
+  }
 
   private _splitModalDismissedProperly = false;
 
@@ -38,12 +32,6 @@ export class SplitModalComponent implements OnInit {
   @Input() set splitModalDismissedProperly(value: boolean) {
     this._splitModalDismissedProperly = value;
     this.dissmissedChange.emit(this._splitModalDismissedProperly);
-  }
-
-  ngOnInit() {}
-
-  onHidden() {
-    this.subscrManager.destroy();
   }
 
   dismiss(reason: string) {

@@ -4,12 +4,12 @@ import {
   NgbModalOptions,
   NgbModalRef,
 } from '@ng-bootstrap/ng-bootstrap';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { NgChartsModule } from 'ng2-charts';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
-import { SubscriptionManager } from '../../shared/subscription-manager';
 
 @Component({
   selector: 'tportal-statistics',
@@ -18,7 +18,10 @@ import { SubscriptionManager } from '../../shared/subscription-manager';
   standalone: true,
   imports: [NgCircleProgressModule, NgChartsModule],
 })
-export class StatisticsModalComponent implements OnDestroy {
+export class StatisticsModalComponent
+  extends SubscriberComponent
+  implements OnDestroy
+{
   @ViewChild('statisticsModal', { static: true }) statisticsModal?: NgbModalRef;
   public static options: NgbModalOptions = {
     size: 'xl',
@@ -28,7 +31,6 @@ export class StatisticsModalComponent implements OnDestroy {
 
   // Pie
   public pieChartType: ChartConfiguration['type'] = 'pie';
-  private _subscrmanager: SubscriptionManager = new SubscriptionManager();
 
   public pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -44,10 +46,12 @@ export class StatisticsModalComponent implements OnDestroy {
     public statisticsService: StatisticsService,
     public taskService: TaskService,
     protected activeModal: NgbActiveModal
-  ) {}
+  ) {
+    super();
+  }
 
-  ngOnDestroy() {
-    this._subscrmanager.destroy();
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     this.statisticsService.destroy();
   }
 }

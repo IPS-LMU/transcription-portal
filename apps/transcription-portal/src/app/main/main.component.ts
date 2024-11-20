@@ -13,7 +13,6 @@ import { SafeResourceUrl } from '@angular/platform-browser';
 import {
   NgbCollapse,
   NgbDropdown,
-  NgbDropdownItem,
   NgbDropdownMenu,
   NgbDropdownToggle,
   NgbModal,
@@ -26,6 +25,7 @@ import {
   PartiturConverter,
 } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
@@ -54,7 +54,6 @@ import { BugReportService, ConsoleType } from '../shared/bug-report.service';
 import { NotificationService } from '../shared/notification.service';
 import { OHModalService } from '../shared/ohmodal.service';
 import { SettingsService } from '../shared/settings.service';
-import { SubscriptionManager } from '../shared/subscription-manager';
 import { TimePipe } from '../shared/time.pipe';
 import { StorageService } from '../storage.service';
 
@@ -66,10 +65,6 @@ import { StorageService } from '../storage.service';
   animations: [ANIMATIONS],
   standalone: true,
   imports: [
-    FirstModalComponent,
-    SplitModalComponent,
-    QueueModalComponent,
-    StatisticsModalComponent,
     AlertComponent,
     NgClass,
     FormsModule,
@@ -82,11 +77,10 @@ import { StorageService } from '../storage.service';
     NgbTooltip,
     NgbDropdown,
     NgbDropdownMenu,
-    NgbDropdownItem,
     NgbDropdownToggle,
   ],
 })
-export class MainComponent implements OnDestroy {
+export class MainComponent extends SubscriberComponent implements OnDestroy {
   public sidebarstate = 'hidden';
   public toolURL?: SafeResourceUrl;
   isCollapsed = false;
@@ -104,7 +98,6 @@ export class MainComponent implements OnDestroy {
   public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
-  private subscrmanager = new SubscriptionManager();
 
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
@@ -121,31 +114,29 @@ export class MainComponent implements OnDestroy {
     private cd: ChangeDetectorRef,
     public modalService: OHModalService
   ) {
-    this.subscrmanager.add(
-      this.notification.onPermissionChange.subscribe((result) => {
+    super();
+    this.subscribe(this.notification.onPermissionChange, {
+      next: (result) => {
         if (this.storage.ready) {
           this.storage.saveUserSettings('notification', {
             enabled: result,
           });
         }
-      })
-    );
-
-    this.subscrmanager.add(
-      this.taskService.errorscountchange.subscribe(() => {
-        this.protocolFooter?.blop();
-      })
-    );
+      },
+    });
+    this.subscribe(this.taskService.errorscountchange, () => {
+      this.protocolFooter?.blop();
+    });
 
     new Promise<void>((resolve, reject) => {
       if (this.settingsService.allLoaded) {
         resolve();
       } else {
-        this.subscrmanager.add(
-          this.settingsService.settingsload.subscribe(() => {
+        this.subscribe(this.settingsService.settingsload, {
+          next: () => {
             resolve();
-          })
-        );
+          },
+        });
       }
     }).then(() => {
       // configuration loaded
@@ -156,11 +147,11 @@ export class MainComponent implements OnDestroy {
 
       new Promise<any>((resolve, reject) => {
         if (!this.storage.ready) {
-          this.subscrmanager.add(
-            this.storage.allloaded.subscribe((results) => {
+          this.subscribe(this.storage.allloaded, {
+            next: (results) => {
               resolve(results);
-            })
-          );
+            },
+          });
         } else {
           resolve([null]);
         }
@@ -262,10 +253,6 @@ export class MainComponent implements OnDestroy {
     }
 
     return [];
-  }
-
-  ngOnDestroy() {
-    this.subscrmanager.destroy();
   }
 
   onAfterDrop(entries: (FileInfo | DirectoryInfo)[]) {
