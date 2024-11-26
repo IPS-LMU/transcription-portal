@@ -2,9 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { TaskEntry } from './task-entry';
 import { IAccessCode, Operation } from '../operations/operation';
-import { OHCommand, OHLanguageObject } from '../oh-config';
+import { OHCommand, ProviderLanguage } from '../oh-config';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { SubscriptionManager } from '@octra/utilities';
+import { ServiceProvider } from '@octra/ngx-components';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -67,24 +68,24 @@ export class Task {
     return this._id;
   }
 
-  private _language = null;
+  private _language?: string;
 
-  get language(): any {
+  get language(): string | undefined {
     return this._language;
   }
 
-  set language(value: any) {
+  set language(value: string | undefined) {
     this._language = value;
   }
 
-  private _asr = null;
+  private _provider?: string;
 
-  get asr(): any {
-    return this._asr;
+  get provider(): string | undefined {
+    return this._provider;
   }
 
-  set asr(value: any) {
-    this._asr = value;
+  set provider(value: string | undefined) {
+    this._provider = value;
   }
 
   private _files: FileInfo[];
@@ -132,7 +133,7 @@ export class Task {
 
     const task = new Task([], operations, undefined, taskObj.id);
     task.language = taskObj.language;
-    task._asr = (taskObj.operations[1].webService && taskObj.operations[1].webService !== '')
+    task._provider = (taskObj.operations[1].webService && taskObj.operations[1].webService !== '')
       ? taskObj.operations[1].webService : taskObj.asr;
 
     if (taskObj.state !== TaskState.PROCESSING) {
@@ -191,25 +192,25 @@ export class Task {
     return task;
   }
 
-  public start(languageObject: OHLanguageObject, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  public start(asrService: ServiceProvider, languageObj: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
     if (this.state !== TaskState.FINISHED) {
-      this.startNextOperation(languageObject, httpclient, accessCodes);
+      this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
     }
   }
 
-  public restart(languageObject: OHLanguageObject, http: HttpClient, accessCodes: IAccessCode[]) {
+  public restart(asrService: ServiceProvider, languageObj: ProviderLanguage, http: HttpClient, accessCodes: IAccessCode[]) {
     this.changeState(TaskState.PROCESSING);
     this.listenToOperationChanges();
-    this.start(languageObject, http, accessCodes);
+    this.start(asrService, languageObj, http, accessCodes);
   }
 
-  public restartFailedOperation(languageObject: OHLanguageObject, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  public restartFailedOperation(asrService: ServiceProvider, languageObject: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
     for (const operation of this.operations) {
       if (operation.state === TaskState.ERROR) {
         // restart failed operation
         operation.changeState(TaskState.READY);
         this.changeState(TaskState.PENDING);
-        this.restart(languageObject, httpclient, accessCodes);
+        this.restart(asrService, languageObject, httpclient, accessCodes);
         break;
       }
     }
@@ -267,7 +268,7 @@ export class Task {
         state: this.state,
         folderPath: '',
         language: this.language,
-        asr: this.asr,
+        asr: this.provider,
         files: [],
         operations: []
       };
@@ -367,7 +368,7 @@ export class Task {
     }
   }
 
-  private startNextOperation(languageObject: OHLanguageObject, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  private startNextOperation(asrService: ServiceProvider, languageObj: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
     if (!this.stopRequested) {
       let nextoperation = -1;
 
@@ -397,7 +398,7 @@ export class Task {
             (event) => {
               if (event.newState === TaskState.FINISHED) {
                 subscription.unsubscribe();
-                this.startNextOperation(languageObject, httpclient, accessCodes);
+                this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
               } else {
                 if (event.newState === TaskState.READY) {
                   this.changeState(TaskState.READY);
@@ -415,20 +416,12 @@ export class Task {
             files = this.operations[0].results;
           }
 
-          this.operations[nextoperation].start(languageObject, files, this.operations, httpclient,
-            this.getAccessCode(languageObject, accessCodes));
+          this.operations[nextoperation].start(asrService, languageObj, files, this.operations, httpclient, "");
         }
       }
     } else {
       this.changeState(TaskState.PENDING);
     }
-  }
-
-  private getAccessCode(langObject: OHLanguageObject, accessCodes: IAccessCode[]) {
-    const result = accessCodes.find((a) => {
-      return a.name === `${langObject.asr}ASR`;
-    });
-    return (result) ? result.value : '';
   }
 }
 

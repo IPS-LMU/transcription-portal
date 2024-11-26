@@ -1,22 +1,24 @@
-import {EventEmitter, Injectable} from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AlertService {
-
   public alertsend = new EventEmitter<{
-    type: 'danger' | 'warning' | 'info' | 'success',
-    message: string,
-    duration: number
+    type: 'danger' | 'warning' | 'info' | 'success';
+    message: string;
+    duration: number;
   }>();
 
-  constructor() {
-  }
+  constructor() {}
 
-  public showAlert(type: 'danger' | 'warning' | 'info' | 'success', message: string, duration?: number) {
+  public showAlert(
+    type: 'danger' | 'warning' | 'info' | 'success',
+    message: string,
+    duration?: number
+  ) {
     this.alertsend.emit({
       type,
       message,
-      duration: (duration) ? duration : 5
+      duration: duration ? duration : 5,
     });
   }
 }

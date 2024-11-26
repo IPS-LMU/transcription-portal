@@ -1,8 +1,8 @@
-import {Injectable} from '@angular/core';
-import {Subject} from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
 import * as Notify from 'notifyjs';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class NotificationService {
   public onPermissionChange: Subject<boolean> = new Subject<boolean>();
 
@@ -27,7 +27,10 @@ export class NotificationService {
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {
-      Notify.requestPermission(this.onPermissionGranted, this.onPermissionDenied);
+      Notify.requestPermission(
+        this.onPermissionGranted,
+        this.onPermissionDenied
+      );
     } else {
       this._permissionGranted = !Notify.needsPermission;
     }
@@ -38,7 +41,7 @@ export class NotificationService {
     if (this.permissionGranted) {
       const myNotification = new Notify(title, {
         body,
-        timeout: 30
+        timeout: 30,
       });
 
       myNotification.show();
@@ -48,11 +51,11 @@ export class NotificationService {
   private onPermissionGranted = () => {
     this._permissionGranted = true;
     this.onPermissionChange.next(this._permissionGranted);
-  }
+  };
 
   private onPermissionDenied = () => {
     this._permissionGranted = false;
     console.warn('Permission has been denied by the user');
     this.onPermissionChange.next(this._permissionGranted);
-  }
+  };
 }

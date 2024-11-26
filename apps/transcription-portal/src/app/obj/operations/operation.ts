@@ -2,8 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
-import { OHLanguageObject, OHService } from '../oh-config';
+import { ProviderLanguage } from '../oh-config';
 import { Task, TaskState } from '../tasks';
+import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 
 export abstract class Operation {
   static counter = 0;
@@ -11,7 +12,8 @@ export abstract class Operation {
   public mouseover = false;
   public changed: Subject<void> = new Subject<void>();
   public abstract start: (
-    languageObject: OHLanguageObject,
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
@@ -169,13 +171,13 @@ export abstract class Operation {
     return this._description;
   }
 
-  protected _providerInformation: OHService | undefined;
+  protected _providerInformation: ServiceProvider | undefined;
 
-  get providerInformation(): OHService | undefined {
+  get providerInformation(): ServiceProvider | undefined {
     return this._providerInformation;
   }
 
-  set providerInformation(value: OHService | undefined) {
+  set providerInformation(value: ServiceProvider | undefined) {
     this._providerInformation = value;
   }
 
@@ -372,9 +374,9 @@ export abstract class Operation {
     }
   }
 
-  public onMouseEnter() {}
-  public onMouseLeave() {}
-  public onMouseOver() {}
+  public abstract onMouseEnter(): void;
+  public abstract onMouseLeave(): void;
+  public abstract onMouseOver(): void;
 }
 
 export interface IAccessCode {

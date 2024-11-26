@@ -1,14 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ASRSettings } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { isNumber } from '@octra/utilities';
 import * as jQuery from 'jquery';
-import { Subject } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { OHConfiguration } from '../obj/oh-config';
 import { AppSettings } from './app.settings';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class SettingsService {
   public shortCutsEnabled = true;
   private _allLoaded = false;
@@ -36,7 +37,6 @@ export class SettingsService {
       .subscribe({
         next: (json: OHConfiguration) => {
           AppSettings.init(json);
-          this._settingsload.next();
           this.octraAPI
             .init(
               json.api.octraBackend.url,
@@ -49,7 +49,50 @@ export class SettingsService {
                 (properties.send_feedback && properties.email_notification) ??
                 false;
             });
-          this._allLoaded = true;
+          this.loadExternInformation()
+            .then((result) => {
+              this._allLoaded = true;
+              AppSettings.languages = {
+                asr: result[3].map((a: any) => ({
+                  value: a.ParameterValue.Value,
+                  description: a.ParameterValue.Description,
+                  providersOnly: a.ParameterValue.ProvidersOnly,
+                })),
+                maus: result[4]
+                  .filter(
+                    (a: any) =>
+                      a.ParameterValue.Description &&
+                      a.ParameterValue.Description !== ''
+                  )
+                  .map((a: any) => ({
+                    value: a.ParameterValue.Value,
+                    description: a.ParameterValue.Description,
+                    providersOnly: a.ParameterValue.ProvidersOnly,
+                  })),
+              };
+              AppSettings.languages.asr.sort((a, b) =>
+                a.description > b.description
+                  ? 1
+                  : a.description < b.description
+                  ? -1
+                  : 0
+              );
+              AppSettings.languages.maus.sort((a, b) =>
+                a.description > b.description
+                  ? 1
+                  : a.description < b.description
+                  ? -1
+                  : 0
+              );
+
+              this._settingsload.next();
+            })
+            .catch((error) => {
+              console.error(error);
+              alert(
+                'Error: app configuration not loaded. Please check the config.json'
+              );
+            });
         },
         error: (err) => {
           alert(
@@ -58,6 +101,20 @@ export class SettingsService {
           console.error(err);
         },
       });
+  }
+
+  loadExternInformation(): Promise<any[]> {
+    const promises: Promise<any>[] = [];
+
+    promises.push(this.updateASRQuotaInfo(AppSettings.configuration));
+    promises.push(this.updateASRInfo(AppSettings.configuration));
+    promises.push(
+      this.getActiveASRProviders(AppSettings.configuration.api as any)
+    );
+    promises.push(this.getASRLanguages(AppSettings.configuration.api as any));
+    promises.push(this.getMAUSLanguages(AppSettings.configuration.api as any));
+
+    return Promise.all(promises);
   }
 
   updateASRInfo(json: OHConfiguration): Promise<void> {
@@ -175,7 +232,7 @@ export class SettingsService {
           },
           error: (e) => {
             console.error(e);
-            resolve(e);
+            resolve();
           },
         });
       } else {
@@ -218,49 +275,119 @@ export class SettingsService {
     }>((resolve, reject) => {
       this.http
         .get(`${url}?ASRType=call${asrName}ASR`, { responseType: 'text' })
-        .subscribe((result) => {
-          const x2js = new X2JS();
-          const response: any = x2js.xml2js(result);
-          const asrQuotaInfo: {
-            asrName: string;
-            monthlyQuota?: number;
-            usedQuota?: number;
-          } = {
-            asrName,
-          };
-
-          if (response.basQuota) {
-            const info = {
-              monthlyQuota:
-                response.basQuota &&
-                response.basQuota.monthlyQuota &&
-                isNumber(response.basQuota.monthlyQuota)
-                  ? Number(response.basQuota.monthlyQuota)
-                  : null,
-              secsAvailable:
-                response.basQuota &&
-                response.basQuota.secsAvailable &&
-                isNumber(response.basQuota.secsAvailable)
-                  ? Number(response.basQuota.secsAvailable)
-                  : null,
+        .subscribe({
+          next: (result) => {
+            const x2js = new X2JS();
+            const response: any = x2js.xml2js(result);
+            const asrQuotaInfo: {
+              asrName: string;
+              monthlyQuota?: number;
+              usedQuota?: number;
+            } = {
+              asrName,
             };
 
-            if (info.monthlyQuota && info.monthlyQuota !== 999999) {
-              asrQuotaInfo.monthlyQuota = info.monthlyQuota;
+            if (response.basQuota) {
+              const info = {
+                monthlyQuota:
+                  response.basQuota &&
+                  response.basQuota.monthlyQuota &&
+                  isNumber(response.basQuota.monthlyQuota)
+                    ? Number(response.basQuota.monthlyQuota)
+                    : null,
+                secsAvailable:
+                  response.basQuota &&
+                  response.basQuota.secsAvailable &&
+                  isNumber(response.basQuota.secsAvailable)
+                    ? Number(response.basQuota.secsAvailable)
+                    : null,
+              };
+
+              if (info.monthlyQuota && info.monthlyQuota !== 999999) {
+                asrQuotaInfo.monthlyQuota = info.monthlyQuota;
+              }
+
+              if (
+                info.monthlyQuota &&
+                info.secsAvailable !== undefined &&
+                info.secsAvailable !== null &&
+                info.secsAvailable !== 999999
+              ) {
+                asrQuotaInfo.usedQuota = info.monthlyQuota - info.secsAvailable;
+              }
             }
 
-            if (
-              info.monthlyQuota &&
-              info.secsAvailable !== undefined &&
-              info.secsAvailable !== null &&
-              info.secsAvailable !== 999999
-            ) {
-              asrQuotaInfo.usedQuota = info.monthlyQuota - info.secsAvailable;
-            }
-          }
-
-          resolve(asrQuotaInfo);
+            resolve(asrQuotaInfo);
+          },
+          error: (e) => {
+            resolve({
+              asrName,
+            });
+          },
         });
     });
+  }
+
+  public getMAUSLanguages(asrSettings?: ASRSettings): Promise<
+    {
+      ParameterValue: { Value: string; Description: string };
+    }[]
+  > {
+    if (asrSettings?.basConfigURL) {
+      return firstValueFrom(
+        this.http.get<
+          {
+            ParameterValue: { Value: string; Description: string };
+          }[]
+        >(
+          `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runPipeline/Input/LANGUAGE/Values/`,
+          { responseType: 'json' }
+        )
+      );
+    } else {
+      return Promise.resolve([]);
+    }
+  }
+
+  public getASRLanguages(asrSettings?: ASRSettings): Promise<
+    {
+      ParameterValue: { Value: string; Description: string };
+    }[]
+  > {
+    if (asrSettings?.basConfigURL) {
+      return firstValueFrom(
+        this.http.get<
+          {
+            ParameterValue: { Value: string; Description: string };
+          }[]
+        >(
+          `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runASR/Input/LANGUAGE/Values`,
+          { responseType: 'json' }
+        )
+      );
+    } else {
+      return Promise.resolve([]);
+    }
+  }
+
+  public getActiveASRProviders(asrSettings?: ASRSettings): Promise<
+    {
+      ParameterValue: { Value: string; Description: string };
+    }[]
+  > {
+    if (asrSettings?.basConfigURL) {
+      return firstValueFrom(
+        this.http.get<
+          {
+            ParameterValue: { Value: string; Description: string };
+          }[]
+        >(
+          `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runASR/Input/ASRType/Values/`,
+          { responseType: 'json' }
+        )
+      );
+    } else {
+      return Promise.resolve([]);
+    }
   }
 }

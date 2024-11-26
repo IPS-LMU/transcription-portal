@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { TimePipe } from '../../shared/time.pipe';
-import { OHLanguageObject } from '../oh-config';
 import { Task, TaskState } from '../tasks';
 import { Operation } from './operation';
+import { ProviderLanguage } from '../oh-config';
 
 export class UploadOperation extends Operation {
   public constructor(
@@ -89,7 +90,8 @@ export class UploadOperation extends Operation {
   }
 
   public start = (
-    languageObject: OHLanguageObject,
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
     files: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
@@ -100,7 +102,7 @@ export class UploadOperation extends Operation {
     this.changeState(TaskState.UPLOADING);
     this._time.start = Date.now();
 
-    const url = this._commands[0].replace('{{host}}', languageObject.host);
+    const url = this._commands[0].replace('{{host}}', asrService.host);
     const subj = UploadOperation.upload(files, url, httpclient);
 
     subj.subscribe(
@@ -302,4 +304,10 @@ export class UploadOperation extends Operation {
       this.estimatedEnd = 0;
     }
   };
+
+  onMouseEnter(): void {}
+
+  onMouseLeave(): void {}
+
+  onMouseOver(): void {}
 }

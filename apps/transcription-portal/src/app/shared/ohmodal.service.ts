@@ -80,7 +80,7 @@ export class OHModalService implements OnDestroy {
               message,
               sendProtocol,
               screenshots
-            )
+            ) as any
           );
         },
       })

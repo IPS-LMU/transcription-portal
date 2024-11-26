@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Operation } from './operation';
-import { Task, TaskState } from '../tasks';
-import { OHLanguageObject } from '../oh-config';
+import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
+import { ProviderLanguage } from '../oh-config';
+import { Task, TaskState } from '../tasks';
+import { Operation } from './operation';
 
 export class ToolOperation extends Operation {
   public constructor(
@@ -23,7 +24,8 @@ export class ToolOperation extends Operation {
   private active = true;
 
   public start = (
-    languageObject: OHLanguageObject,
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
@@ -111,4 +113,10 @@ export class ToolOperation extends Operation {
   public getToolURL(): string {
     return '';
   }
+
+  onMouseEnter(): void {}
+
+  onMouseLeave(): void {}
+
+  onMouseOver(): void {}
 }

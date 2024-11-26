@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import {
   AudioCutter,
@@ -20,7 +21,6 @@ import { NotificationService } from '../../shared/notification.service';
 import { StorageService } from '../../storage.service';
 import { calcSHA256FromFile } from '../CryptoHelper';
 import { readFileAsArray } from '../functions';
-import { OHLanguageObject } from '../oh-config';
 import { ASROperation } from '../operations/asr-operation';
 import { EmuOperation } from '../operations/emu-operation';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
@@ -37,7 +37,7 @@ import {
 } from './index';
 import { TaskEntry } from './task-entry';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class TaskService implements OnDestroy {
   public newfiles = false;
   public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' =
@@ -45,7 +45,9 @@ export class TaskService implements OnDestroy {
   public protocolURL: SafeResourceUrl | undefined;
   public protocolFileName = '';
   public errorscountchange = new EventEmitter<number>();
-  public selectedlanguage: OHLanguageObject | undefined;
+  public selectedMausLanguage?: string;
+  public selectedASRLanguage?: string;
+  public selectedProvider?: ServiceProvider;
   private options = {
     max_running_tasks: 3,
   };
@@ -395,14 +397,12 @@ export class TaskService implements OnDestroy {
       for (const taskObj of idbTasks) {
         if (taskObj.type === 'task') {
           if (taskObj.asr === null || taskObj.asr === undefined) {
-            const firstLangObj = AppSettings.configuration.api.languages.find(
-              (a) => {
-                return a.code === taskObj.language;
-              }
-            );
+            const firstLangObj = AppSettings.languages.asr.find((a) => {
+              return a.value === taskObj.language;
+            });
 
             if (!(firstLangObj === null || firstLangObj === undefined)) {
-              taskObj.asr = firstLangObj.asr;
+              taskObj.asr = firstLangObj.value;
             }
           }
           const task = Task.fromAny(
@@ -528,20 +528,24 @@ export class TaskService implements OnDestroy {
     if (!(dbEntries[1] === null || dbEntries[1] === undefined)) {
       // read userSettings
       for (const userSetting of dbEntries[1]) {
-        const lang = AppSettings.getLanguageByCode(
-          userSetting.value.language,
-          userSetting.value.asr
-        );
-
         switch (userSetting.name) {
           case 'notification':
             this.notification.permissionGranted = userSetting.value.enabled;
             break;
           case 'defaultTaskOptions':
             // search lang obj
-            if (!(lang === null || lang === undefined)) {
-              this.selectedlanguage = lang;
+            const lang = AppSettings.getLanguageByCode(
+              userSetting.value.asrLanguage,
+              userSetting.value.asrProvider
+            );
+
+            if (lang) {
+              this.selectedASRLanguage = userSetting.value.asrLanguage;
+              this.selectedMausLanguage = userSetting.value.mausLanguage;
             }
+            this.selectedProvider = AppSettings.getServiceInformation(
+              userSetting.value.asrProvider
+            );
             break;
         }
       }
@@ -695,13 +699,16 @@ export class TaskService implements OnDestroy {
             });
           });
           this.storage.saveTask(task);
+          const asrService = AppSettings.getServiceInformation(
+            task.operations[1].providerInformation.provider
+          );
           const langObj = AppSettings.getLanguageByCode(
-            task.language,
+            task.language!,
             task.operations[1].providerInformation.provider
           );
 
-          if (langObj) {
-            task.start(langObj, this.httpclient, [
+          if (langObj && asrService) {
+            task.start(asrService, langObj, this.httpclient, [
               {
                 name: 'GoogleASR',
                 value: this._accessCode,
@@ -1112,7 +1119,7 @@ export class TaskService implements OnDestroy {
           const cutter = new AudioCutter(audioInfo);
           const files: File[] = await cutter.splitChannelsToFiles(
             file.attributes.originalFileName,
-            file.type,
+            [0, 1],
             arrayBuffer
           );
           if (this._splitPrompt === 'PENDING') {
@@ -1186,8 +1193,8 @@ export class TaskService implements OnDestroy {
 
         // new file
         const task = new Task([newFileInfo], this.operations);
-        task.language = this.selectedlanguage?.code;
-        task.asr = this.selectedlanguage?.asr;
+        task.language = this.selectedASRLanguage;
+        task.provider = this.selectedProvider?.provider;
 
         // set state
         for (let i = 0; i < this.operations.length; i++) {

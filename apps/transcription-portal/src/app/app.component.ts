@@ -8,7 +8,6 @@ import { ProceedingsComponent } from './components/proceedings/proceedings.compo
 import { ProtocolFooterComponent } from './components/protocol-footer/protocol-footer.component';
 import { ToolLoaderComponent } from './components/tool-loader/tool-loader.component';
 import { FirstModalComponent } from './modals/first-modal/first-modal.component';
-import { QueueModalComponent } from './modals/queue-modal/queue-modal.component';
 import { SplitModalComponent } from './modals/split-modal/split-modal.component';
 import { Operation } from './obj/operations/operation';
 import { Task } from './obj/tasks';
@@ -38,7 +37,6 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
   @ViewChild('splitModal', { static: true }) splitModal!: SplitModalComponent;
   @ViewChild('firstModal', { static: true }) firstModal!: FirstModalComponent;
-  @ViewChild('queueModal') queueModal!: QueueModalComponent;
   @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
 

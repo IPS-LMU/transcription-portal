@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { stringifyQueryParams } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
+import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskState } from '../tasks';
 import { Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
-import { AppSettings } from '../../shared/app.settings';
-import { OHLanguageObject } from '../oh-config';
-import { FileInfo } from '@octra/web-media';
-import { stringifyQueryParams } from '@octra/utilities';
+import { ProviderLanguage } from '../oh-config';
+import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 
 export class OCTRAOperation extends ToolOperation {
   public constructor(
@@ -31,7 +32,8 @@ export class OCTRAOperation extends ToolOperation {
   protected operations: Operation[] | undefined;
 
   public override start = (
-    languageObject: OHLanguageObject,
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
@@ -155,7 +157,6 @@ export class OCTRAOperation extends ToolOperation {
       ) &&
       this.task
     ) {
-      // @ts-ignore TODO CHECK
       const audio_url = encodeURIComponent(
         (this.operations[0] as any)?.wavFile?.url
       ) as string;
@@ -165,12 +166,13 @@ export class OCTRAOperation extends ToolOperation {
       const embedded = `1`;
 
       const langObj = AppSettings.getLanguageByCode(
-        this.task.language,
-        this.task.asr
+        this.task.language!,
+        this.task.provider!
       );
+      const provider = AppSettings.getServiceInformation(this.task.provider!);
 
-      if (langObj) {
-        const host = encodeURIComponent(langObj.host);
+      if (langObj && provider) {
+        const host = encodeURIComponent(provider.host);
 
         if (this.results.length < 1 && this.previousOperation) {
           if (
@@ -201,7 +203,7 @@ export class OCTRAOperation extends ToolOperation {
         })}`;
       } else {
         console.log(
-          `langObj not found in octra operation lang:${this.task.language} and ${this.task.asr}`
+          `langObj or provider not found in octra operation lang:${this.task.language} and ${this.task.provider}`
         );
       }
     }

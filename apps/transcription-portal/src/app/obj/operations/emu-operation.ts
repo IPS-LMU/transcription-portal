@@ -4,9 +4,10 @@ import { Task, TaskState } from '../tasks';
 import { Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
-import { OHLanguageObject } from '../oh-config';
 import { AppSettings } from '../../shared/app.settings';
 import { FileInfo } from '@octra/web-media';
+import { ServiceProvider } from '@octra/ngx-components';
+import { ProviderLanguage } from '../oh-config';
 
 export class EmuOperation extends ToolOperation {
   protected operations?: Operation[];
@@ -30,7 +31,8 @@ export class EmuOperation extends ToolOperation {
   public override resultType = 'AnnotJSON';
 
   public override start = (
-    languageObject: OHLanguageObject,
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
@@ -154,6 +156,7 @@ export class EmuOperation extends ToolOperation {
     result.updateProtocol(operationObj.protocol);
     result.operations = task.operations;
     result.enabled = operationObj.enabled;
+
     return result;
   }
 
@@ -171,8 +174,8 @@ export class EmuOperation extends ToolOperation {
       )}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(
-        this.task?.language,
-        this.task?.asr
+        this.task?.language!,
+        this.task?.provider!
       );
       let result = null;
       const lastResultMaus = this.previousOperation?.lastResult;
@@ -205,7 +208,7 @@ export class EmuOperation extends ToolOperation {
         console.error(`result url is null or undefined`);
       } else {
         console.log(
-          `langObj not found in octra operation lang:${this.task?.language} and ${this.task?.asr}`
+          `langObj not found in octra operation lang:${this.task?.language} and ${this.task?.provider}`
         );
       }
     }

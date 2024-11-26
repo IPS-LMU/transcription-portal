@@ -1,22 +1,20 @@
+import { ServiceProvider } from '@octra/ngx-components';
+
 export interface OHConfiguration {
   name: string;
   version: string;
   api: {
     commands: OHCommand[];
-    languages: OHLanguageObject[];
-    services: OHService[];
+    services: ServiceProvider[];
     asrInfoURL?: string;
     asrQuotaInfoURL?: string;
+    basConfigURL?: string;
     octraBackend: {
       url: '';
       key: '';
     };
   };
   plugins: {
-    emailSender: {
-      authKey: string;
-      url: string;
-    };
     tracking?: {
       active: string;
       matomo: {
@@ -31,30 +29,13 @@ export interface OHConfiguration {
   }[];
 }
 
-export interface OHLanguageObject {
-  code: string;
-  name: string;
-  asr: string;
-  state: string;
-  host: string;
-}
-
 export interface OHCommand {
   name: string;
   calls: string[];
 }
 
-export interface OHService {
-  provider: string;
-  basName?: string;
-  maxSignalDuration?: number;
-  maxSignalSize?: number;
-  quotaPerMonth?: number;
-  knownIssues?: string;
-  usedQuota?: number;
-  type: string;
-  termsURL: string;
-  dataStoragePolicy: string;
-  homepageURL: string;
-  logoURL: string;
+export interface ProviderLanguage {
+  value: string;
+  providersOnly?: string[];
+  description: string;
 }

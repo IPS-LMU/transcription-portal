@@ -39,7 +39,7 @@ import { FirstModalComponent } from '../modals/first-modal/first-modal.component
 import { QueueModalComponent } from '../modals/queue-modal/queue-modal.component';
 import { SplitModalComponent } from '../modals/split-modal/split-modal.component';
 import { StatisticsModalComponent } from '../modals/statistics-modal/statistics-modal.component';
-import { OHLanguageObject } from '../obj/oh-config';
+import { openModal } from '../obj/functions';
 import { EmuOperation } from '../obj/operations/emu-operation';
 import { OCTRAOperation } from '../obj/operations/octra-operation';
 import { Operation } from '../obj/operations/operation';
@@ -142,12 +142,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       // configuration loaded
       this.cd.markForCheck();
       this.cd.detectChanges();
-      this.taskService.selectedlanguage =
-        AppSettings.configuration.api.languages[0];
 
       new Promise<any>((resolve, reject) => {
         if (!this.storage.ready) {
-          this.subscribe(this.storage.allloaded, {
+          this.subscribe(this.storage.allloaded.asObservable(), {
             next: (results) => {
               resolve(results);
             },
@@ -271,12 +269,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   openQueueModal() {
-    const ref = this.ngbModalService.open(
+    const ref = openModal<QueueModalComponent>(
+      this.ngbModalService,
       QueueModalComponent,
       QueueModalComponent.options
     );
     ref.componentInstance.queue = this.taskService.preprocessor.queue;
-    ref.componentInstance.tasks = this.taskService.taskList?.getAllTasks();
+    ref.componentInstance.tasks =
+      this.taskService.taskList?.getAllTasks() ?? [];
     ref.componentInstance.operations = this.taskService.operations;
   }
 
@@ -496,36 +496,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   onOperationHover(operation: Operation) {}
 
-  onASRLangChanged(lang: OHLanguageObject) {
-    if (
-      lang.code !== this.taskService.selectedlanguage?.code ||
-      lang.asr !== this.taskService.selectedlanguage.asr
-    ) {
-      this.taskService.selectedlanguage = lang;
-      this.changeLanguageforAllQueuedTasks();
-      this.storage.saveUserSettings('defaultTaskOptions', {
-        language: lang.code,
-        asr: lang.asr,
-      });
-    }
-  }
-
-  changeLanguageforAllQueuedTasks() {
-    if (this.taskService.taskList && this.taskService.selectedlanguage) {
-      const tasks = this.taskService.taskList.getAllTasks();
-
-      for (const task of tasks) {
-        if (task.state === TaskState.QUEUED) {
-          task.language = this.taskService.selectedlanguage.code;
-          task.asr = this.taskService.selectedlanguage.asr;
-          this.storage.saveTask(task);
-        }
-      }
-    } else {
-      throw new Error('taskList is undefined');
-    }
-  }
-
   getShortCode(code: string) {
     return code.substring(code.length - 2);
   }
@@ -704,12 +674,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   .providerInformation
               ) {
                 const langObj = AppSettings.getLanguageByCode(
-                  this.toolSelectedOperation.task.language,
+                  this.toolSelectedOperation.task.language!,
                   this.toolSelectedOperation.task.operations[1]
                     .providerInformation.provider
                 );
                 if (langObj) {
                   this.toolSelectedOperation.task.restart(
+                    this.toolSelectedOperation.task.operations[1]
+                      .providerInformation,
                     langObj,
                     this.httpclient,
                     [
@@ -915,11 +887,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         operation.task &&
         operation.task.operations[1].providerInformation
       ) {
-        const langObj = AppSettings.getLanguageByCode(
-          operation.task.language,
-          operation.task.operations[1].providerInformation.provider
-        );
-        const url = `${langObj?.host}uploadFileMulti`;
+        const url = `${operation.task.operations[1].providerInformation.host}uploadFileMulti`;
 
         const subj = UploadOperation.upload([file], url, this.httpclient);
         subj.subscribe(

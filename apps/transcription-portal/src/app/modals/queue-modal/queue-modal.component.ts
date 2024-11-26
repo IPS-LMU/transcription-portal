@@ -1,29 +1,23 @@
-import { NgClass, NgStyle, UpperCasePipe } from '@angular/common';
+import { NgClass, NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  Input,
   OnDestroy,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   NgbActiveModal,
   NgbDropdown,
-  NgbDropdownMenu,
-  NgbDropdownToggle,
-  NgbModal,
   NgbModalOptions,
   NgbPopover,
 } from '@ng-bootstrap/ng-bootstrap';
+import { AsrOptionsComponent, ServiceProvider } from '@octra/ngx-components';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, FileInfo } from '@octra/web-media';
-import {
-  OHConfiguration,
-  OHLanguageObject,
-  OHService,
-} from '../../obj/oh-config';
+import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
 import { OCTRAOperation } from '../../obj/operations/octra-operation';
@@ -46,21 +40,19 @@ import { StorageService } from '../../storage.service';
   imports: [
     NgClass,
     NgStyle,
-    UpperCasePipe,
     TimePipe,
-    NgbDropdown,
-    NgbDropdownMenu,
-    NgbDropdownToggle,
     NgbPopover,
+    FormsModule,
+    AsrOptionsComponent,
   ],
 })
 export class QueueModalComponent implements OnDestroy {
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
   @ViewChild('pop', { static: true }) popover?: NgbPopover;
 
-  @Input() tasks: Task[] = [];
-  @Input() queue: QueueItem[] = [];
-  @Input() operations: Operation[] = [];
+  tasks: Task[] = [];
+  queue: QueueItem[] = [];
+  operations: Operation[] = [];
   public mouseInDropdown = false;
   public serviceProviders: any = {};
   public static options: NgbModalOptions = {
@@ -76,21 +68,20 @@ export class QueueModalComponent implements OnDestroy {
     checks: CompatibleResult[];
   }[] = [];
 
-  public get selectedASRInfo(): OHService | undefined {
+  public get selectedASRInfo(): ServiceProvider | undefined {
     if (
       this.serviceProviders &&
-      this.taskService.selectedlanguage &&
-      hasProperty(this.serviceProviders, this.taskService.selectedlanguage.asr)
+      this.taskService.selectedASRLanguage &&
+      hasProperty(this.serviceProviders, this.taskService.selectedASRLanguage)
     ) {
       return (this.serviceProviders as any)[
-        this.taskService?.selectedlanguage?.asr as string
-      ] as OHService;
+        this.taskService?.selectedASRLanguage
+      ] as ServiceProvider;
     }
     return undefined;
   }
 
   constructor(
-    private ngbModalService: NgbModal,
     protected activeModal: NgbActiveModal,
     public taskService: TaskService,
     private storage: StorageService,
@@ -161,26 +152,15 @@ export class QueueModalComponent implements OnDestroy {
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility(
             task.files[0] as AudioInfo,
-            task.asr
+            task.provider!
           ),
         });
       }
     }
   }
 
-  onASRItemClicked(lang: OHLanguageObject) {
-    if (lang.state === 'active') {
-      this.taskService.selectedlanguage = lang;
-      this.changeLanguageforAllQueuedTasks();
-    }
-  }
-
-  getShortCode(code: string) {
-    return code.substring(code.length - 2);
-  }
-
   changeLanguageforAllQueuedTasks() {
-    if (this.taskService.selectedlanguage) {
+    if (this.taskService.selectedASRLanguage) {
       this.compatibleTable = [];
 
       const tasks = this.tasks.filter((a) => {
@@ -188,11 +168,11 @@ export class QueueModalComponent implements OnDestroy {
       });
 
       for (const task of tasks) {
-        task.language = this.taskService.selectedlanguage.code;
-        task.asr = this.taskService.selectedlanguage.asr;
+        task.language = this.taskService.selectedASRLanguage;
+        task.provider = this.taskService.selectedProvider?.provider;
         task.operations[1].providerInformation =
           AppSettings.getServiceInformation(
-            this.taskService.selectedlanguage.asr
+            this.taskService.selectedProvider?.provider!
           );
         this.storage.saveTask(task);
 
@@ -204,13 +184,15 @@ export class QueueModalComponent implements OnDestroy {
           this.compatibleTable.push({
             id: task.id,
             fileName: !audioInfo ? '' : audioInfo.name,
-            checks: this.checkAudioFileCompatibility(audioInfo, task.asr),
+            checks: this.checkAudioFileCompatibility(audioInfo, task.provider!),
           });
         }
       }
+
       this.storage.saveUserSettings('defaultTaskOptions', {
-        language: this.taskService.selectedlanguage.code,
-        asr: this.taskService.selectedlanguage.asr,
+        asrLanguage: this.taskService.selectedASRLanguage,
+        mausLanguage: this.taskService.selectedMausLanguage,
+        asrProvider: this.taskService.selectedProvider?.provider,
       });
 
       if (this.dropdown) {
@@ -463,36 +445,31 @@ export class QueueModalComponent implements OnDestroy {
     return [];
   }
 
-  getQuotaPercentage(langAsr: string) {
-    if (this.serviceProviders[langAsr]) {
-      const ohService: OHService = this.serviceProviders[langAsr] as OHService;
-      if (ohService.usedQuota && ohService.quotaPerMonth) {
-        return Math.round(
-          (ohService.usedQuota / ohService.quotaPerMonth) * 100
-        );
-      }
-    }
-    return 0;
+  onASROptionsChange($event: {
+    accessCode?: string;
+    selectedMausLanguage?: string;
+    selectedASRLanguage?: string;
+    selectedServiceProvider?: ServiceProvider;
+  }) {
+    this.onASRLangChanged(
+      $event.selectedASRLanguage,
+      $event.selectedServiceProvider,
+      $event.selectedMausLanguage
+    );
   }
 
-  getQuotaLabel(langAsr: string) {
-    if (this.serviceProviders[langAsr]) {
-      const ohService: OHService = this.serviceProviders[langAsr] as OHService;
-      if (ohService.usedQuota && ohService.quotaPerMonth) {
-        const remainingQuota =
-          (ohService.quotaPerMonth - ohService.usedQuota) / 60;
-        let label = '';
-        if (remainingQuota > 60) {
-          label = `${Math.round(remainingQuota / 60)} hours`;
-        } else {
-          label = `${Math.round(remainingQuota)} minutes`;
-        }
-
-        return `Free quota: Approx.<br/><b>${label}</b><br/>of recording time shared among all BAS users.`;
-      }
-    }
-    return '';
+  onASRLangChanged(
+    lang?: string,
+    provider?: ServiceProvider,
+    mausLang?: string
+  ) {
+    this.taskService.selectedASRLanguage = lang;
+    this.taskService.selectedProvider = provider;
+    this.taskService.selectedMausLanguage = mausLang;
+    this.changeLanguageforAllQueuedTasks();
   }
+
+  protected readonly AppSettings = AppSettings;
 }
 
 interface CompatibleResult {

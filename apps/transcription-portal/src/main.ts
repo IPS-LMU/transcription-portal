@@ -9,7 +9,7 @@ import {
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { NgChartsModule } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -57,7 +57,6 @@ bootstrapApplication(AppComponent, {
     OHModalService,
     DownloadService,
     NgbActiveModal,
-    NgbModal,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
   ],

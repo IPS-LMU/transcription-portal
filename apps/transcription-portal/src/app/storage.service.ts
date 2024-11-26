@@ -7,7 +7,7 @@ import { Operation } from './obj/operations/operation';
 import { SubscriptionManager } from '@octra/utilities';
 import { Subscription } from 'rxjs';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class StorageService {
   public ready = false;
   public tasksFound = false;
