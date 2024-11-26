@@ -147,7 +147,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
           this.taskService.init();
           this.taskService.importDBData({ tasks, userSettings });
           this.cd.markForCheck();
-          this.cd.detectChanges();
 
           this.storage.idbm.intern
             .get('firstModalShown')

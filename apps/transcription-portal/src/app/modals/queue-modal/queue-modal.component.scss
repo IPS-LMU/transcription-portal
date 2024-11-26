@@ -1,3 +1,10 @@
+:host {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+  height: 100%;
+}
+
 #queue tr td,
 #queue thead th,
 #queue thead th div {

@@ -31,17 +31,17 @@ export class IndexedDBManager extends Dexie {
   constructor(dbname: string) {
     super(dbname);
     this.version(2).stores({
-      intern: '&name, value',
+      intern: 'name, value',
       tasks:
-        '++id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
-      userSettings: '&name, value',
+        'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+      userSettings: 'name, value',
     });
     this.version(3)
       .stores({
-        intern: '&name, value',
+        intern: 'name, value',
         tasks:
-          '++id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
-        userSettings: '&name, value',
+          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        userSettings: 'name, value',
       })
       .upgrade((transaction) => {
         transaction

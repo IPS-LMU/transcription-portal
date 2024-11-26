@@ -3,7 +3,10 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   OnDestroy,
+  OnInit,
+  Renderer2,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -15,7 +18,6 @@ import {
   NgbPopover,
 } from '@ng-bootstrap/ng-bootstrap';
 import { AsrOptionsComponent, ServiceProvider } from '@octra/ngx-components';
-import { hasProperty } from '@octra/utilities';
 import { AudioInfo, FileInfo } from '@octra/web-media';
 import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
@@ -46,7 +48,7 @@ import { StorageService } from '../../storage.service';
     AsrOptionsComponent,
   ],
 })
-export class QueueModalComponent implements OnDestroy {
+export class QueueModalComponent implements OnDestroy, OnInit {
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
   @ViewChild('pop', { static: true }) popover?: NgbPopover;
 
@@ -54,10 +56,9 @@ export class QueueModalComponent implements OnDestroy {
   queue: QueueItem[] = [];
   operations: Operation[] = [];
   public mouseInDropdown = false;
-  public serviceProviders: any = {};
   public static options: NgbModalOptions = {
     size: 'xl',
-    fullscreen: 'sm',
+    fullscreen: 'lg',
     keyboard: false,
     backdrop: 'static',
   };
@@ -69,16 +70,7 @@ export class QueueModalComponent implements OnDestroy {
   }[] = [];
 
   public get selectedASRInfo(): ServiceProvider | undefined {
-    if (
-      this.serviceProviders &&
-      this.taskService.selectedASRLanguage &&
-      hasProperty(this.serviceProviders, this.taskService.selectedASRLanguage)
-    ) {
-      return (this.serviceProviders as any)[
-        this.taskService?.selectedASRLanguage
-      ] as ServiceProvider;
-    }
-    return undefined;
+    return this.taskService.selectedProvider;
   }
 
   constructor(
@@ -86,11 +78,15 @@ export class QueueModalComponent implements OnDestroy {
     public taskService: TaskService,
     private storage: StorageService,
     private cd: ChangeDetectorRef,
-    private settingsService: SettingsService
-  ) {
-    for (const provider of AppSettings.configuration.api.services) {
-      this.serviceProviders[provider.provider] = provider;
-    }
+    private elementRef: ElementRef,
+    private settingsService: SettingsService,
+    private renderer: Renderer2
+  ) {}
+
+  ngOnInit(): void {
+    this.renderer.addClass(this.elementRef.nativeElement, 'd-flex');
+    this.renderer.addClass(this.elementRef.nativeElement, 'flex-column');
+    this.renderer.addClass(this.elementRef.nativeElement, 'h-100');
   }
 
   public get AppConfiguration(): OHConfiguration {

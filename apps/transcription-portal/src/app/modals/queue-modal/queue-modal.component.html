@@ -5,7 +5,7 @@
   </button>
   <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
-<div class="modal-body">
+<div class="modal-body d-flex flex-column h-100">
 
   <div>
     <p style="font-size: 0.9em;text-align: justify;margin-bottom:0;">
@@ -27,6 +27,26 @@
         skipped.
       </p>
     }
+
+    <div class="row">
+      <div class="col-lg-6">
+        <octra-asr-options
+          [options]="{
+       selectedASRLanguage: this.taskService.selectedASRLanguage!,
+       selectedMausLanguage: this.taskService.selectedMausLanguage!,
+       selectedServiceProvider: this.taskService.selectedProvider!
+      }"
+          (optionsChange)="onASROptionsChange($event)"
+          [languageSettings]="{
+        services: AppSettings.configuration.api.services
+      }"
+          [mausLanguages]="AppSettings.languages.maus"
+          [asrLanguages]="AppSettings.languages.asr"
+          [showAccessCode]="false"
+        ></octra-asr-options>
+      </div>
+    </div>
+
     @if (isOneAudiofileInvalid()) {
       <div class="alert alert-danger" style="font-size: 0.9em;">
         One or more audio files do not fit the ASR provider's requirements:
@@ -57,25 +77,7 @@
       </div>
     }
 
-    <div class="row">
-      <div class="col-lg-6">
-        <octra-asr-options
-          [options]="{
-       selectedASRLanguage: this.taskService.selectedASRLanguage!,
-       selectedMausLanguage: this.taskService.selectedMausLanguage!,
-       selectedServiceProvider: this.taskService.selectedProvider!
-      }"
-          (optionsChange)="onASROptionsChange($event)"
-          [languageSettings]="{
-        services: AppSettings.configuration.api.services
-      }"
-          [mausLanguages]="AppSettings.languages.maus"
-          [asrLanguages]="AppSettings.languages.asr"
-          [showAccessCode]="false"
-        ></octra-asr-options>
-      </div>
-    </div>
-    <table class="table table-responsive table-striped" id="queue">
+    <table class="table table-responsive-md table-striped" id="queue">
       <thead>
       <tr>
         <th>Valid?</th>
