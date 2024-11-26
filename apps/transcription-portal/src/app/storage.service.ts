@@ -1,18 +1,33 @@
-import { EventEmitter, Injectable } from '@angular/core';
-import { IndexedDBManager } from './obj/IndexedDBManager';
-import { Task, TaskDirectory } from './obj/tasks';
-import { AppInfo } from './app.info';
-import { TaskEntry } from './obj/tasks/task-entry';
-import { Operation } from './obj/operations/operation';
+import { Injectable } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { AppInfo } from './app.info';
+import {
+  IDBInternItem,
+  IDBTaskItem,
+  IDBUserSettingsItem,
+  IndexedDBManager,
+} from './obj/IndexedDBManager';
+import { Operation } from './obj/operations/operation';
+import { Task, TaskDirectory } from './obj/tasks';
+import { TaskEntry } from './obj/tasks/task-entry';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
+  get idbm(): IndexedDBManager {
+    return this._idbm;
+  }
+
   public ready = false;
   public tasksFound = false;
-  public allloaded: EventEmitter<any[]> = new EventEmitter<any[]>();
-  private idbm: IndexedDBManager;
+  public allloaded = new BehaviorSubject<{
+    tasks: IDBTaskItem[];
+    userSettings: IDBUserSettingsItem[];
+  }>({
+    tasks: [],
+    userSettings: [],
+  });
+  private _idbm: IndexedDBManager;
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   private userProfile = {
@@ -26,7 +41,10 @@ export class StorageService {
 
   public set userEmail(value: string) {
     this.userProfile.email = value;
-    this.idbm.save('userSettings', 'userProfile', { value: this.userProfile });
+    this.idbm.userSettings.put({
+      name: 'userProfile',
+      value: this.userProfile,
+    });
   }
 
   public get userName(): string {
@@ -35,136 +53,67 @@ export class StorageService {
 
   public set userName(value: string) {
     this.userProfile.name = value;
-    this.idbm.save('userSettings', 'userProfile', { value: this.userProfile });
+    this.idbm.userSettings.put({
+      name: 'userProfile',
+      value: this.userProfile,
+    });
   }
 
   constructor() {
-    this.idbm = new IndexedDBManager('oh-portal');
-    this.subscrmanager.add(
-      this.idbm.open(2).subscribe(
-        (result) => {
-          console.log('open db');
-          if (result.type === 'success') {
-            // database opened
-            console.log('IDB opened');
-            this.idbm
-              .count('tasks')
-              .then((count) => {
-                if (count > 0) {
-                  this.tasksFound = true;
-                }
-              })
-              .catch((error) => {
-                console.error(error);
-              });
-            this.idbm.save('intern', 'version', { value: AppInfo.version });
-            setTimeout(() => {
-              const promises = [];
-              promises.push(this.idbm.get('intern', 'taskCounter'));
-              promises.push(this.idbm.get('intern', 'operationCounter'));
+    this._idbm = new IndexedDBManager('oh-portal');
+    this._idbm.open().catch((e) => {
+      alert(e.message);
+    });
+    this._idbm.on('ready', async () => {
+      console.log('IDB ready.');
+      const tasksCount = await this._idbm.tasks.count();
+      this.tasksFound = tasksCount > 0;
+      this._idbm.intern.put({
+        name: 'version',
+        value: AppInfo.version,
+      });
 
-              promises.push(this.idbm.getAll('tasks'));
-              promises.push(this.idbm.getAll('userSettings'));
+      const promises = [];
+      promises.push(this._idbm.intern.get('taskCounter'));
+      promises.push(this._idbm.intern.get('operationCounter'));
 
-              Promise.all(promises)
-                .then((results) => {
-                  TaskEntry.counter = results[0].value;
-                  Operation.counter = results[1].value;
-                  this.ready = true;
+      promises.push(this._idbm.tasks.toArray());
+      promises.push(this._idbm.userSettings.toArray());
 
-                  if (results[3]) {
-                    const userProfile = results[3].find((a: any) => {
-                      return a.name === 'userProfile';
-                    });
+      Promise.all<
+        [IDBInternItem, IDBInternItem, IDBTaskItem[], IDBUserSettingsItem[]]
+      >(promises as any)
+        .then(([taskCounter, operationCounter, tasks, userSettings]) => {
+          TaskEntry.counter = taskCounter.value;
+          Operation.counter = operationCounter.value;
+          this.ready = true;
 
-                    if (userProfile && userProfile.value) {
-                      this.userProfile = userProfile.value;
-                    }
-                  }
+          if (userSettings) {
+            const userProfile = userSettings.find((a: any) => {
+              return a.name === 'userProfile';
+            });
 
-                  this.allloaded.emit([results[2], results[3]]);
-                })
-                .catch((err) => {
-                  console.error(err);
-                  this.ready = true;
-                  this.allloaded.emit();
-                });
-            }, 500);
-          } else if (result.type === 'upgradeneeded') {
-            // database opened and needs upgrade/installation
-
-            let oldVersion = result.oldVersion;
-
-            // foreach step to the latest version you need to define the uprade
-            // procedure
-            if (this.idbm.db) {
-              new Promise<void>((resolve, reject) => {
-                if (this.idbm.db) {
-                  if (oldVersion === 0) {
-                    const promises = [];
-
-                    const optionsStore = this.idbm.db.createObjectStore(
-                      'intern',
-                      { keyPath: 'name' }
-                    );
-                    promises.push(
-                      this.idbm.save(optionsStore, 'version', { value: 0 })
-                    );
-                    promises.push(
-                      this.idbm.save(optionsStore, 'taskCounter', { value: 0 })
-                    );
-                    promises.push(
-                      this.idbm.save(optionsStore, 'operationCounter', {
-                        value: 0,
-                      })
-                    );
-
-                    Promise.all(promises)
-                      .then(() => {
-                        oldVersion++;
-                        console.log(`IDB upgraded to v${oldVersion}`);
-                        resolve();
-                      })
-                      .catch((err) => {
-                        console.error(err);
-                        reject(err);
-                      });
-                    this.idbm.db.createObjectStore('tasks', { keyPath: 'id' });
-                  } else {
-                    // skip update to 1
-                    resolve();
-                  }
-                }
-              })
-                .then(() => {
-                  return new Promise<void>((resolve) => {
-                    if (this.idbm.db) {
-                      if (oldVersion === 1) {
-                        console.log(`UPDATE TO 2!`);
-                        this.idbm.db.createObjectStore('userSettings', {
-                          keyPath: 'name',
-                        });
-                        oldVersion++;
-                        resolve();
-                      } else {
-                        // skip update to 2
-                        resolve();
-                      }
-                    }
-                  });
-                })
-                .catch((err) => {
-                  console.error(`update to db v1 failed`);
-                  console.error(err);
-                });
+            if (userProfile && userProfile.value) {
+              this.userProfile = userProfile.value;
             }
           }
-        },
-        (error) => {
-          console.error(error);
-        }
-      )
-    );
+
+          this.allloaded.next({
+            tasks,
+            userSettings,
+          });
+          this.allloaded.complete();
+        })
+        .catch((err) => {
+          console.error(err);
+          this.ready = true;
+          this.allloaded.next({
+            tasks: [],
+            userSettings: [],
+          });
+          this.allloaded.complete();
+        });
+    });
   }
 
   public saveTask(taskEntry: Task | TaskDirectory): Promise<void> {
@@ -182,8 +131,8 @@ export class StorageService {
 
       promise
         .then((data) => {
-          this.idbm
-            .save('tasks', data.id, data)
+          this.idbm.tasks
+            .put(data)
             .then(() => {
               resolve();
             })
@@ -198,19 +147,22 @@ export class StorageService {
   }
 
   public saveCounter(name: string, value: number) {
-    this.idbm.save('intern', name, {
+    this.idbm.intern.put({
+      name,
       value,
     });
   }
 
   public saveIntern(name: string, value: any) {
-    this.idbm.save('intern', name, {
+    this.idbm.intern.put({
+      name,
       value,
     });
   }
 
   public saveUserSettings(name: string, value: any) {
-    this.idbm.save('userSettings', name, {
+    this.idbm.userSettings.put({
+      name,
       value,
     });
   }
@@ -219,8 +171,8 @@ export class StorageService {
     return new Promise<void>((resolve, reject) => {
       if (entry instanceof Task) {
         if (entry.directory === null || entry.directory === undefined) {
-          this.idbm
-            .remove('tasks', entry.id)
+          this.idbm.tasks
+            .delete(entry.id)
             .then(() => {
               resolve();
             })
@@ -243,8 +195,8 @@ export class StorageService {
           }
         }
       } else {
-        this.idbm
-          .remove('tasks', entry.id)
+        this.idbm.tasks
+          .delete(entry.id)
           .then(() => {
             resolve();
           })
@@ -256,7 +208,7 @@ export class StorageService {
   }
 
   public getIntern(name: string) {
-    return this.idbm.get('intern', name);
+    return this.idbm.intern.get(name);
   }
 
   public destroy() {
@@ -264,7 +216,9 @@ export class StorageService {
   }
 
   public clearAll() {
-    this.idbm.removeDatabase('oh-portal');
+    this._idbm.delete({
+      disableAutoOpen: true,
+    });
     window.location.reload();
   }
 }

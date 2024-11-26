@@ -193,7 +193,7 @@ export class ASROperation extends Operation {
         .replace('{{host}}', asrService.host)
         .replace('{{audioURL}}', this.previousOperation?.lastResult?.url ?? '')
         .replace('{{asrType}}', asrService.provider!)
-        .replace('{{language}}', this.task?.language!);
+        .replace('{{language}}', this.task?.asrLanguage!);
 
       if (accessCode !== '') {
         url += `&ACCESSCODE=${accessCode}`;
@@ -301,7 +301,7 @@ export class ASROperation extends Operation {
               this.previousOperation?.lastResult?.url ?? ''
             )
             .replace('{{asrType}}', `${asrService.provider}`)
-            .replace('{{language}}', this.task?.language!);
+            .replace('{{language}}', this.task?.asrLanguage!);
 
           httpClient
             .post(

@@ -166,10 +166,12 @@ export class OCTRAOperation extends ToolOperation {
       const embedded = `1`;
 
       const langObj = AppSettings.getLanguageByCode(
-        this.task.language!,
-        this.task.provider!
+        this.task.asrLanguage!,
+        this.task.asrProvider!
       );
-      const provider = AppSettings.getServiceInformation(this.task.provider!);
+      const provider = AppSettings.getServiceInformation(
+        this.task.asrProvider!
+      );
 
       if (langObj && provider) {
         const host = encodeURIComponent(provider.host);
@@ -203,7 +205,7 @@ export class OCTRAOperation extends ToolOperation {
         })}`;
       } else {
         console.log(
-          `langObj or provider not found in octra operation lang:${this.task.language} and ${this.task.provider}`
+          `langObj or provider not found in octra operation lang:${this.task.asrLanguage} and ${this.task.asrProvider}`
         );
       }
     }

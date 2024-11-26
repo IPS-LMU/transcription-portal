@@ -368,8 +368,8 @@
         }}
         , Language: @if (toolSelectedOperation !== undefined &&
         toolSelectedOperation.task !== undefined &&
-        toolSelectedOperation.task.language !== undefined) {
-        {{ toolSelectedOperation.task.language }}
+        toolSelectedOperation.task.asrLanguage !== undefined) {
+        {{ toolSelectedOperation.task.asrLanguage }}
         } , Audio duration: {{ getTime() | time }}
         } @if ( toolSelectedOperation &&
         toolSelectedOperation.previousOperation!.results.length < 1 &&
@@ -381,8 +381,8 @@
           toolSelectedOperation!.previousOperation!.previousOperation!
             .results[0]!.attributes?.originalFileName
         }}
-        , Language: @if ( toolSelectedOperation.task?.language !== undefined) {
-        {{ toolSelectedOperation.task!.language }}
+        , Language: @if ( toolSelectedOperation.task?.asrLanguage !== undefined) {
+        {{ toolSelectedOperation.task!.asrLanguage }}
         } , Audio duration: {{ getTime() | time }}
         }
       </p>

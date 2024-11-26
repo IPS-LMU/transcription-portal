@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
-import { TaskEntry } from './task-entry';
-import { IAccessCode, Operation } from '../operations/operation';
-import { OHCommand, ProviderLanguage } from '../oh-config';
-import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
-import { SubscriptionManager } from '@octra/utilities';
 import { ServiceProvider } from '@octra/ngx-components';
+import { SubscriptionManager } from '@octra/utilities';
+import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
+import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
+import { OHCommand, ProviderLanguage } from '../oh-config';
+import { IAccessCode, Operation } from '../operations/operation';
+import { TaskEntry } from './task-entry';
 
 export enum TaskState {
   INACTIVE = 'INACTIVE',
@@ -44,8 +44,13 @@ export class Task {
   private stopRequested = false;
   private readonly _id: number;
 
-  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
-    if ((id === null || id === undefined)) {
+  constructor(
+    files: FileInfo[],
+    operations: Operation[],
+    directory?: TaskDirectory,
+    id?: number
+  ) {
+    if (id === null || id === undefined) {
       this._id = ++TaskEntry.counter;
     } else {
       this._id = id;
@@ -68,24 +73,34 @@ export class Task {
     return this._id;
   }
 
-  private _language?: string;
+  private _asrLanguage?: string;
 
-  get language(): string | undefined {
-    return this._language;
+  get asrLanguage(): string | undefined {
+    return this._asrLanguage;
   }
 
-  set language(value: string | undefined) {
-    this._language = value;
+  set asrLanguage(value: string | undefined) {
+    this._asrLanguage = value;
   }
 
-  private _provider?: string;
+  private _mausLanguage?: string;
 
-  get provider(): string | undefined {
-    return this._provider;
+  get mausLanguage(): string | undefined {
+    return this._mausLanguage;
   }
 
-  set provider(value: string | undefined) {
-    this._provider = value;
+  set mausLanguage(value: string | undefined) {
+    this._mausLanguage = value;
+  }
+
+  private _asrProvider?: string;
+
+  get asrProvider(): string | undefined {
+    return this._asrProvider;
+  }
+
+  set asrProvider(value: string | undefined) {
+    this._asrProvider = value;
   }
 
   private _files: FileInfo[];
@@ -128,13 +143,20 @@ export class Task {
     return this._state;
   }
 
-  public static fromAny(taskObj: any, commands: OHCommand[], defaultOperations: Operation[]): Task {
+  public static fromAny(
+    taskObj: any,
+    commands: OHCommand[],
+    defaultOperations: Operation[]
+  ): Task {
     const operations: Operation[] = [];
 
     const task = new Task([], operations, undefined, taskObj.id);
-    task.language = taskObj.language;
-    task._provider = (taskObj.operations[1].webService && taskObj.operations[1].webService !== '')
-      ? taskObj.operations[1].webService : taskObj.asr;
+    task.asrLanguage = taskObj.asrLanguage;
+    task._asrProvider =
+      taskObj.operations[1].webService &&
+      taskObj.operations[1].webService !== ''
+        ? taskObj.operations[1].webService
+        : taskObj.asrProvider;
 
     if (taskObj.state !== TaskState.PROCESSING) {
       task.changeState(taskObj.state);
@@ -146,7 +168,15 @@ export class Task {
       let info;
 
       if (file.fullname.indexOf('wav') > 0) {
-        info = new AudioInfo(file.fullname, file.type, file.size, file.sampleRate, file.duration, file.channels, file.bitsPerSecond);
+        info = new AudioInfo(
+          file.fullname,
+          file.type,
+          file.size,
+          file.sampleRate,
+          file.duration,
+          file.channels,
+          file.bitsPerSecond
+        );
         info.attributes = file.attributes;
         info.hash = file.hash;
       } else {
@@ -164,7 +194,10 @@ export class Task {
             operation.changeState(TaskState.PENDING);
           } else {
             if (operation.state === TaskState.PROCESSING) {
-              if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
+              if (
+                operation.name === 'OCTRA' ||
+                operation.name === 'Emu WebApp'
+              ) {
                 operation.changeState(TaskState.READY);
               } else {
                 operation.changeState(TaskState.PENDING);
@@ -176,8 +209,10 @@ export class Task {
         }
       }
     }
-    const isSomethingPending = task.operations.findIndex(a => a.state === TaskState.PENDING) > -1;
-    const isSomethingReady = task.operations.findIndex(a => a.state === TaskState.READY) > -1;
+    const isSomethingPending =
+      task.operations.findIndex((a) => a.state === TaskState.PENDING) > -1;
+    const isSomethingReady =
+      task.operations.findIndex((a) => a.state === TaskState.READY) > -1;
 
     if (task.state !== TaskState.QUEUED) {
       if (isSomethingPending) {
@@ -192,19 +227,34 @@ export class Task {
     return task;
   }
 
-  public start(asrService: ServiceProvider, languageObj: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  public start(
+    asrService: ServiceProvider,
+    languageObj: ProviderLanguage,
+    httpclient: HttpClient,
+    accessCodes: IAccessCode[]
+  ) {
     if (this.state !== TaskState.FINISHED) {
       this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
     }
   }
 
-  public restart(asrService: ServiceProvider, languageObj: ProviderLanguage, http: HttpClient, accessCodes: IAccessCode[]) {
+  public restart(
+    asrService: ServiceProvider,
+    languageObj: ProviderLanguage,
+    http: HttpClient,
+    accessCodes: IAccessCode[]
+  ) {
     this.changeState(TaskState.PROCESSING);
     this.listenToOperationChanges();
     this.start(asrService, languageObj, http, accessCodes);
   }
 
-  public restartFailedOperation(asrService: ServiceProvider, languageObject: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  public restartFailedOperation(
+    asrService: ServiceProvider,
+    languageObject: ProviderLanguage,
+    httpclient: HttpClient,
+    accessCodes: IAccessCode[]
+  ) {
     for (const operation of this.operations) {
       if (operation.state === TaskState.ERROR) {
         // restart failed operation
@@ -223,21 +273,23 @@ export class Task {
     if (oldstate !== state) {
       this.statesubj.next({
         oldState: oldstate,
-        newState: state
+        newState: state,
       });
     }
   }
 
   public getOperationByID(id: number) {
     return this.operations.find((a) => {
-      return (a.id === id);
+      return a.id === id;
     });
   }
 
   public addFile(file: FileInfo) {
-    if (this._files.findIndex((a) => {
-      return a.fullname === file.fullname;
-    }) < 0) {
+    if (
+      this._files.findIndex((a) => {
+        return a.fullname === file.fullname;
+      }) < 0
+    ) {
       this._files.push(file);
     }
     this._files = this._files.sort((a, b) => {
@@ -267,10 +319,11 @@ export class Task {
         type: 'task',
         state: this.state,
         folderPath: '',
-        language: this.language,
-        asr: this.provider,
+        asrLanguage: this.asrLanguage,
+        asrProvider: this.asrProvider,
+        mausLanguage: this.asrProvider,
         files: [],
-        operations: []
+        operations: [],
       };
 
       // read file data
@@ -279,48 +332,55 @@ export class Task {
         filePromises.push(file.toAny());
       }
 
-      Promise.all(filePromises).then((values) => {
-        for (let i = 0; i < values.length; i++) {
-          const file = this.files[i];
+      Promise.all(filePromises)
+        .then((values) => {
+          for (let i = 0; i < values.length; i++) {
+            const file = this.files[i];
 
-          const fileObj: any = values[i];
+            const fileObj: any = values[i];
 
-          // TODO check this
-          if (file instanceof AudioInfo) {
-            const audioFile = file as AudioInfo;
+            // TODO check this
+            if (file instanceof AudioInfo) {
+              const audioFile = file as AudioInfo;
 
-            fileObj.sampleRate = audioFile.sampleRate;
-            fileObj.bitsPerSecond = audioFile.bitrate;
-            fileObj.channels = audioFile.channels;
-            fileObj.duration = audioFile.duration.samples;
+              fileObj.sampleRate = audioFile.sampleRate;
+              fileObj.bitsPerSecond = audioFile.bitrate;
+              fileObj.channels = audioFile.channels;
+              fileObj.duration = audioFile.duration.samples;
+            }
+            fileObj.attributes = file.attributes;
+
+            result.files.push(fileObj as never);
           }
-          fileObj.attributes = file.attributes;
 
-          result.files.push(fileObj as never);
-        }
+          result.folderPath =
+            this._directory === null || this._directory === undefined
+              ? ''
+              : this._directory.path;
 
-        result.folderPath = ((this._directory === null || this._directory === undefined)) ? '' : this._directory.path;
+          // read operation data
+          const promises: Promise<any>[] = [];
+          for (const operation of this.operations) {
+            promises.push(operation.toAny());
+          }
 
-        // read operation data
-        const promises: Promise<any>[] = [];
-        for (const operation of this.operations) {
-          promises.push(operation.toAny());
-        }
-
-        if (promises.length > 0) {
-          Promise.all(promises).then((values2) => {
-            result.operations = values2 as never[];
+          if (promises.length > 0) {
+            Promise.all(promises)
+              .then((values2) => {
+                result.operations = values2 as never[];
+                resolve(result);
+              })
+              .catch((error) => {
+                console.error('not arrived');
+                reject(error);
+              });
+          } else {
             resolve(result);
-          }).catch((error) => {
-            console.error('not arrived');
-            reject(error);
-          });
-        } else {
-          resolve(result);
-        }
-      }).catch((error) => {
-        reject(error);
-      });
+          }
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 
@@ -334,26 +394,27 @@ export class Task {
 
   protected listenToOperationChanges() {
     for (const operation of this._operations) {
-      const subscription = operation.statechange.subscribe(
-        (event) => {
-          if (event.newState === TaskState.ERROR) {
-            this.changeState(TaskState.ERROR);
-          }
-
-          this.opstatesubj.next({
-            opID: operation.id,
-            oldState: event.oldState,
-            newState: event.newState
-          });
-
-          if (event.newState === TaskState.FINISHED) {
-            if ((operation.nextOperation === null || operation.nextOperation === undefined)) {
-              this.changeState(TaskState.FINISHED);
-            }
-            subscription.unsubscribe();
-          }
+      const subscription = operation.statechange.subscribe((event) => {
+        if (event.newState === TaskState.ERROR) {
+          this.changeState(TaskState.ERROR);
         }
-      );
+
+        this.opstatesubj.next({
+          opID: operation.id,
+          oldState: event.oldState,
+          newState: event.newState,
+        });
+
+        if (event.newState === TaskState.FINISHED) {
+          if (
+            operation.nextOperation === null ||
+            operation.nextOperation === undefined
+          ) {
+            this.changeState(TaskState.FINISHED);
+          }
+          subscription.unsubscribe();
+        }
+      });
     }
   }
 
@@ -368,7 +429,12 @@ export class Task {
     }
   }
 
-  private startNextOperation(asrService: ServiceProvider, languageObj: ProviderLanguage, httpclient: HttpClient, accessCodes: IAccessCode[]) {
+  private startNextOperation(
+    asrService: ServiceProvider,
+    languageObj: ProviderLanguage,
+    httpclient: HttpClient,
+    accessCodes: IAccessCode[]
+  ) {
     if (!this.stopRequested) {
       let nextoperation = -1;
 
@@ -377,7 +443,11 @@ export class Task {
         if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
           operation.changeState(TaskState.SKIPPED);
         }
-        if (operation.enabled && this.operations[i].state !== TaskState.FINISHED && this.operations[i].state !== TaskState.SKIPPED) {
+        if (
+          operation.enabled &&
+          this.operations[i].state !== TaskState.FINISHED &&
+          this.operations[i].state !== TaskState.SKIPPED
+        ) {
           nextoperation = i;
           break;
         }
@@ -389,16 +459,26 @@ export class Task {
       } else {
         const operation = this.operations[nextoperation];
         if (operation.state !== TaskState.FINISHED) {
-          if ((operation.name === 'OCTRA' || operation.name === 'Emu WebApp') && operation.state === TaskState.READY) {
+          if (
+            (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') &&
+            operation.state === TaskState.READY
+          ) {
             this.changeState(TaskState.READY);
           } else {
             this.changeState(TaskState.PROCESSING);
           }
-          const subscription = this.operations[nextoperation].statechange.subscribe(
+          const subscription = this.operations[
+            nextoperation
+          ].statechange.subscribe(
             (event) => {
               if (event.newState === TaskState.FINISHED) {
                 subscription.unsubscribe();
-                this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
+                this.startNextOperation(
+                  asrService,
+                  languageObj,
+                  httpclient,
+                  accessCodes
+                );
               } else {
                 if (event.newState === TaskState.READY) {
                   this.changeState(TaskState.READY);
@@ -407,16 +487,27 @@ export class Task {
             },
             (error) => {
               console.error(error);
-            });
+            }
+          );
 
           let files;
-          if (this.files.length > 0 && !(this.files[0].file === null || this.files[0].file === undefined)) {
+          if (
+            this.files.length > 0 &&
+            !(this.files[0].file === null || this.files[0].file === undefined)
+          ) {
             files = this.files;
           } else {
             files = this.operations[0].results;
           }
 
-          this.operations[nextoperation].start(asrService, languageObj, files, this.operations, httpclient, "");
+          this.operations[nextoperation].start(
+            asrService,
+            languageObj,
+            files,
+            this.operations,
+            httpclient,
+            ''
+          );
         }
       }
     } else {
@@ -473,22 +564,31 @@ export class TaskDirectory {
   public static fromFolderObject(folder: never): Promise<TaskDirectory> {
     return new Promise<TaskDirectory>((resolve, reject) => {
       if (folder) {
-        TaskDirectory.traverseFileTree(folder, '').then((result) => {
-          if (!(result === null || result === undefined) && result[0] instanceof TaskDirectory) {
-            resolve(result[0] as TaskDirectory);
-          } else {
-            reject('could not parse directory');
-          }
-        }).catch(error => {
-          reject(error);
-        });
+        TaskDirectory.traverseFileTree(folder, '')
+          .then((result) => {
+            if (
+              !(result === null || result === undefined) &&
+              result[0] instanceof TaskDirectory
+            ) {
+              resolve(result[0] as TaskDirectory);
+            } else {
+              reject('could not parse directory');
+            }
+          })
+          .catch((error) => {
+            reject(error);
+          });
       } else {
         reject('folder not given.');
       }
     });
   }
 
-  public static fromAny(dirObj: any, commands: OHCommand[], defaultOperations: Operation[]): TaskDirectory {
+  public static fromAny(
+    dirObj: any,
+    commands: OHCommand[],
+    defaultOperations: Operation[]
+  ): TaskDirectory {
     const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
 
     for (const entry of dirObj.entries) {
@@ -498,7 +598,10 @@ export class TaskDirectory {
     return result;
   }
 
-  private static traverseFileTree(item: any, path: string): Promise<(Task | TaskDirectory)[]> {
+  private static traverseFileTree(
+    item: any,
+    path: string
+  ): Promise<(Task | TaskDirectory)[]> {
     // console.log(`search path: ${path}`);
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
       path = path || '';
@@ -576,7 +679,7 @@ export class TaskDirectory {
         id: this.id,
         type: 'folder',
         path: this.path,
-        entries: []
+        entries: [],
       };
 
       const promises: Promise<any>[] = [];
@@ -584,12 +687,14 @@ export class TaskDirectory {
         promises.push(entry.toAny());
       }
 
-      Promise.all(promises).then((values) => {
-        result.entries = values as never[];
-        resolve(result);
-      }).catch((error) => {
-        reject(error);
-      });
+      Promise.all(promises)
+        .then((values) => {
+          result.entries = values as never[];
+          resolve(result);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 }

@@ -174,8 +174,8 @@ export class EmuOperation extends ToolOperation {
       )}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(
-        this.task?.language!,
-        this.task?.provider!
+        this.task?.asrLanguage!,
+        this.task?.asrProvider!
       );
       let result = null;
       const lastResultMaus = this.previousOperation?.lastResult;
@@ -208,7 +208,7 @@ export class EmuOperation extends ToolOperation {
         console.error(`result url is null or undefined`);
       } else {
         console.log(
-          `langObj not found in octra operation lang:${this.task?.language} and ${this.task?.provider}`
+          `langObj not found in octra operation lang:${this.task?.asrLanguage} and ${this.task?.asrProvider}`
         );
       }
     }

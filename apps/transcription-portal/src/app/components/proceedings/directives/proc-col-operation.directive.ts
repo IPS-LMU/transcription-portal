@@ -228,7 +228,7 @@ export class ProcColOperationDirective
       this.entry.operations[1].providerInformation
     ) {
       const langObj = AppSettings.getLanguageByCode(
-        this.entry.language!,
+        this.entry.asrLanguage!,
         this.entry.operations[1].providerInformation.provider
       );
       if (langObj) {

@@ -56,6 +56,7 @@ import { OHModalService } from '../shared/ohmodal.service';
 import { SettingsService } from '../shared/settings.service';
 import { TimePipe } from '../shared/time.pipe';
 import { StorageService } from '../storage.service';
+import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'tportal-main',
@@ -128,66 +129,55 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       this.protocolFooter?.blop();
     });
 
-    new Promise<void>((resolve, reject) => {
-      if (this.settingsService.allLoaded) {
-        resolve();
-      } else {
-        this.subscribe(this.settingsService.settingsload, {
-          next: () => {
-            resolve();
-          },
-        });
-      }
-    }).then(() => {
-      // configuration loaded
-      this.cd.markForCheck();
-      this.cd.detectChanges();
+    this.subscribe(
+      forkJoin<{
+        settings: Observable<boolean>;
+        idb: Observable<any>;
+      }>({
+        settings: this.settingsService.settingsload,
+        idb: this.storage.allloaded,
+      }),
+      {
+        complete: () => {
+          // configuration loaded
+          const { tasks, userSettings } = this.storage.allloaded.value;
+          this.cd.markForCheck();
 
-      new Promise<any>((resolve, reject) => {
-        if (!this.storage.ready) {
-          this.subscribe(this.storage.allloaded.asObservable(), {
-            next: (results) => {
-              resolve(results);
-            },
-          });
-        } else {
-          resolve([null]);
-        }
-      }).then((results) => {
-        // idb loaded
-        this.taskService.init();
-        this.taskService.importDBData(results);
-        this.cd.markForCheck();
-        this.cd.detectChanges();
+          // idb loaded
+          this.taskService.init();
+          this.taskService.importDBData({ tasks, userSettings });
+          this.cd.markForCheck();
+          this.cd.detectChanges();
 
-        this.storage
-          .getIntern('firstModalShown')
-          .then((result) => {
-            if (!(result === null || result === undefined)) {
-              this.firstModalShown = result.value;
-            }
-            this.loadFirstModal();
-          })
-          .catch((err) => {
-            console.error(err);
-            this.loadFirstModal();
-          });
+          this.storage.idbm.intern
+            .get('firstModalShown')
+            .then((result) => {
+              if (!(result === null || result === undefined)) {
+                this.firstModalShown = result.value;
+              }
+              this.loadFirstModal();
+            })
+            .catch((err) => {
+              console.error(err);
+              this.loadFirstModal();
+            });
 
-        if (!(results[1] === null || results[1] === undefined)) {
-          // read userSettings
-          for (const userSetting of results[1]) {
-            switch (userSetting.name) {
-              case 'sidebarWidth':
-                this.newProceedingsWidth = userSetting.value;
-                break;
-              case 'accessCode':
-                this.taskService.accessCode = userSetting.value;
-                break;
+          if (userSettings) {
+            // read userSettings
+            for (const userSetting of userSettings) {
+              switch (userSetting.name) {
+                case 'sidebarWidth':
+                  this.newProceedingsWidth = userSetting.value;
+                  break;
+                case 'accessCode':
+                  this.taskService.accessCode = userSetting.value;
+                  break;
+              }
             }
           }
-        }
-      });
-    });
+        },
+      }
+    );
 
     window.onunload = () => {
       return false;
@@ -674,7 +664,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   .providerInformation
               ) {
                 const langObj = AppSettings.getLanguageByCode(
-                  this.toolSelectedOperation.task.language!,
+                  this.toolSelectedOperation.task.asrLanguage!,
                   this.toolSelectedOperation.task.operations[1]
                     .providerInformation.provider
                 );

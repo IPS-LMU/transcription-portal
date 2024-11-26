@@ -21,6 +21,7 @@ import { NotificationService } from '../../shared/notification.service';
 import { StorageService } from '../../storage.service';
 import { calcSHA256FromFile } from '../CryptoHelper';
 import { readFileAsArray } from '../functions';
+import { IDBTaskItem, IDBUserSettingsItem } from '../IndexedDBManager';
 import { ASROperation } from '../operations/asr-operation';
 import { EmuOperation } from '../operations/emu-operation';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
@@ -384,10 +385,13 @@ export class TaskService implements OnDestroy {
     this.updateStatistics();
   }
 
-  public importDBData(dbEntries: any[]) {
-    const idbTasks = dbEntries[0];
+  public importDBData(dbEntries: {
+    tasks: IDBTaskItem[];
+    userSettings: IDBUserSettingsItem[];
+  }) {
+    const idbTasks = dbEntries.tasks;
 
-    if (!(idbTasks === null || idbTasks === undefined)) {
+    if (idbTasks) {
       this.newfiles = idbTasks.length > 0;
 
       // make sure that taskCounter and operation counter are equal to their biggest value
@@ -396,13 +400,13 @@ export class TaskService implements OnDestroy {
 
       for (const taskObj of idbTasks) {
         if (taskObj.type === 'task') {
-          if (taskObj.asr === null || taskObj.asr === undefined) {
+          if (taskObj.asrLanguage) {
             const firstLangObj = AppSettings.languages.asr.find((a) => {
-              return a.value === taskObj.language;
+              return a.value === taskObj.asrLanguage;
             });
 
-            if (!(firstLangObj === null || firstLangObj === undefined)) {
-              taskObj.asr = firstLangObj.value;
+            if (firstLangObj) {
+              taskObj.asrLanguage = firstLangObj.value;
             }
           }
           const task = Task.fromAny(
@@ -525,9 +529,9 @@ export class TaskService implements OnDestroy {
         this.protocolURL = url;
       });
     }
-    if (!(dbEntries[1] === null || dbEntries[1] === undefined)) {
+    if (dbEntries.userSettings) {
       // read userSettings
-      for (const userSetting of dbEntries[1]) {
+      for (const userSetting of dbEntries.userSettings) {
         switch (userSetting.name) {
           case 'notification':
             this.notification.permissionGranted = userSetting.value.enabled;
@@ -703,7 +707,7 @@ export class TaskService implements OnDestroy {
             task.operations[1].providerInformation.provider
           );
           const langObj = AppSettings.getLanguageByCode(
-            task.language!,
+            task.asrLanguage!,
             task.operations[1].providerInformation.provider
           );
 
@@ -1193,8 +1197,8 @@ export class TaskService implements OnDestroy {
 
         // new file
         const task = new Task([newFileInfo], this.operations);
-        task.language = this.selectedASRLanguage;
-        task.provider = this.selectedProvider?.provider;
+        task.asrLanguage = this.selectedASRLanguage;
+        task.asrProvider = this.selectedProvider?.provider;
 
         // set state
         for (let i = 0; i < this.operations.length; i++) {

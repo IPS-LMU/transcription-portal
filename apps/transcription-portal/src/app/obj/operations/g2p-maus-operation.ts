@@ -26,7 +26,7 @@ export class G2pMausOperation extends Operation {
 
     let url = this._commands[0]
       .replace('{{host}}', asrService.host)
-      .replace('{{language}}', this.task?.language!)
+      .replace('{{language}}', this.task?.asrLanguage!)
       .replace('{{audioURL}}', operations[0]!.results[0]!.url!);
 
     // use G2P -> MAUS Pipe

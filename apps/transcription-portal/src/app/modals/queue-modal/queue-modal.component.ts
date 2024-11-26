@@ -152,7 +152,7 @@ export class QueueModalComponent implements OnDestroy {
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility(
             task.files[0] as AudioInfo,
-            task.provider!
+            task.asrProvider!
           ),
         });
       }
@@ -168,8 +168,8 @@ export class QueueModalComponent implements OnDestroy {
       });
 
       for (const task of tasks) {
-        task.language = this.taskService.selectedASRLanguage;
-        task.provider = this.taskService.selectedProvider?.provider;
+        task.asrLanguage = this.taskService.selectedASRLanguage;
+        task.asrProvider = this.taskService.selectedProvider?.provider;
         task.operations[1].providerInformation =
           AppSettings.getServiceInformation(
             this.taskService.selectedProvider?.provider!
@@ -184,7 +184,10 @@ export class QueueModalComponent implements OnDestroy {
           this.compatibleTable.push({
             id: task.id,
             fileName: !audioInfo ? '' : audioInfo.name,
-            checks: this.checkAudioFileCompatibility(audioInfo, task.provider!),
+            checks: this.checkAudioFileCompatibility(
+              audioInfo,
+              task.asrProvider!
+            ),
           });
         }
       }

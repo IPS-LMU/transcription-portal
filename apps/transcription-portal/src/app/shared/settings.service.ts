@@ -4,7 +4,7 @@ import { ASRSettings } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { isNumber } from '@octra/utilities';
 import * as jQuery from 'jquery';
-import { firstValueFrom, Subject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import * as X2JS from 'x2js';
 import { OHConfiguration } from '../obj/oh-config';
 import { AppSettings } from './app.settings';
@@ -23,9 +23,9 @@ export class SettingsService {
     return this._allLoaded;
   }
 
-  private _settingsload: Subject<void> = new Subject<void>();
+  private _settingsload = new BehaviorSubject<boolean>(false);
 
-  get settingsload(): Subject<void> {
+  get settingsload(): BehaviorSubject<boolean> {
     return this._settingsload;
   }
 
@@ -85,7 +85,8 @@ export class SettingsService {
                   : 0
               );
 
-              this._settingsload.next();
+              this._settingsload.next(true);
+              this._settingsload.complete();
             })
             .catch((error) => {
               console.error(error);

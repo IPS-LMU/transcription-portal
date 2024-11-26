@@ -117,7 +117,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     }
 
     this.subscribe(this.settingsService.settingsload, {
-      next: () => {
+      complete: () => {
         // add tracking code
         if (
           AppSettings.configuration.plugins.tracking &&

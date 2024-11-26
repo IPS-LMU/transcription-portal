@@ -93,10 +93,10 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>Language: {{popover.task.language}}</span>
-    @if (popover.task && popover.task.provider) {
+    <span>Language: {{popover.task.asrLanguage}}</span>
+    @if (popover.task && popover.task.asrProvider) {
       <span>
-        , ASR: {{popover.task.provider}}
+        , ASR: {{popover.task.asrProvider}}
       </span>
     }
     <br/><br/>
