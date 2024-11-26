@@ -73,6 +73,22 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     return this.taskService.selectedProvider;
   }
 
+  languages: {
+    asr: {
+      value: string;
+      description: string;
+      providersOnly?: string[];
+    }[];
+    maus: {
+      value: string;
+      description: string;
+      providersOnly?: string[];
+    }[];
+  } = {
+    asr: [],
+    maus: [],
+  };
+
   constructor(
     protected activeModal: NgbActiveModal,
     public taskService: TaskService,
@@ -87,6 +103,13 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.renderer.addClass(this.elementRef.nativeElement, 'd-flex');
     this.renderer.addClass(this.elementRef.nativeElement, 'flex-column');
     this.renderer.addClass(this.elementRef.nativeElement, 'h-100');
+
+    this.languages.asr = AppSettings.languages?.asr.filter(
+      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null
+    );
+    this.languages.maus = AppSettings.languages?.maus.filter(
+      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null
+    );
   }
 
   public get AppConfiguration(): OHConfiguration {
