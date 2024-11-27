@@ -1,19 +1,34 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { ASRSettings } from '@octra/ngx-components';
+import { Injectable, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ASRSettings, NgbModalWrapper, openModal } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
-import { isNumber } from '@octra/utilities';
+import { downloadFile } from '@octra/ngx-utilities';
+import { isNumber, SubscriptionManager } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
 import * as jQuery from 'jquery';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import {
+  BehaviorSubject,
+  firstValueFrom,
+  map,
+  merge,
+  Observable,
+  Subscription,
+  timer,
+} from 'rxjs';
 import * as X2JS from 'x2js';
+import { UrlModeModalComponent } from '../modals/url-mode-modal/url-mode-modal.component';
 import { OHConfiguration } from '../obj/oh-config';
+import { TaskService } from '../obj/tasks/task.service';
 import { AppSettings } from './app.settings';
 
 @Injectable({ providedIn: 'root' })
-export class SettingsService {
+export class SettingsService implements OnDestroy {
   public shortCutsEnabled = true;
   private _allLoaded = false;
   private _feedbackEnabled = false;
+  private subscrManager = new SubscriptionManager<Subscription>();
 
   get feedbackEnabled(): boolean {
     return this._feedbackEnabled;
@@ -29,7 +44,34 @@ export class SettingsService {
     return this._settingsload;
   }
 
-  constructor(private http: HttpClient, private octraAPI: OctraAPIService) {
+  constructor(
+    private http: HttpClient,
+    private octraAPI: OctraAPIService,
+    private taskService: TaskService,
+    private activeRoute: ActivatedRoute,
+    private modalService: NgbModal,
+    private router: Router
+  ) {
+    this.activeRoute.queryParams.subscribe(
+      (param: { audio?: string; transcript?: string }) => {
+        let audioURL: string | undefined;
+        let transcriptURL: string | undefined;
+        if (Object.keys(param).includes('audio') && param.audio) {
+          audioURL = param.audio;
+        }
+
+        if (Object.keys(param).includes('transcript') && param.transcript) {
+          transcriptURL = param.transcript;
+        }
+
+        if (audioURL) {
+          this.readFromURL(audioURL, transcriptURL).catch((e) => {
+            console.error(`READ from URL ERROR: ${e.message}`);
+          });
+        }
+      }
+    );
+
     this.http
       .get<OHConfiguration>('config/config.json', {
         responseType: 'json',
@@ -390,5 +432,140 @@ export class SettingsService {
     } else {
       return Promise.resolve([]);
     }
+  }
+
+  private async readFromURL(
+    audioURL: string | undefined,
+    transcriptURL?: string
+  ) {
+    if (audioURL) {
+      let leftTime = 0;
+      let ref: NgbModalWrapper<UrlModeModalComponent> | undefined;
+
+      const close = () => {
+        this.subscrManager.removeByTag('waitForURLImport');
+        if (ref) {
+          this.router.navigate([], {
+            queryParams: {
+              audio: null,
+              transcript: null,
+            },
+            queryParamsHandling: 'merge',
+          });
+          ref.close();
+        }
+      };
+
+      this.subscrManager.add(
+        timer(2000).subscribe({
+          next: () => {
+            ref = openModal<UrlModeModalComponent>(
+              this.modalService,
+              UrlModeModalComponent,
+              UrlModeModalComponent.options,
+              {
+                leftTime,
+              }
+            );
+          },
+        }),
+        'waitForURLImport'
+      );
+
+      try {
+        const observables: Observable<{
+          progress: number;
+          result?: ArrayBuffer;
+          downloadURL: string;
+        }>[] = [];
+
+        const progress: {
+          downloadURL: string;
+          progress: number;
+          result?: ArrayBuffer;
+        }[] = [];
+
+        observables.push(
+          downloadFile<ArrayBuffer>(this.http, audioURL, 'arraybuffer').pipe(
+            map((a) => ({
+              ...a,
+              downloadURL: audioURL,
+            }))
+          )
+        );
+
+        if (transcriptURL) {
+          observables.push(
+            downloadFile(this.http, transcriptURL, 'arraybuffer').pipe(
+              map((a) => ({
+                ...a,
+                result: a.result as ArrayBuffer,
+                downloadURL: transcriptURL,
+              }))
+            )
+          );
+        }
+
+        const downloadStartedAt = Date.now();
+
+        merge(...observables).subscribe((event) => {
+          const index = progress.findIndex(
+            (a: any) => a.downloadURL === event.downloadURL
+          );
+
+          if (index > -1) {
+            progress[index].progress = event.progress;
+
+            if (event.result) {
+              progress[index].result = event.result;
+
+              if (
+                progress.filter((a) => a.result !== undefined).length ===
+                observables.length
+              ) {
+                for (const progressElement of progress) {
+                  const info = FileInfo.fromURL(progressElement.downloadURL);
+                  info.file = new File(
+                    [progressElement.result!],
+                    info.fullname,
+                    {
+                      type: info.type,
+                    }
+                  );
+                  this.taskService.preprocessor.addToQueue(info);
+                }
+
+                close();
+              }
+            }
+          } else {
+            progress.push({
+              downloadURL: event.downloadURL,
+              progress: event.progress,
+            });
+          }
+
+          if (ref) {
+            const overallProgress = Math.min(
+              ...progress.map((a) => a.progress * 100),
+              100
+            );
+
+            leftTime =
+              ((Date.now() - downloadStartedAt) * (100 - overallProgress)) /
+              overallProgress;
+            ref.componentInstance.leftTime = leftTime;
+          }
+        });
+      } catch (error) {
+        close();
+      }
+    } else {
+      alert('Missing audio URL');
+    }
+  }
+
+  ngOnDestroy() {
+    this.subscrManager.destroy();
   }
 }

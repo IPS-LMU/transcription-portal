@@ -13,7 +13,7 @@ export class FirstModalComponent extends SubscriberComponent {
   @Output() understandClick: Subject<void> = new Subject<void>();
 
   public static options: NgbModalOptions = {
-    size: 'sn',
+    size: 'sm',
     backdrop: 'static',
     keyboard: false,
   };

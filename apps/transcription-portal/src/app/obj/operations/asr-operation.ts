@@ -263,26 +263,15 @@ export class ASROperation extends Operation {
       new Promise<string>((resolve2, reject2) => {
         UploadOperation.upload(
           [asrResult],
-          asrService.host + 'uploadFileMulti',
-          httpClient
+          asrService.host + 'uploadFileMulti'
         ).subscribe(
           (event) => {
             if (event.type === 'loadend') {
-              const result = event.result as string;
-              const x2js = new X2JS();
-              let json: any = x2js.xml2js(result);
-              json = json.UploadFileMultiResponse;
-
-              let url = '';
-
-              if (Array.isArray(json.fileList.entry)) {
-                url = json.fileList.entry[0].value;
+              if (event.urls) {
+                resolve2(event.urls[0]);
               } else {
-                // json attribute entry is an object
-                url = json.fileList.entry.value;
+                reject2(new Error('Missung upload URL'));
               }
-
-              resolve2(url);
             }
           },
           (error) => {

@@ -5,9 +5,9 @@ import { FileInfo } from '@octra/web-media';
 import { Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { TimePipe } from '../../shared/time.pipe';
+import { ProviderLanguage } from '../oh-config';
 import { Task, TaskState } from '../tasks';
 import { Operation } from './operation';
-import { ProviderLanguage } from '../oh-config';
 
 export class UploadOperation extends Operation {
   public constructor(
@@ -38,15 +38,18 @@ export class UploadOperation extends Operation {
 
   public static upload(
     files: FileInfo[],
-    url: string,
-    httpclient: HttpClient
+    url: string
   ): Subject<{
     type: 'progress' | 'loadend';
-    result?: any;
+    progress?: number;
+    urls?: string[];
+    warnings?: string;
   }> {
     const subj = new Subject<{
       type: 'progress' | 'loadend';
-      result?: any;
+      progress?: number;
+      urls?: string[];
+      warnings?: string;
     }>();
 
     const form: FormData = new FormData();
@@ -67,7 +70,7 @@ export class UploadOperation extends Operation {
         }
         subj.next({
           type: 'progress',
-          result: progress as any,
+          progress,
         });
       },
       false
@@ -78,11 +81,30 @@ export class UploadOperation extends Operation {
     };
 
     xhr.onloadend = (e) => {
-      subj.next({
-        type: 'loadend',
-        result: (e.currentTarget as any).responseText as any,
-      });
-      subj.complete();
+      const result = (e.currentTarget as any).responseText as any;
+      const x2js = new X2JS();
+      let json: any = x2js.xml2js(result);
+      json = json.UploadFileMultiResponse;
+      let warnings: string | undefined;
+
+      if (json.warnings !== '') {
+        warnings = json.warnings.replace('¶');
+      }
+
+      if (json.success) {
+        const urls = Array.isArray(json.fileList.entry)
+          ? json.fileList.entry.map((a: any) => a.value)
+          : [json.fileList.entry.value];
+
+        subj.next({
+          type: 'loadend',
+          warnings,
+          urls,
+        });
+        subj.complete();
+      } else {
+        subj.error(new Error(json.message));
+      }
     };
     xhr.send(form);
 
@@ -103,59 +125,43 @@ export class UploadOperation extends Operation {
     this._time.start = Date.now();
 
     const url = this._commands[0].replace('{{host}}', asrService.host);
-    const subj = UploadOperation.upload(files, url, httpclient);
+    const subj = UploadOperation.upload(files, url);
 
     subj.subscribe(
       (obj) => {
         if (obj.type === 'progress') {
-          this.progress = obj.result as number;
+          this.progress = obj.progress!;
           this.updateEstimatedEnd();
           this.changed.next();
         } else if (obj.type === 'loadend') {
           this.time.duration = Date.now() - this.time.start;
-          const result = obj.result as string;
-          const x2js = new X2JS();
-          let json: any = x2js.xml2js(result);
-          json = json.UploadFileMultiResponse;
 
           // add messages to protocol
-          if (json.warnings !== '') {
-            this.updateProtocol(json.warnings.replace('¶'));
+          if (obj.warnings) {
+            this.updateProtocol(obj.warnings);
           }
 
-          if (json.success === 'true') {
-            // TODO set urls to results only
-            if (Array.isArray(json.fileList.entry)) {
-              for (let i = 0; i < files.length; i++) {
-                files[i].url = json.fileList.entry[i].value;
-                const type =
-                  files[i].extension.indexOf('wav') > 0
-                    ? 'audio/wav'
-                    : 'text/plain';
-                this.results.push(
-                  FileInfo.fromURL(
-                    files[i]!.url!,
-                    type,
-                    files[i]!.fullname,
-                    Date.now()
-                  )
-                );
-              }
-            } else {
-              // json attribute entry is an object
-              files[0].url = json.fileList.entry.value;
+          if (obj.urls && obj.urls.length === files.length) {
+            for (let i = 0; i < files.length; i++) {
+              files[i].url = obj.urls[i];
+              const type =
+                files[i].extension.indexOf('wav') > 0
+                  ? 'audio/wav'
+                  : 'text/plain';
               this.results.push(
                 FileInfo.fromURL(
-                  json.fileList.entry.value,
-                  'audio/wav',
-                  undefined,
+                  files[i]!.url!,
+                  type,
+                  files[i]!.fullname,
                   Date.now()
                 )
               );
             }
             this.changeState(TaskState.FINISHED);
           } else {
-            this.updateProtocol(json.message);
+            this.updateProtocol(
+              'Number of returned URLs do not match number of files.'
+            );
             this.changeState(TaskState.ERROR);
           }
         }

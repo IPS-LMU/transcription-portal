@@ -116,7 +116,7 @@ export class Preprocessor {
 
     if (fileBlob) {
       calcSHA256FromFile(fileBlob).catch((e) => {
-        console.error(e);
+        throw e;
       });
     }
 

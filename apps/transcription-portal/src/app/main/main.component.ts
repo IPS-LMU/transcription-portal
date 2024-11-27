@@ -28,7 +28,7 @@ import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
-import * as X2JS from 'x2js';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AppInfo } from '../app.info';
 import { AlertComponent } from '../components/alert/alert.component';
@@ -56,7 +56,6 @@ import { OHModalService } from '../shared/ohmodal.service';
 import { SettingsService } from '../shared/settings.service';
 import { TimePipe } from '../shared/time.pipe';
 import { StorageService } from '../storage.service';
-import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'tportal-main',
@@ -878,36 +877,21 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       ) {
         const url = `${operation.task.operations[1].providerInformation.host}uploadFileMulti`;
 
-        const subj = UploadOperation.upload([file], url, this.httpclient);
-        subj.subscribe(
-          (obj) => {
+        const subj = UploadOperation.upload([file], url);
+        subj.subscribe({
+          next: (obj) => {
             if (obj.type === 'loadend') {
-              const result = obj.result as string;
-              const x2js = new X2JS();
-              let json: any = x2js.xml2js(result);
-              json = json.UploadFileMultiResponse;
-
               // add messages to protocol
-              if (json.warnings !== '') {
-                console.warn(json.warnings);
+              if (obj.warnings) {
+                console.warn(obj.warnings);
               }
-
-              if (json.success === 'true') {
-                if (Array.isArray(json.fileList.entry)) {
-                  resolve(json.fileList.entry[0].value);
-                } else {
-                  // json attribute entry is an object
-                  resolve(json.fileList.entry.value);
-                }
-              } else {
-                reject(json.message);
-              }
+              resolve(obj.urls![0]);
             }
           },
-          (err) => {
+          error: (err) => {
             reject(err);
-          }
-        );
+          },
+        });
       }
     });
   }
