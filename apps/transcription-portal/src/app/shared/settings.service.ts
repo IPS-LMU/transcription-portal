@@ -135,6 +135,8 @@ export class SettingsService implements OnDestroy {
               alert(
                 'Error: app configuration not loaded. Please check the config.json'
               );
+              this._settingsload.next(true);
+              this._settingsload.complete();
             });
         },
         error: (err) => {

@@ -1,3 +1,4 @@
+import { NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -8,24 +9,23 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import { Operation } from '../../obj/operations/operation';
-import { AppInfo, ConverterData } from '../../app.info';
-import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { hasProperty } from '@octra/utilities';
 import { Converter } from '@octra/annotation';
-import { DownloadService } from '../../shared/download.service';
-import { AudioInfo, FileInfo } from '@octra/web-media';
 import { OAudiofile } from '@octra/media';
-import { NgStyle } from '@angular/common';
+import { hasProperty } from '@octra/utilities';
+import { AudioInfo, FileInfo } from '@octra/web-media';
+import { AppInfo, ConverterData } from '../../app.info';
+import { Operation } from '../../obj/operations/operation';
+import { DownloadService } from '../../shared/download.service';
 
 @Component({
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgStyle],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgStyle, FormsModule],
 })
 export class ResultsTableComponent implements OnChanges {
   @Input() operation?: Operation;
@@ -56,11 +56,11 @@ export class ResultsTableComponent implements OnChanges {
   private generationRunning = false;
 
   @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  selectedVersion = '0';
 
   constructor(
-    private http: HttpClient,
     private sanitizer: DomSanitizer,
-    private cd: ChangeDetectorRef,
+    protected cd: ChangeDetectorRef,
     private downloadService: DownloadService
   ) {}
 
@@ -96,10 +96,11 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   public onPreviewClick(file: FileInfo) {
-    this.previewClick.emit(file);
-
+    this.visible = false;
     this.cd.markForCheck();
-    this.cd.detectChanges();
+
+    this.previewClick.emit(file);
+    this.cd.markForCheck();
   }
 
   public isUnequalResultType(converter: any) {
@@ -291,5 +292,9 @@ export class ResultsTableComponent implements OnChanges {
       return 0;
     }
     return -1;
+  }
+
+  test() {
+    alert('Ok');
   }
 }

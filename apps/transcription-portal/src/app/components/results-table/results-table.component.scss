@@ -21,3 +21,33 @@ table {
   font-size: 10px;
   display: block;
 }
+.result-icon {
+  padding: 0;
+}
+
+.result-icon .overlay {
+  background-color: cornflowerblue;
+  opacity: 0.3;
+  height: 100%;
+  width: 100%;
+  z-index: 1001;
+  position: absolute;
+}
+
+.result-icon-overlay {
+  display: none;
+}
+
+.result-icon:hover .overlay{
+  opacity: 0.2;
+}
+
+.result-icon:hover .result-icon-overlay {
+  display: block;
+  opacity: 1;
+}
+
+.result-icon-overlay .btn-primary {
+  background-color: #5d95fb;
+  border: #5d95fb;
+}

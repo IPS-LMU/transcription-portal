@@ -1,63 +1,131 @@
 @if (convertedArray.length > 0) {
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th colspan="2">Results</th>
-        @if (conversionExtension !== '.wav') {
-          <th [attr.colspan]="converters.length">Conversions</th>
+<div class="border">
+  <div
+    class="row g-0 py-1 px-2 justify-items-center align-items-center"
+    style="background-color: #1b4685"
+  >
+    <div class="col-sm text-light" style="font-size: 0.9rem">
+      Result and Conversions
+    </div>
+    <div class="col-auto">
+      <select class="form-select-sm" [(ngModel)]="selectedVersion">
+        @for (elem of convertedArray; track elem) {
+        <option [value]="elem.number">v{{ elem.number + 1 }}</option>
         }
-      </tr>
-      <tr>
-        <th>#</th>
-        <th>{{originalLabel}}</th>
-        @if (conversionExtension !== '.wav') {
-          @for (converter of converters; track converter) {
-            @if (isUnequalResultType(converter);) {
-              <th>*{{converter.obj.extension}}</th>
-            }
-          }
-        }
-      </tr>
-    </thead>
-    @for (elem of convertedArray; track elem; let i = $index) {
-      @if (elem.input !== undefined) {
-        <tr>
-          <td>#{{elem.number + 1}}</td>
-          @if (elem.input.info.available === true) {
-            <td style="border-right: 1px solid lightgray;">
-              <a [attr.download]="elem.input.info.attributes.originalFileName"
-                [attr.href]="elem.input.url">
-                <i class="bi bi-file-text"></i>
+      </select>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      @for(elem of convertedArray; track elem) { @if(elem.number.toString() ===
+      selectedVersion) {
+      <div
+        class="col-3 result-icon position-relative text-center"
+        style="background-color: #bfdeef; border-collapse: separate"
+      >
+        <div
+          class="result-icon-overlay position-absolute w-100 h-100"
+          style="z-index: 1000"
+        >
+          <div class="overlay" style="z-index: 1001"></div>
+          <div class="position-absolute w-100 h-100" style="z-index: 1002">
+            <div class="w-100" style="height: 70%">
+              <div
+                class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
+                style="margin: 2% 5% 0 5%; width: 90%; height: 95%"
+                (click)="onPreviewClick(elem.input?.info!)"
+              >
+                <i class="bi bi-eye-fill" style="color: white"></i>
+              </div>
+            </div>
+            <div class="w-100" style="height: 30%">
+              <a
+                class="btn btn-secondary btn-sm p-0 pointer"
+                [href]="elem.input!.info.url"
+                [download]="elem.input!.info.attributes.originalFileName"
+                target="_blank"
+                style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
+              >
+                <i class="bi bi-cloud-download-fill" style="color: white"></i>
               </a>
-              @if (elem.input.info.extension !== '.wav') {
-                <i (click)="onPreviewClick(elem.input.info)" class="bi bi-eye"
-                style="margin-left:3px;cursor: pointer;"></i>
-              }
-            </td>
-          }
-          @if (elem.input.info && !elem.input.info.available) {
-            <td style="border-right: 1px solid lightgray;">
-              <i class="bi bi-wifi-off" style="color:red;"></i>
-            </td>
-          }
-          @if (elem.input.info.extension !== '.wav') {
-            @for (converter of elem.conversions; track converter) {
-              <td style="border-right: 1px solid lightgray;">
-                @if (elem.input?.info?.available && converter.result !== null) {
-                  <a [attr.download]="converter.result.fullname"
-                    [attr.href]="converter.result.url"
-                    >
-                    <i [ngStyle]="{ color: converter.converter.color}" class="bi bi-file-text"></i>
-                  </a>
-                  <i (click)="onPreviewClick(converter.result)" [ngStyle]="{ color: converter.converter.color}"
-                  class="bi bi-eye" style="cursor: pointer;margin-left:3px;"></i>
-                }
-              </td>
-            }
-          }
-        </tr>
-      }
-    }
-  </table>
+            </div>
+          </div>
+        </div>
+        <div>
+          <i
+            class="bi bi-patch-check-fill position-absolute top-0 right-0"
+            style="color: yellow; z-index: 900"
+          ></i>
+          <i
+            class="bi bi-file-earmark-text-fill fs-1"
+            [ngStyle]="{
+              color: 'darkblue'
+            }"
+          ></i>
+          <div style="font-size: 0.75rem">
+            {{ elem.input?.info?.extension }}
+          </div>
+        </div>
+      </div>
+      @for(conversion of elem.conversions; track conversion) {
+      <div
+        class="col-3 result-icon text-center position-relative"
+        style="background-color: white; border-collapse: separate"
+      >
+        <div
+          class="result-icon-overlay position-absolute w-100 h-100"
+          style="z-index: 1000"
+        >
+          <div class="overlay" style="z-index: 1001"></div>
+          <div class="position-absolute w-100 h-100" style="z-index: 1002">
+            <div class="w-100" style="height: 70%">
+              <div
+                class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
+                style="margin: 2% 5% 0 5%; width: 90%; height: 95%"
+                (click)="onPreviewClick(conversion.result!)"
+              >
+                <i class="bi bi-eye-fill" style="color: white"></i>
+              </div>
+            </div>
+            <div class="w-100" style="height: 30%">
+              <a
+                class="btn btn-secondary btn-sm p-0 pointer"
+                [href]="conversion.result.url"
+                [download]="conversion.result.attributes.originalFileName"
+                target="_blank"
+                style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
+              >
+                <i class="bi bi-cloud-download-fill" style="color: white"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <span
+          class="position-absolute top-0 right-0 rounded-3"
+          style="
+            height: 16px;
+            width: 16px;
+            background-color: black;
+            margin-top: 5px;
+          "
+        >
+          <i
+            class="position-absolute bi bi-arrow-right-circle-fill"
+            style="color: whitesmoke; margin-top: -4px; margin-left: -8px"
+          ></i>
+        </span>
+        <i
+          class="bi bi-file-earmark-text-fill fs-1"
+          [ngStyle]="{
+            color: conversion.converter.color
+          }"
+        ></i>
+        <div style="font-size: 0.75rem">
+          {{ conversion.result.extension }}
+        </div>
+      </div>
+      } } }
+    </div>
+  </div>
+</div>
 }
-<span class="remark">On Windows please use right-click and "Save as" to download a result</span>
