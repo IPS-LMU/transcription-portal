@@ -92,6 +92,7 @@ export class ASROperation extends Operation {
     );
     for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
+      resultClass.attributes = resultObj.attributes;
       result.results.push(resultClass);
     }
     result._time = operationObj.time;

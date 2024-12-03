@@ -42,6 +42,7 @@
               <a
                 class="btn btn-secondary btn-sm p-0 pointer"
                 [href]="elem.input!.info.url"
+                [title]="elem.input!.info.attributes.originalFileName"
                 [download]="elem.input!.info.attributes.originalFileName"
                 target="_blank"
                 style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
@@ -91,7 +92,7 @@
               <a
                 class="btn btn-secondary btn-sm p-0 pointer"
                 [href]="conversion.result.url"
-                [download]="conversion.result.attributes.originalFileName"
+                [download]="conversion.result.fullname"
                 target="_blank"
                 style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
               >

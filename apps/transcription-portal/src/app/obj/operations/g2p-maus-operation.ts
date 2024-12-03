@@ -144,6 +144,7 @@ export class G2pMausOperation extends Operation {
     );
     for (const resultElement of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultElement);
+      resultClass.attributes = resultElement.attributes;
       resultClass.url = resultElement.url;
       result.results.push(resultClass);
     }

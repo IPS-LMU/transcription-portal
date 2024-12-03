@@ -130,6 +130,7 @@ export class OCTRAOperation extends ToolOperation {
     );
     for (const operationResult of operationObj.results) {
       const resultClass = FileInfo.fromAny(operationResult);
+      resultClass.attributes = operationResult.attributes;
       result.results.push(resultClass);
     }
 

@@ -53,13 +53,11 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
-    DownloadModalComponent,
     PopoverComponent,
     NgStyle,
     ResultsTableComponent,
     NgClass,
     FileInfoTableComponent,
-    FilePreviewModalComponent,
     OperationArrowComponent,
     ContextMenuComponent,
     ProceedingsRowDirective,
@@ -925,6 +923,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public onPreviewClick(file: FileInfo) {
     this.popover.state = 'closed';
+    this.cd.markForCheck();
     const ref = this.ngbModalService.open(
       FilePreviewModalComponent,
       FilePreviewModalComponent.options

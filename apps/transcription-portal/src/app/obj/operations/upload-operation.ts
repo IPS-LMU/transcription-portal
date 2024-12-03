@@ -148,14 +148,14 @@ export class UploadOperation extends Operation {
                 files[i].extension.indexOf('wav') > 0
                   ? 'audio/wav'
                   : 'text/plain';
-              this.results.push(
-                FileInfo.fromURL(
-                  files[i]!.url!,
-                  type,
-                  files[i]!.fullname,
-                  Date.now()
-                )
+              const info = FileInfo.fromURL(
+                files[i]!.url!,
+                type,
+                files[i]!.fullname,
+                Date.now()
               );
+              info.attributes = files[i].attributes;
+              this.results.push(info);
             }
             this.changeState(TaskState.FINISHED);
           } else {
@@ -291,6 +291,7 @@ export class UploadOperation extends Operation {
         resultObj.type,
         resultObj.size
       );
+      resultClass.attributes = resultObj.attributes;
       resultClass.url = resultObj.url;
       result.results.push(resultClass);
     }

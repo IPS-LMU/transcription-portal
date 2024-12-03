@@ -141,7 +141,9 @@ export class EmuOperation extends ToolOperation {
       operationObj.id
     );
     for (const resultElement of operationObj.results) {
-      result.results.push(FileInfo.fromAny(resultElement));
+      const resultClass = FileInfo.fromAny(resultElement);
+      resultClass.attributes = operationObj.attributes;
+      result.results.push(resultClass);
     }
 
     if (result.state === TaskState.PROCESSING) {
