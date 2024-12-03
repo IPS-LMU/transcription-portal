@@ -886,14 +886,14 @@ export class TaskService implements OnDestroy {
 
   public existsFile(url: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.httpclient.head(url).subscribe(
-        () => {
+      this.httpclient.head(url).subscribe({
+        next: () => {
           resolve();
         },
-        (err) => {
+        error: (err) => {
           reject(err);
-        }
-      );
+        },
+      });
     });
   }
 

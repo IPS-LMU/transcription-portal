@@ -274,6 +274,9 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private updateGUI() {
+    this.selectedVersion = (
+      (this.operation?.results.length ?? 1) - 1
+    ).toString();
     this.cd.markForCheck();
     this.cd.detectChanges();
     if (this.operation) {

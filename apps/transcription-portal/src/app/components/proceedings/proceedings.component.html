@@ -83,7 +83,7 @@
   </div>
   <div class="clearfix"></div>
   } @if (popover.operation.results.length > 0) {
-  <div style="overflow: auto">
+  <div style="overflow: hidden;">
     <tportal-results-table
       [visible]="popover.state === 'opened'"
       (previewClick)="onPreviewClick($event)"

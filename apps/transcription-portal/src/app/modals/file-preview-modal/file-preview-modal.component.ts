@@ -3,13 +3,15 @@ import { SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
+import hljs from 'highlight.js';
+import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 
 @Component({
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
   standalone: true,
-  imports: [],
+  imports: [NgxCodeJarComponent],
 })
 export class FilePreviewModalComponent
   extends SubscriberComponent
@@ -22,6 +24,7 @@ export class FilePreviewModalComponent
   public static options: NgbModalOptions = {
     size: 'xl',
     fullscreen: 'md',
+    scrollable: true,
     backdrop: true,
   };
 
@@ -60,4 +63,22 @@ export class FilePreviewModalComponent
       console.error(`selectedFile is null!`);
     }
   }
+
+  private getCodejarSyntaxType(): 'json' | 'xml' | 'text' {
+    if (this.selectedFile?.file?.type.includes('json')) {
+      return 'json';
+    }
+    if (this.selectedFile?.file?.type.includes('xml')) {
+      return 'xml';
+    }
+    return 'text';
+  }
+
+  highlightMethod = (editor: CodeJarContainer) => {
+    if (editor.textContent !== null && editor.textContent !== undefined) {
+      editor.innerHTML = hljs.highlight(editor.textContent, {
+        language: this.getCodejarSyntaxType(),
+      }).value;
+    }
+  };
 }

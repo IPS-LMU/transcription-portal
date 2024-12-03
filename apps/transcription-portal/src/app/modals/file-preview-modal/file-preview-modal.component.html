@@ -3,10 +3,9 @@
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
-  <textarea aria-readonly="true" readonly>{{fileContent}}</textarea>
+  <ngx-codejar [code]="fileContent" [highlightMethod]="highlightMethod" [readonly]="true" [showLineNumbers]="true"></ngx-codejar>
 </div>
 <div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close('Save click')">Save</button>
   <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self">
     DOWNLOAD
   </a>

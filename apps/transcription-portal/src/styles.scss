@@ -2,6 +2,8 @@
 @import 'node_modules/bootstrap/scss/spinners';
 @import 'node_modules/bootstrap-icons';
 @import 'node_modules/jodit/es2021/jodit.css';
+@import "node_modules/highlight.js/styles/github.css";
+@import "node_modules/codejar-linenumbers/es/codejar-linenumbers.css";
 
 body {
   padding: 0;
