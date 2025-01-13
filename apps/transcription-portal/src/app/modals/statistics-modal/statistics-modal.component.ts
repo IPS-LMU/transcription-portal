@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
 import {
   NgbActiveModal,
   NgbModalOptions,
@@ -7,9 +7,10 @@ import {
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
+import { BaseChartDirective } from 'ng2-charts';
+import { timer } from 'rxjs';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
-import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
   selector: 'tportal-statistics',
@@ -19,7 +20,7 @@ import { BaseChartDirective } from 'ng2-charts';
 })
 export class StatisticsModalComponent
   extends SubscriberComponent
-  implements OnDestroy
+  implements OnDestroy, AfterViewInit
 {
   @ViewChild('statisticsModal', { static: true }) statisticsModal?: NgbModalRef;
   public static options: NgbModalOptions = {
@@ -27,6 +28,7 @@ export class StatisticsModalComponent
     backdrop: true,
     fullscreen: 'sm',
   };
+  showCharts = false;
 
   // Pie
   public pieChartType: ChartConfiguration['type'] = 'pie';
@@ -52,5 +54,13 @@ export class StatisticsModalComponent
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.statisticsService.destroy();
+  }
+
+  ngAfterViewInit() {
+    this.subscribe(timer(1000), {
+      next: () => {
+        this.showCharts = true;
+      },
+    });
   }
 }
