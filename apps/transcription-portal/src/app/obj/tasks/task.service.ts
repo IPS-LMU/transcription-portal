@@ -1127,7 +1127,7 @@ export class TaskService implements OnDestroy {
           const cutter = new AudioCutter(audioInfo);
           const files: File[] = await cutter.splitChannelsToFiles(
             file.attributes.originalFileName,
-            [0],
+            [0, 1],
             arrayBuffer
           );
           if (this._splitPrompt === 'PENDING') {
