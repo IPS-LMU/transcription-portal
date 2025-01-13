@@ -902,7 +902,7 @@ export class TaskService implements OnDestroy {
 
     for (const converter of AppInfo.converters) {
       for (const extension1 of converter.obj.extensions) {
-        result = result || extension.includes(extension);
+        result = result || extension1.includes(extension);
       }
     }
 
@@ -1109,7 +1109,8 @@ export class TaskService implements OnDestroy {
       );
       const isValidTranscript = this.validTranscript(file.extension);
 
-      if (format !== undefined) {
+      if (format && !isValidTranscript) {
+        // it's an audio file
         await format.init(file.fullname, file.type, arrayBuffer);
         const audioInfo = getAudioInfo(
           format,
@@ -1180,7 +1181,7 @@ export class TaskService implements OnDestroy {
           );
           newFileInfo.hash = file.hash;
         }
-      } else {
+      } else if (file.type.includes('audio')) {
         this.alertService.showAlert(
           'danger',
           `The audio file '${file.fullname}' is invalid.

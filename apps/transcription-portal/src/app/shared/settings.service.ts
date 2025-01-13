@@ -5,7 +5,11 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ASRSettings, NgbModalWrapper, openModal } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { downloadFile } from '@octra/ngx-utilities';
-import { isNumber, SubscriptionManager } from '@octra/utilities';
+import {
+  extractFileNameFromURL,
+  isNumber,
+  SubscriptionManager,
+} from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import * as jQuery from 'jquery';
 import {
@@ -528,10 +532,16 @@ export class SettingsService implements OnDestroy {
                 observables.length
               ) {
                 for (const progressElement of progress) {
+                  const filename = `audio_from_url_${new Date().toLocaleString()}`;
+                  const nameFromURL = extractFileNameFromURL(
+                    progressElement.downloadURL
+                  );
                   const info = FileInfo.fromURL(
                     progressElement.downloadURL,
-                    'audi/wave',
-                    'audio_from_url.wav'
+                    nameFromURL.extension === '.wav'
+                      ? 'audio/wave'
+                      : 'text/plain',
+                    `${filename}${nameFromURL.extension}`
                   );
                   info.file = new File(
                     [progressElement.result!],
