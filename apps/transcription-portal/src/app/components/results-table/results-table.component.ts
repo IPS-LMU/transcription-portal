@@ -15,6 +15,7 @@ import { Converter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, FileInfo } from '@octra/web-media';
+import { timer } from 'rxjs';
 import { AppInfo, ConverterData } from '../../app.info';
 import { Operation } from '../../obj/operations/operation';
 import { DownloadService } from '../../shared/download.service';
@@ -29,6 +30,8 @@ import { DownloadService } from '../../shared/download.service';
 export class ResultsTableComponent implements OnChanges {
   @Input() operation?: Operation;
   @Input() visible = false;
+
+  somethingClicked = false;
 
   public convertedArray: {
     input?: {
@@ -88,9 +91,10 @@ export class ResultsTableComponent implements OnChanges {
     } else if (
       hasProperty(changes, 'visible') &&
       changes['visible'].currentValue &&
-      !changes['visible'].currentValue
+      !changes['visible'].previousValue
     ) {
       this.generationRunning = false;
+      this.somethingClicked = false;
     }
   }
 
@@ -301,5 +305,14 @@ export class ResultsTableComponent implements OnChanges {
 
   test() {
     alert('Ok');
+  }
+
+  disableClick($event: MouseEvent) {
+    this.somethingClicked = true;
+    timer(300).subscribe({
+      next: () => {
+        this.somethingClicked = false;
+      },
+    });
   }
 }

@@ -8,10 +8,10 @@
       Result and Conversions
     </div>
     <div class="col-auto">
-      <select class="form-select-sm" [(ngModel)]="selectedVersion" (mouseup)="$event.stopPropagation();$event.preventDefault();" (click)="$event.stopPropagation();$event.preventDefault();">
+      <select class="form-select form-select-sm pointer" [(ngModel)]="selectedVersion" (mousedown)="disableClick($event)" (click)="disableClick($event)">
         @for (elem of convertedArray; track elem;) {
-        <option [value]="elem.number">
-          @if($index > 0) { v{{ elem.number + 1 }} }
+        <option [value]="elem.number" (click)="disableClick($event)">
+          @if ($index > 0) { v{{ elem.number + 1 }} }
           @else { latest (v{{ elem.number + 1 }}) }
         </option>
         }

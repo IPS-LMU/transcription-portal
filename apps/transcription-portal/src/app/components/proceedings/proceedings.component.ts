@@ -136,6 +136,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   @Output() public feedbackRequested = new EventEmitter<Operation>();
   @ViewChild('inner', { static: true }) inner?: ElementRef;
   @ViewChild('popoverRef') public popoverRef?: PopoverComponent;
+  @ViewChild('resultsTableComponent')
+  public resultsTableComponent?: ResultsTableComponent;
 
   public selectedOperation?: Operation;
   public toolSelectedOperation?: Operation;
@@ -490,7 +492,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   togglePopover(show: boolean) {
     if (show) {
       this.popover.state = 'opened';
-    } else {
+    } else if (!this.resultsTableComponent?.somethingClicked) {
       console.log('toggle popover test');
       this.popover.state = 'closed';
     }

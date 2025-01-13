@@ -85,6 +85,7 @@
   } @if (popover.operation.results.length > 0) {
   <div style="overflow: hidden">
     <tportal-results-table
+      #resultsTableComponent
       [visible]="popover.state === 'opened'"
       (previewClick)="onPreviewClick($event)"
       [operation]="popover.operation"
