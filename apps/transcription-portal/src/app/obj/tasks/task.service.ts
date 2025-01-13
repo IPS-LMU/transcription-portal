@@ -1176,7 +1176,7 @@ export class TaskService implements OnDestroy {
           );
           newFileInfo.hash = file.hash;
         }
-      } else if (!isValidTranscript) {
+      } else {
         this.alertService.showAlert(
           'danger',
           `The audio file '${file.fullname}' is invalid.

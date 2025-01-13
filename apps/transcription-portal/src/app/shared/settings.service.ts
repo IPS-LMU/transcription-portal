@@ -57,11 +57,13 @@ export class SettingsService implements OnDestroy {
         let audioURL: string | undefined;
         let transcriptURL: string | undefined;
         if (Object.keys(param).includes('audio') && param.audio) {
-          audioURL = param.audio;
+          audioURL = decodeURIComponent(param.audio);
+          console.log(audioURL);
         }
 
         if (Object.keys(param).includes('transcript') && param.transcript) {
-          transcriptURL = param.transcript;
+          transcriptURL = decodeURIComponent(param.transcript);
+          console.log(transcriptURL);
         }
 
         if (audioURL) {
@@ -526,7 +528,11 @@ export class SettingsService implements OnDestroy {
                 observables.length
               ) {
                 for (const progressElement of progress) {
-                  const info = FileInfo.fromURL(progressElement.downloadURL);
+                  const info = FileInfo.fromURL(
+                    progressElement.downloadURL,
+                    'audi/wave',
+                    'audio_from_url.wav'
+                  );
                   info.file = new File(
                     [progressElement.result!],
                     info.fullname,

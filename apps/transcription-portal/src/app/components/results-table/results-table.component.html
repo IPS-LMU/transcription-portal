@@ -8,9 +8,12 @@
       Result and Conversions
     </div>
     <div class="col-auto">
-      <select class="form-select-sm" [(ngModel)]="selectedVersion">
-        @for (elem of convertedArray; track elem) {
-        <option [value]="elem.number">v{{ elem.number + 1 }}</option>
+      <select class="form-select-sm" [(ngModel)]="selectedVersion" (mouseup)="$event.stopPropagation();$event.preventDefault();" (click)="$event.stopPropagation();$event.preventDefault();">
+        @for (elem of convertedArray; track elem;) {
+        <option [value]="elem.number">
+          @if($index > 0) { v{{ elem.number + 1 }} }
+          @else { latest (v{{ elem.number + 1 }}) }
+        </option>
         }
       </select>
     </div>

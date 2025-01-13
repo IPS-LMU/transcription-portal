@@ -1,7 +1,7 @@
 <tportal-popover
   #popoverRef
   (mouseenter)="popover.mouseIn = true"
-  (mouseleave)="popover.state = 'closed'"
+  (mouseleave)="togglePopover(false)"
   [@fadeToggleRow]="popover.state"
   [borderColor]="getPopoverColor(popover.operation!)"
   [height]="popover.height"
@@ -20,7 +20,7 @@
   <p style="color: red">The latest result does not exist anymore.</p>
   }
   <div class="row g-0">
-    <div class="col" style="font-size:0.85rem;">
+    <div class="col" style="font-size: 0.85rem">
       <i class="bi bi-clock" style="color: cornflowerblue"></i
       ><span>
         {{
@@ -28,7 +28,7 @@
         }}</span
       >
     </div>
-    <div class="col text-end" style="font-size:0.85rem;">
+    <div class="col text-end" style="font-size: 0.85rem">
       <i class="bi bi-hourglass" style="color: cornflowerblue"></i
       ><span>
         {{
@@ -83,7 +83,7 @@
   </div>
   <div class="clearfix"></div>
   } @if (popover.operation.results.length > 0) {
-  <div style="overflow: hidden;">
+  <div style="overflow: hidden">
     <tportal-results-table
       [visible]="popover.state === 'opened'"
       (previewClick)="onPreviewClick($event)"

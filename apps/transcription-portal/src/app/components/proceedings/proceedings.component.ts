@@ -414,6 +414,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           operation.results[operation.results.length - 1].online)
       ) {
         this.operationclick.emit(operation);
+        console.log('row selected close');
         this.popover.state = 'closed';
       }
 
@@ -491,6 +492,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     if (show) {
       this.popover.state = 'opened';
     } else {
+      console.log('toggle popover test');
       this.popover.state = 'closed';
     }
 
@@ -567,6 +569,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.popover.mouseIn = false;
     setTimeout(() => {
       if (!this.popover.mouseIn) {
+        console.log('operation mouse leave');
         this.togglePopover(false);
       }
     }, 250);
@@ -813,6 +816,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       operation instanceof EmuOperation
     ) {
       this.popover.state = 'closed';
+      console.log('operation click selected close');
       this.cd.markForCheck();
       this.cd.detectChanges();
       this.selectedOperation = undefined;
@@ -856,6 +860,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       .then((result) => {
         if (result) {
           if (result.command === 'remove') {
+            console.log('keyup close');
             this.popover.state = 'closed';
             this.deleteSelectedTasks();
           } else if (result.command === 'select all') {
@@ -922,6 +927,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onPreviewClick(file: FileInfo) {
+    console.log('preview click close');
     this.popover.state = 'closed';
     this.cd.markForCheck();
     const ref = this.ngbModalService.open(
