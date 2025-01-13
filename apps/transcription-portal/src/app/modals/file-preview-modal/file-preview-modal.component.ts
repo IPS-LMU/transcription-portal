@@ -10,7 +10,6 @@ import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
-  standalone: true,
   imports: [NgxCodeJarComponent],
 })
 export class FilePreviewModalComponent

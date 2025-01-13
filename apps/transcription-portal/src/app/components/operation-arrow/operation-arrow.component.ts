@@ -5,7 +5,6 @@ import { NgClass } from '@angular/common';
   selector: 'tportal-operation-arrow',
   templateUrl: './operation-arrow.component.html',
   styleUrls: ['./operation-arrow.component.scss'],
-  standalone: true,
   imports: [NgClass],
 })
 export class OperationArrowComponent implements OnInit {

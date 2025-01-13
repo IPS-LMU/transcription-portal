@@ -23,7 +23,6 @@ import { DownloadService } from '../../shared/download.service';
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, FormsModule],
 })
@@ -137,12 +136,15 @@ export class ResultsTableComponent implements OnChanges {
                 const conversions = promiseResults[j];
 
                 const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) => a.obj.extension.indexOf(result.extension) > -1
+                  (a) =>
+                    a.obj.extensions.findIndex(
+                      (b) => b.indexOf(result.extension) > -1
+                    ) > -1
                 );
 
                 if (from) {
                   const importConverter = from.obj;
-                  this.originalLabel = importConverter.extension;
+                  this.originalLabel = importConverter.extensions[0];
 
                   if (!result.file) {
                     throw new Error(`result file is undefined`);

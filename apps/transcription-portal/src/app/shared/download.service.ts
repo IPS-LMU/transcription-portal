@@ -46,10 +46,13 @@ export class DownloadService {
       }>[] = [];
 
       for (const converter of converters) {
-        if (operationResult.fullname.indexOf(converter.obj.extension) < 0) {
-          promises.push(
-            this.getResultConversion(converter, operation, operationResult)
-          );
+        for (const extension of converter.obj.extensions) {
+          if (operationResult.fullname.indexOf(extension) < 0) {
+            promises.push(
+              this.getResultConversion(converter, operation, operationResult)
+            );
+            break;
+          }
         }
       }
 
@@ -109,7 +112,12 @@ export class DownloadService {
           let annotJSON;
 
           const from = AppInfo.converters.find((a) => {
-            return opResult.fullname.indexOf(a.obj.extension) > -1;
+            for (const extension of a.obj.extensions) {
+              if (opResult.fullname.indexOf(extension) > -1) {
+                return true;
+              }
+            }
+            return false;
           });
 
           if (!(from === null || from === undefined)) {
@@ -160,7 +168,7 @@ export class DownloadService {
                 const file: File = FileInfo.getFileFromContent(
                   conversion.file.content,
                   audiofile.name.replace(/\.[^.]+$/g, '') +
-                    converter.obj.extension,
+                    converter.obj.extensions[0],
                   conversion.file.type
                 );
 

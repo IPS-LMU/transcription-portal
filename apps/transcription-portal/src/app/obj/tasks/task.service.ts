@@ -901,7 +901,9 @@ export class TaskService implements OnDestroy {
     let result = false;
 
     for (const converter of AppInfo.converters) {
-      result = result || converter.obj.extension.includes(extension);
+      for (const extension1 of converter.obj.extensions) {
+        result = result || extension.includes(extension);
+      }
     }
 
     return result;
@@ -909,8 +911,10 @@ export class TaskService implements OnDestroy {
 
   public getAppendingsExtension(file: FileInfo): string {
     for (const converter of AppInfo.converters) {
-      if (file.fullname.includes(converter.obj.extension)) {
-        return converter.obj.extension;
+      for (const extension of converter.obj.extensions) {
+        if (file.fullname.includes(extension)) {
+          return extension;
+        }
       }
     }
 
@@ -1123,7 +1127,7 @@ export class TaskService implements OnDestroy {
           const cutter = new AudioCutter(audioInfo);
           const files: File[] = await cutter.splitChannelsToFiles(
             file.attributes.originalFileName,
-            file.type,
+            [0],
             arrayBuffer
           );
           if (this._splitPrompt === 'PENDING') {

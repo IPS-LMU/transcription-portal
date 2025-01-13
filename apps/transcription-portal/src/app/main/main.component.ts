@@ -63,7 +63,6 @@ import { StorageService } from '../storage.service';
   styleUrls: ['./main.component.scss'],
   providers: [],
   animations: [ANIMATIONS],
-  standalone: true,
   imports: [
     AlertComponent,
     NgClass,

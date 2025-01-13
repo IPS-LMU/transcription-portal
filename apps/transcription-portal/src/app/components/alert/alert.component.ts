@@ -14,12 +14,11 @@ export interface AlertEntry {
 }
 
 @Component({
-  selector: 'tportal-alert',
-  templateUrl: './alert.component.html',
-  styleUrls: ['./alert.component.scss'],
-  animations: ANIMATIONS,
-  standalone: true,
-  imports: [NgStyle, NgbAlert],
+    selector: 'tportal-alert',
+    templateUrl: './alert.component.html',
+    styleUrls: ['./alert.component.scss'],
+    animations: ANIMATIONS,
+    imports: [NgStyle, NgbAlert]
 })
 export class AlertComponent implements OnInit, OnDestroy {
   private static counter = 0;

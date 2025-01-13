@@ -15,12 +15,12 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@octra/media": ["node_modules/@octra/media"],
       "@octra/annotation": ["node_modules/@octra/annotation"],
-      "@octra/utilities": ["node_modules/@octra/utilities"],
+      "@octra/media": ["node_modules/@octra/media"],
+      "@octra/ngx-components": ["node_modules/@octra/ngx-components"],
       "@octra/ngx-utilities": ["node_modules/@octra/ngx-utilities"],
-      "@octra/web-media": ["node_modules/@octra/web-media"],
-      "@octra/ngx-components": ["node_modules/@octra/ngx-components"]
+      "@octra/utilities": ["node_modules/@octra/utilities"],
+      "@octra/web-media": ["node_modules/@octra/web-media"]
     }
   },
   "exclude": ["node_modules", "tmp"]

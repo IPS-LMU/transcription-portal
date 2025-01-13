@@ -51,7 +51,6 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
   styleUrls: ['./proceedings.component.scss'],
   animations: ANIMATIONS,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: true,
   imports: [
     PopoverComponent,
     NgStyle,

@@ -7,16 +7,15 @@ import {
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
-import { NgChartsModule } from 'ng2-charts';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
+import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
-  standalone: true,
-  imports: [NgCircleProgressModule, NgChartsModule],
+  imports: [NgCircleProgressModule, BaseChartDirective],
 })
 export class StatisticsModalComponent
   extends SubscriberComponent

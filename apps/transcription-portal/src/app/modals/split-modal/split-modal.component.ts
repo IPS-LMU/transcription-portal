@@ -6,7 +6,6 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
   selector: 'tportal-split-modal',
   templateUrl: './split-modal.component.html',
   styleUrls: ['./split-modal.component.scss'],
-  standalone: true,
   imports: [],
 })
 export class SplitModalComponent extends SubscriberComponent {

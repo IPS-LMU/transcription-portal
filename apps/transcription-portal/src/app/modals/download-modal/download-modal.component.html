@@ -19,7 +19,7 @@
                class="conversion-check" type="checkbox"/> <label
         [attr.for]="'check-' + i"> <i [ngStyle]="{color: conversion.color}"
                                       class="bi bi-file-text"></i>
-        {{conversion.obj.name}} ({{conversion.obj.extension}})</label>
+        {{conversion.obj.name}} ({{conversion.obj.extensions[0]}})</label>
       </div>
     }
     <div class="clearfix"></div>

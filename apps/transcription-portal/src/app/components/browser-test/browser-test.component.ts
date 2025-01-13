@@ -9,7 +9,6 @@ import { NgClass, NgStyle } from '@angular/common';
   selector: 'tportal-browser-test',
   templateUrl: './browser-test.component.html',
   styleUrls: ['./browser-test.component.scss'],
-  standalone: true,
   imports: [NgClass, NgStyle],
 })
 export class BrowserTestComponent implements OnInit {

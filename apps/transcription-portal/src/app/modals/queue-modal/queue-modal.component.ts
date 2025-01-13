@@ -38,7 +38,6 @@ import { StorageService } from '../../storage.service';
   styleUrls: ['./queue-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  standalone: true,
   imports: [
     NgClass,
     NgStyle,

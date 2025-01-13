@@ -24,7 +24,6 @@ import { SettingsService } from './shared/settings.service';
   styleUrls: ['./app.component.scss'],
   providers: [],
   animations: [ANIMATIONS],
-  standalone: true,
   imports: [RouterOutlet],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {

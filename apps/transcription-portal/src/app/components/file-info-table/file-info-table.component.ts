@@ -8,7 +8,6 @@ import { FilesizePipe } from '../../shared/filesize.pipe';
   selector: 'tportal-file-info-table',
   templateUrl: './file-info-table.component.html',
   styleUrls: ['./file-info-table.component.scss'],
-  standalone: true,
   imports: [NgClass, TimePipe, FilesizePipe],
 })
 export class FileInfoTableComponent implements OnInit {

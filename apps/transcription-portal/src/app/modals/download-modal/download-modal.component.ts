@@ -19,7 +19,6 @@ import { DownloadService } from '../../shared/download.service';
   selector: 'tportal-download-modal',
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
-  standalone: true,
   imports: [FormsModule, NgStyle],
 })
 export class DownloadModalComponent
