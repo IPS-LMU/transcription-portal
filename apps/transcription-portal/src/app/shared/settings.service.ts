@@ -56,26 +56,81 @@ export class SettingsService implements OnDestroy {
     private modalService: NgbModal,
     private router: Router
   ) {
-    this.activeRoute.queryParams.subscribe(
-      (param: { audio?: string; transcript?: string }) => {
-        let audioURL: string | undefined;
-        let transcriptURL: string | undefined;
-        if (Object.keys(param).includes('audio') && param.audio) {
-          audioURL = decodeURIComponent(param.audio);
-          console.log(audioURL);
-        }
+    this.subscrManager.add(
+      this.activeRoute.queryParams.subscribe(
+        (param: {
+          audio?: string;
+          transcript?: string;
+          audio_language?: string;
+          audio_type?: string;
+          transcript_type?: string;
+        }) => {
+          this.subscrManager.add(
+            this.taskService.dbImported.subscribe({
+              next: () => {
+                let audioURL: string | undefined;
+                let audioLanguage: string | undefined;
+                let audioType: string | undefined;
+                let transcriptURL: string | undefined;
+                let transcriptType: string | undefined;
 
-        if (Object.keys(param).includes('transcript') && param.transcript) {
-          transcriptURL = decodeURIComponent(param.transcript);
-          console.log(transcriptURL);
-        }
+                if (Object.keys(param).includes('audio') && param.audio) {
+                  audioURL = decodeURIComponent(param.audio);
+                  console.log(`audioURL: ${audioURL}`);
+                }
 
-        if (audioURL) {
-          this.readFromURL(audioURL, transcriptURL).catch((e) => {
-            console.error(`READ from URL ERROR: ${e.message}`);
-          });
+                if (
+                  Object.keys(param).includes('audio_language') &&
+                  param.audio_language
+                ) {
+                  audioLanguage = decodeURIComponent(param.audio_language);
+                  console.log(`audioLanguage: ${audioLanguage}`);
+                }
+
+                if (
+                  Object.keys(param).includes('audio_type') &&
+                  param.audio_type
+                ) {
+                  audioType = decodeURIComponent(param.audio_type);
+                  console.log(`audioType: ${audioType}`);
+                }
+
+                if (
+                  Object.keys(param).includes('transcript') &&
+                  param.transcript
+                ) {
+                  transcriptURL = decodeURIComponent(param.transcript);
+                  console.log(`transcriptURL: ${transcriptURL}`);
+                }
+
+                if (
+                  Object.keys(param).includes('transcript_type') &&
+                  param.transcript_type
+                ) {
+                  transcriptType = decodeURIComponent(param.transcript_type);
+                  console.log(`transcriptType: ${transcriptType}`);
+                }
+
+                if (audioURL) {
+                  this.readFilesFromURL(
+                    audioURL,
+                    audioType,
+                    transcriptURL,
+                    transcriptType
+                  ).catch((e) => {
+                    console.error(`READ files from URL ERROR: ${e.message}`);
+                  });
+                  this.readAudioLanguageFromURL(audioLanguage).catch((e) => {
+                    console.error(
+                      `READ audioLanguage from URL ERROR: ${e.message}`
+                    );
+                  });
+                }
+              },
+            })
+          );
         }
-      }
+      )
     );
 
     this.http
@@ -442,9 +497,11 @@ export class SettingsService implements OnDestroy {
     }
   }
 
-  private async readFromURL(
+  private async readFilesFromURL(
     audioURL: string | undefined,
-    transcriptURL?: string
+    audioType?: string,
+    transcriptURL?: string,
+    transcriptType?: string
   ) {
     if (audioURL) {
       let leftTime = 0;
@@ -531,18 +588,23 @@ export class SettingsService implements OnDestroy {
                 progress.filter((a) => a.result !== undefined).length ===
                 observables.length
               ) {
+                // retrieving files finished
+                const filename = `from_url_${new Date()
+                  .toLocaleString()
+                  .replace(/, /g, '_')
+                  .replace(/[ .:]/g, '-')}`;
                 for (const progressElement of progress) {
-                  const filename = `audio_from_url_${new Date().toLocaleString()}`;
                   const nameFromURL = extractFileNameFromURL(
                     progressElement.downloadURL
                   );
                   const info = FileInfo.fromURL(
                     progressElement.downloadURL,
                     nameFromURL.extension === '.wav'
-                      ? 'audio/wave'
-                      : 'text/plain',
+                      ? audioType ?? 'audio/wave'
+                      : transcriptType ?? 'text/plain',
                     `${filename}${nameFromURL.extension}`
                   );
+
                   info.file = new File(
                     [progressElement.result!],
                     info.fullname,
@@ -550,7 +612,13 @@ export class SettingsService implements OnDestroy {
                       type: info.type,
                     }
                   );
-                  this.taskService.preprocessor.addToQueue(info);
+                  this.subscrManager.add(
+                    timer(0).subscribe({
+                      next: () => {
+                        this.taskService.preprocessor.addToQueue(info);
+                      },
+                    })
+                  );
                 }
 
                 close();
@@ -580,6 +648,27 @@ export class SettingsService implements OnDestroy {
       }
     } else {
       alert('Missing audio URL');
+    }
+  }
+
+  private async readAudioLanguageFromURL(audioLanguage?: string) {
+    if (audioLanguage && /(^deu)|(^ita)|(^nld)|(^eng)/g.exec(audioLanguage)) {
+      const supportedAudioLanguages = AppSettings.languages.asr.filter((a) =>
+        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)
+      );
+      const supportedMausLanguages = AppSettings.languages.maus.filter((a) =>
+        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)
+      );
+      this.taskService.selectedASRLanguage = supportedAudioLanguages.find((a) =>
+        a.value.includes(audioLanguage)
+      )?.value;
+      this.taskService.selectedMausLanguage = supportedMausLanguages.find((a) =>
+        a.value.includes(audioLanguage)
+      )?.value;
+
+      if (this.taskService.selectedMausLanguage) {
+        this.taskService.selectedProvider = undefined;
+      }
     }
   }
 

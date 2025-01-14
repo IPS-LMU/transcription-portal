@@ -54,6 +54,7 @@ export class TaskService implements OnDestroy {
   };
   private subscrmanager = new SubscriptionManager<Subscription>();
   private state: TaskState = TaskState.READY;
+  dbImported = new EventEmitter<void>();
 
   constructor(
     public httpclient: HttpClient,
@@ -385,7 +386,7 @@ export class TaskService implements OnDestroy {
     this.updateStatistics();
   }
 
-  public importDBData(dbEntries: {
+  public async importDBData(dbEntries: {
     tasks: IDBTaskItem[];
     userSettings: IDBUserSettingsItem[];
   }) {
@@ -422,33 +423,31 @@ export class TaskService implements OnDestroy {
 
             for (const opResult of operation.results) {
               if (!(opResult.url === null || opResult.url === undefined)) {
-                this.existsFile(opResult.url)
-                  .then(() => {
-                    opResult.online = true;
+                try {
+                  await this.existsFile(opResult.url);
 
-                    if (opResult.file === null || opResult.file === undefined) {
-                      const format: AudioFormat | undefined =
-                        AudioManager.getFileFormat(
-                          opResult.extension,
-                          AppInfo.audioFormats
-                        );
+                  opResult.online = true;
+                  if (opResult.file === null || opResult.file === undefined) {
+                    const format: AudioFormat | undefined =
+                      AudioManager.getFileFormat(
+                        opResult.extension,
+                        AppInfo.audioFormats
+                      );
 
-                      if (!format) {
-                        opResult
-                          .updateContentFromURL(this.httpclient)
-                          .then(() => {
-                            // TODO minimize task savings
-                            this.storage.saveTask(task);
-                          })
-                          .catch((error: any) => {
-                            console.error(error);
-                          });
+                    if (!format) {
+                      try {
+                        await opResult.updateContentFromURL(this.httpclient);
+
+                        // TODO minimize task savings
+                        await this.storage.saveTask(task);
+                      } catch (e) {
+                        console.error(e);
                       }
                     }
-                  })
-                  .catch(() => {
-                    opResult.online = false;
-                  });
+                  }
+                } catch (e) {
+                  opResult.online = false;
+                }
               } else {
                 opResult.online = false;
               }
@@ -474,29 +473,24 @@ export class TaskService implements OnDestroy {
             for (const operation of task.operations) {
               for (const opResult of operation.results) {
                 if (!(opResult.url === null || opResult.url === undefined)) {
-                  this.existsFile(opResult.url)
-                    .then(() => {
-                      opResult.online = true;
+                  try {
+                    opResult.online = true;
 
-                      if (
-                        (opResult.file === null ||
-                          opResult.file === undefined) &&
-                        opResult.extension.indexOf('wav') < 0
-                      ) {
-                        opResult
-                          .updateContentFromURL(this.httpclient)
-                          .then(() => {
-                            // TODO minimize task savings
-                            this.storage.saveTask(task);
-                          })
-                          .catch((error: any) => {
-                            console.error(error);
-                          });
+                    if (
+                      (opResult.file === null || opResult.file === undefined) &&
+                      opResult.extension.indexOf('wav') < 0
+                    ) {
+                      try {
+                        opResult.updateContentFromURL(this.httpclient);
+                        // TODO minimize task savings
+                        await this.storage.saveTask(task);
+                      } catch (e) {
+                        console.error(e);
                       }
-                    })
-                    .catch(() => {
-                      opResult.online = false;
-                    });
+                    }
+                  } catch (e) {
+                    opResult.online = false;
+                  }
                 }
               }
             }
@@ -525,9 +519,8 @@ export class TaskService implements OnDestroy {
         Operation.counter = maxOperationCounter;
       }
 
-      this.updateProtocolURL().then((url) => {
-        this.protocolURL = url;
-      });
+      const url = await this.updateProtocolURL();
+      this.protocolURL = url;
     }
     if (dbEntries.userSettings) {
       // read userSettings
@@ -555,6 +548,8 @@ export class TaskService implements OnDestroy {
       }
       // this.notification.permissionGranted = results[1][]
     }
+    this.dbImported.next();
+    this.dbImported.complete();
   }
 
   public checkFiles() {

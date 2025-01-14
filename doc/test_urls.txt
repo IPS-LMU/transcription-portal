@@ -1,0 +1,2 @@
+Local URL params:
+http://localhost:3456/?audio=http:%2F%2F127.0.0.1:4353%2FBahnauskunft2.wav&transcript=http:%2F%2F127.0.0.1:4353%2FBahnauskunft2.txt&audio_type=audio%2Fvnd.wave&transcript_type=text%2Fplain&audio_language=ita
