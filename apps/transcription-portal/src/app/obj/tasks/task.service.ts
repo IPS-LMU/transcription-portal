@@ -141,7 +141,7 @@ export class TaskService implements OnDestroy {
         }
 
         if (this._statistics.queued > 0) {
-          return `${this._statistics.queued} audio file(s) waiting to be verified by you.`;
+          return `${this._statistics.queued} audio file(s) are waiting to be verified by you.`;
         }
 
         return 'All jobs done. Waiting for new tasks...';
@@ -150,7 +150,7 @@ export class TaskService implements OnDestroy {
       return 'Processing...';
     } else if (this.overallState === 'not started') {
       if (this._statistics.queued > 0) {
-        return `${this._statistics.queued} audio file(s) waiting to be verified by you.`;
+        return `${this._statistics.queued} audio file(s) are waiting to be verified by you.`;
       }
       return 'Ready';
     }

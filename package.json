@@ -39,7 +39,7 @@
     "@octra/ngx-components": "~1.0.0",
     "@octra/ngx-octra-api": "~0.2.3",
     "@octra/ngx-utilities": "~1.0.0",
-    "@octra/utilities": "~1.0.0",
+    "@octra/utilities": "^1.0.1",
     "@octra/web-media": "~1.0.0",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.3",

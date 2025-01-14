@@ -594,15 +594,41 @@ export class SettingsService implements OnDestroy {
                   .replace(/, /g, '_')
                   .replace(/[ .:]/g, '-')}`;
                 for (const progressElement of progress) {
+                  let mediaType: string | undefined;
+
+                  if (progressElement.downloadURL.includes('?')) {
+                    const matches = /mediatype=([^&]+)/g.exec(
+                      progressElement.downloadURL
+                    );
+                    mediaType = matches ? matches[1] : undefined;
+                  }
+
                   const nameFromURL = extractFileNameFromURL(
                     progressElement.downloadURL
                   );
+
+                  let extension = '';
+                  if (nameFromURL.extension) {
+                    extension = nameFromURL.extension;
+                  } else {
+                    if (mediaType) {
+                      if (mediaType.includes('audio')) {
+                        extension = '.wav';
+                      } else if (mediaType.includes('text')) {
+                        extension = '.txt';
+                      } else if (mediaType.includes('json')) {
+                        extension = '_annot.json';
+                      }
+                    }
+                  }
+
                   const info = FileInfo.fromURL(
                     progressElement.downloadURL,
-                    nameFromURL.extension === '.wav'
-                      ? audioType ?? 'audio/wave'
-                      : transcriptType ?? 'text/plain',
-                    `${filename}${nameFromURL.extension}`
+                    mediaType ??
+                      (extension === '.wav'
+                        ? audioType ?? 'audio/wave'
+                        : transcriptType ?? 'text/plain'),
+                    `${filename}${extension}`
                   );
 
                   info.file = new File(
@@ -659,15 +685,27 @@ export class SettingsService implements OnDestroy {
       const supportedMausLanguages = AppSettings.languages.maus.filter((a) =>
         /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)
       );
+
+      if (audioLanguage === 'deu') {
+        audioLanguage = 'deu-DE';
+      } else if (audioLanguage === 'en') {
+        audioLanguage = 'en-GB';
+      } else if (audioLanguage === 'nld') {
+        audioLanguage = 'nld-NL';
+      } else if (audioLanguage === 'ita') {
+        audioLanguage = 'ita-IT';
+      }
+
       this.taskService.selectedASRLanguage = supportedAudioLanguages.find((a) =>
-        a.value.includes(audioLanguage)
+        a.value.includes(audioLanguage!)
       )?.value;
       this.taskService.selectedMausLanguage = supportedMausLanguages.find((a) =>
-        a.value.includes(audioLanguage)
+        a.value.includes(audioLanguage!)
       )?.value;
 
       if (this.taskService.selectedMausLanguage) {
-        this.taskService.selectedProvider = undefined;
+        this.taskService.selectedProvider =
+          AppSettings.getServiceInformation('Watson'); // Watson is default
       }
     }
   }
