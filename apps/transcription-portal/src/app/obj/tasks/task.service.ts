@@ -843,7 +843,7 @@ export class TaskService implements OnDestroy {
 
         dir.entries = dir.entries.filter((a: any) => {
           const format: AudioFormat | undefined = AudioManager.getFileFormat(
-            a.file.extension,
+            a.extension,
             AppInfo.audioFormats
           );
           return (
