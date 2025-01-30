@@ -5,16 +5,11 @@
   height: 100%;
 }
 
-#queue tr td,
+#queue td,
 #queue thead th,
 #queue thead th div {
   text-align: center;
   font-size: 0.9em;
-}
-
-#queue tr td:first-of-type,
-#queue thead th:first-of-type {
-  text-align: left;
 }
 
 #queue thead th {

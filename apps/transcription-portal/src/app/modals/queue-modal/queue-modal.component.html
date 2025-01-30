@@ -81,7 +81,7 @@
       <thead>
       <tr>
         <th>Valid?</th>
-        <th>File</th>
+        <th class="text-start">File</th>
         <th>Language</th>
         @for (operation of operations; track operation; let i = $index) {
           <th>
@@ -163,7 +163,7 @@
                 }"></i>
                           </span>
               </td>
-              <td>
+              <td class="text-start">
                         <span [ngClass]="{
                                 'green': ((task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
                                          (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online)),
@@ -174,8 +174,8 @@
                           </span>
                 @if ( task.files.length > 1 || task.files[0].extension !== '.wav') {
                   <span [ngClass]="{
-                                'badge-info': getBadge(task).type === 'info',
-                                'badge-warning': getBadge(task).type === 'warning'
+                                'bg-info': getBadge(task).type === 'info',
+                                'bg-warning': getBadge(task).type === 'warning'
                             }" class="badge">
                               {{getBadge(task).label}}
                             </span>
