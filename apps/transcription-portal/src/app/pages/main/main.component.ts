@@ -29,33 +29,33 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { forkJoin, Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { AppInfo } from '../app.info';
-import { AlertComponent } from '../components/alert/alert.component';
-import { ProceedingsComponent } from '../components/proceedings/proceedings.component';
-import { ProtocolFooterComponent } from '../components/protocol-footer/protocol-footer.component';
-import { ToolLoaderComponent } from '../components/tool-loader/tool-loader.component';
-import { FirstModalComponent } from '../modals/first-modal/first-modal.component';
-import { QueueModalComponent } from '../modals/queue-modal/queue-modal.component';
-import { SplitModalComponent } from '../modals/split-modal/split-modal.component';
-import { StatisticsModalComponent } from '../modals/statistics-modal/statistics-modal.component';
-import { openModal } from '../obj/functions';
-import { EmuOperation } from '../obj/operations/emu-operation';
-import { OCTRAOperation } from '../obj/operations/octra-operation';
-import { Operation } from '../obj/operations/operation';
-import { ToolOperation } from '../obj/operations/tool-operation';
-import { UploadOperation } from '../obj/operations/upload-operation';
-import { Task, TaskState } from '../obj/tasks';
-import { TaskService } from '../obj/tasks/task.service';
-import { AlertService } from '../shared/alert.service';
-import { ANIMATIONS } from '../shared/Animations';
-import { AppSettings } from '../shared/app.settings';
-import { BugReportService, ConsoleType } from '../shared/bug-report.service';
-import { NotificationService } from '../shared/notification.service';
-import { OHModalService } from '../shared/ohmodal.service';
-import { SettingsService } from '../shared/settings.service';
-import { TimePipe } from '../shared/time.pipe';
-import { StorageService } from '../storage.service';
+import { environment } from '../../../environments/environment';
+import { AppInfo } from '../../app.info';
+import { AlertComponent } from '../../components/alert/alert.component';
+import { ProceedingsComponent } from '../../components/proceedings/proceedings.component';
+import { ProtocolFooterComponent } from '../../components/protocol-footer/protocol-footer.component';
+import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
+import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
+import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
+import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
+import { StatisticsModalComponent } from '../../modals/statistics-modal/statistics-modal.component';
+import { openModal } from '../../obj/functions';
+import { EmuOperation } from '../../obj/operations/emu-operation';
+import { OCTRAOperation } from '../../obj/operations/octra-operation';
+import { Operation } from '../../obj/operations/operation';
+import { ToolOperation } from '../../obj/operations/tool-operation';
+import { UploadOperation } from '../../obj/operations/upload-operation';
+import { Task, TaskState } from '../../obj/tasks';
+import { TaskService } from '../../obj/tasks/task.service';
+import { AlertService } from '../../shared/alert.service';
+import { ANIMATIONS } from '../../shared/Animations';
+import { AppSettings } from '../../shared/app.settings';
+import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
+import { NotificationService } from '../../shared/notification.service';
+import { OHModalService } from '../../shared/ohmodal.service';
+import { SettingsService } from '../../shared/settings.service';
+import { TimePipe } from '../../shared/time.pipe';
+import { StorageService } from '../../storage.service';
 
 @Component({
   selector: 'tportal-main',
@@ -88,18 +88,18 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
-  @ViewChild('fileinput') fileinput?: ElementRef;
-  @ViewChild('folderinput') folderinput?: ElementRef;
-  @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
-  @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
-  @ViewChild('statisticsModal', { static: true })
   public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
 
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
+
+  @ViewChild('fileinput') fileinput?: ElementRef;
+  @ViewChild('folderinput') folderinput?: ElementRef;
+  @ViewChild('proceedings') proceedings?: ProceedingsComponent;
+  @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
+  @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
 
   constructor(
     public taskService: TaskService,

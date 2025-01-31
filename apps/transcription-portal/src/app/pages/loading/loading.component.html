@@ -1,0 +1,18 @@
+<div class="position-absolute top-50 start-50 translate-middle">
+  @if(!error) {
+    <div class="d-inline-block">
+      <div
+        class="spinner-grow"
+        style="width: 5rem; height: 5rem; color: lightgray"
+        role="status"
+      >
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Please wait...</p>
+    </div>
+  } @else {
+    <p class="alert alert-danger" style="max-width:400px;">
+      {{error}}
+    </p>
+  }
+</div>

@@ -28,26 +28,16 @@ export class CompatibilityGuard implements CanActivate {
         if (AppSettings.configuration) {
           resolve2();
         } else {
-          const subscr = this.settingsService.settingsload.subscribe(
-            (loaded) => {
-              if (loaded) {
-                resolve2();
-                subscr.unsubscribe();
-              }
-            }
-          );
+          this.router.navigate(['/loading']);
         }
       }).then(() => {
         this.compatibility.testCompability().then((result) => {
           if (result) {
-            if (route.url.length > 0) {
-              this.router.navigate(['']);
-            }
             resolve(true);
           } else {
             if (route.url.length === 0) {
-              this.router.navigate(['test']);
               resolve(result);
+              this.router.navigate(['test']);
             } else {
               resolve(true);
             }
