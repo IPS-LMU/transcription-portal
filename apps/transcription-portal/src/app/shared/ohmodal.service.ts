@@ -6,6 +6,7 @@ import { BrowserInfo } from '@octra/web-media';
 import { AppInfo } from '../app.info';
 import { openModal } from '../obj/functions';
 import { BugReportService } from './bug-report.service';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +16,8 @@ export class OHModalService implements OnDestroy {
 
   constructor(
     private ngbModalService: NgbModal,
-    private bugreportService: BugReportService
+    private bugreportService: BugReportService,
+    private settingsService: SettingsService
   ) {}
 
   public openFeedbackModal() {
@@ -59,6 +61,7 @@ export class OHModalService implements OnDestroy {
         },
       } as any
     );
+    this.settingsService.shortCutsEnabled = false;
 
     ref.componentInstance.i18n = {
       ...ref.componentInstance.i18n,
@@ -89,9 +92,11 @@ export class OHModalService implements OnDestroy {
     return ref.result
       .then(() => {
         this.subscrManager.removeByTag('update-bugreport-profile');
+        this.settingsService.shortCutsEnabled = true;
       })
       .catch(() => {
         this.subscrManager.removeByTag('update-bugreport-profile');
+        this.settingsService.shortCutsEnabled = true;
       });
   }
 

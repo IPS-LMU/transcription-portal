@@ -904,9 +904,17 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   openStatisticsModal() {
-    this.ngbModalService.open(
+    const ref = this.ngbModalService.open(
       StatisticsModalComponent,
       StatisticsModalComponent.options
     );
+    this.settingsService.shortCutsEnabled = false;
+    ref.result
+      .then(() => {
+        this.settingsService.shortCutsEnabled = true;
+      })
+      .catch((err) => {
+        this.settingsService.shortCutsEnabled = true;
+      });
   }
 }
