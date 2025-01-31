@@ -940,6 +940,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       this.sanitizer.bypassSecurityTrustResourceUrl(
         URL.createObjectURL(file.file!)
       );
+    ref.result.then(() => {
+      URL.revokeObjectURL(
+        (ref.componentInstance.downloadURL as any)
+          .changingThisBreaksApplicationSecurity
+      );
+    });
   }
 
   onTagClicked() {

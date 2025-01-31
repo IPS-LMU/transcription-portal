@@ -113,8 +113,25 @@ export class ResultsTableComponent implements OnChanges {
     return false;
   }
 
-  private generateTable() {
+  private clearConvertedArray() {
+    const revokeURLIfNeeded = (url?: string) => {
+      if (url && /^blob:/g.exec(url.toString()) !== null) {
+        URL.revokeObjectURL(url);
+      }
+    };
+    this.convertedArray.forEach((v) => {
+      revokeURLIfNeeded(
+        (v.input?.url as any)?.changingThisBreaksApplicationSecurity
+      );
+      v.conversions.forEach((s) => {
+        revokeURLIfNeeded(s.result.url);
+      });
+    });
     this.convertedArray = [];
+  }
+
+  private generateTable() {
+    this.clearConvertedArray();
     if (this.operation && this.operation.resultType) {
       this.conversionExtension = this.operation.resultType.replace('/json', '');
 

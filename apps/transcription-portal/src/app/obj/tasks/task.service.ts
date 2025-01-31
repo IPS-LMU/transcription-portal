@@ -520,6 +520,11 @@ export class TaskService implements OnDestroy {
       }
 
       const url = await this.updateProtocolURL();
+      if (this.protocolURL) {
+        URL.revokeObjectURL(
+          (this.protocolURL as any).changingThisBreaksApplicationSecurity
+        );
+      }
       this.protocolURL = url;
     }
     if (dbEntries.userSettings) {
@@ -694,6 +699,13 @@ export class TaskService implements OnDestroy {
             this.storage.saveTask(task);
 
             this.updateProtocolURL().then((url) => {
+              if (this.protocolURL) {
+                URL.revokeObjectURL(
+                  (
+                    this.protocolURL as any
+                  ).changingThisBreaksApplicationSecurity.toString()
+                );
+              }
               this.protocolURL = url;
             });
           });
@@ -1032,6 +1044,13 @@ export class TaskService implements OnDestroy {
         this.storage.saveTask(task);
 
         this.updateProtocolURL().then((url) => {
+          if (this.protocolURL) {
+            URL.revokeObjectURL(
+              (
+                this.protocolURL as any
+              ).changingThisBreaksApplicationSecurity.toString()
+            );
+          }
           this.protocolURL = url;
         });
       })
