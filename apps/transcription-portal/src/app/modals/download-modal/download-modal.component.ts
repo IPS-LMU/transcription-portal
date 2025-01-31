@@ -124,7 +124,7 @@ export class DownloadModalComponent
           const result: FileInfo | undefined = operation.lastResult;
           if (result?.online && result.file) {
             const originalName =
-              result.attributes.originalFileName ?? result.fullname;
+              result.attributes?.originalFileName ?? result.fullname;
 
             requestPackage.entries.push({
               path: originalName,
@@ -303,7 +303,7 @@ export class DownloadModalComponent
                   ''
                 );
               const originalName =
-                opResult.attributes.originalFileName ?? opResult.fullname;
+                opResult.attributes?.originalFileName ?? opResult.fullname;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
@@ -334,7 +334,7 @@ export class DownloadModalComponent
                           ''
                         );
                       const originalName =
-                        entry.attributes.originalFileName ?? entry.fullname;
+                        entry.attributes?.originalFileName ?? entry.fullname;
 
                       entryResult.push({
                         path: `${fileName}/${folderName2}/${originalName}`,
