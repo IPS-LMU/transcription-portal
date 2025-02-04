@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { RoutingService } from '../../routing.service';
 import { SettingsService } from '../../shared/settings.service';
 
 @Component({
@@ -15,12 +15,14 @@ export class LoadingComponent extends SubscriberComponent {
 
   constructor(
     private settingsService: SettingsService,
-    private router: Router
+    private routingServer: RoutingService
   ) {
     super();
     this.subscribe(this.settingsService.settingsload, {
       next: (result) => {
-        this.router.navigate(['/']);
+        this.routingServer.navigate('navigate after settings loaded', ['/'], {
+          queryParamsHandling: 'merge',
+        });
       },
       error: (error: Error) => {
         this.error = error.message;

@@ -58,6 +58,10 @@
   vertical-align: middle;
 }
 
+.table.table-striped tbody tr:hover td {
+  background-color: rgba(243, 250, 255, 0.81);
+}
+
 .op-deactivated {
 }
 

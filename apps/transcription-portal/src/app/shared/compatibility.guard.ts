@@ -5,9 +5,9 @@ import {
   Router,
   RouterStateSnapshot,
 } from '@angular/router';
+import { RoutingService } from '../routing.service';
 import { AppSettings } from './app.settings';
 import { CompatibilityService } from './compatibility.service';
-import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,19 +16,21 @@ export class CompatibilityGuard implements CanActivate {
   constructor(
     private router: Router,
     private compatibility: CompatibilityService,
-    private settingsService: SettingsService
+    private routingService: RoutingService
   ) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Promise<boolean> {
+    this.routingService.addStaticParams(route.queryParams);
+
     return new Promise<boolean>((resolve, reject) => {
       new Promise<void>((resolve2, reject2) => {
         if (AppSettings.configuration) {
           resolve2();
         } else {
-          this.router.navigate(['/loading']);
+          this.routingService.navigate('config not loaded', ['/loading']);
         }
       }).then(() => {
         this.compatibility.testCompability().then((result) => {
@@ -37,7 +39,7 @@ export class CompatibilityGuard implements CanActivate {
           } else {
             if (route.url.length === 0) {
               resolve(result);
-              this.router.navigate(['test']);
+              this.routingService.navigate('route to test page', ['test']);
             } else {
               resolve(true);
             }

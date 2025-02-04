@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { sum } from '@octra/api-types';
 import { ASRSettings, NgbModalWrapper, openModal } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { downloadFile } from '@octra/ngx-utilities';
@@ -25,6 +26,7 @@ import * as X2JS from 'x2js';
 import { UrlModeModalComponent } from '../modals/url-mode-modal/url-mode-modal.component';
 import { OHConfiguration } from '../obj/oh-config';
 import { TaskService } from '../obj/tasks/task.service';
+import { RoutingService } from '../routing.service';
 import { AppSettings } from './app.settings';
 
 @Injectable({ providedIn: 'root' })
@@ -54,7 +56,7 @@ export class SettingsService implements OnDestroy {
     private taskService: TaskService,
     private activeRoute: ActivatedRoute,
     private modalService: NgbModal,
-    private router: Router
+    private routingService: RoutingService
   ) {
     this.subscrManager.add(
       this.activeRoute.queryParams.subscribe(
@@ -510,7 +512,7 @@ export class SettingsService implements OnDestroy {
       const close = () => {
         this.subscrManager.removeByTag('waitForURLImport');
         if (ref) {
-          this.router.navigate([], {
+          this.routingService.navigate('remove query params', [], {
             queryParams: {
               audio: null,
               transcript: null,
@@ -659,7 +661,7 @@ export class SettingsService implements OnDestroy {
 
           if (ref) {
             const overallProgress = Math.min(
-              ...progress.map((a) => a.progress * 100),
+              sum(progress.map((a) => a.progress * 100)) / progress.length,
               100
             );
 

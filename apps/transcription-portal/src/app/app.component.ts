@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { environment } from '../environments/environment';
@@ -43,9 +43,18 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     public taskService: TaskService,
     public notification: NotificationService,
     public bugService: BugReportService,
-    public settingsService: SettingsService
+    public settingsService: SettingsService,
+    private activeRoute: ActivatedRoute
   ) {
     super();
+
+    this.subscribe(this.activeRoute.queryParams, {
+      next: (param: any) => {
+        console.log('FOUND PARAMS APP');
+        console.log(param['test']);
+      },
+    });
+
     // overwrite console.log
     if (!AppInfo.debugging) {
       const oldLog = console.log;

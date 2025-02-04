@@ -5,5 +5,13 @@
 
 export const environment = {
   production: false,
-  development: true
+  development: true,
+  debugging: {
+    enabled: false,
+    logging: {
+      console: true,
+      actions: false,
+      routes: false,
+    },
+  },
 };
