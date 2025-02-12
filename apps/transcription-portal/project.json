@@ -4,12 +4,11 @@
   "projectType": "application",
   "sourceRoot": "apps/transcription-portal/src",
   "prefix": "tportal",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/transcription-portal",
         "index": "apps/transcription-portal/src/index.html",
@@ -25,13 +24,8 @@
           "apps/transcription-portal/src/contents",
           "apps/transcription-portal/src/config"
         ],
-        "styles": [
-          "apps/transcription-portal/src/styles.scss"
-        ],
-        "allowedCommonJsDependencies": [
-          "x2js",
-          "chart.js"
-        ],
+        "styles": ["apps/transcription-portal/src/styles.scss"],
+        "allowedCommonJsDependencies": ["x2js", "chart.js"],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
@@ -99,13 +93,16 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}"
-      ],
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/transcription-portal/jest.config.ts"
       }
+    },
+    "version": {
+      "executor": "@jscutlery/semver:version",
+      "options": {
+        "preset": "angular"
+      }
     }
-  },
-  "tags": []
+  }
 }
