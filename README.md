@@ -1,8 +1,11 @@
 <h1 align="center">TranscriptionPortal</h1>
+<p>
+  A portal that offers a transcription chain for multi upload and processing of audio files using ASR and tools like OCTRA (orthographic transcription), MAUS (word alignment) and EMU-webApp (phonetic details). 
+</p>
 <p align="center">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal01.png">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
-  <img width="600" height="390" style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal01.png">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
 </p>
 <p align="center">
 Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
