@@ -102,7 +102,7 @@
       "executor": "@jscutlery/semver:version",
       "options": {
         "preset": "angular",
-        "postTargets": ["ngx-components:github"],
+        "postTargets": ["transcription-portal:github"],
         "baseBranch": "master",
         "releaseAs": "patch",
         "commitMessageFormat": "build({projectName}): release version ${version}"
