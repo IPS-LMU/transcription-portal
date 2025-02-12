@@ -1,3 +1,46 @@
+# Changelog
+
+This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
+
+# [1.1.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-1.0.9...transcription-portal-1.1.0) (2025-02-12)
+
+
+### Bug Fixes
+
+* **tportal:** adding transcripts to the table not working ([14eb2af](https://github.com/IPS-LMU/transcription-portal/commit/14eb2af68a75be6419dcf34c92dcc02a8e7dda77))
+* **tportal:** can't add folders ([487d10c](https://github.com/IPS-LMU/transcription-portal/commit/487d10c6d149cc77724de7e1bbfb8e0dfd21a46e))
+* **tportal:** can't read file name from URL params if no extension exists ([b245a14](https://github.com/IPS-LMU/transcription-portal/commit/b245a140348ac7634e0183ccf3eee75e0050e2c6))
+* **tportal:** downloading task chain not working ([d79615c](https://github.com/IPS-LMU/transcription-portal/commit/d79615cdf04c1506aec415fca7ab3d98da576a80)), closes [#42](https://github.com/IPS-LMU/transcription-portal/issues/42)
+* **tportal:** fix isue with idb and queue modal ([1252542](https://github.com/IPS-LMU/transcription-portal/commit/125254203487b33bfbf7ce3c6d044e15feb0583a))
+* **tportal:** hotkeys for table triggered on feedback and statistics modals ([c6f9acc](https://github.com/IPS-LMU/transcription-portal/commit/c6f9accbeca415a6bcf807017a147f0bc0db6c50))
+* **tportal:** only one channel extracted on splitting audio files ([ec7bc68](https://github.com/IPS-LMU/transcription-portal/commit/ec7bc686cddb631099dc25bc6fb15fd97f9cb691))
+* **tportal:** query parameters are not preserved ([1f01be6](https://github.com/IPS-LMU/transcription-portal/commit/1f01be61ca9b3e7221fef0a7e8b3870c08215d11))
+* **tportal:** results table immediately closes on version click ([f87ad2a](https://github.com/IPS-LMU/transcription-portal/commit/f87ad2a4fe35388eee0fe7444609f4a955ac1bf5))
+* **tportal:** rows are not highlighted on selection ([8aea11c](https://github.com/IPS-LMU/transcription-portal/commit/8aea11cfe022a1b537f35f340e63aef7017c9571))
+* **tportal:** statistics pie chart not working ([1b7a234](https://github.com/IPS-LMU/transcription-portal/commit/1b7a2344038e94ebb1b450b6bf05315569eb589b))
+* **tportal:** wrong naming for downloaded files ([c4e295f](https://github.com/IPS-LMU/transcription-portal/commit/c4e295f7203fa3b7ba7b1d7486fe6c9933bd279f))
+
+
+### Features
+
+* **tportal:** all languages from BAS webservices are available ([e252c22](https://github.com/IPS-LMU/transcription-portal/commit/e252c22dadc96482ee3545c55f23ccdc74b32def))
+* **tportal:** import audio and transcript file from url params ([2fb8133](https://github.com/IPS-LMU/transcription-portal/commit/2fb81337c9406787dd08574c746324481b84ca9e))
+* **tportal:** improved UX for results view in popover ([c25b835](https://github.com/IPS-LMU/transcription-portal/commit/c25b8350742d55dc13a701030a4d0c2e5f968835))
+* **tportal:** include feedback modal from octra/ngx-components ([74093fb](https://github.com/IPS-LMU/transcription-portal/commit/74093fbcff5722c4d7819cc715770e6b8d64a39c))
+* **tportal:** preview audio file using html audio player ([8225127](https://github.com/IPS-LMU/transcription-portal/commit/822512769eb9c2a8eb6690b2da56d4aeab52d25b))
+* **tportal:** read additional URL query parameters ([793759e](https://github.com/IPS-LMU/transcription-portal/commit/793759e55ee7c789cc8615e49a4555fc8583efe7))
+* **tportal:** replace old idb code with dexie.js ([2232fcf](https://github.com/IPS-LMU/transcription-portal/commit/2232fcf330345d5c4cdfe868a43ef02d9ac00c23))
+* **tportal:** show loading spinner while loading settings ([9c6c0b8](https://github.com/IPS-LMU/transcription-portal/commit/9c6c0b87c0e11dce220ee4c786b0a161fa879eda))
+* **tportal:** upgrade octra to v2 ([a6ec3be](https://github.com/IPS-LMU/transcription-portal/commit/a6ec3bef2ca93daf9d6d706c45a6150953b00fb8))
+* **tportal:** use code editor for file previews ([8761127](https://github.com/IPS-LMU/transcription-portal/commit/8761127ff1a7982a80f3d613a9a06daeebb0a9e8))
+
+
+### Performance Improvements
+
+* **tportal:** revoke object url if not needed ([29cd04a](https://github.com/IPS-LMU/transcription-portal/commit/29cd04ac38ec0f43e0508e0ee8873fdfc0e9984d)), closes [#42](https://github.com/IPS-LMU/transcription-portal/issues/42)
+
+
+
 ## [1.0.9](https://github.com/IPS-LMU/transcription-portal/compare/v1.0.8...v1.0.9) (2024-06-14)
 
 
