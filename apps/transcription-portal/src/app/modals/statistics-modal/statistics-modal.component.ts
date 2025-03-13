@@ -46,7 +46,7 @@ export class StatisticsModalComponent
   constructor(
     public statisticsService: StatisticsService,
     public taskService: TaskService,
-    protected activeModal: NgbActiveModal
+    protected activeModal: NgbActiveModal,
   ) {
     super();
   }

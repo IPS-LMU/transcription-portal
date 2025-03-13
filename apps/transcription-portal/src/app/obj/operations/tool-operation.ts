@@ -14,7 +14,7 @@ export class ToolOperation extends Operation {
     shortTitle?: string,
     task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
   }
@@ -29,7 +29,7 @@ export class ToolOperation extends Operation {
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => {
     this._time.start = Date.now();
     this.changeState(TaskState.PROCESSING);
@@ -81,7 +81,7 @@ export class ToolOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTasks,
-      this.state
+      this.state,
     ) as Operation;
   }
 
@@ -93,13 +93,13 @@ export class ToolOperation extends Operation {
       this.shortTitle,
       task,
       operationObj.state,
-      operationObj.id
+      operationObj.id,
     );
     for (const resultObj of operationObj.results) {
       const resultClass = new FileInfo(
         resultObj.fullname,
         resultObj.type,
-        resultObj.size
+        resultObj.size,
       );
       resultClass.url = resultObj.url;
       result.results.push(resultClass);

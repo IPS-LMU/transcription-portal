@@ -15,7 +15,7 @@ export class LoadingComponent extends SubscriberComponent {
 
   constructor(
     private settingsService: SettingsService,
-    private routingServer: RoutingService
+    private routingServer: RoutingService,
   ) {
     super();
     this.subscribe(this.settingsService.settingsload, {

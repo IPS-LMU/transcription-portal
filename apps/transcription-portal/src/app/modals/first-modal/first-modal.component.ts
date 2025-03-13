@@ -1,7 +1,7 @@
 import { Component, Output } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
-import { Subject } from 'rxjs';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'tportal-first-modal',

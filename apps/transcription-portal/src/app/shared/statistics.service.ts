@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { TaskService } from '../obj/tasks/task.service';
-import { interval, Subscription } from 'rxjs';
-import { ChartData } from 'chart.js';
 import { SubscriptionManager } from '@octra/utilities';
+import { ChartData } from 'chart.js';
+import { interval, Subscription } from 'rxjs';
+import { TaskService } from '../obj/tasks/task.service';
 
 @Injectable({
   providedIn: 'root',
@@ -60,7 +60,7 @@ export class StatisticsService {
             this.updateAverageDurations();
           }
         }
-      })
+      }),
     );
   }
 

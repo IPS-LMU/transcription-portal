@@ -1,12 +1,12 @@
-import {readFileAsArray} from './functions';
+import { readFileAsArray } from './functions';
 
 export function cryptoSupported() {
-  const subtle = (crypto?.subtle ?? ((crypto as any)?.webkit as Crypto)?.subtle);
-  return (subtle !== undefined && subtle !== null);
+  const subtle = crypto?.subtle ?? ((crypto as any)?.webkit as Crypto)?.subtle;
+  return subtle !== undefined && subtle !== null;
 }
 
 export async function calcSHA256FromFile(file: File) {
-  const subtle = (crypto.subtle ?? ((crypto as any).webkit as Crypto).subtle);
+  const subtle = crypto.subtle ?? ((crypto as any).webkit as Crypto).subtle;
   const buffer = await readFileAsArray(file);
   const hashBuffer = await subtle.digest('SHA-256', buffer);
   return convertDigestToHexString(hashBuffer);

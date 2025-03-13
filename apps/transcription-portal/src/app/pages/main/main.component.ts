@@ -111,7 +111,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     private alertService: AlertService,
     public settingsService: SettingsService,
     private cd: ChangeDetectorRef,
-    public modalService: OHModalService
+    public modalService: OHModalService,
   ) {
     super();
     this.subscribe(this.notification.onPermissionChange, {
@@ -173,7 +173,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             }
           }
         },
-      }
+      },
     );
 
     window.onunload = () => {
@@ -259,7 +259,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     const ref = openModal<QueueModalComponent>(
       this.ngbModalService,
       QueueModalComponent,
-      QueueModalComponent.options
+      QueueModalComponent.options,
     );
     ref.componentInstance.queue = this.taskService.preprocessor.queue;
     ref.componentInstance.tasks =
@@ -322,7 +322,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             this.alertService.showAlert(
               'warning',
               `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
-              10
+              10,
             );
             tool.task?.operations[0].changeState(TaskState.PENDING);
             tool.task?.changeState(TaskState.PENDING);
@@ -331,7 +331,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             this.alertService.showAlert(
               'info',
               `Please wait until file ${tool.task.files[0].fullname}` +
-                ` being uploaded and do '${tool.title}' again.`
+                ` being uploaded and do '${tool.title}' again.`,
             );
             uploadOperation.statechange.subscribe(
               (state) => {
@@ -339,7 +339,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   this.alertService.showAlert(
                     'success',
                     `file ${tool.task?.files[0].fullname}` +
-                      +` successfully uploaded. You can do '${tool.title}' for this file.`
+                      +` successfully uploaded. You can do '${tool.title}' for this file.`,
                   );
                   if (tool.task) {
                     this.storage.saveTask(tool.task);
@@ -348,7 +348,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               },
               (error) => {
                 console.error(error);
-              }
+              },
             );
             this.taskService.start();
           }
@@ -359,7 +359,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
           this.alertService.showAlert(
             'info',
             `Please run ${previousOperation?.name} for this task again.`,
-            12
+            12,
           );
         }
       } else {
@@ -500,7 +500,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             try {
               const converter = new AnnotJSONConverter();
               const audio = this.toolSelectedOperation?.task!.files.find((a) =>
-                a.type.includes('audio')
+                a.type.includes('audio'),
               ) as AudioInfo;
               const audiofile = new OAudiofile();
               audiofile.url = audio.url;
@@ -514,12 +514,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               if (importResult.annotjson && !importResult.error) {
                 const exportConverter = new PartiturConverter();
                 const oAnnotJSON = OAnnotJSON.deserialize(
-                  importResult.annotjson
+                  importResult.annotjson,
                 );
                 const exportResult = exportConverter.export(
                   oAnnotJSON!,
                   audiofile,
-                  0
+                  0,
                 );
 
                 if (exportResult.file && !exportResult.error) {
@@ -546,13 +546,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               annotation.name,
               annotation.type,
               blob.size,
-              blob
+              blob,
             );
             const inputs = this.toolSelectedOperation?.task?.files;
 
             const url = await this.upload(
               toolLoader.operation as ToolOperation,
-              file
+              file,
             );
             file.url = url;
 
@@ -595,14 +595,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             const file: File = FileInfo.getFileFromContent(
               jsonText,
               `${fileName}_annot.json`,
-              'text/plain'
+              'text/plain',
             );
             const fileInfo = new FileInfo(
               `${fileName}_annot.json`,
               'text/plain',
               file.size,
               file,
-              Date.now()
+              Date.now(),
             );
 
             fileInfo.attributes = {
@@ -625,7 +625,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   this.toolSelectedOperation &&
                   op.id === this.toolSelectedOperation.id
                 );
-              }
+              },
             );
 
             // reset next operations
@@ -663,7 +663,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                 const langObj = AppSettings.getLanguageByCode(
                   this.toolSelectedOperation.task.asrLanguage!,
                   this.toolSelectedOperation.task.operations[1]
-                    .providerInformation.provider
+                    .providerInformation.provider,
                 );
                 if (langObj) {
                   this.toolSelectedOperation.task.restart(
@@ -676,7 +676,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                         name: 'GoogleASR',
                         value: this.taskService.accessCode,
                       },
-                    ]
+                    ],
                   );
                 } else {
                   throw new Error('langObj is undefined');
@@ -747,7 +747,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public openSplitModal = () => {
     const ref = this.ngbModalService.open(
       SplitModalComponent,
-      SplitModalComponent.options
+      SplitModalComponent.options,
     );
     ref.result.then((reason) => {
       this.taskService.splitPrompt = reason;
@@ -776,7 +776,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       } else if ($event.type === 'mousemove') {
         // dragging
         const procWidth = Math.floor(
-          (($event.pageX + 10) / window.innerWidth) * 100
+          (($event.pageX + 10) / window.innerWidth) * 100,
         );
         const toolWidth = 100 - procWidth;
 
@@ -827,7 +827,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       ConsoleType.INFO,
       `user clicked on report issue:\n` +
         `operation: ${operation.name}, ${operation.state}\n` +
-        `protocol: ${operation.protocol}\n`
+        `protocol: ${operation.protocol}\n`,
     );
     this.modalService.openFeedbackModal();
   }
@@ -837,7 +837,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       setTimeout(() => {
         const ref = this.ngbModalService.open(
           FirstModalComponent,
-          FirstModalComponent.options
+          FirstModalComponent.options,
         );
         ref.result.then(() => {
           this.storage.saveIntern('firstModalShown', true);
@@ -906,7 +906,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   openStatisticsModal() {
     const ref = this.ngbModalService.open(
       StatisticsModalComponent,
-      StatisticsModalComponent.options
+      StatisticsModalComponent.options,
     );
     this.settingsService.shortCutsEnabled = false;
     ref.result

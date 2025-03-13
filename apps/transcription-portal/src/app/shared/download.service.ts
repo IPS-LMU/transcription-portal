@@ -11,7 +11,7 @@ import { Operation } from '../obj/operations/operation';
 export class DownloadService {
   public getLevelNumforConverter(
     converterData: ConverterData,
-    annotJSON: OAnnotJSON
+    annotJSON: OAnnotJSON,
   ) {
     if (converterData.tierNameMatches) {
       for (const tierNameMatch of converterData.tierNameMatches) {
@@ -33,7 +33,7 @@ export class DownloadService {
   public getConversionFiles(
     operation: Operation,
     operationResult: FileInfo | undefined,
-    converters: ConverterData[]
+    converters: ConverterData[],
   ): Promise<FileInfo[]> {
     return new Promise<FileInfo[]>((resolve, reject) => {
       if (!operationResult) {
@@ -49,7 +49,7 @@ export class DownloadService {
         for (const extension of converter.obj.extensions) {
           if (operationResult.fullname.indexOf(extension) < 0) {
             promises.push(
-              this.getResultConversion(converter, operation, operationResult)
+              this.getResultConversion(converter, operation, operationResult),
             );
             break;
           }
@@ -62,7 +62,7 @@ export class DownloadService {
           resolve(
             values
               .filter((a: any) => a.result !== undefined)
-              .map((a: any) => a.result) as FileInfo[]
+              .map((a: any) => a.result) as FileInfo[],
           );
         })
         .catch((error) => {
@@ -75,7 +75,7 @@ export class DownloadService {
     values: {
       converter: ConverterData;
       result: FileInfo | undefined;
-    }[]
+    }[],
   ) {
     let index = values.findIndex((a) => a.converter.obj.name === 'PlainText');
     let removed = values.splice(index, 1);
@@ -86,7 +86,7 @@ export class DownloadService {
   public getResultConversion(
     converter: ConverterData,
     operation: Operation,
-    opResult: FileInfo
+    opResult: FileInfo,
   ): Promise<{
     converter: ConverterData;
     result: FileInfo | undefined;
@@ -134,19 +134,19 @@ export class DownloadService {
                   encoding: 'utf-8',
                   type: 'text/plain',
                 },
-                audiofile
+                audiofile,
               );
               if (importResult) {
                 if (importResult.error === '') {
                   annotJSON = importResult.annotjson;
                 } else {
                   console.error(
-                    `importResult Error from ${importConverter.name}: ${importResult.error}`
+                    `importResult Error from ${importConverter.name}: ${importResult.error}`,
                   );
                 }
               } else {
                 console.error(
-                  `importResult for import ${importConverter.name} is undefined!`
+                  `importResult for import ${importConverter.name} is undefined!`,
                 );
               }
             } else {
@@ -156,12 +156,12 @@ export class DownloadService {
             if (annotJSON) {
               const levelnum = this.getLevelNumforConverter(
                 converter,
-                annotJSON
+                annotJSON,
               );
               const conversion = converter.obj.export(
                 annotJSON,
                 audiofile,
-                levelnum
+                levelnum,
               );
 
               if (conversion?.file) {
@@ -169,14 +169,14 @@ export class DownloadService {
                   conversion.file.content,
                   audiofile.name.replace(/\.[^.]+$/g, '') +
                     converter.obj.extensions[0],
-                  conversion.file.type
+                  conversion.file.type,
                 );
 
                 const fileInfo = new FileInfo(
                   file.name,
                   file.type,
                   file.size,
-                  file
+                  file,
                 );
                 resolve({
                   converter,

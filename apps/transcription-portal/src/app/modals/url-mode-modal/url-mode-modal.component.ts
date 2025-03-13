@@ -40,7 +40,7 @@ export class UrlModeModalComponent
 
   constructor(
     protected activeModal: NgbActiveModal,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
   ) {
     super();
     this.subscribe(interval(1000), {

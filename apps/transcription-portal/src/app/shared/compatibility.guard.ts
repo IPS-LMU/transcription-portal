@@ -16,12 +16,12 @@ export class CompatibilityGuard implements CanActivate {
   constructor(
     private router: Router,
     private compatibility: CompatibilityService,
-    private routingService: RoutingService
+    private routingService: RoutingService,
   ) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
+    state: RouterStateSnapshot,
   ): Promise<boolean> {
     this.routingService.addStaticParams(route.queryParams);
 

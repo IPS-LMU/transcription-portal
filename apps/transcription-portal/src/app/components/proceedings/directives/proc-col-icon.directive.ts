@@ -10,11 +10,11 @@ import {
   Renderer2,
   SimpleChanges,
 } from '@angular/core';
-import { Task, TaskDirectory, TaskState } from '../../../obj/tasks';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
-import { TaskService } from '../../../obj/tasks/task.service';
-import { Subscription } from 'rxjs';
 import { FileInfo } from '@octra/web-media';
+import { Subscription } from 'rxjs';
+import { Task, TaskDirectory, TaskState } from '../../../obj/tasks';
+import { TaskService } from '../../../obj/tasks/task.service';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -49,7 +49,7 @@ export class ProcColIconDirective
   constructor(
     private elementRef: ElementRef,
     private renderer: Renderer2,
-    private taskService: TaskService
+    private taskService: TaskService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {
@@ -60,7 +60,7 @@ export class ProcColIconDirective
       this.renderer.setStyle(
         this.elementRef.nativeElement,
         'max-width',
-        this.shortStyle ? '150px' : 'inherit'
+        this.shortStyle ? '150px' : 'inherit',
       );
     }
     if (
@@ -76,14 +76,14 @@ export class ProcColIconDirective
           this.entry.statechange.subscribe(() => {
             this.updateView();
           }),
-          'update'
+          'update',
         );
 
         this.subscrmanager.add(
           this.entry.fileschange.subscribe(() => {
             this.updateView();
           }),
-          'update'
+          'update',
         );
       }
     }
@@ -130,7 +130,7 @@ export class ProcColIconDirective
         this.renderer.setAttribute(
           this.elementRef.nativeElement,
           'colspan',
-          '2'
+          '2',
         );
         this.appendIcon(wrapper);
         this.appendFileNameSpan(wrapper);
@@ -176,7 +176,7 @@ export class ProcColIconDirective
       }
     } else {
       throw new Error(
-        'ProcColDirective error: updateView: nativeElement is undefined'
+        'ProcColDirective error: updateView: nativeElement is undefined',
       );
     }
   }
@@ -297,15 +297,15 @@ export class ProcColIconDirective
       this.renderer.setAttribute(
         result,
         'title',
-        this.entry.files[0].attributes.originalFileName
+        this.entry.files[0].attributes.originalFileName,
       );
       const filename = this.renderer.createText(
         ' ' +
           this.entry.files[0].attributes.originalFileName.replace(
             '_annot.json',
-            '.wav'
+            '.wav',
           ) +
-          ' '
+          ' ',
       );
       this.renderer.appendChild(result, filename);
       this.renderer.appendChild(wrapper, result);
@@ -324,7 +324,7 @@ export class ProcColIconDirective
           // set number of files
           const filesNumSpan = this.renderer.createElement('span');
           const filesNum = this.renderer.createText(
-            ' (' + this.entry.entries.length + ')'
+            ' (' + this.entry.entries.length + ')',
           );
           this.renderer.appendChild(filesNumSpan, filesNum);
           this.renderer.appendChild(result, filesNumSpan);

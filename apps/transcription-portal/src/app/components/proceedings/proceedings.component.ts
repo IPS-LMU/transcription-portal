@@ -155,7 +155,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     public cd: ChangeDetectorRef,
     public taskService: TaskService,
     public storage: StorageService,
-    private ngbModalService: NgbModal
+    private ngbModalService: NgbModal,
   ) {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -169,7 +169,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           this.cd.markForCheck();
           this.cd.detectChanges();
         },
-      })
+      }),
     );
   }
 
@@ -261,7 +261,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
                       this.afterdrop.error(error);
                       reject();
                     });
-                })
+                }),
               );
             } else {
               // check added file
@@ -434,7 +434,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.openArchiveDownload(
           'line',
           this.selectedOperation,
-          this.selectedRows
+          this.selectedRows,
         );
       }
     }
@@ -504,7 +504,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   onOperationMouseEnter(
     $event: MouseEvent,
     operation: Operation,
-    td: HTMLTableCellElement
+    td: HTMLTableCellElement,
   ) {
     // show Popover for normal operations only
     if (
@@ -659,7 +659,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   calculateDuration(
     time: { start: number; duration: number },
-    operation: Operation
+    operation: Operation,
   ) {
     if (operation.state === TaskState.PROCESSING) {
       return (
@@ -830,7 +830,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   openArchiveDownload(
     type: 'column' | 'line',
     operation: Operation | undefined,
-    selectedLines: number[]
+    selectedLines: number[],
   ) {
     if (
       operation !== null &&
@@ -847,7 +847,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   openDownloadModal(type: 'column' | 'line', selectedLines: number[]) {
     const ref = this.ngbModalService.open(
       DownloadModalComponent,
-      DownloadModalComponent.options
+      DownloadModalComponent.options,
     );
     ref.componentInstance.type = type;
     ref.componentInstance.selectedTasks = selectedLines;
@@ -933,17 +933,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
     const ref = this.ngbModalService.open(
       FilePreviewModalComponent,
-      FilePreviewModalComponent.options
+      FilePreviewModalComponent.options,
     );
     ref.componentInstance.selectedFile = file;
     ref.componentInstance.downloadURL =
       this.sanitizer.bypassSecurityTrustResourceUrl(
-        URL.createObjectURL(file.file!)
+        URL.createObjectURL(file.file!),
       );
     ref.result.then(() => {
       URL.revokeObjectURL(
         (ref.componentInstance.downloadURL as any)
-          .changingThisBreaksApplicationSecurity
+          .changingThisBreaksApplicationSecurity,
       );
     });
   }
@@ -1088,7 +1088,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public getTaskDirectory(
-    entry: Task | TaskDirectory
+    entry: Task | TaskDirectory,
   ): TaskDirectory | undefined {
     if (entry instanceof TaskDirectory) {
       return entry as TaskDirectory;

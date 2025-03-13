@@ -56,7 +56,7 @@ export class SettingsService implements OnDestroy {
     private taskService: TaskService,
     private activeRoute: ActivatedRoute,
     private modalService: NgbModal,
-    private routingService: RoutingService
+    private routingService: RoutingService,
   ) {
     this.subscrManager.add(
       this.activeRoute.queryParams.subscribe(
@@ -118,21 +118,21 @@ export class SettingsService implements OnDestroy {
                     audioURL,
                     audioType,
                     transcriptURL,
-                    transcriptType
+                    transcriptType,
                   ).catch((e) => {
                     console.error(`READ files from URL ERROR: ${e.message}`);
                   });
                   this.readAudioLanguageFromURL(audioLanguage).catch((e) => {
                     console.error(
-                      `READ audioLanguage from URL ERROR: ${e.message}`
+                      `READ audioLanguage from URL ERROR: ${e.message}`,
                     );
                   });
                 }
               },
-            })
+            }),
           );
-        }
-      )
+        },
+      ),
     );
 
     this.http
@@ -147,7 +147,7 @@ export class SettingsService implements OnDestroy {
               json.api.octraBackend.url,
               json.api.octraBackend.key,
               undefined,
-              false
+              false,
             )
             .subscribe((properties) => {
               this._feedbackEnabled =
@@ -167,7 +167,7 @@ export class SettingsService implements OnDestroy {
                   .filter(
                     (a: any) =>
                       a.ParameterValue.Description &&
-                      a.ParameterValue.Description !== ''
+                      a.ParameterValue.Description !== '',
                   )
                   .map((a: any) => ({
                     value: a.ParameterValue.Value,
@@ -179,15 +179,15 @@ export class SettingsService implements OnDestroy {
                 a.description > b.description
                   ? 1
                   : a.description < b.description
-                  ? -1
-                  : 0
+                    ? -1
+                    : 0,
               );
               AppSettings.languages.maus.sort((a, b) =>
                 a.description > b.description
                   ? 1
                   : a.description < b.description
-                  ? -1
-                  : 0
+                    ? -1
+                    : 0,
               );
 
               this._settingsload.next(true);
@@ -196,7 +196,7 @@ export class SettingsService implements OnDestroy {
             .catch((error) => {
               console.error(error);
               alert(
-                'Error: app configuration not loaded. Please check the config.json'
+                'Error: app configuration not loaded. Please check the config.json',
               );
               this._settingsload.next(true);
               this._settingsload.complete();
@@ -204,7 +204,7 @@ export class SettingsService implements OnDestroy {
         },
         error: (err) => {
           alert(
-            'Error: app configuration not loaded. Please check the config.json'
+            'Error: app configuration not loaded. Please check the config.json',
           );
           console.error(err);
         },
@@ -217,7 +217,7 @@ export class SettingsService implements OnDestroy {
     promises.push(this.updateASRQuotaInfo(AppSettings.configuration));
     promises.push(this.updateASRInfo(AppSettings.configuration));
     promises.push(
-      this.getActiveASRProviders(AppSettings.configuration.api as any)
+      this.getActiveASRProviders(AppSettings.configuration.api as any),
     );
     promises.push(this.getASRLanguages(AppSettings.configuration.api as any));
     promises.push(this.getMAUSLanguages(AppSettings.configuration.api as any));
@@ -233,7 +233,7 @@ export class SettingsService implements OnDestroy {
             const html = jQuery(result);
             const basTable = html.find('#bas-asr-service-table');
             const basASRInfoContainers = basTable.find(
-              '.bas-asr-info-container'
+              '.bas-asr-info-container',
             );
 
             const asrInfos: {
@@ -277,17 +277,17 @@ export class SettingsService implements OnDestroy {
                 maxSignalDuration: Number(
                   jQuery(elem)
                     .find('.bas-asr-info-max-signal-duration-seconds')
-                    .attr('data-value')
+                    .attr('data-value'),
                 ),
                 maxSignalSize: Number(
                   jQuery(elem)
                     .find('.bas-asr-info-max-signal-size-megabytes')
-                    .attr('data-value')
+                    .attr('data-value'),
                 ),
                 quotaPerMonth: Number(
                   jQuery(elem)
                     .find('.bas-asr-info-quota-per-month-seconds')
-                    .attr('data-value')
+                    .attr('data-value'),
                 ),
                 termsURL: jQuery(elem)
                   .find('.bas-asr-info-eula-link')
@@ -317,7 +317,7 @@ export class SettingsService implements OnDestroy {
             for (const service of json.api.services) {
               if (service.basName) {
                 const basInfo = asrInfos.find(
-                  (a) => a.name === service.basName
+                  (a) => a.name === service.basName,
                 );
                 if (basInfo !== undefined) {
                   service.dataStoragePolicy =
@@ -354,14 +354,17 @@ export class SettingsService implements OnDestroy {
     for (const service of json.api.services) {
       if (service.type === 'ASR' && json.api.asrQuotaInfoURL) {
         results.push(
-          await this.getASRQuotaInfo(json.api.asrQuotaInfoURL, service.provider)
+          await this.getASRQuotaInfo(
+            json.api.asrQuotaInfoURL,
+            service.provider,
+          ),
         );
       }
     }
 
     for (const result of results) {
       const serviceIndex = json.api.services.findIndex(
-        (a) => a.provider === result.asrName
+        (a) => a.provider === result.asrName,
       );
 
       if (serviceIndex > -1) {
@@ -449,8 +452,8 @@ export class SettingsService implements OnDestroy {
           }[]
         >(
           `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runPipeline/Input/LANGUAGE/Values/`,
-          { responseType: 'json' }
-        )
+          { responseType: 'json' },
+        ),
       );
     } else {
       return Promise.resolve([]);
@@ -470,8 +473,8 @@ export class SettingsService implements OnDestroy {
           }[]
         >(
           `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runASR/Input/LANGUAGE/Values`,
-          { responseType: 'json' }
-        )
+          { responseType: 'json' },
+        ),
       );
     } else {
       return Promise.resolve([]);
@@ -491,8 +494,8 @@ export class SettingsService implements OnDestroy {
           }[]
         >(
           `${asrSettings.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runASR/Input/ASRType/Values/`,
-          { responseType: 'json' }
-        )
+          { responseType: 'json' },
+        ),
       );
     } else {
       return Promise.resolve([]);
@@ -503,7 +506,7 @@ export class SettingsService implements OnDestroy {
     audioURL: string | undefined,
     audioType?: string,
     transcriptURL?: string,
-    transcriptType?: string
+    transcriptType?: string,
   ) {
     if (audioURL) {
       let leftTime = 0;
@@ -532,11 +535,11 @@ export class SettingsService implements OnDestroy {
               UrlModeModalComponent.options,
               {
                 leftTime,
-              }
+              },
             );
           },
         }),
-        'waitForURLImport'
+        'waitForURLImport',
       );
 
       try {
@@ -557,8 +560,8 @@ export class SettingsService implements OnDestroy {
             map((a) => ({
               ...a,
               downloadURL: audioURL,
-            }))
-          )
+            })),
+          ),
         );
 
         if (transcriptURL) {
@@ -568,8 +571,8 @@ export class SettingsService implements OnDestroy {
                 ...a,
                 result: a.result as ArrayBuffer,
                 downloadURL: transcriptURL,
-              }))
-            )
+              })),
+            ),
           );
         }
 
@@ -577,7 +580,7 @@ export class SettingsService implements OnDestroy {
 
         merge(...observables).subscribe((event) => {
           const index = progress.findIndex(
-            (a: any) => a.downloadURL === event.downloadURL
+            (a: any) => a.downloadURL === event.downloadURL,
           );
 
           if (index > -1) {
@@ -600,13 +603,13 @@ export class SettingsService implements OnDestroy {
 
                   if (progressElement.downloadURL.includes('?')) {
                     const matches = /mediatype=([^&]+)/g.exec(
-                      progressElement.downloadURL
+                      progressElement.downloadURL,
                     );
                     mediaType = matches ? matches[1] : undefined;
                   }
 
                   const nameFromURL = extractFileNameFromURL(
-                    progressElement.downloadURL
+                    progressElement.downloadURL,
                   );
 
                   let extension = '';
@@ -628,9 +631,9 @@ export class SettingsService implements OnDestroy {
                     progressElement.downloadURL,
                     mediaType ??
                       (extension === '.wav'
-                        ? audioType ?? 'audio/wave'
-                        : transcriptType ?? 'text/plain'),
-                    `${filename}${extension}`
+                        ? (audioType ?? 'audio/wave')
+                        : (transcriptType ?? 'text/plain')),
+                    `${filename}${extension}`,
                   );
 
                   info.file = new File(
@@ -638,14 +641,14 @@ export class SettingsService implements OnDestroy {
                     info.fullname,
                     {
                       type: info.type,
-                    }
+                    },
                   );
                   this.subscrManager.add(
                     timer(0).subscribe({
                       next: () => {
                         this.taskService.preprocessor.addToQueue(info);
                       },
-                    })
+                    }),
                   );
                 }
 
@@ -662,7 +665,7 @@ export class SettingsService implements OnDestroy {
           if (ref) {
             const overallProgress = Math.min(
               sum(progress.map((a) => a.progress * 100)) / progress.length,
-              100
+              100,
             );
 
             leftTime =
@@ -682,10 +685,10 @@ export class SettingsService implements OnDestroy {
   private async readAudioLanguageFromURL(audioLanguage?: string) {
     if (audioLanguage && /(^deu)|(^ita)|(^nld)|(^eng)/g.exec(audioLanguage)) {
       const supportedAudioLanguages = AppSettings.languages.asr.filter((a) =>
-        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)
+        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value),
       );
       const supportedMausLanguages = AppSettings.languages.maus.filter((a) =>
-        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)
+        /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value),
       );
 
       if (audioLanguage === 'deu') {
@@ -699,10 +702,10 @@ export class SettingsService implements OnDestroy {
       }
 
       this.taskService.selectedASRLanguage = supportedAudioLanguages.find((a) =>
-        a.value.includes(audioLanguage!)
+        a.value.includes(audioLanguage!),
       )?.value;
       this.taskService.selectedMausLanguage = supportedMausLanguages.find((a) =>
-        a.value.includes(audioLanguage!)
+        a.value.includes(audioLanguage!),
       )?.value;
 
       if (this.taskService.selectedMausLanguage) {

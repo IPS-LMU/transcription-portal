@@ -72,7 +72,7 @@ export class IndexedDBManager extends Dexie {
           asrProvider: '',
         },
       },
-      'defaultUserSettings'
+      'defaultUserSettings',
     );
     this.intern.bulkAdd([
       {

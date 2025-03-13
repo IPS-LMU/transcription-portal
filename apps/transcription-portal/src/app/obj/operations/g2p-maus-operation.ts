@@ -18,7 +18,7 @@ export class G2pMausOperation extends Operation {
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => {
     this.updateProtocol('');
     this.changeState(TaskState.PROCESSING);
@@ -36,7 +36,7 @@ export class G2pMausOperation extends Operation {
     ) {
       url = url.replace(
         '{{transcriptURL}}',
-        this.previousOperation?.lastResult?.url
+        this.previousOperation?.lastResult?.url,
       );
     } else {
       if (operations[1].lastResult?.url) {
@@ -53,7 +53,7 @@ export class G2pMausOperation extends Operation {
             'Content-Type': 'multipart/form-data',
           },
           responseType: 'text',
-        }
+        },
       )
       .subscribe(
         (result: string) => {
@@ -80,7 +80,7 @@ export class G2pMausOperation extends Operation {
               json.downloadLink,
               'text/plain',
               undefined,
-              Date.now()
+              Date.now(),
             );
             console.log('file1');
             console.log(file);
@@ -112,7 +112,7 @@ export class G2pMausOperation extends Operation {
         (error) => {
           this.updateProtocol(error.message);
           this.changeState(TaskState.ERROR);
-        }
+        },
       );
   };
 
@@ -124,14 +124,14 @@ export class G2pMausOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state
+      this.state,
     );
   }
 
   public fromAny(
     operationObj: any,
     commands: string[],
-    task: Task
+    task: Task,
   ): G2pMausOperation {
     const result = new G2pMausOperation(
       operationObj.name,
@@ -140,7 +140,7 @@ export class G2pMausOperation extends Operation {
       this.shortTitle,
       task,
       operationObj.state,
-      operationObj.id
+      operationObj.id,
     );
     for (const resultElement of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultElement);
@@ -162,7 +162,7 @@ export class G2pMausOperation extends Operation {
     shortTitle?: string,
     task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
     this._description =

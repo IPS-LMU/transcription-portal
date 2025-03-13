@@ -1,9 +1,9 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
+import { interval, Subject, Subscription } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
-import { interval, Subject, Subscription } from 'rxjs';
-import { NgStyle } from '@angular/common';
-import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';
@@ -14,11 +14,11 @@ export interface AlertEntry {
 }
 
 @Component({
-    selector: 'tportal-alert',
-    templateUrl: './alert.component.html',
-    styleUrls: ['./alert.component.scss'],
-    animations: ANIMATIONS,
-    imports: [NgStyle, NgbAlert]
+  selector: 'tportal-alert',
+  templateUrl: './alert.component.html',
+  styleUrls: ['./alert.component.scss'],
+  animations: ANIMATIONS,
+  imports: [NgStyle, NgbAlert],
 })
 export class AlertComponent implements OnInit, OnDestroy {
   private static counter = 0;
@@ -33,7 +33,7 @@ export class AlertComponent implements OnInit, OnDestroy {
       (obj) => this.onAlertSend(obj),
       (err) => {
         console.error(err);
-      }
+      },
     );
 
     this.counter = interval(1000).subscribe(() => {

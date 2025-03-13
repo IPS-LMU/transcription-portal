@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import { ProviderLanguage } from '../oh-config';
 import { Task, TaskState } from '../tasks';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 
 export abstract class Operation {
   static counter = 0;
@@ -17,7 +17,7 @@ export abstract class Operation {
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => void;
   private readonly _shortTitle: string | undefined;
   private statesubj: Subject<{
@@ -43,7 +43,7 @@ export abstract class Operation {
     shortTitle?: string,
     private _task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     if (id === null || id === undefined) {
       this._id = ++Operation.counter;
@@ -206,7 +206,7 @@ export abstract class Operation {
 
   public getStateIcon = (
     sanitizer: DomSanitizer,
-    state: TaskState
+    state: TaskState,
   ): SafeHtml => {
     let result = '';
 
@@ -305,7 +305,7 @@ export abstract class Operation {
   public abstract fromAny(
     operationObj: any,
     commands: string[],
-    task: Task
+    task: Task,
   ): Operation;
 
   toAny(): Promise<any> {

@@ -61,7 +61,7 @@ export class TaskService implements OnDestroy {
     private notification: NotificationService,
     private storage: StorageService,
     private sanitizer: DomSanitizer,
-    private alertService: AlertService
+    private alertService: AlertService,
   ) {}
 
   private _taskList: TaskList | undefined;
@@ -170,31 +170,31 @@ export class TaskService implements OnDestroy {
         'Upload',
         AppSettings.configuration.api.commands[0].calls,
         'Upload',
-        'UL'
+        'UL',
       ),
       new ASROperation(
         'ASR',
         AppSettings.configuration.api.commands[1].calls,
         'Speech Recognition',
-        'ASR'
+        'ASR',
       ),
       new OCTRAOperation(
         'OCTRA',
         AppSettings.configuration.api.commands[2].calls,
         'Manual Transcription',
-        'MT'
+        'MT',
       ),
       new G2pMausOperation(
         'MAUS',
         AppSettings.configuration.api.commands[3].calls,
         'Word alignment',
-        'WA'
+        'WA',
       ),
       new EmuOperation(
         'Emu WebApp',
         AppSettings.configuration.api.commands[4].calls,
         'Phonetic detail',
-        'PD'
+        'PD',
       ),
     ];
 
@@ -212,18 +212,18 @@ export class TaskService implements OnDestroy {
               const escapedName = escapeRegex(
                 result.files[0].attributes.originalFileName.replace(
                   /(_annot)?\.[^.]+$/g,
-                  ''
-                )
+                  '',
+                ),
               );
               foundTask = this.getTaskWithOriginalFileName(
-                new RegExp(`^${escapedName}((_annot)?.[^.]+)$`)
+                new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
               );
 
               if (foundTask) {
                 // found a task
                 // file with this hash already exists, overwrite
                 const oldFileIndex = foundTask.files.findIndex(
-                  (a) => file && a.hash === file.hash
+                  (a) => file && a.hash === file.hash,
                 );
 
                 if (oldFileIndex > -1) {
@@ -269,12 +269,12 @@ export class TaskService implements OnDestroy {
                   const format1: AudioFormat | undefined =
                     AudioManager.getFileFormat(
                       task.files[0].extension,
-                      AppInfo.audioFormats
+                      AppInfo.audioFormats,
                     );
                   const format2: AudioFormat | undefined =
                     AudioManager.getFileFormat(
                       entry.files[0].extension,
-                      AppInfo.audioFormats
+                      AppInfo.audioFormats,
                     );
 
                   if (!(format1 && format2)) {
@@ -307,12 +307,12 @@ export class TaskService implements OnDestroy {
                 const format1: AudioFormat | undefined =
                   AudioManager.getFileFormat(
                     foundTask.files[0].extension,
-                    AppInfo.audioFormats
+                    AppInfo.audioFormats,
                   );
                 const format2: AudioFormat | undefined =
                   AudioManager.getFileFormat(
                     entry.files[0].extension,
-                    AppInfo.audioFormats
+                    AppInfo.audioFormats,
                   );
 
                 if (!(format1 && format2)) {
@@ -344,7 +344,7 @@ export class TaskService implements OnDestroy {
           // check remaining unchecked files
           this.checkFiles();
         }
-      })
+      }),
     );
 
     this.subscrmanager.add(
@@ -375,13 +375,13 @@ export class TaskService implements OnDestroy {
         } else if (event.state === 'changed') {
           // not implemented yet
         }
-      })
+      }),
     );
 
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
         this.updateStatistics();
-      })
+      }),
     );
     this.updateStatistics();
   }
@@ -413,7 +413,7 @@ export class TaskService implements OnDestroy {
           const task = Task.fromAny(
             taskObj,
             AppSettings.configuration.api.commands,
-            this.operations
+            this.operations,
           );
 
           maxTaskCounter = Math.max(maxTaskCounter, task.id);
@@ -431,7 +431,7 @@ export class TaskService implements OnDestroy {
                     const format: AudioFormat | undefined =
                       AudioManager.getFileFormat(
                         opResult.extension,
-                        AppInfo.audioFormats
+                        AppInfo.audioFormats,
                       );
 
                     if (!format) {
@@ -465,7 +465,7 @@ export class TaskService implements OnDestroy {
           const taskDir = TaskDirectory.fromAny(
             taskObj,
             AppSettings.configuration.api.commands,
-            this.operations
+            this.operations,
           );
 
           for (const taskElem of taskDir.entries) {
@@ -507,14 +507,14 @@ export class TaskService implements OnDestroy {
 
       if (TaskEntry.counter < maxTaskCounter) {
         console.warn(
-          `Warning: Task counter was less than the biggest id. Reset counter.`
+          `Warning: Task counter was less than the biggest id. Reset counter.`,
         );
         TaskEntry.counter = maxTaskCounter;
       }
 
       if (Operation.counter < maxOperationCounter) {
         console.warn(
-          `Warning: Operation counter was less than the biggest id. Reset counter.`
+          `Warning: Operation counter was less than the biggest id. Reset counter.`,
         );
         Operation.counter = maxOperationCounter;
       }
@@ -522,7 +522,7 @@ export class TaskService implements OnDestroy {
       const url = await this.updateProtocolURL();
       if (this.protocolURL) {
         URL.revokeObjectURL(
-          (this.protocolURL as any).changingThisBreaksApplicationSecurity
+          (this.protocolURL as any).changingThisBreaksApplicationSecurity,
         );
       }
       this.protocolURL = url;
@@ -538,7 +538,7 @@ export class TaskService implements OnDestroy {
             // search lang obj
             const lang = AppSettings.getLanguageByCode(
               userSetting.value.asrLanguage,
-              userSetting.value.asrProvider
+              userSetting.value.asrProvider,
             );
 
             if (lang) {
@@ -546,7 +546,7 @@ export class TaskService implements OnDestroy {
               this.selectedMausLanguage = userSetting.value.mausLanguage;
             }
             this.selectedProvider = AppSettings.getServiceInformation(
-              userSetting.value.asrProvider
+              userSetting.value.asrProvider,
             );
             break;
         }
@@ -643,7 +643,7 @@ export class TaskService implements OnDestroy {
   public changeEntry(
     id: number,
     entry: Task | TaskDirectory,
-    saveToDB: boolean = false
+    saveToDB: boolean = false,
   ) {
     if (!this.taskList) {
       throw new Error('undefined tasklist');
@@ -703,7 +703,7 @@ export class TaskService implements OnDestroy {
                 URL.revokeObjectURL(
                   (
                     this.protocolURL as any
-                  ).changingThisBreaksApplicationSecurity.toString()
+                  ).changingThisBreaksApplicationSecurity.toString(),
                 );
               }
               this.protocolURL = url;
@@ -711,11 +711,11 @@ export class TaskService implements OnDestroy {
           });
           this.storage.saveTask(task);
           const asrService = AppSettings.getServiceInformation(
-            task.operations[1].providerInformation.provider
+            task.operations[1].providerInformation.provider,
           );
           const langObj = AppSettings.getLanguageByCode(
             task.asrLanguage!,
-            task.operations[1].providerInformation.provider
+            task.operations[1].providerInformation.provider,
           );
 
           if (langObj && asrService) {
@@ -808,7 +808,7 @@ export class TaskService implements OnDestroy {
             this.protocolFileName,
             {
               type: 'text/plain',
-            }
+            },
           );
 
           const url = URL.createObjectURL(file);
@@ -833,7 +833,7 @@ export class TaskService implements OnDestroy {
   }
 
   public cleanUpInputArray(
-    entries: (FileInfo | DirectoryInfo)[]
+    entries: (FileInfo | DirectoryInfo)[],
   ): (FileInfo | DirectoryInfo)[] {
     let result: (FileInfo | DirectoryInfo)[] = [];
 
@@ -842,7 +842,7 @@ export class TaskService implements OnDestroy {
         const file = entry as FileInfo;
         const format: AudioFormat | undefined = AudioManager.getFileFormat(
           file.extension,
-          AppInfo.audioFormats
+          AppInfo.audioFormats,
         );
 
         if (format || this.validTranscript(file.extension)) {
@@ -856,7 +856,7 @@ export class TaskService implements OnDestroy {
         dir.entries = dir.entries.filter((a: any) => {
           const format: AudioFormat | undefined = AudioManager.getFileFormat(
             a.extension,
-            AppInfo.audioFormats
+            AppInfo.audioFormats,
           );
           return (
             a instanceof FileInfo &&
@@ -1009,19 +1009,19 @@ export class TaskService implements OnDestroy {
         if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
-            `You can now transcribe ${fileName} manually.`
+            `You can now transcribe ${fileName} manually.`,
           );
         } else if (event.newState === TaskState.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
- For more information hover over the red "X" icon.`
+ For more information hover over the red "X" icon.`,
           );
         } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
-  details of ${fileName}.`
+  details of ${fileName}.`,
           );
         }
 
@@ -1048,19 +1048,19 @@ export class TaskService implements OnDestroy {
             URL.revokeObjectURL(
               (
                 this.protocolURL as any
-              ).changingThisBreaksApplicationSecurity.toString()
+              ).changingThisBreaksApplicationSecurity.toString(),
             );
           }
           this.protocolURL = url;
         });
-      })
+      }),
     );
   }
 
   private async processFileInfo(
     file: FileInfo,
     path: string,
-    queueItem: QueueItem
+    queueItem: QueueItem,
   ): Promise<(Task | TaskDirectory)[]> {
     if (!file?.file) {
       throw new Error('file is undefined');
@@ -1083,7 +1083,7 @@ export class TaskService implements OnDestroy {
         newfile.name,
         file.type,
         newfile.size,
-        newfile
+        newfile,
       );
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
@@ -1094,7 +1094,7 @@ export class TaskService implements OnDestroy {
         file.fullname,
         file.type !== '' ? file.type : file.file.type,
         file.size,
-        file.file
+        file.file,
       );
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
@@ -1112,14 +1112,14 @@ export class TaskService implements OnDestroy {
 
     const foundOldFile = this.getTaskWithHashAndName(
       file.hash,
-      file.attributes.originalFileName
+      file.attributes.originalFileName,
     );
 
     if (file?.file) {
       const arrayBuffer = await readFileAsArray(file.file);
       const format: AudioFormat | undefined = AudioManager.getFileFormat(
         file.extension,
-        AppInfo.audioFormats
+        AppInfo.audioFormats,
       );
       const isValidTranscript = this.validTranscript(file.extension);
 
@@ -1130,20 +1130,20 @@ export class TaskService implements OnDestroy {
           format,
           file.fullname,
           file.type,
-          arrayBuffer
+          arrayBuffer,
         );
 
         if (audioInfo.channels > 1) {
           const directory = new DirectoryInfo(
             path +
               file.attributes.originalFileName.replace(/\..+$/g, '') +
-              '_dir/'
+              '_dir/',
           );
           const cutter = new AudioCutter(audioInfo);
           const files: File[] = await cutter.splitChannelsToFiles(
             file.attributes.originalFileName,
             [0, 1],
-            arrayBuffer
+            arrayBuffer,
           );
           if (this._splitPrompt === 'PENDING') {
             this.openSplitModal();
@@ -1165,21 +1165,21 @@ export class TaskService implements OnDestroy {
               fileInfo.hash = await calcSHA256FromFile(fileObj);
               fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(
                 /\..+$/g,
-                ''
+                '',
               )}_${i + 1}.${file.extension}`;
               fileInfos.push(fileInfo);
             }
             directory.addEntries(fileInfos);
             const result = await this.processDirectoryInfo(
               directory,
-              queueItem
+              queueItem,
             );
             return result;
           } else {
             return this.processFileInfo(
               FileInfo.fromFileObject(files[0]),
               path,
-              queueItem
+              queueItem,
             );
           }
         } else {
@@ -1191,7 +1191,7 @@ export class TaskService implements OnDestroy {
             format.sampleRate,
             audioInfo.duration.samples,
             audioInfo.channels,
-            audioInfo.bitrate
+            audioInfo.bitrate,
           );
           newFileInfo.hash = file.hash;
         }
@@ -1200,7 +1200,7 @@ export class TaskService implements OnDestroy {
           'danger',
           `The audio file '${file.fullname}' is invalid.
               Only Wave (*.wav) files with 16 Bit signed Int are supported.`,
-          -1
+          -1,
         );
         throw new Error('no valid wave format!');
       }
@@ -1236,7 +1236,7 @@ export class TaskService implements OnDestroy {
 
   private async processDirectoryInfo(
     dir: DirectoryInfo,
-    queueItem: QueueItem
+    queueItem: QueueItem,
   ): Promise<TaskDirectory[]> {
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
@@ -1245,7 +1245,7 @@ export class TaskService implements OnDestroy {
       if (dirEntry instanceof FileInfo) {
         const file = dirEntry as FileInfo;
         processedValues.push(
-          await this.processFileInfo(file, dir.path, queueItem)
+          await this.processFileInfo(file, dir.path, queueItem),
         );
       } else {
         throw new Error('file in dir is not a file!');

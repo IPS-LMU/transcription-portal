@@ -44,7 +44,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     public notification: NotificationService,
     public bugService: BugReportService,
     public settingsService: SettingsService,
-    private activeRoute: ActivatedRoute
+    private activeRoute: ActivatedRoute,
   ) {
     super();
 
@@ -105,7 +105,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
           if (debug !== '') {
             serv.addEntry(
               ConsoleType.ERROR,
-              `${debug}${stack !== '' ? ' ' + stack : ''}`
+              `${debug}${stack !== '' ? ' ' + stack : ''}`,
             );
           }
 
@@ -133,7 +133,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
           AppSettings.configuration.plugins.tracking.active !== ''
         ) {
           this.appendTrackingCode(
-            AppSettings.configuration.plugins.tracking.active
+            AppSettings.configuration.plugins.tracking.active,
           );
         }
       },
@@ -222,7 +222,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
         jQuery(trackingCode).insertAfter(jQuery('body').children().last());
       } else {
         console.error(
-          `attributes for matomo tracking in appconfig.json are invalid.`
+          `attributes for matomo tracking in appconfig.json are invalid.`,
         );
       }
     } else {

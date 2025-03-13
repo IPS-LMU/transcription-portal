@@ -7,9 +7,9 @@ import {
   Renderer2,
   SimpleChanges,
 } from '@angular/core';
+import { hasProperty } from '@octra/utilities';
 import { Operation } from '../../../obj/operations/operation';
 import { Task, TaskDirectory } from '../../../obj/tasks';
-import { hasProperty } from '@octra/utilities';
 
 @Directive({
   selector: '[tportalProceedingsRow]',
@@ -20,7 +20,10 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   @Input() toolSelectedOperation?: Operation;
   @Input() rowSelected = false;
 
-  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
+  constructor(
+    private elementRef: ElementRef,
+    private renderer: Renderer2,
+  ) {
     renderer.setStyle(elementRef.nativeElement, 'cursor', 'pointer');
   }
 
@@ -39,7 +42,7 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
       } else {
         this.renderer.removeClass(
           this.elementRef.nativeElement,
-          'tool-selected'
+          'tool-selected',
         );
       }
     }
@@ -53,7 +56,7 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
       } else {
         this.renderer.removeClass(
           this.elementRef.nativeElement,
-          'row-selected'
+          'row-selected',
         );
       }
     }

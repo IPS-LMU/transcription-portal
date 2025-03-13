@@ -47,7 +47,7 @@ export class DownloadModalComponent
     private taskService: TaskService,
     protected activeModal: NgbActiveModal,
     private sanitizer: DomSanitizer,
-    private downloadService: DownloadService
+    private downloadService: DownloadService,
   ) {
     super();
   }
@@ -174,7 +174,7 @@ export class DownloadModalComponent
           },
           (error) => {
             reject(error);
-          }
+          },
         );
       }
     })
@@ -235,7 +235,7 @@ export class DownloadModalComponent
                 .catch((error) => {
                   console.error(error);
                 });
-            })
+            }),
           );
         } else {
           // task
@@ -253,7 +253,7 @@ export class DownloadModalComponent
                     console.error(error);
                     reject(error);
                   });
-              })
+              }),
             );
           }
         }
@@ -300,7 +300,7 @@ export class DownloadModalComponent
               const fileName =
                 task.files[0].attributes.originalFileName.replace(
                   /\.[^.]+$/g,
-                  ''
+                  '',
                 );
               const originalName =
                 opResult.attributes?.originalFileName ?? opResult.fullname;
@@ -321,7 +321,7 @@ export class DownloadModalComponent
                   .getConversionFiles(
                     operation,
                     operation.lastResult,
-                    selectedConverters
+                    selectedConverters,
                   )
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
@@ -331,7 +331,7 @@ export class DownloadModalComponent
                       const fileName =
                         task.files[0].attributes.originalFileName.replace(
                           /\.[^.]+$/g,
-                          ''
+                          '',
                         );
                       const originalName =
                         entry.attributes?.originalFileName ?? entry.fullname;
@@ -346,7 +346,7 @@ export class DownloadModalComponent
                   .catch((error) => {
                     reject2(error);
                   });
-              })
+              }),
             );
           }
         }
@@ -368,7 +368,7 @@ export class DownloadModalComponent
     entries: {
       path: string;
       file: File;
-    }[]
+    }[],
   ) {
     const zip = new JSZip();
 
@@ -378,7 +378,7 @@ export class DownloadModalComponent
 
     zip.generateAsync({ type: 'base64' }).then((base64) => {
       this.archiveURL = this.sanitizer.bypassSecurityTrustResourceUrl(
-        'data:application/zip;base64,' + base64
+        'data:application/zip;base64,' + base64,
       );
       this.state = 'finished';
     });

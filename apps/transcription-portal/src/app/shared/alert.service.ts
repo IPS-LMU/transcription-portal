@@ -13,7 +13,7 @@ export class AlertService {
   public showAlert(
     type: 'danger' | 'warning' | 'info' | 'success',
     message: string,
-    duration?: number
+    duration?: number,
   ) {
     this.alertsend.emit({
       type,

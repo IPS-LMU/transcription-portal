@@ -28,9 +28,7 @@ export class BugReportService {
     return this._console;
   }
 
-  constructor(
-    private octraAPI: OctraAPIService
-  ) {}
+  constructor(private octraAPI: OctraAPIService) {}
 
   public get hasErrors(): boolean {
     const errors = this._console.filter((entry) => {
@@ -46,18 +44,18 @@ export class BugReportService {
     if (typeof message === 'string') {
       sanitizedMessage = sanitizedMessage.replace(
         /(ACCESSCODE=)([^&\n]+)/g,
-        '$1****'
+        '$1****',
       );
     } else {
       if (hasProperty(sanitizedMessage, 'message')) {
         sanitizedMessage.message = sanitizedMessage.message.replace(
           /(ACCESSCODE=)([^&\n]+)/g,
-          '$1****'
+          '$1****',
         );
       } else if (hasProperty(sanitizedMessage, 'text')) {
         sanitizedMessage.text = sanitizedMessage.text.replace(
           /(ACCESSCODE=)([^&\n]+)/g,
-          '$1****'
+          '$1****',
         );
       }
     }
@@ -99,7 +97,7 @@ export class BugReportService {
     email: string,
     message: string,
     sendProtocol: boolean,
-    screenshots: any[]
+    screenshots: any[],
   ): Observable<any> {
     let pkg: FeedbackRequestPropertiesDto = {
       type: 'bug',
@@ -125,7 +123,7 @@ export class BugReportService {
         JSON.stringify({
           tool: {
             version: AppInfo.version,
-            language: "en",
+            language: 'en',
             signed_in: true,
             url: window.location.href,
           },
@@ -133,7 +131,7 @@ export class BugReportService {
         }),
       ],
       `OCB_protocol_${Date.now()}.json`,
-      { type: 'application/json' }
+      { type: 'application/json' },
     );
 
     if (!sendProtocol) {
@@ -144,7 +142,7 @@ export class BugReportService {
     return this.octraAPI.sendFeedback(
       pkg,
       protocol,
-      screenshots.map((a) => a.blob)
+      screenshots.map((a) => a.blob),
     );
   }
 }

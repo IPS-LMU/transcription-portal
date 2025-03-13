@@ -10,14 +10,14 @@ import {
   Renderer2,
   SimpleChanges,
 } from '@angular/core';
-import { Task } from '../../../obj/tasks';
-import { hasProperty, SubscriptionManager } from '@octra/utilities';
-import { Operation } from '../../../obj/operations/operation';
 import { DomSanitizer } from '@angular/platform-browser';
+import { hasProperty, SubscriptionManager } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
+import { Subscription } from 'rxjs';
+import { Operation } from '../../../obj/operations/operation';
+import { Task } from '../../../obj/tasks';
 import { TaskService } from '../../../obj/tasks/task.service';
 import { AppSettings } from '../../../shared/app.settings';
-import { Subscription } from 'rxjs';
-import { FileInfo } from '@octra/web-media';
 
 @Directive({
   selector: '[tportalProcColOperation]',
@@ -49,7 +49,7 @@ export class ProcColOperationDirective
     private elementRef: ElementRef,
     private renderer: Renderer2,
     private sanitizer: DomSanitizer,
-    private taskService: TaskService
+    private taskService: TaskService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {
@@ -60,7 +60,7 @@ export class ProcColOperationDirective
       this.renderer.setStyle(
         this.elementRef.nativeElement,
         'max-width',
-        this.shortStyle ? '150px' : 'auto'
+        this.shortStyle ? '150px' : 'auto',
       );
     }
     this.updateView();
@@ -77,7 +77,7 @@ export class ProcColOperationDirective
         this.updateView();
       } else {
         throw new Error(
-          'ProcOperationDirective error: entry of type Task does not have any files'
+          'ProcOperationDirective error: entry of type Task does not have any files',
         );
       }
     } else {
@@ -89,13 +89,13 @@ export class ProcColOperationDirective
       this.subscrmanager.add(
         this.operation.statechange.subscribe(() => {
           this.updateView();
-        })
+        }),
       );
 
       this.subscrmanager.add(
         this.operation.changed.subscribe(() => {
           this.updateView();
-        })
+        }),
       );
     }
   }
@@ -113,7 +113,7 @@ export class ProcColOperationDirective
         this.renderer.setStyle(
           this.elementRef.nativeElement,
           'text-align',
-          'center'
+          'center',
         );
 
         if (this.operation) {
@@ -140,7 +140,7 @@ export class ProcColOperationDirective
                 const wrapper = this.renderer.createElement('div');
                 this.renderer.setStyle(wrapper, 'display', 'inline');
                 wrapper.innerHTML = this.operation.getStateIcon2(
-                  this.operation.state
+                  this.operation.state,
                 );
 
                 this.renderer.listen(wrapper, 'mouseover', this.onMouseOver);
@@ -148,7 +148,7 @@ export class ProcColOperationDirective
                 this.renderer.listen(wrapper, 'mouseleave', this.onMouseLeave);
                 this.renderer.appendChild(
                   this.elementRef.nativeElement,
-                  wrapper
+                  wrapper,
                 );
               } else {
                 icon = this.renderer.createElement('i');
@@ -162,13 +162,13 @@ export class ProcColOperationDirective
 
               this.renderer.removeClass(
                 this.elementRef.nativeElement,
-                'op-deactivated'
+                'op-deactivated',
               );
             } else {
               // operation disabled
               this.renderer.addClass(
                 this.elementRef.nativeElement,
-                'op-deactivated'
+                'op-deactivated',
               );
 
               const icon = this.renderer.createElement('i');
@@ -182,12 +182,12 @@ export class ProcColOperationDirective
         }
       } else {
         throw new Error(
-          'ProcOperationDirective error: entry is not of type Task'
+          'ProcOperationDirective error: entry is not of type Task',
         );
       }
     } else {
       throw new Error(
-        'ProcOperationDirective error: updateView: nativeElement is undefined'
+        'ProcOperationDirective error: updateView: nativeElement is undefined',
       );
     }
   }
@@ -229,7 +229,7 @@ export class ProcColOperationDirective
     ) {
       const langObj = AppSettings.getLanguageByCode(
         this.entry.asrLanguage!,
-        this.entry.operations[1].providerInformation.provider
+        this.entry.operations[1].providerInformation.provider,
       );
       if (langObj) {
         this.entry.restartFailedOperation(
@@ -241,7 +241,7 @@ export class ProcColOperationDirective
               name: 'GoogleASR',
               value: this.taskService.accessCode,
             },
-          ]
+          ],
         );
       }
     }

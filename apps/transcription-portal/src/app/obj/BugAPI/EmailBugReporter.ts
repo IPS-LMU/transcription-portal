@@ -1,7 +1,7 @@
-import {BugReporter} from './BugReporter';
-import {Observable} from 'rxjs';
-import {HttpClient, HttpResponse} from '@angular/common/http';
-import {hasProperty} from '@octra/utilities';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { hasProperty } from '@octra/utilities';
+import { Observable } from 'rxjs';
+import { BugReporter } from './BugReporter';
 
 export class EmailBugReporter extends BugReporter {
   constructor() {
@@ -9,12 +9,18 @@ export class EmailBugReporter extends BugReporter {
     this._name = 'Email';
   }
 
-  public sendBugReport(http: HttpClient, pkg: any, form: any, url: string,
-                       authToken: string, sendbugreport: boolean, screenshots: {
-      blob: File
-    }[]): Observable<HttpResponse<any>> {
-
-    const report = (sendbugreport) ? JSON.parse(JSON.stringify(pkg)) : null;
+  public sendBugReport(
+    http: HttpClient,
+    pkg: any,
+    form: any,
+    url: string,
+    authToken: string,
+    sendbugreport: boolean,
+    screenshots: {
+      blob: File;
+    }[],
+  ): Observable<HttpResponse<any>> {
+    const report = sendbugreport ? JSON.parse(JSON.stringify(pkg)) : null;
 
     const json = pkg;
 
@@ -22,13 +28,13 @@ export class EmailBugReporter extends BugReporter {
       description: form.description,
       additional_information: {
         email: form.email,
-        name: form.name
+        name: form.name,
       },
       os: json.system.os.name,
       os_build: json.system.os.version,
       platform: json.system.browser,
       version: json.ohportal.version,
-      report
+      report,
     };
 
     const formData = new FormData();
@@ -41,10 +47,10 @@ export class EmailBugReporter extends BugReporter {
 
     return http.post(url, formData, {
       headers: {
-        Authorization: authToken
+        Authorization: authToken,
       },
       observe: 'response',
-      responseType: 'json'
+      responseType: 'json',
     });
   }
 
@@ -58,7 +64,11 @@ export class EmailBugReporter extends BugReporter {
           result += '---------\n';
 
           for (const attr2 in pkg[attr]) {
-            if (hasProperty(pkg[attr], attr2) && typeof pkg[attr][attr2] !== 'object' || pkg[attr][attr2] === null) {
+            if (
+              (hasProperty(pkg[attr], attr2) &&
+                typeof pkg[attr][attr2] !== 'object') ||
+              pkg[attr][attr2] === null
+            ) {
               result += '  ' + attr2 + ':  ' + pkg[attr][attr2] + '\n';
             }
           }
@@ -70,7 +80,12 @@ export class EmailBugReporter extends BugReporter {
             if (typeof elem.message === 'string') {
               result += '  ' + elem.type + '  ' + elem.message + '\n';
             } else if (typeof elem.message === 'object') {
-              result += '  ' + elem.type + '\n' + JSON.stringify(elem.message, null, 2) + '\n';
+              result +=
+                '  ' +
+                elem.type +
+                '\n' +
+                JSON.stringify(elem.message, null, 2) +
+                '\n';
             }
           }
         }

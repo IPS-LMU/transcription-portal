@@ -6,27 +6,33 @@ import {
   OnChanges,
   OnDestroy,
   Renderer2,
-  SimpleChanges
+  SimpleChanges,
 } from '@angular/core';
-import {Task, TaskDirectory, TaskState} from '../../../obj/tasks';
-import {SubscriptionManager} from '@octra/utilities';
-import {interval, Subscription} from 'rxjs';
+import { SubscriptionManager } from '@octra/utilities';
+import { interval, Subscription } from 'rxjs';
+import { Task, TaskDirectory, TaskState } from '../../../obj/tasks';
 
 @Directive({
-    selector: '[tportalDirProgress]',
-    standalone: true
+  selector: '[tportalDirProgress]',
+  standalone: true,
 })
-export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy {
-
+export class DirProgressDirective
+  implements OnChanges, AfterViewInit, OnDestroy
+{
   @Input() dir?: TaskDirectory;
   @Input() opIndex?: number;
 
   private subscrmanager = new SubscriptionManager<Subscription>();
 
-  constructor(private elementRef: ElementRef, private renderer: Renderer2) {
-    this.subscrmanager.add(interval(1000).subscribe(() => {
-      this.updateView();
-    }));
+  constructor(
+    private elementRef: ElementRef,
+    private renderer: Renderer2,
+  ) {
+    this.subscrmanager.add(
+      interval(1000).subscribe(() => {
+        this.updateView();
+      }),
+    );
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -39,7 +45,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
 
   updateView() {
     if (!this.dir) {
-      throw new Error("dir is undefined");
+      throw new Error('dir is undefined');
     }
     if (this.opIndex == undefined) {
       return;
@@ -49,12 +55,11 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     const counters = {
       processing: 0,
       finished: 0,
-      failed: 0
+      failed: 0,
     };
 
     for (const entry of this.dir.entries) {
       if (entry instanceof Task) {
-
         const operation = entry.operations[this.opIndex];
 
         if (operation.state === TaskState.PROCESSING) {
@@ -70,13 +75,29 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     const sum = counters.finished;
     this.elementRef.nativeElement.innerHTML = sum + '/' + allEntries;
 
-    this.renderer.setStyle(this.elementRef.nativeElement, 'width', `${sum / allEntries * 100}%`);
-    this.renderer.setAttribute(this.elementRef.nativeElement, 'aria-valuenow', `${sum / allEntries * 100}`);
+    this.renderer.setStyle(
+      this.elementRef.nativeElement,
+      'width',
+      `${(sum / allEntries) * 100}%`,
+    );
+    this.renderer.setAttribute(
+      this.elementRef.nativeElement,
+      'aria-valuenow',
+      `${(sum / allEntries) * 100}`,
+    );
 
     if (counters.failed > 0) {
-      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `red`);
+      this.renderer.setStyle(
+        this.elementRef.nativeElement,
+        'background-color',
+        `red`,
+      );
     } else {
-      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `#7AB55C`);
+      this.renderer.setStyle(
+        this.elementRef.nativeElement,
+        'background-color',
+        `#7AB55C`,
+      );
     }
   }
 

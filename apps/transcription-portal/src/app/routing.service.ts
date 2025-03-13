@@ -20,12 +20,15 @@ export class RoutingService {
   private subscrManager = new SubscriptionManager();
 
   // Observable exposing the breadcrumb hierarchy
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+  ) {
     this.subscrManager.add(
       this.activatedRoute.queryParams.subscribe((params) => {
         console.log('ROUTER SERVICE PARAMS');
         console.log(params);
-      })
+      }),
     );
   }
 
@@ -38,7 +41,7 @@ export class RoutingService {
   public addStaticParams(params: Record<string, string | undefined | null>) {
     this._staticQueryParams = {
       ...removeEmptyProperties<Record<string, string | undefined | null>>(
-        params
+        params,
       ),
       ...params,
     };
@@ -48,7 +51,7 @@ export class RoutingService {
     label: string,
     commands: any[],
     extras?: NavigationExtras,
-    queryParamsHandling: QueryParamsHandling | null | undefined = 'merge'
+    queryParamsHandling: QueryParamsHandling | null | undefined = 'merge',
   ) {
     try {
       if (

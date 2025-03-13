@@ -20,7 +20,7 @@ export class ASROperation extends Operation {
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => {
     this.webService = asrService.provider!;
     this.updateProtocol('');
@@ -51,7 +51,7 @@ export class ASROperation extends Operation {
               })
               .catch((error) => {
                 this.updateProtocol(
-                  this.protocol + '<br/>' + error.replace('¶')
+                  this.protocol + '<br/>' + error.replace('¶'),
                 );
                 this.time.duration = Date.now() - this.time.start;
                 this.changeState(TaskState.ERROR);
@@ -76,7 +76,7 @@ export class ASROperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state
+      this.state,
     );
   }
 
@@ -88,7 +88,7 @@ export class ASROperation extends Operation {
       this.shortTitle,
       task,
       operationObj.state,
-      operationObj.id
+      operationObj.id,
     );
     for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
@@ -107,7 +107,7 @@ export class ASROperation extends Operation {
       )
     ) {
       result._providerInformation = AppSettings.getServiceInformation(
-        operationObj.serviceProvider
+        operationObj.serviceProvider,
       );
       console.log(`loaded ASR: ${result._providerInformation?.provider}`);
     } else {
@@ -117,7 +117,7 @@ export class ASROperation extends Operation {
         result._providerInformation =
           AppSettings.getServiceInformation(providerName);
         console.log(
-          `provider not available, set ${result._providerInformation?.provider}`
+          `provider not available, set ${result._providerInformation?.provider}`,
         );
       }
     }
@@ -172,7 +172,7 @@ export class ASROperation extends Operation {
     shortTitle?: string,
     task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
     this._description =
@@ -185,7 +185,7 @@ export class ASROperation extends Operation {
     asrService: ServiceProvider,
     httpClient: HttpClient,
     input: FileInfo,
-    accessCode: string
+    accessCode: string,
   ): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       this.webService = asrService.provider!;
@@ -209,7 +209,7 @@ export class ASROperation extends Operation {
               'Content-Type': 'multipart/form-data',
             },
             responseType: 'text',
-          }
+          },
         )
         .subscribe({
           next: (result: string) => {
@@ -224,7 +224,7 @@ export class ASROperation extends Operation {
                 json.downloadLink,
                 'text/plain',
                 input.name + extension,
-                Date.now()
+                Date.now(),
               );
               file
                 .updateContentFromURL(httpClient)
@@ -232,11 +232,11 @@ export class ASROperation extends Operation {
                   // add messages to protocol
                   if (json.warnings !== '') {
                     this.updateProtocol(
-                      this.protocol + '<br/>' + json.warnings.replace('¶')
+                      this.protocol + '<br/>' + json.warnings.replace('¶'),
                     );
                   } else if (json.output !== '') {
                     this.updateProtocol(
-                      this.protocol + '<br/>' + json.output.replace('¶')
+                      this.protocol + '<br/>' + json.output.replace('¶'),
                     );
                   }
                   resolve(file);
@@ -258,13 +258,13 @@ export class ASROperation extends Operation {
   private callG2PChunker(
     asrService: ServiceProvider,
     httpClient: HttpClient,
-    asrResult: FileInfo
+    asrResult: FileInfo,
   ): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       new Promise<string>((resolve2, reject2) => {
         UploadOperation.upload(
           [asrResult],
-          asrService.host + 'uploadFileMulti'
+          asrService.host + 'uploadFileMulti',
         ).subscribe(
           (event) => {
             if (event.type === 'loadend') {
@@ -277,7 +277,7 @@ export class ASROperation extends Operation {
           },
           (error) => {
             reject2(error);
-          }
+          },
         );
       })
         .then((asrURL) => {
@@ -288,7 +288,7 @@ export class ASROperation extends Operation {
             .replace('{{transcriptURL}}', asrURL)
             .replace(
               '{{audioURL}}',
-              this.previousOperation?.lastResult?.url ?? ''
+              this.previousOperation?.lastResult?.url ?? '',
             )
             .replace('{{asrType}}', `${asrService.provider}`)
             .replace('{{language}}', this.task?.asrLanguage!);
@@ -302,7 +302,7 @@ export class ASROperation extends Operation {
                   'Content-Type': 'multipart/form-data',
                 },
                 responseType: 'text',
-              }
+              },
             )
             .subscribe(
               (result: string) => {
@@ -313,13 +313,13 @@ export class ASROperation extends Operation {
 
                 if (json.success === 'true') {
                   const { extension } = extractFileNameFromURL(
-                    json.downloadLink
+                    json.downloadLink,
                   );
                   const file = FileInfo.fromURL(
                     json.downloadLink,
                     'text/plain',
                     input.name + extension,
-                    Date.now()
+                    Date.now(),
                   );
                   setTimeout(() => {
                     file
@@ -328,11 +328,11 @@ export class ASROperation extends Operation {
                         // add messages to protocol
                         if (json.warnings !== '') {
                           this.updateProtocol(
-                            '<br/>' + json.warnings.replace('¶')
+                            '<br/>' + json.warnings.replace('¶'),
                           );
                         } else if (json.output !== '') {
                           this.updateProtocol(
-                            '<br/>' + json.output.replace('¶')
+                            '<br/>' + json.output.replace('¶'),
                           );
                         }
                         resolve(file);
@@ -347,7 +347,7 @@ export class ASROperation extends Operation {
               },
               (error) => {
                 reject(error.message);
-              }
+              },
             );
         })
         .catch((error) => {

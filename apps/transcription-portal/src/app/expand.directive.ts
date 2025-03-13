@@ -5,7 +5,10 @@ import { Directive, ElementRef, OnInit, Renderer2 } from '@angular/core';
   standalone: true,
 })
 export class ExpandDirective implements OnInit {
-  constructor(private elRef: ElementRef, private renderer: Renderer2) {}
+  constructor(
+    private elRef: ElementRef,
+    private renderer: Renderer2,
+  ) {}
 
   ngOnInit() {
     const native = this.elRef.nativeElement;

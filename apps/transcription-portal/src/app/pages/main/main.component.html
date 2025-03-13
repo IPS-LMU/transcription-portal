@@ -15,7 +15,7 @@
       >
         <li class="nav-item active">
           <a
-            [title]="AppInfo.lastUpdated | date : 'dd.MM.yyyy H:mm z'"
+            [title]="AppInfo.lastUpdated | date: 'dd.MM.yyyy H:mm z'"
             class="nav-link"
             href="#"
             ><span class="logo"
@@ -26,7 +26,7 @@
               TranscriptionPortal</span
             >
             @if (isdevelopment) {
-            <span style="color: red"> Beta </span>
+              <span style="color: red"> Beta </span>
             }
             <button
               (click)="isCollapsed = !isCollapsed"
@@ -84,7 +84,7 @@
               <div class="number">{{ taskService.statistics.running }}</div>
               <i
                 [ngClass]="{
-                  spin: taskService.statistics.running > 0
+                  spin: taskService.statistics.running > 0,
                 }"
                 class="bi bi-gear-fill"
                 style="color: orange"
@@ -168,9 +168,9 @@
             >
               <i
                 [ngClass]="{
-                yellow: !bugService.hasErrors,
-                red: bugService.hasErrors
-              }"
+                  yellow: !bugService.hasErrors,
+                  red: bugService.hasErrors,
+                }"
                 class="bi bi-exclamation-circle pointer"
               ></i
               ><span style="cursor: pointer"> Feedback</span>
@@ -178,19 +178,20 @@
           }
           <li class="nav-item active">
             @if (notification.permissionGranted) {
-            <i
-              (click)="notification.permissionGranted = false"
-              aria-hidden="true"
-              class="bi bi-bell"
-              style="cursor: pointer"
-            ></i>
-            } @if (!notification.permissionGranted) {
-            <i
-              (click)="notification.permissionGranted = true"
-              aria-hidden="true"
-              class="bi bi-bell-slash"
-              style="cursor: pointer"
-            ></i>
+              <i
+                (click)="notification.permissionGranted = false"
+                aria-hidden="true"
+                class="bi bi-bell"
+                style="cursor: pointer"
+              ></i>
+            }
+            @if (!notification.permissionGranted) {
+              <i
+                (click)="notification.permissionGranted = true"
+                aria-hidden="true"
+                class="bi bi-bell-slash"
+                style="cursor: pointer"
+              ></i>
             }
           </li>
           <li class="nav-item active">
@@ -244,7 +245,7 @@
                                   'bi-eye-slash':
                                     accessCodeInputFieldType === 'text',
                                   'bi-eye':
-                                    accessCodeInputFieldType === 'password'
+                                    accessCodeInputFieldType === 'password',
                                 }"
                               ></i>
                             </span>
@@ -285,122 +286,137 @@
   </nav>
   <!-- SUB-HEADER OVERVIEW -->
   @if (!showtool) {
-  <div class="row proceedings-header" style="padding-top: 0">
-    <div class="col-4" style="text-align: left; padding-top: 5px">
-      <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-        <i class="bi bi-plus"></i
-        ><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
-      </button>
-      <!-- webkitdirectory directory multiple -->
-      <input
-        #fileinput
-        (change)="onFileChange($event)"
-        class="fileinput"
-        multiple
-        style="display: none"
-        type="file"
-        value="Select audio file"
-      />
-      <button
-        (click)="onVerifyButtonClick()"
-        [disabled]="taskService.statistics.queued < 1"
-        class="btn btn-primary"
-        style="margin-left: 10px"
-      >
-        <i class="bi bi-database-fill"></i>
-        <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span> @if
-        (taskService.statistics.queued > 0) { ({{
-          taskService.statistics.queued
-        }}) }
-      </button>
-    </div>
-    <div class="col-4">
-      <div id="overall-state">
-        {{ taskService.stateLabel }}
+    <div class="row proceedings-header" style="padding-top: 0">
+      <div class="col-4" style="text-align: left; padding-top: 5px">
+        <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
+          <i class="bi bi-plus"></i
+          ><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
+        </button>
+        <!-- webkitdirectory directory multiple -->
+        <input
+          #fileinput
+          (change)="onFileChange($event)"
+          class="fileinput"
+          multiple
+          style="display: none"
+          type="file"
+          value="Select audio file"
+        />
+        <button
+          (click)="onVerifyButtonClick()"
+          [disabled]="taskService.statistics.queued < 1"
+          class="btn btn-primary"
+          style="margin-left: 10px"
+        >
+          <i class="bi bi-database-fill"></i>
+          <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
+          @if (taskService.statistics.queued > 0) {
+            ({{ taskService.statistics.queued }})
+          }
+        </button>
+      </div>
+      <div class="col-4">
+        <div id="overall-state">
+          {{ taskService.stateLabel }}
+        </div>
+      </div>
+      <div class="col-4" style="text-align: right; padding-top: 5px">
+        <button
+          (click)="onStartClick()"
+          [disabled]="!taskService.newfiles"
+          class="btn btn-primary"
+        >
+          <i
+            [ngClass]="{
+              'bi-play-fill': !taskService.isProcessing,
+              'bi-stop-fill': taskService.isProcessing,
+            }"
+            aria-hidden="true"
+            class="bi"
+          ></i
+          ><span class="d-none d-lg-inline d-xl-inline">
+            @if (!taskService.isProcessing) {
+              3. START PROCESSING
+            }
+            @if (taskService.isProcessing) {
+              3. STOP PROCESSING
+            }
+          </span>
+        </button>
       </div>
     </div>
-    <div class="col-4" style="text-align: right; padding-top: 5px">
-      <button
-        (click)="onStartClick()"
-        [disabled]="!taskService.newfiles"
-        class="btn btn-primary"
-      >
-        <i
-          [ngClass]="{
-            'bi-play-fill': !taskService.isProcessing,
-            'bi-stop-fill': taskService.isProcessing
-          }"
-          aria-hidden="true"
-          class="bi"
-        ></i
-        ><span class="d-none d-lg-inline d-xl-inline">
-          @if (!taskService.isProcessing) { 3. START PROCESSING } @if
-          (taskService.isProcessing) { 3. STOP PROCESSING }
-        </span>
-      </button>
-    </div>
-  </div>
   }
 
   <!-- SUB-HEADER TOOL -->
   @if (showtool) {
-  <div class="row proceedings-header" style="padding-top: 0; height: 50px">
-    <div class="col-2" style="text-align: left; padding-top: 5px">
-      <button
-        (click)="onBackButtonClicked()"
-        class="btn btn-primary"
-        style="width: 100%"
-      >
-        <i
-          aria-hidden="true"
-          class="bi bi-chevron-double-left"
-          style="font-size: 20px"
-        ></i>
-      </button>
+    <div class="row proceedings-header" style="padding-top: 0; height: 50px">
+      <div class="col-2" style="text-align: left; padding-top: 5px">
+        <button
+          (click)="onBackButtonClicked()"
+          class="btn btn-primary"
+          style="width: 100%"
+        >
+          <i
+            aria-hidden="true"
+            class="bi bi-chevron-double-left"
+            style="font-size: 20px"
+          ></i>
+        </button>
+      </div>
+      <div class="col-8" style="text-align: center">
+        <p style="margin: 10px 0 0">
+          @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
+            {{ toolSelectedOperation!.name }}:
+            {{
+              toolSelectedOperation!.previousOperation!.results[0].attributes
+                ?.originalFileName
+            }}
+            , Language:
+            @if (
+              toolSelectedOperation !== undefined &&
+              toolSelectedOperation.task !== undefined &&
+              toolSelectedOperation.task.asrLanguage !== undefined
+            ) {
+              {{ toolSelectedOperation.task.asrLanguage }}
+            }
+            , Audio duration: {{ getTime() | time }}
+          }
+          @if (
+            toolSelectedOperation &&
+            toolSelectedOperation.previousOperation!.results.length < 1 &&
+            toolSelectedOperation!.previousOperation!.previousOperation !==
+              undefined
+          ) {
+            @if (toolSelectedOperation) {
+              {{ toolSelectedOperation.name }}
+            }
+            :
+            {{
+              toolSelectedOperation!.previousOperation!.previousOperation!
+                .results[0]!.attributes?.originalFileName
+            }}
+            , Language:
+            @if (toolSelectedOperation.task?.asrLanguage !== undefined) {
+              {{ toolSelectedOperation.task!.asrLanguage }}
+            }
+            , Audio duration: {{ getTime() | time }}
+          }
+        </p>
+      </div>
+      <div class="col-2" style="text-align: right; padding-top: 5px">
+        <button
+          (click)="onBackButtonClicked()"
+          class="btn btn-primary"
+          style="width: 100%"
+        >
+          <i
+            aria-hidden="true"
+            class="bi bi-chevron-double-right"
+            style="font-size: 20px"
+          ></i>
+        </button>
+      </div>
     </div>
-    <div class="col-8" style="text-align: center">
-      <p style="margin: 10px 0 0">
-        @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
-        {{ toolSelectedOperation!.name }}:
-        {{
-          toolSelectedOperation!.previousOperation!.results[0].attributes
-            ?.originalFileName
-        }}
-        , Language: @if (toolSelectedOperation !== undefined &&
-        toolSelectedOperation.task !== undefined &&
-        toolSelectedOperation.task.asrLanguage !== undefined) {
-        {{ toolSelectedOperation.task.asrLanguage }}
-        } , Audio duration: {{ getTime() | time }}
-        } @if ( toolSelectedOperation &&
-        toolSelectedOperation.previousOperation!.results.length < 1 &&
-        toolSelectedOperation!.previousOperation!.previousOperation !==
-        undefined ) { @if (toolSelectedOperation) {
-        {{ toolSelectedOperation.name }}
-        }:
-        {{
-          toolSelectedOperation!.previousOperation!.previousOperation!
-            .results[0]!.attributes?.originalFileName
-        }}
-        , Language: @if ( toolSelectedOperation.task?.asrLanguage !== undefined) {
-        {{ toolSelectedOperation.task!.asrLanguage }}
-        } , Audio duration: {{ getTime() | time }}
-        }
-      </p>
-    </div>
-    <div class="col-2" style="text-align: right; padding-top: 5px">
-      <button
-        (click)="onBackButtonClicked()"
-        class="btn btn-primary"
-        style="width: 100%"
-      >
-        <i
-          aria-hidden="true"
-          class="bi bi-chevron-double-right"
-          style="font-size: 20px"
-        ></i>
-      </button>
-    </div>
-  </div>
   }
 
   <!-- WORKING AREA -->
@@ -414,31 +430,31 @@
       (mouseup)="dragBorder($event, 'left')"
       [@expandLeft]="animationObject2"
       [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging'
+        dragborder: dragborder === 'active' || dragborder === 'dragging',
       }"
       [ngStyle]="{
         width: newProceedingsWidth + '%',
         'border-right':
-          sidebarExpand === 'closed' ? '2px solid lightgray' : 'none'
+          sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
       }"
       style="float: right"
     >
       @if (settingsService.allLoaded && taskService.taskList !== undefined) {
-      <tportal-proceedings
-        #proceedings
-        (afterdrop)="onAfterDrop($event)"
-        (feedbackRequested)="onFeedbackRequest($event)"
-        (operationclick)="onOperationClick($event)"
-        (operationhover)="onOperationHover($event)"
-        [isClosed]="sidebarExpand === 'closed'"
-        [operations]="taskService.operations"
-        [queue]="taskService.preprocessor.queue"
-        [shortstyle]="sidebarstate === 'opened'"
-        [taskList]="taskService.taskList"
-        [shorcutsEnabled]="settingsService.shortCutsEnabled"
-        style="height: 100%"
-      >
-      </tportal-proceedings>
+        <tportal-proceedings
+          #proceedings
+          (afterdrop)="onAfterDrop($event)"
+          (feedbackRequested)="onFeedbackRequest($event)"
+          (operationclick)="onOperationClick($event)"
+          (operationhover)="onOperationHover($event)"
+          [isClosed]="sidebarExpand === 'closed'"
+          [operations]="taskService.operations"
+          [queue]="taskService.preprocessor.queue"
+          [shortstyle]="sidebarstate === 'opened'"
+          [taskList]="taskService.taskList"
+          [shorcutsEnabled]="settingsService.shortCutsEnabled"
+          style="height: 100%"
+        >
+        </tportal-proceedings>
       }
     </div>
     <div
@@ -450,11 +466,11 @@
       [@comeIn]="animationObject"
       [hidden]="dragborder === 'inactive'"
       [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging'
+        dragborder: dragborder === 'active' || dragborder === 'dragging',
       }"
       [ngStyle]="{
         'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%'
+        width: newToolWidth + '%',
       }"
       style="position: absolute; height: 100%; z-index: 800"
     ></div>
@@ -462,7 +478,7 @@
       [@comeIn]="animationObject"
       [ngStyle]="{
         'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%'
+        width: newToolWidth + '%',
       }"
       style="position: absolute; height: 100%; border-top: 1px solid gray"
     >

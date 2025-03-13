@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
 import * as Notify from 'notifyjs';
+import { Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -29,7 +29,7 @@ export class NotificationService {
     if (Notify.needsPermission && Notify.isSupported()) {
       Notify.requestPermission(
         this.onPermissionGranted,
-        this.onPermissionDenied
+        this.onPermissionDenied,
       );
     } else {
       this._permissionGranted = !Notify.needsPermission;

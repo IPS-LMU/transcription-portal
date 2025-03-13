@@ -5,34 +5,23 @@
     "commands": [
       {
         "name": "Upload",
-        "calls": [
-          ""
-        ]
+        "calls": [""]
       },
       {
         "name": "ASR",
-        "calls": [
-          "",
-          ""
-        ]
+        "calls": ["", ""]
       },
       {
         "name": "OCTRA",
-        "calls": [
-          ""
-        ]
+        "calls": [""]
       },
       {
         "name": "MAUS",
-        "calls": [
-          ""
-        ]
+        "calls": [""]
       },
       {
         "name": "Emu WebApp",
-        "calls": [
-          ""
-        ]
+        "calls": [""]
       }
     ],
     "asrInfoURL": "",
@@ -42,6 +31,5 @@
       "key": ""
     }
   },
-  "plugins": {
-  }
+  "plugins": {}
 }

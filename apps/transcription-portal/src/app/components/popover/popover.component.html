@@ -1,18 +1,36 @@
 <svg #svg [attr.height]="height" [attr.width]="width">
   <defs>
     <filter height="300%" id="f3" width="300%" x="0" y="0">
-      <feDropShadow dx="4" dy="4" flood-color="gray" stdDeviation="5"/>
+      <feDropShadow dx="4" dy="4" flood-color="gray" stdDeviation="5" />
     </filter>
   </defs>
-  <rect [attr.height]="height-margin.top - margin.bottom" [attr.width]="width - margin.left -margin.right"
-        [attr.x]="margin.left"
-        [attr.y]="margin.top"
-        [style.stroke]="borderColor" filter="url(#f3)" rx="5" ry="5"></rect>
-  <polygon [attr.points]="getPolygonString()" style="fill:white;"/>
-  <line [attr.x1]="polygon.koord1.x" [attr.x2]="polygon.koord2.x" [attr.y1]="polygon.koord1.y"
-        [attr.y2]="polygon.koord2.y" [style.stroke]="borderColor" style="stroke-width:1"/>
-  <line [attr.x1]="polygon.koord1.x" [attr.x2]="polygon.koord3.x" [attr.y1]="polygon.koord1.y"
-        [attr.y2]="polygon.koord3.y" [style.stroke]="borderColor" style="stroke-width:1"/>
+  <rect
+    [attr.height]="height - margin.top - margin.bottom"
+    [attr.width]="width - margin.left - margin.right"
+    [attr.x]="margin.left"
+    [attr.y]="margin.top"
+    [style.stroke]="borderColor"
+    filter="url(#f3)"
+    rx="5"
+    ry="5"
+  ></rect>
+  <polygon [attr.points]="getPolygonString()" style="fill: white" />
+  <line
+    [attr.x1]="polygon.koord1.x"
+    [attr.x2]="polygon.koord2.x"
+    [attr.y1]="polygon.koord1.y"
+    [attr.y2]="polygon.koord2.y"
+    [style.stroke]="borderColor"
+    style="stroke-width: 1"
+  />
+  <line
+    [attr.x1]="polygon.koord1.x"
+    [attr.x2]="polygon.koord3.x"
+    [attr.y1]="polygon.koord1.y"
+    [attr.y2]="polygon.koord3.y"
+    [style.stroke]="borderColor"
+    style="stroke-width: 1"
+  />
 </svg>
 <div #inner class="inner">
   <div class="content">

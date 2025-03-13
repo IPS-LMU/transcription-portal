@@ -1,13 +1,12 @@
-import {Pipe, PipeTransform} from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'filesize',
-    standalone: true
+  name: 'filesize',
+  standalone: true,
 })
 export class FilesizePipe implements PipeTransform {
-
   transform(value: any, args?: any): any {
-    if ((args === null || args === undefined)) {
+    if (args === null || args === undefined) {
       // value are miliseconds
       if (!isNaN(Number(value))) {
         const bytes = Number(value);
@@ -36,5 +35,4 @@ export class FilesizePipe implements PipeTransform {
     }
     return null;
   }
-
 }

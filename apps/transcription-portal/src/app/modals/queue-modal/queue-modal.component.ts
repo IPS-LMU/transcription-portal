@@ -95,7 +95,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     private cd: ChangeDetectorRef,
     private elementRef: ElementRef,
     private settingsService: SettingsService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
   ) {}
 
   ngOnInit(): void {
@@ -104,10 +104,10 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.renderer.addClass(this.elementRef.nativeElement, 'h-100');
 
     this.languages.asr = AppSettings.languages?.asr.filter(
-      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null
+      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null,
     );
     this.languages.maus = AppSettings.languages?.maus.filter(
-      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null
+      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null,
     );
   }
 
@@ -170,7 +170,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility(
             task.files[0] as AudioInfo,
-            task.asrProvider!
+            task.asrProvider!,
           ),
         });
       }
@@ -190,7 +190,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         task.asrProvider = this.taskService.selectedProvider?.provider;
         task.operations[1].providerInformation =
           AppSettings.getServiceInformation(
-            this.taskService.selectedProvider?.provider!
+            this.taskService.selectedProvider?.provider!,
           );
         this.storage.saveTask(task);
 
@@ -204,7 +204,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
             fileName: !audioInfo ? '' : audioInfo.name,
             checks: this.checkAudioFileCompatibility(
               audioInfo,
-              task.asrProvider!
+              task.asrProvider!,
             ),
           });
         }
@@ -380,7 +380,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     }[] = [];
 
     const serviceInfo = AppSettings.configuration.api.services.find(
-      (a) => a.provider === asrName
+      (a) => a.provider === asrName,
     );
     if (serviceInfo && audioInfo && audioInfo instanceof AudioInfo) {
       if (serviceInfo.maxSignalDuration) {
@@ -475,14 +475,14 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.onASRLangChanged(
       $event.selectedASRLanguage,
       $event.selectedServiceProvider,
-      $event.selectedMausLanguage
+      $event.selectedMausLanguage,
     );
   }
 
   onASRLangChanged(
     lang?: string,
     provider?: ServiceProvider,
-    mausLang?: string
+    mausLang?: string,
   ) {
     this.taskService.selectedASRLanguage = lang;
     this.taskService.selectedProvider = provider;

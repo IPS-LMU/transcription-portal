@@ -11,6 +11,7 @@ import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgCircleProgressModule } from 'ng-circle-progress';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
 import { AppComponent } from './app/app.component';
 import { TaskService } from './app/obj/tasks/task.service';
@@ -23,7 +24,6 @@ import { OHModalService } from './app/shared/ohmodal.service';
 import { SettingsService } from './app/shared/settings.service';
 import { StorageService } from './app/storage.service';
 import { environment } from './environments/environment';
-import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 if (environment.production) {
   enableProdMode();
@@ -44,7 +44,7 @@ bootstrapApplication(AppComponent, {
         animationDuration: 300,
       }),
       FormsModule,
-      ReactiveFormsModule
+      ReactiveFormsModule,
     ),
     TaskService,
     NotificationService,
@@ -58,6 +58,6 @@ bootstrapApplication(AppComponent, {
     NgbActiveModal,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
-    provideCharts(withDefaultRegisterables())
+    provideCharts(withDefaultRegisterables()),
   ],
 }).catch((err) => console.error(err));

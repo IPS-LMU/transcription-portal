@@ -63,7 +63,7 @@ export class ResultsTableComponent implements OnChanges {
   constructor(
     private sanitizer: DomSanitizer,
     protected cd: ChangeDetectorRef,
-    private downloadService: DownloadService
+    private downloadService: DownloadService,
   ) {}
 
   public get converters() {
@@ -121,7 +121,7 @@ export class ResultsTableComponent implements OnChanges {
     };
     this.convertedArray.forEach((v) => {
       revokeURLIfNeeded(
-        (v.input?.url as any)?.changingThisBreaksApplicationSecurity
+        (v.input?.url as any)?.changingThisBreaksApplicationSecurity,
       );
       v.conversions.forEach((s) => {
         revokeURLIfNeeded(s.result.url);
@@ -143,8 +143,8 @@ export class ResultsTableComponent implements OnChanges {
             this.downloadService.getConversionFiles(
               this.operation,
               this.operation.lastResult,
-              this.converters
-            )
+              this.converters,
+            ),
           );
         }
 
@@ -159,8 +159,8 @@ export class ResultsTableComponent implements OnChanges {
                 const from: ConverterData | undefined = AppInfo.converters.find(
                   (a) =>
                     a.obj.extensions.findIndex(
-                      (b) => b.indexOf(result.extension) > -1
-                    ) > -1
+                      (b) => b.indexOf(result.extension) > -1,
+                    ) > -1,
                 );
 
                 if (from) {
@@ -182,7 +182,7 @@ export class ResultsTableComponent implements OnChanges {
                     result.type,
                     result.size,
                     result.file,
-                    result.createdAt
+                    result.createdAt,
                   );
                   fileInfo.url = result.file
                     ? URL.createObjectURL(result.file)
@@ -194,7 +194,7 @@ export class ResultsTableComponent implements OnChanges {
                   const resultObj = {
                     url: result.file
                       ? this.sanitizer.bypassSecurityTrustUrl(
-                          URL.createObjectURL(result.file)
+                          URL.createObjectURL(result.file),
                         )
                       : '',
                     info: fileInfo,
@@ -223,7 +223,7 @@ export class ResultsTableComponent implements OnChanges {
                   this.convertedArray.sort(this.sortAlgorithm);
 
                   const convertersWithoutFrom = this.converters.filter(
-                    (a) => a.obj.name !== importConverter.name
+                    (a) => a.obj.name !== importConverter.name,
                   );
 
                   for (let k = 0; k < conversions.length; k++) {
@@ -251,7 +251,7 @@ export class ResultsTableComponent implements OnChanges {
                         ? URL.createObjectURL(conversion.file)
                         : '';
                       res.result.url = this.sanitizer.bypassSecurityTrustUrl(
-                        url
+                        url,
                       ) as any;
                       res.state = 'FINISHED';
                       convElem.conversions.push(res);

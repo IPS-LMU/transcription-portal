@@ -147,7 +147,7 @@ export class CompatibilityService {
       } else {
         if (AppSettings.configuration.allowed_browsers.length > 0) {
           const valid = this.isValidBrowser(
-            AppSettings.configuration.allowed_browsers
+            AppSettings.configuration.allowed_browsers,
           );
           resolve(valid);
         } else {

@@ -20,7 +20,7 @@ export class AppSettings {
 
   public static getLanguageByCode(
     code: string,
-    asr: string
+    asr: string,
   ): ProviderLanguage | undefined {
     if (!asr) {
       return undefined;

@@ -7,19 +7,40 @@
 }
 
 .arrow-start {
-  background-image: url("../../../assets/arrow-blue-rect.png"), url("../../../assets/arrow-blue-middle.png"), url("../../../assets/arrow-blue-right.png");
-  background-position: left bottom, left bottom, right bottom;
-  background-repeat: no-repeat, repeat no-repeat, no-repeat;
+  background-image:
+    url('../../../assets/arrow-blue-rect.png'),
+    url('../../../assets/arrow-blue-middle.png'),
+    url('../../../assets/arrow-blue-right.png');
+  background-position:
+    left bottom,
+    left bottom,
+    right bottom;
+  background-repeat:
+    no-repeat,
+    repeat no-repeat,
+    no-repeat;
 }
 
 .arrow-middle {
-  background-image: url("../../../assets/arrow-blue-middle.png"), url("../../../assets/arrow-blue-right.png");
-  background-position: left bottom, right bottom;
-  background-repeat: repeat no-repeat, no-repeat;
+  background-image:
+    url('../../../assets/arrow-blue-middle.png'),
+    url('../../../assets/arrow-blue-right.png');
+  background-position:
+    left bottom,
+    right bottom;
+  background-repeat:
+    repeat no-repeat,
+    no-repeat;
 }
 
 .arrow-end {
-  background-image: url("../../../assets/arrow-blue-middle.png"), url("../../../assets/arrow-blue-circle.png");
-  background-position: left bottom, right bottom;
-  background-repeat: repeat no-repeat, no-repeat;
+  background-image:
+    url('../../../assets/arrow-blue-middle.png'),
+    url('../../../assets/arrow-blue-circle.png');
+  background-position:
+    left bottom,
+    right bottom;
+  background-repeat:
+    repeat no-repeat,
+    no-repeat;
 }

@@ -170,7 +170,7 @@ export class Preprocessor {
               this.removeFromQueue(newItem.id);
             });
         },
-      })
+      }),
     );
   };
 }

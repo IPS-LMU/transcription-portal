@@ -1,116 +1,131 @@
-import {BrowserInfo} from './BrowserInfo';
-import {hasProperty} from '@octra/utilities';
+import { hasProperty } from '@octra/utilities';
+import { BrowserInfo } from './BrowserInfo';
 
 export class ShortcutManager {
   private keyMap = {
     mac: {
       select: 'CMD',
       'select all': 'CMD + A',
-      remove: 'CMD + BACKSPACE'
+      remove: 'CMD + BACKSPACE',
     },
     pc: {
       select: 'CTRL',
       'select all': 'CTRL + A',
-      remove: 'CTRL + BACKSPACE'
-    }
+      remove: 'CTRL + BACKSPACE',
+    },
   };
 
   private table: any = [
     {
       name: 'CMD',
-      keyCode: 91
+      keyCode: 91,
     },
     {
       name: 'CMD',
-      keyCode: 93
+      keyCode: 93,
     },
     {
       name: 'CMD',
-      keyCode: 224
+      keyCode: 224,
     },
     {
       name: 'ALT',
-      keyCode: 18
-    }, {
+      keyCode: 18,
+    },
+    {
       name: 'META',
-      keyCode: -1
-    }, {
+      keyCode: -1,
+    },
+    {
       name: 'CTRL',
-      keyCode: 17
-    }, {
+      keyCode: 17,
+    },
+    {
       name: 'TAB',
-      keyCode: 9
+      keyCode: 9,
     },
     {
       name: 'BACKSPACE',
-      keyCode: 8
-    }, {
+      keyCode: 8,
+    },
+    {
       name: 'ENTER',
-      keyCode: 13
-    }, {
+      keyCode: 13,
+    },
+    {
       name: 'ESC',
-      keyCode: 27
-    }, {
+      keyCode: 27,
+    },
+    {
       name: 'SPACE',
-      keyCode: 32
-    }, {
+      keyCode: 32,
+    },
+    {
       name: 'SHIFT',
-      keyCode: 16
-    }, {
+      keyCode: 16,
+    },
+    {
       name: 'ARROWLEFT',
-      keyCode: 37
-    }, {
+      keyCode: 37,
+    },
+    {
       name: 'ARROWUP',
-      keyCode: 38
-    }, {
+      keyCode: 38,
+    },
+    {
       name: 'ARROWRIGHT',
-      keyCode: 39
-    }, {
+      keyCode: 39,
+    },
+    {
       name: 'ARROWDOWN',
-      keyCode: 40
-    }
+      keyCode: 40,
+    },
   ];
 
   public shortcutsEnabled = true;
 
   private _pressedKey = {
     code: -1,
-    name: ''
+    name: '',
   };
 
   get pressedKey(): { code: number; name: string } {
     return this._pressedKey;
   }
 
-  public checkKeyEvent(event: KeyboardEvent): Promise<{ command: string, platform: string } | undefined> {
-    return new Promise<{ command: string, platform: string } | undefined>((resolve) => {
-      if (this.shortcutsEnabled) {
-        if (event.type === 'keydown') {
-          const shortcut = this.getShorcutCombination(event);
+  public checkKeyEvent(
+    event: KeyboardEvent,
+  ): Promise<{ command: string; platform: string } | undefined> {
+    return new Promise<{ command: string; platform: string } | undefined>(
+      (resolve) => {
+        if (this.shortcutsEnabled) {
+          if (event.type === 'keydown') {
+            const shortcut = this.getShorcutCombination(event);
 
-          if (this._pressedKey.code < 0) {
-            this._pressedKey.code = event.keyCode;
-            this._pressedKey.name = this.getNameByCode(event.keyCode);
-          }
+            if (this._pressedKey.code < 0) {
+              this._pressedKey.code = event.keyCode;
+              this._pressedKey.name = this.getNameByCode(event.keyCode);
+            }
 
-          const command = this.getCommand(shortcut, BrowserInfo.platform);
-          if (!(command === null || command === undefined)) {
-            event.preventDefault();
-            resolve({
-              platform: BrowserInfo.platform,
-              command
-            });
+            const command = this.getCommand(shortcut, BrowserInfo.platform);
+            if (!(command === null || command === undefined)) {
+              event.preventDefault();
+              resolve({
+                platform: BrowserInfo.platform,
+                command,
+              });
+            }
+          } else if (event.type === 'keyup') {
+            if (event.keyCode === this._pressedKey.code) {
+              this._pressedKey.code = -1;
+              this._pressedKey.name = '';
+            }
           }
-        } else if (event.type === 'keyup') {
-          if (event.keyCode === this._pressedKey.code) {
-            this._pressedKey.code = -1;
-            this._pressedKey.name = '';
-          }
+        } else {
+          resolve(undefined);
         }
-      } else {
-        resolve(undefined);
-      }
-    });
+      },
+    );
   }
 
   private getCommand(shorcut: string, platform: string) {
@@ -141,11 +156,13 @@ export class ShortcutManager {
   }
 
   private getKeyCode(event: KeyboardEvent): string | undefined {
-    let key = (event.key || event.keyCode || event.which);
+    let key = event.key || event.keyCode || event.which;
     if (!key) {
       return undefined;
     }
-    return ((typeof key === "string") ? key : String.fromCharCode(key)).toUpperCase();
+    return (
+      typeof key === 'string' ? key : String.fromCharCode(key)
+    ).toUpperCase();
   }
 
   private getShorcutCombination(event: KeyboardEvent) {

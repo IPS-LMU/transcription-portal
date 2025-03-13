@@ -1,30 +1,40 @@
 <div class="modal-header">
   <h4 class="modal-title pull-left">Queue</h4>
-  <button (click)="onSubmit()" class="btn btn-outline-primary" style="margin-left:20px;" type="button">
+  <button
+    (click)="onSubmit()"
+    class="btn btn-outline-primary"
+    style="margin-left: 20px"
+    type="button"
+  >
     OK
   </button>
-  <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
+  <button
+    type="button"
+    class="btn-close pull-right"
+    aria-label="Close"
+    (click)="activeModal.close('Cross click')"
+  ></button>
 </div>
 <div class="modal-body d-flex flex-column h-100">
-
   <div>
-    <p style="font-size: 0.9em;text-align: justify;margin-bottom:0;">
-      The following files are going to be processed one after the other. Please check if all options are
-      set as
-      you wish. While you are selecting the language you can click on the logos of the service providers
-      for
-      further information like data storage policy and terms and
-      conditions.
+    <p style="font-size: 0.9em; text-align: justify; margin-bottom: 0">
+      The following files are going to be processed one after the other. Please
+      check if all options are set as you wish. While you are selecting the
+      language you can click on the logos of the service providers for further
+      information like data storage policy and terms and conditions.
     </p>
-    <p style="font-size: 0.9em;text-align: justify;margin-top:5px;">
-      When you click "OK" you agree with the terms and conditions of the selected (third-party) services
-      and the
-      files are marked for further processing.
+    <p style="font-size: 0.9em; text-align: justify; margin-top: 5px">
+      When you click "OK" you agree with the terms and conditions of the
+      selected (third-party) services and the files are marked for further
+      processing.
     </p>
     @if (orangeCount > 0) {
-      <p class="alert alert-warning" style="text-align: center; font-size:0.9em;">
-        Please add the files with file names in orange again. Otherwise these files will be
-        skipped.
+      <p
+        class="alert alert-warning"
+        style="text-align: center; font-size: 0.9em"
+      >
+        Please add the files with file names in orange again. Otherwise these
+        files will be skipped.
       </p>
     }
 
@@ -32,14 +42,14 @@
       <div class="col-lg-6">
         <octra-asr-options
           [options]="{
-       selectedASRLanguage: this.taskService.selectedASRLanguage!,
-       selectedMausLanguage: this.taskService.selectedMausLanguage!,
-       selectedServiceProvider: this.taskService.selectedProvider!
-      }"
+            selectedASRLanguage: this.taskService.selectedASRLanguage!,
+            selectedMausLanguage: this.taskService.selectedMausLanguage!,
+            selectedServiceProvider: this.taskService.selectedProvider!,
+          }"
           (optionsChange)="onASROptionsChange($event)"
           [languageSettings]="{
-        services: AppSettings.configuration.api.services
-      }"
+            services: AppSettings.configuration.api.services,
+          }"
           [mausLanguages]="languages.maus"
           [asrLanguages]="languages.asr"
           [showAccessCode]="false"
@@ -48,82 +58,108 @@
     </div>
 
     @if (isOneAudiofileInvalid()) {
-      <div class="alert alert-danger" style="font-size: 0.9em;">
+      <div class="alert alert-danger" style="font-size: 0.9em">
         One or more audio files do not fit the ASR provider's requirements:
         @if (this.selectedASRInfo !== undefined) {
           <ul>
             @if (this.selectedASRInfo.maxSignalSize) {
-              <li>Maximum size of audio
-                file: {{this.selectedASRInfo.maxSignalSize}} MB
+              <li>
+                Maximum size of audio file:
+                {{ this.selectedASRInfo.maxSignalSize }} MB
               </li>
             }
             @if (this.selectedASRInfo.maxSignalDuration) {
-              <li>Maximum audio
-                duration: {{this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']}} (H:m:s)
+              <li>
+                Maximum audio duration:
+                {{
+                  this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']
+                }}
+                (H:m:s)
               </li>
             }
           </ul>
         }
         <p>
-          Incompatible audio files are marked with a red cross on the left. These audio files are not going to be
-          processed.
+          Incompatible audio files are marked with a red cross on the left.
+          These audio files are not going to be processed.
         </p>
       </div>
     }
-    @if (selectedASRInfo !== undefined &&
-    isASRSelected() && selectedASRInfo.knownIssues !== undefined) {
-      <div class="alert alert-info" style="font-size: 0.9em;">
-        <b>Known Issues for {{selectedASRInfo.provider}} ASR:</b> {{selectedASRInfo.knownIssues}}
+    @if (
+      selectedASRInfo !== undefined &&
+      isASRSelected() &&
+      selectedASRInfo.knownIssues !== undefined
+    ) {
+      <div class="alert alert-info" style="font-size: 0.9em">
+        <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
+        {{ selectedASRInfo.knownIssues }}
       </div>
     }
 
     <table class="table table-responsive-md table-striped" id="queue">
       <thead>
-      <tr>
-        <th>Valid?</th>
-        <th class="text-start">File</th>
-        <th>Language</th>
-        @for (operation of operations; track operation; let i = $index) {
-          <th>
-            <div>
-              @if (operation.title === '') {
-                <span style="display:block;">
-                              <ng-container>
-                                {{operation.name}}
-                              </ng-container>
-                            </span>
-              } @else {
-                <div [innerHTML]="operation.title"></div>
-              }
-            </div>
-          </th>
-        }
-      </tr>
-      <tr>
-        <th class="compatible-col"></th>
-        <th></th>
-        <th></th>
-        <th></th>
-        @for (operation of operations; track operation; let i = $index) {
-          @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+        <tr>
+          <th>Valid?</th>
+          <th class="text-start">File</th>
+          <th>Language</th>
+          @for (operation of operations; track operation; let i = $index) {
             <th>
-              <input (click)="deactivateOperation(operation, i)"
-                     [checked]="operation.enabled"
-                     class="header-checkbox" type="checkbox"/>
+              <div>
+                @if (operation.title === '') {
+                  <span style="display: block">
+                    <ng-container>
+                      {{ operation.name }}
+                    </ng-container>
+                  </span>
+                } @else {
+                  <div [innerHTML]="operation.title"></div>
+                }
+              </div>
             </th>
           }
-          @if (operation.name === 'MAUS') {
-            <th colspan="2" style="position: relative">
-              <img src="assets/directory.png" style="height:25px;left:0;position:absolute"/>
-              <input (click)="deactivateOperation(operation, i)"
-                     [checked]="operation.enabled"
-                     class="header-checkbox" type="checkbox"/>
-              <img src="assets/directory.png"
-                   style="height:25px;-webkit-transform: scaleX(-1); transform: scaleX(-1);right:0;position:absolute"/>
-            </th>
+        </tr>
+        <tr>
+          <th class="compatible-col"></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          @for (operation of operations; track operation; let i = $index) {
+            @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+              <th>
+                <input
+                  (click)="deactivateOperation(operation, i)"
+                  [checked]="operation.enabled"
+                  class="header-checkbox"
+                  type="checkbox"
+                />
+              </th>
+            }
+            @if (operation.name === 'MAUS') {
+              <th colspan="2" style="position: relative">
+                <img
+                  src="assets/directory.png"
+                  style="height: 25px; left: 0; position: absolute"
+                />
+                <input
+                  (click)="deactivateOperation(operation, i)"
+                  [checked]="operation.enabled"
+                  class="header-checkbox"
+                  type="checkbox"
+                />
+                <img
+                  src="assets/directory.png"
+                  style="
+                    height: 25px;
+                    -webkit-transform: scaleX(-1);
+                    transform: scaleX(-1);
+                    right: 0;
+                    position: absolute;
+                  "
+                />
+              </th>
+            }
           }
-        }
-      </tr>
+        </tr>
       </thead>
       <tbody>
         @for (task of tasks; track task) {
@@ -135,57 +171,92 @@
                     <tbody>
                       @for (check of getChecksByID(task.id); track check) {
                         <tr>
-                          <td><i class="bi" [ngClass]="{
-                      'bi-check-lg': check.isValid,
-                      'bi-x': !check.isValid
-                      }" [ngStyle]="{
-                      'color': (check.isValid) ? 'green' : 'red'
-                      }"></i></td>
-                          <td style="text-align: left">{{check.name}}:</td>
-                          <td style="text-align: left">{{check.value}}</td>
+                          <td>
+                            <i
+                              class="bi"
+                              [ngClass]="{
+                                'bi-check-lg': check.isValid,
+                                'bi-x': !check.isValid,
+                              }"
+                              [ngStyle]="{
+                                color: check.isValid ? 'green' : 'red',
+                              }"
+                            ></i>
+                          </td>
+                          <td style="text-align: left">{{ check.name }}:</td>
+                          <td style="text-align: left">{{ check.value }}</td>
                         </tr>
                       }
                     </tbody>
                   </table>
                 </ng-template>
                 <span
-                  #popoverResult="ngbPopover" (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                  #popoverResult="ngbPopover"
+                  (mouseenter)="
+                    onValidationResultMouseEnter(popoverResult, task.id)
+                  "
                   (mouseleave)="popoverResult.close()"
                   triggers=""
                   [ngbPopover]="validationResult"
                   [placement]="'right'"
                 >
-                <i class="bi" [ngClass]="{
-                'bi-check-lg': !isSomethingInvalid(task.id),
-                'fbi-x': isSomethingInvalid(task.id)
-                }" [ngStyle]="{
-                'color': isSomethingInvalid(task.id) ? 'red' : 'green'
-                }"></i>
-                          </span>
+                  <i
+                    class="bi"
+                    [ngClass]="{
+                      'bi-check-lg': !isSomethingInvalid(task.id),
+                      'fbi-x': isSomethingInvalid(task.id),
+                    }"
+                    [ngStyle]="{
+                      color: isSomethingInvalid(task.id) ? 'red' : 'green',
+                    }"
+                  ></i>
+                </span>
               </td>
               <td class="text-start">
-                        <span [ngClass]="{
-                                'green': ((task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                                         (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online)),
-                                'yellow': ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') && task.operations[0].state !== 'FINISHED',
-                                'red': isSomethingInvalid(task.id)
-                                }" title="{{task.files[0].attributes.originalFileName}}">
-                            {{task.files[0].attributes.originalFileName.replace('_annot.json', '.wav')}}
-                          </span>
-                @if ( task.files.length > 1 || task.files[0].extension !== '.wav') {
-                  <span [ngClass]="{
-                                'bg-info': getBadge(task).type === 'info',
-                                'bg-warning': getBadge(task).type === 'warning'
-                            }" class="badge">
-                              {{getBadge(task).label}}
-                            </span>
+                <span
+                  [ngClass]="{
+                    green:
+                      (task.files[0].extension === '.wav' &&
+                        task.files[0].file !== undefined) ||
+                      (task.operations[0].results.length > 0 &&
+                        task.operations[0].lastResult?.online),
+                    yellow:
+                      ((task.files[0].extension === '.wav' &&
+                        task.files[0].file === undefined) ||
+                        task.files[0].extension !== '.wav') &&
+                      task.operations[0].state !== 'FINISHED',
+                    red: isSomethingInvalid(task.id),
+                  }"
+                  title="{{ task.files[0].attributes.originalFileName }}"
+                >
+                  {{
+                    task.files[0].attributes.originalFileName.replace(
+                      '_annot.json',
+                      '.wav'
+                    )
+                  }}
+                </span>
+                @if (
+                  task.files.length > 1 || task.files[0].extension !== '.wav'
+                ) {
+                  <span
+                    [ngClass]="{
+                      'bg-info': getBadge(task).type === 'info',
+                      'bg-warning': getBadge(task).type === 'warning',
+                    }"
+                    class="badge"
+                  >
+                    {{ getBadge(task).label }}
+                  </span>
                 }
               </td>
-              <td>{{task.asrLanguage}}</td>
+              <td>{{ task.asrLanguage }}</td>
               @for (operation of task.operations; track operation) {
                 <td>
                   @if (operation.enabled) {
-                    <span><i class="bi bi-check-lg" style="color:black;"></i></span>
+                    <span
+                      ><i class="bi bi-check-lg" style="color: black"></i
+                    ></span>
                   }
                   @if (!operation.enabled) {
                     <span>skip</span>
@@ -200,8 +271,23 @@
   </div>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">Cancel</button>
-  <button (click)="onSubmit()" [disabled]="!this.taskService.selectedASRLanguage || !this.taskService.selectedMausLanguage || !this.taskService.selectedProvider" class="btn btn-outline-primary" type="button">
+  <button
+    type="button"
+    class="btn btn-outline-dark"
+    (click)="activeModal.close()"
+  >
+    Cancel
+  </button>
+  <button
+    (click)="onSubmit()"
+    [disabled]="
+      !this.taskService.selectedASRLanguage ||
+      !this.taskService.selectedMausLanguage ||
+      !this.taskService.selectedProvider
+    "
+    class="btn btn-outline-primary"
+    type="button"
+  >
     OK
   </button>
 </div>

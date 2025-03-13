@@ -7,8 +7,8 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { hasProperty } from '@octra/utilities';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { hasProperty } from '@octra/utilities';
 
 @Component({
   selector: 'tportal-popover',

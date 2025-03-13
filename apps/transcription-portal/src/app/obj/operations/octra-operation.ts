@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 import { stringifyQueryParams } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
+import { ProviderLanguage } from '../oh-config';
 import { Task, TaskState } from '../tasks';
 import { Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
-import { ProviderLanguage } from '../oh-config';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
 
 export class OCTRAOperation extends ToolOperation {
   public constructor(
@@ -18,7 +18,7 @@ export class OCTRAOperation extends ToolOperation {
     shortTitle?: string,
     task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
     this._description =
@@ -37,7 +37,7 @@ export class OCTRAOperation extends ToolOperation {
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => {
     this.updateProtocol('');
     this.operations = operations;
@@ -110,14 +110,14 @@ export class OCTRAOperation extends ToolOperation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state
+      this.state,
     );
   }
 
   public override fromAny(
     operationObj: any,
     commands: string[],
-    task: Task
+    task: Task,
   ): OCTRAOperation {
     const result = new OCTRAOperation(
       operationObj.name,
@@ -126,7 +126,7 @@ export class OCTRAOperation extends ToolOperation {
       this.shortTitle,
       task,
       operationObj.state,
-      operationObj.id
+      operationObj.id,
     );
     for (const operationResult of operationObj.results) {
       const resultClass = FileInfo.fromAny(operationResult);
@@ -159,7 +159,7 @@ export class OCTRAOperation extends ToolOperation {
       this.task
     ) {
       const audio_url = encodeURIComponent(
-        (this.operations[0] as any)?.wavFile?.url
+        (this.operations[0] as any)?.wavFile?.url,
       ) as string;
       const audio_name = (this.operations[0] as UploadOperation)?.wavFile
         ?.fullname;
@@ -168,10 +168,10 @@ export class OCTRAOperation extends ToolOperation {
 
       const langObj = AppSettings.getLanguageByCode(
         this.task.asrLanguage!,
-        this.task.asrProvider!
+        this.task.asrProvider!,
       );
       const provider = AppSettings.getServiceInformation(
-        this.task.asrProvider!
+        this.task.asrProvider!,
       );
 
       if (langObj && provider) {
@@ -206,7 +206,7 @@ export class OCTRAOperation extends ToolOperation {
         })}`;
       } else {
         console.log(
-          `langObj or provider not found in octra operation lang:${this.task.asrLanguage} and ${this.task.asrProvider}`
+          `langObj or provider not found in octra operation lang:${this.task.asrLanguage} and ${this.task.asrProvider}`,
         );
       }
     }

@@ -17,7 +17,7 @@ export class OHModalService implements OnDestroy {
   constructor(
     private ngbModalService: NgbModal,
     private bugreportService: BugReportService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
   ) {}
 
   public openFeedbackModal() {
@@ -45,7 +45,7 @@ export class OHModalService implements OnDestroy {
         },
       },
       null,
-      2
+      2,
     );
 
     const ref = openModal<BugreportModalComponent>(
@@ -59,7 +59,7 @@ export class OHModalService implements OnDestroy {
           name: '',
           email: '',
         },
-      } as any
+      } as any,
     );
     this.settingsService.shortCutsEnabled = false;
 
@@ -82,11 +82,11 @@ export class OHModalService implements OnDestroy {
               email,
               message,
               sendProtocol,
-              screenshots
-            ) as any
+              screenshots,
+            ) as any,
           );
         },
-      })
+      }),
     );
 
     return ref.result

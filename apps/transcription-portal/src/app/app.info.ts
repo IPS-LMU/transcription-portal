@@ -28,9 +28,7 @@ export class AppInfo {
     return this._audioFormats;
   }
 
-  private static _audioFormats: AudioFormat[] = [
-    new WavFormat()
-  ];
+  private static _audioFormats: AudioFormat[] = [new WavFormat()];
 
   private static _converters: ConverterData[] = [
     {

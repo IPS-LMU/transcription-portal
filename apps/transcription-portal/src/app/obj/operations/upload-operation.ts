@@ -17,7 +17,7 @@ export class UploadOperation extends Operation {
     shortTitle?: string,
     task?: Task,
     state?: TaskState,
-    id?: number
+    id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
     this._description =
@@ -38,7 +38,7 @@ export class UploadOperation extends Operation {
 
   public static upload(
     files: FileInfo[],
-    url: string
+    url: string,
   ): Subject<{
     type: 'progress' | 'loadend';
     progress?: number;
@@ -73,7 +73,7 @@ export class UploadOperation extends Operation {
           progress,
         });
       },
-      false
+      false,
     );
 
     xhr.onerror = (e) => {
@@ -117,7 +117,7 @@ export class UploadOperation extends Operation {
     files: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string
+    accessCode: string,
   ) => {
     this._results = [];
     this.updateProtocol('');
@@ -152,7 +152,7 @@ export class UploadOperation extends Operation {
                 files[i]!.url!,
                 type,
                 files[i]!.fullname,
-                Date.now()
+                Date.now(),
               );
               info.attributes = files[i].attributes;
               this.results.push(info);
@@ -160,7 +160,7 @@ export class UploadOperation extends Operation {
             this.changeState(TaskState.FINISHED);
           } else {
             this.updateProtocol(
-              'Number of returned URLs do not match number of files.'
+              'Number of returned URLs do not match number of files.',
             );
             this.changeState(TaskState.ERROR);
           }
@@ -171,7 +171,7 @@ export class UploadOperation extends Operation {
         // add messages to protocol
         this.updateProtocol(e.message);
         this.changeState(TaskState.ERROR);
-      }
+      },
     );
   };
 
@@ -267,14 +267,14 @@ export class UploadOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state
+      this.state,
     );
   }
 
   public fromAny(
     operationObj: any,
     commands: string[],
-    task: Task
+    task: Task,
   ): UploadOperation {
     const result = new UploadOperation(
       operationObj.name,
@@ -283,13 +283,13 @@ export class UploadOperation extends Operation {
       this.shortTitle,
       task,
       operationObj.state,
-      operationObj.id
+      operationObj.id,
     );
     for (const resultObj of operationObj.results) {
       const resultClass = new FileInfo(
         resultObj.fullname,
         resultObj.type,
-        resultObj.size
+        resultObj.size,
       );
       resultClass.attributes = resultObj.attributes;
       resultClass.url = resultObj.url;

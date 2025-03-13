@@ -48,7 +48,7 @@ export class Task {
     files: FileInfo[],
     operations: Operation[],
     directory?: TaskDirectory,
-    id?: number
+    id?: number,
   ) {
     if (id === null || id === undefined) {
       this._id = ++TaskEntry.counter;
@@ -146,7 +146,7 @@ export class Task {
   public static fromAny(
     taskObj: any,
     commands: OHCommand[],
-    defaultOperations: Operation[]
+    defaultOperations: Operation[],
   ): Task {
     const operations: Operation[] = [];
 
@@ -175,7 +175,7 @@ export class Task {
           file.sampleRate,
           file.duration,
           file.channels,
-          file.bitsPerSecond
+          file.bitsPerSecond,
         );
         info.attributes = file.attributes;
         info.hash = file.hash;
@@ -231,7 +231,7 @@ export class Task {
     asrService: ServiceProvider,
     languageObj: ProviderLanguage,
     httpclient: HttpClient,
-    accessCodes: IAccessCode[]
+    accessCodes: IAccessCode[],
   ) {
     if (this.state !== TaskState.FINISHED) {
       this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
@@ -242,7 +242,7 @@ export class Task {
     asrService: ServiceProvider,
     languageObj: ProviderLanguage,
     http: HttpClient,
-    accessCodes: IAccessCode[]
+    accessCodes: IAccessCode[],
   ) {
     this.changeState(TaskState.PROCESSING);
     this.listenToOperationChanges();
@@ -253,7 +253,7 @@ export class Task {
     asrService: ServiceProvider,
     languageObject: ProviderLanguage,
     httpclient: HttpClient,
-    accessCodes: IAccessCode[]
+    accessCodes: IAccessCode[],
   ) {
     for (const operation of this.operations) {
       if (operation.state === TaskState.ERROR) {
@@ -433,7 +433,7 @@ export class Task {
     asrService: ServiceProvider,
     languageObj: ProviderLanguage,
     httpclient: HttpClient,
-    accessCodes: IAccessCode[]
+    accessCodes: IAccessCode[],
   ) {
     if (!this.stopRequested) {
       let nextoperation = -1;
@@ -477,7 +477,7 @@ export class Task {
                   asrService,
                   languageObj,
                   httpclient,
-                  accessCodes
+                  accessCodes,
                 );
               } else {
                 if (event.newState === TaskState.READY) {
@@ -487,7 +487,7 @@ export class Task {
             },
             (error) => {
               console.error(error);
-            }
+            },
           );
 
           let files;
@@ -506,7 +506,7 @@ export class Task {
             files,
             this.operations,
             httpclient,
-            ''
+            '',
           );
         }
       }
@@ -587,7 +587,7 @@ export class TaskDirectory {
   public static fromAny(
     dirObj: any,
     commands: OHCommand[],
-    defaultOperations: Operation[]
+    defaultOperations: Operation[],
   ): TaskDirectory {
     const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
 
@@ -600,7 +600,7 @@ export class TaskDirectory {
 
   private static traverseFileTree(
     item: any,
-    path: string
+    path: string,
   ): Promise<(Task | TaskDirectory)[]> {
     // console.log(`search path: ${path}`);
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {

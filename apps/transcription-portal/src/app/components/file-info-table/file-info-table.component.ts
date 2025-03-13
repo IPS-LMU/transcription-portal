@@ -1,8 +1,8 @@
+import { NgClass } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { AudioInfo } from '@octra/web-media';
-import { NgClass } from '@angular/common';
-import { TimePipe } from '../../shared/time.pipe';
 import { FilesizePipe } from '../../shared/filesize.pipe';
+import { TimePipe } from '../../shared/time.pipe';
 
 @Component({
   selector: 'tportal-file-info-table',

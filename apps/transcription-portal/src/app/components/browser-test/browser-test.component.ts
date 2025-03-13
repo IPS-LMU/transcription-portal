@@ -1,9 +1,9 @@
+import { NgClass, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CompatibilityService } from '../../shared/compatibility.service';
 import { BrowserInfo } from '../../obj/BrowserInfo';
+import { CompatibilityService } from '../../shared/compatibility.service';
 import { OHModalService } from '../../shared/ohmodal.service';
-import { NgClass, NgStyle } from '@angular/common';
 
 @Component({
   selector: 'tportal-browser-test',
@@ -15,7 +15,7 @@ export class BrowserTestComponent implements OnInit {
   constructor(
     private router: Router,
     public compatibility: CompatibilityService,
-    public modalService: OHModalService
+    public modalService: OHModalService,
   ) {}
 
   public get browserName(): string {

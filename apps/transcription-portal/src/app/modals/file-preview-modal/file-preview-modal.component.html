@@ -8,17 +8,17 @@
   ></button>
 </div>
 <div class="modal-body">
-  @if(!selectedFile?.isMediaFile()) {
-  <ngx-codejar
-    [code]="fileContent"
-    [highlightMethod]="highlightMethod"
-    [readonly]="true"
-    [showLineNumbers]="true"
-  ></ngx-codejar>
-  } @else if(selectedFile){
-  <audio controls class="w-100">
-    <source [src]="selectedFile.url" />
-  </audio>
+  @if (!selectedFile?.isMediaFile()) {
+    <ngx-codejar
+      [code]="fileContent"
+      [highlightMethod]="highlightMethod"
+      [readonly]="true"
+      [showLineNumbers]="true"
+    ></ngx-codejar>
+  } @else if (selectedFile) {
+    <audio controls class="w-100">
+      <source [src]="selectedFile.url" />
+    </audio>
   }
 </div>
 <div

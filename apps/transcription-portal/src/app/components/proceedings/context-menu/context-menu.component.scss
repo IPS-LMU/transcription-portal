@@ -3,7 +3,9 @@
   width: 200px;
   border: 1px solid gray;
   position: absolute;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  box-shadow:
+    0 4px 8px 0 rgba(0, 0, 0, 0.2),
+    0 6px 20px 0 rgba(0, 0, 0, 0.19);
   text-align: center;
   padding: 5px;
   border-radius: 3%;
@@ -39,6 +41,6 @@ tr:first-of-type {
   width: 100%;
 }
 
-tbody tr:nth-of-type(odd){
+tbody tr:nth-of-type(odd) {
   background-color: initial;
 }

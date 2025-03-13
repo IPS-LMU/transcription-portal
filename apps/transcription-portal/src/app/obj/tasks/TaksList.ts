@@ -1,14 +1,13 @@
-import {Task, TaskDirectory, TaskState} from './task';
-import {Subject} from 'rxjs';
+import { Subject } from 'rxjs';
+import { Task, TaskDirectory, TaskState } from './task';
 
 export interface EntryChangeEvent {
   state: 'added' | 'removed' | 'changed';
   saveToDB: boolean;
-  entry: (Task | TaskDirectory);
+  entry: Task | TaskDirectory;
 }
 
 export class TaskList {
-
   public get length(): number {
     let result = 0;
 
@@ -30,20 +29,27 @@ export class TaskList {
     return this._entries;
   }
 
-  private _entryChanged: Subject<EntryChangeEvent> = new Subject<EntryChangeEvent>();
+  private _entryChanged: Subject<EntryChangeEvent> =
+    new Subject<EntryChangeEvent>();
 
   get entryChanged(): Subject<EntryChangeEvent> {
     return this._entryChanged;
   }
 
-  public addEntry(newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+  public addEntry(
+    newEntry: Task | TaskDirectory,
+    saveToDB: boolean = false,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if ((this.findEntryById(newEntry.id) === null || this.findEntryById(newEntry.id) === undefined)) {
+      if (
+        this.findEntryById(newEntry.id) === null ||
+        this.findEntryById(newEntry.id) === undefined
+      ) {
         this._entries.push(newEntry);
         this._entryChanged.next({
           state: 'added',
           saveToDB,
-          entry: newEntry
+          entry: newEntry,
         });
         resolve();
       } else {
@@ -52,16 +58,20 @@ export class TaskList {
     });
   }
 
-  public changeEntry(id: number, newEntry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+  public changeEntry(
+    id: number,
+    newEntry: Task | TaskDirectory,
+    saveToDB: boolean = false,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      const foundEntry = this._entries.findIndex(a => a.id === id);
+      const foundEntry = this._entries.findIndex((a) => a.id === id);
 
       if (foundEntry > -1) {
         this._entries[foundEntry] = newEntry;
         this._entryChanged.next({
           state: 'changed',
           saveToDB,
-          entry: newEntry
+          entry: newEntry,
         });
         resolve();
       } else {
@@ -134,7 +144,6 @@ export class TaskList {
       result++;
     }
 
-
     return result;
   }
 
@@ -179,24 +188,29 @@ export class TaskList {
     return result;
   }
 
-  public removeEntry(entry: (Task | TaskDirectory), saveToDB: boolean = false): Promise<void> {
+  public removeEntry(
+    entry: Task | TaskDirectory,
+    saveToDB: boolean = false,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const sendEvent = () => {
         this._entryChanged.next({
           state: 'removed',
           saveToDB,
-          entry
+          entry,
         });
       };
       if (!(entry === null || entry === undefined)) {
         if (entry instanceof Task) {
           if (!(entry.directory === null || entry.directory === undefined)) {
             entry.directory.removeTask(entry);
-            this.cleanup(entry.directory, saveToDB).then(() => {
-              resolve();
-            }).catch((error) => {
-              reject(error);
-            });
+            this.cleanup(entry.directory, saveToDB)
+              .then(() => {
+                resolve();
+              })
+              .catch((error) => {
+                reject(error);
+              });
           } else {
             const taskIndex = this.entries.findIndex((a) => {
               return a instanceof Task && (a as Task).id === entry.id;
@@ -213,7 +227,9 @@ export class TaskList {
           }
         } else {
           const taskIndex = this.entries.findIndex((a) => {
-            return a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id;
+            return (
+              a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id
+            );
           });
 
           if (taskIndex > -1) {
@@ -229,8 +245,14 @@ export class TaskList {
     });
   }
 
-  public cleanup(entry: (Task | TaskDirectory), saveToDB: boolean): Promise<void> {
-    if (!(entry === null || entry === undefined) && entry instanceof TaskDirectory) {
+  public cleanup(
+    entry: Task | TaskDirectory,
+    saveToDB: boolean,
+  ): Promise<void> {
+    if (
+      !(entry === null || entry === undefined) &&
+      entry instanceof TaskDirectory
+    ) {
       if (entry.entries.length === 0) {
         // remove dir
         return this.removeEntry(entry, saveToDB);
@@ -238,11 +260,13 @@ export class TaskList {
         // move entry task to upper level and remove dir
         const entryTask = entry.entries[0] as Task;
         entryTask.directory = undefined;
-        return this.removeEntry(entryTask, saveToDB).then(() => {
-          return this.removeEntry(entry, saveToDB);
-        }).then(() => {
-          return this.addEntry(entryTask, saveToDB);
-        });
+        return this.removeEntry(entryTask, saveToDB)
+          .then(() => {
+            return this.removeEntry(entry, saveToDB);
+          })
+          .then(() => {
+            return this.addEntry(entryTask, saveToDB);
+          });
       } else {
         return new Promise<void>((resolve) => {
           resolve();
