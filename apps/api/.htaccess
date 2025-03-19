@@ -8,6 +8,10 @@ deny from all
 <IfModule mod_rewrite.c>
   # Redirect to the public folder
   RewriteEngine On
+
+  # Excluded directories:
+  RewriteRule ^api/?(.*) %{REQUEST_URI} [L,R=301]
+
   # RewriteBase /
   RewriteRule ^$ public/ [L]
   RewriteRule (.*) public/$1 [L]

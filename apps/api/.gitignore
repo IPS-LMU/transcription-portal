@@ -5,3 +5,5 @@
 /logs/*
 !/logs/README.md
 .phpunit.result.cache
+/config.php
+/uploads

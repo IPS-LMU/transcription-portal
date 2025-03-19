@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+include("../config.php");
 
 use App\Application\Handlers\HttpErrorHandler;
 use App\Application\Handlers\ShutdownHandler;
@@ -33,10 +34,15 @@ $repositories($containerBuilder);
 
 // Build PHP-DI Container instance
 $container = $containerBuilder->build();
+$container->set('upload_directory', __DIR__ . '/../uploads');
 
 // Instantiate the app
 AppFactory::setContainer($container);
 $app = AppFactory::create();
+if (!empty(BASE_PATH) && BASE_PATH != "/") {
+  $app->setBasePath(BASE_PATH);
+}
+
 $callableResolver = $app->getCallableResolver();
 
 // Register middleware
