@@ -122,7 +122,7 @@ export class DownloadModalComponent
           operation.state === TaskState.FINISHED
         ) {
           const result: FileInfo | undefined = operation.lastResult;
-          if (result?.online && result.file) {
+          if (result?.file) {
             const originalName =
               result.attributes?.originalFileName ?? result.fullname;
 

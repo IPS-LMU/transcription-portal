@@ -850,6 +850,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       DownloadModalComponent.options,
     );
     ref.componentInstance.type = type;
+    ref.componentInstance.column = this.selectedOperation;
     ref.componentInstance.selectedTasks = selectedLines;
   }
 
