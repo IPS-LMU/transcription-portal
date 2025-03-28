@@ -22,7 +22,8 @@
           "apps/transcription-portal/src/favicon.ico",
           "apps/transcription-portal/src/assets",
           "apps/transcription-portal/src/contents",
-          "apps/transcription-portal/src/config"
+          "apps/transcription-portal/src/config",
+          "apps/transcription-portal/src/manifest.json"
         ],
         "styles": ["apps/transcription-portal/src/styles.scss"],
         "allowedCommonJsDependencies": ["x2js", "chart.js"],

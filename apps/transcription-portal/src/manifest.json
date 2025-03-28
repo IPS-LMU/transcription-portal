@@ -1,0 +1,28 @@
+{
+  "theme_color": "white",
+  "background_color": "white",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "assets/img/TPortal-Logo_only_512p.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "assets/img/TPortal-Logo_only_512p.png",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "any",
+  "display": "standalone",
+  "dir": "left",
+  "lang": "en-EN",
+  "name": "TranscriptionPortal",
+  "short_name": "tportal",
+  "start_url": "/",
+  "scope": "/",
+  "description": "OCTRA is a web-application for the orthographic transcription of audio files. ",
+  "id": "/"
+}
