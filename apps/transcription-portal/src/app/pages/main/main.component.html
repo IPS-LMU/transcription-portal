@@ -284,211 +284,250 @@
       </div>
     </div>
   </nav>
-  <!-- SUB-HEADER OVERVIEW -->
-  @if (!showtool) {
-    <div class="row proceedings-header" style="padding-top: 0">
-      <div class="col-4" style="text-align: left; padding-top: 5px">
-        <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-          <i class="bi bi-plus"></i
-          ><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
-        </button>
-        <!-- webkitdirectory directory multiple -->
-        <input
-          #fileinput
-          (change)="onFileChange($event)"
-          class="fileinput"
-          multiple
-          style="display: none"
-          type="file"
-          value="Select audio file"
-        />
-        <button
-          (click)="onVerifyButtonClick()"
-          [disabled]="taskService.statistics.queued < 1"
-          class="btn btn-primary"
-          style="margin-left: 10px"
-        >
-          <i class="bi bi-database-fill"></i>
-          <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
-          @if (taskService.statistics.queued > 0) {
-            ({{ taskService.statistics.queued }})
-          }
-        </button>
-      </div>
-      <div class="col-4">
-        <div id="overall-state">
-          {{ taskService.stateLabel }}
-        </div>
-      </div>
-      <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button
-          (click)="onStartClick()"
-          [disabled]="!taskService.newfiles"
-          class="btn btn-primary"
-        >
-          <i
+
+  <ul ngbNav #nav="ngbNav" [(activeId)]="activeMode" class="nav-tabs" style="margin-top: 60px;">
+    <li [ngbNavItem]="1">
+      <button ngbNavLink>Annotation</button>
+      <ng-template ngbNavContent>
+        <!-- SUB-HEADER OVERVIEW -->
+        @if (!showtool) {
+          <div class="row proceedings-header" style="padding-top: 0">
+            <div class="col-4" style="text-align: left; padding-top: 5px">
+              <button
+                (click)="onFilesAddButtonClicked()"
+                class="btn btn-primary"
+              >
+                <i class="bi bi-plus"></i
+                ><span class="d-none d-lg-inline d-xl-inline">
+                  1. ADD FILES</span
+                >
+              </button>
+              <!-- webkitdirectory directory multiple -->
+              <input
+                #fileinput
+                (change)="onFileChange($event)"
+                class="fileinput"
+                multiple
+                style="display: none"
+                type="file"
+                value="Select audio file"
+              />
+              <button
+                (click)="onVerifyButtonClick()"
+                [disabled]="taskService.statistics.queued < 1"
+                class="btn btn-primary"
+                style="margin-left: 10px"
+              >
+                <i class="bi bi-database-fill"></i>
+                <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
+                @if (taskService.statistics.queued > 0) {
+                  ({{ taskService.statistics.queued }})
+                }
+              </button>
+            </div>
+            <div class="col-4">
+              <div id="overall-state">
+                {{ taskService.stateLabel }}
+              </div>
+            </div>
+            <div class="col-4" style="text-align: right; padding-top: 5px">
+              <button
+                (click)="onStartClick()"
+                [disabled]="!taskService.newfiles"
+                class="btn btn-primary"
+              >
+                <i
+                  [ngClass]="{
+                    'bi-play-fill': !taskService.isProcessing,
+                    'bi-stop-fill': taskService.isProcessing,
+                  }"
+                  aria-hidden="true"
+                  class="bi"
+                ></i
+                ><span class="d-none d-lg-inline d-xl-inline">
+                  @if (!taskService.isProcessing) {
+                    3. START PROCESSING
+                  }
+                  @if (taskService.isProcessing) {
+                    3. STOP PROCESSING
+                  }
+                </span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- SUB-HEADER TOOL -->
+        @if (showtool) {
+          <div
+            class="row proceedings-header"
+            style="padding-top: 0; height: 50px"
+          >
+            <div class="col-2" style="text-align: left; padding-top: 5px">
+              <button
+                (click)="onBackButtonClicked()"
+                class="btn btn-primary"
+                style="width: 100%"
+              >
+                <i
+                  aria-hidden="true"
+                  class="bi bi-chevron-double-left"
+                  style="font-size: 20px"
+                ></i>
+              </button>
+            </div>
+            <div class="col-8" style="text-align: center">
+              <p style="margin: 10px 0 0">
+                @if (
+                  toolSelectedOperation!.previousOperation!.results.length > 0
+                ) {
+                  {{ toolSelectedOperation!.name }}:
+                  {{
+                    toolSelectedOperation!.previousOperation!.results[0]
+                      .attributes?.originalFileName
+                  }}
+                  , Language:
+                  @if (
+                    toolSelectedOperation !== undefined &&
+                    toolSelectedOperation.task !== undefined &&
+                    toolSelectedOperation.task.asrLanguage !== undefined
+                  ) {
+                    {{ toolSelectedOperation.task.asrLanguage }}
+                  }
+                  , Audio duration: {{ getTime() | time }}
+                }
+                @if (
+                  toolSelectedOperation &&
+                  toolSelectedOperation.previousOperation!.results.length < 1 &&
+                  toolSelectedOperation!.previousOperation!
+                    .previousOperation !== undefined
+                ) {
+                  @if (toolSelectedOperation) {
+                    {{ toolSelectedOperation.name }}
+                  }
+                  :
+                  {{
+                    toolSelectedOperation!.previousOperation!.previousOperation!
+                      .results[0]!.attributes?.originalFileName
+                  }}
+                  , Language:
+                  @if (toolSelectedOperation.task?.asrLanguage !== undefined) {
+                    {{ toolSelectedOperation.task!.asrLanguage }}
+                  }
+                  , Audio duration: {{ getTime() | time }}
+                }
+              </p>
+            </div>
+            <div class="col-2" style="text-align: right; padding-top: 5px">
+              <button
+                (click)="onBackButtonClicked()"
+                class="btn btn-primary"
+                style="width: 100%"
+              >
+                <i
+                  aria-hidden="true"
+                  class="bi bi-chevron-double-right"
+                  style="font-size: 20px"
+                ></i>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- WORKING AREA -->
+        <div id="main" style="position: relative">
+          <div
+            (blur)="onBlur($event)"
+            (mousedown)="dragBorder($event, 'left')"
+            (mouseenter)="dragBorder($event, 'left')"
+            (mouseleave)="dragBorder($event, 'left')"
+            (mousemove)="dragBorder($event, 'left')"
+            (mouseup)="dragBorder($event, 'left')"
+            [@expandLeft]="animationObject2"
             [ngClass]="{
-              'bi-play-fill': !taskService.isProcessing,
-              'bi-stop-fill': taskService.isProcessing,
+              dragborder: dragborder === 'active' || dragborder === 'dragging',
             }"
-            aria-hidden="true"
-            class="bi"
-          ></i
-          ><span class="d-none d-lg-inline d-xl-inline">
-            @if (!taskService.isProcessing) {
-              3. START PROCESSING
-            }
-            @if (taskService.isProcessing) {
-              3. STOP PROCESSING
-            }
-          </span>
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- SUB-HEADER TOOL -->
-  @if (showtool) {
-    <div class="row proceedings-header" style="padding-top: 0; height: 50px">
-      <div class="col-2" style="text-align: left; padding-top: 5px">
-        <button
-          (click)="onBackButtonClicked()"
-          class="btn btn-primary"
-          style="width: 100%"
-        >
-          <i
-            aria-hidden="true"
-            class="bi bi-chevron-double-left"
-            style="font-size: 20px"
-          ></i>
-        </button>
-      </div>
-      <div class="col-8" style="text-align: center">
-        <p style="margin: 10px 0 0">
-          @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
-            {{ toolSelectedOperation!.name }}:
-            {{
-              toolSelectedOperation!.previousOperation!.results[0].attributes
-                ?.originalFileName
-            }}
-            , Language:
+            [ngStyle]="{
+              width: newProceedingsWidth + '%',
+              'border-right':
+                sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
+            }"
+            style="float: right"
+          >
             @if (
-              toolSelectedOperation !== undefined &&
-              toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.asrLanguage !== undefined
+              settingsService.allLoaded && taskService.taskList !== undefined
             ) {
-              {{ toolSelectedOperation.task.asrLanguage }}
+              <tportal-proceedings
+                #proceedings
+                (afterdrop)="onAfterDrop($event)"
+                (feedbackRequested)="onFeedbackRequest($event)"
+                (operationclick)="onOperationClick($event)"
+                (operationhover)="onOperationHover($event)"
+                [isClosed]="sidebarExpand === 'closed'"
+                [operations]="taskService.operations"
+                [queue]="taskService.preprocessor.queue"
+                [shortstyle]="sidebarstate === 'opened'"
+                [taskList]="taskService.taskList"
+                [shorcutsEnabled]="settingsService.shortCutsEnabled"
+                style="height: 100%"
+              >
+              </tportal-proceedings>
             }
-            , Audio duration: {{ getTime() | time }}
-          }
-          @if (
-            toolSelectedOperation &&
-            toolSelectedOperation.previousOperation!.results.length < 1 &&
-            toolSelectedOperation!.previousOperation!.previousOperation !==
-              undefined
-          ) {
-            @if (toolSelectedOperation) {
-              {{ toolSelectedOperation.name }}
-            }
-            :
-            {{
-              toolSelectedOperation!.previousOperation!.previousOperation!
-                .results[0]!.attributes?.originalFileName
-            }}
-            , Language:
-            @if (toolSelectedOperation.task?.asrLanguage !== undefined) {
-              {{ toolSelectedOperation.task!.asrLanguage }}
-            }
-            , Audio duration: {{ getTime() | time }}
-          }
+          </div>
+          <div
+            (mousedown)="dragBorder($event, 'right')"
+            (mouseenter)="dragBorder($event, 'right')"
+            (mouseleave)="dragBorder($event, 'right')"
+            (mousemove)="dragBorder($event, 'right')"
+            (mouseup)="dragBorder($event, 'right')"
+            [@comeIn]="animationObject"
+            [hidden]="dragborder === 'inactive'"
+            [ngClass]="{
+              dragborder: dragborder === 'active' || dragborder === 'dragging',
+            }"
+            [ngStyle]="{
+              'margin-left': newProceedingsWidth + '%',
+              width: newToolWidth + '%',
+            }"
+            style="position: absolute; height: 100%; z-index: 800"
+          ></div>
+          <div
+            [@comeIn]="animationObject"
+            [ngStyle]="{
+              'margin-left': newProceedingsWidth + '%',
+              width: newToolWidth + '%',
+            }"
+            style="position: absolute; height: 100%; border-top: 1px solid gray"
+          >
+            <tportal-tool-loader
+              #toolLoader
+              (datareceived)="onToolDataReceived($event, toolLoader)"
+              [operation]="toolSelectedOperation"
+              style="height: 100%"
+            ></tportal-tool-loader>
+          </div>
+          <div class="clearfix"></div>
+        </div>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+      <button ngbNavLink>Summarization &amp; Translation</button>
+      <ng-template ngbNavContent>
+        <p>
+          Exercitation +1 labore velit, blog sartorial PBR leggings next level
+          wes anderson artisan four loko farm-to-table craft beer twee. Qui
+          photo booth letterpress, commodo enim craft beer mlkshk aliquip jean
+          shorts ullamco ad vinyl cillum PBR. Homo nostrud organic, assumenda
+          labore aesthetic magna delectus mollit. Keytar helvetica VHS salvia
+          yr, vero magna velit sapiente labore stumptown. Vegan fanny pack odio
+          cillum wes anderson 8-bit, sustainable jean shorts beard ut DIY
+          ethical culpa terry richardson biodiesel. Art party scenester
+          stumptown, tumblr butcher vero sint qui sapiente accusamus tattooed
+          echo park.
         </p>
-      </div>
-      <div class="col-2" style="text-align: right; padding-top: 5px">
-        <button
-          (click)="onBackButtonClicked()"
-          class="btn btn-primary"
-          style="width: 100%"
-        >
-          <i
-            aria-hidden="true"
-            class="bi bi-chevron-double-right"
-            style="font-size: 20px"
-          ></i>
-        </button>
-      </div>
-    </div>
-  }
+      </ng-template>
+    </li>
+  </ul>
 
-  <!-- WORKING AREA -->
-  <div id="main" style="position: relative">
-    <div
-      (blur)="onBlur($event)"
-      (mousedown)="dragBorder($event, 'left')"
-      (mouseenter)="dragBorder($event, 'left')"
-      (mouseleave)="dragBorder($event, 'left')"
-      (mousemove)="dragBorder($event, 'left')"
-      (mouseup)="dragBorder($event, 'left')"
-      [@expandLeft]="animationObject2"
-      [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging',
-      }"
-      [ngStyle]="{
-        width: newProceedingsWidth + '%',
-        'border-right':
-          sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
-      }"
-      style="float: right"
-    >
-      @if (settingsService.allLoaded && taskService.taskList !== undefined) {
-        <tportal-proceedings
-          #proceedings
-          (afterdrop)="onAfterDrop($event)"
-          (feedbackRequested)="onFeedbackRequest($event)"
-          (operationclick)="onOperationClick($event)"
-          (operationhover)="onOperationHover($event)"
-          [isClosed]="sidebarExpand === 'closed'"
-          [operations]="taskService.operations"
-          [queue]="taskService.preprocessor.queue"
-          [shortstyle]="sidebarstate === 'opened'"
-          [taskList]="taskService.taskList"
-          [shorcutsEnabled]="settingsService.shortCutsEnabled"
-          style="height: 100%"
-        >
-        </tportal-proceedings>
-      }
-    </div>
-    <div
-      (mousedown)="dragBorder($event, 'right')"
-      (mouseenter)="dragBorder($event, 'right')"
-      (mouseleave)="dragBorder($event, 'right')"
-      (mousemove)="dragBorder($event, 'right')"
-      (mouseup)="dragBorder($event, 'right')"
-      [@comeIn]="animationObject"
-      [hidden]="dragborder === 'inactive'"
-      [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging',
-      }"
-      [ngStyle]="{
-        'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%',
-      }"
-      style="position: absolute; height: 100%; z-index: 800"
-    ></div>
-    <div
-      [@comeIn]="animationObject"
-      [ngStyle]="{
-        'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%',
-      }"
-      style="position: absolute; height: 100%; border-top: 1px solid gray"
-    >
-      <tportal-tool-loader
-        #toolLoader
-        (datareceived)="onToolDataReceived($event, toolLoader)"
-        [operation]="toolSelectedOperation"
-        style="height: 100%"
-      ></tportal-tool-loader>
-    </div>
-    <div class="clearfix"></div>
-  </div>
+  <div [ngbNavOutlet]="nav" class="mt-2"></div>
 </div>

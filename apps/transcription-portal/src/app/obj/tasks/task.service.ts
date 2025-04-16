@@ -37,6 +37,7 @@ import {
   TaskState,
 } from './index';
 import { TaskEntry } from './task-entry';
+import {SummarizationOperation} from '../operations/summarization-operation';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService implements OnDestroy {
@@ -195,6 +196,12 @@ export class TaskService implements OnDestroy {
         AppSettings.configuration.api.commands[4].calls,
         'Phonetic detail',
         'PD',
+      ),
+      new SummarizationOperation(
+        'Summarization',
+        AppSettings.configuration.api.commands[4].calls,
+        'Summarization',
+        'SUM',
       ),
     ];
 

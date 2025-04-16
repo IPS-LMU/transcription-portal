@@ -16,6 +16,7 @@ import {
   NgbDropdownMenu,
   NgbDropdownToggle,
   NgbModal,
+  NgbNavModule,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
 import {
@@ -26,7 +27,7 @@ import {
 } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { hasProperty, stringifyQueryParams } from '@octra/utilities';
+import { hasProperty } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -77,6 +78,7 @@ import { StorageService } from '../../storage.service';
     NgbDropdown,
     NgbDropdownMenu,
     NgbDropdownToggle,
+    NgbNavModule,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
@@ -94,6 +96,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
+  activeMode = 1;
 
   sumProjectName = '';
 
