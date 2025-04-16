@@ -35,31 +35,24 @@ export class StatisticsService {
   constructor(private taskService: TaskService) {
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
-        if (
-          !(
-            this.taskService.taskList === null ||
-            this.taskService.taskList === undefined
-          )
-        ) {
-          const allTasks = this.taskService.taskList.getAllTasks();
+        const allTasks = [
+          ...this.taskService.state.modes.annotation.taskList?.getAllTasks() ?? [],
+          ...this.taskService.state.modes.summarization.taskList?.getAllTasks() ?? [],
+        ];
+        const allTasksCount = allTasks.length;
+        this.overAllProgress.waiting =
+          ((this.taskService.statistics.waiting +
+              this.taskService.statistics.queued) /
+            allTasksCount) *
+          100;
+        this.overAllProgress.failed =
+          (this.taskService.statistics.errors / allTasksCount) * 100;
+        this.overAllProgress.processing =
+          (this.taskService.statistics.running / allTasksCount) * 100;
+        this.overAllProgress.finished =
+          (this.taskService.statistics.finished / allTasksCount) * 100;
 
-          if (!(allTasks === null || allTasks === undefined)) {
-            const allTasksCount = allTasks.length;
-            this.overAllProgress.waiting =
-              ((this.taskService.statistics.waiting +
-                this.taskService.statistics.queued) /
-                allTasksCount) *
-              100;
-            this.overAllProgress.failed =
-              (this.taskService.statistics.errors / allTasksCount) * 100;
-            this.overAllProgress.processing =
-              (this.taskService.statistics.running / allTasksCount) * 100;
-            this.overAllProgress.finished =
-              (this.taskService.statistics.finished / allTasksCount) * 100;
-
-            this.updateAverageDurations();
-          }
-        }
+        this.updateAverageDurations();
       }),
     );
   }
@@ -69,6 +62,8 @@ export class StatisticsService {
   }
 
   public updateAverageDurations() {
+    // TODO implement
+    /*
     if (this.taskService.taskList) {
       const tasks = this.taskService.taskList.getAllTasks();
 
@@ -87,5 +82,6 @@ export class StatisticsService {
           Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
       }
     }
+     */
   }
 }

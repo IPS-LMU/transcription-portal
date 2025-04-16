@@ -4,7 +4,7 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
@@ -18,7 +18,7 @@ export class EmuOperation extends ToolOperation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
@@ -40,27 +40,27 @@ export class EmuOperation extends ToolOperation {
   ) => {
     this.updateProtocol('');
     this.operations = operations;
-    this.changeState(TaskState.READY);
+    this.changeState(TaskStatus.READY);
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result =
           '<i class="bi bi-gear-fill spin"></i>\n' +
           '<span class="sr-only">Loading...</span>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         if (
           this.previousOperation &&
           this.previousOperation.results.length > 0 &&
@@ -73,11 +73,11 @@ export class EmuOperation extends ToolOperation {
             '<i class="bi bi-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
         }
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result =
           '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -89,24 +89,24 @@ export class EmuOperation extends ToolOperation {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = '<i class="bi bi-gear-fill spin link" aria-hidden="true"></i>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -146,11 +146,11 @@ export class EmuOperation extends ToolOperation {
       result.results.push(resultClass);
     }
 
-    if (result.state === TaskState.PROCESSING) {
+    if (result.state === TaskStatus.PROCESSING) {
       if (result.results.length > 0) {
-        result.changeState(TaskState.FINISHED);
+        result.changeState(TaskStatus.FINISHED);
       } else {
-        result.changeState(TaskState.READY);
+        result.changeState(TaskStatus.READY);
       }
     }
 

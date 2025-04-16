@@ -42,9 +42,9 @@
       <div class="col-lg-6">
         <octra-asr-options
           [options]="{
-            selectedASRLanguage: this.taskService.selectedASRLanguage!,
-            selectedMausLanguage: this.taskService.selectedMausLanguage!,
-            selectedServiceProvider: this.taskService.selectedProvider!,
+            selectedASRLanguage: this.taskService.state.currentModeState.selectedASRLanguage!,
+            selectedMausLanguage: this.taskService.state.currentModeState.selectedMausLanguage!,
+            selectedServiceProvider: this.taskService.state.currentModeState.selectedProvider!,
           }"
           (optionsChange)="onASROptionsChange($event)"
           [languageSettings]="{
@@ -281,9 +281,9 @@
   <button
     (click)="onSubmit()"
     [disabled]="
-      !this.taskService.selectedASRLanguage ||
-      !this.taskService.selectedMausLanguage ||
-      !this.taskService.selectedProvider
+      !this.taskService.state.currentModeState.selectedASRLanguage ||
+      !this.taskService.state.currentModeState.selectedMausLanguage ||
+      !this.taskService.state.currentModeState.selectedProvider
     "
     class="btn btn-outline-primary"
     type="button"

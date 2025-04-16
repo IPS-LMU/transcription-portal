@@ -11,7 +11,7 @@ import { AppInfo } from '../../app.info';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { Operation } from '../../obj/operations/operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskDirectory, TaskState } from '../../obj/tasks';
+import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
 
@@ -86,7 +86,7 @@ export class DownloadModalComponent
   }
 
   doColumnZipping() {
-    if (!this.taskService.taskList) {
+    if (!this.taskService.state.currentModeState.taskList) {
       throw new Error('taskList is undefined');
     }
     // get url for resulty by column
@@ -100,11 +100,11 @@ export class DownloadModalComponent
     } = {
       entries: [],
     };
-    const tasks = this.taskService.taskList.getAllTasks();
+    const tasks = this.taskService.state.currentModeState.taskList.getAllTasks();
 
     const promises: Promise<void>[] = [];
 
-    const opIndex = this.taskService.operations.findIndex((a) => {
+    const opIndex = this.taskService.state.currentModeState.operations.findIndex((a) => {
       if (!this.column) {
         throw new Error('column is undefined');
       }
@@ -119,7 +119,7 @@ export class DownloadModalComponent
 
         if (
           operation.results.length > 0 &&
-          operation.state === TaskState.FINISHED
+          operation.state === TaskStatus.FINISHED
         ) {
           const result: FileInfo | undefined = operation.lastResult;
           if (result?.online && result.file) {
@@ -211,7 +211,7 @@ export class DownloadModalComponent
       const promises = [];
 
       for (const index of this.selectedTasks) {
-        const entry = this.taskService.taskList?.getEntryByIndex(index);
+        const entry = this.taskService.state.currentModeState.taskList?.getEntryByIndex(index);
 
         if (entry instanceof TaskDirectory) {
           promises.push(
@@ -290,7 +290,7 @@ export class DownloadModalComponent
 
           if (
             operation.name !== task.operations[0].name &&
-            operation.state === TaskState.FINISHED &&
+            operation.state === TaskStatus.FINISHED &&
             operation.results.length > 0
           ) {
             const opResult = operation.lastResult;
@@ -385,11 +385,11 @@ export class DownloadModalComponent
   }
 
   removeSelected() {
-    if (this.selectedTasks && this.taskService.taskList) {
+    if (this.selectedTasks && this.taskService.state.currentModeState.taskList) {
       for (const index of this.selectedTasks) {
-        const entry = this.taskService.taskList.getEntryByIndex(index);
+        const entry = this.taskService.state.currentModeState.taskList.getEntryByIndex(index);
         if (entry) {
-          this.taskService.taskList.removeEntry(entry, true);
+          this.taskService.state.currentModeState.taskList.removeEntry(entry, true);
         } else {
           throw new Error("Can't find entry");
         }

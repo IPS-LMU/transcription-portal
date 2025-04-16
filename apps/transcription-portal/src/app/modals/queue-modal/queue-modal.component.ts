@@ -25,7 +25,7 @@ import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
 import { OCTRAOperation } from '../../obj/operations/octra-operation';
 import { Operation } from '../../obj/operations/operation';
 import { QueueItem } from '../../obj/preprocessor';
-import { Task, TaskState } from '../../obj/tasks';
+import { Task, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { AppSettings } from '../../shared/app.settings';
 import { SettingsService } from '../../shared/settings.service';
@@ -69,7 +69,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }[] = [];
 
   public get selectedASRInfo(): ServiceProvider | undefined {
-    return this.taskService.selectedProvider;
+    return this.taskService.state.currentModeState.selectedProvider;
   }
 
   languages: {
@@ -119,7 +119,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     if (!(this.tasks.filter === null || this.tasks.filter === undefined)) {
       return this.tasks.filter((a) => {
         return (
-          a.state === TaskState.QUEUED &&
+          a.state === TaskStatus.QUEUED &&
           (a.files[0].file === undefined ||
             a.files[0].extension !== '.wav' ||
             (a.files.length > 1 && a.files[1].file === undefined))
@@ -135,13 +135,13 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     let j = 0;
 
     for (const task of this.tasks) {
-      if (task.state === TaskState.QUEUED) {
+      if (task.state === TaskStatus.QUEUED) {
         if (
           task.files[0] instanceof AudioInfo &&
           task.files[0].file !== undefined &&
           !this.isSomethingInvalid(task.id)
         ) {
-          task.changeState(TaskState.PENDING);
+          task.changeState(TaskStatus.PENDING);
         }
 
         j++;
@@ -164,7 +164,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
     this.compatibleTable = [];
     for (const task of this.tasks) {
-      if (task.state === TaskState.QUEUED) {
+      if (task.state === TaskStatus.QUEUED) {
         this.compatibleTable.push({
           id: task.id,
           fileName: task.files[0].fullname,
@@ -178,19 +178,21 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   changeLanguageforAllQueuedTasks() {
-    if (this.taskService.selectedASRLanguage) {
+    if (this.taskService.state.currentModeState.selectedASRLanguage) {
       this.compatibleTable = [];
 
       const tasks = this.tasks.filter((a) => {
-        return a.state === TaskState.QUEUED;
+        return a.state === TaskStatus.QUEUED;
       });
 
       for (const task of tasks) {
-        task.asrLanguage = this.taskService.selectedASRLanguage;
-        task.asrProvider = this.taskService.selectedProvider?.provider;
+        task.asrLanguage =
+          this.taskService.state.currentModeState.selectedASRLanguage;
+        task.asrProvider =
+          this.taskService.state.currentModeState.selectedProvider?.provider;
         task.operations[1].providerInformation =
           AppSettings.getServiceInformation(
-            this.taskService.selectedProvider?.provider!,
+            this.taskService.state.currentModeState.selectedProvider?.provider!,
           );
         this.storage.saveTask(task);
 
@@ -211,9 +213,12 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       }
 
       this.storage.saveUserSettings('defaultTaskOptions', {
-        asrLanguage: this.taskService.selectedASRLanguage,
-        mausLanguage: this.taskService.selectedMausLanguage,
-        asrProvider: this.taskService.selectedProvider?.provider,
+        asrLanguage:
+          this.taskService.state.currentModeState.selectedASRLanguage,
+        mausLanguage:
+          this.taskService.state.currentModeState.selectedMausLanguage,
+        asrProvider:
+          this.taskService.state.currentModeState.selectedProvider?.provider,
       });
 
       if (this.dropdown) {
@@ -227,7 +232,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   deactivateOperation(operation: Operation, index: number) {
     const tasks = this.tasks.filter((a) => {
-      return a.state === TaskState.QUEUED;
+      return a.state === TaskStatus.QUEUED;
     });
 
     operation.enabled = !operation.enabled;
@@ -249,11 +254,11 @@ export class QueueModalComponent implements OnDestroy, OnInit {
               }) > -1;
 
             if (!hasTranscript) {
-              if (taskOperation.state === TaskState.PENDING) {
+              if (taskOperation.state === TaskStatus.PENDING) {
                 taskOperation.enabled = previous.enabled;
               }
 
-              if (currOperation.state === TaskState.PENDING) {
+              if (currOperation.state === TaskStatus.PENDING) {
                 currOperation.enabled = operation.enabled;
               }
             }
@@ -268,10 +273,10 @@ export class QueueModalComponent implements OnDestroy, OnInit {
           const taskOperation = task.operations[index + 1];
           const currOperation = task.operations[index];
 
-          if (taskOperation.state === TaskState.PENDING) {
+          if (taskOperation.state === TaskStatus.PENDING) {
             taskOperation.enabled = next.enabled;
           }
-          if (currOperation.state === TaskState.PENDING) {
+          if (currOperation.state === TaskStatus.PENDING) {
             currOperation.enabled = operation.enabled;
           }
         }
@@ -283,10 +288,10 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         const taskOperation = task.operations[index + 1];
         const currOperation = task.operations[index];
 
-        if (taskOperation.state === TaskState.PENDING) {
+        if (taskOperation.state === TaskStatus.PENDING) {
           taskOperation.enabled = next.enabled;
         }
-        if (currOperation.state === TaskState.PENDING) {
+        if (currOperation.state === TaskStatus.PENDING) {
           currOperation.enabled = operation.enabled;
         }
       }
@@ -300,11 +305,11 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   public updateEnableState() {
     const tasks = this.tasks.filter((a) => {
-      return a.state === TaskState.QUEUED;
+      return a.state === TaskStatus.QUEUED;
     });
 
-    for (let j = 0; j < this.taskService.operations.length; j++) {
-      const operation = this.taskService.operations[j];
+    for (let j = 0; j < this.taskService.state.currentModeState.operations.length; j++) {
+      const operation = this.taskService.state.currentModeState.operations[j];
 
       for (const task of tasks) {
         const currOperation = task.operations[j];
@@ -317,7 +322,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
             }) > -1;
 
           if (!hasTranscript) {
-            if (currOperation.state === TaskState.PENDING) {
+            if (currOperation.state === TaskStatus.PENDING) {
               currOperation.enabled = operation.enabled;
             }
           }
@@ -452,7 +457,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   isASRSelected() {
     return (
-      this.taskService.operations.find((a) => a.name === 'ASR')?.enabled ??
+      this.taskService.state.currentModeState.operations.find((a) => a.name === 'ASR')?.enabled ??
       false
     );
   }
@@ -484,9 +489,9 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     provider?: ServiceProvider,
     mausLang?: string,
   ) {
-    this.taskService.selectedASRLanguage = lang;
-    this.taskService.selectedProvider = provider;
-    this.taskService.selectedMausLanguage = mausLang;
+    this.taskService.state.currentModeState.selectedASRLanguage = lang;
+    this.taskService.state.currentModeState.selectedProvider = provider;
+    this.taskService.state.currentModeState.selectedMausLanguage = mausLang;
     this.changeLanguageforAllQueuedTasks();
   }
 

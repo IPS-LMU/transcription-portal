@@ -5,7 +5,7 @@ import { FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 
 export class G2pMausOperation extends Operation {
@@ -21,7 +21,7 @@ export class G2pMausOperation extends Operation {
     accessCode: string,
   ) => {
     this.updateProtocol('');
-    this.changeState(TaskState.PROCESSING);
+    this.changeState(TaskStatus.PROCESSING);
     this._time.start = Date.now();
 
     let url = this._commands[0]
@@ -96,22 +96,22 @@ export class G2pMausOperation extends Operation {
                 };
 
                 this.results.push(file);
-                this.changeState(TaskState.FINISHED);
+                this.changeState(TaskStatus.FINISHED);
 
                 console.log('file2');
                 console.log(file);
               })
               .catch((error: any) => {
                 this.updateProtocol(error);
-                this.changeState(TaskState.ERROR);
+                this.changeState(TaskStatus.ERROR);
               });
           } else {
-            this.changeState(TaskState.ERROR);
+            this.changeState(TaskStatus.ERROR);
           }
         },
         (error) => {
           this.updateProtocol(error.message);
-          this.changeState(TaskState.ERROR);
+          this.changeState(TaskStatus.ERROR);
         },
       );
   };
@@ -161,7 +161,7 @@ export class G2pMausOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);

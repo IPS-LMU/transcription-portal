@@ -5,7 +5,7 @@ import { stringifyQueryParams } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
@@ -17,7 +17,7 @@ export class OCTRAOperation extends ToolOperation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
@@ -41,31 +41,31 @@ export class OCTRAOperation extends ToolOperation {
   ) => {
     this.updateProtocol('');
     this.operations = operations;
-    this.changeState(TaskState.READY);
+    this.changeState(TaskStatus.READY);
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = '<i class="bi bi-gear-fill spin link" aria-hidden="true"></i>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -77,24 +77,24 @@ export class OCTRAOperation extends ToolOperation {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = '<i class="bi bi-gear-fill spin link" aria-hidden="true"></i>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -134,11 +134,11 @@ export class OCTRAOperation extends ToolOperation {
       result.results.push(resultClass);
     }
 
-    if (result.state === TaskState.PROCESSING) {
+    if (result.state === TaskStatus.PROCESSING) {
       if (result.results.length > 0) {
-        result.changeState(TaskState.FINISHED);
+        result.changeState(TaskStatus.FINISHED);
       } else {
-        result.changeState(TaskState.READY);
+        result.changeState(TaskStatus.READY);
       }
     }
 

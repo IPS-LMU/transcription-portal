@@ -1,8 +1,9 @@
-import {SubscriptionManager} from '@octra/utilities';
-import {DirectoryInfo, FileInfo} from '@octra/web-media';
-import {Subject, timer} from 'rxjs';
-import {calcSHA256FromFile, cryptoSupported} from './CryptoHelper';
-import {Task, TaskDirectory} from './tasks';
+import { SubscriptionManager } from '@octra/utilities';
+import { DirectoryInfo, FileInfo } from '@octra/web-media';
+import { Subject, timer } from 'rxjs';
+import { calcSHA256FromFile, cryptoSupported } from './CryptoHelper';
+import { Task, TaskDirectory } from './tasks';
+import { PortalModeType } from './tasks/task.service';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks
@@ -53,7 +54,7 @@ export class QueueItem {
 }
 
 export class Preprocessor {
-  constructor() {
+  constructor(private mode: PortalModeType) {
     this._itemAdded.subscribe(this.onItemAdded);
   }
 
@@ -95,10 +96,12 @@ export class Preprocessor {
 
   private subscrManager = new SubscriptionManager();
 
-  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> =
-    () => {
-      return new Promise<(Task | TaskDirectory)[]>(() => {});
-    };
+  public process: (
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ) => Promise<(Task | TaskDirectory)[]> = () => {
+    return new Promise<(Task | TaskDirectory)[]>(() => {});
+  };
 
   public changeState(item: QueueItem, state: State) {
     const oldState = item.state;
@@ -156,7 +159,7 @@ export class Preprocessor {
     this.subscrManager.add(
       timer(100).subscribe({
         next: () => {
-          this.process(newItem)
+          this.process(newItem, this.mode)
             .then((result) => {
               if (!(result === null || result === undefined)) {
                 newItem.results = result;

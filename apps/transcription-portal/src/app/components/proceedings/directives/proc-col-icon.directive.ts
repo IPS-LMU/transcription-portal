@@ -13,7 +13,7 @@ import {
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
-import { Task, TaskDirectory, TaskState } from '../../../obj/tasks';
+import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
 import { TaskService } from '../../../obj/tasks/task.service';
 
 @Directive({
@@ -193,16 +193,16 @@ export class ProcColIconDirective
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
         switch (this.entry.state) {
-          case TaskState.FINISHED:
+          case TaskStatus.FINISHED:
             this.renderer.addClass(icon, 'green');
             break;
-          case TaskState.ERROR:
+          case TaskStatus.ERROR:
             this.renderer.addClass(icon, 'red');
             break;
-          case TaskState.PENDING || this.entry.state === TaskState.READY:
+          case TaskStatus.PENDING || this.entry.state === TaskStatus.READY:
             this.renderer.addClass(icon, 'blue');
             break;
-          case TaskState.PROCESSING:
+          case TaskStatus.PROCESSING:
             this.renderer.addClass(icon, 'yellow');
             break;
         }
@@ -224,16 +224,16 @@ export class ProcColIconDirective
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
         switch (this.entry.state) {
-          case TaskState.FINISHED:
+          case TaskStatus.FINISHED:
             this.renderer.addClass(icon, 'green');
             break;
-          case TaskState.ERROR:
+          case TaskStatus.ERROR:
             this.renderer.addClass(icon, 'red');
             break;
-          case TaskState.PENDING || TaskState.READY:
+          case TaskStatus.PENDING || TaskStatus.READY:
             this.renderer.addClass(icon, 'blue');
             break;
-          case TaskState.PROCESSING:
+          case TaskStatus.PROCESSING:
             this.renderer.addClass(icon, 'yellow');
             break;
         }

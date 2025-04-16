@@ -1,5 +1,5 @@
 import { Subject } from 'rxjs';
-import { Task, TaskDirectory, TaskState } from './task';
+import { Task, TaskDirectory, TaskStatus } from './task';
 
 export interface EntryChangeEvent {
   state: 'added' | 'removed' | 'changed';
@@ -80,7 +80,7 @@ export class TaskList {
     });
   }
 
-  public findTaskByState(state: TaskState): Task | undefined {
+  public findTaskByState(state: TaskStatus): Task | undefined {
     const tasks = this.getAllTasks();
 
     return tasks.find((a: Task) => {

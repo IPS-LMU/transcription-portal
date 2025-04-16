@@ -170,7 +170,7 @@
 >
   @if (
     !storage.tasksFound &&
-    taskService.taskList!.entries.length === 0 &&
+    taskService.state.currentModeState.taskList!.entries.length === 0 &&
     queue.length === 0
   ) {
     <div class="tportal-placeholder">
@@ -531,7 +531,7 @@
             }
             @if (entry.type === 'folder') {
               @for (
-                operation of taskService.operations;
+                operation of taskService.state.currentModeState.operations;
                 track operation;
                 let opIndex = $index
               ) {
@@ -626,7 +626,7 @@
             <tr style="cursor: pointer">
               @if (getDirEntriesFromItem(entry).length === 0) {
                 <td
-                  [attr.colspan]="taskService.operations.length + 3"
+                  [attr.colspan]="taskService.state.currentModeState.operations.length + 3"
                   [ngClass]="{ shorten: shortstyle }"
                 >
                   <i aria-hidden="true" class="bi bi-database op-50"> </i>
@@ -640,7 +640,7 @@
                 </td>
               }
               @if (getDirEntriesFromItem(entry).length > 0) {
-                <td [attr.colspan]="taskService.operations.length + 3">
+                <td [attr.colspan]="taskService.state.currentModeState.operations.length + 3">
                   <i
                     aria-hidden="true"
                     class="bi bi-folder2-open blue op-50"
@@ -661,7 +661,7 @@
                   <i class="bi bi-gear-fill spin"></i>
                 </div>
               </td>
-              <td [attr.colspan]="taskService.operations.length + 2"></td>
+              <td [attr.colspan]="taskService.state.currentModeState.operations.length + 2"></td>
             </tr>
           }
         }

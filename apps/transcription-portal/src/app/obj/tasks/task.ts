@@ -7,7 +7,7 @@ import { OHCommand, ProviderLanguage } from '../oh-config';
 import { IAccessCode, Operation } from '../operations/operation';
 import { TaskEntry } from './task-entry';
 
-export enum TaskState {
+export enum TaskStatus {
   INACTIVE = 'INACTIVE',
   QUEUED = 'QUEUED',
   PENDING = 'PENDING',
@@ -24,21 +24,21 @@ export class Task {
   public mouseover = false;
   private opstatesubj = new ReplaySubject<{
     opID: number;
-    oldState: TaskState | undefined;
-    newState: TaskState;
+    oldState: TaskStatus | undefined;
+    newState: TaskStatus;
   }>();
   public opstatechange: Observable<{
     opID: number;
-    oldState: TaskState | undefined;
-    newState: TaskState;
+    oldState: TaskStatus | undefined;
+    newState: TaskStatus;
   }> = this.opstatesubj.asObservable();
   private statesubj = new ReplaySubject<{
-    oldState: TaskState | undefined;
-    newState: TaskState;
+    oldState: TaskStatus | undefined;
+    newState: TaskStatus;
   }>();
   public statechange: Observable<{
-    oldState: TaskState | undefined;
-    newState: TaskState;
+    oldState: TaskStatus | undefined;
+    newState: TaskStatus;
   }> = this.statesubj.asObservable();
   private subscrmanager = new SubscriptionManager<Subscription>();
   private stopRequested = false;
@@ -65,7 +65,7 @@ export class Task {
 
     this.listenToOperationChanges();
 
-    this.changeState(TaskState.PENDING);
+    this.changeState(TaskStatus.PENDING);
     this._directory = directory;
   }
 
@@ -137,9 +137,9 @@ export class Task {
     return this._type;
   }
 
-  private _state: TaskState = TaskState.PENDING;
+  private _state: TaskStatus = TaskStatus.PENDING;
 
-  get state(): TaskState {
+  get state(): TaskStatus {
     return this._state;
   }
 
@@ -158,10 +158,10 @@ export class Task {
         ? taskObj.operations[1].webService
         : taskObj.asrProvider;
 
-    if (taskObj.state !== TaskState.PROCESSING) {
+    if (taskObj.state !== TaskStatus.PROCESSING) {
       task.changeState(taskObj.state);
     } else {
-      task.changeState(TaskState.READY);
+      task.changeState(TaskStatus.READY);
     }
 
     for (const file of taskObj.files) {
@@ -190,17 +190,17 @@ export class Task {
         const op = defaultOperations[j];
         if (op.name === operationObj.name) {
           const operation = op.fromAny(operationObj, commands[j].calls, task);
-          if (operation.state === TaskState.UPLOADING) {
-            operation.changeState(TaskState.PENDING);
+          if (operation.state === TaskStatus.UPLOADING) {
+            operation.changeState(TaskStatus.PENDING);
           } else {
-            if (operation.state === TaskState.PROCESSING) {
+            if (operation.state === TaskStatus.PROCESSING) {
               if (
                 operation.name === 'OCTRA' ||
                 operation.name === 'Emu WebApp'
               ) {
-                operation.changeState(TaskState.READY);
+                operation.changeState(TaskStatus.READY);
               } else {
-                operation.changeState(TaskState.PENDING);
+                operation.changeState(TaskStatus.PENDING);
               }
             }
           }
@@ -210,15 +210,15 @@ export class Task {
       }
     }
     const isSomethingPending =
-      task.operations.findIndex((a) => a.state === TaskState.PENDING) > -1;
+      task.operations.findIndex((a) => a.state === TaskStatus.PENDING) > -1;
     const isSomethingReady =
-      task.operations.findIndex((a) => a.state === TaskState.READY) > -1;
+      task.operations.findIndex((a) => a.state === TaskStatus.READY) > -1;
 
-    if (task.state !== TaskState.QUEUED) {
+    if (task.state !== TaskStatus.QUEUED) {
       if (isSomethingPending) {
-        task.changeState(TaskState.PENDING);
+        task.changeState(TaskStatus.PENDING);
       } else if (isSomethingReady) {
-        task.changeState(TaskState.READY);
+        task.changeState(TaskStatus.READY);
       }
     }
 
@@ -233,7 +233,7 @@ export class Task {
     httpclient: HttpClient,
     accessCodes: IAccessCode[],
   ) {
-    if (this.state !== TaskState.FINISHED) {
+    if (this.state !== TaskStatus.FINISHED) {
       this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
     }
   }
@@ -244,7 +244,7 @@ export class Task {
     http: HttpClient,
     accessCodes: IAccessCode[],
   ) {
-    this.changeState(TaskState.PROCESSING);
+    this.changeState(TaskStatus.PROCESSING);
     this.listenToOperationChanges();
     this.start(asrService, languageObj, http, accessCodes);
   }
@@ -256,17 +256,17 @@ export class Task {
     accessCodes: IAccessCode[],
   ) {
     for (const operation of this.operations) {
-      if (operation.state === TaskState.ERROR) {
+      if (operation.state === TaskStatus.ERROR) {
         // restart failed operation
-        operation.changeState(TaskState.READY);
-        this.changeState(TaskState.PENDING);
+        operation.changeState(TaskStatus.READY);
+        this.changeState(TaskStatus.PENDING);
         this.restart(asrService, languageObject, httpclient, accessCodes);
         break;
       }
     }
   }
 
-  public changeState(state: TaskState) {
+  public changeState(state: TaskStatus) {
     const oldstate = this._state;
     this._state = state;
 
@@ -395,8 +395,8 @@ export class Task {
   protected listenToOperationChanges() {
     for (const operation of this._operations) {
       const subscription = operation.statechange.subscribe((event) => {
-        if (event.newState === TaskState.ERROR) {
-          this.changeState(TaskState.ERROR);
+        if (event.newState === TaskStatus.ERROR) {
+          this.changeState(TaskStatus.ERROR);
         }
 
         this.opstatesubj.next({
@@ -405,12 +405,12 @@ export class Task {
           newState: event.newState,
         });
 
-        if (event.newState === TaskState.FINISHED) {
+        if (event.newState === TaskStatus.FINISHED) {
           if (
             operation.nextOperation === null ||
             operation.nextOperation === undefined
           ) {
-            this.changeState(TaskState.FINISHED);
+            this.changeState(TaskStatus.FINISHED);
           }
           subscription.unsubscribe();
         }
@@ -440,13 +440,13 @@ export class Task {
 
       for (let i = 0; i < this.operations.length; i++) {
         const operation = this.operations[i];
-        if (!operation.enabled && operation.state !== TaskState.SKIPPED) {
-          operation.changeState(TaskState.SKIPPED);
+        if (!operation.enabled && operation.state !== TaskStatus.SKIPPED) {
+          operation.changeState(TaskStatus.SKIPPED);
         }
         if (
           operation.enabled &&
-          this.operations[i].state !== TaskState.FINISHED &&
-          this.operations[i].state !== TaskState.SKIPPED
+          this.operations[i].state !== TaskStatus.FINISHED &&
+          this.operations[i].state !== TaskStatus.SKIPPED
         ) {
           nextoperation = i;
           break;
@@ -455,23 +455,23 @@ export class Task {
 
       if (nextoperation === -1) {
         // all finished
-        this.changeState(TaskState.FINISHED);
+        this.changeState(TaskStatus.FINISHED);
       } else {
         const operation = this.operations[nextoperation];
-        if (operation.state !== TaskState.FINISHED) {
+        if (operation.state !== TaskStatus.FINISHED) {
           if (
             (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') &&
-            operation.state === TaskState.READY
+            operation.state === TaskStatus.READY
           ) {
-            this.changeState(TaskState.READY);
+            this.changeState(TaskStatus.READY);
           } else {
-            this.changeState(TaskState.PROCESSING);
+            this.changeState(TaskStatus.PROCESSING);
           }
           const subscription = this.operations[
             nextoperation
           ].statechange.subscribe(
             (event) => {
-              if (event.newState === TaskState.FINISHED) {
+              if (event.newState === TaskStatus.FINISHED) {
                 subscription.unsubscribe();
                 this.startNextOperation(
                   asrService,
@@ -480,8 +480,8 @@ export class Task {
                   accessCodes,
                 );
               } else {
-                if (event.newState === TaskState.READY) {
-                  this.changeState(TaskState.READY);
+                if (event.newState === TaskStatus.READY) {
+                  this.changeState(TaskStatus.READY);
                 }
               }
             },
@@ -511,7 +511,7 @@ export class Task {
         }
       }
     } else {
-      this.changeState(TaskState.PENDING);
+      this.changeState(TaskStatus.PENDING);
     }
   }
 }

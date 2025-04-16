@@ -12,7 +12,6 @@ import {
   FileInfo,
   getAudioInfo,
 } from '@octra/web-media';
-import { DateTime } from 'luxon';
 import { firstValueFrom, interval, of, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
 import { AlertService } from '../../shared/alert.service';
@@ -27,6 +26,7 @@ import { EmuOperation } from '../operations/emu-operation';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
 import { OCTRAOperation } from '../operations/octra-operation';
 import { Operation } from '../operations/operation';
+import { SummarizationOperation } from '../operations/summarization-operation';
 import { UploadOperation } from '../operations/upload-operation';
 import { Preprocessor, QueueItem } from '../preprocessor';
 import {
@@ -34,36 +34,31 @@ import {
   Task,
   TaskDirectory,
   TaskList,
-  TaskState,
+  TaskStatus,
 } from './index';
 import { TaskEntry } from './task-entry';
-import {SummarizationOperation} from '../operations/summarization-operation';
 
-@Injectable({ providedIn: 'root' })
-export class TaskService implements OnDestroy {
+export type PortalModeType = 'annotation' | 'summarization';
+
+export class PortalModeState {
+  newFiles = false;
   public newfiles = false;
   public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' =
     'not started';
-  public protocolURL: SafeResourceUrl | undefined;
-  public protocolFileName = '';
-  public errorscountchange = new EventEmitter<number>();
   public selectedMausLanguage?: string;
   public selectedASRLanguage?: string;
   public selectedProvider?: ServiceProvider;
-  private options = {
-    max_running_tasks: 3,
-  };
-  private subscrmanager = new SubscriptionManager<Subscription>();
-  private state: TaskState = TaskState.READY;
-  dbImported = new EventEmitter<void>();
+  private _status: TaskStatus = TaskStatus.READY;
+  private _preprocessor!: Preprocessor;
+  private subscrManager = new SubscriptionManager();
 
-  constructor(
-    public httpclient: HttpClient,
-    private notification: NotificationService,
-    private storage: StorageService,
-    private sanitizer: DomSanitizer,
-    private alertService: AlertService,
-  ) {}
+  get preprocessor(): Preprocessor {
+    return this._preprocessor;
+  }
+
+  get status(): TaskStatus {
+    return this._status;
+  }
 
   private _taskList: TaskList | undefined;
 
@@ -76,6 +71,68 @@ export class TaskService implements OnDestroy {
   get operations(): Operation[] {
     return this._operations;
   }
+
+  init(
+    operations: Operation[],
+    mode: PortalModeType,
+    process: (
+      queueItem: QueueItem,
+      mode: PortalModeType,
+    ) => Promise<(Task | TaskDirectory)[]>,
+  ) {
+    this._taskList = new TaskList();
+    this._preprocessor = new Preprocessor(mode);
+    this._preprocessor.process = process;
+    this._operations = operations;
+  }
+
+  changeStatus(newStatus: TaskStatus) {
+    this._status = newStatus;
+  }
+
+  destroy() {
+    this.subscrManager.destroy();
+  }
+}
+
+export class PortalState {
+  modes: {
+    annotation: PortalModeState;
+    summarization: PortalModeState;
+  } = {
+    annotation: new PortalModeState(),
+    summarization: new PortalModeState(),
+  };
+
+  currentMode: PortalModeType = 'annotation';
+
+  get currentModeState(): PortalModeState {
+    return this.modes[this.currentMode];
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class TaskService implements OnDestroy {
+  public protocolURL: SafeResourceUrl | undefined;
+  public protocolFileName = '';
+  public errorscountchange = new EventEmitter<number>();
+
+  public readonly state = new PortalState();
+
+  private options = {
+    max_running_tasks: 3,
+  };
+
+  private subscrmanager = new SubscriptionManager<Subscription>();
+  dbImported = new EventEmitter<void>();
+
+  constructor(
+    public httpclient: HttpClient,
+    private notification: NotificationService,
+    private storage: StorageService,
+    private sanitizer: DomSanitizer,
+    private alertService: AlertService,
+  ) {}
 
   private _accessCode = '';
 
@@ -122,18 +179,12 @@ export class TaskService implements OnDestroy {
     this._splitPrompt = value;
   }
 
-  private _preprocessor: Preprocessor = new Preprocessor();
-
-  get preprocessor(): Preprocessor {
-    return this._preprocessor;
-  }
-
   public get isProcessing(): boolean {
-    return this.overallState === 'processing';
+    return this.state.currentModeState.overallState === 'processing';
   }
 
   public get stateLabel(): string {
-    if (this.overallState === 'processing') {
+    if (this.state.currentModeState.overallState === 'processing') {
       if (this._statistics.running === 0) {
         if (this._statistics.waiting > 1) {
           return `${this._statistics.waiting} tasks need your attention`;
@@ -149,13 +200,13 @@ export class TaskService implements OnDestroy {
       }
 
       return 'Processing...';
-    } else if (this.overallState === 'not started') {
+    } else if (this.state.currentModeState.overallState === 'not started') {
       if (this._statistics.queued > 0) {
         return `${this._statistics.queued} audio file(s) are waiting to be verified by you.`;
       }
       return 'Ready';
     }
-    if (this.overallState === 'stopped') {
+    if (this.state.currentModeState.overallState === 'stopped') {
       if (this._statistics.running > 0) {
         return `waiting for ${this._statistics.running} tasks to stop their work...`;
       }
@@ -165,224 +216,94 @@ export class TaskService implements OnDestroy {
   }
 
   public init() {
-    this._taskList = new TaskList();
-    this._operations = [
-      new UploadOperation(
-        'Upload',
-        AppSettings.configuration.api.commands[0].calls,
-        'Upload',
-        'UL',
-      ),
-      new ASROperation(
-        'ASR',
-        AppSettings.configuration.api.commands[1].calls,
-        'Speech Recognition',
-        'ASR',
-      ),
-      new OCTRAOperation(
-        'OCTRA',
-        AppSettings.configuration.api.commands[2].calls,
-        'Manual Transcription',
-        'MT',
-      ),
-      new G2pMausOperation(
-        'MAUS',
-        AppSettings.configuration.api.commands[3].calls,
-        'Word alignment',
-        'WA',
-      ),
-      new EmuOperation(
-        'Emu WebApp',
-        AppSettings.configuration.api.commands[4].calls,
-        'Phonetic detail',
-        'PD',
-      ),
-      new SummarizationOperation(
-        'Summarization',
-        AppSettings.configuration.api.commands[4].calls,
-        'Summarization',
-        'SUM',
-      ),
-    ];
+    this.state.modes.annotation.init(
+      [
+        new UploadOperation(
+          'Upload',
+          AppSettings.configuration.api.commands[0].calls,
+          'Upload',
+          'UL',
+        ),
+        new ASROperation(
+          'ASR',
+          AppSettings.configuration.api.commands[1].calls,
+          'Speech Recognition',
+          'ASR',
+        ),
+        new OCTRAOperation(
+          'OCTRA',
+          AppSettings.configuration.api.commands[2].calls,
+          'Manual Transcription',
+          'MT',
+        ),
+        new G2pMausOperation(
+          'MAUS',
+          AppSettings.configuration.api.commands[3].calls,
+          'Word alignment',
+          'WA',
+        ),
+        new EmuOperation(
+          'Emu WebApp',
+          AppSettings.configuration.api.commands[4].calls,
+          'Phonetic detail',
+          'PD',
+        ),
+      ],
+      'annotation',
+      this.process,
+    );
 
-    this._preprocessor.process = this.process;
-    if (!this.taskList || !this._taskList) {
-      throw new Error('taksList not defined');
-    }
-
-    this.subscrmanager.add(
-      this._preprocessor.itemProcessed.subscribe(async (item) => {
-        for (const result of item.results) {
-          let foundTask: Task | undefined;
-          if (result instanceof Task) {
-            for (const file of result.files) {
-              const escapedName = escapeRegex(
-                result.files[0].attributes.originalFileName.replace(
-                  /(_annot)?\.[^.]+$/g,
-                  '',
-                ),
-              );
-              foundTask = this.getTaskWithOriginalFileName(
-                new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
-              );
-
-              if (foundTask) {
-                // found a task
-                // file with this hash already exists, overwrite
-                const oldFileIndex = foundTask.files.findIndex(
-                  (a) => file && a.hash === file.hash,
-                );
-
-                if (oldFileIndex > -1) {
-                  foundTask.setFileObj(oldFileIndex, file);
-                } else {
-                  if (foundTask.files.length > 1) {
-                    const index = file.type.indexOf('audio') > -1 ? 0 : 1;
-                    foundTask.files[index] = file;
-                    if (index === 1) {
-                      foundTask.operations[1].enabled = false;
-                    }
-                  } else {
-                    if (file.type.indexOf('audio') > -1) {
-                      foundTask.files = [file, ...foundTask.files];
-                      foundTask.operations[1].enabled = false;
-                    } else {
-                      foundTask.files.push(file);
-                      foundTask.operations[1].enabled = false;
-                    }
-                  }
-                }
-                await this.storage.saveTask(foundTask);
-              }
-            }
-            result.changeState(TaskState.QUEUED);
-          } else {
-            for (let j = 0; j < result.entries.length; j++) {
-              const entry = result.entries[j] as Task;
-              const tasks: Task[] = result.entries.filter((a) => {
-                return a instanceof Task;
-              }) as Task[];
-
-              // search for grouped files in this new directory
-              for (let v = j + 1; v < tasks.length; v++) {
-                const task = tasks[v];
-
-                const foundIt = task.files.find((b) => {
-                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name === entry.files[0].name;
-                });
-
-                if (!(foundIt === null || foundIt === undefined)) {
-                  const format1: AudioFormat | undefined =
-                    AudioManager.getFileFormat(
-                      task.files[0].extension,
-                      AppInfo.audioFormats,
-                    );
-                  const format2: AudioFormat | undefined =
-                    AudioManager.getFileFormat(
-                      entry.files[0].extension,
-                      AppInfo.audioFormats,
-                    );
-
-                  if (!(format1 && format2)) {
-                    entry.addFile(task.files[0]);
-
-                    (result as TaskDirectory).entries.splice(v, 1);
-                    tasks.splice(v, 1);
-                    v--;
-
-                    // TODO change if other than transcript files are needed
-                    entry.operations[1].enabled = false;
-                    entry.operations[1].changeState(TaskState.SKIPPED);
-                  }
-                }
-              }
-
-              foundTask = this.taskList?.getAllTasks().find((a) => {
-                const foundIt = a.files.find((b) => {
-                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name === entry.files[0].name;
-                });
-
-                return (
-                  a.state === TaskState.QUEUED &&
-                  !(foundIt === null || foundIt === undefined)
-                );
-              });
-
-              if (!(foundTask === null || foundTask === undefined)) {
-                const format1: AudioFormat | undefined =
-                  AudioManager.getFileFormat(
-                    foundTask.files[0].extension,
-                    AppInfo.audioFormats,
-                  );
-                const format2: AudioFormat | undefined =
-                  AudioManager.getFileFormat(
-                    entry.files[0].extension,
-                    AppInfo.audioFormats,
-                  );
-
-                if (!(format1 && format2)) {
-                  foundTask.setFileObj(0, entry.files[0]);
-                  foundTask.setFileObj(1, entry.files[1]);
-
-                  if (foundTask.files.length > 1) {
-                    // TODO change if other than transcript files are needed
-                    foundTask.operations[1].enabled = false;
-                    foundTask.operations[1].changeState(TaskState.SKIPPED);
-                  }
-                } else {
-                  // TODO check this
-                }
-              }
-
-              entry.changeState(TaskState.QUEUED);
-            }
-          }
-
-          if (foundTask === null || foundTask === undefined) {
-            this.addEntry(result, true);
-          } else {
-            foundTask.fileschange.next();
-          }
-        }
-
-        if (this.preprocessor.queue.length === 0) {
-          // check remaining unchecked files
-          this.checkFiles();
-        }
-      }),
+    this.state.modes.summarization.init(
+      [
+        new UploadOperation(
+          'Upload',
+          AppSettings.configuration.api.commands[0].calls,
+          'Upload',
+          'UL',
+        ),
+        new ASROperation(
+          'ASR',
+          AppSettings.configuration.api.commands[1].calls,
+          'Speech Recognition',
+          'ASR',
+        ),
+        new OCTRAOperation(
+          'OCTRA',
+          AppSettings.configuration.api.commands[2].calls,
+          'Manual Transcription',
+          'MT',
+        ),
+        new SummarizationOperation(
+          'Summarization',
+          AppSettings.configuration.api.commands[4].calls,
+          'Summarization',
+          'SUM',
+        ),
+      ],
+      'summarization',
+      this.process,
     );
 
     this.subscrmanager.add(
-      this.taskList?.entryChanged.subscribe((event: EntryChangeEvent) => {
-        if (event.state === 'added') {
-          if (event.entry.type === 'task') {
-            this.listenToTaskEvents(event.entry as Task);
-          } else {
-            for (const entry of (event.entry as TaskDirectory).entries) {
-              const task = entry as Task;
-              this.listenToTaskEvents(task);
-            }
-          }
+      this.state.modes.annotation.preprocessor.itemProcessed.subscribe(
+        this.onItemProcessed('annotation'),
+      ),
+    );
+    this.subscrmanager.add(
+      this.state.modes.annotation.taskList?.entryChanged.subscribe(
+        this.onTaskListEntryChanged('annotation'),
+      ),
+    );
 
-          if (event.saveToDB) {
-            this.storage.saveTask(event.entry).catch((error) => {
-              console.error(error);
-            });
-          }
-        } else if (event.state === 'removed') {
-          if (event.saveToDB) {
-            this.storage.removeFromDB(event.entry).catch((error) => {
-              console.error(error);
-            });
-          } else {
-            // TODO check this
-          }
-        } else if (event.state === 'changed') {
-          // not implemented yet
-        }
-      }),
+    this.subscrmanager.add(
+      this.state.modes.summarization.preprocessor.itemProcessed.subscribe(
+        this.onItemProcessed('summarization'),
+      ),
+    );
+    this.subscrmanager.add(
+      this.state.modes.summarization.taskList?.entryChanged.subscribe(
+        this.onTaskListEntryChanged('summarization'),
+      ),
     );
 
     this.subscrmanager.add(
@@ -393,6 +314,185 @@ export class TaskService implements OnDestroy {
     this.updateStatistics();
   }
 
+  private onTaskListEntryChanged = (mode: PortalModeType) => {
+    // TODO save to related task
+    return (event: EntryChangeEvent) => {
+      if (event.state === 'added') {
+        if (event.entry.type === 'task') {
+          this.listenToTaskEvents(event.entry as Task, mode);
+        } else {
+          for (const entry of (event.entry as TaskDirectory).entries) {
+            const task = entry as Task;
+            this.listenToTaskEvents(task, mode);
+          }
+        }
+
+        if (event.saveToDB) {
+          this.storage.saveTask(event.entry).catch((error) => {
+            console.error(error);
+          });
+        }
+      } else if (event.state === 'removed') {
+        if (event.saveToDB) {
+          this.storage.removeFromDB(event.entry).catch((error) => {
+            console.error(error);
+          });
+        } else {
+          // TODO check this
+        }
+      } else if (event.state === 'changed') {
+        // not implemented yet
+      }
+    };
+  };
+
+  private onItemProcessed = (mode: PortalModeType) => {
+    return async (item: QueueItem) => {
+      for (const result of item.results) {
+        let foundTask: Task | undefined;
+        if (result instanceof Task) {
+          for (const file of result.files) {
+            const escapedName = escapeRegex(
+              result.files[0].attributes.originalFileName.replace(
+                /(_annot)?\.[^.]+$/g,
+                '',
+              ),
+            );
+            foundTask = this.getTaskWithOriginalFileName(
+              new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
+              mode,
+            );
+
+            if (foundTask) {
+              // found a task
+              // file with this hash already exists, overwrite
+              const oldFileIndex = foundTask.files.findIndex(
+                (a) => file && a.hash === file.hash,
+              );
+
+              if (oldFileIndex > -1) {
+                foundTask.setFileObj(oldFileIndex, file);
+              } else {
+                if (foundTask.files.length > 1) {
+                  const index = file.type.indexOf('audio') > -1 ? 0 : 1;
+                  foundTask.files[index] = file;
+                  if (index === 1) {
+                    foundTask.operations[1].enabled = false;
+                  }
+                } else {
+                  if (file.type.indexOf('audio') > -1) {
+                    foundTask.files = [file, ...foundTask.files];
+                    foundTask.operations[1].enabled = false;
+                  } else {
+                    foundTask.files.push(file);
+                    foundTask.operations[1].enabled = false;
+                  }
+                }
+              }
+              await this.storage.saveTask(foundTask);
+            }
+          }
+          result.changeState(TaskStatus.QUEUED);
+        } else {
+          for (let j = 0; j < result.entries.length; j++) {
+            const entry = result.entries[j] as Task;
+            const tasks: Task[] = result.entries.filter((a) => {
+              return a instanceof Task;
+            }) as Task[];
+
+            // search for grouped files in this new directory
+            for (let v = j + 1; v < tasks.length; v++) {
+              const task = tasks[v];
+
+              const foundIt = task.files.find((b) => {
+                // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
+                return b.name === entry.files[0].name;
+              });
+
+              if (!(foundIt === null || foundIt === undefined)) {
+                const format1: AudioFormat | undefined =
+                  AudioManager.getFileFormat(
+                    task.files[0].extension,
+                    AppInfo.audioFormats,
+                  );
+                const format2: AudioFormat | undefined =
+                  AudioManager.getFileFormat(
+                    entry.files[0].extension,
+                    AppInfo.audioFormats,
+                  );
+
+                if (!(format1 && format2)) {
+                  entry.addFile(task.files[0]);
+
+                  (result as TaskDirectory).entries.splice(v, 1);
+                  tasks.splice(v, 1);
+                  v--;
+
+                  // TODO change if other than transcript files are needed
+                  entry.operations[1].enabled = false;
+                  entry.operations[1].changeState(TaskStatus.SKIPPED);
+                }
+              }
+            }
+
+            foundTask = this.state.modes[mode].taskList
+              ?.getAllTasks()
+              .find((a) => {
+                const foundIt = a.files.find((b) => {
+                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
+                  return b.name === entry.files[0].name;
+                });
+
+                return (
+                  a.state === TaskStatus.QUEUED &&
+                  !(foundIt === null || foundIt === undefined)
+                );
+              });
+
+            if (!(foundTask === null || foundTask === undefined)) {
+              const format1: AudioFormat | undefined =
+                AudioManager.getFileFormat(
+                  foundTask.files[0].extension,
+                  AppInfo.audioFormats,
+                );
+              const format2: AudioFormat | undefined =
+                AudioManager.getFileFormat(
+                  entry.files[0].extension,
+                  AppInfo.audioFormats,
+                );
+
+              if (!(format1 && format2)) {
+                foundTask.setFileObj(0, entry.files[0]);
+                foundTask.setFileObj(1, entry.files[1]);
+
+                if (foundTask.files.length > 1) {
+                  // TODO change if other than transcript files are needed
+                  foundTask.operations[1].enabled = false;
+                  foundTask.operations[1].changeState(TaskStatus.SKIPPED);
+                }
+              } else {
+                // TODO check this
+              }
+            }
+
+            entry.changeState(TaskStatus.QUEUED);
+          }
+        }
+
+        if (!foundTask) {
+          this.addEntry(result, mode, true);
+        } else {
+          foundTask.fileschange.next();
+        }
+      }
+
+      if (this.state.modes[mode].preprocessor.queue.length === 0) {
+        // check remaining unchecked files
+        this.checkFiles(mode);
+      }
+    };
+  };
+
   public async importDBData(dbEntries: {
     tasks: IDBTaskItem[];
     userSettings: IDBUserSettingsItem[];
@@ -400,7 +500,9 @@ export class TaskService implements OnDestroy {
     const idbTasks = dbEntries.tasks;
 
     if (idbTasks) {
-      this.newfiles = idbTasks.length > 0;
+      // TODO filter idbTasks correctly
+      const mode = 'annotation';
+      this.state.currentModeState.newfiles = idbTasks.length > 0;
 
       // make sure that taskCounter and operation counter are equal to their biggest value
       let maxTaskCounter = 0;
@@ -420,7 +522,7 @@ export class TaskService implements OnDestroy {
           const task = Task.fromAny(
             taskObj,
             AppSettings.configuration.api.commands,
-            this.operations,
+            this.state.modes[mode].operations,
           );
 
           maxTaskCounter = Math.max(maxTaskCounter, task.id);
@@ -461,18 +563,18 @@ export class TaskService implements OnDestroy {
             }
           }
 
-          if (!this._taskList) {
+          if (!this.state.modes[mode].taskList) {
             throw new Error('taskList not defined');
           }
 
-          this._taskList.addEntry(task).catch((err) => {
+          this.state.modes[mode].taskList.addEntry(task).catch((err) => {
             console.error(err);
           });
         } else {
           const taskDir = TaskDirectory.fromAny(
             taskObj,
             AppSettings.configuration.api.commands,
-            this.operations,
+            this.state.modes[mode].operations,
           );
 
           for (const taskElem of taskDir.entries) {
@@ -503,10 +605,10 @@ export class TaskService implements OnDestroy {
             }
           }
 
-          if (!this._taskList) {
+          if (!this.state.modes[mode].taskList) {
             throw new Error('undefined tasklist');
           }
-          this._taskList.addEntry(taskDir).catch((err) => {
+          this.state.modes[mode].taskList.addEntry(taskDir).catch((err) => {
             console.error(err);
           });
         }
@@ -549,12 +651,13 @@ export class TaskService implements OnDestroy {
             );
 
             if (lang) {
-              this.selectedASRLanguage = userSetting.value.asrLanguage;
-              this.selectedMausLanguage = userSetting.value.mausLanguage;
+              this.state.currentModeState.selectedASRLanguage =
+                userSetting.value.asrLanguage;
+              this.state.currentModeState.selectedMausLanguage =
+                userSetting.value.mausLanguage;
             }
-            this.selectedProvider = AppSettings.getServiceInformation(
-              userSetting.value.asrProvider,
-            );
+            this.state.currentModeState.selectedProvider =
+              AppSettings.getServiceInformation(userSetting.value.asrProvider);
             break;
         }
       }
@@ -564,16 +667,16 @@ export class TaskService implements OnDestroy {
     this.dbImported.complete();
   }
 
-  public checkFiles() {
+  public checkFiles(mode: PortalModeType) {
     if (this.splitPrompt !== 'BOTH') {
       const removeList = [];
       const promises = [];
 
-      if (!this.taskList) {
+      if (!this.state.modes[mode].taskList) {
         throw new Error('undefined tasklist');
       }
 
-      for (const entryElem of this.taskList.entries) {
+      for (const entryElem of this.state.modes[mode].taskList.entries) {
         if (entryElem instanceof TaskDirectory) {
           const entry = entryElem as TaskDirectory;
           if (entry.path.indexOf('_dir') > -1) {
@@ -583,7 +686,7 @@ export class TaskService implements OnDestroy {
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
                 if (
-                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.state === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
                   dirEntry.files[0].attributes.originalFileName.indexOf('_2.') >
                     -1
@@ -593,7 +696,7 @@ export class TaskService implements OnDestroy {
                 }
               } else if (this.splitPrompt === 'SECOND') {
                 if (
-                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.state === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
                   dirEntry.files[0].attributes.originalFileName.indexOf('_1.') >
                     -1
@@ -604,7 +707,9 @@ export class TaskService implements OnDestroy {
               }
 
               if (nothingToDo) {
-                promises.push(this.taskList.cleanup(entry, true));
+                promises.push(
+                  this.state.modes[mode].taskList.cleanup(entry, true),
+                );
                 this.saveCounters();
               }
             }
@@ -613,7 +718,9 @@ export class TaskService implements OnDestroy {
       }
 
       for (const removeElement of removeList) {
-        promises.push(this.taskList.removeEntry(removeElement, true));
+        promises.push(
+          this.state.modes[mode].taskList.removeEntry(removeElement, true),
+        );
       }
 
       Promise.all(promises).catch((error) => {
@@ -622,18 +729,23 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  public addEntry(entry: Task | TaskDirectory, saveToDB: boolean = false) {
-    if (!this.taskList) {
+  public addEntry(
+    entry: Task | TaskDirectory,
+    mode: PortalModeType,
+    saveToDB = false,
+  ) {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    this.taskList
+    taskList
       .addEntry(entry, saveToDB)
       .then(() => {
-        if (!this.taskList) {
+        if (!taskList) {
           throw new Error('undefined tasklist');
         }
-        return this.taskList.cleanup(entry, saveToDB);
+        return taskList.cleanup(entry, saveToDB);
       })
       .catch((err) => {
         console.error(`${err}`);
@@ -650,19 +762,22 @@ export class TaskService implements OnDestroy {
   public changeEntry(
     id: number,
     entry: Task | TaskDirectory,
-    saveToDB: boolean = false,
+    mode: PortalModeType,
+    saveToDB = false,
   ) {
-    if (!this.taskList) {
+    const taskList = this.state.modes[mode].taskList;
+
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    this.taskList
+    taskList
       .changeEntry(id, entry, saveToDB)
       .then(() => {
-        if (!this.taskList) {
+        if (!taskList) {
           throw new Error('undefined tasklist');
         }
-        return this.taskList.cleanup(entry, saveToDB);
+        return taskList.cleanup(entry, saveToDB);
       })
       .catch((err) => {
         console.error(`${err}`);
@@ -681,25 +796,26 @@ export class TaskService implements OnDestroy {
     this.storage.saveCounter('operationCounter', Operation.counter);
   }
 
-  public start() {
+  public start(mode: PortalModeType) {
     // look for pending tasks
-    if (this.overallState === 'processing') {
+    const taskList = this.state.modes[mode].taskList;
+    if (this.state.currentModeState.overallState === 'processing') {
       this.updateStatistics();
-      if (!this.taskList) {
+      if (!taskList) {
         throw new Error('undefined tasklist');
       }
-      const uploadingTask = this.taskList.getAllTasks().findIndex((task) => {
+      const uploadingTask = taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
       if (
         this._statistics.running < this.options.max_running_tasks &&
         uploadingTask < 0
       ) {
-        const task: Task | undefined = this.findNextWaitingTask();
+        const task: Task | undefined = this.findNextWaitingTask(mode);
 
         if (task && task.operations[1].providerInformation) {
-          if (this.state !== TaskState.PROCESSING) {
-            this.state = TaskState.READY;
+          if (this.state.currentModeState.status !== TaskStatus.PROCESSING) {
+            this.state.currentModeState.changeStatus(TaskStatus.READY);
           }
 
           task.statechange.subscribe((obj) => {
@@ -736,29 +852,30 @@ export class TaskService implements OnDestroy {
             console.error('langObj is undefined');
           }
           setTimeout(() => {
-            this.start();
+            this.start(mode);
           }, 100);
         } else {
           setTimeout(() => {
-            this.start();
+            this.start(mode);
           }, 100);
         }
       } else {
         setTimeout(() => {
-          this.start();
+          this.start(mode);
         }, 250);
       }
     }
   }
 
-  public findNextWaitingTask(): Task | undefined {
-    if (!this.taskList) {
+  public findNextWaitingTask(mode: PortalModeType): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
-    const tasks = this.taskList.getAllTasks();
+    const tasks = taskList.getAllTasks();
     for (const entry of tasks) {
       if (
-        entry.state === TaskState.PENDING &&
+        entry.state === TaskStatus.PENDING &&
         ((!(
           entry.files[0].file === null || entry.files[0].file === undefined
         ) &&
@@ -767,17 +884,17 @@ export class TaskService implements OnDestroy {
             entry.operations[0]?.lastResult?.online))
       ) {
         return entry;
-      } else if (entry.state === TaskState.READY) {
+      } else if (entry.state === TaskStatus.READY) {
         for (const operation of entry.operations) {
-          if (operation.state !== TaskState.SKIPPED && operation.enabled) {
+          if (operation.state !== TaskStatus.SKIPPED && operation.enabled) {
             if (
-              (operation.state === TaskState.PENDING ||
-                operation.state === TaskState.READY) &&
+              (operation.state === TaskStatus.PENDING ||
+                operation.state === TaskStatus.READY) &&
               !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
             ) {
               return entry;
             } else if (
-              operation.state !== TaskState.FINISHED &&
+              operation.state !== TaskStatus.FINISHED &&
               (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
             ) {
               break;
@@ -792,6 +909,8 @@ export class TaskService implements OnDestroy {
 
   public updateProtocolURL(): Promise<SafeResourceUrl> {
     return new Promise<SafeResourceUrl>((resolve, reject) => {
+      // TODO implement
+      /*
       if (!this.taskList) {
         throw new Error('undefined tasklist');
       }
@@ -824,14 +943,15 @@ export class TaskService implements OnDestroy {
         .catch((error) => {
           reject(error);
         });
+       */
     });
   }
 
   ngOnDestroy() {
-    if (!this.taskList) {
-      throw new Error('undefined tasklist');
-    }
-    const tasks = this.taskList.getAllTasks();
+    const tasks = [
+      ...(this.state.modes.annotation.taskList?.getAllTasks() ?? []),
+      ...(this.state.modes.summarization.taskList?.getAllTasks() ?? []),
+    ];
 
     for (const task of tasks) {
       task.destroy();
@@ -884,17 +1004,24 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> =
-    async (queueItem: QueueItem) => {
-      if (queueItem.file instanceof FileInfo) {
-        const file = queueItem.file as FileInfo;
-        return await this.processFileInfo(file, '', queueItem);
-      } else if (queueItem.file instanceof DirectoryInfo) {
-        const dir = queueItem.file as DirectoryInfo;
-        return this.processDirectoryInfo(dir, queueItem);
-      }
-      return firstValueFrom(of([]));
-    };
+  public process: (
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ) => Promise<(Task | TaskDirectory)[]> = async (
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ) => {
+    // TODO define distribution of files to correct modes
+
+    if (queueItem.file instanceof FileInfo) {
+      const file = queueItem.file as FileInfo;
+      return await this.processFileInfo(file, '', queueItem, mode);
+    } else if (queueItem.file instanceof DirectoryInfo) {
+      const dir = queueItem.file as DirectoryInfo;
+      return this.processDirectoryInfo(dir, queueItem, mode);
+    }
+    return firstValueFrom(of([]));
+  };
 
   public openSplitModal = () => {};
 
@@ -936,18 +1063,21 @@ export class TaskService implements OnDestroy {
   }
 
   public toggleProcessing() {
-    this.overallState =
-      this.overallState === 'processing' ? 'stopped' : 'processing';
-    if (!this.taskList) {
+    const mode = this.state.currentMode;
+    this.state.currentModeState.overallState =
+      this.state.currentModeState.overallState === 'processing'
+        ? 'stopped'
+        : 'processing';
+    if (!this.state.modes[mode].taskList) {
       throw new Error('undefined tasklist');
     }
-    const tasks = this.taskList.getAllTasks();
-    if (this.overallState === 'processing') {
+    const tasks = this.state.modes[mode].taskList.getAllTasks();
+    if (this.state.currentModeState.overallState === 'processing') {
       for (const task of tasks) {
         task.resumeTask();
       }
 
-      this.start();
+      this.start(mode);
     } else {
       for (const task of tasks) {
         task.stopTask();
@@ -963,37 +1093,40 @@ export class TaskService implements OnDestroy {
       finished: 0,
       errors: 0,
     };
-    if (!this.taskList) {
-      throw new Error('undefined tasklist');
-    }
-    const tasks = this.taskList.getAllTasks();
+    const allTasks = [
+      ...(this.state.modes.annotation.taskList?.getAllTasks() ?? []),
+      ...(this.state.modes.summarization.taskList?.getAllTasks() ?? []),
+    ];
 
-    for (const task of tasks) {
+    for (const task of allTasks) {
       // running
       if (
-        task.state === TaskState.PROCESSING ||
-        task.state === TaskState.UPLOADING
+        task.state === TaskStatus.PROCESSING ||
+        task.state === TaskStatus.UPLOADING
       ) {
         result.running++;
       }
 
       // waiting
-      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
+      if (
+        task.state === TaskStatus.PENDING ||
+        task.state === TaskStatus.READY
+      ) {
         result.waiting++;
       }
 
       // queued
-      if (task.state === TaskState.QUEUED) {
+      if (task.state === TaskStatus.QUEUED) {
         result.queued++;
       }
 
       // finished
-      if (task.state === TaskState.FINISHED) {
+      if (task.state === TaskStatus.FINISHED) {
         result.finished++;
       }
 
       // failed
-      if (task.state === TaskState.ERROR) {
+      if (task.state === TaskStatus.ERROR) {
         result.errors++;
       }
     }
@@ -1001,7 +1134,7 @@ export class TaskService implements OnDestroy {
     this._statistics = result;
   }
 
-  private listenToTaskEvents(task: Task) {
+  private listenToTaskEvents(task: Task, mode: PortalModeType) {
     this.subscrmanager.add(
       task.opstatechange.subscribe((event) => {
         const operation = task.getOperationByID(event.opID);
@@ -1013,18 +1146,21 @@ export class TaskService implements OnDestroy {
           task.files[0].attributes?.originalFileName ?? task.files[0].fullname
         ).replace(/\.[^.]+$/g, '');
 
-        if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
+        if (opName === 'ASR' && event.newState === TaskStatus.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now transcribe ${fileName} manually.`,
           );
-        } else if (event.newState === TaskState.ERROR) {
+        } else if (event.newState === TaskStatus.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`,
           );
-        } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+        } else if (
+          opName === 'MAUS' &&
+          event.newState === TaskStatus.FINISHED
+        ) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
@@ -1037,16 +1173,16 @@ export class TaskService implements OnDestroy {
         if (
           this._statistics.running > 1 ||
           (this._statistics.running === 1 &&
-            lastOp.state !== TaskState.FINISHED &&
-            lastOp.state !== TaskState.READY)
+            lastOp.state !== TaskStatus.FINISHED &&
+            lastOp.state !== TaskStatus.READY)
         ) {
-          if (operation.state === TaskState.UPLOADING) {
-            this.state = TaskState.UPLOADING;
+          if (operation.state === TaskStatus.UPLOADING) {
+            this.state.modes[mode].changeStatus(TaskStatus.UPLOADING);
           } else {
-            this.state = TaskState.PROCESSING;
+            this.state.modes[mode].changeStatus(TaskStatus.PROCESSING);
           }
         } else {
-          this.state = TaskState.READY;
+          this.state.modes[mode].changeStatus(TaskStatus.READY);
         }
         this.storage.saveTask(task);
 
@@ -1068,17 +1204,20 @@ export class TaskService implements OnDestroy {
     file: FileInfo,
     path: string,
     queueItem: QueueItem,
+    mode: PortalModeType,
   ): Promise<(Task | TaskDirectory)[]> {
     if (!file?.file) {
       throw new Error('file is undefined');
     }
 
-    file.hash = await this.preprocessor.getHashString(file.file);
+    file.hash = await this.state.modes[mode].preprocessor.getHashString(
+      file.file,
+    );
     const hashString =
       file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
     const newName = `${hashString}${file.extension}`;
     let newFileInfo: FileInfo | undefined;
-    this.newfiles = true;
+    this.state.currentModeState.newfiles = true;
 
     if (newName !== file.fullname) {
       // no valid name, replace
@@ -1120,6 +1259,7 @@ export class TaskService implements OnDestroy {
     const foundOldFile = this.getTaskWithHashAndName(
       file.hash,
       file.attributes.originalFileName,
+      mode,
     );
 
     if (file?.file) {
@@ -1180,6 +1320,7 @@ export class TaskService implements OnDestroy {
             const result = await this.processDirectoryInfo(
               directory,
               queueItem,
+              mode,
             );
             return result;
           } else {
@@ -1187,6 +1328,7 @@ export class TaskService implements OnDestroy {
               FileInfo.fromFileObject(files[0]),
               path,
               queueItem,
+              mode,
             );
           }
         } else {
@@ -1222,13 +1364,14 @@ export class TaskService implements OnDestroy {
         };
 
         // new file
-        const task = new Task([newFileInfo], this.operations);
-        task.asrLanguage = this.selectedASRLanguage;
-        task.asrProvider = this.selectedProvider?.provider;
+        const task = new Task([newFileInfo], this.state.modes[mode].operations);
+        task.asrLanguage = this.state.currentModeState.selectedASRLanguage;
+        task.asrProvider =
+          this.state.currentModeState.selectedProvider?.provider;
 
         // set state
-        for (let i = 0; i < this.operations.length; i++) {
-          const operation = this.operations[i];
+        for (let i = 0; i < this.state.modes[mode].operations.length; i++) {
+          const operation = this.state.modes[mode].operations[i];
           task.operations[i].enabled = operation.enabled;
         }
 
@@ -1244,6 +1387,7 @@ export class TaskService implements OnDestroy {
   private async processDirectoryInfo(
     dir: DirectoryInfo,
     queueItem: QueueItem,
+    mode: PortalModeType,
   ): Promise<TaskDirectory[]> {
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
@@ -1252,7 +1396,7 @@ export class TaskService implements OnDestroy {
       if (dirEntry instanceof FileInfo) {
         const file = dirEntry as FileInfo;
         processedValues.push(
-          await this.processFileInfo(file, dir.path, queueItem),
+          await this.processFileInfo(file, dir.path, queueItem, mode),
         );
       } else {
         throw new Error('file in dir is not a file!');
@@ -1266,8 +1410,8 @@ export class TaskService implements OnDestroy {
     for (const value of values) {
       if (value instanceof Task) {
         // set state
-        for (let i = 0; i < this.operations.length; i++) {
-          const operation = this.operations[i];
+        for (let i = 0; i < this.state.modes[mode].operations.length; i++) {
+          const operation = this.state.modes[mode].operations[i];
           value.operations[i].enabled = operation.enabled;
         }
         content.push(value);
@@ -1294,12 +1438,17 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  private getTaskWithHashAndName(hash: string, name: string): Task | undefined {
-    if (!this.taskList) {
+  private getTaskWithHashAndName(
+    hash: string,
+    name: string,
+    mode: PortalModeType,
+  ): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    const tasks: Task[] = this.taskList.getAllTasks();
+    const tasks: Task[] = taskList.getAllTasks();
 
     for (const task of tasks) {
       if (
@@ -1314,8 +1463,8 @@ export class TaskService implements OnDestroy {
           if (
             cmpHash === hash &&
             file.attributes.originalFileName === name &&
-            (task.operations[0].state === TaskState.PENDING ||
-              task.operations[0].state === TaskState.ERROR)
+            (task.operations[0].state === TaskStatus.PENDING ||
+              task.operations[0].state === TaskStatus.ERROR)
           ) {
             return task;
           }
@@ -1328,21 +1477,25 @@ export class TaskService implements OnDestroy {
     return undefined;
   }
 
-  private getTaskWithOriginalFileName(regex: RegExp): Task | undefined {
-    if (!this.taskList) {
+  private getTaskWithOriginalFileName(
+    regex: RegExp,
+    mode: PortalModeType,
+  ): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    const tasks: Task[] = this.taskList.getAllTasks();
+    const tasks: Task[] = taskList.getAllTasks();
 
     for (const task of tasks) {
       if (task.files[0].attributes.originalFileName) {
         for (const file of task.files) {
           // console.log(`${cmpHash} === ${hash}`);
           if (
-            (task.operations[0].state === TaskState.PENDING ||
-              task.operations[0].state === TaskState.QUEUED ||
-              task.operations[0].state === TaskState.ERROR) &&
+            (task.operations[0].state === TaskStatus.PENDING ||
+              task.operations[0].state === TaskStatus.QUEUED ||
+              task.operations[0].state === TaskStatus.ERROR) &&
             regex.exec(file.attributes.originalFileName) !== null
           ) {
             return task;

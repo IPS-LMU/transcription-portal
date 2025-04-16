@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
-import { Task, TaskDirectory, TaskState } from '../../../obj/tasks';
+import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
 
 @Directive({
   selector: '[tportalDirProgress]',
@@ -62,11 +62,11 @@ export class DirProgressDirective
       if (entry instanceof Task) {
         const operation = entry.operations[this.opIndex];
 
-        if (operation.state === TaskState.PROCESSING) {
+        if (operation.state === TaskStatus.PROCESSING) {
           counters.processing++;
-        } else if (operation.state === TaskState.FINISHED) {
+        } else if (operation.state === TaskStatus.FINISHED) {
           counters.finished++;
-        } else if (operation.state === TaskState.ERROR) {
+        } else if (operation.state === TaskStatus.ERROR) {
           counters.failed++;
         }
       }

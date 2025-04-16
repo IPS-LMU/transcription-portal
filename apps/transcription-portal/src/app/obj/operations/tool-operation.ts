@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 
 export class ToolOperation extends Operation {
@@ -13,7 +13,7 @@ export class ToolOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
@@ -32,10 +32,10 @@ export class ToolOperation extends Operation {
     accessCode: string,
   ) => {
     this._time.start = Date.now();
-    this.changeState(TaskState.PROCESSING);
+    this.changeState(TaskStatus.PROCESSING);
 
     setTimeout(() => {
-      this.changeState(TaskState.FINISHED);
+      this.changeState(TaskStatus.FINISHED);
       this.time.duration = 0;
     }, 2000);
   };
@@ -44,27 +44,27 @@ export class ToolOperation extends Operation {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result =
           '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }

@@ -46,7 +46,7 @@ import { OCTRAOperation } from '../../obj/operations/octra-operation';
 import { Operation } from '../../obj/operations/operation';
 import { ToolOperation } from '../../obj/operations/tool-operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskState } from '../../obj/tasks';
+import { TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
@@ -96,6 +96,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
+
+  private tabOrder = {
+    annotation: 1,
+    summarization: 2,
+  };
+
   activeMode = 1;
 
   sumProjectName = '';
@@ -232,27 +238,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     return AppInfo;
   }
 
-  public allTasks(): Task[] {
-    if (
-      !(
-        this.taskService.taskList === null ||
-        this.taskService.taskList === undefined
-      )
-    ) {
-      return this.taskService.taskList.getAllTasks();
-    }
-
-    return [];
-  }
-
   onAfterDrop(entries: (FileInfo | DirectoryInfo)[]) {
     this.readNewFiles(entries);
   }
 
   onVerifyButtonClick() {
-    // TODO any change needed?
-    const tasks = this.taskService?.taskList?.getAllTasks().filter((a) => {
-      return a.state === TaskState.QUEUED;
+    const taskList = this.taskService.state.currentModeState.taskList;
+    const tasks = taskList?.getAllTasks().filter((a) => {
+      return a.state === TaskStatus.QUEUED;
     });
 
     if (tasks && tasks.length > 0) {
@@ -266,10 +259,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       QueueModalComponent,
       QueueModalComponent.options,
     );
-    ref.componentInstance.queue = this.taskService.preprocessor.queue;
-    ref.componentInstance.tasks =
-      this.taskService.taskList?.getAllTasks() ?? [];
-    ref.componentInstance.operations = this.taskService.operations;
+    const taskList = this.taskService.state.currentModeState.taskList;
+    ref.componentInstance.queue = this.taskService.state.currentModeState.preprocessor.queue;
+    ref.componentInstance.tasks = taskList?.getAllTasks() ?? [];
+    ref.componentInstance.operations =
+      this.taskService.state.currentModeState.operations;
   }
 
   onMissedDrop(event: DragEvent) {
@@ -304,7 +298,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if (
       operation &&
       operation instanceof ToolOperation &&
-      operation.state !== TaskState.PENDING
+      operation.state !== TaskStatus.PENDING
     ) {
       const tool = operation as ToolOperation;
       const task = tool.task!;
@@ -329,8 +323,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
               10,
             );
-            tool.task?.operations[0].changeState(TaskState.PENDING);
-            tool.task?.changeState(TaskState.PENDING);
+            tool.task?.operations[0].changeState(TaskStatus.PENDING);
+            tool.task?.changeState(TaskStatus.PENDING);
           } else {
             // start upload process
             this.alertService.showAlert(
@@ -355,7 +349,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                 console.error(error);
               },
             );
-            this.taskService.start();
+            this.taskService.start(this.taskService.state.currentMode);
           }
         } else if (
           uploadOperation?.lastResult?.available &&
@@ -433,7 +427,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
               if (index < tool.task.operations.length) {
                 // start processing
-                tool.changeState(TaskState.PROCESSING);
+                tool.changeState(TaskStatus.PROCESSING);
               }
             }
 
@@ -587,7 +581,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               inputs[0].attributes?.originalFileName ?? inputs[0].fullname
             ).replace(/\.[^.]+$/g, '');
 
-            this.toolSelectedOperation.changeState(TaskState.FINISHED);
+            this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
             this._showtool = false;
             let jsonText = '';
             if (hasProperty($event.data.data, 'annotation')) {
@@ -641,7 +635,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                 i++
               ) {
                 const operation = this.toolSelectedOperation.task.operations[i];
-                operation.changeState(TaskState.PENDING);
+                operation.changeState(TaskStatus.PENDING);
               }
             }
 
@@ -653,7 +647,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                 Date.now() - this.toolSelectedOperation.time.start;
             }
 
-            this.toolSelectedOperation.changeState(TaskState.FINISHED);
+            this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
             this.storage.saveTask(this.toolSelectedOperation.task);
 
             setTimeout(() => {
@@ -714,14 +708,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if (this.toolSelectedOperation) {
       if (
         this.toolSelectedOperation.nextOperation &&
-        this.toolSelectedOperation.nextOperation.state === TaskState.FINISHED
+        this.toolSelectedOperation.nextOperation.state === TaskStatus.FINISHED
       ) {
-        this.toolSelectedOperation.changeState(TaskState.FINISHED);
-      } else if (this.toolSelectedOperation.state !== TaskState.FINISHED) {
+        this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
+      } else if (this.toolSelectedOperation.state !== TaskStatus.FINISHED) {
         if (this.toolSelectedOperation.results.length > 0) {
-          this.toolSelectedOperation.changeState(TaskState.FINISHED);
+          this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
         } else {
-          this.toolSelectedOperation.changeState(TaskState.READY);
+          this.toolSelectedOperation.changeState(TaskStatus.READY);
         }
       }
     }
@@ -756,7 +750,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     );
     ref.result.then((reason) => {
       this.taskService.splitPrompt = reason;
-      this.taskService.checkFiles();
+      this.taskService.checkFiles(this.taskService.state.currentMode);
     });
   };
 
@@ -852,18 +846,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
-    if (
-      !(entries === null || entries === undefined) &&
-      !(
-        this.taskService.operations === null ||
-        this.taskService.operations === undefined
-      )
-    ) {
+    if (entries && this.taskService.state.currentModeState.operations) {
       // filter and re-structure entries array to supported files and directories
       const filteredEntries = this.taskService.cleanUpInputArray(entries);
 
       for (const entry of filteredEntries) {
-        this.taskService.preprocessor.addToQueue(entry);
+        this.taskService.state.currentModeState.preprocessor.addToQueue(entry);
       }
     }
   }
@@ -921,5 +909,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       .catch((err) => {
         this.settingsService.shortCutsEnabled = true;
       });
+  }
+
+  changeMode(mode: 'annotation' | 'summarization') {
+    this.taskService.state.currentMode = mode;
   }
 }

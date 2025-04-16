@@ -11,6 +11,8 @@ export class SummarizationOperation extends Operation {
   public webService = '';
   public resultType = 'Text';
 
+  private sumProjectName = '';
+
   public start = (
     asrService: ServiceProvider,
     languageObject: ProviderLanguage,
@@ -25,14 +27,7 @@ export class SummarizationOperation extends Operation {
     this._time.start = Date.now();
 
     setTimeout(async () => {
-      console.log('RUN SUMMARIZATION WITH ASR RESULTS');
-      console.log(operations[1].results);
-      const projectName = await this.createSummarizationProject(httpclient);
-      await this.uploadFile(
-        operations[1].results[0].file!,
-        httpclient,
-        projectName,
-      );
+      await this.createSummarizationProject(httpclient);
     }, 2000);
   };
 
@@ -150,61 +145,15 @@ export class SummarizationOperation extends Operation {
   }
 
   async createSummarizationProject(httpClient: HttpClient) {
-    return new Promise<string>((resolve, reject) => {
-      const projectName = `tportal_session_${Date.now()}`;
+    return new Promise<any>((resolve, reject) => {
+      this.sumProjectName = `tportal_session_${Date.now()}`;
       this.subscrManager.add(
         httpClient
           .post(
             'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/create',
             {
-              projectName,
+              projectName: this.sumProjectName,
             },
-            { responseType: 'json' },
-          )
-          .subscribe({
-            next: () => {
-              resolve(projectName);
-            },
-            error: reject,
-          }),
-      );
-    });
-  }
-
-  async processSummarizationProject(
-    httpclient: HttpClient,
-    projectName: string,
-  ) {
-    return new Promise<void>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/process',
-            {
-              projectName,
-              language: 'nl',
-              gpu: false,
-            },
-            { responseType: 'json' },
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
-    });
-  }
-
-  getProjectStatus(httpclient: HttpClient, projectName: string) {
-    return new Promise<any>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .get(
-            `https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project${stringifyQueryParams(
-              {
-                projectName,
-              },
-            )}`,
             { responseType: 'json' },
           )
           .subscribe({
@@ -215,44 +164,85 @@ export class SummarizationOperation extends Operation {
     });
   }
 
-  deleteSummarizationProject(httpclient: HttpClient, projectName: string) {
-    return new Promise<void>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .delete(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project',
-            {
-              responseType: 'json',
-              body: {
-                projectName,
-              },
-            },
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
-    });
+  processSummarizationProject(httpclient: HttpClient) {
+    this.subscrManager.add(
+      httpclient
+        .post(
+          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/process',
+          {
+            projectName: this.sumProjectName,
+            language: 'nl',
+            gpu: false,
+          },
+          { responseType: 'json' },
+        )
+        .subscribe({
+          next: (result) => {
+            console.log('SUMM PROCESS PROJECT RESULT:');
+            console.log(result);
+          },
+        }),
+    );
   }
 
-  uploadFile(file: File, httpClient: HttpClient, projectName: string) {
-    return new Promise<void>((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('projectName', projectName);
-      this.subscrManager.add(
-        httpClient
-          .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/upload',
-            formData,
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
-    });
+  getProjectStatus(httpclient: HttpClient) {
+    this.subscrManager.add(
+      httpclient
+        .get(
+          `https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project${stringifyQueryParams(
+            {
+              projectName: this.sumProjectName,
+            },
+          )}`,
+          { responseType: 'json' },
+        )
+        .subscribe({
+          next: (result) => {
+            console.log('SUMM GET STATUS PROJECT RESULT:');
+            console.log(result);
+          },
+        }),
+    );
+  }
+
+  deleteSummarizationProject(httpclient: HttpClient) {
+    this.subscrManager.add(
+      httpclient
+        .delete(
+          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project',
+          {
+            responseType: 'json',
+            body: {
+              projectName: this.sumProjectName,
+            },
+          },
+        )
+        .subscribe({
+          next: (result) => {
+            console.log('SUMM DELETE PROJECT RESULT:');
+            console.log(result);
+          },
+        }),
+    );
+  }
+
+  uploadFile(file: File, httpClient: HttpClient) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('projectName', this.sumProjectName);
+    this.subscrManager.add(
+      httpClient
+        .post(
+          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/upload',
+          formData,
+        )
+        .subscribe({
+          next: (result) => {
+            console.log('SUMM UPLOAD FILE PROJECT RESULT:');
+            console.log(result);
+          },
+        }),
+    );
   }
 
   onMouseEnter(): void {}

@@ -6,7 +6,7 @@ import { FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 import { UploadOperation } from './upload-operation';
 
@@ -24,7 +24,7 @@ export class ASROperation extends Operation {
   ) => {
     this.webService = asrService.provider!;
     this.updateProtocol('');
-    this.changeState(TaskState.PROCESSING);
+    this.changeState(TaskStatus.PROCESSING);
     this._time.start = Date.now();
 
     setTimeout(() => {
@@ -44,9 +44,9 @@ export class ASROperation extends Operation {
                     originalFileName: `${name}${finalResult.extension}`,
                   };
                   this.results.push(finalResult);
-                  this.changeState(TaskState.FINISHED);
+                  this.changeState(TaskStatus.FINISHED);
                 } else {
-                  this.changeState(TaskState.ERROR);
+                  this.changeState(TaskStatus.ERROR);
                 }
               })
               .catch((error) => {
@@ -54,7 +54,7 @@ export class ASROperation extends Operation {
                   this.protocol + '<br/>' + error.replace('¶'),
                 );
                 this.time.duration = Date.now() - this.time.start;
-                this.changeState(TaskState.ERROR);
+                this.changeState(TaskStatus.ERROR);
                 console.error(error);
               });
           }
@@ -62,7 +62,7 @@ export class ASROperation extends Operation {
         .catch((error) => {
           this.updateProtocol(this.protocol + '<br/>' + error.replace('¶'));
           this.time.duration = Date.now() - this.time.start;
-          this.changeState(TaskState.ERROR);
+          this.changeState(TaskStatus.ERROR);
           console.error(error);
         });
     }, 2000);
@@ -171,7 +171,7 @@ export class ASROperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);

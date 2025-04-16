@@ -646,7 +646,8 @@ export class SettingsService implements OnDestroy {
                   this.subscrManager.add(
                     timer(0).subscribe({
                       next: () => {
-                        this.taskService.preprocessor.addToQueue(info);
+                        // TODO select preprocessor by mode
+                        this.taskService.state.modes.annotation.preprocessor.addToQueue(info);
                       },
                     }),
                   );
@@ -701,15 +702,15 @@ export class SettingsService implements OnDestroy {
         audioLanguage = 'ita-IT';
       }
 
-      this.taskService.selectedASRLanguage = supportedAudioLanguages.find((a) =>
+      this.taskService.state.currentModeState.selectedASRLanguage = supportedAudioLanguages.find((a) =>
         a.value.includes(audioLanguage!),
       )?.value;
-      this.taskService.selectedMausLanguage = supportedMausLanguages.find((a) =>
+      this.taskService.state.currentModeState.selectedMausLanguage = supportedMausLanguages.find((a) =>
         a.value.includes(audioLanguage!),
       )?.value;
 
-      if (this.taskService.selectedMausLanguage) {
-        this.taskService.selectedProvider =
+      if (this.taskService.state.currentModeState.selectedMausLanguage) {
+        this.taskService.state.currentModeState.selectedProvider =
           AppSettings.getServiceInformation('Watson'); // Watson is default
       }
     }

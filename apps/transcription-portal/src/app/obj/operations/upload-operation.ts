@@ -6,7 +6,7 @@ import { Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { TimePipe } from '../../shared/time.pipe';
 import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 
 export class UploadOperation extends Operation {
@@ -16,7 +16,7 @@ export class UploadOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
@@ -121,7 +121,7 @@ export class UploadOperation extends Operation {
   ) => {
     this._results = [];
     this.updateProtocol('');
-    this.changeState(TaskState.UPLOADING);
+    this.changeState(TaskStatus.UPLOADING);
     this._time.start = Date.now();
 
     const url = this._commands[0].replace('{{host}}', asrService.host);
@@ -157,12 +157,12 @@ export class UploadOperation extends Operation {
               info.attributes = files[i].attributes;
               this.results.push(info);
             }
-            this.changeState(TaskState.FINISHED);
+            this.changeState(TaskStatus.FINISHED);
           } else {
             this.updateProtocol(
               'Number of returned URLs do not match number of files.',
             );
-            this.changeState(TaskState.ERROR);
+            this.changeState(TaskStatus.ERROR);
           }
         }
       },
@@ -170,7 +170,7 @@ export class UploadOperation extends Operation {
         console.error(e);
         // add messages to protocol
         this.updateProtocol(e.message);
-        this.changeState(TaskState.ERROR);
+        this.changeState(TaskStatus.ERROR);
       },
     );
   };
@@ -178,10 +178,10 @@ export class UploadOperation extends Operation {
   public override getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
     let result = '';
     switch (this._state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = '';
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         if (this.progress > 0) {
           this.updateEstimatedEnd();
           const time = this.estimatedEnd ? this.estimatedEnd - Date.now() : 0;
@@ -196,19 +196,19 @@ export class UploadOperation extends Operation {
 </div>`;
         }
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result =
           '<i class="bi bi-gear spin"></i>\n' +
           '<span class="sr-only">Loading...</span>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result =
           '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -216,14 +216,14 @@ export class UploadOperation extends Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
-  public override getStateIcon2 = (state: TaskState): string => {
+  public override getStateIcon2 = (state: TaskStatus): string => {
     let result = '';
 
     switch (state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = '';
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         if (this.progress > 0) {
           this.updateEstimatedEnd();
           const time = this.estimatedEnd ? this.estimatedEnd - Date.now() : 0;
@@ -238,20 +238,20 @@ export class UploadOperation extends Operation {
 </div>`;
         }
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result =
           '<i class="bi bi-gear-fill spin"></i>\n' +
           '<span class="sr-only">Processing...</span>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
