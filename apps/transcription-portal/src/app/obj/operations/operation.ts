@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import { ProviderLanguage } from '../oh-config';
@@ -35,6 +36,8 @@ export abstract class Operation {
     newState: TaskState;
   }> = this.statesubj.asObservable();
   private readonly _id: number;
+
+  protected subscrManager = new SubscriptionManager();
 
   protected constructor(
     private _name: string,

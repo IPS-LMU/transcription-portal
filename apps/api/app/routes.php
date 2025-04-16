@@ -30,7 +30,7 @@ return function (App $app) {
   /**
    * creates a new project for summarization.
    * body: {
-   *   name: string
+   *   projectName: string
    * }
    */
   $app->post('/summarization/project/create', function (Request $request, Response $response) {
@@ -45,7 +45,7 @@ return function (App $app) {
     if ($result->getStatusCode() === 201) {
       $response->getBody()->write(json_encode(array("status" => "success")));
     } else {
-      $response = $response->withStatus(500);
+      $response = $response->withStatus($result->getStatusCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $result->getBody()->getContents())));
     }
 
@@ -69,7 +69,7 @@ return function (App $app) {
       $response = $response->withStatus($result->getStatusCode());
       $response->getBody()->write(json_encode(array("status" => "success")));
     } catch (GuzzleException $err) {
-      $response = $response->withStatus(500);
+      $response = $response->withStatus($err->getCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $err->getMessage())));
     }
     return $response;
@@ -110,11 +110,10 @@ return function (App $app) {
         ]);
 
         unlink($newFilePath);
-
         $response->getBody()->write(json_encode(array("status" => "success")));
       }
     } catch (GuzzleException $err) {
-      $response = $response->withStatus(500);
+      $response = $response->withStatus($err->getCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $err->getMessage())));
     }
 
@@ -127,7 +126,7 @@ return function (App $app) {
    * body: {
    *   projectName: string;
    *   gpu?: boolean;
-   *   language?: string;
+   *   language: string;
    * }
    */
   $app->post('/summarization/project/process', function (Request $request, Response $response) {
@@ -137,7 +136,7 @@ return function (App $app) {
       $parsedBody = $request->getParsedBody();
       $result = $summarizationClient->post('sumservice/' . $parsedBody['projectName'], [
         'form_params' => [
-          'gpu' => $parsedBody['gpu'],
+          'gpu' => !empty($parsedBody['gpu']) ? $parsedBody['gpu'] : false,
           'language' => $parsedBody['language']
         ]
       ]);
@@ -156,7 +155,7 @@ return function (App $app) {
 
       $response->getBody()->write(json_encode(array("status" => "success")));
     } catch (GuzzleException $err) {
-      $response = $response->withStatus(500);
+      $response = $response->withStatus($err->getCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $err->getMessage())));
     }
     return $response;
@@ -170,7 +169,6 @@ return function (App $app) {
    */
   $app->get('/summarization/project', function (Request $request, Response $response) {
     global $summarizationClient;
-
     try {
       $queryParams = $request->getQueryParams();
       $result = $summarizationClient->get('sumservice/' . $queryParams['projectName']);
@@ -199,7 +197,7 @@ return function (App $app) {
       }
 
       $inputs = array();
-      if ($xml->input->file->count() > 1) {
+      if (!empty($xml->input->file) && $xml->input->file->count() > 1) {
         foreach ($xml->input->file as $input) {
           $inputs[] = array(
             "filename" => (string)$input->name,
@@ -216,7 +214,7 @@ return function (App $app) {
       }
 
       $outputs = array();
-      if ($xml->output->file->count() > 1) {
+      if (!empty($xml->output->file) && $xml->output->file->count() > 1) {
         foreach ($xml->output->file as $output) {
           $outputs[] = array(
             "filename" => (string)$output->name,
@@ -241,7 +239,7 @@ return function (App $app) {
         "outputs" => $outputs
       ))));
     } catch (GuzzleException $err) {
-      $response = $response->withStatus(500);
+      $response = $response->withStatus($err->getCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $err->getMessage())));
     }
     return $response;

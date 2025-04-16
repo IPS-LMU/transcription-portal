@@ -26,7 +26,7 @@ import {
 } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { hasProperty } from '@octra/utilities';
+import { hasProperty, stringifyQueryParams } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -94,6 +94,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
+
+  sumProjectName = '';
 
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('folderinput') folderinput?: ElementRef;
