@@ -1,13 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { ServiceProvider } from '@octra/ngx-components';
-import { stringifyQueryParams } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
+import { last } from '@octra/utilities';
+import { FileInfo, readFileContents } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
 import { Operation } from './operation';
 
-export class SummarizationOperation extends Operation {
+export class TranslationOperation extends Operation {
   public webService = '';
   public resultType = 'Text';
 
@@ -27,13 +27,38 @@ export class SummarizationOperation extends Operation {
     this._time.start = Date.now();
 
     setTimeout(async () => {
-      await this.createSummarizationProject(httpclient);
+      const lastResult = last(operations[3].results);
+      console.log('LAST RESULT FROM SUMMARIZATION OPERATION');
+      console.log(lastResult);
+
+      if (lastResult?.file) {
+        const content = await readFileContents<string>(
+          lastResult.file,
+          'text',
+          'utf-8',
+        );
+        const result = await this.getTranslation(httpclient, content);
+        console.log('TRANSLATION RESULT');
+        console.log(result);
+        this.time.duration = Date.now() - this.time.start;
+        this.results.push(
+          new FileInfo(
+            lastResult.fullname,
+            lastResult.type,
+            lastResult.size,
+            new File([result.translatedText], lastResult.fullname, {
+              type: 'text/plain',
+            }),
+          ),
+        );
+        this.changeState(TaskStatus.FINISHED);
+      }
     }, 2000);
   };
 
-  public clone(task?: Task): SummarizationOperation {
+  public clone(task?: Task): TranslationOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new SummarizationOperation(
+    return new TranslationOperation(
       this.name,
       this._commands,
       this.title,
@@ -44,7 +69,7 @@ export class SummarizationOperation extends Operation {
   }
 
   public fromAny(operationObj: any, commands: string[], task: Task): Operation {
-    const result = new SummarizationOperation(
+    const result = new TranslationOperation(
       operationObj.name,
       commands,
       this.title,
@@ -144,17 +169,31 @@ export class SummarizationOperation extends Operation {
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  async createSummarizationProject(httpClient: HttpClient) {
+  onMouseEnter(): void {}
+
+  onMouseLeave(): void {}
+
+  onMouseOver(): void {}
+
+  private async getTranslation(httpClient: HttpClient, text: string) {
     return new Promise<any>((resolve, reject) => {
-      this.sumProjectName = `tportal_session_${Date.now()}`;
       this.subscrManager.add(
         httpClient
           .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/create',
+            'https://translate.cls.ru.nl/translate',
             {
-              projectName: this.sumProjectName,
+              q: text,
+              source: 'nl',
+              target: 'en',
+              format: 'text',
+              alternatives: 1,
+              api_key: '',
             },
-            { responseType: 'json' },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            },
           )
           .subscribe({
             next: resolve,
@@ -163,91 +202,4 @@ export class SummarizationOperation extends Operation {
       );
     });
   }
-
-  processSummarizationProject(httpclient: HttpClient) {
-    this.subscrManager.add(
-      httpclient
-        .post(
-          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/process',
-          {
-            projectName: this.sumProjectName,
-            language: 'nl',
-            gpu: false,
-          },
-          { responseType: 'json' },
-        )
-        .subscribe({
-          next: (result) => {
-            console.log('SUMM PROCESS PROJECT RESULT:');
-            console.log(result);
-          },
-        }),
-    );
-  }
-
-  getProjectStatus(httpclient: HttpClient) {
-    this.subscrManager.add(
-      httpclient
-        .get(
-          `https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project${stringifyQueryParams(
-            {
-              projectName: this.sumProjectName,
-            },
-          )}`,
-          { responseType: 'json' },
-        )
-        .subscribe({
-          next: (result) => {
-            console.log('SUMM GET STATUS PROJECT RESULT:');
-            console.log(result);
-          },
-        }),
-    );
-  }
-
-  deleteSummarizationProject(httpclient: HttpClient) {
-    this.subscrManager.add(
-      httpclient
-        .delete(
-          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project',
-          {
-            responseType: 'json',
-            body: {
-              projectName: this.sumProjectName,
-            },
-          },
-        )
-        .subscribe({
-          next: (result) => {
-            console.log('SUMM DELETE PROJECT RESULT:');
-            console.log(result);
-          },
-        }),
-    );
-  }
-
-  uploadFile(file: File, httpClient: HttpClient) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('projectName', this.sumProjectName);
-    this.subscrManager.add(
-      httpClient
-        .post(
-          'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/upload',
-          formData,
-        )
-        .subscribe({
-          next: (result) => {
-            console.log('SUMM UPLOAD FILE PROJECT RESULT:');
-            console.log(result);
-          },
-        }),
-    );
-  }
-
-  onMouseEnter(): void {}
-
-  onMouseLeave(): void {}
-
-  onMouseOver(): void {}
 }

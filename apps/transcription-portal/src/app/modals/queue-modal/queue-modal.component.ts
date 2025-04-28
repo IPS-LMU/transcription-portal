@@ -194,7 +194,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
           AppSettings.getServiceInformation(
             this.taskService.state.currentModeState.selectedProvider?.provider!,
           );
-        this.storage.saveTask(task);
+        this.storage.saveTask(task, this.taskService.state.currentMode);
 
         const audioInfo: AudioInfo | undefined =
           task.files[0] && task.files[0] instanceof AudioInfo

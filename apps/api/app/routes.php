@@ -202,14 +202,14 @@ return function (App $app) {
           $inputs[] = array(
             "filename" => (string)$input->name,
             "template" => (string)$input->attributes()->template,
-            "url" => SUMMARIZATION_HOST . "/sumservice/" . $queryParams['projectName'] . "/output/" . ((string)$input->name)
+            "url" => SERVER_URL ."summarization/project/file?path=". urlencode($queryParams['projectName'] ."/output/" . ((string)$input->name))
           );
         }
       } else if (!empty($xml->input->file)) {
         $inputs[] = array(
           "filename" => (string)$xml->input->file->name,
           "template" => (string)$xml->input->file->attributes()->template,
-          "url" => SUMMARIZATION_HOST . "/sumservice/" . $queryParams['projectName'] . "/output/" . ((string)$xml->input->file->name)
+          "url" => SERVER_URL ."summarization/project/file?path=". urlencode($queryParams['projectName'] ."/output/" . ((string)$xml->input->file->name))
         );
       }
 
@@ -219,14 +219,14 @@ return function (App $app) {
           $outputs[] = array(
             "filename" => (string)$output->name,
             "template" => (string)$output->attributes()->template,
-            "url" => SUMMARIZATION_HOST . "/sumservice/" . $queryParams['projectName'] . "/output/" . ((string)$output->name)
+            "url" => SERVER_URL ."summarization/project/file?path=". urlencode($queryParams['projectName'] ."/output/" . ((string)$output->name))
           );
         }
       } else if (!empty($xml->output->file)) {
         $outputs[] = array(
           "filename" => (string)$xml->output->file->name,
           "template" => (string)$xml->output->file->attributes()->template,
-          "url" => SUMMARIZATION_HOST . "/sumservice/" . $queryParams['projectName'] . "/output/" . ((string)$xml->output->file->name)
+          "url" => SERVER_URL ."summarization/project/file?path=". urlencode($queryParams['projectName'] ."/output/" . ((string)$xml->output->file->name))
         );
       }
 
@@ -242,6 +242,23 @@ return function (App $app) {
       $response = $response->withStatus($err->getCode());
       $response->getBody()->write(json_encode(array("status" => "failed", "message" => $err->getMessage())));
     }
+    return $response;
+  });
+
+  /**
+   * retrieves a file.
+   * queryParams: {
+   *   projectName: string;
+   * }
+   */
+  $app->get('/summarization/project/file', function (Request $request, Response $response) {
+    global $summarizationClient;
+    $queryParams = $request->getQueryParams();
+    $result = $summarizationClient->get('sumservice/' . $queryParams['path']);
+
+    $response = $response->withHeader('Content-Type', $result->getHeader("Content-Type")[0]);;
+    $response = $response->withStatus($result->getStatusCode());
+    $response->getBody()->write($result->getBody()->getContents());
     return $response;
   });
 };

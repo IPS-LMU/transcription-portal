@@ -169,7 +169,7 @@
   class="inner"
 >
   @if (
-    !storage.tasksFound &&
+    taskList.length === 0 &&
     taskService.state.currentModeState.taskList!.entries.length === 0 &&
     queue.length === 0
   ) {
@@ -259,7 +259,7 @@
       </div>
     </div>
   }
-  @if (storage.tasksFound && !storage.ready) {
+  @if (taskList.length > 0 && !storage.ready) {
     <div id="loading">
       <div class="spinner-border fs-1" role="status">
         <span class="visually-hidden">Loading...</span>

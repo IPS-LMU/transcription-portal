@@ -149,12 +149,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       {
         complete: () => {
           // configuration loaded
-          const { tasks, userSettings } = this.storage.allloaded.value;
+          const { annotationTasks, summarizationTasks, userSettings } = this.storage.allloaded.value;
           this.cd.markForCheck();
 
           // idb loaded
           this.taskService.init();
-          this.taskService.importDBData({ tasks, userSettings });
+          this.taskService.importDBData({ annotationTasks, summarizationTasks, userSettings });
           this.cd.markForCheck();
 
           this.storage.idbm.intern
@@ -341,7 +341,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                       +` successfully uploaded. You can do '${tool.title}' for this file.`,
                   );
                   if (tool.task) {
-                    this.storage.saveTask(tool.task);
+                    this.storage.saveTask(tool.task, this.taskService.state.currentMode);
                   }
                 }
               },
@@ -407,7 +407,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   previousOperation.lastResult.online = true;
                 }
                 if (tool.task) {
-                  this.storage.saveTask(tool.task);
+                  this.storage.saveTask(tool.task, this.taskService.state.currentMode);
                 }
                 resolve();
               })
@@ -648,7 +648,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             }
 
             this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-            this.storage.saveTask(this.toolSelectedOperation.task);
+            this.storage.saveTask(this.toolSelectedOperation.task, this.taskService.state.currentMode);
 
             setTimeout(() => {
               if (

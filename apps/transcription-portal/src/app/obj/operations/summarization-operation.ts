@@ -1,7 +1,15 @@
 import { HttpClient } from '@angular/common/http';
+import { PartiturConverter, TextConverter } from '@octra/annotation';
+import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
-import { stringifyQueryParams } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
+import { last, stringifyQueryParams, wait } from '@octra/utilities';
+import {
+  AudioInfo,
+  downloadFile,
+  FileInfo,
+  readFileContents,
+} from '@octra/web-media';
+import { interval } from 'rxjs';
 import { AppSettings } from '../../shared/app.settings';
 import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
@@ -20,19 +28,139 @@ export class SummarizationOperation extends Operation {
     accessCode: string,
   ) => {
     this.webService = asrService.provider!;
-    this.updateProtocol('');
-    this.changeState(TaskStatus.PROCESSING);
-    this._time.start = Date.now();
 
     setTimeout(async () => {
+      this.updateProtocol('');
+      this.changeState(TaskStatus.PROCESSING);
+      this._time.start = Date.now();
+
       console.log('RUN SUMMARIZATION WITH ASR RESULTS');
-      console.log(operations[1].results);
-      const projectName = await this.createSummarizationProject(httpclient);
-      await this.uploadFile(
-        operations[1].results[0].file!,
-        httpclient,
-        projectName,
-      );
+      console.log(operations[2].results);
+      console.log('UPLOAD RESULTS');
+      console.log(operations[0].results);
+
+      const transcriptFile = operations[2].enabled
+        ? last(operations[2].results)
+        : last(operations[1].results);
+      const audioinfo = operations[0].task!.files[0] as AudioInfo;
+
+      if (transcriptFile?.file && audioinfo) {
+        let transcript = '';
+        const content = await readFileContents<string>(
+          transcriptFile.file,
+          'text',
+          'utf-8',
+        );
+
+        const audiofile = new OAudiofile();
+        audiofile.duration = audioinfo.duration.samples;
+        audiofile.name =
+          audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+        audiofile.sampleRate = audioinfo.sampleRate;
+        audiofile.size = audioinfo.size;
+
+        if (transcriptFile.extension === '.txt') {
+          transcript = content;
+        } else {
+          const converter = new PartiturConverter();
+          const imported = converter.import(
+            {
+              name: transcriptFile.fullname,
+              type: transcriptFile.type,
+              content,
+              encoding: 'utf-8',
+            },
+            audiofile,
+          );
+          transcript = new TextConverter().export(
+            imported.annotjson!,
+            audiofile,
+            0,
+          ).file!.content;
+        }
+
+        console.log('TRANSCRIPT');
+        console.log(transcript);
+
+        const projectName = await this.createSummarizationProject(httpclient);
+        console.log(`Created project ${projectName}`);
+        await this.uploadFile(
+          new File([transcript], `${projectName}.txt`, {
+            type: 'text/plain',
+          }),
+          httpclient,
+          projectName,
+        );
+        console.log('uploaded file to project successfully');
+
+        console.log('Start processing...');
+        await wait(3);
+        const res = await this.processSummarizationProject(
+          httpclient,
+          projectName,
+        );
+        console.log(res);
+        this.subscrManager.add(
+          interval(5000).subscribe({
+            next: async () => {
+              const result = await this.getProjectStatus(
+                httpclient,
+                projectName,
+              );
+              console.log('Retrieve project status...');
+              console.log(result);
+
+              if (
+                result.status === 'success' &&
+                result.body.status === 'finished'
+              ) {
+                if (result.body.errors) {
+                  this.time.duration = Date.now() - this.time.start;
+
+                  const summary = result.body.outputs.find((o: any) =>
+                    o.filename.includes('error'),
+                  );
+
+                  if (summary) {
+                    const file = new File([transcript], `${projectName}.txt`, {
+                      type: 'text/plain',
+                    });
+                    this.results.push(
+                      new FileInfo(file.name, file.type, file.size, file),
+                    );
+                    console.log('ADD TO RESULTS:');
+                    console.log(this.results);
+                    this.changeState(TaskStatus.FINISHED);
+                  }
+                } else {
+                  this.changeState(TaskStatus.ERROR);
+                  this.updateProtocol(result.body.errorMessage);
+
+                  const errorLogFileURL: string = result.body.outputs.find(
+                    (o: any) => o.filename === 'error.log',
+                  )?.url;
+                  if (errorLogFileURL) {
+                    const errorLog = await downloadFile(
+                      errorLogFileURL,
+                      'text',
+                    );
+                    console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
+                  }
+                }
+
+                this.subscrManager.removeByTag('status check');
+                console.log("Remove project");
+                await this.deleteSummarizationProject(httpclient, projectName);
+              }
+            },
+          }),
+          'status check',
+        );
+        console.log('processing finished');
+      } else {
+        this.changeState(TaskStatus.ERROR);
+        this.updateProtocol('Missing transcript file or audio file.');
+      }
     }, 2000);
   };
 

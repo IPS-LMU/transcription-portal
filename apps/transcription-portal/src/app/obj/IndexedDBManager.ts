@@ -26,7 +26,8 @@ export interface IDBInternItem {
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem, string>;
   intern!: Table<IDBInternItem, string>;
-  tasks!: Table<IDBTaskItem, number>;
+  annotation_tasks!: Table<IDBTaskItem, number>;
+  summarization_tasks!: Table<IDBTaskItem, number>;
 
   constructor(dbname: string) {
     super(dbname);
@@ -59,6 +60,28 @@ export class IndexedDBManager extends Dexie {
             }
           });
       });
+    this.version(4)
+      .stores({
+        intern: 'name, value',
+        tasks:
+          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        annotation_tasks:
+          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        summarization_tasks:
+          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        userSettings: 'name, value',
+      })
+      .upgrade((transaction) => {
+        transaction
+          .table('tasks')
+          .toArray()
+          .then((tasks: IDBTaskItem[]) => {
+            return transaction.table('annotation_tasks').bulkAdd(tasks);
+          });
+      });
+    this.version(5).stores({
+      tasks: null,
+    });
     this.on('populate', () => this.populate());
   }
 

@@ -27,6 +27,7 @@ import { G2pMausOperation } from '../operations/g2p-maus-operation';
 import { OCTRAOperation } from '../operations/octra-operation';
 import { Operation } from '../operations/operation';
 import { SummarizationOperation } from '../operations/summarization-operation';
+import { TranslationOperation } from '../operations/translation-operation';
 import { UploadOperation } from '../operations/upload-operation';
 import { Preprocessor, QueueItem } from '../preprocessor';
 import {
@@ -275,10 +276,11 @@ export class TaskService implements OnDestroy {
         ),
         new SummarizationOperation(
           'Summarization',
-          AppSettings.configuration.api.commands[4].calls,
+          [''],
           'Summarization',
           'SUM',
         ),
+        new TranslationOperation('Translation', [''], 'Translation', 'TR'),
       ],
       'summarization',
       this.process,
@@ -328,13 +330,13 @@ export class TaskService implements OnDestroy {
         }
 
         if (event.saveToDB) {
-          this.storage.saveTask(event.entry).catch((error) => {
+          this.storage.saveTask(event.entry, mode).catch((error) => {
             console.error(error);
           });
         }
       } else if (event.state === 'removed') {
         if (event.saveToDB) {
-          this.storage.removeFromDB(event.entry).catch((error) => {
+          this.storage.removeFromDB(event.entry, mode).catch((error) => {
             console.error(error);
           });
         } else {
@@ -389,7 +391,7 @@ export class TaskService implements OnDestroy {
                   }
                 }
               }
-              await this.storage.saveTask(foundTask);
+              await this.storage.saveTask(foundTask, mode);
             }
           }
           result.changeState(TaskStatus.QUEUED);
@@ -493,149 +495,174 @@ export class TaskService implements OnDestroy {
     };
   };
 
-  public async importDBData(dbEntries: {
-    tasks: IDBTaskItem[];
-    userSettings: IDBUserSettingsItem[];
-  }) {
-    const idbTasks = dbEntries.tasks;
+  private async importTasksFromDB(idbTasks: any[], mode: PortalModeType) {
+    let maxTaskCounter = 0;
+    let maxOperationCounter = 0;
 
-    if (idbTasks) {
-      // TODO filter idbTasks correctly
-      const mode = 'annotation';
-      this.state.currentModeState.newfiles = idbTasks.length > 0;
+    for (const taskObj of idbTasks) {
+      if (taskObj.type === 'task') {
+        if (taskObj.asrLanguage) {
+          const firstLangObj = AppSettings.languages.asr.find((a) => {
+            return a.value === taskObj.asrLanguage;
+          });
 
-      // make sure that taskCounter and operation counter are equal to their biggest value
-      let maxTaskCounter = 0;
-      let maxOperationCounter = 0;
+          if (firstLangObj) {
+            taskObj.asrLanguage = firstLangObj.value;
+          }
+        }
+        const task = Task.fromAny(
+          taskObj,
+          AppSettings.configuration.api.commands,
+          this.state.modes[mode].operations,
+        );
 
-      for (const taskObj of idbTasks) {
-        if (taskObj.type === 'task') {
-          if (taskObj.asrLanguage) {
-            const firstLangObj = AppSettings.languages.asr.find((a) => {
-              return a.value === taskObj.asrLanguage;
-            });
+        maxTaskCounter = Math.max(maxTaskCounter, task.id);
 
-            if (firstLangObj) {
-              taskObj.asrLanguage = firstLangObj.value;
+        for (const operation of task.operations) {
+          maxOperationCounter = Math.max(maxOperationCounter, operation.id);
+
+          for (const opResult of operation.results) {
+            if (!(opResult.url === null || opResult.url === undefined)) {
+              try {
+                await this.existsFile(opResult.url);
+
+                opResult.online = true;
+                if (opResult.file === null || opResult.file === undefined) {
+                  const format: AudioFormat | undefined =
+                    AudioManager.getFileFormat(
+                      opResult.extension,
+                      AppInfo.audioFormats,
+                    );
+
+                  if (!format) {
+                    try {
+                      await opResult.updateContentFromURL(this.httpclient);
+
+                      // TODO minimize task savings
+                      await this.storage.saveTask(task, mode);
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }
+                }
+              } catch (e) {
+                opResult.online = false;
+              }
+            } else {
+              opResult.online = false;
             }
           }
-          const task = Task.fromAny(
-            taskObj,
-            AppSettings.configuration.api.commands,
-            this.state.modes[mode].operations,
-          );
+        }
 
-          maxTaskCounter = Math.max(maxTaskCounter, task.id);
+        if (!this.state.modes[mode].taskList) {
+          throw new Error('taskList not defined');
+        }
 
+        this.state.modes[mode].taskList.addEntry(task).catch((err) => {
+          console.error(err);
+        });
+      } else {
+        const taskDir = TaskDirectory.fromAny(
+          taskObj,
+          AppSettings.configuration.api.commands,
+          this.state.modes[mode].operations,
+        );
+
+        for (const taskElem of taskDir.entries) {
+          const task = taskElem as Task;
           for (const operation of task.operations) {
-            maxOperationCounter = Math.max(maxOperationCounter, operation.id);
-
             for (const opResult of operation.results) {
               if (!(opResult.url === null || opResult.url === undefined)) {
                 try {
-                  await this.existsFile(opResult.url);
-
                   opResult.online = true;
-                  if (opResult.file === null || opResult.file === undefined) {
-                    const format: AudioFormat | undefined =
-                      AudioManager.getFileFormat(
-                        opResult.extension,
-                        AppInfo.audioFormats,
-                      );
 
-                    if (!format) {
-                      try {
-                        await opResult.updateContentFromURL(this.httpclient);
-
-                        // TODO minimize task savings
-                        await this.storage.saveTask(task);
-                      } catch (e) {
-                        console.error(e);
-                      }
+                  if (
+                    (opResult.file === null || opResult.file === undefined) &&
+                    opResult.extension.indexOf('wav') < 0
+                  ) {
+                    try {
+                      opResult.updateContentFromURL(this.httpclient);
+                      // TODO minimize task savings
+                      await this.storage.saveTask(task, mode);
+                    } catch (e) {
+                      console.error(e);
                     }
                   }
                 } catch (e) {
                   opResult.online = false;
                 }
-              } else {
-                opResult.online = false;
               }
             }
           }
-
-          if (!this.state.modes[mode].taskList) {
-            throw new Error('taskList not defined');
-          }
-
-          this.state.modes[mode].taskList.addEntry(task).catch((err) => {
-            console.error(err);
-          });
-        } else {
-          const taskDir = TaskDirectory.fromAny(
-            taskObj,
-            AppSettings.configuration.api.commands,
-            this.state.modes[mode].operations,
-          );
-
-          for (const taskElem of taskDir.entries) {
-            const task = taskElem as Task;
-            for (const operation of task.operations) {
-              for (const opResult of operation.results) {
-                if (!(opResult.url === null || opResult.url === undefined)) {
-                  try {
-                    opResult.online = true;
-
-                    if (
-                      (opResult.file === null || opResult.file === undefined) &&
-                      opResult.extension.indexOf('wav') < 0
-                    ) {
-                      try {
-                        opResult.updateContentFromURL(this.httpclient);
-                        // TODO minimize task savings
-                        await this.storage.saveTask(task);
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }
-                  } catch (e) {
-                    opResult.online = false;
-                  }
-                }
-              }
-            }
-          }
-
-          if (!this.state.modes[mode].taskList) {
-            throw new Error('undefined tasklist');
-          }
-          this.state.modes[mode].taskList.addEntry(taskDir).catch((err) => {
-            console.error(err);
-          });
         }
-      }
 
-      if (TaskEntry.counter < maxTaskCounter) {
-        console.warn(
-          `Warning: Task counter was less than the biggest id. Reset counter.`,
-        );
-        TaskEntry.counter = maxTaskCounter;
+        if (!this.state.modes[mode].taskList) {
+          throw new Error('undefined tasklist');
+        }
+        this.state.modes[mode].taskList.addEntry(taskDir).catch((err) => {
+          console.error(err);
+        });
       }
-
-      if (Operation.counter < maxOperationCounter) {
-        console.warn(
-          `Warning: Operation counter was less than the biggest id. Reset counter.`,
-        );
-        Operation.counter = maxOperationCounter;
-      }
-
-      const url = await this.updateProtocolURL();
-      if (this.protocolURL) {
-        URL.revokeObjectURL(
-          (this.protocolURL as any).changingThisBreaksApplicationSecurity,
-        );
-      }
-      this.protocolURL = url;
     }
+
+    return {
+      maxTaskCounter,
+      maxOperationCounter,
+    };
+  }
+
+  public async importDBData(dbEntries: {
+    annotationTasks: IDBTaskItem[];
+    summarizationTasks: IDBTaskItem[];
+    userSettings: IDBUserSettingsItem[];
+  }) {
+    // TODO filter idbTasks correctly
+    const mode = 'annotation';
+    this.state.modes.annotation.newfiles = dbEntries.annotationTasks.length > 0;
+    this.state.modes.summarization.newfiles =
+      dbEntries.summarizationTasks.length > 0;
+
+    // make sure that taskCounter and operation counter are equal to their biggest value
+    let maxTaskCounter = 0;
+    let maxOperationCounter = 0;
+
+    const annotationTaskResult = await this.importTasksFromDB(
+      dbEntries.annotationTasks,
+      'annotation',
+    );
+    const summarizationTaskResult = await this.importTasksFromDB(
+      dbEntries.summarizationTasks,
+      'summarization',
+    );
+    maxTaskCounter =
+      annotationTaskResult.maxTaskCounter +
+      summarizationTaskResult.maxTaskCounter;
+    maxOperationCounter =
+      annotationTaskResult.maxOperationCounter +
+      summarizationTaskResult.maxOperationCounter;
+
+    if (TaskEntry.counter < maxTaskCounter) {
+      console.warn(
+        `Warning: Task counter was less than the biggest id. Reset counter.`,
+      );
+      TaskEntry.counter = maxTaskCounter;
+    }
+
+    if (Operation.counter < maxOperationCounter) {
+      console.warn(
+        `Warning: Operation counter was less than the biggest id. Reset counter.`,
+      );
+      Operation.counter = maxOperationCounter;
+    }
+
+    const url = await this.updateProtocolURL();
+    if (this.protocolURL) {
+      URL.revokeObjectURL(
+        (this.protocolURL as any).changingThisBreaksApplicationSecurity,
+      );
+    }
+    this.protocolURL = url;
+
     if (dbEntries.userSettings) {
       // read userSettings
       for (const userSetting of dbEntries.userSettings) {
@@ -651,12 +678,12 @@ export class TaskService implements OnDestroy {
             );
 
             if (lang) {
-              this.state.currentModeState.selectedASRLanguage =
+              this.state.modes.annotation.selectedASRLanguage =
                 userSetting.value.asrLanguage;
-              this.state.currentModeState.selectedMausLanguage =
+              this.state.modes.annotation.selectedMausLanguage =
                 userSetting.value.mausLanguage;
             }
-            this.state.currentModeState.selectedProvider =
+            this.state.modes.annotation.selectedProvider =
               AppSettings.getServiceInformation(userSetting.value.asrProvider);
             break;
         }
@@ -759,38 +786,6 @@ export class TaskService implements OnDestroy {
       });
   }
 
-  public changeEntry(
-    id: number,
-    entry: Task | TaskDirectory,
-    mode: PortalModeType,
-    saveToDB = false,
-  ) {
-    const taskList = this.state.modes[mode].taskList;
-
-    if (!taskList) {
-      throw new Error('undefined tasklist');
-    }
-
-    taskList
-      .changeEntry(id, entry, saveToDB)
-      .then(() => {
-        if (!taskList) {
-          throw new Error('undefined tasklist');
-        }
-        return taskList.cleanup(entry, saveToDB);
-      })
-      .catch((err) => {
-        console.error(`${err}`);
-      })
-      .then(() => {
-        this.saveCounters();
-      })
-      .catch((err) => {
-        console.error(`could not add via taskService!`);
-        console.error(`${err}`);
-      });
-  }
-
   public saveCounters() {
     this.storage.saveCounter('taskCounter', TaskEntry.counter);
     this.storage.saveCounter('operationCounter', Operation.counter);
@@ -819,7 +814,7 @@ export class TaskService implements OnDestroy {
           }
 
           task.statechange.subscribe((obj) => {
-            this.storage.saveTask(task);
+            this.storage.saveTask(task, mode);
 
             this.updateProtocolURL().then((url) => {
               if (this.protocolURL) {
@@ -832,7 +827,7 @@ export class TaskService implements OnDestroy {
               this.protocolURL = url;
             });
           });
-          this.storage.saveTask(task);
+          this.storage.saveTask(task, mode);
           const asrService = AppSettings.getServiceInformation(
             task.operations[1].providerInformation.provider,
           );
@@ -1184,7 +1179,7 @@ export class TaskService implements OnDestroy {
         } else {
           this.state.modes[mode].changeStatus(TaskStatus.READY);
         }
-        this.storage.saveTask(task);
+        this.storage.saveTask(task, mode);
 
         this.updateProtocolURL().then((url) => {
           if (this.protocolURL) {

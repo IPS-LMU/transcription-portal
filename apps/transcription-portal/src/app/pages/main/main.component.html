@@ -322,7 +322,7 @@
       <ng-template ngbNavContent>
         @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
           <tportal-proceedings
-            #proceedings2
+            #proceedings
             (afterdrop)="onAfterDrop($event)"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
