@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild, inject } from '@angular/core';
 import {
   NgbActiveModal,
   NgbModalOptions,
@@ -16,12 +16,17 @@ import { StatisticsService } from '../../shared/statistics.service';
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
+  providers: [StatisticsService],
   imports: [NgCircleProgressModule, BaseChartDirective],
 })
 export class StatisticsModalComponent
   extends SubscriberComponent
   implements OnDestroy, AfterViewInit
 {
+  statisticsService = inject(StatisticsService);
+  taskService = inject(TaskService);
+  protected activeModal = inject(NgbActiveModal);
+
   @ViewChild('statisticsModal', { static: true }) statisticsModal?: NgbModalRef;
   public static options: NgbModalOptions = {
     size: 'xl',
@@ -35,6 +40,7 @@ export class StatisticsModalComponent
 
   public pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
+    animation: false,
     plugins: {
       legend: {
         display: true,
@@ -42,14 +48,6 @@ export class StatisticsModalComponent
       },
     },
   };
-
-  constructor(
-    public statisticsService: StatisticsService,
-    public taskService: TaskService,
-    protected activeModal: NgbActiveModal,
-  ) {
-    super();
-  }
 
   override ngOnDestroy() {
     super.ngOnDestroy();

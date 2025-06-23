@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { TaskService } from '../../obj/tasks/task.service';
 import { ANIMATIONS } from '../../shared/Animations';
 
@@ -10,9 +10,9 @@ import { ANIMATIONS } from '../../shared/Animations';
   standalone: true,
 })
 export class ProtocolFooterComponent implements OnInit {
-  public test = 'inactive';
+  taskService = inject(TaskService);
 
-  constructor(public taskService: TaskService) {}
+  public test = 'inactive';
 
   ngOnInit() {}
 

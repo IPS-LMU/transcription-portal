@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
@@ -24,6 +24,12 @@ import { SettingsService } from './shared/settings.service';
   imports: [RouterOutlet],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {
+  taskService = inject(TaskService);
+  notification = inject(NotificationService);
+  bugService = inject(BugReportService);
+  settingsService = inject(SettingsService);
+  private activeRoute = inject(ActivatedRoute);
+
   public test = 'inactive';
   @ViewChild('fileinput') fileinput!: ElementRef;
   @ViewChild('folderinput') folderinput!: ElementRef;
@@ -33,13 +39,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
 
-  constructor(
-    public taskService: TaskService,
-    public notification: NotificationService,
-    public bugService: BugReportService,
-    public settingsService: SettingsService,
-    private activeRoute: ActivatedRoute,
-  ) {
+  constructor() {
     super();
 
     this.subscribe(this.activeRoute.queryParams, {
@@ -171,5 +171,10 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     } else {
       console.error(`tracking type ${type} is not supported.`);
     }
+  }
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+    this.taskService.destroy();
   }
 }

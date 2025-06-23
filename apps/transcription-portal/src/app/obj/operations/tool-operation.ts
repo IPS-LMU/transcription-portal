@@ -4,7 +4,7 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
-import { Operation } from './operation';
+import { IOperation, Operation } from './operation';
 
 export class ToolOperation extends Operation {
   public constructor(
@@ -15,8 +15,10 @@ export class ToolOperation extends Operation {
     task?: Task,
     state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id);
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider, language);
   }
 
   public resultType?: string;
@@ -24,12 +26,10 @@ export class ToolOperation extends Operation {
   private active = true;
 
   public start = (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string,
+    accessCode?: string,
   ) => {
     this._time.start = Date.now();
     this.changeState(TaskStatus.PROCESSING);
@@ -82,10 +82,13 @@ export class ToolOperation extends Operation {
       this.shortTitle,
       selectedTasks,
       this.state,
+      undefined,
+      this.serviceProvider,
+      this.language
     ) as Operation;
   }
 
-  public fromAny(operationObj: any, commands: string[], task: Task): Operation {
+  public fromAny(operationObj: IOperation, commands: string[], task: Task): Operation {
     const result = new ToolOperation(
       operationObj.name,
       commands,
@@ -113,10 +116,4 @@ export class ToolOperation extends Operation {
   public getToolURL(): string {
     return '';
   }
-
-  onMouseEnter(): void {}
-
-  onMouseLeave(): void {}
-
-  onMouseOver(): void {}
 }

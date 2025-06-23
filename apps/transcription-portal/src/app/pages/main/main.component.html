@@ -15,7 +15,7 @@
       >
         <li class="nav-item active">
           <a
-            [title]="AppInfo.lastUpdated | date: 'dd.MM.yyyy H:mm z'"
+            [title]="AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z'"
             class="nav-link"
             href="#"
             ><span class="logo"
@@ -23,8 +23,7 @@
                 src="assets/TPortal-Logo_only.svg"
                 style="height: 40px; margin-top: -10px"
               />
-              TranscriptionPortal</span
-            >
+              TranscriptionPortal</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -55,10 +54,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.queued }}</div>
+              <div class="number">{{ taskService.statistics.overall.queued }}</div>
               <i class="bi bi-database-fill" style="color: gray"></i>
               <ng-template #queuedTipp
-                >{{ taskService.statistics.queued }} audio files are waiting for
+                >{{ taskService.statistics.overall.queued }} audio files are waiting for
                 verification.
               </ng-template>
             </div>
@@ -68,10 +67,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.waiting }}</div>
+              <div class="number">{{ taskService.statistics.overall.waiting }}</div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp
-                >{{ taskService.statistics.waiting }} tasks are waiting for
+                >{{ taskService.statistics.overall.waiting }} tasks are waiting for
                 processing.
               </ng-template>
             </div>
@@ -81,16 +80,16 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.running }}</div>
+              <div class="number">{{ taskService.statistics.overall.running }}</div>
               <i
                 [ngClass]="{
-                  spin: taskService.statistics.running > 0,
+                  spin: taskService.statistics.overall.running > 0,
                 }"
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
               <ng-template #runningTipp
-                >{{ taskService.statistics.running }} tasks are running.
+                >{{ taskService.statistics.overall.running }} tasks are running.
               </ng-template>
             </div>
             <div
@@ -99,13 +98,13 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.finished }}</div>
+              <div class="number">{{ taskService.statistics.overall.finished }}</div>
               <i
                 class="bi bi-check-lg"
                 style="color: forestgreen; font-weight: bold"
               ></i>
               <ng-template #finishedTipp
-                >{{ taskService.statistics.finished }} tasks are finished.
+                >{{ taskService.statistics.overall.finished }} tasks are finished.
               </ng-template>
             </div>
             <div
@@ -114,10 +113,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.errors }}</div>
+              <div class="number">{{ taskService.statistics.overall.errors }}</div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.errors }} tasks failed. For further
+                >{{ taskService.statistics.overall.errors }} tasks failed. For further
                 details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
@@ -295,8 +294,11 @@
       <button ngbNavLink (mousedown)="changeMode('annotation')">
         Annotation
       </button>
-      <ng-template ngbNavContent class="d-flex">
-        @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
+        @if (
+          settingsService.allLoaded &&
+          taskService.state.modes.annotation.taskList !== undefined
+        ) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -319,8 +321,11 @@
       <button ngbNavLink (mousedown)="changeMode('summarization')">
         Summarization &amp; Translation
       </button>
-      <ng-template ngbNavContent>
-        @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
+        @if (
+          settingsService.allLoaded &&
+          taskService.state.modes.summarization.taskList !== undefined
+        ) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -360,14 +365,14 @@
         />
         <button
           (click)="onVerifyButtonClick()"
-          [disabled]="taskService.statistics.queued < 1"
+          [disabled]="taskService.currentModeStatistics.queued < 1"
           class="btn btn-primary"
           style="margin-left: 10px"
         >
           <i class="bi bi-database-fill"></i>
           <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
-          @if (taskService.statistics.queued > 0) {
-            ({{ taskService.statistics.queued }})
+          @if (taskService.currentModeStatistics.queued > 0) {
+            ({{ taskService.currentModeStatistics.queued }})
           }
         </button>
       </div>
@@ -431,9 +436,9 @@
             @if (
               toolSelectedOperation !== undefined &&
               toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.asrLanguage !== undefined
+              toolSelectedOperation.task.operations[1].language !== undefined
             ) {
-              {{ toolSelectedOperation.task.asrLanguage }}
+              {{ toolSelectedOperation.task.operations[1].language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
@@ -452,8 +457,8 @@
                 .results[0]!.attributes?.originalFileName
             }}
             , Language:
-            @if (toolSelectedOperation.task?.asrLanguage !== undefined) {
-              {{ toolSelectedOperation.task!.asrLanguage }}
+            @if (toolSelectedOperation.task && toolSelectedOperation.task.operations[1].language !== undefined) {
+              {{ toolSelectedOperation.task!.operations[1].language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
@@ -494,7 +499,10 @@
       }"
       style="float: right"
     >
-      <div [ngbNavOutlet]="nav" class="d-flex flex-auto"></div>
+      <div
+        [ngbNavOutlet]="nav"
+        class="d-flex flex-column flex-auto w-100 h-100 position-relative"
+      ></div>
     </div>
     <div
       (mousedown)="dragBorder($event, 'right')"

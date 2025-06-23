@@ -137,7 +137,7 @@ export class DownloadService {
                 audiofile,
               );
               if (importResult) {
-                if (importResult.error === '') {
+                if (!importResult.error) {
                   annotJSON = importResult.annotjson;
                 } else {
                   console.error(

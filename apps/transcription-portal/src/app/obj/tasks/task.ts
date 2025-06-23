@@ -3,9 +3,10 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
-import { OHCommand, ProviderLanguage } from '../oh-config';
+import { OHCommand } from '../oh-config';
 import { IAccessCode, Operation } from '../operations/operation';
 import { TaskEntry } from './task-entry';
+import { AppSettings } from '../../shared/app.settings';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -73,36 +74,6 @@ export class Task {
     return this._id;
   }
 
-  private _asrLanguage?: string;
-
-  get asrLanguage(): string | undefined {
-    return this._asrLanguage;
-  }
-
-  set asrLanguage(value: string | undefined) {
-    this._asrLanguage = value;
-  }
-
-  private _mausLanguage?: string;
-
-  get mausLanguage(): string | undefined {
-    return this._mausLanguage;
-  }
-
-  set mausLanguage(value: string | undefined) {
-    this._mausLanguage = value;
-  }
-
-  private _asrProvider?: string;
-
-  get asrProvider(): string | undefined {
-    return this._asrProvider;
-  }
-
-  set asrProvider(value: string | undefined) {
-    this._asrProvider = value;
-  }
-
   private _files: FileInfo[];
 
   get files(): FileInfo[] {
@@ -137,10 +108,58 @@ export class Task {
     return this._type;
   }
 
-  private _state: TaskStatus = TaskStatus.PENDING;
+  private _status: TaskStatus = TaskStatus.PENDING;
 
-  get state(): TaskStatus {
-    return this._state;
+  get status(): TaskStatus {
+    return this._status;
+  }
+
+  setOptions(options: {
+    selectedASRLanguage?: string;
+    selectedMausLanguage?: string;
+    selectedASRProvider?: ServiceProvider;
+    selectedSummarizationProvider?: ServiceProvider;
+    selectedTargetLanguage?: string;
+  }) {
+    // set service provider for upload operation
+    console.log("set options");
+    console.log(this.operations);
+    const basProvider = AppSettings.getServiceInformation("BAS");
+    this.operations[0].serviceProvider = options.selectedASRProvider;
+
+    if (this.operations[1].name === 'ASR') {
+      this.operations[1].serviceProvider = options.selectedASRProvider;
+      this.operations[1].language = options.selectedASRLanguage;
+    }
+
+    if (this.operations[2].name === 'OCTRA') {
+      console.log(`set octra provider to}`);
+      console.log(basProvider);
+      this.operations[2].serviceProvider = basProvider;
+      this.operations[2].language = options.selectedASRLanguage;
+    }
+
+    if (this.operations[3].name === 'Summarization') {
+      this.operations[3].serviceProvider =
+        options.selectedSummarizationProvider;
+      this.operations[3].language = options.selectedTargetLanguage;
+    }
+
+    if (this.operations[3].name === 'MAUS') {
+      this.operations[3].serviceProvider = options.selectedASRProvider; // TODO change to maus
+      this.operations[3].language = options.selectedMausLanguage;
+    }
+
+    if (this.operations[4].name === 'Emu WebApp') {
+      this.operations[4].serviceProvider = basProvider;
+      this.operations[4].language = options.selectedASRLanguage;
+    }
+
+    if (this.operations[4].name === 'Translation') {
+      this.operations[4].serviceProvider =
+        options.selectedSummarizationProvider;
+      this.operations[4].language = options.selectedTargetLanguage;
+    }
   }
 
   public static fromAny(
@@ -149,14 +168,7 @@ export class Task {
     defaultOperations: Operation[],
   ): Task {
     const operations: Operation[] = [];
-
     const task = new Task([], operations, undefined, taskObj.id);
-    task.asrLanguage = taskObj.asrLanguage;
-    task._asrProvider =
-      taskObj.operations[1].webService &&
-      taskObj.operations[1].webService !== ''
-        ? taskObj.operations[1].webService
-        : taskObj.asrProvider;
 
     if (taskObj.state !== TaskStatus.PROCESSING) {
       task.changeState(taskObj.state);
@@ -189,7 +201,12 @@ export class Task {
       for (let j = 0; j < defaultOperations.length; j++) {
         const op = defaultOperations[j];
         if (op.name === operationObj.name) {
-          const operation = op.fromAny(operationObj, commands[j].calls, task);
+          const operation = op.fromAny(
+            operationObj,
+            commands[j].calls,
+            task,
+            taskObj,
+          );
           if (operation.state === TaskStatus.UPLOADING) {
             operation.changeState(TaskStatus.PENDING);
           } else {
@@ -214,7 +231,7 @@ export class Task {
     const isSomethingReady =
       task.operations.findIndex((a) => a.state === TaskStatus.READY) > -1;
 
-    if (task.state !== TaskStatus.QUEUED) {
+    if (task.status !== TaskStatus.QUEUED) {
       if (isSomethingPending) {
         task.changeState(TaskStatus.PENDING);
       } else if (isSomethingReady) {
@@ -227,31 +244,19 @@ export class Task {
     return task;
   }
 
-  public start(
-    asrService: ServiceProvider,
-    languageObj: ProviderLanguage,
-    httpclient: HttpClient,
-    accessCodes: IAccessCode[],
-  ) {
-    if (this.state !== TaskStatus.FINISHED) {
-      this.startNextOperation(asrService, languageObj, httpclient, accessCodes);
+  public start(httpclient: HttpClient, accessCodes: IAccessCode[]) {
+    if (this.status !== TaskStatus.FINISHED) {
+      this.startNextOperation(httpclient, accessCodes);
     }
   }
 
-  public restart(
-    asrService: ServiceProvider,
-    languageObj: ProviderLanguage,
-    http: HttpClient,
-    accessCodes: IAccessCode[],
-  ) {
+  public restart(http: HttpClient, accessCodes: IAccessCode[]) {
     this.changeState(TaskStatus.PROCESSING);
     this.listenToOperationChanges();
-    this.start(asrService, languageObj, http, accessCodes);
+    this.start(http, accessCodes);
   }
 
   public restartFailedOperation(
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     httpclient: HttpClient,
     accessCodes: IAccessCode[],
   ) {
@@ -260,20 +265,20 @@ export class Task {
         // restart failed operation
         operation.changeState(TaskStatus.READY);
         this.changeState(TaskStatus.PENDING);
-        this.restart(asrService, languageObject, httpclient, accessCodes);
+        this.restart(httpclient, accessCodes);
         break;
       }
     }
   }
 
-  public changeState(state: TaskStatus) {
-    const oldstate = this._state;
-    this._state = state;
+  public changeState(status: TaskStatus) {
+    const oldstate = this._status;
+    this._status = status;
 
-    if (oldstate !== state) {
+    if (oldstate !== status) {
       this.statesubj.next({
         oldState: oldstate,
-        newState: state,
+        newState: status,
       });
     }
   }
@@ -303,6 +308,9 @@ export class Task {
 
   public destroy() {
     this.subscrmanager.destroy();
+    for (const operation of this.operations) {
+      operation.destroy();
+    }
   }
 
   public setFileObj(index: number, fileObj: FileInfo) {
@@ -317,11 +325,8 @@ export class Task {
       const result = {
         id: this.id,
         type: 'task',
-        state: this.state,
+        state: this.status,
         folderPath: '',
-        asrLanguage: this.asrLanguage,
-        asrProvider: this.asrProvider,
-        mausLanguage: this.asrProvider,
         files: [],
         operations: [],
       };
@@ -430,8 +435,6 @@ export class Task {
   }
 
   private startNextOperation(
-    asrService: ServiceProvider,
-    languageObj: ProviderLanguage,
     httpclient: HttpClient,
     accessCodes: IAccessCode[],
   ) {
@@ -473,12 +476,7 @@ export class Task {
             (event) => {
               if (event.newState === TaskStatus.FINISHED) {
                 subscription.unsubscribe();
-                this.startNextOperation(
-                  asrService,
-                  languageObj,
-                  httpclient,
-                  accessCodes,
-                );
+                this.startNextOperation(httpclient, accessCodes);
               } else {
                 if (event.newState === TaskStatus.READY) {
                   this.changeState(TaskStatus.READY);
@@ -501,8 +499,6 @@ export class Task {
           }
 
           this.operations[nextoperation].start(
-            asrService,
-            languageObj,
             files,
             this.operations,
             httpclient,
@@ -670,7 +666,11 @@ export class TaskDirectory {
     const taskIndex = this.entries.findIndex((a: Task | TaskDirectory) => {
       return a instanceof Task && (a as Task).id === task.id;
     });
-    this._entries.splice(taskIndex, 1);
+
+    if (taskIndex > -1) {
+      task.destroy();
+      this._entries.splice(taskIndex, 1);
+    }
   }
 
   public toAny(): Promise<any> {
@@ -696,5 +696,11 @@ export class TaskDirectory {
           reject(error);
         });
     });
+  }
+
+  public destroy() {
+    for (const entry of this.entries) {
+      entry.destroy();
+    }
   }
 }

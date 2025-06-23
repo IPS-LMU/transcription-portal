@@ -1,25 +1,31 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
-import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
+
+export interface IOperation {
+  id: number;
+  name: string;
+  state: TaskStatus;
+  protocol: string;
+  time: {
+    start: number;
+    duration: number;
+  };
+  enabled: boolean;
+  results: any[];
+  serviceProvider?: string;
+  language?: string;
+}
 
 export abstract class Operation {
   static counter = 0;
   public abstract resultType?: string;
   public mouseover = false;
   public changed: Subject<void> = new Subject<void>();
-  public abstract start: (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
-    inputs: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode: string,
-  ) => void;
   private readonly _shortTitle: string | undefined;
   private statesubj: Subject<{
     opID: number;
@@ -47,6 +53,8 @@ export abstract class Operation {
     private _task?: Task,
     state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
     if (id === null || id === undefined) {
       this._id = ++Operation.counter;
@@ -67,7 +75,17 @@ export abstract class Operation {
     } else {
       this.changeState(TaskStatus.PENDING);
     }
+
+    this._serviceProvider = serviceProvider;
+    this._language = language;
   }
+
+  public abstract start: (
+    inputs: FileInfo[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => void;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;
@@ -174,14 +192,23 @@ export abstract class Operation {
     return this._description;
   }
 
-  protected _providerInformation: ServiceProvider | undefined;
+  protected _serviceProvider?: ServiceProvider;
 
-  get providerInformation(): ServiceProvider | undefined {
-    return this._providerInformation;
+  get serviceProvider(): ServiceProvider | undefined {
+    return this._serviceProvider;
   }
 
-  set providerInformation(value: ServiceProvider | undefined) {
-    this._providerInformation = value;
+  set serviceProvider(value: ServiceProvider | undefined) {
+    this._serviceProvider = value;
+  }
+
+  protected _language?: string;
+  get language(): string | undefined {
+    return this._language;
+  }
+
+  set language(value: string | undefined) {
+    this._language = value;
   }
 
   protected _time: {
@@ -306,22 +333,24 @@ export abstract class Operation {
   public abstract clone(task?: Task): Operation;
 
   public abstract fromAny(
-    operationObj: any,
+    operationObj: IOperation,
     commands: string[],
     task: Task,
+    taskObj: any,
   ): Operation;
 
-  toAny(): Promise<any> {
+  toAny(): Promise<IOperation> {
     return new Promise<any>((resolve, reject) => {
-      const result = {
+      const result: IOperation = {
         id: this.id,
         name: this.name,
         state: this.state,
         protocol: this.protocol,
         time: this.time,
         enabled: this.enabled,
-        webService: '',
         results: [],
+        serviceProvider: this.serviceProvider?.provider,
+        language: this.language,
       };
 
       // result data
@@ -377,9 +406,25 @@ export abstract class Operation {
     }
   }
 
-  public abstract onMouseEnter(): void;
-  public abstract onMouseLeave(): void;
-  public abstract onMouseOver(): void;
+  protected throwError(error: Error) {
+    console.error(error);
+    this.changeState(TaskStatus.ERROR);
+    this.updateProtocol(error?.message?.replace(/\n/g, '<br/>'));
+  }
+
+  public destroy() {
+    this.subscrManager.destroy();
+  }
+
+  public onMouseEnter() {
+    // not implemented
+  }
+  public onMouseLeave() {
+    // not implemented
+  }
+  public onMouseOver() {
+    // not implemented
+  }
 }
 
 export interface IAccessCode {

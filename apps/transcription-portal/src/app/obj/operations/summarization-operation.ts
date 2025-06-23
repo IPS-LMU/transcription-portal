@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
-import { last, stringifyQueryParams, wait } from '@octra/utilities';
+import { joinURL, last, stringifyQueryParams, wait } from '@octra/utilities';
 import {
   AudioInfo,
   downloadFile,
@@ -10,25 +10,21 @@ import {
   readFileContents,
 } from '@octra/web-media';
 import { interval } from 'rxjs';
+import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
-import { ProviderLanguage } from '../oh-config';
+import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
-import { Operation } from './operation';
+import { IOperation, Operation } from './operation';
 
 export class SummarizationOperation extends Operation {
-  public webService = '';
   public resultType = 'Text';
 
   public start = (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string,
+    accessCode?: string,
   ) => {
-    this.webService = asrService.provider!;
-
     setTimeout(async () => {
       this.updateProtocol('');
       this.changeState(TaskStatus.PROCESSING);
@@ -84,22 +80,33 @@ export class SummarizationOperation extends Operation {
 
         const projectName = await this.createSummarizationProject(httpclient);
         console.log(`Created project ${projectName}`);
-        await this.uploadFile(
-          new File([transcript], `${projectName}.txt`, {
-            type: 'text/plain',
-          }),
-          httpclient,
-          projectName,
-        );
-        console.log('uploaded file to project successfully');
+        try {
+          await this.uploadFile(
+            new File([transcript], `${projectName}.txt`, {
+              type: 'text/plain',
+            }),
+            httpclient,
+            projectName,
+          );
+          console.log('uploaded file to project successfully');
 
-        console.log('Start processing...');
-        await wait(3);
-        const res = await this.processSummarizationProject(
-          httpclient,
-          projectName,
-        );
-        console.log(res);
+          console.log('Start processing...');
+          await wait(3);
+          const res = await this.processSummarizationProject(
+            httpclient,
+            projectName,
+          );
+          console.log(res);
+        } catch (err: any) {
+          // couldn't upload file or process summarization project
+          this.changeState(TaskStatus.ERROR);
+          this.updateProtocol(
+            err?.error?.message ?? err?.message ?? err?.toString(),
+          );
+          await this.deleteSummarizationProject(httpclient, projectName);
+          return;
+        }
+
         this.subscrManager.add(
           interval(5000).subscribe({
             next: async () => {
@@ -114,15 +121,16 @@ export class SummarizationOperation extends Operation {
                 result.status === 'success' &&
                 result.body.status === 'finished'
               ) {
-                if (result.body.errors) {
+                if (!result.body.errors) {
                   this.time.duration = Date.now() - this.time.start;
 
                   const summary = result.body.outputs.find((o: any) =>
-                    o.filename.includes('error'),
+                    o.filename.includes('summary.txt'),
                   );
 
                   if (summary) {
-                    const file = new File([transcript], `${projectName}.txt`, {
+                    const summaryText = await downloadFile(summary.url, 'text');
+                    const file = new File([summaryText], `${projectName}.txt`, {
                       type: 'text/plain',
                     });
                     this.results.push(
@@ -149,7 +157,7 @@ export class SummarizationOperation extends Operation {
                 }
 
                 this.subscrManager.removeByTag('status check');
-                console.log("Remove project");
+                console.log('Remove project');
                 await this.deleteSummarizationProject(httpclient, projectName);
               }
             },
@@ -173,10 +181,18 @@ export class SummarizationOperation extends Operation {
       this.shortTitle,
       selectedTask,
       this.state,
+      undefined,
+      this.serviceProvider,
+      this.language,
     );
   }
 
-  public fromAny(operationObj: any, commands: string[], task: Task): Operation {
+  public fromAny(
+    operationObj: IOperation,
+    commands: string[],
+    task: Task,
+    taskObj?: any,
+  ): Operation {
     const result = new SummarizationOperation(
       operationObj.name,
       commands,
@@ -185,80 +201,22 @@ export class SummarizationOperation extends Operation {
       task,
       operationObj.state,
       operationObj.id,
+      AppSettings.getServiceInformation(operationObj.serviceProvider) ??
+        AppSettings.getServiceInformation(taskObj.summarizationServiceProvider),
+      operationObj.language ?? taskObj.targetLanguage,
     );
+
     for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
       resultClass.attributes = resultObj.attributes;
       result.results.push(resultClass);
     }
+
     result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol.replace('¶'));
+    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
-    result.webService = operationObj.webService.replace('ASR', '');
-
-    if (
-      !(
-        operationObj.serviceProvider === null ||
-        operationObj.serviceProvider === undefined
-      )
-    ) {
-      result._providerInformation = AppSettings.getServiceInformation(
-        operationObj.serviceProvider,
-      );
-      console.log(`loaded ASR: ${result._providerInformation?.provider}`);
-    } else {
-      const providerName = operationObj.webService.replace('ASR', '');
-
-      if (providerName !== '') {
-        result._providerInformation =
-          AppSettings.getServiceInformation(providerName);
-        console.log(
-          `provider not available, set ${result._providerInformation?.provider}`,
-        );
-      }
-    }
 
     return result;
-  }
-
-  override toAny(): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      const result = {
-        id: this.id,
-        name: this.name,
-        state: this.state,
-        protocol: this.protocol,
-        time: this.time,
-        enabled: this.enabled,
-        webService: this.webService,
-        serviceProvider: !(
-          this._providerInformation === null ||
-          this._providerInformation === undefined
-        )
-          ? this._providerInformation.provider
-          : undefined,
-        results: [],
-      };
-
-      // result data
-      const promises: Promise<any>[] = [];
-      for (const resultObj of this.results) {
-        promises.push(resultObj.toAny());
-      }
-
-      if (promises.length > 0) {
-        Promise.all(promises)
-          .then((values) => {
-            result.results = values as never[];
-            resolve(result);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      } else {
-        resolve(result);
-      }
-    });
   }
 
   public constructor(
@@ -269,33 +227,47 @@ export class SummarizationOperation extends Operation {
     task?: Task,
     state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id);
-    this._description =
-      'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
-      'The result of this process is a text file with a literal transcription of the audio file. \n' +
-      'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
+    super(
+      name,
+      commands,
+      title,
+      shortTitle,
+      task,
+      state,
+      id,
+      serviceProvider,
+      language,
+    );
+    this._description = 'Summarizes a given full text.';
   }
 
   async createSummarizationProject(httpClient: HttpClient) {
     return new Promise<string>((resolve, reject) => {
-      const projectName = `tportal_session_${Date.now()}`;
-      this.subscrManager.add(
-        httpClient
-          .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/create',
-            {
-              projectName,
-            },
-            { responseType: 'json' },
-          )
-          .subscribe({
-            next: () => {
-              resolve(projectName);
-            },
-            error: reject,
-          }),
-      );
+      if (this.serviceProvider) {
+        const projectName = `tportal_session_${UUID.v7().replace(/-/g, '')}`;
+
+        this.subscrManager.add(
+          httpClient
+            .post(
+              joinURL(this.serviceProvider.host, '/project/create'),
+              {
+                projectName,
+              },
+              { responseType: 'json' },
+            )
+            .subscribe({
+              next: () => {
+                resolve(projectName);
+              },
+              error: reject,
+            }),
+        );
+      } else {
+        reject('Missing service provider');
+      }
     });
   }
 
@@ -304,88 +276,96 @@ export class SummarizationOperation extends Operation {
     projectName: string,
   ) {
     return new Promise<void>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/process',
-            {
-              projectName,
-              language: 'nl',
-              gpu: false,
-            },
-            { responseType: 'json' },
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
+      if (this.serviceProvider && this.language) {
+        console.log(
+          `convert ${this.language} to ${convertISO639Language(this.language)}`,
+        );
+        this.subscrManager.add(
+          httpclient
+            .post(
+              joinURL(this.serviceProvider.host, '/project/process'),
+              {
+                projectName,
+                language: 'en',
+              },
+              { responseType: 'json' },
+            )
+            .subscribe({
+              next: () => resolve(),
+              error: reject,
+            }),
+        );
+      } else {
+        reject('Missing service provider');
+      }
     });
   }
 
   getProjectStatus(httpclient: HttpClient, projectName: string) {
     return new Promise<any>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .get(
-            `https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project${stringifyQueryParams(
-              {
-                projectName,
-              },
-            )}`,
-            { responseType: 'json' },
-          )
-          .subscribe({
-            next: resolve,
-            error: reject,
-          }),
-      );
+      if (this.serviceProvider) {
+        this.subscrManager.add(
+          httpclient
+            .get(
+              joinURL(
+                this.serviceProvider.host,
+                `/project${stringifyQueryParams({
+                  projectName,
+                })}`,
+              ),
+              { responseType: 'json' },
+            )
+            .subscribe({
+              next: resolve,
+              error: reject,
+            }),
+        );
+      }
     });
   }
 
   deleteSummarizationProject(httpclient: HttpClient, projectName: string) {
     return new Promise<void>((resolve, reject) => {
-      this.subscrManager.add(
-        httpclient
-          .delete(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project',
-            {
+      if (this.serviceProvider) {
+        this.subscrManager.add(
+          httpclient
+            .delete(joinURL(this.serviceProvider.host, '/project'), {
               responseType: 'json',
               body: {
                 projectName,
               },
-            },
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
+            })
+            .subscribe({
+              next: () => resolve(),
+              error: reject,
+            }),
+        );
+      } else {
+        reject('Missing service provider');
+      }
     });
   }
 
   uploadFile(file: File, httpClient: HttpClient, projectName: string) {
     return new Promise<void>((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('projectName', projectName);
-      this.subscrManager.add(
-        httpClient
-          .post(
-            'https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/api/summarization/project/upload',
-            formData,
-          )
-          .subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
-      );
+      if (this.serviceProvider) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('projectName', projectName);
+        this.subscrManager.add(
+          httpClient
+            .post(
+              joinURL(this.serviceProvider.host, '/project/upload'),
+              formData,
+            )
+            .subscribe({
+              next: () => resolve(),
+              error: reject,
+            }),
+        );
+      } else {
+        reject('Missing service provider');
+      }
     });
   }
-
-  onMouseEnter(): void {}
-
-  onMouseLeave(): void {}
-
-  onMouseOver(): void {}
 }

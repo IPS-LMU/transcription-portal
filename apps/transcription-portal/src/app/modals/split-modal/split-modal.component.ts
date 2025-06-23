@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 
@@ -9,6 +9,8 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
   imports: [],
 })
 export class SplitModalComponent extends SubscriberComponent {
+  protected activeModal = inject(NgbActiveModal);
+
   @Output() dissmissedChange: EventEmitter<boolean> =
     new EventEmitter<boolean>();
   public static options: NgbModalOptions = {
@@ -17,10 +19,6 @@ export class SplitModalComponent extends SubscriberComponent {
     keyboard: false,
     fullscreen: 'mm',
   };
-
-  constructor(protected activeModal: NgbActiveModal) {
-    super();
-  }
 
   private _splitModalDismissedProperly = false;
 

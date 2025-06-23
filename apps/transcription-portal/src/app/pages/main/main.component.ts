@@ -5,6 +5,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  inject,
   OnDestroy,
   ViewChild,
 } from '@angular/core';
@@ -82,6 +83,17 @@ import { StorageService } from '../../storage.service';
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
+  taskService = inject(TaskService);
+  private ngbModalService = inject(NgbModal);
+  private httpClient = inject(HttpClient);
+  notification = inject(NotificationService);
+  private storage = inject(StorageService);
+  bugService = inject(BugReportService);
+  private alertService = inject(AlertService);
+  settingsService = inject(SettingsService);
+  private cd = inject(ChangeDetectorRef);
+  modalService = inject(OHModalService);
+
   public sidebarstate = 'hidden';
   public toolURL?: SafeResourceUrl;
   isCollapsed = false;
@@ -112,18 +124,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
 
-  constructor(
-    public taskService: TaskService,
-    private ngbModalService: NgbModal,
-    private httpclient: HttpClient,
-    public notification: NotificationService,
-    private storage: StorageService,
-    public bugService: BugReportService,
-    private alertService: AlertService,
-    public settingsService: SettingsService,
-    private cd: ChangeDetectorRef,
-    public modalService: OHModalService,
-  ) {
+  constructor() {
     super();
     this.subscribe(this.notification.onPermissionChange, {
       next: (result) => {
@@ -149,12 +150,17 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       {
         complete: () => {
           // configuration loaded
-          const { annotationTasks, summarizationTasks, userSettings } = this.storage.allloaded.value;
+          const { annotationTasks, summarizationTasks, userSettings } =
+            this.storage.allloaded.value;
           this.cd.markForCheck();
 
           // idb loaded
           this.taskService.init();
-          this.taskService.importDBData({ annotationTasks, summarizationTasks, userSettings });
+          this.taskService.importDBData({
+            annotationTasks,
+            summarizationTasks,
+            userSettings,
+          });
           this.cd.markForCheck();
 
           this.storage.idbm.intern
@@ -245,7 +251,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   onVerifyButtonClick() {
     const taskList = this.taskService.state.currentModeState.taskList;
     const tasks = taskList?.getAllTasks().filter((a) => {
-      return a.state === TaskStatus.QUEUED;
+      return a.status === TaskStatus.QUEUED;
     });
 
     if (tasks && tasks.length > 0) {
@@ -260,7 +266,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       QueueModalComponent.options,
     );
     const taskList = this.taskService.state.currentModeState.taskList;
-    ref.componentInstance.queue = this.taskService.state.currentModeState.preprocessor.queue;
+    ref.componentInstance.queue =
+      this.taskService.state.currentModeState.preprocessor.queue;
     ref.componentInstance.tasks = taskList?.getAllTasks() ?? [];
     ref.componentInstance.operations =
       this.taskService.state.currentModeState.operations;
@@ -341,7 +348,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                       +` successfully uploaded. You can do '${tool.title}' for this file.`,
                   );
                   if (tool.task) {
-                    this.storage.saveTask(tool.task, this.taskService.state.currentMode);
+                    this.storage.saveTask(
+                      tool.task,
+                      this.taskService.state.currentMode,
+                    );
                   }
                 }
               },
@@ -407,7 +417,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
                   previousOperation.lastResult.online = true;
                 }
                 if (tool.task) {
-                  this.storage.saveTask(tool.task, this.taskService.state.currentMode);
+                  this.storage.saveTask(
+                    tool.task,
+                    this.taskService.state.currentMode,
+                  );
                 }
                 resolve();
               })
@@ -648,38 +661,26 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             }
 
             this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-            this.storage.saveTask(this.toolSelectedOperation.task, this.taskService.state.currentMode);
+            this.storage.saveTask(
+              this.toolSelectedOperation.task,
+              this.taskService.state.currentMode,
+            );
 
             setTimeout(() => {
               if (
                 this.toolSelectedOperation &&
                 this.toolSelectedOperation.task &&
-                this.toolSelectedOperation.task.state === 'FINISHED' &&
+                this.toolSelectedOperation.task.status === 'FINISHED' &&
                 this.toolSelectedOperation.task.operations[1] &&
-                this.toolSelectedOperation.task.operations[1]
-                  .providerInformation
+                this.toolSelectedOperation.task.operations[1].serviceProvider &&
+                this.toolSelectedOperation.task.operations[1].language
               ) {
-                const langObj = AppSettings.getLanguageByCode(
-                  this.toolSelectedOperation.task.asrLanguage!,
-                  this.toolSelectedOperation.task.operations[1]
-                    .providerInformation.provider,
-                );
-                if (langObj) {
-                  this.toolSelectedOperation.task.restart(
-                    this.toolSelectedOperation.task.operations[1]
-                      .providerInformation,
-                    langObj,
-                    this.httpclient,
-                    [
-                      {
-                        name: 'GoogleASR',
-                        value: this.taskService.accessCode,
-                      },
-                    ],
-                  );
-                } else {
-                  throw new Error('langObj is undefined');
-                }
+                this.toolSelectedOperation.task.restart(this.httpClient, [
+                  {
+                    name: 'GoogleASR',
+                    value: this.taskService.accessCode,
+                  },
+                ]);
               }
               this.onBackButtonClicked();
             }, 1000);
@@ -865,11 +866,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       if (
         operation &&
         operation.task &&
-        operation.task.operations[1].providerInformation
+        operation.task.operations[1].serviceProvider
       ) {
-        const url = `${operation.task.operations[1].providerInformation.host}uploadFileMulti`;
-
-        const subj = UploadOperation.upload([file], url);
+        const url = `${operation.task.operations[1].serviceProvider.host}uploadFileMulti`;
+        const subj = UploadOperation.upload([file], url, this.httpClient);
         subj.subscribe({
           next: (obj) => {
             if (obj.type === 'loadend') {

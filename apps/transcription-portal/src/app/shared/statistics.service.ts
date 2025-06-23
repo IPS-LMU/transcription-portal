@@ -1,13 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { ChartData } from 'chart.js';
 import { interval, Subscription } from 'rxjs';
 import { TaskService } from '../obj/tasks/task.service';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class StatisticsService {
+  private taskService = inject(TaskService);
+
   public overAllProgress = {
     waiting: 0,
     processing: 0,
@@ -15,44 +15,28 @@ export class StatisticsService {
     failed: 0,
   };
 
-  public averageDurations: ChartData<'pie', number[], string | string[]> = {
-    labels: [
-      ['Upload'],
-      ['Speech Recognition'],
-      ['Manual Transcription'],
-      ['Word alignment'],
-      ['Phonetic Detail'],
-    ],
-    datasets: [
-      {
-        data: [0, 0, 0, 0, 0],
-      },
-    ],
-  };
+  public averageDurations?: ChartData<'pie', number[], string | string[]>;
 
   private subscrmanager = new SubscriptionManager<Subscription>();
 
-  constructor(private taskService: TaskService) {
+  constructor() {
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
-        const allTasks = [
-          ...this.taskService.state.modes.annotation.taskList?.getAllTasks() ?? [],
-          ...this.taskService.state.modes.summarization.taskList?.getAllTasks() ?? [],
-        ];
+        const modeState =
+          this.taskService.state.modes[this.taskService.state.currentMode];
+        const allTasks = [...(modeState.taskList?.getAllTasks() ?? [])];
         const allTasksCount = allTasks.length;
         this.overAllProgress.waiting =
-          ((this.taskService.statistics.waiting +
-              this.taskService.statistics.queued) /
+          ((modeState.statistics.waiting + modeState.statistics.queued) /
             allTasksCount) *
           100;
         this.overAllProgress.failed =
-          (this.taskService.statistics.errors / allTasksCount) * 100;
+          (modeState.statistics.errors / allTasksCount) * 100;
         this.overAllProgress.processing =
-          (this.taskService.statistics.running / allTasksCount) * 100;
+          (modeState.statistics.running / allTasksCount) * 100;
         this.overAllProgress.finished =
-          (this.taskService.statistics.finished / allTasksCount) * 100;
-
-        this.updateAverageDurations();
+          (modeState.statistics.finished / allTasksCount) * 100;
+        this.updateAverageDurations(this.taskService.state.currentMode);
       }),
     );
   }
@@ -61,11 +45,14 @@ export class StatisticsService {
     this.subscrmanager.destroy();
   }
 
-  public updateAverageDurations() {
-    // TODO implement
-    /*
-    if (this.taskService.taskList) {
-      const tasks = this.taskService.taskList.getAllTasks();
+  public updateAverageDurations(mode: 'annotation' | 'summarization') {
+    if (
+      this.taskService.statistics &&
+      this.taskService.state?.modes &&
+      Object.keys(this.taskService.state.modes).includes(mode)
+    ) {
+      const modeState = this.taskService.state.modes[mode];
+      const tasks = modeState.taskList?.getAllTasks() ?? [];
 
       const durations = [0, 0, 0, 0, 0];
 
@@ -77,11 +64,42 @@ export class StatisticsService {
         }
       }
 
+      if (mode === 'annotation') {
+        this.averageDurations = {
+          labels: [
+            ['Upload'],
+            ['Speech Recognition'],
+            ['Manual Transcription'],
+            ['Word alignment'],
+            ['Phonetic Detail'],
+          ],
+          datasets: [
+            {
+              data: [0, 0, 0, 0, 0],
+            },
+          ],
+        };
+      } else {
+        this.averageDurations = {
+          labels: [
+            ['Upload'],
+            ['Speech Recognition'],
+            ['Manual Transcription'],
+            ['Summarization'],
+            ['Translation'],
+          ],
+          datasets: [
+            {
+              data: [0, 0, 0, 0, 0],
+            },
+          ],
+        };
+      }
+
       for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
         this.averageDurations.datasets[0].data[i] =
           Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
       }
     }
-     */
   }
 }

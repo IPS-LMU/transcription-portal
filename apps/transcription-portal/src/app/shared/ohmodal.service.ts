@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { BugreportModalComponent } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
@@ -12,13 +12,11 @@ import { SettingsService } from './settings.service';
   providedIn: 'root',
 })
 export class OHModalService implements OnDestroy {
-  private subscrManager = new SubscriptionManager();
+  private ngbModalService = inject(NgbModal);
+  private bugreportService = inject(BugReportService);
+  private settingsService = inject(SettingsService);
 
-  constructor(
-    private ngbModalService: NgbModal,
-    private bugreportService: BugReportService,
-    private settingsService: SettingsService,
-  ) {}
+  private subscrManager = new SubscriptionManager();
 
   public openFeedbackModal() {
     const pkgText = JSON.stringify(

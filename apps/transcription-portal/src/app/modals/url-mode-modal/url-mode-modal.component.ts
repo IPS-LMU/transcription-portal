@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
@@ -19,6 +14,9 @@ export class UrlModeModalComponent
   extends SubscriberComponent
   implements OnInit
 {
+  protected activeModal = inject(NgbActiveModal);
+  private cd = inject(ChangeDetectorRef);
+
   leftTime = 0;
 
   get minutes(): string {
@@ -38,10 +36,7 @@ export class UrlModeModalComponent
     keyboard: false,
   };
 
-  constructor(
-    protected activeModal: NgbActiveModal,
-    private cd: ChangeDetectorRef,
-  ) {
+  constructor() {
     super();
     this.subscribe(interval(1000), {
       next: () => {
