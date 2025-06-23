@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import {
   AudioCutter,

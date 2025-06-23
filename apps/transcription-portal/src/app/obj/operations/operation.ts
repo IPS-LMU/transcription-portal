@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';

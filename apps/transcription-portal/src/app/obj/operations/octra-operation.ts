@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
 import { stringifyQueryParams } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';

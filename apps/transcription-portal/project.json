@@ -25,7 +25,7 @@
           "apps/transcription-portal/src/config"
         ],
         "styles": ["apps/transcription-portal/src/styles.scss"],
-        "allowedCommonJsDependencies": ["x2js", "chart.js"],
+        "allowedCommonJsDependencies": ["x2js", "chart.js", "jszip", "notifyjs", "konva"],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
@@ -80,7 +80,8 @@
       "defaultConfiguration": "development",
       "options": {
         "port": 3456
-      }
+      },
+      "continuous": true
     },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
