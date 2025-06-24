@@ -1,5 +1,7 @@
 const fs = require("fs");
 const {execSync, spawn} = require('child_process');
+const { readFile, writeFile } = require('node:fs/promises');
+const crypto = require('crypto');
 
 const buildDir = "dist/apps/transcription-portal/";
 const targetFolder = "assets";
@@ -51,19 +53,10 @@ node.stdout.on('data', function (data) {
 node.stderr.on('data', function (data) {
   console.log(data.toString());
 });
-node.on('exit', function (code) {
+node.on('exit', async function (code) {
   console.log('child process exited with code ' + code.toString());
   console.log(`Change index.html...`);
-  let indexHTML = fs.readFileSync(`${buildDir}index.html`, {
-    encoding: "utf8"
-  });
-
-  indexHTML = indexHTML.replace(/(const ohPortalLastUpdated = ").*(";)/g, `$1${timeNow}$2`);
-  indexHTML = indexHTML.replace(/(const ohPortalVersion = ").*(";)/g, `$1${version}$2`);
-
-  fs.writeFileSync(`${buildDir}index.html`, indexHTML, {
-    encoding: "utf8"
-  });
+  await setBuildVariable();
   console.log(`indexed html changed!`);
 
   if (isUpdate) {
@@ -119,4 +112,33 @@ function getDateTimeString() {
     sec = '0' + sec;
   }
   return `${yyyy}-${mm}-${dd} ${h}:${min}:${sec}`;
+}
+
+async function setBuildVariable() {
+  let content = await readFile('./dist/apps/transcription-portal/index.html', {
+    encoding: 'utf-8',
+  });
+
+  let pkg = await readFile('./package.json', {
+    encoding: 'utf-8',
+  });
+  pkg = JSON.parse(pkg);
+  const hash = crypto.randomUUID();
+
+  content = content.replace(/\/\*.*var BUILD = ({[^}]+}).*\*\//gs, (g0, g1) => {
+    const build = JSON.parse(g1);
+    build.version = pkg.version;
+    build.timestamp = new Date().toISOString();
+    build.hash = hash;
+
+    console.log(build);
+
+    return `var BUILD = ${JSON.stringify(build)};`;
+  });
+
+  await writeFile('./dist/apps/transcription-portal/index.html', content, {
+    encoding: 'utf-8',
+  });
+
+  console.log(`BUILD-HASH: ${hash}`);
 }

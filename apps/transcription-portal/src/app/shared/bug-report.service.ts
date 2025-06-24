@@ -78,7 +78,7 @@ export class BugReportService {
       ohportal: {
         version: AppInfo.version,
         url: window.location.href,
-        lastUpdated: AppInfo.lastUpdated,
+        lastUpdated: AppInfo.BUILD.timestamp,
       },
       system: {
         os: {

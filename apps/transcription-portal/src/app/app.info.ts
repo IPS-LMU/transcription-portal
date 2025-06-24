@@ -12,16 +12,20 @@ import {
 import { AudioFormat, WavFormat } from '@octra/web-media';
 import { environment } from '../environments/environment';
 
-declare var ohPortalVersion: string;
-declare var ohPortalLastUpdated: string;
-
 export class AppInfo {
   public static readonly debugging = environment.development;
-  static readonly _version = ohPortalVersion;
-  static readonly lastUpdated = ohPortalLastUpdated;
+  public static BUILD: {
+    version: string;
+    hash: string;
+    timestamp: string;
+  } = (window as any).BUILD ?? {
+    version: '0.0.0',
+    hash: '2893u092i349i23904',
+    timestamp: new Date().toISOString(),
+  };
 
   static get version(): string {
-    return this._version;
+    return this.BUILD.version;
   }
 
   static get audioFormats(): AudioFormat[] {
