@@ -52,6 +52,23 @@ export class PortalModeState {
   private _status: TaskStatus = TaskStatus.READY;
   private _preprocessor!: Preprocessor;
   private subscrManager = new SubscriptionManager();
+  private _statistics = {
+    queued: 0,
+    waiting: 0,
+    running: 0,
+    finished: 0,
+    errors: 0,
+  };
+
+  get statistics(): {
+    queued: number;
+    waiting: number;
+    running: number;
+    finished: number;
+    errors: number;
+  } {
+    return this._statistics;
+  }
 
   get preprocessor(): Preprocessor {
     return this._preprocessor;
@@ -89,6 +106,52 @@ export class PortalModeState {
 
   changeStatus(newStatus: TaskStatus) {
     this._status = newStatus;
+  }
+
+  public updateStatistics() {
+    const result = {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0,
+    };
+    const allTasks = [...(this._taskList?.getAllTasks() ?? [])];
+
+    for (const task of allTasks) {
+      // running
+      if (
+        task.state === TaskStatus.PROCESSING ||
+        task.state === TaskStatus.UPLOADING
+      ) {
+        result.running++;
+      }
+
+      // waiting
+      if (
+        task.state === TaskStatus.PENDING ||
+        task.state === TaskStatus.READY
+      ) {
+        result.waiting++;
+      }
+
+      // queued
+      if (task.state === TaskStatus.QUEUED) {
+        result.queued++;
+      }
+
+      // finished
+      if (task.state === TaskStatus.FINISHED) {
+        result.finished++;
+      }
+
+      // failed
+      if (task.state === TaskStatus.ERROR) {
+        result.errors++;
+      }
+    }
+
+    this._statistics = result;
   }
 
   destroy() {
@@ -311,6 +374,8 @@ export class TaskService implements OnDestroy {
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
         this.updateStatistics();
+        this.state.modes.annotation.updateStatistics();
+        this.state.modes.summarization.updateStatistics();
       }),
     );
     this.updateStatistics();

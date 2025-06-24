@@ -11,12 +11,14 @@ import { BaseChartDirective } from 'ng2-charts';
 import { timer } from 'rxjs';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
-  imports: [NgCircleProgressModule, BaseChartDirective],
+  providers: [StatisticsService],
+  imports: [NgCircleProgressModule, BaseChartDirective, JsonPipe],
 })
 export class StatisticsModalComponent
   extends SubscriberComponent
@@ -35,6 +37,7 @@ export class StatisticsModalComponent
 
   public pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
+    animation: false,
     plugins: {
       legend: {
         display: true,
