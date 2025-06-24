@@ -194,7 +194,7 @@ export class ASROperation extends Operation {
         .replace('{{host}}', asrService.host)
         .replace('{{audioURL}}', this.previousOperation?.lastResult?.url ?? '')
         .replace('{{asrType}}', asrService.provider!)
-        .replace('{{language}}', this.task?.asrLanguage!);
+        .replace('{{language}}', this.task?.asrLanguage!) + "&diarization=false";
 
       if (accessCode !== '') {
         url += `&ACCESSCODE=${accessCode}`;

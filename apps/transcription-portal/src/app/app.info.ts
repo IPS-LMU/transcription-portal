@@ -52,22 +52,22 @@ export class AppInfo {
     {
       obj: new PraatTableConverter(),
       color: 'purple',
-      tierNameMatches: ['^TRN$', '^OCTRA'],
+      tierNameMatches: ['^TRN$', '^OCTRA', "^S[0-9]+"],
     },
     {
       obj: new TextConverter(),
       color: 'darkblue',
-      tierNameMatches: ['^TRN$', '^OCTRA'],
+      tierNameMatches: ['^TRN$', '^OCTRA', "^S[0-9]+"],
     },
     {
       obj: new SRTConverter(),
       color: 'pink',
-      tierNameMatches: ['^TRN$', '^OCTRA'],
+      tierNameMatches: ['^TRN$', '^OCTRA', "^S[0-9]+"],
     },
     {
       obj: new WebVTTConverter(),
       color: 'black',
-      tierNameMatches: ['^TRN$', '^OCTRA'],
+      tierNameMatches: ['^TRN$', '^OCTRA', "^S[0-9]+"],
     },
   ];
 
