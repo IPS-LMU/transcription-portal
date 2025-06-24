@@ -295,7 +295,7 @@
       <button ngbNavLink (mousedown)="changeMode('annotation')">
         Annotation
       </button>
-      <ng-template ngbNavContent class="d-flex">
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
         @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
@@ -319,7 +319,7 @@
       <button ngbNavLink (mousedown)="changeMode('summarization')">
         Summarization &amp; Translation
       </button>
-      <ng-template ngbNavContent>
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
         @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
@@ -494,7 +494,7 @@
       }"
       style="float: right"
     >
-      <div [ngbNavOutlet]="nav" class="d-flex flex-auto"></div>
+      <div [ngbNavOutlet]="nav" class="d-flex flex-column flex-auto w-100 h-100 position-relative"></div>
     </div>
     <div
       (mousedown)="dragBorder($event, 'right')"

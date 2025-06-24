@@ -115,7 +115,7 @@
             <i class="bi bi-clipboard"></i> Copy to clipboard
           </button>
         </div>
-        <table class="table table-sm table-striped" id="ouput-table">
+        <table class="table table-sm table-striped" id="output-table">
           <tbody>
             @for (item of popover.operation.parsedProtocol; track item) {
               <tr>
@@ -325,6 +325,7 @@
                           openArchiveDownload('column', operation, selectedRows)
                         "
                         [ngbTooltip]="tipContent"
+                        [container]="'body'"
                         tooltipClass="operation-tooltip"
                         placement="bottom"
                         style="display: inline; padding: 0 3px"

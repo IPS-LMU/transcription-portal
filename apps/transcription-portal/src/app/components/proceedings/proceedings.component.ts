@@ -549,7 +549,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         const top =
           icon.offsetTop +
           parentNode.offsetTop +
-          this.inner.nativeElement.parentElement.parentElement.parentElement
+          this.inner.nativeElement.parentElement.parentElement.parentElement.parentElement.parentElement
             .offsetTop -
           this.inner.nativeElement.scrollTop +
           icon.offsetHeight;
@@ -558,6 +558,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             ? top - this.popover.height - icon.offsetHeight + 10
             : top;
       }
+
+      console.log(`Show popover at position (${this.popover.x}, ${this.popover.y}) and size ${this.popover.width}, ${this.popover.height})`);
 
       this.togglePopover(true);
     }

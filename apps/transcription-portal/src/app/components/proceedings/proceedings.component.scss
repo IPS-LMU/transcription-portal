@@ -24,6 +24,7 @@
 
 :host {
   display: flex;
+  position: relative;
 }
 
 .bi.bi-file-text {
@@ -245,12 +246,12 @@ table thead tr th:hover {
   width: 200px !important;
 }
 
-#ouput-table tr td {
+#output-table tr td {
   vertical-align: top;
   font-size: 0.7em;
 }
 
-#ouput-table .error {
+#output-table .error {
   color: red;
 }
 

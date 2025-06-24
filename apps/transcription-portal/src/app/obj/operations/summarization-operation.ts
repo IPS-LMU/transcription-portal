@@ -150,7 +150,7 @@ export class SummarizationOperation extends Operation {
 
                 this.subscrManager.removeByTag('status check');
                 console.log("Remove project");
-                await this.deleteSummarizationProject(httpclient, projectName);
+                // await this.deleteSummarizationProject(httpclient, projectName);
               }
             },
           }),

@@ -291,7 +291,7 @@ export class ASROperation extends Operation {
               this.previousOperation?.lastResult?.url ?? '',
             )
             .replace('{{asrType}}', `${asrService.provider}`)
-            .replace('{{language}}', this.task?.asrLanguage!);
+            .replace('{{language}}', this.task?.asrLanguage!)
 
           httpClient
             .post(

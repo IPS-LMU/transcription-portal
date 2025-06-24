@@ -110,3 +110,12 @@ tbody .bi.bi-arrow-up {
 .flex-auto {
   flex: auto !important;
 }
+
+
+.tab-content .tab-pane {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: auto !important;
+  height: 100% !important;
+  width: 100% !important;
+}
