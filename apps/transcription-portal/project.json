@@ -19,7 +19,6 @@
         ],
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
         "assets": [
-          "apps/transcription-portal/src/favicon.ico",
           "apps/transcription-portal/src/assets",
           "apps/transcription-portal/src/contents",
           "apps/transcription-portal/src/config"
