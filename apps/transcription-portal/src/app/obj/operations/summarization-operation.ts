@@ -271,10 +271,7 @@ export class SummarizationOperation extends Operation {
     id?: number,
   ) {
     super(name, commands, title, shortTitle, task, state, id);
-    this._description =
-      'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
-      'The result of this process is a text file with a literal transcription of the audio file. \n' +
-      'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
+    this._description = "Summarizes a given full text.";
   }
 
   async createSummarizationProject(httpClient: HttpClient) {

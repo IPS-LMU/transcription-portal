@@ -42,9 +42,12 @@
       <div class="col-lg-6">
         <octra-asr-options
           [options]="{
-            selectedASRLanguage: this.taskService.state.currentModeState.selectedASRLanguage!,
-            selectedMausLanguage: this.taskService.state.currentModeState.selectedMausLanguage!,
-            selectedServiceProvider: this.taskService.state.currentModeState.selectedProvider!,
+            selectedASRLanguage:
+              this.taskService.state.currentModeState.selectedASRLanguage!,
+            selectedMausLanguage:
+              this.taskService.state.currentModeState.selectedMausLanguage!,
+            selectedServiceProvider:
+              this.taskService.state.currentModeState.selectedProvider!,
           }"
           (optionsChange)="onASROptionsChange($event)"
           [languageSettings]="{
@@ -124,7 +127,12 @@
           <th></th>
           <th></th>
           @for (operation of operations; track operation; let i = $index) {
-            @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+            @if (
+              operation.name === 'OCTRA' ||
+              operation.name === 'ASR' ||
+              operation.name === 'Summarization' ||
+              operation.name === 'Translation'
+            ) {
               <th>
                 <input
                   (click)="deactivateOperation(operation, i)"
@@ -133,8 +141,7 @@
                   type="checkbox"
                 />
               </th>
-            }
-            @if (operation.name === 'MAUS') {
+            } @else if (operation.name === 'MAUS') {
               <th colspan="2" style="position: relative">
                 <img
                   src="assets/directory.png"

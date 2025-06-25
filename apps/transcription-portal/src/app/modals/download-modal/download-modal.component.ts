@@ -406,8 +406,12 @@ export class DownloadModalComponent
         return '2_Manual Transcription';
       case 'MAUS':
         return '3_Word Alignment';
+      case 'Summarization':
+        return '3_Summarization';
       case 'Emu WebApp':
         return '4_Phonetic Detail';
+      case 'Translation':
+        return '4_Translation';
     }
 
     return '';

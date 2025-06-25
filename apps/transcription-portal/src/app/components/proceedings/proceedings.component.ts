@@ -25,9 +25,10 @@ import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
-import { OCTRAOperation } from '../../obj/operations/octra-operation';
 import { Operation } from '../../obj/operations/operation';
+import { SummarizationOperation } from '../../obj/operations/summarization-operation';
 import { ToolOperation } from '../../obj/operations/tool-operation';
+import { TranslationOperation } from '../../obj/operations/translation-operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
 import { QueueItem } from '../../obj/preprocessor';
 import { ShortcutManager } from '../../obj/shortcut-manager';
@@ -449,7 +450,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (entry instanceof Task) {
         if (entry && entry.files.length > 1) {
           entry.files.splice(1);
-          entry.operations[1].enabled = this.taskService.state.currentModeState.operations[1].enabled;
+          entry.operations[1].enabled =
+            this.taskService.state.currentModeState.operations[1].enabled;
           entry.operations[1].changeState(entry.state);
         }
       } else {
@@ -549,8 +551,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         const top =
           icon.offsetTop +
           parentNode.offsetTop +
-          this.inner.nativeElement.parentElement.parentElement.parentElement.parentElement.parentElement
-            .offsetTop -
+          this.inner.nativeElement.parentElement.parentElement.parentElement
+            .parentElement.parentElement.offsetTop -
           this.inner.nativeElement.scrollTop +
           icon.offsetHeight;
         this.popover.y =
@@ -559,7 +561,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             : top;
       }
 
-      console.log(`Show popover at position (${this.popover.x}, ${this.popover.y}) and size ${this.popover.width}, ${this.popover.height})`);
+      console.log(
+        `Show popover at position (${this.popover.x}, ${this.popover.y}) and size ${this.popover.width}, ${this.popover.height})`,
+      );
 
       this.togglePopover(true);
     }
@@ -705,36 +709,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     });
 
     operation.enabled = !operation.enabled;
-    const previous = this.taskService.state.currentModeState.operations[index - 1];
+    const previous =
+      this.taskService.state.currentModeState.operations[index - 1];
     const next = this.taskService.state.currentModeState.operations[index + 1];
-    if (operation instanceof OCTRAOperation) {
-      if (!previous.enabled && !operation.enabled) {
-        previous.enabled = true;
-
-        for (const task of tasks) {
-          const taskOperation = task.operations[index - 1];
-          const currOperation = task.operations[index];
-          let hasTranscript = false;
-          if (currOperation?.task) {
-            // check if transcript was added to the task
-            hasTranscript =
-              currOperation.task.files.findIndex((a) => {
-                return this.taskService.validTranscript(a.extension);
-              }) > -1;
-          }
-
-          if (!hasTranscript) {
-            if (taskOperation.state === TaskStatus.PENDING) {
-              taskOperation.enabled = previous.enabled;
-            }
-
-            if (currOperation.state === TaskStatus.PENDING) {
-              currOperation.enabled = operation.enabled;
-            }
-          }
-        }
-      }
-    } else if (operation instanceof ASROperation) {
+    if (operation instanceof ASROperation) {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
@@ -764,6 +742,42 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           currOperation.enabled = operation.enabled;
         }
       }
+    } else if (
+      operation instanceof SummarizationOperation ||
+      operation instanceof TranslationOperation
+    ) {
+      for (const task of tasks) {
+        const currOperation = task.operations[index];
+
+        if (currOperation.state === TaskStatus.PENDING) {
+          currOperation.enabled = operation.enabled;
+        }
+      }
+    } else if (!previous.enabled && !operation.enabled) {
+      previous.enabled = true;
+
+      for (const task of tasks) {
+        const taskOperation = task.operations[index - 1];
+        const currOperation = task.operations[index];
+        let hasTranscript = false;
+        if (currOperation?.task) {
+          // check if transcript was added to the task
+          hasTranscript =
+            currOperation.task.files.findIndex((a) => {
+              return this.taskService.validTranscript(a.extension);
+            }) > -1;
+        }
+
+        if (!hasTranscript) {
+          if (taskOperation.state === TaskStatus.PENDING) {
+            taskOperation.enabled = previous.enabled;
+          }
+
+          if (currOperation.state === TaskStatus.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
+        }
+      }
     }
 
     this.updateEnableState();
@@ -774,7 +788,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       return a.state === TaskStatus.QUEUED || a.state === TaskStatus.PENDING;
     });
 
-    for (let j = 0; j < this.taskService.state.currentModeState.operations.length; j++) {
+    for (
+      let j = 0;
+      j < this.taskService.state.currentModeState.operations.length;
+      j++
+    ) {
       const operation = this.taskService.state.currentModeState.operations[j];
 
       for (const task of tasks) {
@@ -891,9 +909,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public removeEntry(event: MouseEvent, entry?: Task | TaskDirectory) {
     if (this.taskService.state.currentModeState.taskList && entry) {
-      this.taskService.state.currentModeState.taskList.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
+      this.taskService.state.currentModeState.taskList
+        .removeEntry(entry, true)
+        .catch((error) => {
+          console.error(error);
+        });
       setTimeout(() => {
         this.selectedRows = [];
         this.cd.markForCheck();
@@ -1019,9 +1039,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
 
     for (const entry of removeQueue) {
-      this.taskService.state.currentModeState.taskList?.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
+      this.taskService.state.currentModeState.taskList
+        ?.removeEntry(entry, true)
+        .catch((error) => {
+          console.error(error);
+        });
     }
 
     this.selectedRows = [];

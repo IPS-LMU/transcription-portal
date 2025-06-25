@@ -11,14 +11,13 @@ import { BaseChartDirective } from 'ng2-charts';
 import { timer } from 'rxjs';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
-import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
   providers: [StatisticsService],
-  imports: [NgCircleProgressModule, BaseChartDirective, JsonPipe],
+  imports: [NgCircleProgressModule, BaseChartDirective],
 })
 export class StatisticsModalComponent
   extends SubscriberComponent

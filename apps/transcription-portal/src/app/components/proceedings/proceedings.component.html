@@ -399,8 +399,7 @@
                     type="checkbox"
                   />
                 </th>
-              }
-              @if (operation.name === 'MAUS') {
+              } @else if (operation.name === 'MAUS') {
                 <th
                   colspan="2"
                   style="position: relative"
@@ -429,8 +428,35 @@
                     "
                   />
                 </th>
-              }
-              @if (i === 0) {
+              } @else if (operation.name === 'Summarization') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    (click)="deactivateOperation(operation, i)"
+                    [checked]="operation.enabled"
+                    class="header-checkbox"
+                    type="checkbox"
+                  />
+                </th>
+              } @else if (operation.name === 'Translation') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    (click)="deactivateOperation(operation, i)"
+                    [checked]="operation.enabled"
+                    class="header-checkbox"
+                    type="checkbox"
+                  />
+                </th>
+              } @else if (i === 0) {
                 <th></th>
               }
             </ng-container>
@@ -627,7 +653,9 @@
             <tr style="cursor: pointer">
               @if (getDirEntriesFromItem(entry).length === 0) {
                 <td
-                  [attr.colspan]="taskService.state.currentModeState.operations.length + 3"
+                  [attr.colspan]="
+                    taskService.state.currentModeState.operations.length + 3
+                  "
                   [ngClass]="{ shorten: shortstyle }"
                 >
                   <i aria-hidden="true" class="bi bi-database op-50"> </i>
@@ -641,7 +669,11 @@
                 </td>
               }
               @if (getDirEntriesFromItem(entry).length > 0) {
-                <td [attr.colspan]="taskService.state.currentModeState.operations.length + 3">
+                <td
+                  [attr.colspan]="
+                    taskService.state.currentModeState.operations.length + 3
+                  "
+                >
                   <i
                     aria-hidden="true"
                     class="bi bi-folder2-open blue op-50"
@@ -662,7 +694,11 @@
                   <i class="bi bi-gear-fill spin"></i>
                 </div>
               </td>
-              <td [attr.colspan]="taskService.state.currentModeState.operations.length + 2"></td>
+              <td
+                [attr.colspan]="
+                  taskService.state.currentModeState.operations.length + 2
+                "
+              ></td>
             </tr>
           }
         }
