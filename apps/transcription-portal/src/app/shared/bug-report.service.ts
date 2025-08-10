@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FeedbackRequestPropertiesDto } from '@octra/api-types';
 import { OctraAPIService, removeProperties } from '@octra/ngx-octra-api';
 import { hasProperty } from '@octra/utilities';
@@ -22,13 +22,13 @@ export interface ConsoleEntry {
 
 @Injectable()
 export class BugReportService {
+  private octraAPI = inject(OctraAPIService);
+
   private _console: ConsoleEntry[] = [];
 
   get console(): ConsoleEntry[] {
     return this._console;
   }
-
-  constructor(private octraAPI: OctraAPIService) {}
 
   public get hasErrors(): boolean {
     const errors = this._console.filter((entry) => {
@@ -78,7 +78,7 @@ export class BugReportService {
       ohportal: {
         version: AppInfo.version,
         url: window.location.href,
-        lastUpdated: AppInfo.lastUpdated,
+        lastUpdated: AppInfo.BUILD.timestamp,
       },
       system: {
         os: {

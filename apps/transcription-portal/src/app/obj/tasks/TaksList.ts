@@ -1,5 +1,5 @@
 import { Subject } from 'rxjs';
-import { Task, TaskDirectory, TaskState } from './task';
+import { Task, TaskDirectory, TaskStatus } from './task';
 
 export interface EntryChangeEvent {
   state: 'added' | 'removed' | 'changed';
@@ -80,11 +80,11 @@ export class TaskList {
     });
   }
 
-  public findTaskByState(state: TaskState): Task | undefined {
+  public findTaskByState(state: TaskStatus): Task | undefined {
     const tasks = this.getAllTasks();
 
     return tasks.find((a: Task) => {
-      return a.state === state;
+      return a.status === state;
     });
   }
 
@@ -202,6 +202,7 @@ export class TaskList {
       };
       if (!(entry === null || entry === undefined)) {
         if (entry instanceof Task) {
+          // is task
           if (!(entry.directory === null || entry.directory === undefined)) {
             entry.directory.removeTask(entry);
             this.cleanup(entry.directory, saveToDB)
@@ -217,6 +218,7 @@ export class TaskList {
             });
 
             if (taskIndex > -1) {
+              entry.destroy();
               this._entries.splice(taskIndex, 1);
             } else {
               console.log(`entry not found with ID ${entry.id}`);
@@ -226,6 +228,7 @@ export class TaskList {
             sendEvent();
           }
         } else {
+          // is folder
           const taskIndex = this.entries.findIndex((a) => {
             return (
               a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id
@@ -233,6 +236,7 @@ export class TaskList {
           });
 
           if (taskIndex > -1) {
+            entry.destroy();
             this._entries.splice(taskIndex, 1);
           } else {
             console.log(`entry not found with ID ${entry.id}`);

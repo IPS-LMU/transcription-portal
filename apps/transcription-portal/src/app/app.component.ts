@@ -1,16 +1,13 @@
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
-import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
 import { ProceedingsComponent } from './components/proceedings/proceedings.component';
 import { ProtocolFooterComponent } from './components/protocol-footer/protocol-footer.component';
 import { ToolLoaderComponent } from './components/tool-loader/tool-loader.component';
 import { FirstModalComponent } from './modals/first-modal/first-modal.component';
 import { SplitModalComponent } from './modals/split-modal/split-modal.component';
-import { Operation } from './obj/operations/operation';
-import { Task } from './obj/tasks';
 import { TaskService } from './obj/tasks/task.service';
 import { ANIMATIONS } from './shared/Animations';
 import { AppSettings } from './shared/app.settings';
@@ -27,10 +24,13 @@ import { SettingsService } from './shared/settings.service';
   imports: [RouterOutlet],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {
-  public sidebarstate = 'hidden';
+  taskService = inject(TaskService);
+  notification = inject(NotificationService);
+  bugService = inject(BugReportService);
+  settingsService = inject(SettingsService);
+  private activeRoute = inject(ActivatedRoute);
+
   public test = 'inactive';
-  public sidebarExpand = 'opened';
-  public newProceedingsWidth = 30;
   @ViewChild('fileinput') fileinput!: ElementRef;
   @ViewChild('folderinput') folderinput!: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
@@ -39,13 +39,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
 
-  constructor(
-    public taskService: TaskService,
-    public notification: NotificationService,
-    public bugService: BugReportService,
-    public settingsService: SettingsService,
-    private activeRoute: ActivatedRoute,
-  ) {
+  constructor() {
     super();
 
     this.subscribe(this.activeRoute.queryParams, {
@@ -140,57 +134,6 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     });
   }
 
-  private _showtool = false;
-
-  get showtool(): boolean {
-    return this._showtool;
-  }
-
-  set showtool(value: boolean) {
-    this.sidebarExpand = value ? 'closed' : 'opened';
-    this._showtool = value;
-  }
-
-  public get isdevelopment(): boolean {
-    return environment.development;
-  }
-
-  public get toolSelectedOperation(): Operation | undefined {
-    return this.proceedings?.toolSelectedOperation;
-  }
-
-  public set toolSelectedOperation(value: Operation | undefined) {
-    if (this.proceedings) {
-      this.proceedings.toolSelectedOperation = value;
-    }
-  }
-
-  public get animationObject(): any {
-    const width = 100 - this.newProceedingsWidth;
-    return {
-      value: this.sidebarExpand,
-      params: { toolWidth: width, procWidth: this.newProceedingsWidth },
-    };
-  }
-
-  public get animationObject2(): any {
-    const width = this.newProceedingsWidth;
-    return { value: this.sidebarExpand, params: { width: width } };
-  }
-
-  public allTasks(): Task[] {
-    if (
-      !(
-        this.taskService.taskList === null ||
-        this.taskService.taskList === undefined
-      )
-    ) {
-      return this.taskService.taskList.getAllTasks();
-    }
-
-    return [];
-  }
-
   private appendTrackingCode(type: string) {
     // check if matomo is activated
     if (type === 'matomo') {
@@ -228,5 +171,10 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     } else {
       console.error(`tracking type ${type} is not supported.`);
     }
+  }
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+    this.taskService.destroy();
   }
 }

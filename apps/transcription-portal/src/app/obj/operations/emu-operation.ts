@@ -1,13 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
-import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
-import { Operation } from './operation';
+import { Task, TaskStatus } from '../tasks';
+import { IOperation, Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
+import { ServiceProvider } from '@octra/ngx-components';
 
 export class EmuOperation extends ToolOperation {
   protected operations?: Operation[];
@@ -18,10 +17,12 @@ export class EmuOperation extends ToolOperation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id);
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider, language);
     this._description =
       'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
       'the associated words or phonemes. This is useful for interpreting a transcript, e. g. to determine the focus of' +
@@ -31,36 +32,34 @@ export class EmuOperation extends ToolOperation {
   public override resultType = 'AnnotJSON';
 
   public override start = (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string,
+    accessCode?: string,
   ) => {
     this.updateProtocol('');
     this.operations = operations;
-    this.changeState(TaskState.READY);
+    this.changeState(TaskStatus.READY);
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result =
           '<i class="bi bi-gear-fill spin"></i>\n' +
           '<span class="sr-only">Loading...</span>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         if (
           this.previousOperation &&
           this.previousOperation.results.length > 0 &&
@@ -73,11 +72,11 @@ export class EmuOperation extends ToolOperation {
             '<i class="bi bi-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
         }
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result =
           '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -89,24 +88,24 @@ export class EmuOperation extends ToolOperation {
     let result = '';
 
     switch (this.state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = ``;
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = '<i class="bi bi-gear-fill spin link" aria-hidden="true"></i>';
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -123,13 +122,17 @@ export class EmuOperation extends ToolOperation {
       this.shortTitle,
       selectedTask,
       this.state,
+      undefined,
+      this.serviceProvider,
+      this.language,
     );
   }
 
   public override fromAny(
-    operationObj: any,
+    operationObj: IOperation,
     commands: string[],
     task: Task,
+    taskObj?: any
   ): Operation {
     const result = new EmuOperation(
       operationObj.name,
@@ -139,24 +142,26 @@ export class EmuOperation extends ToolOperation {
       task,
       operationObj.state,
       operationObj.id,
+      AppSettings.getServiceInformation(operationObj.serviceProvider) ?? AppSettings.getServiceInformation(taskObj?.mausProvider),
+      operationObj.language ?? taskObj?.mausLanguage,
     );
-    for (const resultElement of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultElement);
-      resultClass.attributes = operationObj.attributes;
+
+    for (const resultObj of operationObj.results) {
+      const resultClass = FileInfo.fromAny(resultObj);
+      resultClass.attributes = resultObj.attributes;
       result.results.push(resultClass);
     }
 
-    if (result.state === TaskState.PROCESSING) {
+    if (result.state === TaskStatus.PROCESSING) {
       if (result.results.length > 0) {
-        result.changeState(TaskState.FINISHED);
+        result.changeState(TaskStatus.FINISHED);
       } else {
-        result.changeState(TaskState.READY);
+        result.changeState(TaskStatus.READY);
       }
     }
 
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
-    result.operations = task.operations;
     result.enabled = operationObj.enabled;
 
     return result;
@@ -164,20 +169,21 @@ export class EmuOperation extends ToolOperation {
 
   public override getToolURL(): string {
     if (
-      this.operations &&
+      this.task?.operations &&
+      this.serviceProvider &&
+      this.language &&
       !(
-        (this.operations[0] as UploadOperation).wavFile === null ||
-        (this.operations[0] as UploadOperation).wavFile === undefined
+        (this.task.operations[0] as UploadOperation).wavFile === null ||
+        (this.task.operations[0] as UploadOperation).wavFile === undefined
       )
     ) {
-      // @ts-ignore TODO CHECK
       const audio = `audioGetUrl=${encodeURIComponent(
-        (this.operations[0] as any).wavFile.url,
+        (this.task.operations[0] as any).wavFile.url,
       )}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(
-        this.task?.asrLanguage!,
-        this.task?.asrProvider!,
+        this.language,
+        this.serviceProvider.provider,
       );
       let result = null;
       const lastResultMaus = this.previousOperation?.lastResult;
@@ -210,7 +216,7 @@ export class EmuOperation extends ToolOperation {
         console.error(`result url is null or undefined`);
       } else {
         console.log(
-          `langObj not found in octra operation lang:${this.task?.asrLanguage} and ${this.task?.asrProvider}`,
+          `langObj not found in octra operation lang:${this.language} and ${this.serviceProvider}`,
         );
       }
     }

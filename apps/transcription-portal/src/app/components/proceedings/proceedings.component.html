@@ -44,7 +44,7 @@
     }
     @if (
       popover.operation.results.length === 0 &&
-      popover.operation.providerInformation !== undefined
+      popover.operation.serviceProvider !== undefined
     ) {
       <div class="service-preview">
         <div class="provided-by">Service provided by</div>
@@ -54,7 +54,7 @@
           target="_blank"
         >
           <img
-            [src]="popover.operation.providerInformation.logoURL"
+            [src]="popover.operation.serviceProvider.logoURL"
             alt="EML Logo"
             class="service-logo"
             style="border: 1px solid lightgray"
@@ -62,12 +62,12 @@
         </a>
         <div class="service-terms">
           <a
-            [href]="popover.operation.providerInformation.termsURL"
+            [href]="popover.operation.serviceProvider.termsURL"
             target="_blank"
             ><i class="bi bi-journal-text"></i> Service terms</a
           ><br />
           <a
-            [href]="popover.operation.providerInformation.homepageURL"
+            [href]="popover.operation.serviceProvider.homepageURL"
             target="_blank"
             ><i class="bi bi-globe"></i> Homepage</a
           ><br />
@@ -87,7 +87,7 @@
             As soon as the service has finished processing the result appears
             here.
           </li>
-          <li>{{ popover.operation.providerInformation.dataStoragePolicy }}</li>
+          <li>{{ popover.operation.serviceProvider.dataStoragePolicy }}</li>
         </ul>
       </div>
       <div class="clearfix"></div>
@@ -115,7 +115,7 @@
             <i class="bi bi-clipboard"></i> Copy to clipboard
           </button>
         </div>
-        <table class="table table-sm table-striped" id="ouput-table">
+        <table class="table table-sm table-striped" id="output-table">
           <tbody>
             @for (item of popover.operation.parsedProtocol; track item) {
               <tr>
@@ -145,9 +145,9 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>Language: {{ popover.task.asrLanguage }}</span>
-    @if (popover.task && popover.task.asrProvider) {
-      <span> , ASR: {{ popover.task.asrProvider }} </span>
+    <span>Language: {{ popover.task.operations[1].language }}</span>
+    @if (popover.task && popover.task.operations[1].serviceProvider) {
+      <span> , ASR: {{ popover.task.operations[1].serviceProvider }} </span>
     }
     <br /><br />
     <span>File information:</span>
@@ -169,8 +169,8 @@
   class="inner"
 >
   @if (
-    !storage.tasksFound &&
-    taskService.taskList!.entries.length === 0 &&
+    taskList.length === 0 &&
+    taskService.state.currentModeState.taskList!.entries.length === 0 &&
     queue.length === 0
   ) {
     <div class="tportal-placeholder">
@@ -259,7 +259,7 @@
       </div>
     </div>
   }
-  @if (storage.tasksFound && !storage.ready) {
+  @if (taskList.length > 0 && !storage.ready) {
     <div id="loading">
       <div class="spinner-border fs-1" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -325,6 +325,7 @@
                           openArchiveDownload('column', operation, selectedRows)
                         "
                         [ngbTooltip]="tipContent"
+                        [container]="'body'"
                         tooltipClass="operation-tooltip"
                         placement="bottom"
                         style="display: inline; padding: 0 3px"
@@ -398,8 +399,7 @@
                     type="checkbox"
                   />
                 </th>
-              }
-              @if (operation.name === 'MAUS') {
+              } @else if (operation.name === 'MAUS') {
                 <th
                   colspan="2"
                   style="position: relative"
@@ -428,8 +428,35 @@
                     "
                   />
                 </th>
-              }
-              @if (i === 0) {
+              } @else if (operation.name === 'Summarization') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    (click)="deactivateOperation(operation, i)"
+                    [checked]="operation.enabled"
+                    class="header-checkbox"
+                    type="checkbox"
+                  />
+                </th>
+              } @else if (operation.name === 'Translation') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    (click)="deactivateOperation(operation, i)"
+                    [checked]="operation.enabled"
+                    class="header-checkbox"
+                    type="checkbox"
+                  />
+                </th>
+              } @else if (i === 0) {
                 <th></th>
               }
             </ng-container>
@@ -531,7 +558,7 @@
             }
             @if (entry.type === 'folder') {
               @for (
-                operation of taskService.operations;
+                operation of taskService.state.currentModeState.operations;
                 track operation;
                 let opIndex = $index
               ) {
@@ -626,7 +653,9 @@
             <tr style="cursor: pointer">
               @if (getDirEntriesFromItem(entry).length === 0) {
                 <td
-                  [attr.colspan]="taskService.operations.length + 3"
+                  [attr.colspan]="
+                    taskService.state.currentModeState.operations.length + 3
+                  "
                   [ngClass]="{ shorten: shortstyle }"
                 >
                   <i aria-hidden="true" class="bi bi-database op-50"> </i>
@@ -640,7 +669,11 @@
                 </td>
               }
               @if (getDirEntriesFromItem(entry).length > 0) {
-                <td [attr.colspan]="taskService.operations.length + 3">
+                <td
+                  [attr.colspan]="
+                    taskService.state.currentModeState.operations.length + 3
+                  "
+                >
                   <i
                     aria-hidden="true"
                     class="bi bi-folder2-open blue op-50"
@@ -661,7 +694,11 @@
                   <i class="bi bi-gear-fill spin"></i>
                 </div>
               </td>
-              <td [attr.colspan]="taskService.operations.length + 2"></td>
+              <td
+                [attr.colspan]="
+                  taskService.state.currentModeState.operations.length + 2
+                "
+              ></td>
             </tr>
           }
         }

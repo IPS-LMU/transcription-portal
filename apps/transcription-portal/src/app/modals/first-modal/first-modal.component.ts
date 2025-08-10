@@ -1,4 +1,4 @@
-import { Component, Output } from '@angular/core';
+import { Component, Output, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Subject } from 'rxjs';
@@ -10,6 +10,8 @@ import { Subject } from 'rxjs';
   standalone: true,
 })
 export class FirstModalComponent extends SubscriberComponent {
+  protected activeModal = inject(NgbActiveModal);
+
   @Output() understandClick: Subject<void> = new Subject<void>();
 
   public static options: NgbModalOptions = {
@@ -17,8 +19,4 @@ export class FirstModalComponent extends SubscriberComponent {
     backdrop: 'static',
     keyboard: false,
   };
-
-  constructor(protected activeModal: NgbActiveModal) {
-    super();
-  }
 }

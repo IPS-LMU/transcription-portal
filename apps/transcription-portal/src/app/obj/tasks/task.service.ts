@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { EventEmitter, Injectable, OnDestroy } from '@angular/core';
+import { EventEmitter, inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import {
   AudioCutter,
@@ -27,6 +27,8 @@ import { EmuOperation } from '../operations/emu-operation';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
 import { OCTRAOperation } from '../operations/octra-operation';
 import { Operation } from '../operations/operation';
+import { SummarizationOperation } from '../operations/summarization-operation';
+import { TranslationOperation } from '../operations/translation-operation';
 import { UploadOperation } from '../operations/upload-operation';
 import { Preprocessor, QueueItem } from '../preprocessor';
 import {
@@ -34,59 +36,27 @@ import {
   Task,
   TaskDirectory,
   TaskList,
-  TaskState,
+  TaskStatus,
 } from './index';
 import { TaskEntry } from './task-entry';
 
-@Injectable({ providedIn: 'root' })
-export class TaskService implements OnDestroy {
+export type PortalModeType = 'annotation' | 'summarization';
+
+export class PortalModeState {
+  newFiles = false;
   public newfiles = false;
   public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' =
     'not started';
   public protocolURL: SafeResourceUrl | undefined;
   public protocolFileName = '';
-  public errorscountchange = new EventEmitter<number>();
+  public selectedTranslationLanguage?: string = 'de';
   public selectedMausLanguage?: string;
   public selectedASRLanguage?: string;
-  public selectedProvider?: ServiceProvider;
-  private options = {
-    max_running_tasks: 3,
-  };
-  private subscrmanager = new SubscriptionManager<Subscription>();
-  private state: TaskState = TaskState.READY;
-  dbImported = new EventEmitter<void>();
-
-  constructor(
-    public httpclient: HttpClient,
-    private notification: NotificationService,
-    private storage: StorageService,
-    private sanitizer: DomSanitizer,
-    private alertService: AlertService,
-  ) {}
-
-  private _taskList: TaskList | undefined;
-
-  get taskList(): TaskList | undefined {
-    return this._taskList;
-  }
-
-  private _operations: Operation[] = [];
-
-  get operations(): Operation[] {
-    return this._operations;
-  }
-
-  private _accessCode = '';
-
-  public get accessCode(): string {
-    return this._accessCode;
-  }
-
-  public set accessCode(value: string) {
-    this.storage.saveUserSettings('accessCode', value);
-    this._accessCode = value;
-  }
-
+  public selectedSummarizationProvider?: ServiceProvider;
+  public selectedASRProvider?: ServiceProvider;
+  private _status: TaskStatus = TaskStatus.READY;
+  private _preprocessor!: Preprocessor;
+  private subscrManager = new SubscriptionManager();
   private _statistics = {
     queued: 0,
     waiting: 0,
@@ -105,6 +75,201 @@ export class TaskService implements OnDestroy {
     return this._statistics;
   }
 
+  get preprocessor(): Preprocessor {
+    return this._preprocessor;
+  }
+
+  get status(): TaskStatus {
+    return this._status;
+  }
+
+  private _taskList: TaskList | undefined;
+
+  get taskList(): TaskList | undefined {
+    return this._taskList;
+  }
+
+  private _operations: Operation[] = [];
+
+  get operations(): Operation[] {
+    return this._operations;
+  }
+
+  init(
+    operations: Operation[],
+    mode: PortalModeType,
+    process: (
+      queueItem: QueueItem,
+      mode: PortalModeType,
+    ) => Promise<(Task | TaskDirectory)[]>,
+  ) {
+    this._taskList = new TaskList();
+    this._preprocessor = new Preprocessor(mode);
+    this._preprocessor.process = process;
+    this._operations = operations;
+  }
+
+  changeStatus(newStatus: TaskStatus) {
+    this._status = newStatus;
+  }
+
+  public updateStatistics() {
+    const result = {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0,
+    };
+    const allTasks = [...(this._taskList?.getAllTasks() ?? [])];
+
+    for (const task of allTasks) {
+      // running
+      if (
+        task.status === TaskStatus.PROCESSING ||
+        task.status === TaskStatus.UPLOADING
+      ) {
+        result.running++;
+      }
+
+      // waiting
+      if (
+        task.status === TaskStatus.PENDING ||
+        task.status === TaskStatus.READY
+      ) {
+        result.waiting++;
+      }
+
+      // queued
+      if (task.status === TaskStatus.QUEUED) {
+        result.queued++;
+      }
+
+      // finished
+      if (task.status === TaskStatus.FINISHED) {
+        result.finished++;
+      }
+
+      // failed
+      if (task.status === TaskStatus.ERROR) {
+        result.errors++;
+      }
+    }
+
+    this._statistics = result;
+  }
+}
+
+export class PortalState {
+  modes: {
+    annotation: PortalModeState;
+    summarization: PortalModeState;
+  } = {
+    annotation: new PortalModeState(),
+    summarization: new PortalModeState(),
+  };
+
+  currentMode: PortalModeType = 'annotation';
+
+  get currentModeState(): PortalModeState {
+    return this.modes[this.currentMode];
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class TaskService {
+  httpclient = inject(HttpClient);
+  private notification = inject(NotificationService);
+  private storage = inject(StorageService);
+  private sanitizer = inject(DomSanitizer);
+  private alertService = inject(AlertService);
+
+  public errorscountchange = new EventEmitter<number>();
+
+  public readonly state = new PortalState();
+
+  private options = {
+    max_running_tasks: 3,
+  };
+
+  private subscrmanager = new SubscriptionManager<Subscription>();
+  dbImported = new EventEmitter<void>();
+
+  private _accessCode = '';
+
+  get currentModeState(): PortalModeState | undefined {
+    return this.state.modes[this.state.currentMode];
+  }
+
+  public get accessCode(): string {
+    return this._accessCode;
+  }
+
+  public set accessCode(value: string) {
+    this.storage.saveUserSettings('accessCode', value);
+    this._accessCode = value;
+  }
+
+  private _statistics = {
+    overall: {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0,
+    },
+    annotation: {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0,
+    },
+    summarization: {
+      queued: 0,
+      waiting: 0,
+      running: 0,
+      finished: 0,
+      errors: 0,
+    },
+  };
+
+  get statistics(): {
+    overall: {
+      queued: number;
+      waiting: number;
+      running: number;
+      finished: number;
+      errors: number;
+    };
+    annotation: {
+      queued: number;
+      waiting: number;
+      running: number;
+      finished: number;
+      errors: number;
+    };
+    summarization: {
+      queued: number;
+      waiting: number;
+      running: number;
+      finished: number;
+      errors: number;
+    };
+  } {
+    return this._statistics;
+  }
+
+  get currentModeStatistics(): {
+    queued: number;
+    waiting: number;
+    running: number;
+    finished: number;
+    errors: number;
+  } {
+    return (this._statistics as any)[this.state.currentMode];
+  }
+
   private _protocolArray = [];
 
   get protocolArray(): any[] {
@@ -121,42 +286,36 @@ export class TaskService implements OnDestroy {
     this._splitPrompt = value;
   }
 
-  private _preprocessor: Preprocessor = new Preprocessor();
-
-  get preprocessor(): Preprocessor {
-    return this._preprocessor;
-  }
-
   public get isProcessing(): boolean {
-    return this.overallState === 'processing';
+    return this.state.currentModeState.overallState === 'processing';
   }
 
   public get stateLabel(): string {
-    if (this.overallState === 'processing') {
-      if (this._statistics.running === 0) {
-        if (this._statistics.waiting > 1) {
-          return `${this._statistics.waiting} tasks need your attention`;
-        } else if (this._statistics.waiting === 1) {
+    if (this.state.currentModeState.overallState === 'processing') {
+      if (this.currentModeStatistics.running === 0) {
+        if (this.currentModeStatistics.waiting > 1) {
+          return `${this.currentModeStatistics.waiting} tasks need your attention`;
+        } else if (this.currentModeStatistics.waiting === 1) {
           return `1 task needs your attention`;
         }
 
-        if (this._statistics.queued > 0) {
-          return `${this._statistics.queued} audio file(s) are waiting to be verified by you.`;
+        if (this.currentModeStatistics.queued > 0) {
+          return `${this.currentModeStatistics.queued} audio file(s) are waiting to be verified by you.`;
         }
 
         return 'All jobs done. Waiting for new tasks...';
       }
 
       return 'Processing...';
-    } else if (this.overallState === 'not started') {
-      if (this._statistics.queued > 0) {
-        return `${this._statistics.queued} audio file(s) are waiting to be verified by you.`;
+    } else if (this.state.currentModeState.overallState === 'not started') {
+      if (this.currentModeStatistics.queued > 0) {
+        return `${this.currentModeStatistics.queued} audio file(s) are waiting to be verified by you.`;
       }
       return 'Ready';
     }
-    if (this.overallState === 'stopped') {
-      if (this._statistics.running > 0) {
-        return `waiting for ${this._statistics.running} tasks to stop their work...`;
+    if (this.state.currentModeState.overallState === 'stopped') {
+      if (this.currentModeStatistics.running > 0) {
+        return `waiting for ${this.currentModeStatistics.running} tasks to stop their work...`;
       }
       return 'Stopped';
     }
@@ -164,149 +323,206 @@ export class TaskService implements OnDestroy {
   }
 
   public init() {
-    this._taskList = new TaskList();
-    this._operations = [
-      new UploadOperation(
-        'Upload',
-        AppSettings.configuration.api.commands[0].calls,
-        'Upload',
-        'UL',
-      ),
-      new ASROperation(
-        'ASR',
-        AppSettings.configuration.api.commands[1].calls,
-        'Speech Recognition',
-        'ASR',
-      ),
-      new OCTRAOperation(
-        'OCTRA',
-        AppSettings.configuration.api.commands[2].calls,
-        'Manual Transcription',
-        'MT',
-      ),
-      new G2pMausOperation(
-        'MAUS',
-        AppSettings.configuration.api.commands[3].calls,
-        'Word alignment',
-        'WA',
-      ),
-      new EmuOperation(
-        'Emu WebApp',
-        AppSettings.configuration.api.commands[4].calls,
-        'Phonetic detail',
-        'PD',
-      ),
-    ];
+    this.state.modes.annotation.init(
+      [
+        new UploadOperation(
+          'Upload',
+          AppSettings.configuration.api.commands[0].calls,
+          'Upload',
+          'UL',
+        ),
+        new ASROperation(
+          'ASR',
+          AppSettings.configuration.api.commands[1].calls,
+          'Speech Recognition',
+          'ASR',
+        ),
+        new OCTRAOperation(
+          'OCTRA',
+          AppSettings.configuration.api.commands[2].calls,
+          'Manual Transcription',
+          'MT',
+        ),
+        new G2pMausOperation(
+          'MAUS',
+          AppSettings.configuration.api.commands[3].calls,
+          'Word alignment',
+          'WA',
+        ),
+        new EmuOperation(
+          'Emu WebApp',
+          AppSettings.configuration.api.commands[4].calls,
+          'Phonetic detail',
+          'PD',
+        ),
+      ],
+      'annotation',
+      this.process,
+    );
 
-    this._preprocessor.process = this.process;
-    if (!this.taskList || !this._taskList) {
-      throw new Error('taksList not defined');
-    }
+    this.state.modes.summarization.init(
+      [
+        new UploadOperation(
+          'Upload',
+          AppSettings.configuration.api.commands[0].calls,
+          'Upload',
+          'UL',
+        ),
+        new ASROperation(
+          'ASR',
+          AppSettings.configuration.api.commands[1].calls,
+          'Speech Recognition',
+          'ASR',
+        ),
+        new OCTRAOperation(
+          'OCTRA',
+          AppSettings.configuration.api.commands[2].calls,
+          'Manual Transcription',
+          'MT',
+        ),
+        new SummarizationOperation(
+          'Summarization',
+          [''],
+          'Summarization',
+          'SUM',
+        ),
+        new TranslationOperation('Translation', [''], 'Translation', 'TR'),
+      ],
+      'summarization',
+      this.process,
+    );
 
     this.subscrmanager.add(
-      this._preprocessor.itemProcessed.subscribe(async (item) => {
-        for (const result of item.results) {
-          let foundTask: Task | undefined;
-          if (result instanceof Task) {
-            for (const file of result.files) {
-              const escapedName = escapeRegex(
-                result.files[0].attributes.originalFileName.replace(
-                  /(_annot)?\.[^.]+$/g,
-                  '',
-                ),
-              );
-              foundTask = this.getTaskWithOriginalFileName(
-                new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
+      this.state.modes.annotation.preprocessor.itemProcessed.subscribe(
+        this.onItemProcessed('annotation'),
+      ),
+    );
+    this.subscrmanager.add(
+      this.state.modes.annotation.taskList?.entryChanged.subscribe(
+        this.onTaskListEntryChanged('annotation'),
+      ),
+    );
+
+    this.subscrmanager.add(
+      this.state.modes.summarization.preprocessor.itemProcessed.subscribe(
+        this.onItemProcessed('summarization'),
+      ),
+    );
+    this.subscrmanager.add(
+      this.state.modes.summarization.taskList?.entryChanged.subscribe(
+        this.onTaskListEntryChanged('summarization'),
+      ),
+    );
+
+    this.subscrmanager.add(
+      interval(1000).subscribe(() => {
+        this.updateStatistics();
+        this.state.modes.annotation.updateStatistics();
+        this.state.modes.summarization.updateStatistics();
+      }),
+    );
+    this.updateStatistics();
+  }
+
+  private onTaskListEntryChanged = (mode: PortalModeType) => {
+    // TODO save to related task
+    return (event: EntryChangeEvent) => {
+      if (event.state === 'added') {
+        if (event.entry.type === 'task') {
+          this.listenToTaskEvents(event.entry as Task, mode);
+        } else {
+          for (const entry of (event.entry as TaskDirectory).entries) {
+            const task = entry as Task;
+            this.listenToTaskEvents(task, mode);
+          }
+        }
+
+        if (event.saveToDB) {
+          this.storage.saveTask(event.entry, mode).catch((error) => {
+            console.error(error);
+          });
+        }
+      } else if (event.state === 'removed') {
+        if (event.saveToDB) {
+          this.storage.removeFromDB(event.entry, mode).catch((error) => {
+            console.error(error);
+          });
+        } else {
+          // TODO check this
+        }
+      } else if (event.state === 'changed') {
+        // not implemented yet
+      }
+    };
+  };
+
+  private onItemProcessed = (mode: PortalModeType) => {
+    return async (item: QueueItem) => {
+      for (const result of item.results) {
+        let foundTask: Task | undefined;
+        if (result instanceof Task) {
+          for (const file of result.files) {
+            const escapedName = escapeRegex(
+              result.files[0].attributes.originalFileName.replace(
+                /(_annot)?\.[^.]+$/g,
+                '',
+              ),
+            );
+            foundTask = this.getTaskWithOriginalFileName(
+              new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
+              mode,
+            );
+
+            if (foundTask) {
+              // found a task
+              // file with this hash already exists, overwrite
+              const oldFileIndex = foundTask.files.findIndex(
+                (a) => file && a.hash === file.hash,
               );
 
-              if (foundTask) {
-                // found a task
-                // file with this hash already exists, overwrite
-                const oldFileIndex = foundTask.files.findIndex(
-                  (a) => file && a.hash === file.hash,
-                );
-
-                if (oldFileIndex > -1) {
-                  foundTask.setFileObj(oldFileIndex, file);
+              if (oldFileIndex > -1) {
+                foundTask.setFileObj(oldFileIndex, file);
+              } else {
+                if (foundTask.files.length > 1) {
+                  const index = file.type.indexOf('audio') > -1 ? 0 : 1;
+                  foundTask.files[index] = file;
+                  if (index === 1) {
+                    foundTask.operations[1].enabled = false;
+                  }
                 } else {
-                  if (foundTask.files.length > 1) {
-                    const index = file.type.indexOf('audio') > -1 ? 0 : 1;
-                    foundTask.files[index] = file;
-                    if (index === 1) {
-                      foundTask.operations[1].enabled = false;
-                    }
+                  if (file.type.indexOf('audio') > -1) {
+                    foundTask.files = [file, ...foundTask.files];
+                    foundTask.operations[1].enabled = false;
                   } else {
-                    if (file.type.indexOf('audio') > -1) {
-                      foundTask.files = [file, ...foundTask.files];
-                      foundTask.operations[1].enabled = false;
-                    } else {
-                      foundTask.files.push(file);
-                      foundTask.operations[1].enabled = false;
-                    }
+                    foundTask.files.push(file);
+                    foundTask.operations[1].enabled = false;
                   }
                 }
-                await this.storage.saveTask(foundTask);
               }
+              await this.storage.saveTask(foundTask, mode);
             }
-            result.changeState(TaskState.QUEUED);
-          } else {
-            for (let j = 0; j < result.entries.length; j++) {
-              const entry = result.entries[j] as Task;
-              const tasks: Task[] = result.entries.filter((a) => {
-                return a instanceof Task;
-              }) as Task[];
+          }
+          result.changeState(TaskStatus.QUEUED);
+        } else {
+          for (let j = 0; j < result.entries.length; j++) {
+            const entry = result.entries[j] as Task;
+            const tasks: Task[] = result.entries.filter((a) => {
+              return a instanceof Task;
+            }) as Task[];
 
-              // search for grouped files in this new directory
-              for (let v = j + 1; v < tasks.length; v++) {
-                const task = tasks[v];
+            // search for grouped files in this new directory
+            for (let v = j + 1; v < tasks.length; v++) {
+              const task = tasks[v];
 
-                const foundIt = task.files.find((b) => {
-                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name === entry.files[0].name;
-                });
-
-                if (!(foundIt === null || foundIt === undefined)) {
-                  const format1: AudioFormat | undefined =
-                    AudioManager.getFileFormat(
-                      task.files[0].extension,
-                      AppInfo.audioFormats,
-                    );
-                  const format2: AudioFormat | undefined =
-                    AudioManager.getFileFormat(
-                      entry.files[0].extension,
-                      AppInfo.audioFormats,
-                    );
-
-                  if (!(format1 && format2)) {
-                    entry.addFile(task.files[0]);
-
-                    (result as TaskDirectory).entries.splice(v, 1);
-                    tasks.splice(v, 1);
-                    v--;
-
-                    // TODO change if other than transcript files are needed
-                    entry.operations[1].enabled = false;
-                    entry.operations[1].changeState(TaskState.SKIPPED);
-                  }
-                }
-              }
-
-              foundTask = this.taskList?.getAllTasks().find((a) => {
-                const foundIt = a.files.find((b) => {
-                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name === entry.files[0].name;
-                });
-
-                return (
-                  a.state === TaskState.QUEUED &&
-                  !(foundIt === null || foundIt === undefined)
-                );
+              const foundIt = task.files.find((b) => {
+                // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
+                return b.name === entry.files[0].name;
               });
 
-              if (!(foundTask === null || foundTask === undefined)) {
+              if (!(foundIt === null || foundIt === undefined)) {
                 const format1: AudioFormat | undefined =
                   AudioManager.getFileFormat(
-                    foundTask.files[0].extension,
+                    task.files[0].extension,
                     AppInfo.audioFormats,
                   );
                 const format2: AudioFormat | undefined =
@@ -316,217 +532,237 @@ export class TaskService implements OnDestroy {
                   );
 
                 if (!(format1 && format2)) {
-                  foundTask.setFileObj(0, entry.files[0]);
-                  foundTask.setFileObj(1, entry.files[1]);
+                  entry.addFile(task.files[0]);
 
-                  if (foundTask.files.length > 1) {
-                    // TODO change if other than transcript files are needed
-                    foundTask.operations[1].enabled = false;
-                    foundTask.operations[1].changeState(TaskState.SKIPPED);
-                  }
-                } else {
-                  // TODO check this
+                  (result as TaskDirectory).entries.splice(v, 1);
+                  tasks.splice(v, 1);
+                  v--;
+
+                  // TODO change if other than transcript files are needed
+                  entry.operations[1].enabled = false;
+                  entry.operations[1].changeState(TaskStatus.SKIPPED);
                 }
               }
-
-              entry.changeState(TaskState.QUEUED);
             }
-          }
 
-          if (foundTask === null || foundTask === undefined) {
-            this.addEntry(result, true);
-          } else {
-            foundTask.fileschange.next();
+            foundTask = this.state.modes[mode].taskList
+              ?.getAllTasks()
+              .find((a) => {
+                const foundIt = a.files.find((b) => {
+                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
+                  return b.name === entry.files[0].name;
+                });
+
+                return (
+                  a.status === TaskStatus.QUEUED &&
+                  !(foundIt === null || foundIt === undefined)
+                );
+              });
+
+            if (!(foundTask === null || foundTask === undefined)) {
+              const format1: AudioFormat | undefined =
+                AudioManager.getFileFormat(
+                  foundTask.files[0].extension,
+                  AppInfo.audioFormats,
+                );
+              const format2: AudioFormat | undefined =
+                AudioManager.getFileFormat(
+                  entry.files[0].extension,
+                  AppInfo.audioFormats,
+                );
+
+              if (!(format1 && format2)) {
+                foundTask.setFileObj(0, entry.files[0]);
+                foundTask.setFileObj(1, entry.files[1]);
+
+                if (foundTask.files.length > 1) {
+                  // TODO change if other than transcript files are needed
+                  foundTask.operations[1].enabled = false;
+                  foundTask.operations[1].changeState(TaskStatus.SKIPPED);
+                }
+              } else {
+                // TODO check this
+              }
+            }
+
+            entry.changeState(TaskStatus.QUEUED);
           }
         }
 
-        if (this.preprocessor.queue.length === 0) {
-          // check remaining unchecked files
-          this.checkFiles();
+        if (!foundTask) {
+          this.addEntry(result, mode, true);
+        } else {
+          foundTask.fileschange.next();
         }
-      }),
-    );
+      }
 
-    this.subscrmanager.add(
-      this.taskList?.entryChanged.subscribe((event: EntryChangeEvent) => {
-        if (event.state === 'added') {
-          if (event.entry.type === 'task') {
-            this.listenToTaskEvents(event.entry as Task);
-          } else {
-            for (const entry of (event.entry as TaskDirectory).entries) {
-              const task = entry as Task;
-              this.listenToTaskEvents(task);
+      if (this.state.modes[mode].preprocessor.queue.length === 0) {
+        // check remaining unchecked files
+        this.checkFiles(mode);
+      }
+    };
+  };
+
+  private async importTasksFromDB(idbTasks: any[], mode: PortalModeType) {
+    let maxTaskCounter = 0;
+    let maxOperationCounter = 0;
+
+    for (const taskObj of idbTasks) {
+      if (taskObj.type === 'task') {
+        if (taskObj.asrLanguage) {
+          const firstLangObj = AppSettings.languages.asr.find((a) => {
+            return a.value === taskObj.asrLanguage;
+          });
+
+          if (firstLangObj) {
+            taskObj.asrLanguage = firstLangObj.value;
+          }
+        }
+
+        const task = Task.fromAny(
+          taskObj,
+          AppSettings.configuration.api.commands,
+          this.state.modes[mode].operations,
+        );
+
+        maxTaskCounter = Math.max(maxTaskCounter, task.id);
+
+        for (const operation of task.operations) {
+          maxOperationCounter = Math.max(maxOperationCounter, operation.id);
+
+          for (const opResult of operation.results) {
+            if (!(opResult.url === null || opResult.url === undefined)) {
+              try {
+                await this.existsFile(opResult.url);
+
+                opResult.online = true;
+                if (opResult.file === null || opResult.file === undefined) {
+                  const format: AudioFormat | undefined =
+                    AudioManager.getFileFormat(
+                      opResult.extension,
+                      AppInfo.audioFormats,
+                    );
+
+                  if (!format) {
+                    try {
+                      await opResult.updateContentFromURL(this.httpclient);
+
+                      // TODO minimize task savings
+                      await this.storage.saveTask(task, mode);
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }
+                }
+              } catch (e) {
+                opResult.online = false;
+              }
+            } else {
+              opResult.online = false;
             }
           }
-
-          if (event.saveToDB) {
-            this.storage.saveTask(event.entry).catch((error) => {
-              console.error(error);
-            });
-          }
-        } else if (event.state === 'removed') {
-          if (event.saveToDB) {
-            this.storage.removeFromDB(event.entry).catch((error) => {
-              console.error(error);
-            });
-          } else {
-            // TODO check this
-          }
-        } else if (event.state === 'changed') {
-          // not implemented yet
         }
-      }),
-    );
 
-    this.subscrmanager.add(
-      interval(1000).subscribe(() => {
-        this.updateStatistics();
-      }),
-    );
-    this.updateStatistics();
-  }
+        if (!this.state.modes[mode].taskList) {
+          throw new Error('taskList not defined');
+        }
 
-  public async importDBData(dbEntries: {
-    tasks: IDBTaskItem[];
-    userSettings: IDBUserSettingsItem[];
-  }) {
-    const idbTasks = dbEntries.tasks;
+        this.state.modes[mode].taskList.addEntry(task).catch((err) => {
+          console.error(err);
+        });
+      } else {
+        const taskDir = TaskDirectory.fromAny(
+          taskObj,
+          AppSettings.configuration.api.commands,
+          this.state.modes[mode].operations,
+        );
 
-    if (idbTasks) {
-      this.newfiles = idbTasks.length > 0;
-
-      // make sure that taskCounter and operation counter are equal to their biggest value
-      let maxTaskCounter = 0;
-      let maxOperationCounter = 0;
-
-      for (const taskObj of idbTasks) {
-        if (taskObj.type === 'task') {
-          if (taskObj.asrLanguage) {
-            const firstLangObj = AppSettings.languages.asr.find((a) => {
-              return a.value === taskObj.asrLanguage;
-            });
-
-            if (firstLangObj) {
-              taskObj.asrLanguage = firstLangObj.value;
-            }
-          }
-          const task = Task.fromAny(
-            taskObj,
-            AppSettings.configuration.api.commands,
-            this.operations,
-          );
-
-          maxTaskCounter = Math.max(maxTaskCounter, task.id);
-
+        for (const taskElem of taskDir.entries) {
+          const task = taskElem as Task;
           for (const operation of task.operations) {
-            maxOperationCounter = Math.max(maxOperationCounter, operation.id);
-
             for (const opResult of operation.results) {
               if (!(opResult.url === null || opResult.url === undefined)) {
                 try {
-                  await this.existsFile(opResult.url);
-
                   opResult.online = true;
-                  if (opResult.file === null || opResult.file === undefined) {
-                    const format: AudioFormat | undefined =
-                      AudioManager.getFileFormat(
-                        opResult.extension,
-                        AppInfo.audioFormats,
-                      );
 
-                    if (!format) {
-                      try {
-                        await opResult.updateContentFromURL(this.httpclient);
-
-                        // TODO minimize task savings
-                        await this.storage.saveTask(task);
-                      } catch (e) {
-                        console.error(e);
-                      }
+                  if (
+                    (opResult.file === null || opResult.file === undefined) &&
+                    opResult.extension.indexOf('wav') < 0
+                  ) {
+                    try {
+                      opResult.updateContentFromURL(this.httpclient);
+                      // TODO minimize task savings
+                      await this.storage.saveTask(task, mode);
+                    } catch (e) {
+                      console.error(e);
                     }
                   }
                 } catch (e) {
                   opResult.online = false;
                 }
-              } else {
-                opResult.online = false;
               }
             }
           }
-
-          if (!this._taskList) {
-            throw new Error('taskList not defined');
-          }
-
-          this._taskList.addEntry(task).catch((err) => {
-            console.error(err);
-          });
-        } else {
-          const taskDir = TaskDirectory.fromAny(
-            taskObj,
-            AppSettings.configuration.api.commands,
-            this.operations,
-          );
-
-          for (const taskElem of taskDir.entries) {
-            const task = taskElem as Task;
-            for (const operation of task.operations) {
-              for (const opResult of operation.results) {
-                if (!(opResult.url === null || opResult.url === undefined)) {
-                  try {
-                    opResult.online = true;
-
-                    if (
-                      (opResult.file === null || opResult.file === undefined) &&
-                      opResult.extension.indexOf('wav') < 0
-                    ) {
-                      try {
-                        opResult.updateContentFromURL(this.httpclient);
-                        // TODO minimize task savings
-                        await this.storage.saveTask(task);
-                      } catch (e) {
-                        console.error(e);
-                      }
-                    }
-                  } catch (e) {
-                    opResult.online = false;
-                  }
-                }
-              }
-            }
-          }
-
-          if (!this._taskList) {
-            throw new Error('undefined tasklist');
-          }
-          this._taskList.addEntry(taskDir).catch((err) => {
-            console.error(err);
-          });
         }
-      }
 
-      if (TaskEntry.counter < maxTaskCounter) {
-        console.warn(
-          `Warning: Task counter was less than the biggest id. Reset counter.`,
-        );
-        TaskEntry.counter = maxTaskCounter;
+        if (!this.state.modes[mode].taskList) {
+          throw new Error('undefined tasklist');
+        }
+        this.state.modes[mode].taskList.addEntry(taskDir).catch((err) => {
+          console.error(err);
+        });
       }
-
-      if (Operation.counter < maxOperationCounter) {
-        console.warn(
-          `Warning: Operation counter was less than the biggest id. Reset counter.`,
-        );
-        Operation.counter = maxOperationCounter;
-      }
-
-      const url = await this.updateProtocolURL();
-      if (this.protocolURL) {
-        URL.revokeObjectURL(
-          (this.protocolURL as any).changingThisBreaksApplicationSecurity,
-        );
-      }
-      this.protocolURL = url;
     }
+
+    return {
+      maxTaskCounter,
+      maxOperationCounter,
+    };
+  }
+
+  public async importDBData(dbEntries: {
+    annotationTasks: IDBTaskItem[];
+    summarizationTasks: IDBTaskItem[];
+    userSettings: IDBUserSettingsItem[];
+  }) {
+    this.state.modes.annotation.newfiles = dbEntries.annotationTasks.length > 0;
+    this.state.modes.summarization.newfiles =
+      dbEntries.summarizationTasks.length > 0;
+
+    // make sure that taskCounter and operation counter are equal to their biggest value
+    let maxTaskCounter = 0;
+    let maxOperationCounter = 0;
+
+    const annotationTaskResult = await this.importTasksFromDB(
+      dbEntries.annotationTasks,
+      'annotation',
+    );
+    const summarizationTaskResult = await this.importTasksFromDB(
+      dbEntries.summarizationTasks,
+      'summarization',
+    );
+    maxTaskCounter =
+      annotationTaskResult.maxTaskCounter +
+      summarizationTaskResult.maxTaskCounter;
+    maxOperationCounter =
+      annotationTaskResult.maxOperationCounter +
+      summarizationTaskResult.maxOperationCounter;
+
+    if (TaskEntry.counter < maxTaskCounter) {
+      console.warn(
+        `Warning: Task counter was less than the biggest id. Reset counter.`,
+      );
+      TaskEntry.counter = maxTaskCounter;
+    }
+
+    if (Operation.counter < maxOperationCounter) {
+      console.warn(
+        `Warning: Operation counter was less than the biggest id. Reset counter.`,
+      );
+      Operation.counter = maxOperationCounter;
+    }
+    await this.updateProtocolURL();
+
     if (dbEntries.userSettings) {
       // read userSettings
       for (const userSetting of dbEntries.userSettings) {
@@ -534,7 +770,7 @@ export class TaskService implements OnDestroy {
           case 'notification':
             this.notification.permissionGranted = userSetting.value.enabled;
             break;
-          case 'defaultTaskOptions':
+          case 'defaultUserSettings':
             // search lang obj
             const lang = AppSettings.getLanguageByCode(
               userSetting.value.asrLanguage,
@@ -542,12 +778,19 @@ export class TaskService implements OnDestroy {
             );
 
             if (lang) {
-              this.selectedASRLanguage = userSetting.value.asrLanguage;
-              this.selectedMausLanguage = userSetting.value.mausLanguage;
+              this.state.modes.annotation.selectedASRLanguage =
+                userSetting.value.asrLanguage;
+              this.state.modes.annotation.selectedMausLanguage =
+                userSetting.value.mausLanguage;
+              this.state.modes.summarization.selectedASRLanguage =
+                userSetting.value.asrLanguage;
+              this.state.modes.summarization.selectedMausLanguage =
+                userSetting.value.mausLanguage;
             }
-            this.selectedProvider = AppSettings.getServiceInformation(
-              userSetting.value.asrProvider,
-            );
+            this.state.modes.annotation.selectedASRProvider =
+              AppSettings.getServiceInformation(userSetting.value.asrProvider);
+            this.state.modes.summarization.selectedASRProvider =
+              AppSettings.getServiceInformation(userSetting.value.asrProvider);
             break;
         }
       }
@@ -557,16 +800,16 @@ export class TaskService implements OnDestroy {
     this.dbImported.complete();
   }
 
-  public checkFiles() {
+  public checkFiles(mode: PortalModeType) {
     if (this.splitPrompt !== 'BOTH') {
       const removeList = [];
       const promises = [];
 
-      if (!this.taskList) {
+      if (!this.state.modes[mode].taskList) {
         throw new Error('undefined tasklist');
       }
 
-      for (const entryElem of this.taskList.entries) {
+      for (const entryElem of this.state.modes[mode].taskList.entries) {
         if (entryElem instanceof TaskDirectory) {
           const entry = entryElem as TaskDirectory;
           if (entry.path.indexOf('_dir') > -1) {
@@ -576,7 +819,7 @@ export class TaskService implements OnDestroy {
               // TODO improve this code. Determine the channel file using another way
               if (this.splitPrompt === 'FIRST') {
                 if (
-                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
                   dirEntry.files[0].attributes.originalFileName.indexOf('_2.') >
                     -1
@@ -586,7 +829,7 @@ export class TaskService implements OnDestroy {
                 }
               } else if (this.splitPrompt === 'SECOND') {
                 if (
-                  dirEntry.state === TaskState.QUEUED &&
+                  dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
                   dirEntry.files[0].attributes.originalFileName.indexOf('_1.') >
                     -1
@@ -597,7 +840,9 @@ export class TaskService implements OnDestroy {
               }
 
               if (nothingToDo) {
-                promises.push(this.taskList.cleanup(entry, true));
+                promises.push(
+                  this.state.modes[mode].taskList.cleanup(entry, true),
+                );
                 this.saveCounters();
               }
             }
@@ -606,7 +851,9 @@ export class TaskService implements OnDestroy {
       }
 
       for (const removeElement of removeList) {
-        promises.push(this.taskList.removeEntry(removeElement, true));
+        promises.push(
+          this.state.modes[mode].taskList.removeEntry(removeElement, true),
+        );
       }
 
       Promise.all(promises).catch((error) => {
@@ -615,47 +862,23 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  public addEntry(entry: Task | TaskDirectory, saveToDB: boolean = false) {
-    if (!this.taskList) {
+  public addEntry(
+    entry: Task | TaskDirectory,
+    mode: PortalModeType,
+    saveToDB = false,
+  ) {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    this.taskList
+    taskList
       .addEntry(entry, saveToDB)
       .then(() => {
-        if (!this.taskList) {
+        if (!taskList) {
           throw new Error('undefined tasklist');
         }
-        return this.taskList.cleanup(entry, saveToDB);
-      })
-      .catch((err) => {
-        console.error(`${err}`);
-      })
-      .then(() => {
-        this.saveCounters();
-      })
-      .catch((err) => {
-        console.error(`could not add via taskService!`);
-        console.error(`${err}`);
-      });
-  }
-
-  public changeEntry(
-    id: number,
-    entry: Task | TaskDirectory,
-    saveToDB: boolean = false,
-  ) {
-    if (!this.taskList) {
-      throw new Error('undefined tasklist');
-    }
-
-    this.taskList
-      .changeEntry(id, entry, saveToDB)
-      .then(() => {
-        if (!this.taskList) {
-          throw new Error('undefined tasklist');
-        }
-        return this.taskList.cleanup(entry, saveToDB);
+        return taskList.cleanup(entry, saveToDB);
       })
       .catch((err) => {
         console.error(`${err}`);
@@ -674,52 +897,45 @@ export class TaskService implements OnDestroy {
     this.storage.saveCounter('operationCounter', Operation.counter);
   }
 
-  public start() {
+  public async start(mode: PortalModeType) {
+    const affectedMode = this.state.modes[mode];
     // look for pending tasks
-    if (this.overallState === 'processing') {
+    const taskList = affectedMode.taskList;
+    if (affectedMode.overallState === 'processing') {
       this.updateStatistics();
-      if (!this.taskList) {
+      if (!taskList) {
         throw new Error('undefined tasklist');
       }
-      const uploadingTask = this.taskList.getAllTasks().findIndex((task) => {
+      const uploadingTask = taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
       if (
-        this._statistics.running < this.options.max_running_tasks &&
+        this._statistics[mode].running < this.options.max_running_tasks &&
         uploadingTask < 0
       ) {
-        const task: Task | undefined = this.findNextWaitingTask();
+        const task: Task | undefined = this.findNextWaitingTask(mode);
 
-        if (task && task.operations[1].providerInformation) {
-          if (this.state !== TaskState.PROCESSING) {
-            this.state = TaskState.READY;
+        if (task && task.operations[1].serviceProvider) {
+          if (affectedMode.status !== TaskStatus.PROCESSING) {
+            affectedMode.changeStatus(TaskStatus.READY);
           }
 
-          task.statechange.subscribe((obj) => {
-            this.storage.saveTask(task);
-
-            this.updateProtocolURL().then((url) => {
-              if (this.protocolURL) {
-                URL.revokeObjectURL(
-                  (
-                    this.protocolURL as any
-                  ).changingThisBreaksApplicationSecurity.toString(),
-                );
-              }
-              this.protocolURL = url;
-            });
+          task.statechange.subscribe(async (obj) => {
+            await this.storage.saveTask(task, mode);
+            await this.updateProtocolURL();
           });
-          this.storage.saveTask(task);
+
+          await this.storage.saveTask(task, mode);
           const asrService = AppSettings.getServiceInformation(
-            task.operations[1].providerInformation.provider,
+            task.operations[1].serviceProvider.provider,
           );
           const langObj = AppSettings.getLanguageByCode(
-            task.asrLanguage!,
-            task.operations[1].providerInformation.provider,
+            task.operations[1].language!,
+            task.operations[1].serviceProvider.provider,
           );
 
           if (langObj && asrService) {
-            task.start(asrService, langObj, this.httpclient, [
+            task.start(this.httpclient, [
               {
                 name: 'GoogleASR',
                 value: this._accessCode,
@@ -729,29 +945,30 @@ export class TaskService implements OnDestroy {
             console.error('langObj is undefined');
           }
           setTimeout(() => {
-            this.start();
+            this.start(mode);
           }, 100);
         } else {
           setTimeout(() => {
-            this.start();
+            this.start(mode);
           }, 100);
         }
       } else {
         setTimeout(() => {
-          this.start();
+          this.start(mode);
         }, 250);
       }
     }
   }
 
-  public findNextWaitingTask(): Task | undefined {
-    if (!this.taskList) {
+  public findNextWaitingTask(mode: PortalModeType): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
-    const tasks = this.taskList.getAllTasks();
+    const tasks = taskList.getAllTasks();
     for (const entry of tasks) {
       if (
-        entry.state === TaskState.PENDING &&
+        entry.status === TaskStatus.PENDING &&
         ((!(
           entry.files[0].file === null || entry.files[0].file === undefined
         ) &&
@@ -760,17 +977,17 @@ export class TaskService implements OnDestroy {
             entry.operations[0]?.lastResult?.online))
       ) {
         return entry;
-      } else if (entry.state === TaskState.READY) {
+      } else if (entry.status === TaskStatus.READY) {
         for (const operation of entry.operations) {
-          if (operation.state !== TaskState.SKIPPED && operation.enabled) {
+          if (operation.state !== TaskStatus.SKIPPED && operation.enabled) {
             if (
-              (operation.state === TaskState.PENDING ||
-                operation.state === TaskState.READY) &&
+              (operation.state === TaskStatus.PENDING ||
+                operation.state === TaskStatus.READY) &&
               !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
             ) {
               return entry;
             } else if (
-              operation.state !== TaskState.FINISHED &&
+              operation.state !== TaskStatus.FINISHED &&
               (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
             ) {
               break;
@@ -785,51 +1002,65 @@ export class TaskService implements OnDestroy {
 
   public updateProtocolURL(): Promise<SafeResourceUrl> {
     return new Promise<SafeResourceUrl>((resolve, reject) => {
-      if (!this.taskList) {
-        throw new Error('undefined tasklist');
-      }
-      const promises: Promise<any>[] = [];
-      for (const entry of this.taskList.entries) {
-        promises.push(entry.toAny());
-      }
-
-      Promise.all(promises)
-        .then((values) => {
-          const json = {
-            version: '1.0.0',
-            encoding: 'UTF-8',
-            created: DateTime.now().toISO(),
-            entries: values,
-          };
-
-          this.protocolFileName = 'oh_portal_' + Date.now() + '.json';
-          const file = new File(
-            [JSON.stringify(json, null, 2)],
-            this.protocolFileName,
-            {
-              type: 'text/plain',
-            },
+      for (const mode of ['annotation', 'summarization'] as PortalModeType[]) {
+        const affectedMode = this.state.modes[mode];
+        if (affectedMode.protocolURL) {
+          URL.revokeObjectURL(
+            (
+              affectedMode.protocolURL as any
+            ).changingThisBreaksApplicationSecurity.toString(),
           );
+        }
 
-          const url = URL.createObjectURL(file);
-          resolve(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-        })
-        .catch((error) => {
-          reject(error);
-        });
+        if (!affectedMode.taskList) {
+          throw new Error('undefined tasklist');
+        }
+        const promises: Promise<any>[] = [];
+        for (const entry of affectedMode.taskList.entries) {
+          promises.push(entry.toAny());
+        }
+
+        Promise.all(promises)
+          .then((values) => {
+            const json = {
+              version: '1.0.0',
+              encoding: 'UTF-8',
+              created: DateTime.now().toISO(),
+              entries: values,
+            };
+
+            affectedMode.protocolFileName = `oh_portal_${mode}_${DateTime.now().toISO()}.json`;
+            const file = new File(
+              [JSON.stringify(json, null, 2)],
+              affectedMode.protocolFileName,
+              {
+                type: 'text/plain',
+              },
+            );
+
+            const url = URL.createObjectURL(file);
+            affectedMode.protocolURL =
+              this.sanitizer.bypassSecurityTrustResourceUrl(url);
+            resolve(affectedMode.protocolURL);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+      }
     });
   }
 
-  ngOnDestroy() {
-    if (!this.taskList) {
-      throw new Error('undefined tasklist');
-    }
-    const tasks = this.taskList.getAllTasks();
+  destroy() {
+    this.subscrmanager.destroy();
+
+    const tasks = [
+      ...(this.state.modes.annotation.taskList?.getAllTasks() ?? []),
+      ...(this.state.modes.summarization.taskList?.getAllTasks() ?? []),
+    ];
 
     for (const task of tasks) {
       task.destroy();
     }
-    this.subscrmanager.destroy();
   }
 
   public cleanUpInputArray(
@@ -877,17 +1108,24 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  public process: (queueItem: QueueItem) => Promise<(Task | TaskDirectory)[]> =
-    async (queueItem: QueueItem) => {
-      if (queueItem.file instanceof FileInfo) {
-        const file = queueItem.file as FileInfo;
-        return await this.processFileInfo(file, '', queueItem);
-      } else if (queueItem.file instanceof DirectoryInfo) {
-        const dir = queueItem.file as DirectoryInfo;
-        return this.processDirectoryInfo(dir, queueItem);
-      }
-      return firstValueFrom(of([]));
-    };
+  public process: (
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ) => Promise<(Task | TaskDirectory)[]> = async (
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ) => {
+    // TODO define distribution of files to correct modes
+
+    if (queueItem.file instanceof FileInfo) {
+      const file = queueItem.file as FileInfo;
+      return await this.processFileInfo(file, '', queueItem, mode);
+    } else if (queueItem.file instanceof DirectoryInfo) {
+      const dir = queueItem.file as DirectoryInfo;
+      return this.processDirectoryInfo(dir, queueItem, mode);
+    }
+    return firstValueFrom(of([]));
+  };
 
   public openSplitModal = () => {};
 
@@ -928,19 +1166,22 @@ export class TaskService implements OnDestroy {
     return file.extension;
   }
 
-  public toggleProcessing() {
-    this.overallState =
-      this.overallState === 'processing' ? 'stopped' : 'processing';
-    if (!this.taskList) {
+  public async toggleProcessing() {
+    const mode = this.state.currentMode;
+    this.state.currentModeState.overallState =
+      this.state.currentModeState.overallState === 'processing'
+        ? 'stopped'
+        : 'processing';
+    if (!this.state.modes[mode].taskList) {
       throw new Error('undefined tasklist');
     }
-    const tasks = this.taskList.getAllTasks();
-    if (this.overallState === 'processing') {
+    const tasks = this.state.modes[mode].taskList.getAllTasks();
+    if (this.state.currentModeState.overallState === 'processing') {
       for (const task of tasks) {
         task.resumeTask();
       }
 
-      this.start();
+      await this.start(mode);
     } else {
       for (const task of tasks) {
         task.stopTask();
@@ -950,53 +1191,87 @@ export class TaskService implements OnDestroy {
 
   public updateStatistics() {
     const result = {
-      queued: 0,
-      waiting: 0,
-      running: 0,
-      finished: 0,
-      errors: 0,
+      overall: {
+        queued: 0,
+        waiting: 0,
+        running: 0,
+        finished: 0,
+        errors: 0,
+      },
+      annotation: {
+        queued: 0,
+        waiting: 0,
+        running: 0,
+        finished: 0,
+        errors: 0,
+      },
+      summarization: {
+        queued: 0,
+        waiting: 0,
+        running: 0,
+        finished: 0,
+        errors: 0,
+      },
     };
-    if (!this.taskList) {
-      throw new Error('undefined tasklist');
-    }
-    const tasks = this.taskList.getAllTasks();
+    const tasksPerMode = [
+      {
+        mode: 'annotation',
+        tasks: this.state.modes.annotation.taskList?.getAllTasks() ?? [],
+      },
+      {
+        mode: 'summarization',
+        tasks: this.state.modes.summarization.taskList?.getAllTasks() ?? [],
+      },
+    ];
 
-    for (const task of tasks) {
-      // running
-      if (
-        task.state === TaskState.PROCESSING ||
-        task.state === TaskState.UPLOADING
-      ) {
-        result.running++;
-      }
+    for (const taskMode of tasksPerMode) {
+      const mode = taskMode.mode;
+      for (const task of taskMode.tasks) {
+        // running
+        if (
+          task.status === TaskStatus.PROCESSING ||
+          task.status === TaskStatus.UPLOADING
+        ) {
+          result.overall.running++;
+          (result as any)[mode].running++;
+        }
 
-      // waiting
-      if (task.state === TaskState.PENDING || task.state === TaskState.READY) {
-        result.waiting++;
-      }
+        // waiting
+        if (
+          task.status === TaskStatus.PENDING ||
+          task.status === TaskStatus.READY
+        ) {
+          result.overall.waiting++;
+          (result as any)[mode].waiting++;
+        }
 
-      // queued
-      if (task.state === TaskState.QUEUED) {
-        result.queued++;
-      }
+        // queued
+        if (task.status === TaskStatus.QUEUED) {
+          result.overall.queued++;
+          (result as any)[mode].queued++;
+        }
 
-      // finished
-      if (task.state === TaskState.FINISHED) {
-        result.finished++;
-      }
+        // finished
+        if (task.status === TaskStatus.FINISHED) {
+          result.overall.finished++;
+          (result as any)[mode].finished++;
+        }
 
-      // failed
-      if (task.state === TaskState.ERROR) {
-        result.errors++;
+        // failed
+        if (task.status === TaskStatus.ERROR) {
+          result.overall.errors++;
+          (result as any)[mode].errors++;
+        }
       }
     }
 
     this._statistics = result;
   }
 
-  private listenToTaskEvents(task: Task) {
+  private listenToTaskEvents(task: Task, mode: PortalModeType) {
     this.subscrmanager.add(
-      task.opstatechange.subscribe((event) => {
+      task.opstatechange.subscribe(async (event) => {
+        const affectedMode = this.state.modes[mode];
         const operation = task.getOperationByID(event.opID);
         if (!operation) {
           return;
@@ -1006,18 +1281,21 @@ export class TaskService implements OnDestroy {
           task.files[0].attributes?.originalFileName ?? task.files[0].fullname
         ).replace(/\.[^.]+$/g, '');
 
-        if (opName === 'ASR' && event.newState === TaskState.FINISHED) {
+        if (opName === 'ASR' && event.newState === TaskStatus.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now transcribe ${fileName} manually.`,
           );
-        } else if (event.newState === TaskState.ERROR) {
+        } else if (event.newState === TaskStatus.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`,
           );
-        } else if (opName === 'MAUS' && event.newState === TaskState.FINISHED) {
+        } else if (
+          opName === 'MAUS' &&
+          event.newState === TaskStatus.FINISHED
+        ) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
@@ -1028,31 +1306,21 @@ export class TaskService implements OnDestroy {
         this.updateStatistics();
         const lastOp = task.operations[task.operations.length - 1];
         if (
-          this._statistics.running > 1 ||
-          (this._statistics.running === 1 &&
-            lastOp.state !== TaskState.FINISHED &&
-            lastOp.state !== TaskState.READY)
+          this._statistics.overall.running > 1 ||
+          (this._statistics.overall.running === 1 &&
+            lastOp.state !== TaskStatus.FINISHED &&
+            lastOp.state !== TaskStatus.READY)
         ) {
-          if (operation.state === TaskState.UPLOADING) {
-            this.state = TaskState.UPLOADING;
+          if (operation.state === TaskStatus.UPLOADING) {
+            affectedMode.changeStatus(TaskStatus.UPLOADING);
           } else {
-            this.state = TaskState.PROCESSING;
+            affectedMode.changeStatus(TaskStatus.PROCESSING);
           }
         } else {
-          this.state = TaskState.READY;
+          affectedMode.changeStatus(TaskStatus.READY);
         }
-        this.storage.saveTask(task);
-
-        this.updateProtocolURL().then((url) => {
-          if (this.protocolURL) {
-            URL.revokeObjectURL(
-              (
-                this.protocolURL as any
-              ).changingThisBreaksApplicationSecurity.toString(),
-            );
-          }
-          this.protocolURL = url;
-        });
+        await this.storage.saveTask(task, mode);
+        await this.updateProtocolURL();
       }),
     );
   }
@@ -1061,17 +1329,19 @@ export class TaskService implements OnDestroy {
     file: FileInfo,
     path: string,
     queueItem: QueueItem,
+    mode: PortalModeType,
   ): Promise<(Task | TaskDirectory)[]> {
+    const affectedMode = this.state.modes[mode];
     if (!file?.file) {
       throw new Error('file is undefined');
     }
 
-    file.hash = await this.preprocessor.getHashString(file.file);
+    file.hash = await affectedMode.preprocessor.getHashString(file.file);
     const hashString =
       file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
     const newName = `${hashString}${file.extension}`;
     let newFileInfo: FileInfo | undefined;
-    this.newfiles = true;
+    this.state.currentModeState.newfiles = true;
 
     if (newName !== file.fullname) {
       // no valid name, replace
@@ -1113,6 +1383,7 @@ export class TaskService implements OnDestroy {
     const foundOldFile = this.getTaskWithHashAndName(
       file.hash,
       file.attributes.originalFileName,
+      mode,
     );
 
     if (file?.file) {
@@ -1173,6 +1444,7 @@ export class TaskService implements OnDestroy {
             const result = await this.processDirectoryInfo(
               directory,
               queueItem,
+              mode,
             );
             return result;
           } else {
@@ -1180,6 +1452,7 @@ export class TaskService implements OnDestroy {
               FileInfo.fromFileObject(files[0]),
               path,
               queueItem,
+              mode,
             );
           }
         } else {
@@ -1215,13 +1488,21 @@ export class TaskService implements OnDestroy {
         };
 
         // new file
-        const task = new Task([newFileInfo], this.operations);
-        task.asrLanguage = this.selectedASRLanguage;
-        task.asrProvider = this.selectedProvider?.provider;
+        const task = new Task([newFileInfo], affectedMode.operations);
+        task.setOptions({
+          selectedASRProvider: this.state.currentModeState.selectedASRProvider,
+          selectedMausLanguage:
+            this.state.currentModeState.selectedMausLanguage,
+          selectedTargetLanguage:
+            this.state.currentModeState.selectedTranslationLanguage,
+          selectedASRLanguage: this.state.currentModeState.selectedASRLanguage,
+          selectedSummarizationProvider:
+            this.state.currentModeState.selectedSummarizationProvider,
+        });
 
         // set state
-        for (let i = 0; i < this.operations.length; i++) {
-          const operation = this.operations[i];
+        for (let i = 0; i < affectedMode.operations.length; i++) {
+          const operation = affectedMode.operations[i];
           task.operations[i].enabled = operation.enabled;
         }
 
@@ -1237,7 +1518,9 @@ export class TaskService implements OnDestroy {
   private async processDirectoryInfo(
     dir: DirectoryInfo,
     queueItem: QueueItem,
+    mode: PortalModeType,
   ): Promise<TaskDirectory[]> {
+    const affectedMode = this.state.modes[mode];
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
 
@@ -1245,7 +1528,7 @@ export class TaskService implements OnDestroy {
       if (dirEntry instanceof FileInfo) {
         const file = dirEntry as FileInfo;
         processedValues.push(
-          await this.processFileInfo(file, dir.path, queueItem),
+          await this.processFileInfo(file, dir.path, queueItem, mode),
         );
       } else {
         throw new Error('file in dir is not a file!');
@@ -1259,8 +1542,8 @@ export class TaskService implements OnDestroy {
     for (const value of values) {
       if (value instanceof Task) {
         // set state
-        for (let i = 0; i < this.operations.length; i++) {
-          const operation = this.operations[i];
+        for (let i = 0; i < affectedMode.operations.length; i++) {
+          const operation = affectedMode.operations[i];
           value.operations[i].enabled = operation.enabled;
         }
         content.push(value);
@@ -1287,12 +1570,17 @@ export class TaskService implements OnDestroy {
     return result;
   }
 
-  private getTaskWithHashAndName(hash: string, name: string): Task | undefined {
-    if (!this.taskList) {
+  private getTaskWithHashAndName(
+    hash: string,
+    name: string,
+    mode: PortalModeType,
+  ): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    const tasks: Task[] = this.taskList.getAllTasks();
+    const tasks: Task[] = taskList.getAllTasks();
 
     for (const task of tasks) {
       if (
@@ -1307,8 +1595,8 @@ export class TaskService implements OnDestroy {
           if (
             cmpHash === hash &&
             file.attributes.originalFileName === name &&
-            (task.operations[0].state === TaskState.PENDING ||
-              task.operations[0].state === TaskState.ERROR)
+            (task.operations[0].state === TaskStatus.PENDING ||
+              task.operations[0].state === TaskStatus.ERROR)
           ) {
             return task;
           }
@@ -1321,21 +1609,25 @@ export class TaskService implements OnDestroy {
     return undefined;
   }
 
-  private getTaskWithOriginalFileName(regex: RegExp): Task | undefined {
-    if (!this.taskList) {
+  private getTaskWithOriginalFileName(
+    regex: RegExp,
+    mode: PortalModeType,
+  ): Task | undefined {
+    const taskList = this.state.modes[mode].taskList;
+    if (!taskList) {
       throw new Error('undefined tasklist');
     }
 
-    const tasks: Task[] = this.taskList.getAllTasks();
+    const tasks: Task[] = taskList.getAllTasks();
 
     for (const task of tasks) {
       if (task.files[0].attributes.originalFileName) {
         for (const file of task.files) {
           // console.log(`${cmpHash} === ${hash}`);
           if (
-            (task.operations[0].state === TaskState.PENDING ||
-              task.operations[0].state === TaskState.QUEUED ||
-              task.operations[0].state === TaskState.ERROR) &&
+            (task.operations[0].state === TaskStatus.PENDING ||
+              task.operations[0].state === TaskStatus.QUEUED ||
+              task.operations[0].state === TaskStatus.ERROR) &&
             regex.exec(file.attributes.originalFileName) !== null
           ) {
             return task;

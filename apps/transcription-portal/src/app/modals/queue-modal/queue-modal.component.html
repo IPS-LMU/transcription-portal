@@ -18,7 +18,7 @@
 <div class="modal-body d-flex flex-column h-100">
   <div>
     <p style="font-size: 0.9em; text-align: justify; margin-bottom: 0">
-      The following files are going to be processed one after the other. Please
+      The following tasks are going to be processed one after the other. Please
       check if all options are set as you wish. While you are selecting the
       language you can click on the logos of the service providers for further
       information like data storage policy and terms and conditions.
@@ -28,52 +28,127 @@
       selected (third-party) services and the files are marked for further
       processing.
     </p>
-    @if (orangeCount > 0) {
-      <p
-        class="alert alert-warning"
-        style="text-align: center; font-size: 0.9em"
-      >
-        Please add the files with file names in orange again. Otherwise these
-        files will be skipped.
-      </p>
-    }
+    <hr/>
+    <h5>Options</h5>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <table class="table table-sm table-striped">
+          <tbody>
+            <tr class="align-middle">
+              <td><label class="me-1">ASR Language:</label></td>
+              <td>
+                <octra-asr-language-select
+                  [(value)]="
+                    taskService.state.currentModeState.selectedASRLanguage
+                  "
+                  (valueChange)="changeLanguageforAllQueuedTasks()"
+                  [languageSettings]="{
+                    services: AppSettings.configuration.api.services,
+                  }"
+                  [languages]="languages.asr"
+                  [title]="'ASR Language'"
+                ></octra-asr-language-select>
+              </td>
+            </tr>
+            <tr class="align-middle">
+              <td>
+                <label>ASR Service Provider:</label>
+              </td>
+              <td>
+                <octra-asr-provider-select
+                  [(value)]="
+                    taskService.state.currentModeState.selectedASRProvider
+                  "
+                  (valueChange)="changeLanguageforAllQueuedTasks()"
+                  [asrProviders]="asrProviders"
+                ></octra-asr-provider-select>
 
-    <div class="row">
-      <div class="col-lg-6">
-        <octra-asr-options
-          [options]="{
-            selectedASRLanguage: this.taskService.selectedASRLanguage!,
-            selectedMausLanguage: this.taskService.selectedMausLanguage!,
-            selectedServiceProvider: this.taskService.selectedProvider!,
-          }"
-          (optionsChange)="onASROptionsChange($event)"
-          [languageSettings]="{
-            services: AppSettings.configuration.api.services,
-          }"
-          [mausLanguages]="languages.maus"
-          [asrLanguages]="languages.asr"
-          [showAccessCode]="false"
-        ></octra-asr-options>
+                @if (
+                  selectedASRInfo !== undefined &&
+                  isASRSelected() &&
+                  selectedASRInfo.knownIssues !== undefined
+                  ) {
+                  <div class="alert alert-info mt-3" style="font-size: 0.9em">
+                    <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
+                    {{ selectedASRInfo.knownIssues }}
+                  </div>
+                }
+              </td>
+            </tr>
+            <tr class="align-middle">
+              <td>
+                <label>Summarization Service Provider:</label>
+              </td>
+              <td>
+                <octra-asr-provider-select
+                  [(value)]="
+                    taskService.state.currentModeState
+                      .selectedSummarizationProvider
+                  "
+                  (valueChange)="changeLanguageforAllQueuedTasks()"
+                  [asrProviders]="summarizationProviders"
+                  [title]="'Summarization Service Provider'"
+                ></octra-asr-provider-select>
+              </td>
+            </tr>
+            @if (taskService.state.currentMode === 'annotation') {
+              <tr class="align-middle">
+                <td><label>Word Alignment Language:</label></td>
+                <td>
+                  <octra-asr-language-select
+                    [(value)]="
+                      taskService.state.currentModeState.selectedMausLanguage
+                    "
+                    (valueChange)="changeLanguageforAllQueuedTasks()"
+                    [languageSettings]="{
+                      services: AppSettings.configuration.api.services,
+                    }"
+                    [languages]="languages.maus"
+                    [title]="'MAUS Language'"
+                  ></octra-asr-language-select>
+                </td>
+              </tr>
+            } @else {
+              <tr class="align-middle">
+                <td><label>Translation Language:</label></td>
+                <td>
+                  <select
+                    class="form-select form-select-sm"
+                    [(ngModel)]="
+                      taskService.state.currentModeState
+                        .selectedTranslationLanguage
+                    "
+                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                  >
+                    <option value=""></option>
+                    <option value="en">English</option>
+                    <option value="de">German</option>
+                    <option value="nl">Dutch</option>
+                    <option value="it">Italian</option>
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </div>
 
     @if (isOneAudiofileInvalid()) {
       <div class="alert alert-danger" style="font-size: 0.9em">
         One or more audio files do not fit the ASR provider's requirements:
-        @if (this.selectedASRInfo !== undefined) {
+        @if (selectedASRInfo !== undefined) {
           <ul>
-            @if (this.selectedASRInfo.maxSignalSize) {
+            @if (selectedASRInfo.maxSignalSize) {
               <li>
                 Maximum size of audio file:
-                {{ this.selectedASRInfo.maxSignalSize }} MB
+                {{ selectedASRInfo.maxSignalSize }} MB
               </li>
             }
-            @if (this.selectedASRInfo.maxSignalDuration) {
+            @if (selectedASRInfo.maxSignalDuration) {
               <li>
                 Maximum audio duration:
-                {{
-                  this.selectedASRInfo.maxSignalDuration * 1000 | time: ['full']
-                }}
+                {{ selectedASRInfo.maxSignalDuration * 1000 | time: ['full'] }}
                 (H:m:s)
               </li>
             }
@@ -85,15 +160,17 @@
         </p>
       </div>
     }
-    @if (
-      selectedASRInfo !== undefined &&
-      isASRSelected() &&
-      selectedASRInfo.knownIssues !== undefined
-    ) {
-      <div class="alert alert-info" style="font-size: 0.9em">
-        <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
-        {{ selectedASRInfo.knownIssues }}
-      </div>
+    <hr/>
+    <h5>Tasks</h5>
+
+    @if (orangeCount > 0) {
+      <p
+        class="alert alert-warning"
+        style="text-align: center; font-size: 0.9em"
+      >
+        Please add the files with file names in orange again. Otherwise these
+        files will be skipped.
+      </p>
     }
 
     <table class="table table-responsive-md table-striped" id="queue">
@@ -124,7 +201,12 @@
           <th></th>
           <th></th>
           @for (operation of operations; track operation; let i = $index) {
-            @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+            @if (
+              operation.name === 'OCTRA' ||
+              operation.name === 'ASR' ||
+              operation.name === 'Summarization' ||
+              operation.name === 'Translation'
+            ) {
               <th>
                 <input
                   (click)="deactivateOperation(operation, i)"
@@ -133,8 +215,7 @@
                   type="checkbox"
                 />
               </th>
-            }
-            @if (operation.name === 'MAUS') {
+            } @else if (operation.name === 'MAUS') {
               <th colspan="2" style="position: relative">
                 <img
                   src="assets/directory.png"
@@ -163,7 +244,7 @@
       </thead>
       <tbody>
         @for (task of tasks; track task) {
-          @if (task.state === 'QUEUED') {
+          @if (task.status === 'QUEUED') {
             <tr>
               <td class="compatible-col">
                 <ng-template #validationResult>
@@ -250,7 +331,7 @@
                   </span>
                 }
               </td>
-              <td>{{ task.asrLanguage }}</td>
+              <td>{{ task.operations[1].language }}</td>
               @for (operation of task.operations; track operation) {
                 <td>
                   @if (operation.enabled) {
@@ -281,9 +362,12 @@
   <button
     (click)="onSubmit()"
     [disabled]="
-      !this.taskService.selectedASRLanguage ||
-      !this.taskService.selectedMausLanguage ||
-      !this.taskService.selectedProvider
+      !taskService.state.currentModeState.selectedASRLanguage ||
+      (taskService.state.currentMode === 'annotation' &&
+        !taskService.state.currentModeState.selectedMausLanguage) ||
+      (taskService.state.currentMode === 'summarization' &&
+        !taskService.state.currentModeState.selectedTranslationLanguage) ||
+      !taskService.state.currentModeState.selectedASRProvider
     "
     class="btn btn-outline-primary"
     type="button"

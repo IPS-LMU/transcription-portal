@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { sum } from '@octra/api-types';
@@ -31,6 +31,13 @@ import { AppSettings } from './app.settings';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService implements OnDestroy {
+  private http = inject(HttpClient);
+  private octraAPI = inject(OctraAPIService);
+  private taskService = inject(TaskService);
+  private activeRoute = inject(ActivatedRoute);
+  private modalService = inject(NgbModal);
+  private routingService = inject(RoutingService);
+
   public shortCutsEnabled = true;
   private _allLoaded = false;
   private _feedbackEnabled = false;
@@ -50,14 +57,7 @@ export class SettingsService implements OnDestroy {
     return this._settingsload;
   }
 
-  constructor(
-    private http: HttpClient,
-    private octraAPI: OctraAPIService,
-    private taskService: TaskService,
-    private activeRoute: ActivatedRoute,
-    private modalService: NgbModal,
-    private routingService: RoutingService,
-  ) {
+  constructor() {
     this.subscrManager.add(
       this.activeRoute.queryParams.subscribe(
         (param: {
@@ -646,7 +646,8 @@ export class SettingsService implements OnDestroy {
                   this.subscrManager.add(
                     timer(0).subscribe({
                       next: () => {
-                        this.taskService.preprocessor.addToQueue(info);
+                        // TODO select preprocessor by mode
+                        this.taskService.state.modes.annotation.preprocessor.addToQueue(info);
                       },
                     }),
                   );
@@ -701,15 +702,15 @@ export class SettingsService implements OnDestroy {
         audioLanguage = 'ita-IT';
       }
 
-      this.taskService.selectedASRLanguage = supportedAudioLanguages.find((a) =>
+      this.taskService.state.currentModeState.selectedASRLanguage = supportedAudioLanguages.find((a) =>
         a.value.includes(audioLanguage!),
       )?.value;
-      this.taskService.selectedMausLanguage = supportedMausLanguages.find((a) =>
+      this.taskService.state.currentModeState.selectedMausLanguage = supportedMausLanguages.find((a) =>
         a.value.includes(audioLanguage!),
       )?.value;
 
-      if (this.taskService.selectedMausLanguage) {
-        this.taskService.selectedProvider =
+      if (this.taskService.state.currentModeState.selectedMausLanguage) {
+        this.taskService.state.currentModeState.selectedASRProvider =
           AppSettings.getServiceInformation('Watson'); // Watson is default
       }
     }

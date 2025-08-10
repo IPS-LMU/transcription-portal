@@ -3,6 +3,7 @@ import {
   Directive,
   ElementRef,
   EventEmitter,
+  inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -17,7 +18,6 @@ import { Subscription } from 'rxjs';
 import { Operation } from '../../../obj/operations/operation';
 import { Task } from '../../../obj/tasks';
 import { TaskService } from '../../../obj/tasks/task.service';
-import { AppSettings } from '../../../shared/app.settings';
 
 @Directive({
   selector: '[tportalProcColOperation]',
@@ -26,6 +26,11 @@ import { AppSettings } from '../../../shared/app.settings';
 export class ProcColOperationDirective
   implements AfterViewInit, OnChanges, OnDestroy
 {
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+  private sanitizer = inject(DomSanitizer);
+  private taskService = inject(TaskService);
+
   @Input() entry?: Task;
   @Input() operation?: Operation;
   @Input() shortStyle = false;
@@ -44,13 +49,6 @@ export class ProcColOperationDirective
     new EventEmitter<MouseEvent>();
 
   private subscrmanager = new SubscriptionManager<Subscription>();
-
-  constructor(
-    private elementRef: ElementRef,
-    private renderer: Renderer2,
-    private sanitizer: DomSanitizer,
-    private taskService: TaskService,
-  ) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (
@@ -223,27 +221,13 @@ export class ProcColOperationDirective
   };
 
   private onRepeatIconClick = () => {
-    if (
-      this.entry?.operations &&
-      this.entry.operations[1].providerInformation
-    ) {
-      const langObj = AppSettings.getLanguageByCode(
-        this.entry.asrLanguage!,
-        this.entry.operations[1].providerInformation.provider,
-      );
-      if (langObj) {
-        this.entry.restartFailedOperation(
-          this.entry.operations[1].providerInformation,
-          langObj,
-          this.taskService.httpclient,
-          [
-            {
-              name: 'GoogleASR',
-              value: this.taskService.accessCode,
-            },
-          ],
-        );
-      }
+    if (this.entry?.operations && this.entry.operations[1].serviceProvider) {
+      this.entry.restartFailedOperation(this.taskService.httpclient, [
+        {
+          name: 'GoogleASR',
+          value: this.taskService.accessCode,
+        },
+      ]);
     }
   };
 }

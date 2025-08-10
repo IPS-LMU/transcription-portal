@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
@@ -11,7 +11,7 @@ import { AppInfo } from '../../app.info';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { Operation } from '../../obj/operations/operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskDirectory, TaskState } from '../../obj/tasks';
+import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
 
@@ -25,6 +25,11 @@ export class DownloadModalComponent
   extends SubscriberComponent
   implements OnInit
 {
+  private taskService = inject(TaskService);
+  protected activeModal = inject(NgbActiveModal);
+  private sanitizer = inject(DomSanitizer);
+  private downloadService = inject(DownloadService);
+
   @Input() type: 'line' | 'column' = 'column';
   private selectedTasks?: number[];
   @Input() taskList?: Task[];
@@ -42,15 +47,6 @@ export class DownloadModalComponent
   showRemoveLine = false;
 
   public state = 'inactive';
-
-  constructor(
-    private taskService: TaskService,
-    protected activeModal: NgbActiveModal,
-    private sanitizer: DomSanitizer,
-    private downloadService: DownloadService,
-  ) {
-    super();
-  }
 
   public get converters() {
     return AppInfo.converters;
@@ -86,7 +82,7 @@ export class DownloadModalComponent
   }
 
   doColumnZipping() {
-    if (!this.taskService.taskList) {
+    if (!this.taskService.state.currentModeState.taskList) {
       throw new Error('taskList is undefined');
     }
     // get url for resulty by column
@@ -100,11 +96,11 @@ export class DownloadModalComponent
     } = {
       entries: [],
     };
-    const tasks = this.taskService.taskList.getAllTasks();
+    const tasks = this.taskService.state.currentModeState.taskList.getAllTasks();
 
     const promises: Promise<void>[] = [];
 
-    const opIndex = this.taskService.operations.findIndex((a) => {
+    const opIndex = this.taskService.state.currentModeState.operations.findIndex((a) => {
       if (!this.column) {
         throw new Error('column is undefined');
       }
@@ -119,7 +115,7 @@ export class DownloadModalComponent
 
         if (
           operation.results.length > 0 &&
-          operation.state === TaskState.FINISHED
+          operation.state === TaskStatus.FINISHED
         ) {
           const result: FileInfo | undefined = operation.lastResult;
           if (result?.file) {
@@ -211,7 +207,7 @@ export class DownloadModalComponent
       const promises = [];
 
       for (const index of this.selectedTasks) {
-        const entry = this.taskService.taskList?.getEntryByIndex(index);
+        const entry = this.taskService.state.currentModeState.taskList?.getEntryByIndex(index);
 
         if (entry instanceof TaskDirectory) {
           promises.push(
@@ -290,7 +286,7 @@ export class DownloadModalComponent
 
           if (
             operation.name !== task.operations[0].name &&
-            operation.state === TaskState.FINISHED &&
+            operation.state === TaskStatus.FINISHED &&
             operation.results.length > 0
           ) {
             const opResult = operation.lastResult;
@@ -385,11 +381,11 @@ export class DownloadModalComponent
   }
 
   removeSelected() {
-    if (this.selectedTasks && this.taskService.taskList) {
+    if (this.selectedTasks && this.taskService.state.currentModeState.taskList) {
       for (const index of this.selectedTasks) {
-        const entry = this.taskService.taskList.getEntryByIndex(index);
+        const entry = this.taskService.state.currentModeState.taskList.getEntryByIndex(index);
         if (entry) {
-          this.taskService.taskList.removeEntry(entry, true);
+          this.taskService.state.currentModeState.taskList.removeEntry(entry, true);
         } else {
           throw new Error("Can't find entry");
         }
@@ -406,8 +402,12 @@ export class DownloadModalComponent
         return '2_Manual Transcription';
       case 'MAUS':
         return '3_Word Alignment';
+      case 'Summarization':
+        return '3_Summarization';
       case 'Emu WebApp':
         return '4_Phonetic Detail';
+      case 'Translation':
+        return '4_Translation';
     }
 
     return '';

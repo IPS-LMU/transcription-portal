@@ -1,14 +1,13 @@
-import { Directive, ElementRef, OnInit, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, OnInit, Renderer2, inject } from '@angular/core';
 
 @Directive({
   selector: '[appExpandRow]',
   standalone: true,
 })
 export class ExpandRowDirective implements OnInit {
-  constructor(
-    private elRef: ElementRef,
-    private renderer: Renderer2,
-  ) {}
+  private elRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+
 
   ngOnInit() {
     const native = this.elRef.nativeElement;

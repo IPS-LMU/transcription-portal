@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="API" type="PhpBuiltInWebServerConfigurationType"
+                 factoryName="PHP Built-in Web Server" document_root="$PROJECT_DIR$/apps/api/public" port="52678">
+    <method v="2"/>
+  </configuration>
+</component>

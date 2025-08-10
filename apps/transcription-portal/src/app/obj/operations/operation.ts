@@ -1,40 +1,49 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components/lib/components/asr-options/types';
+import { ServiceProvider } from '@octra/ngx-components';
+import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
-import { ProviderLanguage } from '../oh-config';
-import { Task, TaskState } from '../tasks';
+import { Task, TaskStatus } from '../tasks';
+
+export interface IOperation {
+  id: number;
+  name: string;
+  state: TaskStatus;
+  protocol: string;
+  time: {
+    start: number;
+    duration: number;
+  };
+  enabled: boolean;
+  results: any[];
+  serviceProvider?: string;
+  language?: string;
+}
 
 export abstract class Operation {
   static counter = 0;
   public abstract resultType?: string;
   public mouseover = false;
   public changed: Subject<void> = new Subject<void>();
-  public abstract start: (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
-    inputs: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode: string,
-  ) => void;
   private readonly _shortTitle: string | undefined;
   private statesubj: Subject<{
     opID: number;
-    oldState: TaskState;
-    newState: TaskState;
+    oldState: TaskStatus;
+    newState: TaskStatus;
   }> = new Subject<{
     opID: number;
-    oldState: TaskState;
-    newState: TaskState;
+    oldState: TaskStatus;
+    newState: TaskStatus;
   }>();
   public statechange: Observable<{
     opID: number;
-    oldState: TaskState;
-    newState: TaskState;
+    oldState: TaskStatus;
+    newState: TaskStatus;
   }> = this.statesubj.asObservable();
   private readonly _id: number;
+
+  protected subscrManager = new SubscriptionManager();
 
   protected constructor(
     private _name: string,
@@ -42,8 +51,10 @@ export abstract class Operation {
     title?: string,
     shortTitle?: string,
     private _task?: Task,
-    state?: TaskState,
+    state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
     if (id === null || id === undefined) {
       this._id = ++Operation.counter;
@@ -62,9 +73,19 @@ export abstract class Operation {
     if (!(state === null || state === undefined)) {
       this.changeState(state);
     } else {
-      this.changeState(TaskState.PENDING);
+      this.changeState(TaskStatus.PENDING);
     }
+
+    this._serviceProvider = serviceProvider;
+    this._language = language;
   }
+
+  public abstract start: (
+    inputs: FileInfo[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => void;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;
@@ -75,7 +96,7 @@ export abstract class Operation {
   }
 
   get isFinished() {
-    return this.state === TaskState.FINISHED;
+    return this.state === TaskStatus.FINISHED;
   }
 
   public get lastResult(): FileInfo | undefined {
@@ -143,9 +164,9 @@ export abstract class Operation {
     return this._results;
   }
 
-  protected _state: TaskState = TaskState.PENDING;
+  protected _state: TaskStatus = TaskStatus.PENDING;
 
-  get state(): TaskState {
+  get state(): TaskStatus {
     return this._state;
   }
 
@@ -171,14 +192,23 @@ export abstract class Operation {
     return this._description;
   }
 
-  protected _providerInformation: ServiceProvider | undefined;
+  protected _serviceProvider?: ServiceProvider;
 
-  get providerInformation(): ServiceProvider | undefined {
-    return this._providerInformation;
+  get serviceProvider(): ServiceProvider | undefined {
+    return this._serviceProvider;
   }
 
-  set providerInformation(value: ServiceProvider | undefined) {
-    this._providerInformation = value;
+  set serviceProvider(value: ServiceProvider | undefined) {
+    this._serviceProvider = value;
+  }
+
+  protected _language?: string;
+  get language(): string | undefined {
+    return this._language;
+  }
+
+  set language(value: string | undefined) {
+    this._language = value;
   }
 
   protected _time: {
@@ -206,33 +236,33 @@ export abstract class Operation {
 
   public getStateIcon = (
     sanitizer: DomSanitizer,
-    state: TaskState,
+    state: TaskStatus,
   ): SafeHtml => {
     let result = '';
 
     switch (state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = '';
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -240,30 +270,30 @@ export abstract class Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
-  public getStateIcon2 = (state: TaskState): string => {
+  public getStateIcon2 = (state: TaskStatus): string => {
     let result = '';
 
     switch (state) {
-      case TaskState.PENDING:
+      case TaskStatus.PENDING:
         result = '';
         break;
-      case TaskState.UPLOADING:
+      case TaskStatus.UPLOADING:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.PROCESSING:
+      case TaskStatus.PROCESSING:
         result = `<i class="bi bi-gear-fill spin"></i>`;
         break;
-      case TaskState.FINISHED:
+      case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
-      case TaskState.READY:
+      case TaskStatus.READY:
         result = `<div class="spinner-border spinner-border-small" role="status">
   <span class="visually-hidden">Loading...</span>
 </div>`;
         break;
-      case TaskState.ERROR:
+      case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
         break;
     }
@@ -271,7 +301,7 @@ export abstract class Operation {
     return result;
   };
 
-  public changeState(state: TaskState) {
+  public changeState(state: TaskStatus) {
     const oldstate = this._state;
     this._state = state;
 
@@ -288,37 +318,39 @@ export abstract class Operation {
 
     while (nextOP) {
       const nextOP2 =
-        nextOP.enabled && nextOP.state !== TaskState.SKIPPED ? nextOP : null;
+        nextOP.enabled && nextOP.state !== TaskStatus.SKIPPED ? nextOP : null;
       if (nextOP2 !== null) {
         break;
       }
       nextOP = nextOP.nextOperation;
     }
 
-    if (state === TaskState.FINISHED && nextOP === null) {
-      this.task?.changeState(TaskState.FINISHED);
+    if (state === TaskStatus.FINISHED && nextOP === null) {
+      this.task?.changeState(TaskStatus.FINISHED);
     }
   }
 
   public abstract clone(task?: Task): Operation;
 
   public abstract fromAny(
-    operationObj: any,
+    operationObj: IOperation,
     commands: string[],
     task: Task,
+    taskObj: any,
   ): Operation;
 
-  toAny(): Promise<any> {
+  toAny(): Promise<IOperation> {
     return new Promise<any>((resolve, reject) => {
-      const result = {
+      const result: IOperation = {
         id: this.id,
         name: this.name,
         state: this.state,
         protocol: this.protocol,
         time: this.time,
         enabled: this.enabled,
-        webService: '',
         results: [],
+        serviceProvider: this.serviceProvider?.provider,
+        language: this.language,
       };
 
       // result data
@@ -374,9 +406,25 @@ export abstract class Operation {
     }
   }
 
-  public abstract onMouseEnter(): void;
-  public abstract onMouseLeave(): void;
-  public abstract onMouseOver(): void;
+  protected throwError(error: Error) {
+    console.error(error);
+    this.changeState(TaskStatus.ERROR);
+    this.updateProtocol(error?.message?.replace(/\n/g, '<br/>'));
+  }
+
+  public destroy() {
+    this.subscrManager.destroy();
+  }
+
+  public onMouseEnter() {
+    // not implemented
+  }
+  public onMouseLeave() {
+    // not implemented
+  }
+  public onMouseOver() {
+    // not implemented
+  }
 }
 
 export interface IAccessCode {

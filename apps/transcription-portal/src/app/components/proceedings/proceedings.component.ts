@@ -1,16 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ANIMATIONS } from '../../shared/Animations';
 
@@ -25,13 +13,14 @@ import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
-import { OCTRAOperation } from '../../obj/operations/octra-operation';
 import { Operation } from '../../obj/operations/operation';
+import { SummarizationOperation } from '../../obj/operations/summarization-operation';
 import { ToolOperation } from '../../obj/operations/tool-operation';
+import { TranslationOperation } from '../../obj/operations/translation-operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
 import { QueueItem } from '../../obj/preprocessor';
 import { ShortcutManager } from '../../obj/shortcut-manager';
-import { Task, TaskDirectory, TaskList, TaskState } from '../../obj/tasks';
+import { Task, TaskDirectory, TaskList, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
@@ -69,6 +58,12 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
   ],
 })
 export class ProceedingsComponent implements OnInit, OnDestroy {
+  sanitizer = inject(DomSanitizer);
+  cd = inject(ChangeDetectorRef);
+  taskService = inject(TaskService);
+  storage = inject(StorageService);
+  private ngbModalService = inject(NgbModal);
+
   public contextmenu = {
     x: 0,
     y: 0,
@@ -150,20 +145,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   maxColumnWidths = [10, 15, 15, 15, 15, 10];
 
-  constructor(
-    public sanitizer: DomSanitizer,
-    public cd: ChangeDetectorRef,
-    public taskService: TaskService,
-    public storage: StorageService,
-    private ngbModalService: NgbModal,
-  ) {
+  constructor() {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
 
     this.subscrManager.add(
-      this.taskService.taskList?.entryChanged.subscribe({
+      this.taskService.state.currentModeState.taskList?.entryChanged.subscribe({
         next: (event) => {
           console.log(`${event.state} ${event.entry.type} ${event.entry.id}`);
           this.cd.markForCheck();
@@ -449,8 +438,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (entry instanceof Task) {
         if (entry && entry.files.length > 1) {
           entry.files.splice(1);
-          entry.operations[1].enabled = this.taskService.operations[1].enabled;
-          entry.operations[1].changeState(entry.state);
+          entry.operations[1].enabled =
+            this.taskService.state.currentModeState.operations[1].enabled;
+          entry.operations[1].changeState(entry.status);
         }
       } else {
         if (entry) {
@@ -459,8 +449,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             if (task.files.length > 1) {
               task.files.splice(1);
               task.operations[1].enabled =
-                this.taskService.operations[1].enabled;
-              task.operations[1].changeState(task.state);
+                this.taskService.state.currentModeState.operations[1].enabled;
+              task.operations[1].changeState(task.status);
             }
           }
         }
@@ -509,9 +499,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     // show Popover for normal operations only
     if (
       !(
-        operation.state === TaskState.PENDING ||
-        operation.state === TaskState.SKIPPED ||
-        operation.state === TaskState.READY
+        operation.state === TaskStatus.PENDING ||
+        operation.state === TaskStatus.SKIPPED ||
+        operation.state === TaskStatus.READY
       )
     ) {
       const icon: HTMLElement = $event.target as HTMLElement;
@@ -550,7 +540,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           icon.offsetTop +
           parentNode.offsetTop +
           this.inner.nativeElement.parentElement.parentElement.parentElement
-            .offsetTop -
+            .parentElement.parentElement.offsetTop -
           this.inner.nativeElement.scrollTop +
           icon.offsetHeight;
         this.popover.y =
@@ -558,6 +548,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             ? top - this.popover.height - icon.offsetHeight + 10
             : top;
       }
+
+      console.log(
+        `Show popover at position (${this.popover.x}, ${this.popover.y}) and size ${this.popover.width}, ${this.popover.height})`,
+      );
 
       this.togglePopover(true);
     }
@@ -661,7 +655,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     time: { start: number; duration: number },
     operation: Operation,
   ) {
-    if (operation.state === TaskState.PROCESSING) {
+    if (operation.state === TaskStatus.PROCESSING) {
       return (
         operation.time.duration + Math.max(0, Date.now() - operation.time.start)
       );
@@ -675,7 +669,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   getMailToLink(task: Task) {
-    if (task.state === TaskState.FINISHED) {
+    if (task.status === TaskStatus.FINISHED) {
       const toolURL = (task.operations[4] as EmuOperation).getToolURL();
       let subject = 'TranscriptionPortal Links';
       let body =
@@ -699,40 +693,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   deactivateOperation(operation: Operation, index: number) {
     // TODO improve code!
     const tasks = this.taskList.getAllTasks().filter((a) => {
-      return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
+      return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
     });
 
     operation.enabled = !operation.enabled;
-    const previous = this.taskService.operations[index - 1];
-    const next = this.taskService.operations[index + 1];
-    if (operation instanceof OCTRAOperation) {
-      if (!previous.enabled && !operation.enabled) {
-        previous.enabled = true;
-
-        for (const task of tasks) {
-          const taskOperation = task.operations[index - 1];
-          const currOperation = task.operations[index];
-          let hasTranscript = false;
-          if (currOperation?.task) {
-            // check if transcript was added to the task
-            hasTranscript =
-              currOperation.task.files.findIndex((a) => {
-                return this.taskService.validTranscript(a.extension);
-              }) > -1;
-          }
-
-          if (!hasTranscript) {
-            if (taskOperation.state === TaskState.PENDING) {
-              taskOperation.enabled = previous.enabled;
-            }
-
-            if (currOperation.state === TaskState.PENDING) {
-              currOperation.enabled = operation.enabled;
-            }
-          }
-        }
-      }
-    } else if (operation instanceof ASROperation) {
+    const previous =
+      this.taskService.state.currentModeState.operations[index - 1];
+    const next = this.taskService.state.currentModeState.operations[index + 1];
+    if (operation instanceof ASROperation) {
       if (!next.enabled && !operation.enabled) {
         next.enabled = true;
 
@@ -740,10 +708,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           const taskOperation = task.operations[index + 1];
           const currOperation = task.operations[index];
 
-          if (taskOperation.state === TaskState.PENDING) {
+          if (taskOperation.state === TaskStatus.PENDING) {
             taskOperation.enabled = next.enabled;
           }
-          if (currOperation.state === TaskState.PENDING) {
+          if (currOperation.state === TaskStatus.PENDING) {
             currOperation.enabled = operation.enabled;
           }
         }
@@ -755,11 +723,47 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         const taskOperation = task.operations[index + 1];
         const currOperation = task.operations[index];
 
-        if (taskOperation.state === TaskState.PENDING) {
+        if (taskOperation.state === TaskStatus.PENDING) {
           taskOperation.enabled = next.enabled;
         }
-        if (currOperation.state === TaskState.PENDING) {
+        if (currOperation.state === TaskStatus.PENDING) {
           currOperation.enabled = operation.enabled;
+        }
+      }
+    } else if (
+      operation instanceof SummarizationOperation ||
+      operation instanceof TranslationOperation
+    ) {
+      for (const task of tasks) {
+        const currOperation = task.operations[index];
+
+        if (currOperation.state === TaskStatus.PENDING) {
+          currOperation.enabled = operation.enabled;
+        }
+      }
+    } else if (!previous.enabled && !operation.enabled) {
+      previous.enabled = true;
+
+      for (const task of tasks) {
+        const taskOperation = task.operations[index - 1];
+        const currOperation = task.operations[index];
+        let hasTranscript = false;
+        if (currOperation?.task) {
+          // check if transcript was added to the task
+          hasTranscript =
+            currOperation.task.files.findIndex((a) => {
+              return this.taskService.validTranscript(a.extension);
+            }) > -1;
+        }
+
+        if (!hasTranscript) {
+          if (taskOperation.state === TaskStatus.PENDING) {
+            taskOperation.enabled = previous.enabled;
+          }
+
+          if (currOperation.state === TaskStatus.PENDING) {
+            currOperation.enabled = operation.enabled;
+          }
         }
       }
     }
@@ -769,11 +773,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public updateEnableState() {
     const tasks = this.taskList.getAllTasks().filter((a) => {
-      return a.state === TaskState.QUEUED || a.state === TaskState.PENDING;
+      return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
     });
 
-    for (let j = 0; j < this.taskService.operations.length; j++) {
-      const operation = this.taskService.operations[j];
+    for (
+      let j = 0;
+      j < this.taskService.state.currentModeState.operations.length;
+      j++
+    ) {
+      const operation = this.taskService.state.currentModeState.operations[j];
 
       for (const task of tasks) {
         const currOperation = task.operations[j];
@@ -785,7 +793,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             }) > -1;
 
           if (!hasTranscript) {
-            if (currOperation.state === TaskState.PENDING) {
+            if (currOperation.state === TaskStatus.PENDING) {
               currOperation.enabled = operation.enabled;
             }
           }
@@ -797,12 +805,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public getPopoverColor(operation: Operation): string {
     if (operation) {
       if (
-        operation.state === TaskState.ERROR ||
+        operation.state === TaskStatus.ERROR ||
         (operation.results.length > 0 && !operation.lastResult?.available)
       ) {
         return 'red';
       } else if (
-        operation.state === TaskState.FINISHED &&
+        operation.state === TaskStatus.FINISHED &&
         operation.protocol !== ''
       ) {
         return '#ffc33b';
@@ -889,10 +897,12 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public removeEntry(event: MouseEvent, entry?: Task | TaskDirectory) {
-    if (this.taskService.taskList && entry) {
-      this.taskService.taskList.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
+    if (this.taskService.state.currentModeState.taskList && entry) {
+      this.taskService.state.currentModeState.taskList
+        .removeEntry(entry, true)
+        .catch((error) => {
+          console.error(error);
+        });
       setTimeout(() => {
         this.selectedRows = [];
         this.cd.markForCheck();
@@ -1018,9 +1028,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }
 
     for (const entry of removeQueue) {
-      this.taskService.taskList?.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
+      this.taskService.state.currentModeState.taskList
+        ?.removeEntry(entry, true)
+        .catch((error) => {
+          console.error(error);
+        });
     }
 
     this.selectedRows = [];
@@ -1044,7 +1056,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         for (const operation of task.operations) {
           if (!(operation instanceof UploadOperation)) {
             if (
-              operation.state === TaskState.FINISHED ||
+              operation.state === TaskStatus.FINISHED ||
               operation.results.length > 0
             ) {
               return true;

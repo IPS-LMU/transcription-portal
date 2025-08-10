@@ -1,8 +1,8 @@
-@import 'bootstrap';
-@import 'bootstrap-icons';
-@import 'jodit/es2021/jodit.css';
-@import 'highlight.js/styles/github.css';
-@import 'codejar-linenumbers/es/codejar-linenumbers.css';
+@use 'bootstrap';
+@use 'bootstrap-icons';
+@use 'jodit/es2021/jodit.css';
+@use 'highlight.js/styles/github.css';
+@use 'codejar-linenumbers/es/codejar-linenumbers.css';
 
 body {
   padding: 0;
@@ -106,4 +106,16 @@ tbody .bi.bi-arrow-up {
 .row-selected td {
   background-color: #007bff24 !important;
   box-shadow: initial !important;
+}
+.flex-auto {
+  flex: auto !important;
+}
+
+
+.tab-content .tab-pane {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: auto !important;
+  height: 100% !important;
+  width: 100% !important;
 }

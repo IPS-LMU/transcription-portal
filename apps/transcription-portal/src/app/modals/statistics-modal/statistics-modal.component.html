@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Statistics</h4>
+  <h4 class="modal-title" id="modal-basic-title">Statistics for {{taskService.state.currentMode}}</h4>
   <button
     type="button"
     class="btn-close"
@@ -9,11 +9,13 @@
 </div>
 <div class="modal-body">
   <div style="text-align: right">
-    <a
-      [download]="taskService.protocolFileName"
-      [href]="taskService.protocolURL"
+    @if(taskService.currentModeState?.protocolURL && taskService.currentModeState?.protocolFileName) {
+      <a
+        [download]="taskService.currentModeState!.protocolFileName"
+        [href]="taskService.currentModeState!.protocolURL"
       >Download JSON</a
-    >
+      >
+    }
   </div>
   <div class="row">
     <div class="col-6 col-md-3" style="margin-left: -20px">
@@ -88,7 +90,7 @@
 
   <h4 class="mt-5">Processing duration (minutes)</h4>
   <p>Move the mouse over the pie chart for more information.</p>
-  @if (showCharts) {
+  @if (showCharts && statisticsService.averageDurations) {
     <div class="row">
       <div class="col-md-1"></div>
       <div class="col-md-10">

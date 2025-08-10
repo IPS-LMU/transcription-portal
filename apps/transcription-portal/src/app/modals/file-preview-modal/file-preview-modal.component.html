@@ -9,7 +9,7 @@
 </div>
 <div class="modal-body">
   @if (!selectedFile?.isMediaFile()) {
-    @if(selectedFile?.extension === '.txt') {
+    @if(selectedFile?.type === 'text/plain') {
       <textarea readonly class="w-100 h-100" [innerHTML]="fileContent"></textarea>
     } @else {
       <ngx-codejar

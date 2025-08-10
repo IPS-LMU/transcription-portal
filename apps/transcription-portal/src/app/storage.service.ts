@@ -11,6 +11,8 @@ import {
 import { Operation } from './obj/operations/operation';
 import { Task, TaskDirectory } from './obj/tasks';
 import { TaskEntry } from './obj/tasks/task-entry';
+import { PortalModeType } from './obj/tasks/task.service';
+import { environment } from '../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
@@ -21,10 +23,12 @@ export class StorageService {
   public ready = false;
   public tasksFound = false;
   public allloaded = new BehaviorSubject<{
-    tasks: IDBTaskItem[];
+    annotationTasks: IDBTaskItem[];
+    summarizationTasks: IDBTaskItem[];
     userSettings: IDBUserSettingsItem[];
   }>({
-    tasks: [],
+    annotationTasks: [],
+    summarizationTasks: [],
     userSettings: [],
   });
   private _idbm: IndexedDBManager;
@@ -60,30 +64,31 @@ export class StorageService {
   }
 
   constructor() {
-    this._idbm = new IndexedDBManager('oh-portal');
+    this._idbm = new IndexedDBManager(environment.production ? 'oh-portal': 'oh-portal-dev');
     this._idbm.open().catch((e) => {
       alert(e.message);
     });
     this._idbm.on('ready', async () => {
       console.log('IDB ready.');
-      const tasksCount = await this._idbm.tasks.count();
+      const tasksCount = await this._idbm.annotation_tasks.count();
       this.tasksFound = tasksCount > 0;
       this._idbm.intern.put({
         name: 'version',
         value: AppInfo.version,
       });
 
-      const promises = [];
+      const promises: Promise<any>[] = [];
       promises.push(this._idbm.intern.get('taskCounter'));
       promises.push(this._idbm.intern.get('operationCounter'));
 
-      promises.push(this._idbm.tasks.toArray());
+      promises.push(this._idbm.annotation_tasks.toArray());
+      promises.push(this._idbm.summarization_tasks.toArray());
       promises.push(this._idbm.userSettings.toArray());
 
       Promise.all<
-        [IDBInternItem, IDBInternItem, IDBTaskItem[], IDBUserSettingsItem[]]
+        [IDBInternItem, IDBInternItem, IDBTaskItem[], IDBTaskItem[], IDBUserSettingsItem[]]
       >(promises as any)
-        .then(([taskCounter, operationCounter, tasks, userSettings]) => {
+        .then(([taskCounter, operationCounter, annotationTasks, summarizationTasks, userSettings]) => {
           TaskEntry.counter = taskCounter.value;
           Operation.counter = operationCounter.value;
           this.ready = true;
@@ -99,7 +104,8 @@ export class StorageService {
           }
 
           this.allloaded.next({
-            tasks,
+            annotationTasks,
+            summarizationTasks,
             userSettings,
           });
           this.allloaded.complete();
@@ -108,7 +114,8 @@ export class StorageService {
           console.error(err);
           this.ready = true;
           this.allloaded.next({
-            tasks: [],
+            annotationTasks: [],
+            summarizationTasks: [],
             userSettings: [],
           });
           this.allloaded.complete();
@@ -116,8 +123,10 @@ export class StorageService {
     });
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory): Promise<void> {
+  public saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const table = this.idbm[`${mode}_tasks`];
+
       let promise: Promise<any>;
 
       if (
@@ -131,7 +140,7 @@ export class StorageService {
 
       promise
         .then((data) => {
-          this.idbm.tasks
+          table
             .put(data)
             .then(() => {
               resolve();
@@ -167,11 +176,12 @@ export class StorageService {
     });
   }
 
-  public removeFromDB(entry: Task | TaskDirectory): Promise<void> {
+  public removeFromDB(entry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
+      const table = this.idbm[`${mode}_tasks`];
       if (entry instanceof Task) {
         if (entry.directory === null || entry.directory === undefined) {
-          this.idbm.tasks
+          table
             .delete(entry.id)
             .then(() => {
               resolve();
@@ -183,7 +193,7 @@ export class StorageService {
           // file in directory
           entry.directory.removeTask(entry);
           if (entry.directory.entries.length > 1) {
-            this.saveTask(entry.directory)
+            this.saveTask(entry.directory, mode)
               .then(() => {
                 resolve();
               })
@@ -195,7 +205,7 @@ export class StorageService {
           }
         }
       } else {
-        this.idbm.tasks
+        table
           .delete(entry.id)
           .then(() => {
             resolve();
@@ -205,10 +215,6 @@ export class StorageService {
           });
       }
     });
-  }
-
-  public getIntern(name: string) {
-    return this.idbm.intern.get(name);
   }
 
   public destroy() {

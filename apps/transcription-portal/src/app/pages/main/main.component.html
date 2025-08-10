@@ -15,7 +15,7 @@
       >
         <li class="nav-item active">
           <a
-            [title]="AppInfo.lastUpdated | date: 'dd.MM.yyyy H:mm z'"
+            [title]="AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z'"
             class="nav-link"
             href="#"
             ><span class="logo"
@@ -23,8 +23,7 @@
                 src="assets/TPortal-Logo_only.svg"
                 style="height: 40px; margin-top: -10px"
               />
-              TranscriptionPortal</span
-            >
+              TranscriptionPortal</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -55,10 +54,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.queued }}</div>
+              <div class="number">{{ taskService.statistics.overall.queued }}</div>
               <i class="bi bi-database-fill" style="color: gray"></i>
               <ng-template #queuedTipp
-                >{{ taskService.statistics.queued }} audio files are waiting for
+                >{{ taskService.statistics.overall.queued }} audio files are waiting for
                 verification.
               </ng-template>
             </div>
@@ -68,10 +67,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.waiting }}</div>
+              <div class="number">{{ taskService.statistics.overall.waiting }}</div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp
-                >{{ taskService.statistics.waiting }} tasks are waiting for
+                >{{ taskService.statistics.overall.waiting }} tasks are waiting for
                 processing.
               </ng-template>
             </div>
@@ -81,16 +80,16 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.running }}</div>
+              <div class="number">{{ taskService.statistics.overall.running }}</div>
               <i
                 [ngClass]="{
-                  spin: taskService.statistics.running > 0,
+                  spin: taskService.statistics.overall.running > 0,
                 }"
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
               <ng-template #runningTipp
-                >{{ taskService.statistics.running }} tasks are running.
+                >{{ taskService.statistics.overall.running }} tasks are running.
               </ng-template>
             </div>
             <div
@@ -99,13 +98,13 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.finished }}</div>
+              <div class="number">{{ taskService.statistics.overall.finished }}</div>
               <i
                 class="bi bi-check-lg"
                 style="color: forestgreen; font-weight: bold"
               ></i>
               <ng-template #finishedTipp
-                >{{ taskService.statistics.finished }} tasks are finished.
+                >{{ taskService.statistics.overall.finished }} tasks are finished.
               </ng-template>
             </div>
             <div
@@ -114,10 +113,10 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.errors }}</div>
+              <div class="number">{{ taskService.statistics.overall.errors }}</div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.errors }} tasks failed. For further
+                >{{ taskService.statistics.overall.errors }} tasks failed. For further
                 details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
@@ -284,6 +283,68 @@
       </div>
     </div>
   </nav>
+  <ul
+    ngbNav
+    #nav="ngbNav"
+    [(activeId)]="activeMode"
+    class="nav-tabs"
+    style="margin-top: 60px"
+  >
+    <li [ngbNavItem]="1">
+      <button ngbNavLink (mousedown)="changeMode('annotation')">
+        Annotation
+      </button>
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
+        @if (
+          settingsService.allLoaded &&
+          taskService.state.modes.annotation.taskList !== undefined
+        ) {
+          <tportal-proceedings
+            #proceedings
+            (afterdrop)="onAfterDrop($event)"
+            (feedbackRequested)="onFeedbackRequest($event)"
+            (operationclick)="onOperationClick($event)"
+            (operationhover)="onOperationHover($event)"
+            [isClosed]="sidebarExpand === 'closed'"
+            [operations]="taskService.state.modes.annotation.operations"
+            [queue]="taskService.state.modes.annotation.preprocessor.queue"
+            [shortstyle]="sidebarstate === 'opened'"
+            [taskList]="taskService.state.modes.annotation.taskList"
+            [shorcutsEnabled]="settingsService.shortCutsEnabled"
+            style="height: 100%"
+          >
+          </tportal-proceedings>
+        }
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+      <button ngbNavLink (mousedown)="changeMode('summarization')">
+        Summarization &amp; Translation
+      </button>
+      <ng-template ngbNavContent class="d-flex w-100 h-100">
+        @if (
+          settingsService.allLoaded &&
+          taskService.state.modes.summarization.taskList !== undefined
+        ) {
+          <tportal-proceedings
+            #proceedings
+            (afterdrop)="onAfterDrop($event)"
+            (feedbackRequested)="onFeedbackRequest($event)"
+            (operationclick)="onOperationClick($event)"
+            (operationhover)="onOperationHover($event)"
+            [isClosed]="sidebarExpand === 'closed'"
+            [operations]="taskService.state.modes.summarization.operations"
+            [queue]="taskService.state.modes.summarization.preprocessor.queue"
+            [shortstyle]="sidebarstate === 'opened'"
+            [taskList]="taskService.state.modes.summarization.taskList"
+            [shorcutsEnabled]="settingsService.shortCutsEnabled"
+            style="height: 100%"
+          >
+          </tportal-proceedings>
+        }
+      </ng-template>
+    </li>
+  </ul>
   <!-- SUB-HEADER OVERVIEW -->
   @if (!showtool) {
     <div class="row proceedings-header" style="padding-top: 0">
@@ -304,14 +365,14 @@
         />
         <button
           (click)="onVerifyButtonClick()"
-          [disabled]="taskService.statistics.queued < 1"
+          [disabled]="taskService.currentModeStatistics.queued < 1"
           class="btn btn-primary"
           style="margin-left: 10px"
         >
           <i class="bi bi-database-fill"></i>
           <span class="d-none d-lg-inline d-xl-inlin"> 2. VERIFY</span>
-          @if (taskService.statistics.queued > 0) {
-            ({{ taskService.statistics.queued }})
+          @if (taskService.currentModeStatistics.queued > 0) {
+            ({{ taskService.currentModeStatistics.queued }})
           }
         </button>
       </div>
@@ -323,7 +384,7 @@
       <div class="col-4" style="text-align: right; padding-top: 5px">
         <button
           (click)="onStartClick()"
-          [disabled]="!taskService.newfiles"
+          [disabled]="!taskService.state.currentModeState.newfiles"
           class="btn btn-primary"
         >
           <i
@@ -375,9 +436,9 @@
             @if (
               toolSelectedOperation !== undefined &&
               toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.asrLanguage !== undefined
+              toolSelectedOperation.task.operations[1].language !== undefined
             ) {
-              {{ toolSelectedOperation.task.asrLanguage }}
+              {{ toolSelectedOperation.task.operations[1].language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
@@ -396,8 +457,8 @@
                 .results[0]!.attributes?.originalFileName
             }}
             , Language:
-            @if (toolSelectedOperation.task?.asrLanguage !== undefined) {
-              {{ toolSelectedOperation.task!.asrLanguage }}
+            @if (toolSelectedOperation.task && toolSelectedOperation.task.operations[1].language !== undefined) {
+              {{ toolSelectedOperation.task!.operations[1].language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
@@ -418,9 +479,8 @@
       </div>
     </div>
   }
-
   <!-- WORKING AREA -->
-  <div id="main" style="position: relative">
+  <div id="main" style="position: relative" class="d-flex">
     <div
       (blur)="onBlur($event)"
       (mousedown)="dragBorder($event, 'left')"
@@ -439,23 +499,10 @@
       }"
       style="float: right"
     >
-      @if (settingsService.allLoaded && taskService.taskList !== undefined) {
-        <tportal-proceedings
-          #proceedings
-          (afterdrop)="onAfterDrop($event)"
-          (feedbackRequested)="onFeedbackRequest($event)"
-          (operationclick)="onOperationClick($event)"
-          (operationhover)="onOperationHover($event)"
-          [isClosed]="sidebarExpand === 'closed'"
-          [operations]="taskService.operations"
-          [queue]="taskService.preprocessor.queue"
-          [shortstyle]="sidebarstate === 'opened'"
-          [taskList]="taskService.taskList"
-          [shorcutsEnabled]="settingsService.shortCutsEnabled"
-          style="height: 100%"
-        >
-        </tportal-proceedings>
-      }
+      <div
+        [ngbNavOutlet]="nav"
+        class="d-flex flex-column flex-auto w-100 h-100 position-relative"
+      ></div>
     </div>
     <div
       (mousedown)="dragBorder($event, 'right')"
