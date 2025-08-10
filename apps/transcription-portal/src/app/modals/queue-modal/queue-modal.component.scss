@@ -3,6 +3,7 @@
   flex: auto;
   flex-direction: column;
   height: 100%;
+  font-size: 0.9em;
 }
 
 #queue td,
@@ -62,4 +63,8 @@
 #quota-tooltip {
   font-size: 0.9em;
   text-align: center;
+}
+
+label{
+  font-size: 0.9em;
 }

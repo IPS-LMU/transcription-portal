@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   ActivatedRoute,
   NavigationExtras,
@@ -12,6 +12,9 @@ import { environment } from '../environments/environment';
   providedIn: 'root',
 })
 export class RoutingService {
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
+
   get staticQueryParams(): any {
     return this._staticQueryParams;
   }
@@ -20,10 +23,7 @@ export class RoutingService {
   private subscrManager = new SubscriptionManager();
 
   // Observable exposing the breadcrumb hierarchy
-  constructor(
-    private router: Router,
-    private activatedRoute: ActivatedRoute,
-  ) {
+  constructor() {
     this.subscrManager.add(
       this.activatedRoute.queryParams.subscribe((params) => {
         console.log('ROUTER SERVICE PARAMS');

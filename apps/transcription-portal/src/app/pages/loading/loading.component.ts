@@ -1,5 +1,5 @@
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { RoutingService } from '../../routing.service';
 import { SettingsService } from '../../shared/settings.service';
@@ -11,12 +11,12 @@ import { SettingsService } from '../../shared/settings.service';
   styleUrl: './loading.component.scss',
 })
 export class LoadingComponent extends SubscriberComponent {
+  private settingsService = inject(SettingsService);
+  private routingServer = inject(RoutingService);
+
   error?: string;
 
-  constructor(
-    private settingsService: SettingsService,
-    private routingServer: RoutingService,
-  ) {
+  constructor() {
     super();
     this.subscribe(this.settingsService.settingsload, {
       next: (result) => {

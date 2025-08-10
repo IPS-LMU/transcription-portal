@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { ChartData } from 'chart.js';
 import { interval, Subscription } from 'rxjs';
@@ -6,6 +6,8 @@ import { TaskService } from '../obj/tasks/task.service';
 
 @Injectable()
 export class StatisticsService {
+  private taskService = inject(TaskService);
+
   public overAllProgress = {
     waiting: 0,
     processing: 0,
@@ -17,7 +19,7 @@ export class StatisticsService {
 
   private subscrmanager = new SubscriptionManager<Subscription>();
 
-  constructor(private taskService: TaskService) {
+  constructor() {
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
         const modeState =

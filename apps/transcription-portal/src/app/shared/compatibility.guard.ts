@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -13,11 +13,10 @@ import { CompatibilityService } from './compatibility.service';
   providedIn: 'root',
 })
 export class CompatibilityGuard implements CanActivate {
-  constructor(
-    private router: Router,
-    private compatibility: CompatibilityService,
-    private routingService: RoutingService,
-  ) {}
+  private router = inject(Router);
+  private compatibility = inject(CompatibilityService);
+  private routingService = inject(RoutingService);
+
 
   canActivate(
     route: ActivatedRouteSnapshot,

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -16,6 +16,8 @@ export class FilePreviewModalComponent
   extends SubscriberComponent
   implements OnInit
 {
+  protected activeModal = inject(NgbActiveModal);
+
   public selectedFile?: FileInfo;
   public fileContent = '';
   public downloadURL?: SafeResourceUrl;
@@ -32,10 +34,6 @@ export class FilePreviewModalComponent
       this.selectedFile?.attributes.originalFileName ??
       this.selectedFile?.fullname
     );
-  }
-
-  constructor(protected activeModal: NgbActiveModal) {
-    super();
   }
 
   ngOnInit() {

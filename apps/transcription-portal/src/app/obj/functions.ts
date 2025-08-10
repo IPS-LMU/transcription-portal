@@ -39,3 +39,19 @@ export function openModal<T>(
 
   return ref as NgbModalWrapper<T>;
 }
+
+export function convertISO639Language(lang: string) {
+  const mappings = {
+    eng: 'en',
+    deu: 'de',
+    ger: 'de',
+    ita: 'it',
+    nld: 'nl',
+  };
+
+  if (lang.indexOf('-') > -1) {
+    const key = lang.replace(/([a-z]+)-([A-Z]+).*/g, '$1').toLowerCase();
+    return (mappings as any)[key];
+  }
+  return lang;
+}

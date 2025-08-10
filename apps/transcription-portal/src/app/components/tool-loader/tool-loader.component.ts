@@ -1,12 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, inject } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Operation } from '../../obj/operations/operation';
 
@@ -17,6 +9,8 @@ import { Operation } from '../../obj/operations/operation';
   standalone: true,
 })
 export class ToolLoaderComponent {
+  private sanitizer = inject(DomSanitizer);
+
   @ViewChild('iframe', { static: true }) iframe?: ElementRef;
 
   public selectedtool: {
@@ -27,8 +21,6 @@ export class ToolLoaderComponent {
   };
   @Input() public operation?: Operation;
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
-
-  constructor(private sanitizer: DomSanitizer) {}
 
   public set url(url: string | undefined) {
     if (!(url === null || url === undefined) && url !== '') {

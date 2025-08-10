@@ -1,13 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
-import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
-import { Operation } from './operation';
+import { IOperation, Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
+import { ServiceProvider } from '@octra/ngx-components';
 
 export class EmuOperation extends ToolOperation {
   protected operations?: Operation[];
@@ -20,8 +19,10 @@ export class EmuOperation extends ToolOperation {
     task?: Task,
     state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id);
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider, language);
     this._description =
       'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
       'the associated words or phonemes. This is useful for interpreting a transcript, e. g. to determine the focus of' +
@@ -31,12 +32,10 @@ export class EmuOperation extends ToolOperation {
   public override resultType = 'AnnotJSON';
 
   public override start = (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     inputs: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string,
+    accessCode?: string,
   ) => {
     this.updateProtocol('');
     this.operations = operations;
@@ -123,13 +122,17 @@ export class EmuOperation extends ToolOperation {
       this.shortTitle,
       selectedTask,
       this.state,
+      undefined,
+      this.serviceProvider,
+      this.language,
     );
   }
 
   public override fromAny(
-    operationObj: any,
+    operationObj: IOperation,
     commands: string[],
     task: Task,
+    taskObj?: any
   ): Operation {
     const result = new EmuOperation(
       operationObj.name,
@@ -139,10 +142,13 @@ export class EmuOperation extends ToolOperation {
       task,
       operationObj.state,
       operationObj.id,
+      AppSettings.getServiceInformation(operationObj.serviceProvider) ?? AppSettings.getServiceInformation(taskObj?.mausProvider),
+      operationObj.language ?? taskObj?.mausLanguage,
     );
-    for (const resultElement of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultElement);
-      resultClass.attributes = operationObj.attributes;
+
+    for (const resultObj of operationObj.results) {
+      const resultClass = FileInfo.fromAny(resultObj);
+      resultClass.attributes = resultObj.attributes;
       result.results.push(resultClass);
     }
 
@@ -156,7 +162,6 @@ export class EmuOperation extends ToolOperation {
 
     result._time = operationObj.time;
     result.updateProtocol(operationObj.protocol);
-    result.operations = task.operations;
     result.enabled = operationObj.enabled;
 
     return result;
@@ -164,20 +169,21 @@ export class EmuOperation extends ToolOperation {
 
   public override getToolURL(): string {
     if (
-      this.operations &&
+      this.task?.operations &&
+      this.serviceProvider &&
+      this.language &&
       !(
-        (this.operations[0] as UploadOperation).wavFile === null ||
-        (this.operations[0] as UploadOperation).wavFile === undefined
+        (this.task.operations[0] as UploadOperation).wavFile === null ||
+        (this.task.operations[0] as UploadOperation).wavFile === undefined
       )
     ) {
-      // @ts-ignore TODO CHECK
       const audio = `audioGetUrl=${encodeURIComponent(
-        (this.operations[0] as any).wavFile.url,
+        (this.task.operations[0] as any).wavFile.url,
       )}`;
       let transcript = `labelGetUrl=`;
       const langObj = AppSettings.getLanguageByCode(
-        this.task?.asrLanguage!,
-        this.task?.asrProvider!,
+        this.language,
+        this.serviceProvider.provider,
       );
       let result = null;
       const lastResultMaus = this.previousOperation?.lastResult;
@@ -210,7 +216,7 @@ export class EmuOperation extends ToolOperation {
         console.error(`result url is null or undefined`);
       } else {
         console.log(
-          `langObj not found in octra operation lang:${this.task?.asrLanguage} and ${this.task?.asrProvider}`,
+          `langObj not found in octra operation lang:${this.language} and ${this.serviceProvider}`,
         );
       }
     }

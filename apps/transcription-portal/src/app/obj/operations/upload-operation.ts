@@ -1,13 +1,18 @@
-import { HttpClient } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpEvent,
+  HttpEventType,
+} from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import * as X2JS from 'x2js';
+import { AppSettings } from '../../shared/app.settings';
 import { TimePipe } from '../../shared/time.pipe';
-import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
-import { Operation } from './operation';
+import { IOperation, Operation } from './operation';
 
 export class UploadOperation extends Operation {
   public constructor(
@@ -18,8 +23,20 @@ export class UploadOperation extends Operation {
     task?: Task,
     state?: TaskStatus,
     id?: number,
+    serviceProvider?: ServiceProvider,
+    language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id);
+    super(
+      name,
+      commands,
+      title,
+      shortTitle,
+      task,
+      state,
+      id,
+      serviceProvider,
+      language,
+    );
     this._description =
       'Drag and drop your audio and optional text files on the web page to upload them to the server ' +
       'for processing. Prior to upload, the format of the audio files will be checked; stereo files will be split into ' +
@@ -39,6 +56,7 @@ export class UploadOperation extends Operation {
   public static upload(
     files: FileInfo[],
     url: string,
+    httpClient: HttpClient,
   ): Subject<{
     type: 'progress' | 'loadend';
     progress?: number;
@@ -58,121 +76,130 @@ export class UploadOperation extends Operation {
       form.append('file' + i, files[i]!.file!);
     }
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
+    (
+      httpClient.post(url, form, {
+        reportProgress: true,
+        observe: 'events' as any,
+        headers: {
+          'ngsw-bypass': 'true',
+        },
+        responseType: 'text',
+      }) as any as Observable<HttpEvent<ArrayBuffer>>
+    ).subscribe({
+      next: (event: HttpEvent<any>) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          let progress = -1;
+          if (event.total) {
+            progress = event.loaded / event.total;
+          }
+          subj.next({
+            type: 'progress',
+            progress,
+          });
+        } else if (event.type === HttpEventType.Response) {
+          const result = event.body as string;
+          const x2js = new X2JS();
+          let json: any = x2js.xml2js(result);
+          json = json.UploadFileMultiResponse;
+          let warnings: string | undefined;
 
-    xhr.upload.addEventListener(
-      'progress',
-      (e: ProgressEvent) => {
-        let progress = -1;
-        if (e.lengthComputable) {
-          progress = e.loaded / e.total;
+          if (json.warnings !== '') {
+            warnings = json.warnings.replace('¶', '');
+          }
+
+          if (json.success) {
+            const urls = Array.isArray(json.fileList.entry)
+              ? json.fileList.entry.map((a: any) => a.value)
+              : [json.fileList.entry.value];
+
+            subj.next({
+              type: 'loadend',
+              warnings,
+              urls,
+            });
+            subj.complete();
+          } else {
+            subj.error(new Error(json.message));
+          }
         }
-        subj.next({
-          type: 'progress',
-          progress,
-        });
       },
-      false,
-    );
-
-    xhr.onerror = (e) => {
-      subj.error(e);
-    };
-
-    xhr.onloadend = (e) => {
-      const result = (e.currentTarget as any).responseText as any;
-      const x2js = new X2JS();
-      let json: any = x2js.xml2js(result);
-      json = json.UploadFileMultiResponse;
-      let warnings: string | undefined;
-
-      if (json.warnings !== '') {
-        warnings = json.warnings.replace('¶');
-      }
-
-      if (json.success) {
-        const urls = Array.isArray(json.fileList.entry)
-          ? json.fileList.entry.map((a: any) => a.value)
-          : [json.fileList.entry.value];
-
-        subj.next({
-          type: 'loadend',
-          warnings,
-          urls,
-        });
-        subj.complete();
-      } else {
-        subj.error(new Error(json.message));
-      }
-    };
-    xhr.send(form);
+      error: (err: HttpErrorResponse) => {
+        subj.error(err);
+      },
+    });
 
     return subj;
   }
 
   public start = (
-    asrService: ServiceProvider,
-    languageObject: ProviderLanguage,
     files: FileInfo[],
     operations: Operation[],
     httpclient: HttpClient,
-    accessCode: string,
+    accessCode?: string,
   ) => {
-    this._results = [];
-    this.updateProtocol('');
-    this.changeState(TaskStatus.UPLOADING);
-    this._time.start = Date.now();
+    if (this.serviceProvider) {
+      this._results = [];
+      this.updateProtocol('');
+      this.changeState(TaskStatus.UPLOADING);
+      this._time.start = Date.now();
 
-    const url = this._commands[0].replace('{{host}}', asrService.host);
-    const subj = UploadOperation.upload(files, url);
+      const url = this._commands[0].replace(
+        '{{host}}',
+        this.serviceProvider.host,
+      );
 
-    subj.subscribe(
-      (obj) => {
-        if (obj.type === 'progress') {
-          this.progress = obj.progress!;
-          this.updateEstimatedEnd();
-          this.changed.next();
-        } else if (obj.type === 'loadend') {
-          this.time.duration = Date.now() - this.time.start;
+      this.subscrManager.add(
+        UploadOperation.upload(files, url, httpclient).subscribe({
+          next: (obj) => {
+            if (obj.type === 'progress') {
+              this.progress = obj.progress!;
+              this.updateEstimatedEnd();
+              this.changed.next();
+            } else if (obj.type === 'loadend') {
+              this.time.duration = Date.now() - this.time.start;
 
-          // add messages to protocol
-          if (obj.warnings) {
-            this.updateProtocol(obj.warnings);
-          }
+              // add messages to protocol
+              if (obj.warnings) {
+                this.updateProtocol(obj.warnings);
+              }
 
-          if (obj.urls && obj.urls.length === files.length) {
-            for (let i = 0; i < files.length; i++) {
-              files[i].url = obj.urls[i];
-              const type =
-                files[i].extension.indexOf('wav') > 0
-                  ? 'audio/wav'
-                  : 'text/plain';
-              const info = FileInfo.fromURL(
-                files[i]!.url!,
-                type,
-                files[i]!.fullname,
-                Date.now(),
-              );
-              info.attributes = files[i].attributes;
-              this.results.push(info);
+              if (obj.urls && obj.urls.length === files.length) {
+                for (let i = 0; i < files.length; i++) {
+                  files[i].url = obj.urls[i];
+                  const type =
+                    files[i].extension.indexOf('wav') > 0
+                      ? 'audio/wav'
+                      : 'text/plain';
+                  const info = FileInfo.fromURL(
+                    files[i]!.url!,
+                    type,
+                    files[i]!.fullname,
+                    Date.now(),
+                  );
+                  info.attributes = files[i].attributes;
+                  this.results.push(info);
+                }
+                this.changeState(TaskStatus.FINISHED);
+              } else {
+                this.throwError(
+                  new Error(
+                    'Number of returned URLs do not match number of files.',
+                  ),
+                );
+              }
             }
-            this.changeState(TaskStatus.FINISHED);
-          } else {
-            this.updateProtocol(
-              'Number of returned URLs do not match number of files.',
-            );
-            this.changeState(TaskStatus.ERROR);
-          }
-        }
-      },
-      (e) => {
-        console.error(e);
-        // add messages to protocol
-        this.updateProtocol(e.message);
-        this.changeState(TaskStatus.ERROR);
-      },
-    );
+          },
+          error: (err) => {
+            this.throwError(new Error(err?.error?.message ?? err?.message));
+          },
+        }),
+      );
+    } else {
+      this.time.duration = Date.now() - this.time.start;
+      this.throwError(
+        new Error(this.protocol + '\n' + 'serviceProvider is undefined'),
+      );
+    }
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
@@ -268,13 +295,17 @@ export class UploadOperation extends Operation {
       this.shortTitle,
       selectedTask,
       this.state,
+      undefined,
+      this.serviceProvider,
+      this.language,
     );
   }
 
   public fromAny(
-    operationObj: any,
+    operationObj: IOperation,
     commands: string[],
     task: Task,
+    taskObj?: any,
   ): UploadOperation {
     const result = new UploadOperation(
       operationObj.name,
@@ -284,20 +315,21 @@ export class UploadOperation extends Operation {
       task,
       operationObj.state,
       operationObj.id,
+      AppSettings.getServiceInformation(operationObj.serviceProvider) ??
+        AppSettings.getServiceInformation(taskObj?.asrProvider),
+      operationObj.language ?? taskObj?.language,
     );
+
     for (const resultObj of operationObj.results) {
-      const resultClass = new FileInfo(
-        resultObj.fullname,
-        resultObj.type,
-        resultObj.size,
-      );
+      const resultClass = FileInfo.fromAny(resultObj);
       resultClass.attributes = resultObj.attributes;
-      resultClass.url = resultObj.url;
       result.results.push(resultClass);
     }
+
     result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol);
+    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
+
     return result;
   }
 
@@ -311,10 +343,4 @@ export class UploadOperation extends Operation {
       this.estimatedEnd = 0;
     }
   };
-
-  onMouseEnter(): void {}
-
-  onMouseLeave(): void {}
-
-  onMouseOver(): void {}
 }

@@ -35,12 +35,15 @@ export class AppSettings {
     });
   }
 
-  public static getServiceInformation(serviceProvider: string) {
-    if (!AppSettings.configuration.api.services) {
-      throw new Error('services configuration is undefined');
+  public static getServiceInformation(serviceProvider?: string) {
+    if(serviceProvider) {
+      if (!AppSettings.configuration.api.services) {
+        throw new Error('services configuration is undefined');
+      }
+      return AppSettings.configuration.api.services.find((a) => {
+        return a.provider === serviceProvider;
+      });
     }
-    return AppSettings.configuration.api.services.find((a) => {
-      return a.provider === serviceProvider;
-    });
+    return undefined;
   }
 }

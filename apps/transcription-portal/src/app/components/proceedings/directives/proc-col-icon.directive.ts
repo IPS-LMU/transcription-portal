@@ -1,15 +1,4 @@
-import {
-  AfterViewInit,
-  Directive,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnDestroy,
-  Output,
-  Renderer2,
-  SimpleChanges,
-} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, Renderer2, SimpleChanges, inject } from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
@@ -24,6 +13,10 @@ import { TaskService } from '../../../obj/tasks/task.service';
 export class ProcColIconDirective
   implements AfterViewInit, OnChanges, OnDestroy
 {
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+  private taskService = inject(TaskService);
+
   @Input() entry?: Task | TaskDirectory;
   @Input() shortStyle = false;
   @Input() mouseOver = false;
@@ -45,12 +38,6 @@ export class ProcColIconDirective
     new EventEmitter<MouseEvent>();
   @Input() public dirOpened: 'opened' | 'closed' = 'opened';
   private subscrmanager = new SubscriptionManager<Subscription>();
-
-  constructor(
-    private elementRef: ElementRef,
-    private renderer: Renderer2,
-    private taskService: TaskService,
-  ) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (
@@ -192,14 +179,14 @@ export class ProcColIconDirective
         this.renderer.addClass(icon, 'bi-file-earmark-music');
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
-        switch (this.entry.state) {
+        switch (this.entry.status) {
           case TaskStatus.FINISHED:
             this.renderer.addClass(icon, 'green');
             break;
           case TaskStatus.ERROR:
             this.renderer.addClass(icon, 'red');
             break;
-          case TaskStatus.PENDING || this.entry.state === TaskStatus.READY:
+          case TaskStatus.PENDING || this.entry.status === TaskStatus.READY:
             this.renderer.addClass(icon, 'blue');
             break;
           case TaskStatus.PROCESSING:
@@ -223,7 +210,7 @@ export class ProcColIconDirective
         this.renderer.addClass(icon, 'bi-file-earmark-music');
         this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
-        switch (this.entry.state) {
+        switch (this.entry.status) {
           case TaskStatus.FINISHED:
             this.renderer.addClass(icon, 'green');
             break;

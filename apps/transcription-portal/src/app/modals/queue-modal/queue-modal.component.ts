@@ -9,6 +9,7 @@ import {
   Renderer2,
   ViewChild,
   ViewEncapsulation,
+  inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +18,11 @@ import {
   NgbModalOptions,
   NgbPopover,
 } from '@ng-bootstrap/ng-bootstrap';
-import { AsrOptionsComponent, ServiceProvider } from '@octra/ngx-components';
+import {
+  OctraASRLanguageSelectComponent,
+  OctraProviderSelectComponent,
+  ServiceProvider,
+} from '@octra/ngx-components';
 import { AudioInfo, FileInfo } from '@octra/web-media';
 import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
@@ -45,10 +50,19 @@ import { StorageService } from '../../storage.service';
     TimePipe,
     NgbPopover,
     FormsModule,
-    AsrOptionsComponent,
+    OctraASRLanguageSelectComponent,
+    OctraProviderSelectComponent,
   ],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
+  protected activeModal = inject(NgbActiveModal);
+  taskService = inject(TaskService);
+  private storage = inject(StorageService);
+  private cd = inject(ChangeDetectorRef);
+  private elementRef = inject(ElementRef);
+  private settingsService = inject(SettingsService);
+  private renderer = inject(Renderer2);
+
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
   @ViewChild('pop', { static: true }) popover?: NgbPopover;
 
@@ -63,6 +77,9 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     backdrop: 'static',
   };
 
+  asrProviders: ServiceProvider[] = [];
+  summarizationProviders: ServiceProvider[] = [];
+
   public compatibleTable: {
     id: number;
     fileName: string;
@@ -70,7 +87,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }[] = [];
 
   public get selectedASRInfo(): ServiceProvider | undefined {
-    return this.taskService.state.currentModeState.selectedProvider;
+    return this.taskService.state.currentModeState.selectedASRProvider;
   }
 
   languages: {
@@ -89,16 +106,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     maus: [],
   };
 
-  constructor(
-    protected activeModal: NgbActiveModal,
-    public taskService: TaskService,
-    private storage: StorageService,
-    private cd: ChangeDetectorRef,
-    private elementRef: ElementRef,
-    private settingsService: SettingsService,
-    private renderer: Renderer2,
-  ) {}
-
   ngOnInit(): void {
     this.renderer.addClass(this.elementRef.nativeElement, 'd-flex');
     this.renderer.addClass(this.elementRef.nativeElement, 'flex-column');
@@ -110,6 +117,17 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.languages.maus = AppSettings.languages?.maus.filter(
       (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null,
     );
+
+    this.asrProviders = AppSettings.configuration.api.services.filter(
+      (a) => a.type === 'ASR',
+    );
+
+    this.summarizationProviders = AppSettings.configuration.api.services.filter(
+      (a) => a.type === 'Summarization',
+    );
+
+    this.taskService.state.currentModeState.selectedSummarizationProvider =
+      this.summarizationProviders[0];
   }
 
   public get AppConfiguration(): OHConfiguration {
@@ -120,7 +138,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     if (!(this.tasks.filter === null || this.tasks.filter === undefined)) {
       return this.tasks.filter((a) => {
         return (
-          a.state === TaskStatus.QUEUED &&
+          a.status === TaskStatus.QUEUED &&
           (a.files[0].file === undefined ||
             a.files[0].extension !== '.wav' ||
             (a.files.length > 1 && a.files[1].file === undefined))
@@ -136,7 +154,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     let j = 0;
 
     for (const task of this.tasks) {
-      if (task.state === TaskStatus.QUEUED) {
+      if (task.status === TaskStatus.QUEUED) {
         if (
           task.files[0] instanceof AudioInfo &&
           task.files[0].file !== undefined &&
@@ -165,13 +183,13 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
     this.compatibleTable = [];
     for (const task of this.tasks) {
-      if (task.state === TaskStatus.QUEUED) {
+      if (task.status === TaskStatus.QUEUED) {
         this.compatibleTable.push({
           id: task.id,
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility(
             task.files[0] as AudioInfo,
-            task.asrProvider!,
+            task.operations[1].serviceProvider!.provider,
           ),
         });
       }
@@ -183,18 +201,23 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       this.compatibleTable = [];
 
       const tasks = this.tasks.filter((a) => {
-        return a.state === TaskStatus.QUEUED;
+        return a.status === TaskStatus.QUEUED;
       });
 
       for (const task of tasks) {
-        task.asrLanguage =
-          this.taskService.state.currentModeState.selectedASRLanguage;
-        task.asrProvider =
-          this.taskService.state.currentModeState.selectedProvider?.provider;
-        task.operations[1].providerInformation =
-          AppSettings.getServiceInformation(
-            this.taskService.state.currentModeState.selectedProvider?.provider!,
-          );
+        task.setOptions({
+          selectedSummarizationProvider:
+            this.taskService.state.currentModeState
+              .selectedSummarizationProvider,
+          selectedASRLanguage:
+            this.taskService.state.currentModeState.selectedASRLanguage,
+          selectedTargetLanguage:
+            this.taskService.state.currentModeState.selectedTranslationLanguage,
+          selectedMausLanguage:
+            this.taskService.state.currentModeState.selectedMausLanguage,
+          selectedASRProvider:
+            this.taskService.state.currentModeState.selectedASRProvider,
+        });
         this.storage.saveTask(task, this.taskService.state.currentMode);
 
         const audioInfo: AudioInfo | undefined =
@@ -207,19 +230,19 @@ export class QueueModalComponent implements OnDestroy, OnInit {
             fileName: !audioInfo ? '' : audioInfo.name,
             checks: this.checkAudioFileCompatibility(
               audioInfo,
-              task.asrProvider!,
+              task.operations[1].serviceProvider!.provider,
             ),
           });
         }
       }
 
-      this.storage.saveUserSettings('defaultTaskOptions', {
+      this.storage.saveUserSettings('defaultUserSettings', {
         asrLanguage:
           this.taskService.state.currentModeState.selectedASRLanguage,
         mausLanguage:
           this.taskService.state.currentModeState.selectedMausLanguage,
         asrProvider:
-          this.taskService.state.currentModeState.selectedProvider?.provider,
+          this.taskService.state.currentModeState.selectedASRProvider?.provider,
       });
 
       if (this.dropdown) {
@@ -233,7 +256,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   deactivateOperation(operation: Operation, index: number) {
     const tasks = this.tasks.filter((a) => {
-      return a.state === TaskStatus.QUEUED;
+      return a.status === TaskStatus.QUEUED;
     });
 
     operation.enabled = !operation.enabled;
@@ -315,7 +338,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   public updateEnableState() {
     const tasks = this.tasks.filter((a) => {
-      return a.state === TaskStatus.QUEUED;
+      return a.status === TaskStatus.QUEUED;
     });
 
     for (
@@ -484,30 +507,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     }
 
     return [];
-  }
-
-  onASROptionsChange($event: {
-    accessCode?: string;
-    selectedMausLanguage?: string;
-    selectedASRLanguage?: string;
-    selectedServiceProvider?: ServiceProvider;
-  }) {
-    this.onASRLangChanged(
-      $event.selectedASRLanguage,
-      $event.selectedServiceProvider,
-      $event.selectedMausLanguage,
-    );
-  }
-
-  onASRLangChanged(
-    lang?: string,
-    provider?: ServiceProvider,
-    mausLang?: string,
-  ) {
-    this.taskService.state.currentModeState.selectedASRLanguage = lang;
-    this.taskService.state.currentModeState.selectedProvider = provider;
-    this.taskService.state.currentModeState.selectedMausLanguage = mausLang;
-    this.changeLanguageforAllQueuedTasks();
   }
 
   protected readonly AppSettings = AppSettings;

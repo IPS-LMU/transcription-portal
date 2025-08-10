@@ -1,14 +1,5 @@
 import { NgStyle } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Converter } from '@octra/annotation';
@@ -28,6 +19,10 @@ import { DownloadService } from '../../shared/download.service';
   imports: [NgStyle, FormsModule],
 })
 export class ResultsTableComponent implements OnChanges {
+  private sanitizer = inject(DomSanitizer);
+  protected cd = inject(ChangeDetectorRef);
+  private downloadService = inject(DownloadService);
+
   @Input() operation?: Operation;
   @Input() visible = false;
 
@@ -59,12 +54,6 @@ export class ResultsTableComponent implements OnChanges {
 
   @Output() previewClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
   selectedVersion = '0';
-
-  constructor(
-    private sanitizer: DomSanitizer,
-    protected cd: ChangeDetectorRef,
-    private downloadService: DownloadService,
-  ) {}
 
   public get converters() {
     return AppInfo.converters;

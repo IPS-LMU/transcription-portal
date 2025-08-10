@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 import { interval, Subject, Subscription } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
@@ -21,6 +21,8 @@ export interface AlertEntry {
   imports: [NgStyle, NgbAlert],
 })
 export class AlertComponent implements OnInit, OnDestroy {
+  private alert = inject(AlertService);
+
   private static counter = 0;
   public duration = 20;
   public queue: AlertEntry[] = [];
@@ -28,7 +30,7 @@ export class AlertComponent implements OnInit, OnDestroy {
   private _success = new Subject<string>();
   private counter: Subscription;
 
-  constructor(private alert: AlertService) {
+  constructor() {
     this.alert.alertsend.subscribe(
       (obj) => this.onAlertSend(obj),
       (err) => {

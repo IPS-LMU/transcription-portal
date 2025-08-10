@@ -1,16 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ANIMATIONS } from '../../shared/Animations';
 
@@ -70,6 +58,12 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
   ],
 })
 export class ProceedingsComponent implements OnInit, OnDestroy {
+  sanitizer = inject(DomSanitizer);
+  cd = inject(ChangeDetectorRef);
+  taskService = inject(TaskService);
+  storage = inject(StorageService);
+  private ngbModalService = inject(NgbModal);
+
   public contextmenu = {
     x: 0,
     y: 0,
@@ -151,13 +145,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   maxColumnWidths = [10, 15, 15, 15, 15, 10];
 
-  constructor(
-    public sanitizer: DomSanitizer,
-    public cd: ChangeDetectorRef,
-    public taskService: TaskService,
-    public storage: StorageService,
-    private ngbModalService: NgbModal,
-  ) {
+  constructor() {
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
@@ -452,7 +440,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           entry.files.splice(1);
           entry.operations[1].enabled =
             this.taskService.state.currentModeState.operations[1].enabled;
-          entry.operations[1].changeState(entry.state);
+          entry.operations[1].changeState(entry.status);
         }
       } else {
         if (entry) {
@@ -462,7 +450,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
               task.files.splice(1);
               task.operations[1].enabled =
                 this.taskService.state.currentModeState.operations[1].enabled;
-              task.operations[1].changeState(task.state);
+              task.operations[1].changeState(task.status);
             }
           }
         }
@@ -681,7 +669,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   getMailToLink(task: Task) {
-    if (task.state === TaskStatus.FINISHED) {
+    if (task.status === TaskStatus.FINISHED) {
       const toolURL = (task.operations[4] as EmuOperation).getToolURL();
       let subject = 'TranscriptionPortal Links';
       let body =
@@ -705,7 +693,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   deactivateOperation(operation: Operation, index: number) {
     // TODO improve code!
     const tasks = this.taskList.getAllTasks().filter((a) => {
-      return a.state === TaskStatus.QUEUED || a.state === TaskStatus.PENDING;
+      return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
     });
 
     operation.enabled = !operation.enabled;
@@ -785,7 +773,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public updateEnableState() {
     const tasks = this.taskList.getAllTasks().filter((a) => {
-      return a.state === TaskStatus.QUEUED || a.state === TaskStatus.PENDING;
+      return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
     });
 
     for (

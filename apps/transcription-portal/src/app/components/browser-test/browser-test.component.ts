@@ -1,5 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BrowserInfo } from '../../obj/BrowserInfo';
 import { CompatibilityService } from '../../shared/compatibility.service';
@@ -12,11 +12,10 @@ import { OHModalService } from '../../shared/ohmodal.service';
   imports: [NgClass, NgStyle],
 })
 export class BrowserTestComponent implements OnInit {
-  constructor(
-    private router: Router,
-    public compatibility: CompatibilityService,
-    public modalService: OHModalService,
-  ) {}
+  private router = inject(Router);
+  compatibility = inject(CompatibilityService);
+  modalService = inject(OHModalService);
+
 
   public get browserName(): string {
     return BrowserInfo.browser;

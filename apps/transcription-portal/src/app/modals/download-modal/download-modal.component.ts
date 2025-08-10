@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
@@ -25,6 +25,11 @@ export class DownloadModalComponent
   extends SubscriberComponent
   implements OnInit
 {
+  private taskService = inject(TaskService);
+  protected activeModal = inject(NgbActiveModal);
+  private sanitizer = inject(DomSanitizer);
+  private downloadService = inject(DownloadService);
+
   @Input() type: 'line' | 'column' = 'column';
   private selectedTasks?: number[];
   @Input() taskList?: Task[];
@@ -42,15 +47,6 @@ export class DownloadModalComponent
   showRemoveLine = false;
 
   public state = 'inactive';
-
-  constructor(
-    private taskService: TaskService,
-    protected activeModal: NgbActiveModal,
-    private sanitizer: DomSanitizer,
-    private downloadService: DownloadService,
-  ) {
-    super();
-  }
 
   public get converters() {
     return AppInfo.converters;

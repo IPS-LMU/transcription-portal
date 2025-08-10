@@ -1,12 +1,4 @@
-import {
-  AfterViewInit,
-  Directive,
-  ElementRef,
-  Input,
-  OnChanges,
-  Renderer2,
-  SimpleChanges,
-} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges, inject } from '@angular/core';
 import { hasProperty } from '@octra/utilities';
 import { Operation } from '../../../obj/operations/operation';
 import { Task, TaskDirectory } from '../../../obj/tasks';
@@ -16,14 +8,17 @@ import { Task, TaskDirectory } from '../../../obj/tasks';
   standalone: true,
 })
 export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
+  private elementRef = inject(ElementRef);
+  private renderer = inject(Renderer2);
+
   @Input() entry?: Task | TaskDirectory;
   @Input() toolSelectedOperation?: Operation;
   @Input() rowSelected = false;
 
-  constructor(
-    private elementRef: ElementRef,
-    private renderer: Renderer2,
-  ) {
+  constructor() {
+    const elementRef = this.elementRef;
+    const renderer = this.renderer;
+
     renderer.setStyle(elementRef.nativeElement, 'cursor', 'pointer');
   }
 
