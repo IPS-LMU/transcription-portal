@@ -5,7 +5,7 @@
   [hidden]="!settingsService.allLoaded"
   id="app"
 >
-  <nav class="navbar navbar-expand-md navbar-light bg-white fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
     <div
       class="container justify-content-center"
       style="width: 100%; margin: 0; display: contents"
@@ -23,13 +23,15 @@
                 src="assets/TPortal-Logo_only.svg"
                 style="height: 40px; margin-top: -10px"
               />
-              TranscriptionPortal</span>
+              TranscriptionPortal</span
+            >
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
             <button
               (click)="isCollapsed = !isCollapsed"
-              class="navbar-toggler"
+              class="navbar-toggler position-absolute me-2"
+              style="right: 0"
               data-target=".dual-collapse2"
               data-toggle="collapse"
               type="button"
@@ -54,11 +56,13 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.overall.queued }}</div>
+              <div class="number">
+                {{ taskService.statistics.overall.queued }}
+              </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
               <ng-template #queuedTipp
-                >{{ taskService.statistics.overall.queued }} audio files are waiting for
-                verification.
+                >{{ taskService.statistics.overall.queued }} audio files are
+                waiting for verification.
               </ng-template>
             </div>
             <div
@@ -67,11 +71,13 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.overall.waiting }}</div>
+              <div class="number">
+                {{ taskService.statistics.overall.waiting }}
+              </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp
-                >{{ taskService.statistics.overall.waiting }} tasks are waiting for
-                processing.
+                >{{ taskService.statistics.overall.waiting }} tasks are waiting
+                for processing.
               </ng-template>
             </div>
             <div
@@ -80,7 +86,9 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.overall.running }}</div>
+              <div class="number">
+                {{ taskService.statistics.overall.running }}
+              </div>
               <i
                 [ngClass]="{
                   spin: taskService.statistics.overall.running > 0,
@@ -98,13 +106,16 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.overall.finished }}</div>
+              <div class="number">
+                {{ taskService.statistics.overall.finished }}
+              </div>
               <i
                 class="bi bi-check-lg"
                 style="color: forestgreen; font-weight: bold"
               ></i>
               <ng-template #finishedTipp
-                >{{ taskService.statistics.overall.finished }} tasks are finished.
+                >{{ taskService.statistics.overall.finished }} tasks are
+                finished.
               </ng-template>
             </div>
             <div
@@ -113,11 +124,13 @@
               tooltipClass="state-tooltip"
               placement="bottom"
             >
-              <div class="number">{{ taskService.statistics.overall.errors }}</div>
+              <div class="number">
+                {{ taskService.statistics.overall.errors }}
+              </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.overall.errors }} tasks failed. For further
-                details please hover over the red "X" icon in a column.
+                >{{ taskService.statistics.overall.errors }} tasks failed. For
+                further details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
           </li>
@@ -145,7 +158,7 @@
                 class="bi bi-question-circle"
                 style="color: cornflowerblue"
               ></i>
-              Help</a
+              <span class="d-inline-block d-lg-none ms-1">Help</span></a
             >
           </li>
           <li class="nav-item active" style="cursor: pointer">
@@ -157,7 +170,10 @@
                 margin-top: 20px;
                 cursor: pointer;
               "
-              ><i class="bi bi-bar-chart-line"></i> Statistics</span
+              ><i class="bi bi-bar-chart-line"></i>
+              <span class="d-inline-block d-lg-none ms-1"
+                >Statistics</span
+              ></span
             >
           </li>
           @if (settingsService.feedbackEnabled) {
@@ -172,43 +188,48 @@
                 }"
                 class="bi bi-exclamation-circle pointer"
               ></i
-              ><span style="cursor: pointer"> Feedback</span>
+              ><span style="cursor: pointer">
+                <span class="d-inline-block d-lg-none">Feedback</span></span
+              >
             </li>
           }
           <li class="nav-item active">
-            @if (notification.permissionGranted) {
+            <div
+              class="pointer"
+              (click)="
+                notification.permissionGranted = !notification.permissionGranted
+              "
+            >
               <i
-                (click)="notification.permissionGranted = false"
                 aria-hidden="true"
-                class="bi bi-bell"
+                [ngClass]="{
+                  'bi-bell-slash': !notification.permissionGranted,
+                  'bi-bell': notification.permissionGranted,
+                }"
+                class="bi"
                 style="cursor: pointer"
-              ></i>
-            }
-            @if (!notification.permissionGranted) {
-              <i
-                (click)="notification.permissionGranted = true"
-                aria-hidden="true"
-                class="bi bi-bell-slash"
-                style="cursor: pointer"
-              ></i>
-            }
+              ></i
+              ><span class="d-inline-block d-lg-none ms-1">Notifications</span>
+            </div>
           </li>
           <li class="nav-item active">
-            <div ngbDropdown class="d-inline-block">
-              <i
-                (click)="settingsCollapsed = !settingsCollapsed"
-                class="bi bi-gear-fill"
-                ngbDropdownToggle
-                id="dropdownBasic2"
-                style="cursor: pointer"
-              ></i>
+            <div
+              ngbDropdown
+              class="d-inline-block"
+              [ngbCollapse]="settingsCollapsed"
+            >
+              <div class="pointer" ngbDropdownToggle>
+                <i
+                  class="bi bi-gear-fill"
+                  id="dropdownBasic2"
+                  style="cursor: pointer"
+                ></i
+                ><span class="d-inline-block d-lg-none ms-1">Settings</span>
+              </div>
               <div
                 ngbDropdownMenu
-                aria-labelledby="dropdownBasic1"
-                (mouseleave)="
-                  settingsCollapsed = true;
-                  accessCodeInputFieldType = 'password'
-                "
+                aria-labelledby="dropdownBasic2"
+                (mouseleave)="accessCodeInputFieldType = 'password'"
                 id="settings-dropdown"
               >
                 <table style="width: 100%">
@@ -457,7 +478,10 @@
                 .results[0]!.attributes?.originalFileName
             }}
             , Language:
-            @if (toolSelectedOperation.task && toolSelectedOperation.task.operations[1].language !== undefined) {
+            @if (
+              toolSelectedOperation.task &&
+              toolSelectedOperation.task.operations[1].language !== undefined
+            ) {
               {{ toolSelectedOperation.task!.operations[1].language }}
             }
             , Audio duration: {{ getTime() | time }}
