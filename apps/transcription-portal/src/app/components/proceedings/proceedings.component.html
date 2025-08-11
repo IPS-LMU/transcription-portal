@@ -334,7 +334,8 @@
                           {{ operation.shortTitle }}
                         }
                         @if (!shortstyle) {
-                          {{ operation.title }}
+                          <span class="d-none d-xl-inline-block">{{ operation.title }}</span>
+                          <span class="d-inline-block d-xl-none">{{ operation.shortTitle }}</span>
                         }
                       </div>
                     </div>
@@ -369,11 +370,12 @@
                     class="operation-tooltip"
                     aria-describedby="tooltip-9"
                   >
-                    @if (!shortstyle) {
-                      <span>Export</span>
-                    }
                     @if (shortstyle) {
                       <span><i class="bi bi-cloud-download"></i></span>
+                    }
+                    @if (!shortstyle) {
+                      <span class="d-none d-xl-inline-block">Export</span>
+                      <span class="d-inline-block d-xl-none"><i class="bi bi-cloud-download"></i></span>
                     }
                   </div>
                 </div>
