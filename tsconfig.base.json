@@ -13,7 +13,12 @@
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "maintenance-warning-snackbar": [
+        "node_modules/maintenance-warning-snackbar"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

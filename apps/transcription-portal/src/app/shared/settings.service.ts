@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { inject, Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { sum } from '@octra/api-types';
@@ -13,6 +13,7 @@ import {
 } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import * as jQuery from 'jquery';
+import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import {
   BehaviorSubject,
   firstValueFrom,
@@ -142,6 +143,22 @@ export class SettingsService implements OnDestroy {
       .subscribe({
         next: (json: OHConfiguration) => {
           AppSettings.init(json);
+
+          if (
+            json.plugins.maintenance?.active &&
+            json.plugins.maintenance?.outagesURL &&
+            json.plugins.maintenance?.outageTextURL
+          ) {
+            const snackbar = new MaintenanceWarningSnackbar({
+              jsonURL: json.plugins.maintenance.outagesURL,
+              txtURL: json.plugins.maintenance.outageTextURL,
+              nrOfDaysBe4MaintToDisplayMessage: 3,
+              simulate: false,
+              verbose: false,
+            });
+            snackbar.initialize();
+          }
+
           this.octraAPI
             .init(
               json.api.octraBackend.url,
@@ -647,7 +664,9 @@ export class SettingsService implements OnDestroy {
                     timer(0).subscribe({
                       next: () => {
                         // TODO select preprocessor by mode
-                        this.taskService.state.modes.annotation.preprocessor.addToQueue(info);
+                        this.taskService.state.modes.annotation.preprocessor.addToQueue(
+                          info,
+                        );
                       },
                     }),
                   );
@@ -702,12 +721,14 @@ export class SettingsService implements OnDestroy {
         audioLanguage = 'ita-IT';
       }
 
-      this.taskService.state.currentModeState.selectedASRLanguage = supportedAudioLanguages.find((a) =>
-        a.value.includes(audioLanguage!),
-      )?.value;
-      this.taskService.state.currentModeState.selectedMausLanguage = supportedMausLanguages.find((a) =>
-        a.value.includes(audioLanguage!),
-      )?.value;
+      this.taskService.state.currentModeState.selectedASRLanguage =
+        supportedAudioLanguages.find((a) =>
+          a.value.includes(audioLanguage!),
+        )?.value;
+      this.taskService.state.currentModeState.selectedMausLanguage =
+        supportedMausLanguages.find((a) =>
+          a.value.includes(audioLanguage!),
+        )?.value;
 
       if (this.taskService.state.currentModeState.selectedMausLanguage) {
         this.taskService.state.currentModeState.selectedASRProvider =

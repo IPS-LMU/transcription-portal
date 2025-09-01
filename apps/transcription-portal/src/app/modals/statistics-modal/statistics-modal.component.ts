@@ -31,7 +31,7 @@ export class StatisticsModalComponent
   public static options: NgbModalOptions = {
     size: 'xl',
     backdrop: true,
-    fullscreen: 'sm',
+    fullscreen: 'xl',
   };
   showCharts = false;
 

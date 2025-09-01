@@ -60,7 +60,7 @@
     "jszip": "^3.10.1",
     "konva": "^9.3.20",
     "luxon": "^3.6.1",
-    "maintenance-warning-snackbar": "git+https://github.com/IPS-LMU/maintenanceWarningSnackbar.git",
+    "maintenance-warning-snackbar": "https://github.com/julianpoemp/maintenanceWarningSnackbar/tarball/migration-nx",
     "modernizr": "^3.11.3",
     "music-metadata": "^11.3.0",
     "ng-circle-progress": "^1.7.1",

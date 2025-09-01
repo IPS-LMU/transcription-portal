@@ -22,6 +22,11 @@ export interface OHConfiguration {
         siteID: number;
       };
     };
+    maintenance?: {
+      active?: boolean;
+      outagesURL?: string;
+      outageTextURL?: string;
+    }
   };
   allowed_browsers: {
     name: string;

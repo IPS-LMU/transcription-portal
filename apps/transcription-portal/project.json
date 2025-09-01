@@ -24,14 +24,22 @@
           "apps/transcription-portal/src/config",
           "apps/transcription-portal/src/manifest.json"
         ],
-        "styles": ["apps/transcription-portal/src/styles.scss"],
-        "allowedCommonJsDependencies": ["x2js", "chart.js", "jszip", "notifyjs", "konva"],
+        "styles": [
+          "node_modules/maintenance-warning-snackbar/dist/maintenance-warning-snackbar.css",
+          "apps/transcription-portal/src/styles.scss"
+        ],
+        "allowedCommonJsDependencies": [
+          "x2js",
+          "chart.js",
+          "jszip",
+          "notifyjs",
+          "konva"
+        ],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
           "node_modules/jquery/dist/jquery.min.js",
-          "node_modules/jszip/dist/jszip.min.js",
-          "node_modules/maintenance-warning-snackbar/maintenanceWarningSnackbar.js"
+          "node_modules/jszip/dist/jszip.min.js"
         ]
       },
       "configurations": {
