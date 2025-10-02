@@ -13,6 +13,7 @@ import { AppSettings } from '../../shared/app.settings';
 import { TimePipe } from '../../shared/time.pipe';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation } from './operation';
+import { environment } from '../../../environments/environment';
 
 export class UploadOperation extends Operation {
   public constructor(
@@ -76,13 +77,17 @@ export class UploadOperation extends Operation {
       form.append('file' + i, files[i]!.file!);
     }
 
+    const headers: any = {};
+
+    if (environment.production) {
+      headers['ngsw-bypass'] = 'true';
+    }
+
     (
       httpClient.post(url, form, {
         reportProgress: true,
         observe: 'events' as any,
-        headers: {
-          'ngsw-bypass': 'true',
-        },
+        headers,
         responseType: 'text',
       }) as any as Observable<HttpEvent<ArrayBuffer>>
     ).subscribe({
