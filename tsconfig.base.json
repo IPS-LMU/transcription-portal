@@ -17,6 +17,9 @@
     "paths": {
       "maintenance-warning-snackbar": [
         "node_modules/maintenance-warning-snackbar"
+      ],
+      "@octra/ngx-components": [
+        "node_modules/@octra/ngx-components"
       ]
     }
   },
