@@ -189,7 +189,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
           fileName: task.files[0].fullname,
           checks: this.checkAudioFileCompatibility(
             task.files[0] as AudioInfo,
-            task.operations[1].serviceProvider!.provider,
+            task.operations[1].serviceProvider?.provider,
           ),
         });
       }
@@ -230,7 +230,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
             fileName: !audioInfo ? '' : audioInfo.name,
             checks: this.checkAudioFileCompatibility(
               audioInfo,
-              task.operations[1].serviceProvider!.provider,
+              task.operations[1].serviceProvider?.provider,
             ),
           });
         }
@@ -414,7 +414,11 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.mouseInDropdown = false;
   }
 
-  checkAudioFileCompatibility(audioInfo: AudioInfo, asrName: string) {
+  checkAudioFileCompatibility(audioInfo: AudioInfo, asrName?: string) {
+    if (!asrName) {
+      return [];
+    }
+
     const result: {
       name: string;
       isValid: boolean;

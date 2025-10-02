@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ServiceProvider } from '@octra/ngx-components';
+import { stringifyQueryParams } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
-import { ServiceProvider } from '@octra/ngx-components';
 
 export class EmuOperation extends ToolOperation {
   protected operations?: Operation[];
@@ -22,7 +23,17 @@ export class EmuOperation extends ToolOperation {
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider, language);
+    super(
+      name,
+      commands,
+      title,
+      shortTitle,
+      task,
+      state,
+      id,
+      serviceProvider,
+      language,
+    );
     this._description =
       'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
       'the associated words or phonemes. This is useful for interpreting a transcript, e. g. to determine the focus of' +
@@ -132,7 +143,7 @@ export class EmuOperation extends ToolOperation {
     operationObj: IOperation,
     commands: string[],
     task: Task,
-    taskObj?: any
+    taskObj?: any,
   ): Operation {
     const result = new EmuOperation(
       operationObj.name,
@@ -142,7 +153,8 @@ export class EmuOperation extends ToolOperation {
       task,
       operationObj.state,
       operationObj.id,
-      AppSettings.getServiceInformation(operationObj.serviceProvider) ?? AppSettings.getServiceInformation(taskObj?.mausProvider),
+      AppSettings.getServiceInformation(operationObj.serviceProvider) ??
+        AppSettings.getServiceInformation(taskObj?.mausProvider),
       operationObj.language ?? taskObj?.mausLanguage,
     );
 
@@ -177,10 +189,15 @@ export class EmuOperation extends ToolOperation {
         (this.task.operations[0] as UploadOperation).wavFile === undefined
       )
     ) {
-      const audio = `audioGetUrl=${encodeURIComponent(
-        (this.task.operations[0] as any).wavFile.url,
-      )}`;
-      let transcript = `labelGetUrl=`;
+      const urlParams: {
+        audioGetUrl: string;
+        labelGetUrl?: string;
+        labelType?: string;
+        saveToWindowParent: boolean;
+      } = {
+        audioGetUrl: (this.task.operations[0] as any).wavFile.url,
+        saveToWindowParent: true
+      };
       const langObj = AppSettings.getLanguageByCode(
         this.language,
         this.serviceProvider.provider,
@@ -203,15 +220,10 @@ export class EmuOperation extends ToolOperation {
         result?.extension === '_annot.json' ? 'annotJSON' : 'TEXTGRID';
 
       if (!(langObj === null || langObj === undefined) && result?.url) {
-        transcript += encodeURIComponent(result.url);
+        urlParams.labelGetUrl = result.url;
+        urlParams.labelType = labelType;
 
-        return (
-          `${this._commands[0]}?` +
-          `${audio}&` +
-          `${transcript}&` +
-          `&labelType=${labelType}` +
-          `&saveToWindowParent=true`
-        );
+        return `${this._commands[0]}${stringifyQueryParams(urlParams)}`;
       } else if (!result?.url) {
         console.error(`result url is null or undefined`);
       } else {

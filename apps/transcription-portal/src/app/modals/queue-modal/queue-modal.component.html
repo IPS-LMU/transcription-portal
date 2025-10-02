@@ -28,7 +28,7 @@
       selected (third-party) services and the files are marked for further
       processing.
     </p>
-    <hr/>
+    <hr />
     <h5>Options</h5>
     <div class="row mb-3">
       <div class="col-md-6">
@@ -67,7 +67,7 @@
                   selectedASRInfo !== undefined &&
                   isASRSelected() &&
                   selectedASRInfo.knownIssues !== undefined
-                  ) {
+                ) {
                   <div class="alert alert-info mt-3" style="font-size: 0.9em">
                     <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
                     {{ selectedASRInfo.knownIssues }}
@@ -75,22 +75,24 @@
                 }
               </td>
             </tr>
-            <tr class="align-middle">
-              <td>
-                <label>Summarization Service Provider:</label>
-              </td>
-              <td>
-                <octra-asr-provider-select
-                  [(value)]="
-                    taskService.state.currentModeState
-                      .selectedSummarizationProvider
-                  "
-                  (valueChange)="changeLanguageforAllQueuedTasks()"
-                  [asrProviders]="summarizationProviders"
-                  [title]="'Summarization Service Provider'"
-                ></octra-asr-provider-select>
-              </td>
-            </tr>
+            @if (taskService.state.currentMode === 'summarization') {
+              <tr class="align-middle">
+                <td>
+                  <label>Summarization Service Provider:</label>
+                </td>
+                <td>
+                  <octra-asr-provider-select
+                    [(value)]="
+                      taskService.state.currentModeState
+                        .selectedSummarizationProvider
+                    "
+                    (valueChange)="changeLanguageforAllQueuedTasks()"
+                    [asrProviders]="summarizationProviders"
+                    [title]="'Summarization Service Provider'"
+                  ></octra-asr-provider-select>
+                </td>
+              </tr>
+            }
             @if (taskService.state.currentMode === 'annotation') {
               <tr class="align-middle">
                 <td><label>Word Alignment Language:</label></td>
@@ -160,7 +162,7 @@
         </p>
       </div>
     }
-    <hr/>
+    <hr />
     <h5>Tasks</h5>
 
     @if (orangeCount > 0) {
