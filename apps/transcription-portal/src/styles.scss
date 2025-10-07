@@ -111,11 +111,16 @@ tbody .bi.bi-arrow-up {
   flex: auto !important;
 }
 
-
 .tab-content .tab-pane {
   display: flex !important;
   flex-direction: column !important;
   flex: auto !important;
   height: 100% !important;
   width: 100% !important;
+}
+
+.table td.fit,
+.table th.fit {
+  white-space: nowrap;
+  width: 1%;
 }

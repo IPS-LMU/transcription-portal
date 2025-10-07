@@ -1,7 +1,7 @@
 <div class="modal-header">
   <h4 class="modal-title pull-left">Queue</h4>
   <button
-    (click)="onSubmit()"
+    (click)="onSubmit(form)"
     class="btn btn-outline-primary"
     style="margin-left: 20px"
     type="button"
@@ -31,111 +31,149 @@
     <hr />
     <h5>Options</h5>
     <div class="row mb-3">
-      <div class="col-md-6">
-        <table class="table table-sm table-striped">
-          <tbody>
-            <tr class="align-middle">
-              <td><label class="me-1">ASR Language:</label></td>
-              <td>
-                <octra-asr-language-select
-                  [(value)]="
-                    taskService.state.currentModeState.selectedASRLanguage
-                  "
-                  (valueChange)="changeLanguageforAllQueuedTasks()"
-                  [languageSettings]="{
-                    services: AppSettings.configuration.api.services,
-                  }"
-                  [languages]="languages.asr"
-                  [title]="'ASR Language'"
-                ></octra-asr-language-select>
-              </td>
-            </tr>
-            <tr class="align-middle">
-              <td>
-                <label>ASR Service Provider:</label>
-              </td>
-              <td>
-                <octra-asr-provider-select
-                  [(value)]="
-                    taskService.state.currentModeState.selectedASRProvider
-                  "
-                  (valueChange)="changeLanguageforAllQueuedTasks()"
-                  [asrProviders]="asrProviders"
-                ></octra-asr-provider-select>
-
-                @if (
-                  selectedASRInfo !== undefined &&
-                  isASRSelected() &&
-                  selectedASRInfo.knownIssues !== undefined
-                ) {
-                  <div class="alert alert-info mt-3" style="font-size: 0.9em">
-                    <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
-                    {{ selectedASRInfo.knownIssues }}
-                  </div>
-                }
-              </td>
-            </tr>
-            @if (taskService.state.currentMode === 'summarization') {
+      <div class="col-md-12 col-xl-8">
+        <form #form="ngForm">
+          <table class="table table-sm table-striped">
+            <tbody>
               <tr class="align-middle">
-                <td>
-                  <label>Summarization Service Provider:</label>
+                <td class="fit">
+                  <label class="me-1"
+                    >ASR Language<span class="text-danger">*</span>:</label
+                  >
                 </td>
-                <td>
-                  <octra-asr-provider-select
-                    [(value)]="
-                      taskService.state.currentModeState
-                        .selectedSummarizationProvider
-                    "
-                    (valueChange)="changeLanguageforAllQueuedTasks()"
-                    [asrProviders]="summarizationProviders"
-                    [title]="'Summarization Service Provider'"
-                  ></octra-asr-provider-select>
-                </td>
-              </tr>
-            }
-            @if (taskService.state.currentMode === 'annotation') {
-              <tr class="align-middle">
-                <td><label>Word Alignment Language:</label></td>
                 <td>
                   <octra-asr-language-select
-                    [(value)]="
-                      taskService.state.currentModeState.selectedMausLanguage
+                    [(ngModel)]="
+                      taskService.state.currentModeState.selectedASRLanguage
                     "
-                    (valueChange)="changeLanguageforAllQueuedTasks()"
+                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
                     [languageSettings]="{
                       services: AppSettings.configuration.api.services,
                     }"
-                    [languages]="languages.maus"
-                    [title]="'MAUS Language'"
+                    name="asrLanguage"
+                    id="asrLanguage"
+                    class="d-block"
+                    [languages]="languages.asr"
+                    placeholder="ASR Language"
+                    [title]="'ASR Language'"
+                    [required]="true"
                   ></octra-asr-language-select>
                 </td>
               </tr>
-            } @else {
-              <tr class="align-middle">
-                <td><label>Translation Language:</label></td>
-                <td>
-                  <select
-                    class="form-select form-select-sm"
-                    [(ngModel)]="
-                      taskService.state.currentModeState
-                        .selectedTranslationLanguage
-                    "
-                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
+              <tr>
+                <td class="fit">
+                  <label class="mt-2"
+                    >ASR Service Provider<span class="text-danger">*</span
+                    >:</label
                   >
-                    <option value=""></option>
-                    <option value="en">English</option>
-                    <option value="de">German</option>
-                    <option value="nl">Dutch</option>
-                    <option value="it">Italian</option>
-                  </select>
+                </td>
+                <td>
+                  <octra-asr-provider-select
+                    [(ngModel)]="
+                      taskService.state.currentModeState.selectedASRProvider
+                    "
+                    [required]="true"
+                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                    [asrProviders]="asrProviders"
+                    [i18n]="{
+                      asrProvider: 'ASR Provider',
+                    }"
+                    name="asrProvider"
+                    id="asrProvider"
+                    class="d-block"
+                  ></octra-asr-provider-select>
+
+                  @if (
+                    selectedASRInfo !== undefined &&
+                    isASRSelected() &&
+                    selectedASRInfo.knownIssues !== undefined
+                  ) {
+                    <div class="alert alert-info mt-3" style="font-size: 0.9em">
+                      <b
+                        >Known Issues for {{ selectedASRInfo.provider }} ASR:</b
+                      >
+                      {{ selectedASRInfo.knownIssues }}
+                    </div>
+                  }
                 </td>
               </tr>
-            }
-          </tbody>
-        </table>
+              @if (taskService.state.currentMode === 'summarization') {
+                <tr class="align-middle fit">
+                  <td class="fit">
+                    <label for="asrProvider"
+                      >Summarization Service Provider<span class="text-danger"
+                        >*</span
+                      >:</label
+                    >
+                  </td>
+                  <td>
+                    <octra-asr-provider-select
+                      [(ngModel)]="
+                        taskService.state.currentModeState
+                          .selectedSummarizationProvider
+                      "
+                      (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                      [asrProviders]="summarizationProviders"
+                      [title]="'Summarization Service Provider'"
+                      [required]="true"
+                      name="asrProvider"
+                      id="asrProvider"
+                      class="d-block"
+                      [i18n]="{
+                        asrProvider: 'Summarization Service Provider',
+                      }"
+                    ></octra-asr-provider-select>
+                  </td>
+                </tr>
+              }
+              @if (taskService.state.currentMode === 'annotation') {
+                <tr class="align-middle fit">
+                  <td class="fit"><label>Word Alignment Language:</label></td>
+                  <td>
+                    <octra-asr-language-select
+                      [(ngModel)]="
+                        taskService.state.currentModeState.selectedMausLanguage
+                      "
+                      (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                      [languageSettings]="{
+                        services: AppSettings.configuration.api.services,
+                      }"
+                      [languages]="languages.maus"
+                      [title]="'MAUS Language'"
+                      name="mausLanguage"
+                      id="mausLanguage"
+                      placeholder="MAUS Language"
+                    ></octra-asr-language-select>
+                  </td>
+                </tr>
+              } @else {
+                <tr class="align-middle">
+                  <td class="fit"><label>Translate to:</label></td>
+                  <td>
+                    <select
+                      class="form-select form-select-sm"
+                      [(ngModel)]="
+                        taskService.state.currentModeState
+                          .selectedTranslationLanguage
+                      "
+                      name="translationLanguage"
+                      [required]="true"
+                      (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                    >
+                      <option value=""></option>
+                      <option value="en">English</option>
+                      <option value="de">German</option>
+                      <option value="nl">Dutch</option>
+                      <option value="it">Italian</option>
+                    </select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </form>
       </div>
     </div>
-
     @if (isOneAudiofileInvalid()) {
       <div class="alert alert-danger" style="font-size: 0.9em">
         One or more audio files do not fit the ASR provider's requirements:
@@ -362,18 +400,17 @@
     Cancel
   </button>
   <button
-    (click)="onSubmit()"
-    [disabled]="
-      !taskService.state.currentModeState.selectedASRLanguage ||
-      (taskService.state.currentMode === 'annotation' &&
-        !taskService.state.currentModeState.selectedMausLanguage) ||
-      (taskService.state.currentMode === 'summarization' &&
-        !taskService.state.currentModeState.selectedTranslationLanguage) ||
-      !taskService.state.currentModeState.selectedASRProvider
-    "
+    (click)="onSubmit(form)"
     class="btn btn-outline-primary"
     type="button"
+    [ngbPopover]="errorPopoverContent"
+    [popoverClass]="'error-popover'"
+    #okPopover="ngbPopover"
+    triggers="manual"
   >
     OK
   </button>
 </div>
+<ng-template #errorPopoverContent>
+  Please fill in the required fields.
+</ng-template>

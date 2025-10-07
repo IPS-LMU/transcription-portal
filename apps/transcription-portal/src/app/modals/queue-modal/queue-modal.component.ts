@@ -11,7 +11,7 @@ import {
   ViewEncapsulation,
   inject,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import {
   NgbActiveModal,
   NgbDropdown,
@@ -65,6 +65,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
   @ViewChild('pop', { static: true }) popover?: NgbPopover;
+  @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
   tasks: Task[] = [];
   queue: QueueItem[] = [];
@@ -149,26 +150,35 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     return 0;
   }
 
-  onSubmit() {
-    this.changeLanguageforAllQueuedTasks();
-    let j = 0;
+  onSubmit(form: NgForm) {
+    if (form.valid) {
+      this.changeLanguageforAllQueuedTasks();
+      let j = 0;
 
-    for (const task of this.tasks) {
-      if (task.status === TaskStatus.QUEUED) {
-        if (
-          task.files[0] instanceof AudioInfo &&
-          task.files[0].file !== undefined &&
-          !this.isSomethingInvalid(task.id)
-        ) {
-          task.changeState(TaskStatus.PENDING);
+      for (const task of this.tasks) {
+        if (task.status === TaskStatus.QUEUED) {
+          if (
+            task.files[0] instanceof AudioInfo &&
+            task.files[0].file !== undefined &&
+            !this.isSomethingInvalid(task.id)
+          ) {
+            task.changeState(TaskStatus.PENDING);
+          }
+
+          j++;
         }
-
-        j++;
       }
+      this.activeModal?.close();
+      this.cd.markForCheck();
+      this.cd.detectChanges();
+    } else {
+      for (const key of Object.keys(form.controls)) {
+        form.controls[key].markAsTouched();
+      }
+      this.okPopover?.open();
+      this.cd.markForCheck();
+      this.cd.detectChanges();
     }
-    this.activeModal?.close();
-    this.cd.markForCheck();
-    this.cd.detectChanges();
   }
 
   ngOnDestroy() {
