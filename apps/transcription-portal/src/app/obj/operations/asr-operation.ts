@@ -57,7 +57,9 @@ export class ASROperation extends Operation {
             }
           })
           .catch((error) => {
-            this.updateProtocol(this.protocol + '<br/>' + error.replace('¶', ''));
+            this.updateProtocol(
+              this.protocol + '<br/>' + error.replace('¶', ''),
+            );
             this.time.duration = Date.now() - this.time.start;
             this.changeState(TaskStatus.ERROR);
             console.error(error);
@@ -201,7 +203,9 @@ export class ASROperation extends Operation {
                     // add messages to protocol
                     if (json.warnings !== '') {
                       this.updateProtocol(
-                        this.protocol + '<br/>' + json.warnings.replace('¶', ''),
+                        this.protocol +
+                          '<br/>' +
+                          json.warnings.replace('¶', ''),
                       );
                     } else if (json.output !== '') {
                       this.updateProtocol(
@@ -235,9 +239,9 @@ export class ASROperation extends Operation {
         UploadOperation.upload(
           [asrResult],
           asrService.host + 'uploadFileMulti',
-          httpClient
-        ).subscribe(
-          (event) => {
+          httpClient,
+        ).subscribe({
+          next: (event) => {
             if (event.type === 'loadend') {
               if (event.urls) {
                 resolve2(event.urls[0]);
@@ -246,10 +250,10 @@ export class ASROperation extends Operation {
               }
             }
           },
-          (error) => {
+          error: (error) => {
             reject2(error);
           },
-        );
+        });
       })
         .then((asrURL) => {
           const url = this._commands[1]
