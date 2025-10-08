@@ -123,7 +123,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-  public selectedRows: number[] = [];
   public archiveURL = '';
   public closeResult = '';
   public isDragging = false;
@@ -159,7 +158,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   public toolSelectedOperation?: Operation;
   private readonly fileAPIsupported: boolean = false;
   private shiftStart = -1;
-  private allSelected = false;
   private selectionBlocked = false;
   private subscrManager = new SubscriptionManager();
 
@@ -356,11 +354,11 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     const task = this.popover.task ?? this.popover.directory;
     const taskList = this.taskService.state.currentModeState.taskList;
 
-    if (task && taskList) {
-      if (this.selectedRows.length <= 1) {
-        this.selectedRows = [];
+    if (task && taskList && this.taskService.currentModeState) {
+      if (this.taskService.currentModeState.selectedRows.length <= 1) {
+        this.taskService.currentModeState.selectedRows = [];
         const index = taskList.getIndexByEntry(task);
-        this.selectedRows.push(index);
+        this.taskService.currentModeState.selectedRows.push(index);
       }
       this.contextmenu.x = $event.x - 20;
       this.contextmenu.y =
@@ -378,10 +376,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         (operation === null ||
           operation === undefined ||
           !(operation instanceof ToolOperation)) &&
-        taskList
+        taskList && this.taskService.currentModeState
       ) {
         const indexFromTaskList = taskList.getIndexByEntry(entry);
-        const search = this.selectedRows.findIndex((a) => {
+        const search = this.taskService.currentModeState.selectedRows.findIndex((a) => {
           return a === indexFromTaskList;
         });
         const pressedKeys = this.shortcutService.pressedKeys;
@@ -391,10 +389,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
           if (search > -1) {
             // deselect
-            this.selectedRows.splice(search, 1);
+            this.taskService.currentModeState.selectedRows.splice(search, 1);
           } else {
             // select
-            this.selectedRows.push(indexFromTaskList);
+            this.taskService.currentModeState.selectedRows.push(indexFromTaskList);
           }
         } else {
           // shift selection
@@ -410,10 +408,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
                 end = temp;
               }
 
-              this.selectedRows = [];
+              this.taskService.currentModeState.selectedRows = [];
               const entries = taskList.entries;
               for (let i = this.shiftStart; i <= end; i++) {
-                this.selectedRows.push(i);
+                this.taskService.currentModeState.selectedRows.push(i);
               }
               // select all between
               // const start =x
@@ -421,13 +419,13 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
             }
           } else {
             const oldId =
-              this.selectedRows.length > 0 ? this.selectedRows[0] : -1;
+              this.taskService.currentModeState.selectedRows.length > 0 ? this.taskService.currentModeState.selectedRows[0] : -1;
 
-            this.selectedRows = [];
+            this.taskService.currentModeState.selectedRows = [];
 
             if (indexFromTaskList !== oldId) {
               this.shiftStart = indexFromTaskList;
-              this.selectedRows.push(indexFromTaskList);
+              this.taskService.currentModeState.selectedRows.push(indexFromTaskList);
             }
           }
         }
@@ -458,7 +456,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   onContextMenuOptionSelected(option: string) {
-    if (this.selectedRows.length > 0) {
+    if (this.taskService.currentModeState && this.taskService.currentModeState.selectedRows.length > 0) {
       if (option === 'delete') {
         this.deleteSelectedTasks();
       } else if (option === 'appendings-remove') {
@@ -467,7 +465,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         this.openArchiveDownload(
           'line',
           this.selectedOperation,
-          this.selectedRows,
+          this.taskService.currentModeState.selectedRows,
         );
       }
     }
@@ -478,8 +476,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   removeAppendings() {
     const taskList = this.taskService.state.currentModeState.taskList;
-    if (taskList) {
-      for (const index of this.selectedRows) {
+    if (taskList && this.taskService.currentModeState) {
+      for (const index of this.taskService.currentModeState.selectedRows) {
         const entry = taskList.getEntryByIndex(index);
         if (entry instanceof Task) {
           if (entry && entry.files.length > 1) {
@@ -510,7 +508,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
     if (taskList) {
       const tasklistIndex = taskList.getIndexByEntry(entry);
-      const search = this.selectedRows.findIndex((a) => {
+      const search = this.taskService.currentModeState!.selectedRows.findIndex((a) => {
         return a === tasklistIndex;
       });
 
@@ -944,18 +942,18 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     hotkeyEvent: HotkeysEvent,
     shortcutGroup: ShortcutGroup,
   )=> {
-    this.selectedRows = [];
-    if (!this.allSelected) {
+    this.taskService.currentModeState!.selectedRows = [];
+    if (!this.taskService.currentModeState!.allSelected) {
       // select all
       const length =
         this.taskService.state.currentModeState.taskList?.length ?? 0;
 
       for (let i = 0; i < length; i++) {
-        this.selectedRows.push(i);
+        this.taskService.currentModeState!.selectedRows.push(i);
       }
-      this.allSelected = true;
+      this.taskService.currentModeState!.allSelected = true;
     } else {
-      this.allSelected = false;
+      this.taskService.currentModeState!.allSelected = false;
     }
     this.cd.markForCheck();
     this.cd.detectChanges();
@@ -969,7 +967,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
           console.error(error);
         });
       setTimeout(() => {
-        this.selectedRows = [];
+        this.taskService.currentModeState!.selectedRows = [];
         this.cd.markForCheck();
       }, 0);
     }
@@ -1065,8 +1063,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private deleteSelectedTasks() {
     const removeQueue = [];
     const taskList = this.taskService.state.currentModeState.taskList;
-    if (taskList) {
-      for (const index of this.selectedRows) {
+    if (taskList && this.taskService.currentModeState) {
+      for (const index of this.taskService.currentModeState.selectedRows) {
         const entry = taskList.getEntryByIndex(index);
 
         let dirFound = false;
@@ -1078,7 +1076,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
           // found folder?
           dirFound =
-            this.selectedRows.findIndex((a) => {
+            this.taskService.currentModeState.selectedRows.findIndex((a) => {
               return a === dirIndex;
             }) > -1;
         }
@@ -1101,7 +1099,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         });
     }
 
-    this.selectedRows = [];
+    this.taskService.currentModeState!.selectedRows = [];
     this.shiftStart = -1;
     this.cd.markForCheck();
   }

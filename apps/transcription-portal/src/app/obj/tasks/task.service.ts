@@ -56,7 +56,9 @@ export class PortalModeState {
   public selectedASRProvider?: ServiceProvider;
   private _status: TaskStatus = TaskStatus.READY;
   private _preprocessor!: Preprocessor;
-  private subscrManager = new SubscriptionManager();
+  public selectedRows: number[] = [];
+  public allSelected = false;
+
   private _statistics = {
     queued: 0,
     waiting: 0,
@@ -183,9 +185,7 @@ export class TaskService {
   private storage = inject(StorageService);
   private sanitizer = inject(DomSanitizer);
   private alertService = inject(AlertService);
-
   public errorscountchange = new EventEmitter<number>();
-
   public readonly state = new PortalState();
 
   private options = {

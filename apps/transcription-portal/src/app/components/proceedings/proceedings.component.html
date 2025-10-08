@@ -321,7 +321,7 @@
                       }}</ng-template>
                       <div
                         (click)="
-                          openArchiveDownload('column', operation, selectedRows)
+                          openArchiveDownload('column', operation, taskService.currentModeState!.selectedRows)
                         "
                         [ngbTooltip]="tipContent"
                         [container]="'body'"
@@ -484,12 +484,12 @@
             'margin-top': contextmenu.y + 'px',
             'margin-left': contextmenu.x + 'px',
             display:
-              contextmenu.hidden || selectedRows.length === 0
+              contextmenu.hidden || (this.taskService.currentModeState !== undefined && this.taskService.currentModeState.selectedRows.length === 0)
                 ? 'none'
                 : 'initial',
           }"
           [selectedOperationType]="selectedOperation"
-          [selectedTasks]="selectedRows"
+          [selectedTasks]="this.taskService.currentModeState!.selectedRows"
         >
         </tportal-context-menu>
         @if (taskList !== undefined) {
