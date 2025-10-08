@@ -6,7 +6,7 @@
   "scripts": {
     "ng": "nx",
     "postinstall": "node ./decorate-angular-cli.js",
-    "start": "npm run modernizr && nx serve",
+    "start": "npm run modernizr && nx serve --no-tui",
     "build": "node ./build.js dev=false isUpdate=false url=/",
     "build:dev": "node ./build.js dev=true isUpdate=true url=/apps/TranscriptionPortal-Dev/",
     "deploy:tportal:dev:beta": "npm run build:dev && npm run package:tportal && ./deploy.sh tportal-dev",
@@ -55,6 +55,7 @@
     "conventional-changelog-cli": "^2.1.0",
     "dexie": "^4.0.11",
     "highlight.js": "^11.11.1",
+    "hotkeys-js": "^3.13.15",
     "jodit": "^4.6.2",
     "jquery": "^3.5.1",
     "jszip": "^3.10.1",

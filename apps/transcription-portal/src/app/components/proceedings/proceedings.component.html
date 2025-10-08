@@ -61,9 +61,7 @@
           />
         </a>
         <div class="service-terms">
-          <a
-            [href]="popover.operation.serviceProvider.termsURL"
-            target="_blank"
+          <a [href]="popover.operation.serviceProvider.termsURL" target="_blank"
             ><i class="bi bi-journal-text"></i> Service terms</a
           ><br />
           <a
@@ -169,6 +167,7 @@
   class="inner"
 >
   @if (
+    taskList !== undefined &&
     taskList.length === 0 &&
     taskService.state.currentModeState.taskList!.entries.length === 0 &&
     queue.length === 0
@@ -259,7 +258,7 @@
       </div>
     </div>
   }
-  @if (taskList.length > 0 && !storage.ready) {
+  @if (taskList !== undefined && taskList.length > 0 && !storage.ready) {
     <div id="loading">
       <div class="spinner-border fs-1" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -334,8 +333,12 @@
                           {{ operation.shortTitle }}
                         }
                         @if (!shortstyle) {
-                          <span class="d-none d-xl-inline-block">{{ operation.title }}</span>
-                          <span class="d-inline-block d-xl-none">{{ operation.shortTitle }}</span>
+                          <span class="d-none d-xl-inline-block">{{
+                            operation.title
+                          }}</span>
+                          <span class="d-inline-block d-xl-none">{{
+                            operation.shortTitle
+                          }}</span>
                         }
                       </div>
                     </div>
@@ -375,7 +378,9 @@
                     }
                     @if (!shortstyle) {
                       <span class="d-none d-xl-inline-block">Export</span>
-                      <span class="d-inline-block d-xl-none"><i class="bi bi-cloud-download"></i></span>
+                      <span class="d-inline-block d-xl-none"
+                        ><i class="bi bi-cloud-download"></i
+                      ></span>
                     }
                   </div>
                 </div>
@@ -487,137 +492,45 @@
           [selectedTasks]="selectedRows"
         >
         </tportal-context-menu>
-        @for (entry of taskList.entries; track entry; let i = $index) {
-          <tr
-            [entry]="entry"
-            [rowSelected]="isEntrySelected(entry)"
-            [toolSelectedOperation]="toolSelectedOperation"
-            (contextmenu)="onContextMenu($event, row)"
-            (click)="onContextBlur()"
-            (scroll)="cancelScroll($event)"
-            tportalProceedingsRow
-            #row
-          >
-            <td
-              #nameCol="colIcon"
-              (appendingClick)="onPreviewClick($event)"
-              (click)="onRowSelected(entry)"
-              (deleteIconClick)="removeEntry($event, getTask(entry))"
-              (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
-              (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
-              (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-              (mouseenter)="onNameMouseEnter($event, getTask(entry))"
-              (mouseleave)="onNameMouseLeave($event, getTask(entry))"
-              (mouseover)="onNameMouseOver($event, getTask(entry))"
-              (tagClicked)="onTagClicked()"
-              [dirOpened]="allDirOpened"
+        @if (taskList !== undefined) {
+          @for (entry of taskList.entries; track entry; let i = $index) {
+            <tr
               [entry]="entry"
-              [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
-              [shortStyle]="isClosed"
-              tportalProcColIcon
-            ></td>
-            <!-- Task operations-->
-            @if (entry.type === 'task') {
-              @for (
-                operation of getTask(entry)!.operations;
-                track operation;
-                let opIndex = $index
-              ) {
-                <td
-                  (click)="onRowSelected(entry, operation)"
-                  (mousedown)="onOperationClick($event, operation)"
-                  #td
-                  (operationMouseEnter)="
-                    onOperationMouseEnter($event, operation, td)
-                  "
-                  (operationMouseLeave)="
-                    onOperationMouseLeave($event, operation)
-                  "
-                  (operationMouseOver)="onOperationMouseOver($event, operation)"
-                  [entry]="getTask(entry)"
-                  [ngStyle]="{
-                    width: !isClosed ? maxColumnWidths[opIndex] + '%' : 'auto',
-                  }"
-                  [operation]="operation"
-                  tportalProcColOperation
-                ></td>
-              }
-              <td class="export-col">
-                @if (
-                  isOneOperationFinished(entry) && getTask(entry) !== undefined
+              [rowSelected]="isEntrySelected(entry)"
+              [toolSelectedOperation]="toolSelectedOperation"
+              (contextmenu)="onContextMenu($event, row)"
+              (click)="onContextBlur()"
+              (scroll)="cancelScroll($event)"
+              tportalProceedingsRow
+              #row
+            >
+              <td
+                #nameCol="colIcon"
+                (appendingClick)="onPreviewClick($event)"
+                (click)="onRowSelected(entry)"
+                (deleteIconClick)="removeEntry($event, getTask(entry))"
+                (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+                (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+                (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+                (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+                (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+                (mouseover)="onNameMouseOver($event, getTask(entry))"
+                (tagClicked)="onTagClicked()"
+                [dirOpened]="allDirOpened"
+                [entry]="entry"
+                [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
+                [shortStyle]="isClosed"
+                tportalProcColIcon
+              ></td>
+              <!-- Task operations-->
+              @if (entry.type === 'task') {
+                @for (
+                  operation of getTask(entry)!.operations;
+                  track operation;
+                  let opIndex = $index
                 ) {
-                  <button
-                    class="btn btn-outline-success"
-                    style="padding: 0 5px"
-                    (click)="
-                      onExportButtonClick(entry, getTask(entry)!.operations[1])
-                    "
-                  >
-                    <i class="bi bi-cloud-download"></i>
-                  </button>
-                }
-              </td>
-            }
-            @if (entry.type === 'folder') {
-              @for (
-                operation of taskService.state.currentModeState.operations;
-                track operation;
-                let opIndex = $index
-              ) {
-                <td (click)="onRowSelected(entry)">
-                  <div class="progress">
-                    <div
-                      [dir]="getTaskDirectory(entry)"
-                      [opIndex]="opIndex"
-                      tportalDirProgress
-                      aria-valuemax="100"
-                      aria-valuemin="0"
-                      class="progress-bar"
-                      role="progressbar"
-                    ></div>
-                  </div>
-                </td>
-              }
-              <td class="export-col">
-                @if (isOneOperationFinished(entry)) {
-                  <button
-                    class="btn btn-outline-success"
-                    style="padding: 0 5px"
-                    (click)="onExportButtonClick(entry)"
-                  >
-                    <i class="bi bi-cloud-download"></i>
-                  </button>
-                }
-              </td>
-            }
-          </tr>
-          @if (entry.type === 'folder') {
-            <!-- folder row -->
-            @for (dirEntry of getTaskDirEntries(entry); track dirEntry) {
-              <tr
-                [@fadeToggleRow]="nameCol.dirOpened"
-                [entry]="dirEntry"
-                [rowSelected]="isEntrySelected(dirEntry)"
-                [toolSelectedOperation]="toolSelectedOperation"
-                tportalProceedingsRow
-              >
-                <td
-                  (click)="onRowSelected(dirEntry)"
-                  (deleteIconClick)="removeEntry($event, dirEntry)"
-                  (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
-                  (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
-                  (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
-                  (mouseenter)="onNameMouseEnter($event, dirEntry)"
-                  (mouseleave)="onNameMouseLeave($event, dirEntry)"
-                  (mouseover)="onNameMouseOver($event, dirEntry)"
-                  [entry]="dirEntry"
-                  [mouseOver]="dirEntry.mouseover"
-                  [shortStyle]="shortstyle"
-                  tportalProcColIcon
-                ></td>
-                @for (operation of dirEntry.operations; track operation) {
                   <td
-                    (click)="onRowSelected(dirEntry, operation)"
+                    (click)="onRowSelected(entry, operation)"
                     (mousedown)="onOperationClick($event, operation)"
                     #td
                     (operationMouseEnter)="
@@ -629,23 +542,125 @@
                     (operationMouseOver)="
                       onOperationMouseOver($event, operation)
                     "
-                    [entry]="dirEntry"
+                    [entry]="getTask(entry)"
+                    [ngStyle]="{
+                      width: !isClosed
+                        ? maxColumnWidths[opIndex] + '%'
+                        : 'auto',
+                    }"
                     [operation]="operation"
                     tportalProcColOperation
                   ></td>
                 }
                 <td class="export-col">
-                  @if (isOneOperationFinished(dirEntry)) {
+                  @if (
+                    isOneOperationFinished(entry) &&
+                    getTask(entry) !== undefined
+                  ) {
                     <button
                       class="btn btn-outline-success"
                       style="padding: 0 5px"
-                      (click)="onExportButtonClick(dirEntry, undefined)"
+                      (click)="
+                        onExportButtonClick(
+                          entry,
+                          getTask(entry)!.operations[1]
+                        )
+                      "
                     >
                       <i class="bi bi-cloud-download"></i>
                     </button>
                   }
                 </td>
-              </tr>
+              }
+              @if (entry.type === 'folder') {
+                @for (
+                  operation of taskService.state.currentModeState.operations;
+                  track operation;
+                  let opIndex = $index
+                ) {
+                  <td (click)="onRowSelected(entry)">
+                    <div class="progress">
+                      <div
+                        [dir]="getTaskDirectory(entry)"
+                        [opIndex]="opIndex"
+                        tportalDirProgress
+                        aria-valuemax="100"
+                        aria-valuemin="0"
+                        class="progress-bar"
+                        role="progressbar"
+                      ></div>
+                    </div>
+                  </td>
+                }
+                <td class="export-col">
+                  @if (isOneOperationFinished(entry)) {
+                    <button
+                      class="btn btn-outline-success"
+                      style="padding: 0 5px"
+                      (click)="onExportButtonClick(entry)"
+                    >
+                      <i class="bi bi-cloud-download"></i>
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+            @if (entry.type === 'folder') {
+              <!-- folder row -->
+              @for (dirEntry of getTaskDirEntries(entry); track dirEntry) {
+                <tr
+                  [@fadeToggleRow]="nameCol.dirOpened"
+                  [entry]="dirEntry"
+                  [rowSelected]="isEntrySelected(dirEntry)"
+                  [toolSelectedOperation]="toolSelectedOperation"
+                  tportalProceedingsRow
+                >
+                  <td
+                    (click)="onRowSelected(dirEntry)"
+                    (deleteIconClick)="removeEntry($event, dirEntry)"
+                    (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
+                    (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
+                    (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
+                    (mouseenter)="onNameMouseEnter($event, dirEntry)"
+                    (mouseleave)="onNameMouseLeave($event, dirEntry)"
+                    (mouseover)="onNameMouseOver($event, dirEntry)"
+                    [entry]="dirEntry"
+                    [mouseOver]="dirEntry.mouseover"
+                    [shortStyle]="shortstyle"
+                    tportalProcColIcon
+                  ></td>
+                  @for (operation of dirEntry.operations; track operation) {
+                    <td
+                      (click)="onRowSelected(dirEntry, operation)"
+                      (mousedown)="onOperationClick($event, operation)"
+                      #td
+                      (operationMouseEnter)="
+                        onOperationMouseEnter($event, operation, td)
+                      "
+                      (operationMouseLeave)="
+                        onOperationMouseLeave($event, operation)
+                      "
+                      (operationMouseOver)="
+                        onOperationMouseOver($event, operation)
+                      "
+                      [entry]="dirEntry"
+                      [operation]="operation"
+                      tportalProcColOperation
+                    ></td>
+                  }
+                  <td class="export-col">
+                    @if (isOneOperationFinished(dirEntry)) {
+                      <button
+                        class="btn btn-outline-success"
+                        style="padding: 0 5px"
+                        (click)="onExportButtonClick(dirEntry, undefined)"
+                      >
+                        <i class="bi bi-cloud-download"></i>
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
             }
           }
         }

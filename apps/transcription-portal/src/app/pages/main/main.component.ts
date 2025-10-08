@@ -105,8 +105,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public settingsCollapsed = true;
   private firstModalShown = false;
   private blockLeaving = true;
-
-  public shortcutsEnabled = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
 
   private tabOrder = {
@@ -259,7 +257,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     }
   }
 
-  openQueueModal() {
+  async openQueueModal() {
+    this.settingsService.shortCutsEnabled = false;
     const ref = openModal<QueueModalComponent>(
       this.ngbModalService,
       QueueModalComponent,
@@ -271,6 +270,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     ref.componentInstance.tasks = taskList?.getAllTasks() ?? [];
     ref.componentInstance.operations =
       this.taskService.state.currentModeState.operations;
+    await ref.result;
+    this.settingsService.shortCutsEnabled = true;
   }
 
   onMissedDrop(event: DragEvent) {
@@ -857,8 +858,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     }
   }
 
-  public openFeedbackModal() {
-    this.modalService.openFeedbackModal();
+  public async openFeedbackModal() {
+    this.settingsService.shortCutsEnabled = false;
+    await this.modalService.openFeedbackModal();
+    this.settingsService.shortCutsEnabled = true;
   }
 
   private upload(operation: Operation, file: FileInfo): Promise<string> {
@@ -896,7 +899,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     }
   }
 
-  openStatisticsModal() {
+  async openStatisticsModal() {
+    this.settingsService.shortCutsEnabled = false;
     const ref = this.ngbModalService.open(
       StatisticsModalComponent,
       StatisticsModalComponent.options,
@@ -909,6 +913,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       .catch((err) => {
         this.settingsService.shortCutsEnabled = true;
       });
+    await ref.result;
+    this.settingsService.shortCutsEnabled = true;
   }
 
   changeMode(mode: 'annotation' | 'summarization') {

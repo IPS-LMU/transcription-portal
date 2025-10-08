@@ -59,7 +59,6 @@ export class OHModalService implements OnDestroy {
         },
       } as any,
     );
-    this.settingsService.shortCutsEnabled = false;
 
     ref.componentInstance.i18n = {
       ...ref.componentInstance.i18n,
@@ -90,11 +89,9 @@ export class OHModalService implements OnDestroy {
     return ref.result
       .then(() => {
         this.subscrManager.removeByTag('update-bugreport-profile');
-        this.settingsService.shortCutsEnabled = true;
       })
       .catch(() => {
         this.subscrManager.removeByTag('update-bugreport-profile');
-        this.settingsService.shortCutsEnabled = true;
       });
   }
 

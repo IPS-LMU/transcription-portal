@@ -323,6 +323,7 @@
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
+            [shortcutsEnabled]="settingsService.shortCutsEnabled"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
@@ -330,8 +331,6 @@
             [operations]="taskService.state.modes.annotation.operations"
             [queue]="taskService.state.modes.annotation.preprocessor.queue"
             [shortstyle]="sidebarstate === 'opened'"
-            [taskList]="taskService.state.modes.annotation.taskList"
-            [shorcutsEnabled]="settingsService.shortCutsEnabled"
             style="height: 100%"
           >
           </tportal-proceedings>
@@ -350,6 +349,7 @@
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
+            [shortcutsEnabled]="settingsService.shortCutsEnabled"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
@@ -357,8 +357,6 @@
             [operations]="taskService.state.modes.summarization.operations"
             [queue]="taskService.state.modes.summarization.preprocessor.queue"
             [shortstyle]="sidebarstate === 'opened'"
-            [taskList]="taskService.state.modes.summarization.taskList"
-            [shorcutsEnabled]="settingsService.shortCutsEnabled"
             style="height: 100%"
           >
           </tportal-proceedings>
