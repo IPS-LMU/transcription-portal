@@ -175,11 +175,71 @@ export class SettingsService implements OnDestroy {
             .then((result) => {
               this._allLoaded = true;
               AppSettings.languages = {
-                asr: result[3].map((a: any) => ({
-                  value: a.ParameterValue.Value,
-                  description: a.ParameterValue.Description,
-                  providersOnly: a.ParameterValue.ProvidersOnly,
-                })),
+                asr: result[3]
+                  ?.filter((a: any) => a.ParameterValue.Description !== '')
+                  .map((a: any) => {
+                    const result: {
+                      value: string;
+                      providersOnly?: string[];
+                      description: string;
+                    } = {
+                      value: a.ParameterValue.Value,
+                      description: a.ParameterValue.Description.replace(
+                        / *\([^)]*\) *$/g,
+                        '',
+                      ),
+                    };
+
+                    const matches = / *\(([^)]*)\) *$/g.exec(
+                      a.ParameterValue.Description,
+                    );
+
+                    if (matches) {
+                      const splitted = matches[1].split('/');
+                      result.providersOnly = splitted.map((b) => {
+                        switch (b) {
+                          case 'whisp':
+                            return 'WhisperX';
+                          case 'amber':
+                            return 'Amber';
+                          case 'google':
+                            return 'Google';
+                          case 'lst':
+                            return 'LST';
+                          case 'fraunh':
+                            return 'Fraunhofer';
+                          case 'uweb':
+                            return 'Web';
+                          case 'eml':
+                            return 'EML';
+                          case 'watson':
+                            return 'Watson';
+                        }
+                        return b;
+                      });
+
+                      const lstIndex = result.providersOnly.indexOf('LST');
+
+                      if (lstIndex > -1) {
+                        if (/^nl/g.exec(a.ParameterValue.Value)) {
+                          result.providersOnly[lstIndex] = 'LSTDutch';
+                        } else if (/^en/g.exec(a.ParameterValue.Value)) {
+                          result.providersOnly[lstIndex] = 'LSTEnglish';
+                        } else {
+                          result.providersOnly = [
+                            ...result.providersOnly.slice(0, lstIndex - 1),
+                            'LSTDutch',
+                            'LSTEnglish',
+                            ...result.providersOnly.slice(lstIndex),
+                          ];
+                        }
+                      }
+                    } else {
+                      result.providersOnly = undefined;
+                    }
+
+                    return result;
+                  }),
                 maus: result[4]
                   .filter(
                     (a: any) =>

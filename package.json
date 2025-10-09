@@ -39,7 +39,7 @@
     "@octra/annotation": "^1.2.2",
     "@octra/api-types": "^0.4.0",
     "@octra/media": "^1.0.0",
-    "@octra/ngx-components": "^1.4.0",
+    "@octra/ngx-components": "^1.5.0",
     "@octra/ngx-octra-api": "^0.4.1",
     "@octra/ngx-utilities": "^1.0.1",
     "@octra/utilities": "^1.2.0",

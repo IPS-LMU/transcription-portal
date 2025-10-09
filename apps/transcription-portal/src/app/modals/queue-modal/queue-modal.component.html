@@ -35,31 +35,6 @@
         <form #form="ngForm">
           <table class="table table-sm table-striped">
             <tbody>
-              <tr class="align-middle">
-                <td class="fit">
-                  <label class="me-1"
-                    >ASR Language<span class="text-danger">*</span>:</label
-                  >
-                </td>
-                <td>
-                  <octra-asr-language-select
-                    [(ngModel)]="
-                      taskService.state.currentModeState.selectedASRLanguage
-                    "
-                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
-                    [languageSettings]="{
-                      services: AppSettings.configuration.api.services,
-                    }"
-                    name="asrLanguage"
-                    id="asrLanguage"
-                    class="d-block"
-                    [languages]="languages.asr"
-                    placeholder="ASR Language"
-                    [title]="'ASR Language'"
-                    [required]="true"
-                  ></octra-asr-language-select>
-                </td>
-              </tr>
               <tr>
                 <td class="fit">
                   <label class="mt-2"
@@ -95,6 +70,35 @@
                       {{ selectedASRInfo.knownIssues }}
                     </div>
                   }
+                </td>
+              </tr>
+              <tr class="align-middle">
+                <td class="fit">
+                  <label class="me-1"
+                  >ASR Language<span class="text-danger">*</span>:</label
+                  >
+                </td>
+                <td>
+                  <octra-asr-language-select
+                    [ngModel]="
+                      taskService.state.currentModeState.selectedASRLanguage
+                    "
+                    (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                    [languageSettings]="{
+                      services: AppSettings.configuration.api.services,
+                    }"
+                    name="asrLanguage"
+                    id="asrLanguage"
+                    class="d-block"
+                    [languages]="languages.asr"
+                    [options]="{
+                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider
+                    }"
+                    placeholder="ASR Language"
+                    [title]="'ASR Language'"
+                    [required]="true"
+                  ></octra-asr-language-select>
+                  <span class="d-block small mute text-secondary ms-1" style="font-size:0.75rem;">The list of supported ASR languages depends on the selected ASR Provider.</span>
                 </td>
               </tr>
               @if (taskService.state.currentMode === 'summarization') {
@@ -136,7 +140,7 @@
                       "
                       (ngModelChange)="changeLanguageforAllQueuedTasks()"
                       [languageSettings]="{
-                        services: AppSettings.configuration.api.services,
+                        services: AppSettings.configuration.api.services
                       }"
                       [languages]="languages.maus"
                       [title]="'MAUS Language'"
