@@ -80,7 +80,7 @@
                 </td>
                 <td>
                   <octra-asr-language-select
-                    [ngModel]="
+                    [(ngModel)]="
                       taskService.state.currentModeState.selectedASRLanguage
                     "
                     (ngModelChange)="changeLanguageforAllQueuedTasks()"
@@ -92,7 +92,8 @@
                     class="d-block"
                     [languages]="languages.asr"
                     [options]="{
-                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider
+                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
+                      selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage
                     }"
                     placeholder="ASR Language"
                     [title]="'ASR Language'"

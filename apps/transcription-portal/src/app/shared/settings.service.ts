@@ -302,46 +302,20 @@ export class SettingsService implements OnDestroy {
     return Promise.all(promises);
   }
 
-  updateASRInfo(json: OHConfiguration): Promise<void> {
+  updateASRInfo(config: OHConfiguration): Promise<void> {
     return new Promise<void>((resolve) => {
-      if (json.api.asrInfoURL && json.api.asrInfoURL?.trim() !== '') {
-        this.http.get(json.api.asrInfoURL, { responseType: 'text' }).subscribe({
-          next: (result) => {
-            const html = jQuery(result);
-            const basTable = html.find('#bas-asr-service-table');
-            const basASRInfoContainers = basTable.find(
-              '.bas-asr-info-container',
-            );
+      if (config.api.asrInfoURL && config.api.asrInfoURL?.trim() !== '') {
+        this.http
+          .get(config.api.asrInfoURL, { responseType: 'text' })
+          .subscribe({
+            next: (result) => {
+              const html = jQuery(result);
+              const basTable = html.find('#bas-asr-service-table');
+              const basASRInfoContainers = basTable.find(
+                '.bas-asr-info-container',
+              );
 
-            const asrInfos: {
-              name?: string;
-              maxSignalDuration?: number;
-              maxSignalSize?: number;
-              quotaPerMonth?: number;
-              termsURL?: string;
-              dataStoragePolicy?: string;
-              knownIssues?: string;
-            }[] = [];
-
-            jQuery.each(basASRInfoContainers, (key, elem) => {
-              const name = jQuery(elem).attr('data-bas-asr-info-provider-name');
-              const isStringNumber = (str: string) => !isNaN(Number(str));
-              const sanitizeNumberValue = (el: any, attr: string) => {
-                if (el[attr] && isStringNumber(el[attr])) {
-                  el[attr] = Number(el[attr]);
-                } else {
-                  el[attr] = undefined;
-                }
-              };
-              const sanitizeStringValue = (el: any, attr: string) => {
-                if (el[attr] && typeof el[attr] === 'string') {
-                  el[attr] = el[attr].replace(/[\n\t\r]+/g, '');
-                } else {
-                  el[attr] = undefined;
-                }
-              };
-
-              const newElem: {
+              const asrInfos: {
                 name?: string;
                 maxSignalDuration?: number;
                 maxSignalSize?: number;
@@ -349,77 +323,107 @@ export class SettingsService implements OnDestroy {
                 termsURL?: string;
                 dataStoragePolicy?: string;
                 knownIssues?: string;
-              } = {
-                name,
-                maxSignalDuration: Number(
-                  jQuery(elem)
-                    .find('.bas-asr-info-max-signal-duration-seconds')
-                    .attr('data-value'),
-                ),
-                maxSignalSize: Number(
-                  jQuery(elem)
-                    .find('.bas-asr-info-max-signal-size-megabytes')
-                    .attr('data-value'),
-                ),
-                quotaPerMonth: Number(
-                  jQuery(elem)
-                    .find('.bas-asr-info-quota-per-month-seconds')
-                    .attr('data-value'),
-                ),
-                termsURL: jQuery(elem)
-                  .find('.bas-asr-info-eula-link')
-                  .attr('href'),
-                dataStoragePolicy: jQuery(elem)
-                  .find('.bas-asr-info-data-storage-policy')
-                  .text(),
-                knownIssues: jQuery(elem)
-                  .find('.bas-asr-info-known-issues')
-                  .text(),
-              };
+              }[] = [];
 
-              sanitizeNumberValue(newElem, 'maxSignalDuration');
-              sanitizeNumberValue(newElem, 'maxSignalSize');
-              sanitizeNumberValue(newElem, 'quotaPerMonth');
-              sanitizeStringValue(newElem, 'dataStoragePolicy');
-              sanitizeStringValue(newElem, 'knownIssues');
-              newElem.knownIssues =
-                newElem.knownIssues?.trim() === 'none'
-                  ? undefined
-                  : newElem.knownIssues;
-
-              asrInfos.push(newElem);
-            });
-
-            // overwrite data of config
-            for (const service of json.api.services) {
-              if (service.basName) {
-                const basInfo = asrInfos.find(
-                  (a) => a.name === service.basName,
+              jQuery.each(basASRInfoContainers, (key, elem) => {
+                const name = jQuery(elem).attr(
+                  'data-bas-asr-info-provider-name',
                 );
-                if (basInfo !== undefined) {
-                  service.dataStoragePolicy =
-                    basInfo.dataStoragePolicy ?? service.dataStoragePolicy;
-                  service.maxSignalDuration =
-                    basInfo.maxSignalDuration ?? service.maxSignalDuration;
-                  service.maxSignalSize =
-                    basInfo.maxSignalSize ?? service.maxSignalSize;
-                  service.knownIssues =
-                    basInfo.knownIssues ?? service.knownIssues;
-                  service.quotaPerMonth =
-                    basInfo.quotaPerMonth ?? service.quotaPerMonth;
-                  service.termsURL = basInfo.termsURL ?? service.termsURL;
+                const isStringNumber = (str: string) => !isNaN(Number(str));
+                const sanitizeNumberValue = (el: any, attr: string) => {
+                  if (el[attr] && isStringNumber(el[attr])) {
+                    el[attr] = Number(el[attr]);
+                  } else {
+                    el[attr] = undefined;
+                  }
+                };
+                const sanitizeStringValue = (el: any, attr: string) => {
+                  if (el[attr] && typeof el[attr] === 'string') {
+                    el[attr] = el[attr].replace(/[\n\t\r]+/g, '');
+                  } else {
+                    el[attr] = undefined;
+                  }
+                };
+
+                const newElem: {
+                  name?: string;
+                  maxSignalDuration?: number;
+                  maxSignalSize?: number;
+                  quotaPerMonth?: number;
+                  termsURL?: string;
+                  dataStoragePolicy?: string;
+                  knownIssues?: string;
+                } = {
+                  name,
+                  maxSignalDuration: Number(
+                    jQuery(elem)
+                      .find('.bas-asr-info-max-signal-duration-seconds')
+                      .attr('data-value'),
+                  ),
+                  maxSignalSize: Number(
+                    jQuery(elem)
+                      .find('.bas-asr-info-max-signal-size-megabytes')
+                      .attr('data-value'),
+                  ),
+                  quotaPerMonth: Number(
+                    jQuery(elem)
+                      .find('.bas-asr-info-quota-per-month-seconds')
+                      .attr('data-value'),
+                  ),
+                  termsURL: jQuery(elem)
+                    .find('.bas-asr-info-eula-link')
+                    .attr('href'),
+                  dataStoragePolicy: jQuery(elem)
+                    .find('.bas-asr-info-data-storage-policy')
+                    .text(),
+                  knownIssues: jQuery(elem)
+                    .find('.bas-asr-info-known-issues')
+                    .text(),
+                };
+
+                sanitizeNumberValue(newElem, 'maxSignalDuration');
+                sanitizeNumberValue(newElem, 'maxSignalSize');
+                sanitizeNumberValue(newElem, 'quotaPerMonth');
+                sanitizeStringValue(newElem, 'dataStoragePolicy');
+                sanitizeStringValue(newElem, 'knownIssues');
+                newElem.knownIssues =
+                  newElem.knownIssues?.trim() === 'none'
+                    ? undefined
+                    : newElem.knownIssues;
+
+                asrInfos.push(newElem);
+              });
+
+              // overwrite data of config
+              for (const service of config.api.services) {
+                if (service.basName && service.type !== 'Summarization') {
+                  const basInfo = asrInfos.find(
+                    (a) => a.name === service.basName,
+                  );
+                  if (basInfo !== undefined) {
+                    service.dataStoragePolicy =
+                      basInfo.dataStoragePolicy ?? service.dataStoragePolicy;
+                    service.maxSignalDuration =
+                      basInfo.maxSignalDuration ?? service.maxSignalDuration;
+                    service.maxSignalSize =
+                      basInfo.maxSignalSize ?? service.maxSignalSize;
+                    service.knownIssues =
+                      basInfo.knownIssues ?? service.knownIssues;
+                    service.quotaPerMonth =
+                      basInfo.quotaPerMonth ?? service.quotaPerMonth;
+                    service.termsURL = basInfo.termsURL ?? service.termsURL;
+                  }
                 }
               }
-            }
-            this.updateASRQuotaInfo(json).then(() => {
+              this.updateASRQuotaInfo(config).then(() => {
+                resolve();
+              });
+            },
+            error: (e) => {
+              console.error(e);
               resolve();
-            });
-          },
-          error: (e) => {
-            console.error(e);
-            resolve();
-          },
-        });
+            },
+          });
       } else {
         resolve();
       }

@@ -124,3 +124,12 @@ tbody .bi.bi-arrow-up {
   white-space: nowrap;
   width: 1%;
 }
+
+#summarizationProviderMenu,
+#asrProviderMenu {
+  max-width: 100% !important;
+}
+
+#summarizationProviderMenu .list-group .list-group-item .row .col-3 {
+  z-index: 10000;
+}
