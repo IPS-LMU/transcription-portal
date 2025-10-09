@@ -26,13 +26,7 @@ export class AppSettings {
       return undefined;
     }
 
-    return this.languages.asr.find((a) => {
-      return (
-        (a.value === code &&
-          (!a.providersOnly || a.providersOnly.length === 0)) ||
-        a.providersOnly?.includes(asr)
-      );
-    });
+    return this.languages.asr.find((a) => a.value === code);
   }
 
   public static getServiceInformation(serviceProvider?: string) {

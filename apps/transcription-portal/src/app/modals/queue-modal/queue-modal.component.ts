@@ -51,7 +51,7 @@ import { StorageService } from '../../storage.service';
     NgbPopover,
     FormsModule,
     OctraASRLanguageSelectComponent,
-    OctraProviderSelectComponent,
+    OctraProviderSelectComponent
   ],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
@@ -60,7 +60,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   private storage = inject(StorageService);
   private cd = inject(ChangeDetectorRef);
   private elementRef = inject(ElementRef);
-  private settingsService = inject(SettingsService);
+  protected settingsService = inject(SettingsService);
   private renderer = inject(Renderer2);
 
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;

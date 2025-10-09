@@ -3,7 +3,12 @@ import { inject, Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { sum } from '@octra/api-types';
-import { ASRSettings, NgbModalWrapper, openModal } from '@octra/ngx-components';
+import {
+  ASRSettings,
+  NgbModalWrapper,
+  openModal,
+  ServiceProvider,
+} from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { downloadFile } from '@octra/ngx-utilities';
 import {
@@ -43,6 +48,12 @@ export class SettingsService implements OnDestroy {
   private _allLoaded = false;
   private _feedbackEnabled = false;
   private subscrManager = new SubscriptionManager<Subscription>();
+
+  private _translationServiceProvider?: ServiceProvider;
+
+  get translationServiceProvider(): ServiceProvider | undefined {
+    return this._translationServiceProvider;
+  }
 
   get feedbackEnabled(): boolean {
     return this._feedbackEnabled;
@@ -299,6 +310,7 @@ export class SettingsService implements OnDestroy {
     promises.push(this.getASRLanguages(AppSettings.configuration.api as any));
     promises.push(this.getMAUSLanguages(AppSettings.configuration.api as any));
 
+    this._translationServiceProvider = AppSettings.configuration.api.services.find(a => a.type === "Translation");
     return Promise.all(promises);
   }
 

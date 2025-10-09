@@ -75,7 +75,7 @@
               <tr class="align-middle">
                 <td class="fit">
                   <label class="me-1"
-                  >ASR Language<span class="text-danger">*</span>:</label
+                    >ASR Language<span class="text-danger">*</span>:</label
                   >
                 </td>
                 <td>
@@ -92,14 +92,21 @@
                     class="d-block"
                     [languages]="languages.asr"
                     [options]="{
-                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
-                      selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage
+                      selectedServiceProvider:
+                        taskService.state.currentModeState.selectedASRProvider,
+                      selectedASRLanguage:
+                        taskService.state.currentModeState.selectedASRLanguage,
                     }"
                     placeholder="ASR Language"
                     [title]="'ASR Language'"
                     [required]="true"
                   ></octra-asr-language-select>
-                  <span class="d-block small mute text-secondary ms-1" style="font-size:0.75rem;">The list of supported ASR languages depends on the selected ASR Provider.</span>
+                  <span
+                    class="d-block small mute text-secondary ms-1"
+                    style="font-size: 0.75rem"
+                    >The list of supported ASR languages depends on the selected
+                    ASR Provider.</span
+                  >
                 </td>
               </tr>
               @if (taskService.state.currentMode === 'summarization') {
@@ -141,7 +148,7 @@
                       "
                       (ngModelChange)="changeLanguageforAllQueuedTasks()"
                       [languageSettings]="{
-                        services: AppSettings.configuration.api.services
+                        services: AppSettings.configuration.api.services,
                       }"
                       [languages]="languages.maus"
                       [title]="'MAUS Language'"
@@ -155,22 +162,53 @@
                 <tr class="align-middle">
                   <td class="fit"><label>Translate to:</label></td>
                   <td>
-                    <select
-                      class="form-select form-select-sm"
-                      [(ngModel)]="
-                        taskService.state.currentModeState
-                          .selectedTranslationLanguage
-                      "
-                      name="translationLanguage"
-                      [required]="true"
-                      (ngModelChange)="changeLanguageforAllQueuedTasks()"
-                    >
-                      <option value=""></option>
-                      <option value="en">English</option>
-                      <option value="de">German</option>
-                      <option value="nl">Dutch</option>
-                      <option value="it">Italian</option>
-                    </select>
+                    <div class="row g-1 align-items-center">
+                      <div class="col">
+                        <select
+                          class="form-select form-select-sm"
+                          [(ngModel)]="
+                            taskService.state.currentModeState
+                              .selectedTranslationLanguage
+                          "
+                          name="translationLanguage"
+                          [required]="true"
+                          (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                        >
+                          <option value=""></option>
+                          <option value="en">English</option>
+                          <option value="de">German</option>
+                          <option value="nl">Dutch</option>
+                          <option value="it">Italian</option>
+                        </select>
+                        <ng-template #translationProviderInfo>
+                          <div>
+                            <span class="d-block text-center"
+                              >Translation provided by:</span
+                            >
+                            <a
+                              [href]="
+                                settingsService.translationServiceProvider
+                                  ?.homepageURL
+                              "
+                              target="_blank"
+                              ><img
+                                [src]="
+                                  settingsService.translationServiceProvider
+                                    ?.logoURL
+                                "
+                                class="img-fluid"
+                            /></a>
+                          </div>
+                        </ng-template>
+                      </div>
+                      <div class="col-auto">
+                        <i
+                          class="bi bi-info-circle-fill pointer"
+                          style="color: cornflowerblue"
+                          [ngbPopover]="translationProviderInfo"
+                        ></i>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               }
