@@ -507,7 +507,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
       (async () => {
         if (data.name === 'OCTRA') {
-          if (hasProperty($event.data.data, 'annotation')) {
+          if (hasProperty($event.data, 'status') && $event.data.status === "success" && hasProperty($event.data.data, 'annotation')) {
             const result: any = $event.data.data.annotation;
             let annotation: IFile | undefined;
 
