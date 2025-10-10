@@ -58,6 +58,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
+import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 
 @Component({
   selector: 'tportal-main',
@@ -919,5 +920,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   changeMode(mode: 'annotation' | 'summarization') {
     this.taskService.state.currentMode = mode;
+  }
+
+  openAboutModal(){
+    const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
+    return ref.result;
   }
 }
