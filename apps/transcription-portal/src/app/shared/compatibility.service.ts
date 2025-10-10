@@ -12,66 +12,64 @@ export class CompatibilityService {
     name: string;
     description: string;
     help: string;
-    state: 'processing' | 'ok' | 'failed';
+    state: 'initialized' | 'processing' | 'ok' | 'failed';
   }[] = [
     {
       name: 'browser',
       description: 'Browser is supported.',
-      state: 'processing',
+      state: 'initialized',
       help: `Please make sure, that you are using the latest version of your browser. It is recommended using Chrome.
 <br/>Supported Browsers: `,
     },
     {
       name: 'cookies',
       description: 'Cookies are enabled on this browser.',
-      state: 'processing',
+      state: 'initialized',
       help: "Please make sure, that cookies are enabled in your browser settings. Don't use the incognito mode or other private mode.",
     },
     {
       name: 'canvas',
       description: 'Browser supports canvas.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'canvastext',
       description: 'Browser supports rendering text on canvas.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'webaudio',
       description: 'Browser supports Web Audio API.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'promises',
       description: 'Browser supports ES6 Promises.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'indexeddb',
       description: 'Browser supports IndexedDB.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'bloburls',
       description: 'Browser supports BlobURL.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
     {
       name: 'filereader',
       description: 'Browser supports FileReader.',
-      state: 'processing',
+      state: 'initialized',
       help: '',
     },
   ];
-
-  constructor() {}
 
   public isValidBrowser(allowedBrowsers: any[]): boolean {
     for (const browser of allowedBrowsers) {
@@ -83,29 +81,29 @@ export class CompatibilityService {
     return false;
   }
 
-  testCompability(): Promise<boolean> {
+  testCompatibility(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      this.rules[0].help += this.getValidBrowsers();
-      let valid = true;
+        this.rules[0].help += this.getValidBrowsers();
+        let valid = true;
 
-      const promises = [];
-      for (const rule of this.rules) {
-        promises.push(this.checkFeature(rule.name));
-      }
+        const promises = [];
+        for (const rule of this.rules) {
+          promises.push(this.checkFeature(rule.name));
+        }
 
-      Promise.all(promises)
-        .then((values) => {
-          for (let i = 0; i < values.length; i++) {
-            this.rules[i].state = values[i] ? 'ok' : 'failed';
-            if (!values[i]) {
-              valid = false;
+        Promise.all(promises)
+          .then((values) => {
+            for (let i = 0; i < values.length; i++) {
+              this.rules[i].state = values[i] ? 'ok' : 'failed';
+              if (!values[i]) {
+                valid = false;
+              }
             }
-          }
-          resolve(valid);
-        })
-        .catch((error) => {
-          reject(error);
-        });
+            resolve(valid);
+          })
+          .catch((error) => {
+            reject(error);
+          });
     });
   }
 

@@ -32,7 +32,7 @@ export class CompatibilityGuard implements CanActivate {
           this.routingService.navigate('config not loaded', ['/loading']);
         }
       }).then(() => {
-        this.compatibility.testCompability().then((result) => {
+        this.compatibility.testCompatibility().then((result) => {
           if (result) {
             resolve(true);
           } else {
