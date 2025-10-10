@@ -44,77 +44,82 @@ export class TranslationOperation extends Operation {
       console.log('LAST RESULT is');
       console.log(lastResult);
 
-      if (lastResult?.file) {
-        let content = await readFileContents<string>(
-          lastResult.file,
-          'text',
-          'utf-8',
-        );
+      try {
+        if (lastResult?.file) {
+          let content = await readFileContents<string>(
+            lastResult.file,
+            'text',
+            'utf-8',
+          );
 
-        const audiofile = new OAudiofile();
-        audiofile.duration = audioinfo.duration.samples;
-        audiofile.name =
-          audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
-        audiofile.sampleRate = audioinfo.sampleRate;
-        audiofile.size = audioinfo.size;
+          const audiofile = new OAudiofile();
+          audiofile.duration = audioinfo.duration.samples;
+          audiofile.name =
+            audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+          audiofile.sampleRate = audioinfo.sampleRate;
+          audiofile.size = audioinfo.size;
 
-        if (lastResult.extension !== '.txt') {
-          const importResult: ImportResult | undefined =
-            convertFromSupportedConverters(
-              AppInfo.converters.map((a) => a.obj),
-              {
-                name: lastResult.fullname,
-                content,
-                type: lastResult.type,
-                encoding: 'utf-8',
-              },
-              audiofile,
-            );
+          if (lastResult.extension !== '.txt') {
+            const importResult: ImportResult | undefined =
+              convertFromSupportedConverters(
+                AppInfo.converters.map((a) => a.obj),
+                {
+                  name: lastResult.fullname,
+                  content,
+                  type: lastResult.type,
+                  encoding: 'utf-8',
+                },
+                audiofile,
+              );
 
-          if (!importResult || !importResult.annotjson) {
-            const error =
-              "Can't convert last result from a previous operation.";
-            this.updateProtocol(this.protocol + '<br/>' + error);
-            this.time.duration = Date.now() - this.time.start;
-            this.changeState(TaskStatus.ERROR);
-            console.error(error);
-            return;
-          } else {
-            const textExport = new TextConverter().export(
-              importResult.annotjson,
-              audiofile,
-              0,
-            );
-
-            if (textExport?.file && !textExport.error) {
-              content = textExport.file.content;
-            } else {
+            if (!importResult || !importResult.annotjson) {
               const error =
-                "Can't convert last result from a previous operation to a text file.";
+                "Can't convert last result from a previous operation.";
               this.updateProtocol(this.protocol + '<br/>' + error);
               this.time.duration = Date.now() - this.time.start;
               this.changeState(TaskStatus.ERROR);
               console.error(error);
               return;
+            } else {
+              const textExport = new TextConverter().export(
+                importResult.annotjson,
+                audiofile,
+                0,
+              );
+
+              if (textExport?.file && !textExport.error) {
+                content = textExport.file.content;
+              } else {
+                const error =
+                  "Can't convert last result from a previous operation to a text file.";
+                this.updateProtocol(this.protocol + '<br/>' + error);
+                this.time.duration = Date.now() - this.time.start;
+                this.changeState(TaskStatus.ERROR);
+                console.error(error);
+                return;
+              }
             }
           }
-        }
 
-        const result = await this.getTranslation(httpclient, content);
-        console.log('TRANSLATION RESULT');
-        console.log(result);
-        this.time.duration = Date.now() - this.time.start;
-        this.results.push(
-          new FileInfo(
-            lastResult.name + '.txt',
-            'text/plain',
-            lastResult.size,
-            new File([result.translatedText], lastResult.name + '.txt', {
-              type: 'text/plain',
-            }),
-          ),
-        );
-        this.changeState(TaskStatus.FINISHED);
+          const result = await this.getTranslation(httpclient, content);
+          console.log('TRANSLATION RESULT');
+          console.log(result);
+          this.time.duration = Date.now() - this.time.start;
+          this.results.push(
+            new FileInfo(
+              lastResult.name + '.txt',
+              'text/plain',
+              lastResult.size,
+              new File([result.translatedText], lastResult.name + '.txt', {
+                type: 'text/plain',
+              }),
+            ),
+          );
+          this.changeState(TaskStatus.FINISHED);
+        }
+      } catch (e: any) {
+        this.throwError(new Error(e?.error?.message ?? e?.message));
+        console.error(e);
       }
     }, 2000);
   };

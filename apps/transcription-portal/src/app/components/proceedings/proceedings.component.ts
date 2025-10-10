@@ -714,7 +714,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       if (time.duration > 0) {
         return time.duration;
       } else {
-        return Date.now() - time.start;
+        return 0;
       }
     }
   }
