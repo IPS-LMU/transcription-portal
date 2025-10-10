@@ -1,7 +1,8 @@
 import { NgClass, NgStyle } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { BrowserInfo } from '../../obj/BrowserInfo';
+import { RoutingService } from '../../routing.service';
+import { AppSettings } from '../../shared/app.settings';
 import { CompatibilityService } from '../../shared/compatibility.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 
@@ -12,16 +13,28 @@ import { OHModalService } from '../../shared/ohmodal.service';
   imports: [NgClass, NgStyle],
 })
 export class BrowserTestComponent implements OnInit {
-  private router = inject(Router);
+  private routingService = inject(RoutingService);
   compatibility = inject(CompatibilityService);
   modalService = inject(OHModalService);
-
 
   public get browserName(): string {
     return BrowserInfo.browser;
   }
 
-  ngOnInit() {}
+  async ngOnInit() {
+    await new Promise<void>((resolve2, reject2) => {
+      if (AppSettings.configuration) {
+        resolve2();
+      } else {
+        this.routingService.navigate('config not loaded', ['/loading']);
+        reject2();
+      }
+    });
+    const isValid = await this.compatibility.testCompability();
+    if (isValid) {
+      this.routingService.navigate('back to root after check ok', ['/']);
+    }
+  }
 
   getStateIcon(rule: any): 'spinner' | 'times' | 'check' {
     switch (rule.state) {
@@ -45,10 +58,6 @@ export class BrowserTestComponent implements OnInit {
         return 'forestgreen';
     }
     return 'cornflowerblue';
-  }
-
-  test() {
-    window.location.href = 'chrome://settings/content/cookies';
   }
 
   reload() {
