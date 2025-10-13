@@ -1,4 +1,10 @@
-import { Component, ElementRef, OnDestroy, ViewChild, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';

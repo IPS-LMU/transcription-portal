@@ -15,13 +15,18 @@ import {
 import { DateTime } from 'luxon';
 import { firstValueFrom, interval, of, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
+import {
+  IDBNotificationSettingsItem,
+  IDBTaskItem,
+  IDBUserDefaultSettingsItem,
+  IDBUserSettingsItem,
+} from '../../indexedDB';
 import { AlertService } from '../../shared/alert.service';
 import { AppSettings } from '../../shared/app.settings';
 import { NotificationService } from '../../shared/notification.service';
 import { StorageService } from '../../storage.service';
 import { calcSHA256FromFile } from '../CryptoHelper';
 import { readFileAsArray } from '../functions';
-import { IDBTaskItem, IDBUserSettingsItem } from '../IndexedDBManager';
 import { ASROperation } from '../operations/asr-operation';
 import { EmuOperation } from '../operations/emu-operation';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
@@ -54,6 +59,7 @@ export class PortalModeState {
   public selectedASRLanguage?: string;
   public selectedSummarizationProvider?: ServiceProvider;
   public selectedASRProvider?: ServiceProvider;
+  public selectedSummarizationNumberOfWords?: number;
   private _status: TaskStatus = TaskStatus.READY;
   private _preprocessor!: Preprocessor;
   public selectedRows: number[] = [];
@@ -723,7 +729,7 @@ export class TaskService {
   public async importDBData(dbEntries: {
     annotationTasks: IDBTaskItem[];
     summarizationTasks: IDBTaskItem[];
-    userSettings: IDBUserSettingsItem[];
+    userSettings: IDBUserSettingsItem<any>[];
   }) {
     this.state.modes.annotation.newfiles = dbEntries.annotationTasks.length > 0;
     this.state.modes.summarization.newfiles =
@@ -766,32 +772,43 @@ export class TaskService {
     if (dbEntries.userSettings) {
       // read userSettings
       for (const userSetting of dbEntries.userSettings) {
-        switch (userSetting.name) {
-          case 'notification':
-            this.notification.permissionGranted = userSetting.value.enabled;
-            break;
-          case 'defaultUserSettings':
-            // search lang obj
-            const lang = AppSettings.getLanguageByCode(
-              userSetting.value.asrLanguage,
-              userSetting.value.asrProvider,
-            );
+        if (userSetting.name === 'notification') {
+          this.notification.permissionGranted = (
+            userSetting as IDBNotificationSettingsItem
+          ).value.enabled;
+        } else if (userSetting.name === 'defaultUserSettings') {
+          // search lang obj
+          const defaultUserSettings = (
+            userSetting as IDBUserDefaultSettingsItem
+          ).value;
+          const lang =
+            defaultUserSettings.asrLanguage && defaultUserSettings.asrProvider
+              ? AppSettings.getLanguageByCode(
+                  defaultUserSettings.asrLanguage,
+                  defaultUserSettings.asrProvider,
+                )
+              : undefined;
 
-            if (lang) {
-              this.state.modes.annotation.selectedASRLanguage =
-                userSetting.value.asrLanguage;
-              this.state.modes.annotation.selectedMausLanguage =
-                userSetting.value.mausLanguage;
-              this.state.modes.summarization.selectedASRLanguage =
-                userSetting.value.asrLanguage;
-              this.state.modes.summarization.selectedMausLanguage =
-                userSetting.value.mausLanguage;
-            }
-            this.state.modes.annotation.selectedASRProvider =
-              AppSettings.getServiceInformation(userSetting.value.asrProvider);
-            this.state.modes.summarization.selectedASRProvider =
-              AppSettings.getServiceInformation(userSetting.value.asrProvider);
-            break;
+          if (lang) {
+            this.state.modes.annotation.selectedASRLanguage =
+              defaultUserSettings.asrLanguage;
+            this.state.modes.annotation.selectedMausLanguage =
+              defaultUserSettings.mausLanguage;
+            this.state.modes.summarization.selectedASRLanguage =
+              defaultUserSettings.asrLanguage;
+          }
+          this.state.modes.annotation.selectedASRProvider =
+            AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
+          this.state.modes.summarization.selectedASRProvider =
+            AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
+          this.state.modes.summarization.selectedSummarizationProvider =
+            AppSettings.getServiceInformation(
+              defaultUserSettings.summarizationProvider,
+            );
+          this.state.modes.summarization.selectedTranslationLanguage =
+            defaultUserSettings.translationLanguage;
+          this.state.modes.summarization.selectedSummarizationNumberOfWords =
+            defaultUserSettings.summarizationWordLimit;
         }
       }
       // this.notification.permissionGranted = results[1][]
@@ -1498,6 +1515,8 @@ export class TaskService {
           selectedASRLanguage: this.state.currentModeState.selectedASRLanguage,
           selectedSummarizationProvider:
             this.state.currentModeState.selectedSummarizationProvider,
+          selectedSummarizationNumberOfWords:
+            this.state.currentModeState.selectedSummarizationNumberOfWords,
         });
 
         // set state

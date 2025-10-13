@@ -1,18 +1,19 @@
 import { Injectable } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { BehaviorSubject, Subscription } from 'rxjs';
+import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
 import {
   IDBInternItem,
   IDBTaskItem,
+  IDBUserDefaultSettingsItemData,
   IDBUserSettingsItem,
   IndexedDBManager,
-} from './obj/IndexedDBManager';
+} from './indexedDB';
 import { Operation } from './obj/operations/operation';
 import { Task, TaskDirectory } from './obj/tasks';
 import { TaskEntry } from './obj/tasks/task-entry';
 import { PortalModeType } from './obj/tasks/task.service';
-import { environment } from '../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
@@ -25,7 +26,7 @@ export class StorageService {
   public allloaded = new BehaviorSubject<{
     annotationTasks: IDBTaskItem[];
     summarizationTasks: IDBTaskItem[];
-    userSettings: IDBUserSettingsItem[];
+    userSettings: IDBUserSettingsItem<any>[];
   }>({
     annotationTasks: [],
     summarizationTasks: [],
@@ -64,7 +65,9 @@ export class StorageService {
   }
 
   constructor() {
-    this._idbm = new IndexedDBManager(environment.production ? 'oh-portal': 'oh-portal-dev');
+    this._idbm = new IndexedDBManager(
+      environment.production ? 'oh-portal' : 'oh-portal-dev',
+    );
     this._idbm.open().catch((e) => {
       alert(e.message);
     });
@@ -86,30 +89,44 @@ export class StorageService {
       promises.push(this._idbm.userSettings.toArray());
 
       Promise.all<
-        [IDBInternItem, IDBInternItem, IDBTaskItem[], IDBTaskItem[], IDBUserSettingsItem[]]
+        [
+          IDBInternItem,
+          IDBInternItem,
+          IDBTaskItem[],
+          IDBTaskItem[],
+          IDBUserSettingsItem<any>[],
+        ]
       >(promises as any)
-        .then(([taskCounter, operationCounter, annotationTasks, summarizationTasks, userSettings]) => {
-          TaskEntry.counter = taskCounter.value;
-          Operation.counter = operationCounter.value;
-          this.ready = true;
-
-          if (userSettings) {
-            const userProfile = userSettings.find((a: any) => {
-              return a.name === 'userProfile';
-            });
-
-            if (userProfile && userProfile.value) {
-              this.userProfile = userProfile.value;
-            }
-          }
-
-          this.allloaded.next({
+        .then(
+          ([
+            taskCounter,
+            operationCounter,
             annotationTasks,
             summarizationTasks,
             userSettings,
-          });
-          this.allloaded.complete();
-        })
+          ]) => {
+            TaskEntry.counter = taskCounter.value;
+            Operation.counter = operationCounter.value;
+            this.ready = true;
+
+            if (userSettings) {
+              const userProfile = userSettings.find((a: any) => {
+                return a.name === 'userProfile';
+              });
+
+              if (userProfile && userProfile.value) {
+                this.userProfile = userProfile.value;
+              }
+            }
+
+            this.allloaded.next({
+              annotationTasks,
+              summarizationTasks,
+              userSettings,
+            });
+            this.allloaded.complete();
+          },
+        )
         .catch((err) => {
           console.error(err);
           this.ready = true;
@@ -123,16 +140,15 @@ export class StorageService {
     });
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
+  public saveTask(
+    taskEntry: Task | TaskDirectory,
+    mode: PortalModeType,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
-
       let promise: Promise<any>;
 
-      if (
-        taskEntry instanceof Task &&
-        !(taskEntry.directory === null || taskEntry.directory === undefined)
-      ) {
+      if (taskEntry instanceof Task && taskEntry.directory) {
         promise = taskEntry.directory.toAny();
       } else {
         promise = taskEntry.toAny();
@@ -169,14 +185,24 @@ export class StorageService {
     });
   }
 
-  public saveUserSettings(name: string, value: any) {
-    this.idbm.userSettings.put({
+  saveUserSettings<T>(name: string, value: T) {
+    return this.idbm.userSettings.put({
       name,
       value,
     });
   }
 
-  public removeFromDB(entry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
+  public saveDefaultUserSettings(value: IDBUserDefaultSettingsItemData) {
+    return this.idbm.userSettings.put({
+      name: 'defaultUserSettings',
+      value,
+    });
+  }
+
+  public removeFromDB(
+    entry: Task | TaskDirectory,
+    mode: PortalModeType,
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
       if (entry instanceof Task) {

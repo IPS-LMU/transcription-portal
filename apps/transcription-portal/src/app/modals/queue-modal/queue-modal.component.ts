@@ -51,7 +51,7 @@ import { StorageService } from '../../storage.service';
     NgbPopover,
     FormsModule,
     OctraASRLanguageSelectComponent,
-    OctraProviderSelectComponent
+    OctraProviderSelectComponent,
   ],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
@@ -66,6 +66,29 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
   @ViewChild('pop', { static: true }) popover?: NgbPopover;
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
+
+  get selectedSummarizationNumberOfWords(): number | undefined {
+    return isNaN(
+      Number(
+        this.taskService.state.currentModeState
+          .selectedSummarizationNumberOfWords,
+      ),
+    )
+      ? undefined
+      : Number(
+          this.taskService.state.currentModeState
+            .selectedSummarizationNumberOfWords,
+        );
+  }
+
+  set selectedSummarizationNumberOfWords(value: number) {
+    if (isNaN(Number(value))) {
+      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
+        undefined;
+    }
+    this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
+      Number(value);
+  }
 
   tasks: Task[] = [];
   queue: QueueItem[] = [];
@@ -207,7 +230,9 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   changeLanguageforAllQueuedTasks() {
-    if (this.taskService.state.currentModeState.selectedASRLanguage) {
+    if (this.taskService.state.currentModeState?.selectedASRLanguage) {
+      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
+        this.selectedSummarizationNumberOfWords;
       this.compatibleTable = [];
 
       const tasks = this.tasks.filter((a) => {
@@ -227,6 +252,9 @@ export class QueueModalComponent implements OnDestroy, OnInit {
             this.taskService.state.currentModeState.selectedMausLanguage,
           selectedASRProvider:
             this.taskService.state.currentModeState.selectedASRProvider,
+          selectedSummarizationNumberOfWords:
+            this.taskService.state.currentModeState
+              .selectedSummarizationNumberOfWords,
         });
         this.storage.saveTask(task, this.taskService.state.currentMode);
 
@@ -246,13 +274,21 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         }
       }
 
-      this.storage.saveUserSettings('defaultUserSettings', {
+      this.storage.saveDefaultUserSettings({
         asrLanguage:
           this.taskService.state.currentModeState.selectedASRLanguage,
         mausLanguage:
           this.taskService.state.currentModeState.selectedMausLanguage,
         asrProvider:
           this.taskService.state.currentModeState.selectedASRProvider?.provider,
+        summarizationProvider:
+          this.taskService.state.currentModeState.selectedSummarizationProvider
+            ?.provider,
+        translationLanguage:
+          this.taskService.state.currentModeState.selectedTranslationLanguage,
+        summarizationWordLimit:
+          this.taskService.state.currentModeState
+            .selectedSummarizationNumberOfWords,
       });
 
       if (this.dropdown) {

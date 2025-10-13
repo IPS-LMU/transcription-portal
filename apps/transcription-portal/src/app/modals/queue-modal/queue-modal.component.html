@@ -20,8 +20,10 @@
     <p style="font-size: 0.9em; text-align: justify; margin-bottom: 0">
       The following tasks are going to be processed one after the other. Please
       check if all options are set as you wish. While you are selecting the
-      language you can click on the <i class="bi bi-info-circle-fill" style="color:cornflowerblue;"></i> on the right of an entry for further
-      information like data storage policy and terms and conditions.
+      language you can click on the
+      <i class="bi bi-info-circle-fill" style="color: cornflowerblue"></i> on
+      the right of an entry for further information like data storage policy and
+      terms and conditions.
     </p>
     <p style="font-size: 0.9em; text-align: justify; margin-top: 5px">
       When you click "OK" you agree with the terms and conditions of the
@@ -135,6 +137,29 @@
                         asrProvider: 'Summarization Service Provider',
                       }"
                     ></octra-asr-provider-select>
+                  </td>
+                </tr>
+                <tr class="align-middle fit">
+                  <td class="fit">
+                    <label for="asrProvider"
+                      >Max. number of words for summarization<span
+                        class="text-danger"
+                        >*</span
+                      >:</label
+                    >
+                  </td>
+                  <td>
+                    <select
+                      class="form-select form-select-sm"
+                      name="summarizationNumberOfWords"
+                      [(ngModel)]="selectedSummarizationNumberOfWords"
+                      (ngModelChange)="changeLanguageforAllQueuedTasks()"
+                    >
+                      <option [value]="">Unlimited</option>
+                      <option [value]="10">Headline (10 words)</option>
+                      <option [value]="100">Paragraph (100 words)</option>
+                      <option [value]="400">Page (400 words)</option>
+                    </select>
                   </td>
                 </tr>
               }
@@ -251,8 +276,8 @@
         class="alert alert-warning"
         style="text-align: center; font-size: 0.9em"
       >
-        Please add the files with file names in orange again. Otherwise these
-        files will be skipped.
+        Please close this window and re-add the files with file names in orange
+        to the table. Otherwise these files are going to be skipped.
       </p>
     }
 

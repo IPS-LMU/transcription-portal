@@ -136,7 +136,7 @@ return function (App $app) {
       $parsedBody = $request->getParsedBody();
       $result = $summarizationClient->post('sumservice/' . $parsedBody['projectName'], [
         'form_params' => [
-          'gpu' => !empty($parsedBody['gpu']) ? $parsedBody['gpu'] : false,
+          'words' => !empty($parsedBody['words']) ? $parsedBody['words'] : null,
           'language' => $parsedBody['language']
         ]
       ]);
@@ -144,14 +144,12 @@ return function (App $app) {
       $response = $response->withHeader('Content-Type', 'application/json');
       $response = $response->withStatus($result->getStatusCode());
 
-      /**
-       * $xml = simplexml_load_string($result->getBody()->getContents());
-       * if ($xml === false) {
-       * $response = $response->withStatus(500);
-       * $response->getBody()->write(json_encode(array("status" => "failed", "message" => "Unable to read XML response from summarization service.")));
-       * return $response;
-       * }
-       */
+       $xml = simplexml_load_string($result->getBody()->getContents());
+       if ($xml === false) {
+         $response = $response->withStatus(500);
+         $response->getBody()->write(json_encode(array("status" => "failed", "message" => "Unable to read XML response from summarization service.")));
+         return $response;
+       }
 
       $response->getBody()->write(json_encode(array("status" => "success")));
     } catch (GuzzleException $err) {

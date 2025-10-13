@@ -1,12 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
+import {
+  AudioInfo,
+  DirectoryInfo,
+  FileInfo,
+  FileInfoSerialized,
+} from '@octra/web-media';
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
-import { OHCommand } from '../oh-config';
-import { IAccessCode, Operation } from '../operations/operation';
-import { TaskEntry } from './task-entry';
 import { AppSettings } from '../../shared/app.settings';
+import { OHCommand } from '../oh-config';
+import { IAccessCode, IOperation, Operation } from '../operations/operation';
+import { SummarizationOperation } from '../operations/summarization-operation';
+import { TaskEntry } from './task-entry';
+import { AudioFileInfoSerialized, IDBTaskItem } from '../../indexedDB';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -119,12 +126,13 @@ export class Task {
     selectedMausLanguage?: string;
     selectedASRProvider?: ServiceProvider;
     selectedSummarizationProvider?: ServiceProvider;
+    selectedSummarizationNumberOfWords?: number;
     selectedTargetLanguage?: string;
   }) {
     // set service provider for upload operation
-    console.log("set options");
+    console.log('set options');
     console.log(this.operations);
-    const basProvider = AppSettings.getServiceInformation("BAS");
+    const basProvider = AppSettings.getServiceInformation('BAS');
     this.operations[0].serviceProvider = options.selectedASRProvider;
 
     if (this.operations[1].name === 'ASR') {
@@ -142,7 +150,9 @@ export class Task {
     if (this.operations[3].name === 'Summarization') {
       this.operations[3].serviceProvider =
         options.selectedSummarizationProvider;
-      this.operations[3].language = options.selectedTargetLanguage;
+      this.operations[3].language = options.selectedASRLanguage;
+      (this.operations[3] as SummarizationOperation).maxNumberOfWords =
+        options.selectedSummarizationNumberOfWords;
     }
 
     if (this.operations[3].name === 'MAUS') {
@@ -163,7 +173,7 @@ export class Task {
   }
 
   public static fromAny(
-    taskObj: any,
+    taskObj: IDBTaskItem,
     commands: OHCommand[],
     defaultOperations: Operation[],
   ): Task {
@@ -184,10 +194,10 @@ export class Task {
           file.fullname,
           file.type,
           file.size,
-          file.sampleRate,
-          file.duration,
-          file.channels,
-          file.bitsPerSecond,
+          (file as AudioFileInfoSerialized).sampleRate,
+          (file as AudioFileInfoSerialized).duration,
+          (file as AudioFileInfoSerialized).channels,
+          (file as AudioFileInfoSerialized).bitsPerSecond,
         );
         info.attributes = file.attributes;
         info.hash = file.hash;
@@ -320,9 +330,9 @@ export class Task {
     }
   }
 
-  public toAny(): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      const result = {
+  public toAny(): Promise<IDBTaskItem> {
+    return new Promise<IDBTaskItem>((resolve, reject) => {
+      const result: IDBTaskItem = {
         id: this.id,
         type: 'task',
         state: this.status,
@@ -332,30 +342,32 @@ export class Task {
       };
 
       // read file data
-      const filePromises: Promise<unknown>[] = [];
+      const filePromises: Promise<FileInfoSerialized>[] = [];
       for (const file of this.files) {
         filePromises.push(file.toAny());
       }
 
       Promise.all(filePromises)
-        .then((values) => {
-          for (let i = 0; i < values.length; i++) {
+        .then((serializedFiles) => {
+          for (let i = 0; i < serializedFiles.length; i++) {
             const file = this.files[i];
+            const serializedFile: FileInfoSerialized | AudioFileInfoSerialized =
+              serializedFiles[i];
 
-            const fileObj: any = values[i];
-
-            // TODO check this
             if (file instanceof AudioInfo) {
               const audioFile = file as AudioInfo;
-
-              fileObj.sampleRate = audioFile.sampleRate;
-              fileObj.bitsPerSecond = audioFile.bitrate;
-              fileObj.channels = audioFile.channels;
-              fileObj.duration = audioFile.duration.samples;
+              (serializedFile as AudioFileInfoSerialized).sampleRate =
+                audioFile.sampleRate;
+              (serializedFile as AudioFileInfoSerialized).bitsPerSecond =
+                audioFile.bitrate;
+              (serializedFile as AudioFileInfoSerialized).channels =
+                audioFile.channels;
+              (serializedFile as AudioFileInfoSerialized).duration =
+                audioFile.duration.samples;
             }
-            fileObj.attributes = file.attributes;
+            serializedFile.attributes = file.attributes;
 
-            result.files.push(fileObj as never);
+            result.files.push(serializedFile as never);
           }
 
           result.folderPath =
@@ -364,15 +376,15 @@ export class Task {
               : this._directory.path;
 
           // read operation data
-          const promises: Promise<any>[] = [];
+          const operationPromises: Promise<IOperation>[] = [];
           for (const operation of this.operations) {
-            promises.push(operation.toAny());
+            operationPromises.push(operation.toAny());
           }
 
-          if (promises.length > 0) {
-            Promise.all(promises)
-              .then((values2) => {
-                result.operations = values2 as never[];
+          if (operationPromises.length > 0) {
+            Promise.all(operationPromises)
+              .then((serializedOperations) => {
+                result.operations = serializedOperations;
                 resolve(result);
               })
               .catch((error) => {
@@ -673,9 +685,9 @@ export class TaskDirectory {
     }
   }
 
-  public toAny(): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      const result = {
+  public toAny(): Promise<ITaskDirectory> {
+    return new Promise<ITaskDirectory>((resolve, reject) => {
+      const result: ITaskDirectory = {
         id: this.id,
         type: 'folder',
         path: this.path,
@@ -703,4 +715,11 @@ export class TaskDirectory {
       entry.destroy();
     }
   }
+}
+
+export interface ITaskDirectory {
+  id: number;
+  type: 'folder';
+  path: string;
+  entries: IDBTaskItem[];
 }

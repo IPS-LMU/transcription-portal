@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
+import { FileInfo, FileInfoSerialized } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import { Task, TaskStatus } from '../tasks';
 
@@ -16,9 +16,11 @@ export interface IOperation {
     duration: number;
   };
   enabled: boolean;
-  results: any[];
+  results: FileInfoSerialized[];
   serviceProvider?: string;
   language?: string;
+  mausLanguage?: string;
+  summarizationMaxNumberOfWords?: string; // TODO save/retrieve values
 }
 
 export abstract class Operation {
@@ -354,7 +356,7 @@ export abstract class Operation {
       };
 
       // result data
-      const promises: Promise<any>[] = [];
+      const promises: Promise<FileInfoSerialized>[] = [];
       for (const resultObj of this.results) {
         promises.push(resultObj.toAny());
       }
@@ -362,7 +364,7 @@ export abstract class Operation {
       if (promises.length > 0) {
         Promise.all(promises)
           .then((values) => {
-            result.results = values as never[];
+            result.results = values;
             resolve(result);
           })
           .catch((error) => {

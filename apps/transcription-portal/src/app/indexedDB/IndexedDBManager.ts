@@ -1,30 +1,14 @@
 import Dexie, { Table } from 'dexie';
 import { AppInfo } from '../app.info';
-
-export interface IDBUserSettingsItem {
-  name: string;
-  value: any;
-}
-
-export interface IDBTaskItem {
-  id: number;
-  type: string;
-  state: string;
-  folderPath: string;
-  asrLanguage: string;
-  asrProvider: string;
-  mausLanguage: string;
-  files: any[];
-  operations: any[];
-}
-
-export interface IDBInternItem {
-  name: string;
-  value: any;
-}
+import {
+  IDBInternItem,
+  IDBTaskItem,
+  IDBUserDefaultSettingsItemData,
+  IDBUserSettingsItem,
+} from './types';
 
 export class IndexedDBManager extends Dexie {
-  userSettings!: Table<IDBUserSettingsItem, string>;
+  userSettings!: Table<IDBUserSettingsItem<any>, string>;
   intern!: Table<IDBInternItem, string>;
   annotation_tasks!: Table<IDBTaskItem, number>;
   summarization_tasks!: Table<IDBTaskItem, number>;
@@ -50,12 +34,12 @@ export class IndexedDBManager extends Dexie {
           .toCollection()
           .modify((task: IDBTaskItem) => {
             if (Object.keys(task).includes('asr')) {
-              task.asrProvider = (task as any)['asr'];
+              task.operations[1].serviceProvider = (task as any)['asr'];
               delete (task as any)['asr'];
             }
 
             if (Object.keys(task).includes('language')) {
-              task.asrLanguage = (task as any)['language'];
+              task.operations[1].language = (task as any)['language'];
               delete (task as any)['language'];
             }
           });
@@ -82,6 +66,11 @@ export class IndexedDBManager extends Dexie {
     this.version(5).stores({
       tasks: null,
     });
+    this.version(6).stores({
+      tasks: null,
+      annotation_tasks: 'id, type, state, folderPath, files, operations',
+      summarization_tasks: 'id, type, state, folderPath, files, operations',
+    });
     this.on('populate', () => this.populate());
   }
 
@@ -93,7 +82,10 @@ export class IndexedDBManager extends Dexie {
           asrLanguage: '',
           mausLanguage: '',
           asrProvider: '',
-        },
+          summarizationWordLimit: undefined,
+          summarizationProvider: '',
+          translationLanguage: '',
+        } as IDBUserDefaultSettingsItemData,
       },
       'defaultUserSettings',
     );

@@ -12,12 +12,13 @@ import {
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
-import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation } from './operation';
 
 export class SummarizationOperation extends Operation {
   public resultType = 'Text';
+
+  maxNumberOfWords?: number;
 
   public start = (
     inputs: FileInfo[],
@@ -78,9 +79,11 @@ export class SummarizationOperation extends Operation {
         console.log('TRANSCRIPT');
         console.log(transcript);
 
-        const projectName = await this.createSummarizationProject(httpclient);
-        console.log(`Created project ${projectName}`);
+        let projectName: string | undefined = undefined;
         try {
+          projectName = await this.createSummarizationProject(httpclient);
+          console.log(`Created project ${projectName}`);
+
           await this.uploadFile(
             new File([transcript], `${projectName}.txt`, {
               type: 'text/plain',
@@ -103,7 +106,9 @@ export class SummarizationOperation extends Operation {
           this.updateProtocol(
             err?.error?.message ?? err?.message ?? err?.toString(),
           );
-          await this.deleteSummarizationProject(httpclient, projectName);
+          if (projectName) {
+            await this.deleteSummarizationProject(httpclient, projectName);
+          }
           return;
         }
 
@@ -174,7 +179,7 @@ export class SummarizationOperation extends Operation {
 
   public clone(task?: Task): SummarizationOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new SummarizationOperation(
+    const result = new SummarizationOperation(
       this.name,
       this._commands,
       this.title,
@@ -185,6 +190,9 @@ export class SummarizationOperation extends Operation {
       this.serviceProvider,
       this.language,
     );
+    result.maxNumberOfWords = this.maxNumberOfWords;
+
+    return result;
   }
 
   public fromAny(
@@ -203,8 +211,9 @@ export class SummarizationOperation extends Operation {
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider) ??
         AppSettings.getServiceInformation(taskObj.summarizationServiceProvider),
-      operationObj.language ?? taskObj.targetLanguage,
+      operationObj.language ?? taskObj.operations[1].language,
     );
+    result.maxNumberOfWords = (operationObj as any).maxNumberOfWords;
 
     for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
@@ -276,17 +285,20 @@ export class SummarizationOperation extends Operation {
     projectName: string,
   ) {
     return new Promise<void>((resolve, reject) => {
-      if (this.serviceProvider && this.language) {
-        console.log(
-          `convert ${this.language} to ${convertISO639Language(this.language)}`,
-        );
+      console.log(
+        `Process project with options ${this.language} and ${this.maxNumberOfWords}`,
+      );
+      if (this.serviceProvider) {
         this.subscrManager.add(
           httpclient
             .post(
               joinURL(this.serviceProvider.host, '/project/process'),
               {
                 projectName,
-                language: 'en',
+                language: this.mapLanguage(this.language),
+                words: !Number.isNaN(Number(this.maxNumberOfWords))
+                  ? Number(this.maxNumberOfWords)
+                  : undefined,
               },
               { responseType: 'json' },
             )
@@ -367,5 +379,24 @@ export class SummarizationOperation extends Operation {
         reject('Missing service provider');
       }
     });
+  }
+
+  private mapLanguage(isoLanguage?: string) {
+    if (isoLanguage) {
+      const mappings = {
+        deu: 'German',
+        nld: 'Dutch',
+        ita: 'Italian',
+        eng: 'English',
+      };
+
+      const parsed = /(.{3})-.*/g.exec(isoLanguage);
+      if (parsed && parsed.length === 2) {
+        if (Object.keys(mappings).includes(parsed[1])) {
+          return (mappings as any)[parsed[1]];
+        }
+      }
+    }
+    return 'auto';
   }
 }
