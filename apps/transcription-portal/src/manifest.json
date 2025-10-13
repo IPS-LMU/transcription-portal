@@ -19,10 +19,10 @@
   "display": "standalone",
   "dir": "left",
   "lang": "en-EN",
-  "name": "TranscriptionPortal",
-  "short_name": "tportal",
-  "start_url": "/",
-  "scope": "/",
-  "description": "OCTRA is a web-application for the orthographic transcription of audio files. ",
-  "id": "/"
+  "name": "TranscriptionPortalDev",
+  "short_name": "tportalDev",
+  "start_url": "https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/",
+  "scope": "https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/",
+  "description": "The TranscriptionPortal offers a transcription chain for multi upload and processing of audio files using a combination of automatic speech recognition, manual transcription, MAUS and the EMU-webApp.",
+  "id": "https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal-Dev/"
 }
