@@ -43,6 +43,7 @@ h1 {
   text-align: center;
   padding: 5px;
   display: -webkit-box;
+  z-index: 100;
 }
 
 .proceedings-header .status {
@@ -223,4 +224,13 @@ nav li {
   #mode-tabs {
     margin-top: 80px;
   }
+}
+#mode-tabs .nav-item {
+  opacity: 0.75;
+}
+
+#mode-tabs .active {
+  box-shadow: 3px 3px 10px lightgray;
+  opacity: 1;
+  font-weight: 400;
 }
