@@ -175,6 +175,7 @@ export class OCTRAOperation extends ToolOperation {
       ) &&
       this.task
     ) {
+      const serviceProvider = AppSettings.getServiceInformation("BAS")!;
       const audio_url = encodeURIComponent(
         (this.operations[0] as any)?.wavFile?.url,
       ) as string;
@@ -185,11 +186,11 @@ export class OCTRAOperation extends ToolOperation {
 
       const langObj = AppSettings.getLanguageByCode(
         this.language!,
-        this.serviceProvider!.provider,
+        serviceProvider.provider,
       );
 
-      if (langObj && this.serviceProvider) {
-        const host = encodeURIComponent(this.serviceProvider.host);
+      if (langObj) {
+        const host = encodeURIComponent(serviceProvider.host);
 
         if (this.results.length < 1 && this.previousOperation) {
           if (
@@ -220,7 +221,7 @@ export class OCTRAOperation extends ToolOperation {
         })}`;
       } else {
         console.log(
-          `langObj or provider not found in octra operation lang:${this.language} and ${this.serviceProvider}`,
+          `langObj or provider not found in octra operation lang:${this.language} and ${serviceProvider?.provider}`,
         );
       }
     }

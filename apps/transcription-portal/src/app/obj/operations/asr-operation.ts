@@ -1,8 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { input } from '@angular/core';
 import { ServiceProvider } from '@octra/ngx-components';
-import { extractFileNameFromURL } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
+import {
+  extractFileNameFromURL,
+  joinURL,
+  stringifyQueryParams,
+  wait,
+} from '@octra/utilities';
+import { downloadFile, FileInfo } from '@octra/web-media';
+import { interval } from 'rxjs';
+import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
@@ -24,10 +31,15 @@ export class ASROperation extends Operation {
 
     setTimeout(() => {
       if (this.serviceProvider) {
-        this.callASR(httpclient, inputs[0], accessCode)
+        const promise: Promise<FileInfo> =
+          this.serviceProvider.provider === 'LSTWhisperX'
+            ? this.callASRFromRadboud(httpclient, inputs[0], accessCode)
+            : this.callASRFromBASWebservices(httpclient, inputs[0], accessCode);
+
+        promise
           .then((file: FileInfo) => {
             if (file && this.serviceProvider) {
-              this.callG2PChunker(this.serviceProvider, httpclient, file)
+              this.callG2PChunker(AppSettings.getServiceInformation("BAS")!, httpclient, file)
                 .then((finalResult) => {
                   this.time.duration = Date.now() - this.time.start;
 
@@ -150,7 +162,7 @@ export class ASROperation extends Operation {
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  private callASR(
+  private callASRFromBASWebservices(
     httpClient: HttpClient,
     input: FileInfo,
     accessCode?: string,
@@ -225,8 +237,103 @@ export class ASROperation extends Operation {
               reject(error.message);
             },
           });
+      } else {
+        this.throwError(new Error('Missing ASR Provider.'));
       }
     });
+  }
+
+  private async callASRFromRadboud(
+    httpClient: HttpClient,
+    input: FileInfo,
+    accessCode?: string,
+  ): Promise<FileInfo> {
+    if (this.serviceProvider) {
+      if (input.file) {
+        // 1. Create a new project with unique ID
+        const projectName = await this.createLSTASRProject(
+          httpClient,
+          this.serviceProvider,
+        );
+        await wait(1);
+        // 2. Upload files
+        await this.uploadFileToLST(
+          input.file,
+          httpClient,
+          projectName,
+          this.serviceProvider,
+        );
+
+        const res = await this.processASRLSTProject(
+          httpClient,
+          projectName,
+          this.serviceProvider,
+        );
+
+        return new Promise<FileInfo>((resolve, reject) => {
+          this.subscrManager.add(
+            interval(5000).subscribe({
+              next: async () => {
+                if (this.serviceProvider) {
+                  const result = await this.getLSTProjectStatus(
+                    httpClient,
+                    projectName,
+                    this.serviceProvider,
+                  );
+
+                  if (
+                    result.status === 'success' &&
+                    result.body.status === 'finished'
+                  ) {
+                    if (!result.body.errors) {
+                      this.time.duration = Date.now() - this.time.start;
+
+                      const outputFile = result.body.outputs.find(
+                        (o: any) => o.template === 'Transcription',
+                      );
+
+                      if (outputFile) {
+                        const outputFileText = await downloadFile(
+                          outputFile.url,
+                          'text',
+                        ) as any as string;
+                        const file = new File(
+                          [outputFileText.replace(/\n/g, " ").replace(/\s+/g, " ")],
+                          input.name + '.txt',
+                          { type: 'text/plain' },
+                        );
+                        resolve(
+                          new FileInfo(
+                            file.name,
+                            'text/plain',
+                            file.size,
+                            file,
+                          ),
+                        );
+                      }
+                    } else {
+                      reject(result.body.errorMessage);
+                    }
+
+                    this.subscrManager.removeByTag('status check');
+                    await this.deleteLSTASRProject(
+                      httpClient,
+                      projectName,
+                      this.serviceProvider,
+                    );
+                  }
+                }
+              },
+            }),
+            'status check',
+          );
+        });
+      } else {
+        throw new Error('Missing input file.');
+      }
+    } else {
+      throw new Error('Missing ASR Provider.');
+    }
   }
 
   private callG2PChunker(
@@ -238,7 +345,7 @@ export class ASROperation extends Operation {
       new Promise<string>((resolve2, reject2) => {
         UploadOperation.upload(
           [asrResult],
-          asrService.host + 'uploadFileMulti',
+          AppSettings.getServiceInformation('BAS')!.host + 'uploadFileMulti',
           httpClient,
         ).subscribe({
           next: (event) => {
@@ -327,5 +434,144 @@ export class ASROperation extends Operation {
           reject(error);
         });
     });
+  }
+
+  getLSTProjectStatus(
+    httpclient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+  ) {
+    return new Promise<any>((resolve, reject) => {
+      this.subscrManager.add(
+        httpclient
+          .get(
+            joinURL(
+              serviceProvider.host,
+              `/project${stringifyQueryParams({
+                projectName,
+              })}`,
+            ),
+            { responseType: 'json' },
+          )
+          .subscribe({
+            next: resolve,
+            error: reject,
+          }),
+      );
+    });
+  }
+
+  deleteLSTASRProject(
+    httpclient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+  ) {
+    return new Promise<void>((resolve, reject) => {
+      this.subscrManager.add(
+        httpclient
+          .delete(joinURL(serviceProvider.host, '/project'), {
+            responseType: 'json',
+            body: {
+              projectName,
+            },
+          })
+          .subscribe({
+            next: () => resolve(),
+            error: reject,
+          }),
+      );
+    });
+  }
+
+  private async createLSTASRProject(
+    httpClient: HttpClient,
+    asrProvider: ServiceProvider,
+  ) {
+    return new Promise<string>((resolve, reject) => {
+      const projectName = `tportal_session_${UUID.v7().replace(/-/g, '')}`;
+
+      this.subscrManager.add(
+        httpClient
+          .post(
+            joinURL(asrProvider.host, '/project/create'),
+            {
+              projectName,
+            },
+            { responseType: 'json' },
+          )
+          .subscribe({
+            next: () => {
+              resolve(projectName);
+            },
+            error: reject,
+          }),
+      );
+    });
+  }
+
+  private uploadFileToLST(
+    file: File,
+    httpClient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+  ) {
+    return new Promise<void>((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file, file.name);
+      formData.append('projectName', projectName);
+      this.subscrManager.add(
+        httpClient
+          .post(joinURL(serviceProvider.host, '/project/upload'), formData)
+          .subscribe({
+            next: () => resolve(),
+            error: reject,
+          }),
+      );
+    });
+  }
+
+  async processASRLSTProject(
+    httpclient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+  ) {
+    return new Promise<void>((resolve, reject) => {
+      if (this.language) {
+        this.subscrManager.add(
+          httpclient
+            .post(
+              joinURL(serviceProvider.host, '/project/process'),
+              {
+                projectName,
+                language: this.mapLanguageForLST(this.language),
+                gpu: true
+              },
+              { responseType: 'json' },
+            )
+            .subscribe({
+              next: () => resolve(),
+              error: reject,
+            }),
+        );
+      } else {
+        reject(new Error('Missing language'));
+      }
+    });
+  }
+
+  private mapLanguageForLST(isoLanguage: string) {
+    const mappings = {
+      deu: 'de',
+      nld: 'nl',
+      ita: 'it',
+      eng: 'en',
+    };
+
+    const parsed = /(.{3})-.*/g.exec(isoLanguage);
+    if (parsed && parsed.length === 2) {
+      if (Object.keys(mappings).includes(parsed[1])) {
+        return (mappings as any)[parsed[1]];
+      }
+    }
   }
 }

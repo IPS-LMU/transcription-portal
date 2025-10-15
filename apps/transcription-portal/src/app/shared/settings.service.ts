@@ -249,6 +249,15 @@ export class SettingsService implements OnDestroy {
                       result.providersOnly = undefined;
                     }
 
+                    // add provider only entries for LSTWhisperX because languages for that service
+                    // are not retrieved from BASWebservices
+                    if (['deu-DE', "nld-NL", "ita-IT", "eng-GB"].includes(a.ParameterValue.Value)) {
+                      result.providersOnly = [
+                        ...(result.providersOnly ?? []),
+                        'LSTWhisperX',
+                      ];
+                    }
+
                     return result;
                   }),
                 maus: result[4]
@@ -310,7 +319,10 @@ export class SettingsService implements OnDestroy {
     promises.push(this.getASRLanguages(AppSettings.configuration.api as any));
     promises.push(this.getMAUSLanguages(AppSettings.configuration.api as any));
 
-    this._translationServiceProvider = AppSettings.configuration.api.services.find(a => a.type === "Translation");
+    this._translationServiceProvider =
+      AppSettings.configuration.api.services.find(
+        (a) => a.type === 'Translation',
+      );
     return Promise.all(promises);
   }
 

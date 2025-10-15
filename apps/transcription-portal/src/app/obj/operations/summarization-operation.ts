@@ -31,11 +31,6 @@ export class SummarizationOperation extends Operation {
       this.changeState(TaskStatus.PROCESSING);
       this._time.start = Date.now();
 
-      console.log('RUN SUMMARIZATION WITH ASR RESULTS');
-      console.log(operations[2].results);
-      console.log('UPLOAD RESULTS');
-      console.log(operations[0].results);
-
       const transcriptFile = operations[2].enabled
         ? last(operations[2].results)
         : last(operations[1].results);
@@ -76,13 +71,9 @@ export class SummarizationOperation extends Operation {
           ).file!.content;
         }
 
-        console.log('TRANSCRIPT');
-        console.log(transcript);
-
         let projectName: string | undefined = undefined;
         try {
           projectName = await this.createSummarizationProject(httpclient);
-          console.log(`Created project ${projectName}`);
 
           await this.uploadFile(
             new File([transcript], `${projectName}.txt`, {
@@ -91,15 +82,12 @@ export class SummarizationOperation extends Operation {
             httpclient,
             projectName,
           );
-          console.log('uploaded file to project successfully');
 
-          console.log('Start processing...');
           await wait(3);
           const res = await this.processSummarizationProject(
             httpclient,
             projectName,
           );
-          console.log(res);
         } catch (err: any) {
           // couldn't upload file or process summarization project
           this.changeState(TaskStatus.ERROR);
@@ -141,8 +129,6 @@ export class SummarizationOperation extends Operation {
                     this.results.push(
                       new FileInfo(file.name, file.type, file.size, file),
                     );
-                    console.log('ADD TO RESULTS:');
-                    console.log(this.results);
                     this.changeState(TaskStatus.FINISHED);
                   }
                 } else {
@@ -162,14 +148,12 @@ export class SummarizationOperation extends Operation {
                 }
 
                 this.subscrManager.removeByTag('status check');
-                console.log('Remove project');
                 await this.deleteSummarizationProject(httpclient, projectName);
               }
             },
           }),
           'status check',
         );
-        console.log('processing finished');
       } else {
         this.changeState(TaskStatus.ERROR);
         this.updateProtocol('Missing transcript file or audio file.');

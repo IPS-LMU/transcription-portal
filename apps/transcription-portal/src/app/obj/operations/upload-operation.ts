@@ -150,7 +150,7 @@ export class UploadOperation extends Operation {
 
       const url = this._commands[0].replace(
         '{{host}}',
-        this.serviceProvider.host,
+        AppSettings.getServiceInformation("BAS")!.host,
       );
 
       this.subscrManager.add(
@@ -320,8 +320,7 @@ export class UploadOperation extends Operation {
       task,
       operationObj.state,
       operationObj.id,
-      AppSettings.getServiceInformation(operationObj.serviceProvider) ??
-        AppSettings.getServiceInformation(taskObj?.asrProvider),
+      AppSettings.getServiceInformation("BAS"),
       operationObj.language ?? taskObj?.language,
     );
 

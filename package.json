@@ -11,7 +11,7 @@
     "build:dev": "node ./build.js dev=true isUpdate=true url=/apps/TranscriptionPortal-Dev/",
     "deploy:tportal:dev:beta": "npm run build:dev && npm run package:tportal && ./deploy.sh tportal-dev",
     "deploy:tportal:prod": "npm run build:prod && npm run package:tportal && ./deploy.sh tportal-prod",
-    "package:tportal": "cd dist/apps && cp -rf ../../apps/api ./transcription-portal/api && zip -q -r tportal-dev.zip transcription-portal && cd -",
+    "package:tportal": "cd dist/apps && cp -rf ../../apps/api ./transcription-portal/api && rm tportal-dev.zip &> /tmp/null && zip -q -r tportal-dev.zip transcription-portal && cd -",
     "build:prod": "node ./build.js dev=false isUpdate=true url=/apps/TranscriptionPortal/",
     "release": "node ./build.js dev=false isUpdate=false url=/ && cp LICENSE.txt dist/apps/transcription-portal && cd dist/apps/transcription-portal && rm config/config.json && cd ../ && zip -r transcription-portal-v.zip transcription-portal",
     "test": "nx test",

@@ -1,17 +1,23 @@
 <?php
 
 declare(strict_types=1);
-include("../config.php");
+include( __DIR__ . "/../config.php");
 
 use App\Application\Handlers\HttpErrorHandler;
 use App\Application\Handlers\ShutdownHandler;
 use App\Application\ResponseEmitter\ResponseEmitter;
 use App\Application\Settings\SettingsInterface;
 use DI\ContainerBuilder;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 require __DIR__ . '/../vendor/autoload.php';
+ini_set('max_execution_time',60 * 60 * 2);
 
 // Instantiate PHP-DI ContainerBuilder
 $containerBuilder = new ContainerBuilder();
@@ -42,6 +48,35 @@ $app = AppFactory::create();
 if (!empty(BASE_PATH) && BASE_PATH != "/") {
   $app->setBasePath(BASE_PATH);
 }
+
+$app->options('/{routes:.+}', function (Request $request, Response $response) {
+  // CORS Pre-Flight OPTIONS Request Handler
+  return $response;
+});
+
+// This CORS middleware will append the response header
+// Access-Control-Allow-Methods with all allowed methods
+$app->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler) use ($app): ResponseInterface {
+  if ($request->getMethod() === 'OPTIONS') {
+    $response = $app->getResponseFactory()->createResponse();
+  } else {
+    $response = $handler->handle($request);
+  }
+
+  $response = $response
+    ->withHeader('Access-Control-Allow-Credentials', 'true')
+    ->withHeader('Access-Control-Allow-Origin', '*')
+    ->withHeader('Access-Control-Allow-Headers', '*')
+    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+    ->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+    ->withHeader('Pragma', 'no-cache');
+
+  if (ob_get_contents()) {
+    ob_clean();
+  }
+
+  return $response;
+});
 
 $callableResolver = $app->getCallableResolver();
 

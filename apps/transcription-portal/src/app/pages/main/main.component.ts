@@ -867,12 +867,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   private upload(operation: Operation, file: FileInfo): Promise<string> {
     return new Promise<string>((resolve, reject) => {
+      const serviceProvider = AppSettings.getServiceInformation("BAS");
       if (
         operation &&
         operation.task &&
-        operation.task.operations[1].serviceProvider
+        serviceProvider
       ) {
-        const url = `${operation.task.operations[1].serviceProvider.host}uploadFileMulti`;
+        const url = `${serviceProvider.host}uploadFileMulti`;
         const subj = UploadOperation.upload([file], url, this.httpClient);
         subj.subscribe({
           next: (obj) => {
