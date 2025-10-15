@@ -214,3 +214,13 @@ nav li {
 .bi-layout-sidebar-inset {
   color: red;
 }
+
+#mode-tabs {
+  margin-top: 60px;
+}
+
+@media (min-width: 1200px) and (max-width: 1970px) {
+  #mode-tabs {
+    margin-top: 80px;
+  }
+}

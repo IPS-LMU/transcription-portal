@@ -148,16 +148,16 @@
               style="
                 text-align: left;
                 vertical-align: middle;
-                margin-top: 20px;
                 cursor: pointer;
                 text-decoration: none;
+                color: purple;
               "
               (click)="openAboutModal()"
-            ><i
-              class="bi bi-info-circle"
-              style="color: cornflowerblue"
-            ></i>
-              <span class="d-inline-block d-lg-none ms-1">Help</span></a
+              ngbPopover="About"
+              placement="bottom-right"
+              triggers="mouseenter:mouseleave"
+              ><i class="bi bi-info-circle"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1">About</span></a
             >
           </li>
           <li class="nav-item active">
@@ -171,13 +171,40 @@
                 text-decoration: none;
               "
               target="_blank"
+              ngbPopover="Help"
+              placement="bottom-right"
+              triggers="mouseenter:mouseleave"
               ><i
                 class="bi bi-question-circle"
                 style="color: cornflowerblue"
               ></i>
-              <span class="d-inline-block d-lg-none ms-1">Help</span></a
+              <span class="d-lg-none d-xl-inline-block ms-1">Help</span></a
             >
           </li>
+          @if (settingsService.feedbackEnabled) {
+            <li
+              (click)="modalService.openFeedbackModal()"
+              class="nav-item active"
+            >
+              <a
+                ngbPopover="Feedback"
+                placement="bottom-right"
+                triggers="mouseenter:mouseleave"
+                class="text-decoration-none"
+                [ngClass]="{
+                  yellow: !bugService.hasErrors,
+                  red: bugService.hasErrors,
+                }"
+              >
+                <i class="bi bi-exclamation-circle pointer"></i
+                ><span style="cursor: pointer">
+                  <span class="d-lg-none d-xl-inline-block ms-1"
+                    >Feedback</span
+                  ></span
+                >
+              </a>
+            </li>
+          }
           <li class="nav-item active" style="cursor: pointer">
             <span
               (click)="openStatisticsModal()"
@@ -186,36 +213,27 @@
                 vertical-align: middle;
                 margin-top: 20px;
                 cursor: pointer;
+                color: #ff6a00;
               "
+              ngbPopover="Statistics"
+              placement="bottom-right"
+              triggers="mouseenter:mouseleave"
               ><i class="bi bi-bar-chart-line"></i>
-              <span class="d-inline-block d-lg-none ms-1"
+              <span class="d-lg-none d-xl-inline-block ms-1"
                 >Statistics</span
               ></span
             >
           </li>
-          @if (settingsService.feedbackEnabled) {
-            <li
-              (click)="modalService.openFeedbackModal()"
-              class="nav-item active"
-            >
-              <i
-                [ngClass]="{
-                  yellow: !bugService.hasErrors,
-                  red: bugService.hasErrors,
-                }"
-                class="bi bi-exclamation-circle pointer"
-              ></i
-              ><span style="cursor: pointer">
-                <span class="d-inline-block d-lg-none">Feedback</span></span
-              >
-            </li>
-          }
           <li class="nav-item active">
-            <div
+            <a
               class="pointer"
               (click)="
                 notification.permissionGranted = !notification.permissionGranted
               "
+              ngbPopover="Notifications"
+              placement="bottom-right"
+              triggers="mouseenter:mouseleave"
+              style="color: black; text-decoration: none"
             >
               <i
                 aria-hidden="true"
@@ -226,8 +244,10 @@
                 class="bi"
                 style="cursor: pointer"
               ></i
-              ><span class="d-inline-block d-lg-none ms-1">Notifications</span>
-            </div>
+              ><span class="d-lg-none d-xl-inline-block ms-1"
+                >Notifications</span
+              >
+            </a>
           </li>
           <li class="nav-item active">
             <div
@@ -235,13 +255,20 @@
               class="d-inline-block"
               [ngbCollapse]="settingsCollapsed"
             >
-              <div class="pointer" ngbDropdownToggle>
+              <div
+                class="pointer"
+                style="color: dimgray"
+                ngbDropdownToggle
+                ngbPopover="Settings"
+                placement="bottom-right"
+                triggers="mouseenter:mouseleave"
+              >
                 <i
-                  class="bi bi-gear-fill"
+                  class="bi bi-gear-wide-connected"
                   id="dropdownBasic2"
                   style="cursor: pointer"
                 ></i
-                ><span class="d-inline-block d-lg-none ms-1">Settings</span>
+                ><span class="d-lg-none d-xl-inline-block ms-1">Settings</span>
               </div>
               <div
                 ngbDropdownMenu
@@ -326,7 +353,7 @@
     #nav="ngbNav"
     [(activeId)]="activeMode"
     class="nav-tabs"
-    style="margin-top: 60px"
+    id="mode-tabs"
   >
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">

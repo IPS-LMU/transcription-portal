@@ -17,7 +17,7 @@ import {
   NgbDropdownMenu,
   NgbDropdownToggle,
   NgbModal,
-  NgbNavModule,
+  NgbNavModule, NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
 import {
@@ -81,6 +81,7 @@ import { AboutModalComponent } from '../../modals/about-modal/about-modal.compon
     NgbDropdownMenu,
     NgbDropdownToggle,
     NgbNavModule,
+    NgbPopover,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
@@ -507,7 +508,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
       (async () => {
         if (data.name === 'OCTRA') {
-          if (hasProperty($event.data, 'status') && $event.data.status === "success" && hasProperty($event.data.data, 'annotation')) {
+          if (
+            hasProperty($event.data, 'status') &&
+            $event.data.status === 'success' &&
+            hasProperty($event.data.data, 'annotation')
+          ) {
             const result: any = $event.data.data.annotation;
             let annotation: IFile | undefined;
 
@@ -867,12 +872,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   private upload(operation: Operation, file: FileInfo): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const serviceProvider = AppSettings.getServiceInformation("BAS");
-      if (
-        operation &&
-        operation.task &&
-        serviceProvider
-      ) {
+      const serviceProvider = AppSettings.getServiceInformation('BAS');
+      if (operation && operation.task && serviceProvider) {
         const url = `${serviceProvider.host}uploadFileMulti`;
         const subj = UploadOperation.upload([file], url, this.httpClient);
         subj.subscribe({
@@ -923,8 +924,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.taskService.state.currentMode = mode;
   }
 
-  openAboutModal(){
-    const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
+  openAboutModal() {
+    const ref = openModal<AboutModalComponent>(
+      this.ngbModalService,
+      AboutModalComponent,
+      AboutModalComponent.options,
+    );
     return ref.result;
   }
 }
