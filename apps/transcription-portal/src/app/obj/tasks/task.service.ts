@@ -3,24 +3,11 @@ import { EventEmitter, inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
-import {
-  AudioCutter,
-  AudioFormat,
-  AudioInfo,
-  AudioManager,
-  DirectoryInfo,
-  FileInfo,
-  getAudioInfo,
-} from '@octra/web-media';
+import { AudioCutter, AudioFormat, AudioInfo, AudioManager, DirectoryInfo, FileInfo, getAudioInfo } from '@octra/web-media';
 import { DateTime } from 'luxon';
 import { firstValueFrom, interval, of, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
-import {
-  IDBNotificationSettingsItem,
-  IDBTaskItem,
-  IDBUserDefaultSettingsItem,
-  IDBUserSettingsItem,
-} from '../../indexedDB';
+import { IDBNotificationSettingsItem, IDBTaskItem, IDBUserDefaultSettingsItem, IDBUserSettingsItem } from '../../indexedDB';
 import { AlertService } from '../../shared/alert.service';
 import { AppSettings } from '../../shared/app.settings';
 import { NotificationService } from '../../shared/notification.service';
@@ -36,13 +23,7 @@ import { SummarizationOperation } from '../operations/summarization-operation';
 import { TranslationOperation } from '../operations/translation-operation';
 import { UploadOperation } from '../operations/upload-operation';
 import { Preprocessor, QueueItem } from '../preprocessor';
-import {
-  EntryChangeEvent,
-  Task,
-  TaskDirectory,
-  TaskList,
-  TaskStatus,
-} from './index';
+import { EntryChangeEvent, Task, TaskDirectory, TaskList, TaskStatus } from './index';
 import { TaskEntry } from './task-entry';
 
 export type PortalModeType = 'annotation' | 'summarization';
@@ -50,8 +31,7 @@ export type PortalModeType = 'annotation' | 'summarization';
 export class PortalModeState {
   newFiles = false;
   public newfiles = false;
-  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' =
-    'not started';
+  public overallState: 'processing' | 'waiting' | 'stopped' | 'not started' = 'not started';
   public protocolURL: SafeResourceUrl | undefined;
   public protocolFileName = '';
   public selectedTranslationLanguage?: string = 'de';
@@ -60,6 +40,8 @@ export class PortalModeState {
   public selectedSummarizationProvider?: ServiceProvider;
   public selectedASRProvider?: ServiceProvider;
   public selectedSummarizationNumberOfWords?: number;
+  isDiarizationEnabled = false;
+  diarizationSpeakers?: number;
   private _status: TaskStatus = TaskStatus.READY;
   private _preprocessor!: Preprocessor;
   public selectedRows: number[] = [];
@@ -103,14 +85,7 @@ export class PortalModeState {
     return this._operations;
   }
 
-  init(
-    operations: Operation[],
-    mode: PortalModeType,
-    process: (
-      queueItem: QueueItem,
-      mode: PortalModeType,
-    ) => Promise<(Task | TaskDirectory)[]>,
-  ) {
+  init(operations: Operation[], mode: PortalModeType, process: (queueItem: QueueItem, mode: PortalModeType) => Promise<(Task | TaskDirectory)[]>) {
     this._taskList = new TaskList();
     this._preprocessor = new Preprocessor(mode);
     this._preprocessor.process = process;
@@ -133,18 +108,12 @@ export class PortalModeState {
 
     for (const task of allTasks) {
       // running
-      if (
-        task.status === TaskStatus.PROCESSING ||
-        task.status === TaskStatus.UPLOADING
-      ) {
+      if (task.status === TaskStatus.PROCESSING || task.status === TaskStatus.UPLOADING) {
         result.running++;
       }
 
       // waiting
-      if (
-        task.status === TaskStatus.PENDING ||
-        task.status === TaskStatus.READY
-      ) {
+      if (task.status === TaskStatus.PENDING || task.status === TaskStatus.READY) {
         result.waiting++;
       }
 
@@ -331,36 +300,11 @@ export class TaskService {
   public init() {
     this.state.modes.annotation.init(
       [
-        new UploadOperation(
-          'Upload',
-          AppSettings.configuration.api.commands[0].calls,
-          'Upload',
-          'UL',
-        ),
-        new ASROperation(
-          'ASR',
-          AppSettings.configuration.api.commands[1].calls,
-          'Speech Recognition',
-          'ASR',
-        ),
-        new OCTRAOperation(
-          'OCTRA',
-          AppSettings.configuration.api.commands[2].calls,
-          'Manual Transcription',
-          'MT',
-        ),
-        new G2pMausOperation(
-          'MAUS',
-          AppSettings.configuration.api.commands[3].calls,
-          'Word alignment',
-          'WA',
-        ),
-        new EmuOperation(
-          'Emu WebApp',
-          AppSettings.configuration.api.commands[4].calls,
-          'Phonetic detail',
-          'PD',
-        ),
+        new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
+        new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
+        new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
+        new G2pMausOperation('MAUS', AppSettings.configuration.api.commands[3].calls, 'Word alignment', 'WA'),
+        new EmuOperation('Emu WebApp', AppSettings.configuration.api.commands[4].calls, 'Phonetic detail', 'PD'),
       ],
       'annotation',
       this.process,
@@ -368,57 +312,21 @@ export class TaskService {
 
     this.state.modes.summarization.init(
       [
-        new UploadOperation(
-          'Upload',
-          AppSettings.configuration.api.commands[0].calls,
-          'Upload',
-          'UL',
-        ),
-        new ASROperation(
-          'ASR',
-          AppSettings.configuration.api.commands[1].calls,
-          'Speech Recognition',
-          'ASR',
-        ),
-        new OCTRAOperation(
-          'OCTRA',
-          AppSettings.configuration.api.commands[2].calls,
-          'Manual Transcription',
-          'MT',
-        ),
-        new SummarizationOperation(
-          'Summarization',
-          [''],
-          'Summarization',
-          'SUM',
-        ),
+        new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
+        new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
+        new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
+        new SummarizationOperation('Summarization', [''], 'Summarization', 'SUM'),
         new TranslationOperation('Translation', [''], 'Translation', 'TR'),
       ],
       'summarization',
       this.process,
     );
 
-    this.subscrmanager.add(
-      this.state.modes.annotation.preprocessor.itemProcessed.subscribe(
-        this.onItemProcessed('annotation'),
-      ),
-    );
-    this.subscrmanager.add(
-      this.state.modes.annotation.taskList?.entryChanged.subscribe(
-        this.onTaskListEntryChanged('annotation'),
-      ),
-    );
+    this.subscrmanager.add(this.state.modes.annotation.preprocessor.itemProcessed.subscribe(this.onItemProcessed('annotation')));
+    this.subscrmanager.add(this.state.modes.annotation.taskList?.entryChanged.subscribe(this.onTaskListEntryChanged('annotation')));
 
-    this.subscrmanager.add(
-      this.state.modes.summarization.preprocessor.itemProcessed.subscribe(
-        this.onItemProcessed('summarization'),
-      ),
-    );
-    this.subscrmanager.add(
-      this.state.modes.summarization.taskList?.entryChanged.subscribe(
-        this.onTaskListEntryChanged('summarization'),
-      ),
-    );
+    this.subscrmanager.add(this.state.modes.summarization.preprocessor.itemProcessed.subscribe(this.onItemProcessed('summarization')));
+    this.subscrmanager.add(this.state.modes.summarization.taskList?.entryChanged.subscribe(this.onTaskListEntryChanged('summarization')));
 
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
@@ -468,23 +376,13 @@ export class TaskService {
         let foundTask: Task | undefined;
         if (result instanceof Task) {
           for (const file of result.files) {
-            const escapedName = escapeRegex(
-              result.files[0].attributes.originalFileName.replace(
-                /(_annot)?\.[^.]+$/g,
-                '',
-              ),
-            );
-            foundTask = this.getTaskWithOriginalFileName(
-              new RegExp(`^${escapedName}((_annot)?.[^.]+)$`),
-              mode,
-            );
+            const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/(_annot)?\.[^.]+$/g, ''));
+            foundTask = this.getTaskWithOriginalFileName(new RegExp(`^${escapedName}((_annot)?.[^.]+)$`), mode);
 
             if (foundTask) {
               // found a task
               // file with this hash already exists, overwrite
-              const oldFileIndex = foundTask.files.findIndex(
-                (a) => file && a.hash === file.hash,
-              );
+              const oldFileIndex = foundTask.files.findIndex((a) => file && a.hash === file.hash);
 
               if (oldFileIndex > -1) {
                 foundTask.setFileObj(oldFileIndex, file);
@@ -526,16 +424,8 @@ export class TaskService {
               });
 
               if (!(foundIt === null || foundIt === undefined)) {
-                const format1: AudioFormat | undefined =
-                  AudioManager.getFileFormat(
-                    task.files[0].extension,
-                    AppInfo.audioFormats,
-                  );
-                const format2: AudioFormat | undefined =
-                  AudioManager.getFileFormat(
-                    entry.files[0].extension,
-                    AppInfo.audioFormats,
-                  );
+                const format1: AudioFormat | undefined = AudioManager.getFileFormat(task.files[0].extension, AppInfo.audioFormats);
+                const format2: AudioFormat | undefined = AudioManager.getFileFormat(entry.files[0].extension, AppInfo.audioFormats);
 
                 if (!(format1 && format2)) {
                   entry.addFile(task.files[0]);
@@ -551,31 +441,18 @@ export class TaskService {
               }
             }
 
-            foundTask = this.state.modes[mode].taskList
-              ?.getAllTasks()
-              .find((a) => {
-                const foundIt = a.files.find((b) => {
-                  // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
-                  return b.name === entry.files[0].name;
-                });
-
-                return (
-                  a.status === TaskStatus.QUEUED &&
-                  !(foundIt === null || foundIt === undefined)
-                );
+            foundTask = this.state.modes[mode].taskList?.getAllTasks().find((a) => {
+              const foundIt = a.files.find((b) => {
+                // console.log(`${result.files[0].name} === ${b.name} && ${a.state}`);
+                return b.name === entry.files[0].name;
               });
 
+              return a.status === TaskStatus.QUEUED && !(foundIt === null || foundIt === undefined);
+            });
+
             if (!(foundTask === null || foundTask === undefined)) {
-              const format1: AudioFormat | undefined =
-                AudioManager.getFileFormat(
-                  foundTask.files[0].extension,
-                  AppInfo.audioFormats,
-                );
-              const format2: AudioFormat | undefined =
-                AudioManager.getFileFormat(
-                  entry.files[0].extension,
-                  AppInfo.audioFormats,
-                );
+              const format1: AudioFormat | undefined = AudioManager.getFileFormat(foundTask.files[0].extension, AppInfo.audioFormats);
+              const format2: AudioFormat | undefined = AudioManager.getFileFormat(entry.files[0].extension, AppInfo.audioFormats);
 
               if (!(format1 && format2)) {
                 foundTask.setFileObj(0, entry.files[0]);
@@ -625,11 +502,7 @@ export class TaskService {
           }
         }
 
-        const task = Task.fromAny(
-          taskObj,
-          AppSettings.configuration.api.commands,
-          this.state.modes[mode].operations,
-        );
+        const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.state.modes[mode].operations);
 
         maxTaskCounter = Math.max(maxTaskCounter, task.id);
 
@@ -643,11 +516,7 @@ export class TaskService {
 
                 opResult.online = true;
                 if (opResult.file === null || opResult.file === undefined) {
-                  const format: AudioFormat | undefined =
-                    AudioManager.getFileFormat(
-                      opResult.extension,
-                      AppInfo.audioFormats,
-                    );
+                  const format: AudioFormat | undefined = AudioManager.getFileFormat(opResult.extension, AppInfo.audioFormats);
 
                   if (!format) {
                     try {
@@ -677,11 +546,7 @@ export class TaskService {
           console.error(err);
         });
       } else {
-        const taskDir = TaskDirectory.fromAny(
-          taskObj,
-          AppSettings.configuration.api.commands,
-          this.state.modes[mode].operations,
-        );
+        const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.state.modes[mode].operations);
 
         for (const taskElem of taskDir.entries) {
           const task = taskElem as Task;
@@ -691,10 +556,7 @@ export class TaskService {
                 try {
                   opResult.online = true;
 
-                  if (
-                    (opResult.file === null || opResult.file === undefined) &&
-                    opResult.extension.indexOf('wav') < 0
-                  ) {
+                  if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
                     try {
                       opResult.updateContentFromURL(this.httpclient);
                       // TODO minimize task savings
@@ -732,39 +594,24 @@ export class TaskService {
     userSettings: IDBUserSettingsItem<any>[];
   }) {
     this.state.modes.annotation.newfiles = dbEntries.annotationTasks.length > 0;
-    this.state.modes.summarization.newfiles =
-      dbEntries.summarizationTasks.length > 0;
+    this.state.modes.summarization.newfiles = dbEntries.summarizationTasks.length > 0;
 
     // make sure that taskCounter and operation counter are equal to their biggest value
     let maxTaskCounter = 0;
     let maxOperationCounter = 0;
 
-    const annotationTaskResult = await this.importTasksFromDB(
-      dbEntries.annotationTasks,
-      'annotation',
-    );
-    const summarizationTaskResult = await this.importTasksFromDB(
-      dbEntries.summarizationTasks,
-      'summarization',
-    );
-    maxTaskCounter =
-      annotationTaskResult.maxTaskCounter +
-      summarizationTaskResult.maxTaskCounter;
-    maxOperationCounter =
-      annotationTaskResult.maxOperationCounter +
-      summarizationTaskResult.maxOperationCounter;
+    const annotationTaskResult = await this.importTasksFromDB(dbEntries.annotationTasks, 'annotation');
+    const summarizationTaskResult = await this.importTasksFromDB(dbEntries.summarizationTasks, 'summarization');
+    maxTaskCounter = annotationTaskResult.maxTaskCounter + summarizationTaskResult.maxTaskCounter;
+    maxOperationCounter = annotationTaskResult.maxOperationCounter + summarizationTaskResult.maxOperationCounter;
 
     if (TaskEntry.counter < maxTaskCounter) {
-      console.warn(
-        `Warning: Task counter was less than the biggest id. Reset counter.`,
-      );
+      console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
       TaskEntry.counter = maxTaskCounter;
     }
 
     if (Operation.counter < maxOperationCounter) {
-      console.warn(
-        `Warning: Operation counter was less than the biggest id. Reset counter.`,
-      );
+      console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
       Operation.counter = maxOperationCounter;
     }
     await this.updateProtocolURL();
@@ -773,42 +620,30 @@ export class TaskService {
       // read userSettings
       for (const userSetting of dbEntries.userSettings) {
         if (userSetting.name === 'notification') {
-          this.notification.permissionGranted = (
-            userSetting as IDBNotificationSettingsItem
-          ).value.enabled;
+          this.notification.permissionGranted = (userSetting as IDBNotificationSettingsItem).value.enabled;
         } else if (userSetting.name === 'defaultUserSettings') {
           // search lang obj
-          const defaultUserSettings = (
-            userSetting as IDBUserDefaultSettingsItem
-          ).value;
+          const defaultUserSettings = (userSetting as IDBUserDefaultSettingsItem).value;
           const lang =
             defaultUserSettings.asrLanguage && defaultUserSettings.asrProvider
-              ? AppSettings.getLanguageByCode(
-                  defaultUserSettings.asrLanguage,
-                  defaultUserSettings.asrProvider,
-                )
+              ? AppSettings.getLanguageByCode(defaultUserSettings.asrLanguage, defaultUserSettings.asrProvider)
               : undefined;
 
           if (lang) {
-            this.state.modes.annotation.selectedASRLanguage =
-              defaultUserSettings.asrLanguage;
-            this.state.modes.annotation.selectedMausLanguage =
-              defaultUserSettings.mausLanguage;
-            this.state.modes.summarization.selectedASRLanguage =
-              defaultUserSettings.asrLanguage;
+            this.state.modes.annotation.selectedASRLanguage = defaultUserSettings.asrLanguage;
+            this.state.modes.annotation.selectedMausLanguage = defaultUserSettings.mausLanguage;
+            this.state.modes.summarization.selectedASRLanguage = defaultUserSettings.asrLanguage;
           }
-          this.state.modes.annotation.selectedASRProvider =
-            AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
-          this.state.modes.summarization.selectedASRProvider =
-            AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
-          this.state.modes.summarization.selectedSummarizationProvider =
-            AppSettings.getServiceInformation(
-              defaultUserSettings.summarizationProvider,
-            );
-          this.state.modes.summarization.selectedTranslationLanguage =
-            defaultUserSettings.translationLanguage;
-          this.state.modes.summarization.selectedSummarizationNumberOfWords =
-            defaultUserSettings.summarizationWordLimit;
+
+          this.state.modes.annotation.selectedASRProvider = AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
+          this.state.modes.annotation.isDiarizationEnabled = defaultUserSettings.diarization ?? false;
+          this.state.modes.annotation.diarizationSpeakers = defaultUserSettings.diarizationSpeakers;
+          this.state.modes.summarization.selectedASRProvider = AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
+          this.state.modes.summarization.selectedSummarizationProvider = AppSettings.getServiceInformation(defaultUserSettings.summarizationProvider);
+          this.state.modes.summarization.selectedTranslationLanguage = defaultUserSettings.translationLanguage;
+          this.state.modes.summarization.selectedSummarizationNumberOfWords = defaultUserSettings.summarizationWordLimit;
+          this.state.modes.summarization.isDiarizationEnabled = defaultUserSettings.diarization ?? false;
+          this.state.modes.summarization.diarizationSpeakers = defaultUserSettings.diarizationSpeakers;
         }
       }
       // this.notification.permissionGranted = results[1][]
@@ -838,8 +673,7 @@ export class TaskService {
                 if (
                   dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
-                  dirEntry.files[0].attributes.originalFileName.indexOf('_2.') >
-                    -1
+                  dirEntry.files[0].attributes.originalFileName.indexOf('_2.') > -1
                 ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
@@ -848,8 +682,7 @@ export class TaskService {
                 if (
                   dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
-                  dirEntry.files[0].attributes.originalFileName.indexOf('_1.') >
-                    -1
+                  dirEntry.files[0].attributes.originalFileName.indexOf('_1.') > -1
                 ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
@@ -857,9 +690,7 @@ export class TaskService {
               }
 
               if (nothingToDo) {
-                promises.push(
-                  this.state.modes[mode].taskList.cleanup(entry, true),
-                );
+                promises.push(this.state.modes[mode].taskList.cleanup(entry, true));
                 this.saveCounters();
               }
             }
@@ -868,9 +699,7 @@ export class TaskService {
       }
 
       for (const removeElement of removeList) {
-        promises.push(
-          this.state.modes[mode].taskList.removeEntry(removeElement, true),
-        );
+        promises.push(this.state.modes[mode].taskList.removeEntry(removeElement, true));
       }
 
       Promise.all(promises).catch((error) => {
@@ -879,11 +708,7 @@ export class TaskService {
     }
   }
 
-  public addEntry(
-    entry: Task | TaskDirectory,
-    mode: PortalModeType,
-    saveToDB = false,
-  ) {
+  public addEntry(entry: Task | TaskDirectory, mode: PortalModeType, saveToDB = false) {
     const taskList = this.state.modes[mode].taskList;
     if (!taskList) {
       throw new Error('undefined tasklist');
@@ -926,10 +751,7 @@ export class TaskService {
       const uploadingTask = taskList.getAllTasks().findIndex((task) => {
         return task.operations[0].state === 'UPLOADING';
       });
-      if (
-        this._statistics[mode].running < this.options.max_running_tasks &&
-        uploadingTask < 0
-      ) {
+      if (this._statistics[mode].running < this.options.max_running_tasks && uploadingTask < 0) {
         const task: Task | undefined = this.findNextWaitingTask(mode);
 
         if (task && task.operations[1].serviceProvider) {
@@ -943,13 +765,8 @@ export class TaskService {
           });
 
           await this.storage.saveTask(task, mode);
-          const asrService = AppSettings.getServiceInformation(
-            task.operations[1].serviceProvider.provider,
-          );
-          const langObj = AppSettings.getLanguageByCode(
-            task.operations[1].language!,
-            task.operations[1].serviceProvider.provider,
-          );
+          const asrService = AppSettings.getServiceInformation(task.operations[1].serviceProvider.provider);
+          const langObj = AppSettings.getLanguageByCode(task.asrOperation.language!, task.operations[1].serviceProvider.provider);
 
           if (langObj && asrService) {
             task.start(this.httpclient, [
@@ -986,27 +803,19 @@ export class TaskService {
     for (const entry of tasks) {
       if (
         entry.status === TaskStatus.PENDING &&
-        ((!(
-          entry.files[0].file === null || entry.files[0].file === undefined
-        ) &&
-          entry.files[0].extension === '.wav') ||
-          (entry.operations[0].results.length > 0 &&
-            entry.operations[0]?.lastResult?.online))
+        ((!(entry.files[0].file === null || entry.files[0].file === undefined) && entry.files[0].extension === '.wav') ||
+          (entry.operations[0].results.length > 0 && entry.operations[0]?.lastResult?.online))
       ) {
         return entry;
       } else if (entry.status === TaskStatus.READY) {
         for (const operation of entry.operations) {
           if (operation.state !== TaskStatus.SKIPPED && operation.enabled) {
             if (
-              (operation.state === TaskStatus.PENDING ||
-                operation.state === TaskStatus.READY) &&
+              (operation.state === TaskStatus.PENDING || operation.state === TaskStatus.READY) &&
               !(operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
             ) {
               return entry;
-            } else if (
-              operation.state !== TaskStatus.FINISHED &&
-              (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')
-            ) {
+            } else if (operation.state !== TaskStatus.FINISHED && (operation.name === 'OCTRA' || operation.name === 'Emu WebApp')) {
               break;
             }
           }
@@ -1022,11 +831,7 @@ export class TaskService {
       for (const mode of ['annotation', 'summarization'] as PortalModeType[]) {
         const affectedMode = this.state.modes[mode];
         if (affectedMode.protocolURL) {
-          URL.revokeObjectURL(
-            (
-              affectedMode.protocolURL as any
-            ).changingThisBreaksApplicationSecurity.toString(),
-          );
+          URL.revokeObjectURL((affectedMode.protocolURL as any).changingThisBreaksApplicationSecurity.toString());
         }
 
         if (!affectedMode.taskList) {
@@ -1047,17 +852,12 @@ export class TaskService {
             };
 
             affectedMode.protocolFileName = `oh_portal_${mode}_${DateTime.now().toISO()}.json`;
-            const file = new File(
-              [JSON.stringify(json, null, 2)],
-              affectedMode.protocolFileName,
-              {
-                type: 'text/plain',
-              },
-            );
+            const file = new File([JSON.stringify(json, null, 2)], affectedMode.protocolFileName, {
+              type: 'text/plain',
+            });
 
             const url = URL.createObjectURL(file);
-            affectedMode.protocolURL =
-              this.sanitizer.bypassSecurityTrustResourceUrl(url);
+            affectedMode.protocolURL = this.sanitizer.bypassSecurityTrustResourceUrl(url);
             resolve(affectedMode.protocolURL);
           })
           .catch((error) => {
@@ -1070,28 +870,20 @@ export class TaskService {
   destroy() {
     this.subscrmanager.destroy();
 
-    const tasks = [
-      ...(this.state.modes.annotation.taskList?.getAllTasks() ?? []),
-      ...(this.state.modes.summarization.taskList?.getAllTasks() ?? []),
-    ];
+    const tasks = [...(this.state.modes.annotation.taskList?.getAllTasks() ?? []), ...(this.state.modes.summarization.taskList?.getAllTasks() ?? [])];
 
     for (const task of tasks) {
       task.destroy();
     }
   }
 
-  public cleanUpInputArray(
-    entries: (FileInfo | DirectoryInfo)[],
-  ): (FileInfo | DirectoryInfo)[] {
+  public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
     let result: (FileInfo | DirectoryInfo)[] = [];
 
     for (const entry of entries) {
       if (entry instanceof FileInfo) {
         const file = entry as FileInfo;
-        const format: AudioFormat | undefined = AudioManager.getFileFormat(
-          file.extension,
-          AppInfo.audioFormats,
-        );
+        const format: AudioFormat | undefined = AudioManager.getFileFormat(file.extension, AppInfo.audioFormats);
 
         if (format || this.validTranscript(file.extension)) {
           result.push(file);
@@ -1102,14 +894,8 @@ export class TaskService {
         const dir = directory.clone();
 
         dir.entries = dir.entries.filter((a: any) => {
-          const format: AudioFormat | undefined = AudioManager.getFileFormat(
-            a.extension,
-            AppInfo.audioFormats,
-          );
-          return (
-            a instanceof FileInfo &&
-            (format || this.validTranscript(a.extension))
-          );
+          const format: AudioFormat | undefined = AudioManager.getFileFormat(a.extension, AppInfo.audioFormats);
+          return a instanceof FileInfo && (format || this.validTranscript(a.extension));
         });
         const rest = directory.entries.filter((a: any) => {
           return a instanceof DirectoryInfo;
@@ -1125,10 +911,7 @@ export class TaskService {
     return result;
   }
 
-  public process: (
-    queueItem: QueueItem,
-    mode: PortalModeType,
-  ) => Promise<(Task | TaskDirectory)[]> = async (
+  public process: (queueItem: QueueItem, mode: PortalModeType) => Promise<(Task | TaskDirectory)[]> = async (
     queueItem: QueueItem,
     mode: PortalModeType,
   ) => {
@@ -1185,10 +968,7 @@ export class TaskService {
 
   public async toggleProcessing() {
     const mode = this.state.currentMode;
-    this.state.currentModeState.overallState =
-      this.state.currentModeState.overallState === 'processing'
-        ? 'stopped'
-        : 'processing';
+    this.state.currentModeState.overallState = this.state.currentModeState.overallState === 'processing' ? 'stopped' : 'processing';
     if (!this.state.modes[mode].taskList) {
       throw new Error('undefined tasklist');
     }
@@ -1245,19 +1025,13 @@ export class TaskService {
       const mode = taskMode.mode;
       for (const task of taskMode.tasks) {
         // running
-        if (
-          task.status === TaskStatus.PROCESSING ||
-          task.status === TaskStatus.UPLOADING
-        ) {
+        if (task.status === TaskStatus.PROCESSING || task.status === TaskStatus.UPLOADING) {
           result.overall.running++;
           (result as any)[mode].running++;
         }
 
         // waiting
-        if (
-          task.status === TaskStatus.PENDING ||
-          task.status === TaskStatus.READY
-        ) {
+        if (task.status === TaskStatus.PENDING || task.status === TaskStatus.READY) {
           result.overall.waiting++;
           (result as any)[mode].waiting++;
         }
@@ -1294,25 +1068,17 @@ export class TaskService {
           return;
         }
         const opName = operation.name;
-        const fileName = (
-          task.files[0].attributes?.originalFileName ?? task.files[0].fullname
-        ).replace(/\.[^.]+$/g, '');
+        const fileName = (task.files[0].attributes?.originalFileName ?? task.files[0].fullname).replace(/\.[^.]+$/g, '');
 
         if (opName === 'ASR' && event.newState === TaskStatus.FINISHED) {
-          this.notification.showNotification(
-            `"${operation.title}" successful`,
-            `You can now transcribe ${fileName} manually.`,
-          );
+          this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`);
         } else if (event.newState === TaskStatus.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`,
           );
-        } else if (
-          opName === 'MAUS' &&
-          event.newState === TaskStatus.FINISHED
-        ) {
+        } else if (opName === 'MAUS' && event.newState === TaskStatus.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
@@ -1324,9 +1090,7 @@ export class TaskService {
         const lastOp = task.operations[task.operations.length - 1];
         if (
           this._statistics.overall.running > 1 ||
-          (this._statistics.overall.running === 1 &&
-            lastOp.state !== TaskStatus.FINISHED &&
-            lastOp.state !== TaskStatus.READY)
+          (this._statistics.overall.running === 1 && lastOp.state !== TaskStatus.FINISHED && lastOp.state !== TaskStatus.READY)
         ) {
           if (operation.state === TaskStatus.UPLOADING) {
             affectedMode.changeStatus(TaskStatus.UPLOADING);
@@ -1342,20 +1106,14 @@ export class TaskService {
     );
   }
 
-  private async processFileInfo(
-    file: FileInfo,
-    path: string,
-    queueItem: QueueItem,
-    mode: PortalModeType,
-  ): Promise<(Task | TaskDirectory)[]> {
+  private async processFileInfo(file: FileInfo, path: string, queueItem: QueueItem, mode: PortalModeType): Promise<(Task | TaskDirectory)[]> {
     const affectedMode = this.state.modes[mode];
     if (!file?.file) {
       throw new Error('file is undefined');
     }
 
     file.hash = await affectedMode.preprocessor.getHashString(file.file);
-    const hashString =
-      file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
+    const hashString = file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
     const newName = `${hashString}${file.extension}`;
     let newFileInfo: FileInfo | undefined;
     this.state.currentModeState.newfiles = true;
@@ -1366,23 +1124,13 @@ export class TaskService {
         type: file.type,
         lastModified: file.file.lastModified,
       });
-      newFileInfo = new FileInfo(
-        newfile.name,
-        file.type,
-        newfile.size,
-        newfile,
-      );
+      newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
       newFileInfo.hash = file.hash;
       file = newFileInfo;
     } else {
-      newFileInfo = new FileInfo(
-        file.fullname,
-        file.type !== '' ? file.type : file.file.type,
-        file.size,
-        file.file,
-      );
+      newFileInfo = new FileInfo(file.fullname, file.type !== '' ? file.type : file.file.type, file.size, file.file);
       newFileInfo.attributes = queueItem.file.attributes;
       newFileInfo.attributes.originalFileName = file.fullname;
       newFileInfo.hash = file.hash;
@@ -1397,42 +1145,22 @@ export class TaskService {
       throw new Error('hash is undefined');
     }
 
-    const foundOldFile = this.getTaskWithHashAndName(
-      file.hash,
-      file.attributes.originalFileName,
-      mode,
-    );
+    const foundOldFile = this.getTaskWithHashAndName(file.hash, file.attributes.originalFileName, mode);
 
     if (file?.file) {
       const arrayBuffer = await readFileAsArray(file.file);
-      const format: AudioFormat | undefined = AudioManager.getFileFormat(
-        file.extension,
-        AppInfo.audioFormats,
-      );
+      const format: AudioFormat | undefined = AudioManager.getFileFormat(file.extension, AppInfo.audioFormats);
       const isValidTranscript = this.validTranscript(file.extension);
 
       if (format && !isValidTranscript) {
         // it's an audio file
         await format.init(file.fullname, file.type, arrayBuffer);
-        const audioInfo = getAudioInfo(
-          format,
-          file.fullname,
-          file.type,
-          arrayBuffer,
-        );
+        const audioInfo = getAudioInfo(format, file.fullname, file.type, arrayBuffer);
 
         if (audioInfo.channels > 1) {
-          const directory = new DirectoryInfo(
-            path +
-              file.attributes.originalFileName.replace(/\..+$/g, '') +
-              '_dir/',
-          );
+          const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
           const cutter = new AudioCutter(audioInfo);
-          const files: File[] = await cutter.splitChannelsToFiles(
-            file.attributes.originalFileName,
-            [0, 1],
-            arrayBuffer,
-          );
+          const files: File[] = await cutter.splitChannelsToFiles(file.attributes.originalFileName, [0, 1], arrayBuffer);
           if (this._splitPrompt === 'PENDING') {
             this.openSplitModal();
             this._splitPrompt = 'ASKED';
@@ -1451,26 +1179,14 @@ export class TaskService {
               const fileObj = files[i];
               const fileInfo = FileInfo.fromFileObject(fileObj);
               fileInfo.hash = await calcSHA256FromFile(fileObj);
-              fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(
-                /\..+$/g,
-                '',
-              )}_${i + 1}.${file.extension}`;
+              fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
               fileInfos.push(fileInfo);
             }
             directory.addEntries(fileInfos);
-            const result = await this.processDirectoryInfo(
-              directory,
-              queueItem,
-              mode,
-            );
+            const result = await this.processDirectoryInfo(directory, queueItem, mode);
             return result;
           } else {
-            return this.processFileInfo(
-              FileInfo.fromFileObject(files[0]),
-              path,
-              queueItem,
-              mode,
-            );
+            return this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem, mode);
           }
         } else {
           // it's an audio file
@@ -1507,16 +1223,24 @@ export class TaskService {
         // new file
         const task = new Task([newFileInfo], affectedMode.operations);
         task.setOptions({
-          selectedASRProvider: this.state.currentModeState.selectedASRProvider,
-          selectedMausLanguage:
-            this.state.currentModeState.selectedMausLanguage,
-          selectedTargetLanguage:
-            this.state.currentModeState.selectedTranslationLanguage,
-          selectedASRLanguage: this.state.currentModeState.selectedASRLanguage,
-          selectedSummarizationProvider:
-            this.state.currentModeState.selectedSummarizationProvider,
-          selectedSummarizationNumberOfWords:
-            this.state.currentModeState.selectedSummarizationNumberOfWords,
+          asr: {
+            provider: this.state.currentModeState.selectedASRProvider,
+            language: this.state.currentModeState.selectedASRLanguage,
+            diarization: {
+              enabled: this.state.currentModeState.isDiarizationEnabled,
+              speakers: this.state.currentModeState.diarizationSpeakers,
+            },
+          },
+          maus: {
+            language: this.state.currentModeState.selectedMausLanguage,
+          },
+          translation: {
+            language: this.state.currentModeState.selectedTranslationLanguage,
+          },
+          summarization: {
+            provider: this.state.currentModeState.selectedSummarizationProvider,
+            numberOfWords: this.state.currentModeState.selectedSummarizationNumberOfWords,
+          },
         });
 
         // set state
@@ -1534,11 +1258,7 @@ export class TaskService {
     }
   }
 
-  private async processDirectoryInfo(
-    dir: DirectoryInfo,
-    queueItem: QueueItem,
-    mode: PortalModeType,
-  ): Promise<TaskDirectory[]> {
+  private async processDirectoryInfo(dir: DirectoryInfo, queueItem: QueueItem, mode: PortalModeType): Promise<TaskDirectory[]> {
     const affectedMode = this.state.modes[mode];
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
@@ -1546,9 +1266,7 @@ export class TaskService {
     for (const dirEntry of dir.entries) {
       if (dirEntry instanceof FileInfo) {
         const file = dirEntry as FileInfo;
-        processedValues.push(
-          await this.processFileInfo(file, dir.path, queueItem, mode),
-        );
+        processedValues.push(await this.processFileInfo(file, dir.path, queueItem, mode));
       } else {
         throw new Error('file in dir is not a file!');
       }
@@ -1589,11 +1307,7 @@ export class TaskService {
     return result;
   }
 
-  private getTaskWithHashAndName(
-    hash: string,
-    name: string,
-    mode: PortalModeType,
-  ): Task | undefined {
+  private getTaskWithHashAndName(hash: string, name: string, mode: PortalModeType): Task | undefined {
     const taskList = this.state.modes[mode].taskList;
     if (!taskList) {
       throw new Error('undefined tasklist');
@@ -1602,20 +1316,14 @@ export class TaskService {
     const tasks: Task[] = taskList.getAllTasks();
 
     for (const task of tasks) {
-      if (
-        !(
-          task.files[0].attributes.originalFileName === null ||
-          task.files[0].attributes.originalFileName === undefined
-        )
-      ) {
+      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
         for (const file of task.files) {
           const cmpHash = file.hash ?? `${file.name}_${file.size}`;
           // console.log(`${cmpHash} === ${hash}`);
           if (
             cmpHash === hash &&
             file.attributes.originalFileName === name &&
-            (task.operations[0].state === TaskStatus.PENDING ||
-              task.operations[0].state === TaskStatus.ERROR)
+            (task.operations[0].state === TaskStatus.PENDING || task.operations[0].state === TaskStatus.ERROR)
           ) {
             return task;
           }
@@ -1628,10 +1336,7 @@ export class TaskService {
     return undefined;
   }
 
-  private getTaskWithOriginalFileName(
-    regex: RegExp,
-    mode: PortalModeType,
-  ): Task | undefined {
+  private getTaskWithOriginalFileName(regex: RegExp, mode: PortalModeType): Task | undefined {
     const taskList = this.state.modes[mode].taskList;
     if (!taskList) {
       throw new Error('undefined tasklist');

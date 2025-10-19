@@ -42,21 +42,12 @@ export class BugReportService {
     let sanitizedMessage: any = message;
 
     if (typeof message === 'string') {
-      sanitizedMessage = sanitizedMessage.replace(
-        /(ACCESSCODE=)([^&\n]+)/g,
-        '$1****',
-      );
+      sanitizedMessage = sanitizedMessage.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
     } else {
       if (hasProperty(sanitizedMessage, 'message')) {
-        sanitizedMessage.message = sanitizedMessage.message.replace(
-          /(ACCESSCODE=)([^&\n]+)/g,
-          '$1****',
-        );
+        sanitizedMessage.message = sanitizedMessage.message.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
       } else if (hasProperty(sanitizedMessage, 'text')) {
-        sanitizedMessage.text = sanitizedMessage.text.replace(
-          /(ACCESSCODE=)([^&\n]+)/g,
-          '$1****',
-        );
+        sanitizedMessage.text = sanitizedMessage.text.replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****');
       }
     }
 
@@ -92,13 +83,7 @@ export class BugReportService {
     };
   }
 
-  sendBugReport(
-    name: string,
-    email: string,
-    message: string,
-    sendProtocol: boolean,
-    screenshots: any[],
-  ): Observable<any> {
+  sendBugReport(name: string, email: string, message: string, sendProtocol: boolean, screenshots: any[]): Observable<any> {
     let pkg: FeedbackRequestPropertiesDto = {
       type: 'bug',
       message,

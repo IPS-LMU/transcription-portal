@@ -1,19 +1,16 @@
-import {
-  HttpClient,
-  HttpErrorResponse,
-  HttpEvent,
-  HttpEventType,
-} from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import * as X2JS from 'x2js';
+import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { TimePipe } from '../../shared/time.pipe';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation } from './operation';
-import { environment } from '../../../environments/environment';
+import { IOperation, Operation, OperationOptions } from './operation';
+
+export type IUploadOperation = IOperation;
 
 export class UploadOperation extends Operation {
   public constructor(
@@ -25,19 +22,8 @@ export class UploadOperation extends Operation {
     state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
-    language?: string,
   ) {
-    super(
-      name,
-      commands,
-      title,
-      shortTitle,
-      task,
-      state,
-      id,
-      serviceProvider,
-      language,
-    );
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
     this._description =
       'Drag and drop your audio and optional text files on the web page to upload them to the server ' +
       'for processing. Prior to upload, the format of the audio files will be checked; stereo files will be split into ' +
@@ -113,9 +99,7 @@ export class UploadOperation extends Operation {
           }
 
           if (json.success) {
-            const urls = Array.isArray(json.fileList.entry)
-              ? json.fileList.entry.map((a: any) => a.value)
-              : [json.fileList.entry.value];
+            const urls = Array.isArray(json.fileList.entry) ? json.fileList.entry.map((a: any) => a.value) : [json.fileList.entry.value];
 
             subj.next({
               type: 'loadend',
@@ -136,22 +120,14 @@ export class UploadOperation extends Operation {
     return subj;
   }
 
-  public start = (
-    files: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode?: string,
-  ) => {
+  public start = async (files: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
       this._results = [];
       this.updateProtocol('');
       this.changeState(TaskStatus.UPLOADING);
       this._time.start = Date.now();
 
-      const url = this._commands[0].replace(
-        '{{host}}',
-        AppSettings.getServiceInformation("BAS")!.host,
-      );
+      const url = this._commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
 
       this.subscrManager.add(
         UploadOperation.upload(files, url, httpclient).subscribe({
@@ -171,26 +147,14 @@ export class UploadOperation extends Operation {
               if (obj.urls && obj.urls.length === files.length) {
                 for (let i = 0; i < files.length; i++) {
                   files[i].url = obj.urls[i];
-                  const type =
-                    files[i].extension.indexOf('wav') > 0
-                      ? 'audio/wav'
-                      : 'text/plain';
-                  const info = FileInfo.fromURL(
-                    files[i]!.url!,
-                    type,
-                    files[i]!.fullname,
-                    Date.now(),
-                  );
+                  const type = files[i].extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
+                  const info = FileInfo.fromURL(files[i]!.url!, type, files[i]!.fullname, Date.now());
                   info.attributes = files[i].attributes;
                   this.results.push(info);
                 }
                 this.changeState(TaskStatus.FINISHED);
               } else {
-                this.throwError(
-                  new Error(
-                    'Number of returned URLs do not match number of files.',
-                  ),
-                );
+                this.throwError(new Error('Number of returned URLs do not match number of files.'));
               }
             }
           },
@@ -201,9 +165,7 @@ export class UploadOperation extends Operation {
       );
     } else {
       this.time.duration = Date.now() - this.time.start;
-      this.throwError(
-        new Error(this.protocol + '\n' + 'serviceProvider is undefined'),
-      );
+      this.throwError(new Error(this.protocol + '\n' + 'serviceProvider is undefined'));
     }
   };
 
@@ -229,16 +191,13 @@ export class UploadOperation extends Operation {
         }
         break;
       case TaskStatus.PROCESSING:
-        result =
-          '<i class="bi bi-gear spin"></i>\n' +
-          '<span class="sr-only">Loading...</span>';
+        result = '<i class="bi bi-gear spin"></i>\n' + '<span class="sr-only">Loading...</span>';
         break;
       case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
       case TaskStatus.READY:
-        result =
-          '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
+        result = '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
       case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
@@ -271,9 +230,7 @@ export class UploadOperation extends Operation {
         }
         break;
       case TaskStatus.PROCESSING:
-        result =
-          '<i class="bi bi-gear-fill spin"></i>\n' +
-          '<span class="sr-only">Processing...</span>';
+        result = '<i class="bi bi-gear-fill spin"></i>\n' + '<span class="sr-only">Processing...</span>';
         break;
       case TaskStatus.FINISHED:
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
@@ -293,25 +250,10 @@ export class UploadOperation extends Operation {
 
   public clone(task?: Task): UploadOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new UploadOperation(
-      this.name,
-      this._commands,
-      this.title,
-      this.shortTitle,
-      selectedTask,
-      this.state,
-      undefined,
-      this.serviceProvider,
-      this.language,
-    );
+    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state, undefined, this.serviceProvider);
   }
 
-  public fromAny(
-    operationObj: IOperation,
-    commands: string[],
-    task: Task,
-    taskObj?: any,
-  ): UploadOperation {
+  public fromAny(operationObj: IUploadOperation, commands: string[], task: Task): UploadOperation {
     const result = new UploadOperation(
       operationObj.name,
       commands,
@@ -320,8 +262,7 @@ export class UploadOperation extends Operation {
       task,
       operationObj.state,
       operationObj.id,
-      AppSettings.getServiceInformation("BAS"),
-      operationObj.language ?? taskObj?.language,
+      AppSettings.getServiceInformation('BAS'),
     );
 
     for (const resultObj of operationObj.results) {
@@ -347,4 +288,21 @@ export class UploadOperation extends Operation {
       this.estimatedEnd = 0;
     }
   };
+
+  override overwriteOptions(options: OperationOptions) {
+    this._serviceProvider = AppSettings.getServiceInformation('BAS')!;
+  }
+
+  override async toAny(): Promise<IUploadOperation> {
+    return {
+      id: this.id,
+      name: this.name,
+      state: this.state,
+      protocol: this.protocol,
+      time: this.time,
+      enabled: this.enabled,
+      results: await this.serializeResults(),
+      serviceProvider: this.serviceProvider?.provider,
+    };
+  }
 }

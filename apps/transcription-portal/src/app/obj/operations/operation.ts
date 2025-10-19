@@ -4,6 +4,7 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo, FileInfoSerialized } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
+import { IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
 
 export interface IOperation {
@@ -18,9 +19,32 @@ export interface IOperation {
   enabled: boolean;
   results: FileInfoSerialized[];
   serviceProvider?: string;
+  /*
   language?: string;
   mausLanguage?: string;
-  summarizationMaxNumberOfWords?: string; // TODO save/retrieve values
+  summarizationMaxNumberOfWords?: string;
+   */
+}
+
+export interface OperationOptions {
+  asr?: {
+    language?: string;
+    provider?: ServiceProvider;
+    diarization?: {
+      enabled?: boolean;
+      speakers?: number;
+    };
+  };
+  maus?: {
+    language?: string;
+  };
+  summarization?: {
+    provider?: ServiceProvider;
+    numberOfWords?: number;
+  };
+  translation?: {
+    language?: string;
+  };
 }
 
 export abstract class Operation {
@@ -56,7 +80,6 @@ export abstract class Operation {
     state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
-    language?: string,
   ) {
     if (id === null || id === undefined) {
       this._id = ++Operation.counter;
@@ -79,15 +102,9 @@ export abstract class Operation {
     }
 
     this._serviceProvider = serviceProvider;
-    this._language = language;
   }
 
-  public abstract start: (
-    inputs: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode?: string,
-  ) => void;
+  public abstract start: (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => Promise<void>;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;
@@ -204,15 +221,6 @@ export abstract class Operation {
     this._serviceProvider = value;
   }
 
-  protected _language?: string;
-  get language(): string | undefined {
-    return this._language;
-  }
-
-  set language(value: string | undefined) {
-    this._language = value;
-  }
-
   protected _time: {
     start: number;
     duration: number;
@@ -236,10 +244,7 @@ export abstract class Operation {
     this.changed.next();
   }
 
-  public getStateIcon = (
-    sanitizer: DomSanitizer,
-    state: TaskStatus,
-  ): SafeHtml => {
+  public getStateIcon = (sanitizer: DomSanitizer, state: TaskStatus): SafeHtml => {
     let result = '';
 
     switch (state) {
@@ -319,8 +324,7 @@ export abstract class Operation {
     let nextOP = this.nextOperation;
 
     while (nextOP) {
-      const nextOP2 =
-        nextOP.enabled && nextOP.state !== TaskStatus.SKIPPED ? nextOP : null;
+      const nextOP2 = nextOP.enabled && nextOP.state !== TaskStatus.SKIPPED ? nextOP : null;
       if (nextOP2 !== null) {
         break;
       }
@@ -334,46 +338,10 @@ export abstract class Operation {
 
   public abstract clone(task?: Task): Operation;
 
-  public abstract fromAny(
-    operationObj: IOperation,
-    commands: string[],
-    task: Task,
-    taskObj: any,
-  ): Operation;
+  public abstract fromAny(operationObj: IOperation, commands: string[], task: Task, taskObj: IDBTaskItem): Operation;
 
-  toAny(): Promise<IOperation> {
-    return new Promise<any>((resolve, reject) => {
-      const result: IOperation = {
-        id: this.id,
-        name: this.name,
-        state: this.state,
-        protocol: this.protocol,
-        time: this.time,
-        enabled: this.enabled,
-        results: [],
-        serviceProvider: this.serviceProvider?.provider,
-        language: this.language,
-      };
-
-      // result data
-      const promises: Promise<FileInfoSerialized>[] = [];
-      for (const resultObj of this.results) {
-        promises.push(resultObj.toAny());
-      }
-
-      if (promises.length > 0) {
-        Promise.all(promises)
-          .then((values) => {
-            result.results = values;
-            resolve(result);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      } else {
-        resolve(result);
-      }
-    });
+  async toAny(): Promise<IOperation> {
+    throw new Error('Not implemented.');
   }
 
   protected updateProtocol(protocol: string) {
@@ -396,10 +364,7 @@ export abstract class Operation {
       while (match !== null) {
         result.push({
           type: match[1] as 'WARNING' | 'ERROR',
-          message:
-            match.length < 3 || !match[2]
-              ? ''
-              : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****'),
+          message: match.length < 3 || !match[2] ? '' : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****'),
         });
         match = regex.exec(text);
       }
@@ -427,6 +392,19 @@ export abstract class Operation {
   }
   public onMouseOver() {
     // not implemented
+  }
+
+  public overwriteOptions(options: OperationOptions) {
+    throw new Error('Not implemented');
+  }
+
+  protected async serializeResults(): Promise<FileInfoSerialized[]> {
+    const promises: Promise<FileInfoSerialized>[] = [];
+    for (const resultObj of this.results) {
+      promises.push(resultObj.toAny());
+    }
+
+    return Promise.all(promises);
   }
 }
 

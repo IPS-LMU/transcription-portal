@@ -1,12 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  SimpleChanges,
-  ViewChild,
-} from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 
@@ -16,10 +8,7 @@ import { hasProperty } from '@octra/utilities';
   styleUrls: ['./popover.component.scss'],
   standalone: true,
 })
-export class PopoverComponent
-  extends SubscriberComponent
-  implements OnChanges, OnDestroy
-{
+export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy {
   @ViewChild('svg', { static: true }) svg?: ElementRef;
   @ViewChild('inner', { static: true }) inner?: ElementRef;
 

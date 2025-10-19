@@ -1,12 +1,7 @@
 @if (convertedArray.length > 0) {
   <div class="border">
-    <div
-      class="row g-0 py-1 px-2 justify-items-center align-items-center"
-      style="background-color: #1b4685"
-    >
-      <div class="col-sm text-light" style="font-size: 0.9rem">
-        Result and Conversions
-      </div>
+    <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
+      <div class="col-sm text-light" style="font-size: 0.9rem">Result and Conversions</div>
       <div class="col-auto">
         <select
           class="form-select form-select-sm pointer"
@@ -30,19 +25,10 @@
       <div class="row">
         @for (elem of convertedArray; track elem) {
           @if (elem.number.toString() === selectedVersion) {
-            <div
-              class="col-3 result-icon position-relative text-center"
-              style="background-color: #bfdeef; border-collapse: separate"
-            >
-              <div
-                class="result-icon-overlay position-absolute w-100 h-100"
-                style="z-index: 1000"
-              >
+            <div class="col-3 result-icon position-relative text-center" style="background-color: #bfdeef; border-collapse: separate">
+              <div class="result-icon-overlay position-absolute w-100 h-100" style="z-index: 1000">
                 <div class="overlay" style="z-index: 1001"></div>
-                <div
-                  class="position-absolute w-100 h-100"
-                  style="z-index: 1002"
-                >
+                <div class="position-absolute w-100 h-100" style="z-index: 1002">
                   <div class="w-100" style="height: 70%">
                     <div
                       class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
@@ -61,19 +47,13 @@
                       target="_blank"
                       style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
                     >
-                      <i
-                        class="bi bi-cloud-download-fill"
-                        style="color: white"
-                      ></i>
+                      <i class="bi bi-cloud-download-fill" style="color: white"></i>
                     </a>
                   </div>
                 </div>
               </div>
               <div>
-                <i
-                  class="bi bi-patch-check-fill position-absolute top-0 right-0"
-                  style="color: yellow; z-index: 900"
-                ></i>
+                <i class="bi bi-patch-check-fill position-absolute top-0 right-0" style="color: yellow; z-index: 900"></i>
                 <i
                   class="bi bi-file-earmark-text-fill fs-1"
                   [ngStyle]="{
@@ -86,19 +66,10 @@
               </div>
             </div>
             @for (conversion of elem.conversions; track conversion) {
-              <div
-                class="col-3 result-icon text-center position-relative"
-                style="background-color: white; border-collapse: separate"
-              >
-                <div
-                  class="result-icon-overlay position-absolute w-100 h-100"
-                  style="z-index: 1000"
-                >
+              <div class="col-3 result-icon text-center position-relative" style="background-color: white; border-collapse: separate">
+                <div class="result-icon-overlay position-absolute w-100 h-100" style="z-index: 1000">
                   <div class="overlay" style="z-index: 1001"></div>
-                  <div
-                    class="position-absolute w-100 h-100"
-                    style="z-index: 1002"
-                  >
+                  <div class="position-absolute w-100 h-100" style="z-index: 1002">
                     <div class="w-100" style="height: 70%">
                       <div
                         class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
@@ -116,31 +87,13 @@
                         target="_blank"
                         style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
                       >
-                        <i
-                          class="bi bi-cloud-download-fill"
-                          style="color: white"
-                        ></i>
+                        <i class="bi bi-cloud-download-fill" style="color: white"></i>
                       </a>
                     </div>
                   </div>
                 </div>
-                <span
-                  class="position-absolute top-0 right-0 rounded-3"
-                  style="
-                    height: 16px;
-                    width: 16px;
-                    background-color: black;
-                    margin-top: 5px;
-                  "
-                >
-                  <i
-                    class="position-absolute bi bi-arrow-right-circle-fill"
-                    style="
-                      color: whitesmoke;
-                      margin-top: -4px;
-                      margin-left: -8px;
-                    "
-                  ></i>
+                <span class="position-absolute top-0 right-0 rounded-3" style="height: 16px; width: 16px; background-color: black; margin-top: 5px">
+                  <i class="position-absolute bi bi-arrow-right-circle-fill" style="color: whitesmoke; margin-top: -4px; margin-left: -8px"></i>
                 </span>
                 <i
                   class="bi bi-file-earmark-text-fill fs-1"

@@ -1,9 +1,5 @@
 import { AfterViewInit, Component, OnDestroy, ViewChild, inject } from '@angular/core';
-import {
-  NgbActiveModal,
-  NgbModalOptions,
-  NgbModalRef,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
@@ -19,10 +15,7 @@ import { StatisticsService } from '../../shared/statistics.service';
   providers: [StatisticsService],
   imports: [NgCircleProgressModule, BaseChartDirective],
 })
-export class StatisticsModalComponent
-  extends SubscriberComponent
-  implements OnDestroy, AfterViewInit
-{
+export class StatisticsModalComponent extends SubscriberComponent implements OnDestroy, AfterViewInit {
   statisticsService = inject(StatisticsService);
   taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);

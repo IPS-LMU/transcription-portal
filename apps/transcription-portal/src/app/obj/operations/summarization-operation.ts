@@ -3,162 +3,130 @@ import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, last, stringifyQueryParams, wait } from '@octra/utilities';
-import {
-  AudioInfo,
-  downloadFile,
-  FileInfo,
-  readFileContents,
-} from '@octra/web-media';
+import { AudioInfo, downloadFile, FileInfo, readFileContents } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation } from './operation';
+import { IOperation, Operation, OperationOptions } from './operation';
+
+export interface ISummarizationOperation extends IOperation {
+  language?: string;
+  maxNumberOfWords?: number;
+}
 
 export class SummarizationOperation extends Operation {
   public resultType = 'Text';
+  protected _language?: string;
+  get language(): string | undefined {
+    return this._language;
+  }
 
+  set language(value: string | undefined) {
+    this._language = value;
+  }
   maxNumberOfWords?: number;
 
-  public start = (
-    inputs: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode?: string,
-  ) => {
-    setTimeout(async () => {
-      this.updateProtocol('');
-      this.changeState(TaskStatus.PROCESSING);
-      this._time.start = Date.now();
+  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+    this.updateProtocol('');
+    this.changeState(TaskStatus.PROCESSING);
+    await wait(2);
+    this._time.start = Date.now();
 
-      const transcriptFile = operations[2].enabled
-        ? last(operations[2].results)
-        : last(operations[1].results);
-      const audioinfo = operations[0].task!.files[0] as AudioInfo;
+    const transcriptFile = operations[2].enabled ? last(operations[2].results) : last(operations[1].results);
+    const audioinfo = operations[0].task!.files[0] as AudioInfo;
 
-      if (transcriptFile?.file && audioinfo) {
-        let transcript = '';
-        const content = await readFileContents<string>(
-          transcriptFile.file,
-          'text',
-          'utf-8',
-        );
+    if (transcriptFile?.file && audioinfo) {
+      let transcript = '';
+      const content = await readFileContents<string>(transcriptFile.file, 'text', 'utf-8');
 
-        const audiofile = new OAudiofile();
-        audiofile.duration = audioinfo.duration.samples;
-        audiofile.name =
-          audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
-        audiofile.sampleRate = audioinfo.sampleRate;
-        audiofile.size = audioinfo.size;
+      const audiofile = new OAudiofile();
+      audiofile.duration = audioinfo.duration.samples;
+      audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+      audiofile.sampleRate = audioinfo.sampleRate;
+      audiofile.size = audioinfo.size;
 
-        if (transcriptFile.extension === '.txt') {
-          transcript = content;
-        } else {
-          const converter = new PartiturConverter();
-          const imported = converter.import(
-            {
-              name: transcriptFile.fullname,
-              type: transcriptFile.type,
-              content,
-              encoding: 'utf-8',
-            },
-            audiofile,
-          );
-          transcript = new TextConverter().export(
-            imported.annotjson!,
-            audiofile,
-            0,
-          ).file!.content;
-        }
-
-        let projectName: string | undefined = undefined;
-        try {
-          projectName = await this.createSummarizationProject(httpclient);
-
-          await this.uploadFile(
-            new File([transcript], `${projectName}.txt`, {
-              type: 'text/plain',
-            }),
-            httpclient,
-            projectName,
-          );
-
-          await wait(3);
-          const res = await this.processSummarizationProject(
-            httpclient,
-            projectName,
-          );
-        } catch (err: any) {
-          // couldn't upload file or process summarization project
-          this.changeState(TaskStatus.ERROR);
-          this.updateProtocol(
-            err?.error?.message ?? err?.message ?? err?.toString(),
-          );
-          if (projectName) {
-            await this.deleteSummarizationProject(httpclient, projectName);
-          }
-          return;
-        }
-
-        this.subscrManager.add(
-          interval(5000).subscribe({
-            next: async () => {
-              const result = await this.getProjectStatus(
-                httpclient,
-                projectName,
-              );
-              console.log('Retrieve project status...');
-              console.log(result);
-
-              if (
-                result.status === 'success' &&
-                result.body.status === 'finished'
-              ) {
-                if (!result.body.errors) {
-                  this.time.duration = Date.now() - this.time.start;
-
-                  const summary = result.body.outputs.find((o: any) =>
-                    o.filename.includes('summary.txt'),
-                  );
-
-                  if (summary) {
-                    const summaryText = await downloadFile(summary.url, 'text');
-                    const file = new File([summaryText], `${projectName}.txt`, {
-                      type: 'text/plain',
-                    });
-                    this.results.push(
-                      new FileInfo(file.name, file.type, file.size, file),
-                    );
-                    this.changeState(TaskStatus.FINISHED);
-                  }
-                } else {
-                  this.changeState(TaskStatus.ERROR);
-                  this.updateProtocol(result.body.errorMessage);
-
-                  const errorLogFileURL: string = result.body.outputs.find(
-                    (o: any) => o.filename === 'error.log',
-                  )?.url;
-                  if (errorLogFileURL) {
-                    const errorLog = await downloadFile(
-                      errorLogFileURL,
-                      'text',
-                    );
-                    console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
-                  }
-                }
-
-                this.subscrManager.removeByTag('status check');
-                await this.deleteSummarizationProject(httpclient, projectName);
-              }
-            },
-          }),
-          'status check',
-        );
+      if (transcriptFile.extension === '.txt') {
+        transcript = content;
       } else {
-        this.changeState(TaskStatus.ERROR);
-        this.updateProtocol('Missing transcript file or audio file.');
+        const converter = new PartiturConverter();
+        const imported = converter.import(
+          {
+            name: transcriptFile.fullname,
+            type: transcriptFile.type,
+            content,
+            encoding: 'utf-8',
+          },
+          audiofile,
+        );
+        transcript = new TextConverter().export(imported.annotjson!, audiofile, 0).file!.content;
       }
-    }, 2000);
+
+      let projectName: string | undefined = undefined;
+      try {
+        projectName = await this.createSummarizationProject(httpclient);
+
+        await this.uploadFile(
+          new File([transcript], `${projectName}.txt`, {
+            type: 'text/plain',
+          }),
+          httpclient,
+          projectName,
+        );
+
+        await wait(3);
+        const res = await this.processSummarizationProject(httpclient, projectName);
+      } catch (err: any) {
+        // couldn't upload file or process summarization project
+        this.changeState(TaskStatus.ERROR);
+        this.updateProtocol(err?.error?.message ?? err?.message ?? err?.toString());
+        if (projectName) {
+          await this.deleteSummarizationProject(httpclient, projectName);
+        }
+        return;
+      }
+
+      this.subscrManager.add(
+        interval(5000).subscribe({
+          next: async () => {
+            const result = await this.getProjectStatus(httpclient, projectName);
+
+            if (result.status === 'success' && result.body.status === 'finished') {
+              if (!result.body.errors) {
+                this.time.duration = Date.now() - this.time.start;
+
+                const summary = result.body.outputs.find((o: any) => o.filename.includes('summary.txt'));
+
+                if (summary) {
+                  const summaryText = await downloadFile(summary.url, 'text');
+                  const file = new File([summaryText], `${projectName}.txt`, {
+                    type: 'text/plain',
+                  });
+                  this.results.push(new FileInfo(file.name, file.type, file.size, file));
+                  this.changeState(TaskStatus.FINISHED);
+                }
+              } else {
+                this.changeState(TaskStatus.ERROR);
+                this.updateProtocol(result.body.errorMessage);
+
+                const errorLogFileURL: string = result.body.outputs.find((o: any) => o.filename === 'error.log')?.url;
+                if (errorLogFileURL) {
+                  const errorLog = await downloadFile(errorLogFileURL, 'text');
+                  console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
+                }
+              }
+
+              this.subscrManager.removeByTag('status check');
+              await this.deleteSummarizationProject(httpclient, projectName);
+            }
+          },
+        }),
+        'status check',
+      );
+    } else {
+      this.changeState(TaskStatus.ERROR);
+      this.updateProtocol('Missing transcript file or audio file.');
+    }
   };
 
   public clone(task?: Task): SummarizationOperation {
@@ -179,12 +147,7 @@ export class SummarizationOperation extends Operation {
     return result;
   }
 
-  public fromAny(
-    operationObj: IOperation,
-    commands: string[],
-    task: Task,
-    taskObj?: any,
-  ): Operation {
+  public fromAny(operationObj: ISummarizationOperation, commands: string[], task: Task): Operation {
     const result = new SummarizationOperation(
       operationObj.name,
       commands,
@@ -193,11 +156,10 @@ export class SummarizationOperation extends Operation {
       task,
       operationObj.state,
       operationObj.id,
-      AppSettings.getServiceInformation(operationObj.serviceProvider) ??
-        AppSettings.getServiceInformation(taskObj.summarizationServiceProvider),
-      operationObj.language ?? taskObj.operations[1].language,
+      AppSettings.getServiceInformation(operationObj.serviceProvider),
+      operationObj.language,
     );
-    result.maxNumberOfWords = (operationObj as any).maxNumberOfWords;
+    result.maxNumberOfWords = operationObj.maxNumberOfWords;
 
     for (const resultObj of operationObj.results) {
       const resultClass = FileInfo.fromAny(resultObj);
@@ -223,17 +185,8 @@ export class SummarizationOperation extends Operation {
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(
-      name,
-      commands,
-      title,
-      shortTitle,
-      task,
-      state,
-      id,
-      serviceProvider,
-      language,
-    );
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    this._language = language;
     this._description = 'Summarizes a given full text.';
   }
 
@@ -264,14 +217,9 @@ export class SummarizationOperation extends Operation {
     });
   }
 
-  async processSummarizationProject(
-    httpclient: HttpClient,
-    projectName: string,
-  ) {
+  async processSummarizationProject(httpclient: HttpClient, projectName: string) {
     return new Promise<void>((resolve, reject) => {
-      console.log(
-        `Process project with options ${this.language} and ${this.maxNumberOfWords}`,
-      );
+      console.log(`Process project with options ${this.language} and ${this.maxNumberOfWords}`);
       if (this.serviceProvider) {
         this.subscrManager.add(
           httpclient
@@ -280,9 +228,7 @@ export class SummarizationOperation extends Operation {
               {
                 projectName,
                 language: this.mapLanguage(this.language),
-                words: !Number.isNaN(Number(this.maxNumberOfWords))
-                  ? Number(this.maxNumberOfWords)
-                  : undefined,
+                words: !Number.isNaN(Number(this.maxNumberOfWords)) ? Number(this.maxNumberOfWords) : undefined,
               },
               { responseType: 'json' },
             )
@@ -349,15 +295,10 @@ export class SummarizationOperation extends Operation {
         formData.append('file', file);
         formData.append('projectName', projectName);
         this.subscrManager.add(
-          httpClient
-            .post(
-              joinURL(this.serviceProvider.host, '/project/upload'),
-              formData,
-            )
-            .subscribe({
-              next: () => resolve(),
-              error: reject,
-            }),
+          httpClient.post(joinURL(this.serviceProvider.host, '/project/upload'), formData).subscribe({
+            next: () => resolve(),
+            error: reject,
+          }),
         );
       } else {
         reject('Missing service provider');
@@ -382,5 +323,26 @@ export class SummarizationOperation extends Operation {
       }
     }
     return 'auto';
+  }
+
+  override overwriteOptions(options: OperationOptions) {
+    this._serviceProvider = options.summarization?.provider;
+    this._language = options.asr?.language;
+    this.maxNumberOfWords = options.summarization?.numberOfWords;
+  }
+
+  override async toAny(): Promise<ISummarizationOperation> {
+    return {
+      id: this.id,
+      name: this.name,
+      state: this.state,
+      protocol: this.protocol,
+      time: this.time,
+      enabled: this.enabled,
+      results: await this.serializeResults(),
+      serviceProvider: this.serviceProvider?.provider,
+      language: this._language,
+      maxNumberOfWords: this.maxNumberOfWords,
+    };
   }
 }

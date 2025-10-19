@@ -8,7 +8,6 @@ export class ExpandRowDirective implements OnInit {
   private elRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-
   ngOnInit() {
     const native = this.elRef.nativeElement;
     this.renderer.listen(native, 'click', () => {

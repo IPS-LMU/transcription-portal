@@ -3,13 +3,7 @@ import { SubscriptionManager } from '@octra/utilities';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
-import {
-  IDBInternItem,
-  IDBTaskItem,
-  IDBUserDefaultSettingsItemData,
-  IDBUserSettingsItem,
-  IndexedDBManager,
-} from './indexedDB';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from './indexedDB';
 import { Operation } from './obj/operations/operation';
 import { Task, TaskDirectory } from './obj/tasks';
 import { TaskEntry } from './obj/tasks/task-entry';
@@ -65,9 +59,7 @@ export class StorageService {
   }
 
   constructor() {
-    this._idbm = new IndexedDBManager(
-      environment.production ? 'oh-portal' : 'oh-portal-dev',
-    );
+    this._idbm = new IndexedDBManager(environment.production ? 'oh-portal' : 'oh-portal-dev');
     this._idbm.open().catch((e) => {
       alert(e.message);
     });
@@ -88,45 +80,29 @@ export class StorageService {
       promises.push(this._idbm.summarization_tasks.toArray());
       promises.push(this._idbm.userSettings.toArray());
 
-      Promise.all<
-        [
-          IDBInternItem,
-          IDBInternItem,
-          IDBTaskItem[],
-          IDBTaskItem[],
-          IDBUserSettingsItem<any>[],
-        ]
-      >(promises as any)
-        .then(
-          ([
-            taskCounter,
-            operationCounter,
+      Promise.all<[IDBInternItem, IDBInternItem, IDBTaskItem[], IDBTaskItem[], IDBUserSettingsItem<any>[]]>(promises as any)
+        .then(([taskCounter, operationCounter, annotationTasks, summarizationTasks, userSettings]) => {
+          TaskEntry.counter = taskCounter.value;
+          Operation.counter = operationCounter.value;
+          this.ready = true;
+
+          if (userSettings) {
+            const userProfile = userSettings.find((a: any) => {
+              return a.name === 'userProfile';
+            });
+
+            if (userProfile && userProfile.value) {
+              this.userProfile = userProfile.value;
+            }
+          }
+
+          this.allloaded.next({
             annotationTasks,
             summarizationTasks,
             userSettings,
-          ]) => {
-            TaskEntry.counter = taskCounter.value;
-            Operation.counter = operationCounter.value;
-            this.ready = true;
-
-            if (userSettings) {
-              const userProfile = userSettings.find((a: any) => {
-                return a.name === 'userProfile';
-              });
-
-              if (userProfile && userProfile.value) {
-                this.userProfile = userProfile.value;
-              }
-            }
-
-            this.allloaded.next({
-              annotationTasks,
-              summarizationTasks,
-              userSettings,
-            });
-            this.allloaded.complete();
-          },
-        )
+          });
+          this.allloaded.complete();
+        })
         .catch((err) => {
           console.error(err);
           this.ready = true;
@@ -140,10 +116,7 @@ export class StorageService {
     });
   }
 
-  public saveTask(
-    taskEntry: Task | TaskDirectory,
-    mode: PortalModeType,
-  ): Promise<void> {
+  public saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
       let promise: Promise<any>;
@@ -199,10 +172,7 @@ export class StorageService {
     });
   }
 
-  public removeFromDB(
-    entry: Task | TaskDirectory,
-    mode: PortalModeType,
-  ): Promise<void> {
+  public removeFromDB(entry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
       if (entry instanceof Task) {

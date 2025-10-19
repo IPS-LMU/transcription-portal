@@ -11,8 +11,7 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 export class SplitModalComponent extends SubscriberComponent {
   protected activeModal = inject(NgbActiveModal);
 
-  @Output() dissmissedChange: EventEmitter<boolean> =
-    new EventEmitter<boolean>();
+  @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   public static options: NgbModalOptions = {
     size: 'lg',
     backdrop: 'static',

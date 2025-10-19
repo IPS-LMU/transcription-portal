@@ -35,24 +35,15 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
       if (this.toolSelected) {
         this.renderer.addClass(this.elementRef.nativeElement, 'tool-selected');
       } else {
-        this.renderer.removeClass(
-          this.elementRef.nativeElement,
-          'tool-selected',
-        );
+        this.renderer.removeClass(this.elementRef.nativeElement, 'tool-selected');
       }
     }
 
-    if (
-      hasProperty(changes, 'rowSelected') &&
-      changes['rowSelected'].currentValue !== undefined
-    ) {
+    if (hasProperty(changes, 'rowSelected') && changes['rowSelected'].currentValue !== undefined) {
       if (this.rowSelected) {
         this.renderer.addClass(this.elementRef.nativeElement, 'row-selected');
       } else {
-        this.renderer.removeClass(
-          this.elementRef.nativeElement,
-          'row-selected',
-        );
+        this.renderer.removeClass(this.elementRef.nativeElement, 'row-selected');
       }
     }
   }

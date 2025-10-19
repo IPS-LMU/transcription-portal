@@ -1,38 +1,20 @@
 <div class="modal-header">
   <h4 class="modal-title pull-left">About</h4>
-  <button
-    type="button"
-    class="btn-close close pull-right"
-    aria-label="Close"
-    (click)="bsModalRef.close()"
-  >
+  <button type="button" class="btn-close close pull-right" aria-label="Close" (click)="bsModalRef.close()">
     <span aria-hidden="true" class="visually-hidden">&times;</span>
   </button>
 </div>
 <div class="modal-body">
   <h5 class="mt-1 pt-0">Affiliations</h5>
   <div #logos class="align-items-center">
-    <a
-      href="http://www.en.phonetik.uni-muenchen.de/"
-      target="_blank"
-      class="d-inline-block"
+    <a href="http://www.en.phonetik.uni-muenchen.de/" target="_blank" class="d-inline-block"
       ><img src="assets/img/ipsx60.png" style="height: 60px"
     /></a>
-    <a
-      href="https://clarin.phonetik.uni-muenchen.de/BASWebServices/"
-      target="_blank"
-      class="d-inline-block ms-3"
+    <a href="https://clarin.phonetik.uni-muenchen.de/BASWebServices/" target="_blank" class="d-inline-block ms-3"
       ><img src="assets/img/bas.png" style="height: 60px"
     /></a>
-    <a href="https://text-plus.org/" target="_blank" class="d-inline-block ms-3"
-      ><img src="assets/img/Text+Logo.png" style="height: 60px"
-    /></a>
-    <a
-      href="https://atrium-research.eu/"
-      target="_blank"
-      class="d-inline-block ms-3"
-      ><img src="assets/img/AtriumLogo.png" style="height: 60px"
-    /></a>
+    <a href="https://text-plus.org/" target="_blank" class="d-inline-block ms-3"><img src="assets/img/Text+Logo.png" style="height: 60px" /></a>
+    <a href="https://atrium-research.eu/" target="_blank" class="d-inline-block ms-3"><img src="assets/img/AtriumLogo.png" style="height: 60px" /></a>
   </div>
   <h5 class="mt-5">Development Team</h5>
   <table>
@@ -41,52 +23,35 @@
         <td class="pr-1">Project Manager:</td>
         <td>
           Christoph Draxler
-          <a
-            href="https://www.en.phonetik.uni-muenchen.de/people/staff/draxler_christoph/index.html"
-            target="_blank"
-            >(IPS, LMU München)</a
-          >
+          <a href="https://www.en.phonetik.uni-muenchen.de/people/staff/draxler_christoph/index.html" target="_blank">(IPS, LMU München)</a>
         </td>
       </tr>
       <tr>
         <td class="pr-1">Web Developer:</td>
         <td>
           Julian Pömp
-          <a
-            href="https://www.en.phonetik.uni-muenchen.de/people/staff/poemp_julian/index.html"
-            target="_blank"
-            >(IPS, LMU München)</a
-          >
+          <a href="https://www.en.phonetik.uni-muenchen.de/people/staff/poemp_julian/index.html" target="_blank">(IPS, LMU München)</a>
         </td>
       </tr>
     </tbody>
   </table>
   <h5 class="mt-4">Open Source</h5>
-  The code of this project is available on <a href="https://github.com/IPS-LMU/transcription-portal" target="_blank"><i class="bi bi-github"></i> Github</a>.
+  The code of this project is available on
+  <a href="https://github.com/IPS-LMU/transcription-portal" target="_blank"><i class="bi bi-github"></i> Github</a>.
 
   <h5 class="mt-4">Literature</h5>
   <ul class="list-group" style="margin-left: 0">
     @for (item of literature; track item.name) {
       <li class="list-group-item">
-        [{{item.year}}] {{ item.title }}
-        <a
-          [href]="item.url"
-          class="btn btn-outline-secondary btn-sm py-0 px-1 me-2"
-          target="_blank"
+        [{{ item.year }}] {{ item.title }}
+        <a [href]="item.url" class="btn btn-outline-secondary btn-sm py-0 px-1 me-2" target="_blank"
           >Download PDF <i class="bi bi-file-pdf-fill text-danger"></i
         ></a>
-        <a
-          [href]="item.safeURL"
-          target="_blank"
-          class="btn btn-outline-secondary btn-sm py-0 px-1 me-2"
-          >Cite [.bib]</a
-        >
+        <a [href]="item.safeURL" target="_blank" class="btn btn-outline-secondary btn-sm py-0 px-1 me-2">Cite [.bib]</a>
       </li>
     }
   </ul>
 </div>
 <div class="modal-footer text-end">
-  <button type="button" class="btn btn-primary" (click)="bsModalRef.close()">
-    Close
-  </button>
+  <button type="button" class="btn btn-primary" (click)="bsModalRef.close()">Close</button>
 </div>

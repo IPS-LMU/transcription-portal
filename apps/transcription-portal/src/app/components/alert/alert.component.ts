@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 import { interval, Subject, Subscription } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
@@ -53,18 +53,9 @@ export class AlertComponent implements OnInit, OnDestroy {
     this.counter.unsubscribe();
   }
 
-  onAlertSend(obj: {
-    type: 'danger' | 'warning' | 'info' | 'success';
-    message: string;
-    duration: number;
-  }) {
+  onAlertSend(obj: { type: 'danger' | 'warning' | 'info' | 'success'; message: string; duration: number }) {
     this.animation = 'opened';
-    if (
-      obj.type === 'danger' ||
-      obj.type === 'warning' ||
-      obj.type === 'info' ||
-      obj.type === 'success'
-    ) {
+    if (obj.type === 'danger' || obj.type === 'warning' || obj.type === 'info' || obj.type === 'success') {
       const entry: AlertEntry = {
         type: obj.type,
         animation: 'opened',

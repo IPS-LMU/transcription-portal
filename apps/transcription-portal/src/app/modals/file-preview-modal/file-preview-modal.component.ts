@@ -12,10 +12,7 @@ import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
   styleUrls: ['./file-preview-modal.component.scss'],
   imports: [NgxCodeJarComponent],
 })
-export class FilePreviewModalComponent
-  extends SubscriberComponent
-  implements OnInit
-{
+export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);
 
   public selectedFile?: FileInfo;
@@ -30,10 +27,7 @@ export class FilePreviewModalComponent
   };
 
   get fileName(): string {
-    return (
-      this.selectedFile?.attributes.originalFileName ??
-      this.selectedFile?.fullname
-    );
+    return this.selectedFile?.attributes.originalFileName ?? this.selectedFile?.fullname;
   }
 
   ngOnInit() {

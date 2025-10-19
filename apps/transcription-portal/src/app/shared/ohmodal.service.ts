@@ -46,24 +46,18 @@ export class OHModalService implements OnDestroy {
       2,
     );
 
-    const ref = openModal<BugreportModalComponent>(
-      this.ngbModalService,
-      BugreportModalComponent,
-      BugreportModalComponent.options,
-      {
-        pkgText,
-        showSenderFields: true,
-        _profile: {
-          name: '',
-          email: '',
-        },
-      } as any,
-    );
+    const ref = openModal<BugreportModalComponent>(this.ngbModalService, BugreportModalComponent, BugreportModalComponent.options, {
+      pkgText,
+      showSenderFields: true,
+      _profile: {
+        name: '',
+        email: '',
+      },
+    } as any);
 
     ref.componentInstance.i18n = {
       ...ref.componentInstance.i18n,
-      introduction:
-        'Please tell us what you think about the TranscriptionPortal. What can we do better? Did you find any bugs?',
+      introduction: 'Please tell us what you think about the TranscriptionPortal. What can we do better? Did you find any bugs?',
       sending: 'Please wait while sending your feedback...',
     };
 
@@ -73,15 +67,7 @@ export class OHModalService implements OnDestroy {
       ref.componentInstance.send.subscribe({
         next: ({ name, email, message, sendProtocol, screenshots }: any) => {
           ref.componentInstance.sendStatus = 'sending';
-          ref.componentInstance.waitForSendResponse(
-            this.bugreportService.sendBugReport(
-              name,
-              email,
-              message,
-              sendProtocol,
-              screenshots,
-            ) as any,
-          );
+          ref.componentInstance.waitForSendResponse(this.bugreportService.sendBugReport(name, email, message, sendProtocol, screenshots) as any);
         },
       }),
     );

@@ -1,10 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  inject,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
@@ -78,12 +72,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
           if (typeof error === 'string') {
             debug = error;
 
-            if (
-              error === 'ERROR' &&
-              context &&
-              hasProperty(context, 'stack') &&
-              hasProperty(context, 'message')
-            ) {
+            if (error === 'ERROR' && context && hasProperty(context, 'stack') && hasProperty(context, 'message')) {
               debug = context.message;
               stack = context.stack;
             }
@@ -103,10 +92,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
           }
 
           if (debug !== '') {
-            serv.addEntry(
-              ConsoleType.ERROR,
-              `${debug}${stack !== '' ? ' ' + stack : ''}`,
-            );
+            serv.addEntry(ConsoleType.ERROR, `${debug}${stack !== '' ? ' ' + stack : ''}`);
           }
 
           oldError.apply(console, args);
@@ -132,9 +118,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
           AppSettings.configuration.plugins.tracking.active &&
           AppSettings.configuration.plugins.tracking.active !== ''
         ) {
-          this.appendTrackingCode(
-            AppSettings.configuration.plugins.tracking.active,
-          );
+          this.appendTrackingCode(AppSettings.configuration.plugins.tracking.active);
         }
       },
     });
@@ -148,8 +132,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
         AppSettings.configuration?.plugins?.tracking?.matomo.host &&
         AppSettings.configuration?.plugins?.tracking?.matomo.siteID
       ) {
-        const matomoSettings =
-          AppSettings.configuration.plugins.tracking.matomo;
+        const matomoSettings = AppSettings.configuration.plugins.tracking.matomo;
 
         const trackingCode = `
 <!-- Matomo -->
@@ -170,9 +153,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
 
         jQuery(trackingCode).insertAfter(jQuery('body').children().last());
       } else {
-        console.error(
-          `attributes for matomo tracking in appconfig.json are invalid.`,
-        );
+        console.error(`attributes for matomo tracking in appconfig.json are invalid.`);
       }
     } else {
       console.error(`tracking type ${type} is not supported.`);

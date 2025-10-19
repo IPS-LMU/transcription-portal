@@ -1,19 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import {
-  AudioInfo,
-  DirectoryInfo,
-  FileInfo,
-  FileInfoSerialized,
-} from '@octra/web-media';
+import { AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized } from '@octra/web-media';
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
-import { AppSettings } from '../../shared/app.settings';
-import { OHCommand } from '../oh-config';
-import { IAccessCode, IOperation, Operation } from '../operations/operation';
-import { SummarizationOperation } from '../operations/summarization-operation';
-import { TaskEntry } from './task-entry';
 import { AudioFileInfoSerialized, IDBTaskItem } from '../../indexedDB';
+import { OHCommand } from '../oh-config';
+import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
+import { TaskEntry } from './task-entry';
+import { ASROperation } from '../operations/asr-operation';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -52,12 +45,11 @@ export class Task {
   private stopRequested = false;
   private readonly _id: number;
 
-  constructor(
-    files: FileInfo[],
-    operations: Operation[],
-    directory?: TaskDirectory,
-    id?: number,
-  ) {
+  get asrOperation(): ASROperation {
+    return this._operations[1] as ASROperation;
+  }
+
+  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
     if (id === null || id === undefined) {
       this._id = ++TaskEntry.counter;
     } else {
@@ -121,62 +113,14 @@ export class Task {
     return this._status;
   }
 
-  setOptions(options: {
-    selectedASRLanguage?: string;
-    selectedMausLanguage?: string;
-    selectedASRProvider?: ServiceProvider;
-    selectedSummarizationProvider?: ServiceProvider;
-    selectedSummarizationNumberOfWords?: number;
-    selectedTargetLanguage?: string;
-  }) {
+  setOptions(options: OperationOptions) {
     // set service provider for upload operation
-    console.log('set options');
-    console.log(this.operations);
-    const basProvider = AppSettings.getServiceInformation('BAS');
-    this.operations[0].serviceProvider = options.selectedASRProvider;
-
-    if (this.operations[1].name === 'ASR') {
-      this.operations[1].serviceProvider = options.selectedASRProvider;
-      this.operations[1].language = options.selectedASRLanguage;
-    }
-
-    if (this.operations[2].name === 'OCTRA') {
-      console.log(`set octra provider to}`);
-      console.log(basProvider);
-      this.operations[2].serviceProvider = basProvider;
-      this.operations[2].language = options.selectedASRLanguage;
-    }
-
-    if (this.operations[3].name === 'Summarization') {
-      this.operations[3].serviceProvider =
-        options.selectedSummarizationProvider;
-      this.operations[3].language = options.selectedASRLanguage;
-      (this.operations[3] as SummarizationOperation).maxNumberOfWords =
-        options.selectedSummarizationNumberOfWords;
-    }
-
-    if (this.operations[3].name === 'MAUS') {
-      this.operations[3].serviceProvider = options.selectedASRProvider; // TODO change to maus
-      this.operations[3].language = options.selectedMausLanguage;
-    }
-
-    if (this.operations[4].name === 'Emu WebApp') {
-      this.operations[4].serviceProvider = basProvider;
-      this.operations[4].language = options.selectedASRLanguage;
-    }
-
-    if (this.operations[4].name === 'Translation') {
-      this.operations[4].serviceProvider =
-        options.selectedSummarizationProvider;
-      this.operations[4].language = options.selectedTargetLanguage;
+    for (const operation of this._operations) {
+      operation.overwriteOptions(options);
     }
   }
 
-  public static fromAny(
-    taskObj: IDBTaskItem,
-    commands: OHCommand[],
-    defaultOperations: Operation[],
-  ): Task {
+  public static fromAny(taskObj: IDBTaskItem, commands: OHCommand[], defaultOperations: Operation[]): Task {
     const operations: Operation[] = [];
     const task = new Task([], operations, undefined, taskObj.id);
 
@@ -211,20 +155,12 @@ export class Task {
       for (let j = 0; j < defaultOperations.length; j++) {
         const op = defaultOperations[j];
         if (op.name === operationObj.name) {
-          const operation = op.fromAny(
-            operationObj,
-            commands[j].calls,
-            task,
-            taskObj,
-          );
+          const operation = op.fromAny(operationObj, commands[j].calls, task, taskObj);
           if (operation.state === TaskStatus.UPLOADING) {
             operation.changeState(TaskStatus.PENDING);
           } else {
             if (operation.state === TaskStatus.PROCESSING) {
-              if (
-                operation.name === 'OCTRA' ||
-                operation.name === 'Emu WebApp'
-              ) {
+              if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
                 operation.changeState(TaskStatus.READY);
               } else {
                 operation.changeState(TaskStatus.PENDING);
@@ -236,10 +172,8 @@ export class Task {
         }
       }
     }
-    const isSomethingPending =
-      task.operations.findIndex((a) => a.state === TaskStatus.PENDING) > -1;
-    const isSomethingReady =
-      task.operations.findIndex((a) => a.state === TaskStatus.READY) > -1;
+    const isSomethingPending = task.operations.findIndex((a) => a.state === TaskStatus.PENDING) > -1;
+    const isSomethingReady = task.operations.findIndex((a) => a.state === TaskStatus.READY) > -1;
 
     if (task.status !== TaskStatus.QUEUED) {
       if (isSomethingPending) {
@@ -266,10 +200,7 @@ export class Task {
     this.start(http, accessCodes);
   }
 
-  public restartFailedOperation(
-    httpclient: HttpClient,
-    accessCodes: IAccessCode[],
-  ) {
+  public restartFailedOperation(httpclient: HttpClient, accessCodes: IAccessCode[]) {
     for (const operation of this.operations) {
       if (operation.state === TaskStatus.ERROR) {
         // restart failed operation
@@ -351,29 +282,21 @@ export class Task {
         .then((serializedFiles) => {
           for (let i = 0; i < serializedFiles.length; i++) {
             const file = this.files[i];
-            const serializedFile: FileInfoSerialized | AudioFileInfoSerialized =
-              serializedFiles[i];
+            const serializedFile: FileInfoSerialized | AudioFileInfoSerialized = serializedFiles[i];
 
             if (file instanceof AudioInfo) {
               const audioFile = file as AudioInfo;
-              (serializedFile as AudioFileInfoSerialized).sampleRate =
-                audioFile.sampleRate;
-              (serializedFile as AudioFileInfoSerialized).bitsPerSecond =
-                audioFile.bitrate;
-              (serializedFile as AudioFileInfoSerialized).channels =
-                audioFile.channels;
-              (serializedFile as AudioFileInfoSerialized).duration =
-                audioFile.duration.samples;
+              (serializedFile as AudioFileInfoSerialized).sampleRate = audioFile.sampleRate;
+              (serializedFile as AudioFileInfoSerialized).bitsPerSecond = audioFile.bitrate;
+              (serializedFile as AudioFileInfoSerialized).channels = audioFile.channels;
+              (serializedFile as AudioFileInfoSerialized).duration = audioFile.duration.samples;
             }
             serializedFile.attributes = file.attributes;
 
             result.files.push(serializedFile as never);
           }
 
-          result.folderPath =
-            this._directory === null || this._directory === undefined
-              ? ''
-              : this._directory.path;
+          result.folderPath = this._directory === null || this._directory === undefined ? '' : this._directory.path;
 
           // read operation data
           const operationPromises: Promise<IOperation>[] = [];
@@ -423,10 +346,7 @@ export class Task {
         });
 
         if (event.newState === TaskStatus.FINISHED) {
-          if (
-            operation.nextOperation === null ||
-            operation.nextOperation === undefined
-          ) {
+          if (operation.nextOperation === null || operation.nextOperation === undefined) {
             this.changeState(TaskStatus.FINISHED);
           }
           subscription.unsubscribe();
@@ -446,10 +366,7 @@ export class Task {
     }
   }
 
-  private startNextOperation(
-    httpclient: HttpClient,
-    accessCodes: IAccessCode[],
-  ) {
+  private startNextOperation(httpclient: HttpClient, accessCodes: IAccessCode[]) {
     if (!this.stopRequested) {
       let nextoperation = -1;
 
@@ -458,11 +375,7 @@ export class Task {
         if (!operation.enabled && operation.state !== TaskStatus.SKIPPED) {
           operation.changeState(TaskStatus.SKIPPED);
         }
-        if (
-          operation.enabled &&
-          this.operations[i].state !== TaskStatus.FINISHED &&
-          this.operations[i].state !== TaskStatus.SKIPPED
-        ) {
+        if (operation.enabled && this.operations[i].state !== TaskStatus.FINISHED && this.operations[i].state !== TaskStatus.SKIPPED) {
           nextoperation = i;
           break;
         }
@@ -474,17 +387,12 @@ export class Task {
       } else {
         const operation = this.operations[nextoperation];
         if (operation.state !== TaskStatus.FINISHED) {
-          if (
-            (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') &&
-            operation.state === TaskStatus.READY
-          ) {
+          if ((operation.name === 'OCTRA' || operation.name === 'Emu WebApp') && operation.state === TaskStatus.READY) {
             this.changeState(TaskStatus.READY);
           } else {
             this.changeState(TaskStatus.PROCESSING);
           }
-          const subscription = this.operations[
-            nextoperation
-          ].statechange.subscribe(
+          const subscription = this.operations[nextoperation].statechange.subscribe(
             (event) => {
               if (event.newState === TaskStatus.FINISHED) {
                 subscription.unsubscribe();
@@ -501,21 +409,13 @@ export class Task {
           );
 
           let files;
-          if (
-            this.files.length > 0 &&
-            !(this.files[0].file === null || this.files[0].file === undefined)
-          ) {
+          if (this.files.length > 0 && !(this.files[0].file === null || this.files[0].file === undefined)) {
             files = this.files;
           } else {
             files = this.operations[0].results;
           }
 
-          this.operations[nextoperation].start(
-            files,
-            this.operations,
-            httpclient,
-            '',
-          );
+          this.operations[nextoperation].start(files, this.operations, httpclient, '');
         }
       }
     } else {
@@ -574,10 +474,7 @@ export class TaskDirectory {
       if (folder) {
         TaskDirectory.traverseFileTree(folder, '')
           .then((result) => {
-            if (
-              !(result === null || result === undefined) &&
-              result[0] instanceof TaskDirectory
-            ) {
+            if (!(result === null || result === undefined) && result[0] instanceof TaskDirectory) {
               resolve(result[0] as TaskDirectory);
             } else {
               reject('could not parse directory');
@@ -592,11 +489,7 @@ export class TaskDirectory {
     });
   }
 
-  public static fromAny(
-    dirObj: any,
-    commands: OHCommand[],
-    defaultOperations: Operation[],
-  ): TaskDirectory {
+  public static fromAny(dirObj: any, commands: OHCommand[], defaultOperations: Operation[]): TaskDirectory {
     const result = new TaskDirectory(dirObj.path, undefined, dirObj.id);
 
     for (const entry of dirObj.entries) {
@@ -606,10 +499,7 @@ export class TaskDirectory {
     return result;
   }
 
-  private static traverseFileTree(
-    item: any,
-    path: string,
-  ): Promise<(Task | TaskDirectory)[]> {
+  private static traverseFileTree(item: any, path: string): Promise<(Task | TaskDirectory)[]> {
     // console.log(`search path: ${path}`);
     return new Promise<(Task | TaskDirectory)[]>((resolve, reject) => {
       path = path || '';

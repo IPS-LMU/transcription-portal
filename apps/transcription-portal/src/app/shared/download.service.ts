@@ -9,10 +9,7 @@ import { Operation } from '../obj/operations/operation';
   providedIn: 'root',
 })
 export class DownloadService {
-  public getLevelNumforConverter(
-    converterData: ConverterData,
-    annotJSON: OAnnotJSON,
-  ) {
+  public getLevelNumforConverter(converterData: ConverterData, annotJSON: OAnnotJSON) {
     if (converterData.tierNameMatches) {
       for (const tierNameMatch of converterData.tierNameMatches) {
         const regex = new RegExp(tierNameMatch, 'g');
@@ -30,11 +27,7 @@ export class DownloadService {
     }
   }
 
-  public getConversionFiles(
-    operation: Operation,
-    operationResult: FileInfo | undefined,
-    converters: ConverterData[],
-  ): Promise<FileInfo[]> {
+  public getConversionFiles(operation: Operation, operationResult: FileInfo | undefined, converters: ConverterData[]): Promise<FileInfo[]> {
     return new Promise<FileInfo[]>((resolve, reject) => {
       if (!operationResult) {
         reject('operationResult is undefined!');
@@ -48,9 +41,7 @@ export class DownloadService {
       for (const converter of converters) {
         for (const extension of converter.obj.extensions) {
           if (operationResult.fullname.indexOf(extension) < 0) {
-            promises.push(
-              this.getResultConversion(converter, operation, operationResult),
-            );
+            promises.push(this.getResultConversion(converter, operation, operationResult));
             break;
           }
         }
@@ -59,11 +50,7 @@ export class DownloadService {
       Promise.all(promises)
         .then((values: any) => {
           values = this.sortConvertedFiles(values);
-          resolve(
-            values
-              .filter((a: any) => a.result !== undefined)
-              .map((a: any) => a.result) as FileInfo[],
-          );
+          resolve(values.filter((a: any) => a.result !== undefined).map((a: any) => a.result) as FileInfo[]);
         })
         .catch((error) => {
           reject(error);
@@ -104,8 +91,7 @@ export class DownloadService {
           const audioinfo = operation.task.files[0] as AudioInfo;
 
           audiofile.duration = audioinfo.duration.samples;
-          audiofile.name =
-            audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+          audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
           audiofile.sampleRate = audioinfo.sampleRate;
           audiofile.size = audioinfo.size;
 
@@ -126,10 +112,7 @@ export class DownloadService {
             if (importConverter.name !== 'AnnotJSON') {
               const importResult = importConverter.import(
                 {
-                  name: audiofile.name
-                    ? audiofile.name.replace(/\.[^.]+$/g, '') +
-                      opResult.extension
-                    : opResult.fullname,
+                  name: audiofile.name ? audiofile.name.replace(/\.[^.]+$/g, '') + opResult.extension : opResult.fullname,
                   content,
                   encoding: 'utf-8',
                   type: 'text/plain',
@@ -140,44 +123,27 @@ export class DownloadService {
                 if (!importResult.error) {
                   annotJSON = importResult.annotjson;
                 } else {
-                  console.error(
-                    `importResult Error from ${importConverter.name}: ${importResult.error}`,
-                  );
+                  console.error(`importResult Error from ${importConverter.name}: ${importResult.error}`);
                 }
               } else {
-                console.error(
-                  `importResult for import ${importConverter.name} is undefined!`,
-                );
+                console.error(`importResult for import ${importConverter.name} is undefined!`);
               }
             } else {
               annotJSON = OAnnotJSON.deserialize(JSON.parse(content));
             }
 
             if (annotJSON) {
-              const levelnum = this.getLevelNumforConverter(
-                converter,
-                annotJSON,
-              );
-              const conversion = converter.obj.export(
-                annotJSON,
-                audiofile,
-                levelnum,
-              );
+              const levelnum = this.getLevelNumforConverter(converter, annotJSON);
+              const conversion = converter.obj.export(annotJSON, audiofile, levelnum);
 
               if (conversion?.file) {
                 const file: File = FileInfo.getFileFromContent(
                   conversion.file.content,
-                  audiofile.name.replace(/\.[^.]+$/g, '') +
-                    converter.obj.extensions[0],
+                  audiofile.name.replace(/\.[^.]+$/g, '') + converter.obj.extensions[0],
                   conversion.file.type,
                 );
 
-                const fileInfo = new FileInfo(
-                  file.name,
-                  file.type,
-                  file.size,
-                  file,
-                );
+                const fileInfo = new FileInfo(file.name, file.type, file.size, file);
                 resolve({
                   converter,
                   result: fileInfo,

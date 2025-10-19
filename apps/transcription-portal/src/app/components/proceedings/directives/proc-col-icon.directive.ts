@@ -1,4 +1,16 @@
-import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, Renderer2, SimpleChanges, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  Renderer2,
+  SimpleChanges,
+} from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
@@ -10,9 +22,7 @@ import { TaskService } from '../../../obj/tasks/task.service';
   exportAs: 'colIcon',
   standalone: true,
 })
-export class ProcColIconDirective
-  implements AfterViewInit, OnChanges, OnDestroy
-{
+export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
   private taskService = inject(TaskService);
@@ -21,39 +31,22 @@ export class ProcColIconDirective
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
-  @Output() appendingClick: EventEmitter<FileInfo> =
-    new EventEmitter<FileInfo>();
+  @Output() appendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
-  @Output() infoMouseEnter: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
-  @Output() infoMouseLeave: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
-  @Output() infoMouseOver: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
-  @Output() tagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<
-    'opened' | 'closed'
-  >();
+  @Output() infoMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() infoMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() infoMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() tagClicked: EventEmitter<'opened' | 'closed'> = new EventEmitter<'opened' | 'closed'>();
 
-  @Output() deleteIconClick: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
+  @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Input() public dirOpened: 'opened' | 'closed' = 'opened';
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   ngOnChanges(changes: SimpleChanges) {
-    if (
-      hasProperty(changes, 'shortStyle') &&
-      changes['shortStyle'].currentValue !== undefined
-    ) {
-      this.renderer.setStyle(
-        this.elementRef.nativeElement,
-        'max-width',
-        this.shortStyle ? '150px' : 'inherit',
-      );
+    if (hasProperty(changes, 'shortStyle') && changes['shortStyle'].currentValue !== undefined) {
+      this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', this.shortStyle ? '150px' : 'inherit');
     }
-    if (
-      hasProperty(changes, 'entry') &&
-      changes['entry'].currentValue !== undefined
-    ) {
+    if (hasProperty(changes, 'entry') && changes['entry'].currentValue !== undefined) {
       // entry set
 
       // changes of entry must be observed specifically
@@ -99,12 +92,7 @@ export class ProcColIconDirective
   };
 
   private updateView() {
-    if (
-      !(
-        this.elementRef.nativeElement === null ||
-        this.elementRef.nativeElement === undefined
-      )
-    ) {
+    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
       if (!(this.entry === null || this.entry === undefined)) {
         this.clearContents();
         const wrapper: HTMLElement = this.renderer.createElement('div');
@@ -114,11 +102,7 @@ export class ProcColIconDirective
         if (this.shortStyle) {
           this.renderer.addClass(wrapper, 'shorten');
         }
-        this.renderer.setAttribute(
-          this.elementRef.nativeElement,
-          'colspan',
-          '2',
-        );
+        this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '2');
         this.appendIcon(wrapper);
         this.appendFileNameSpan(wrapper);
 
@@ -162,9 +146,7 @@ export class ProcColIconDirective
         this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
       }
     } else {
-      throw new Error(
-        'ProcColDirective error: updateView: nativeElement is undefined',
-      );
+      throw new Error('ProcColDirective error: updateView: nativeElement is undefined');
     }
   }
 
@@ -266,34 +248,18 @@ export class ProcColIconDirective
     }
 
     if (this.entry instanceof Task) {
-      if (
-        this.entry.files[0].extension === '.wav' &&
-        this.entry.files[0].file !== undefined
-      ) {
+      if (this.entry.files[0].extension === '.wav' && this.entry.files[0].file !== undefined) {
         this.renderer.addClass(result, 'green');
       } else if (
-        ((this.entry.files[0].extension === '.wav' &&
-          this.entry.files[0].file === undefined) ||
-          this.entry.files[0].extension !== '.wav') &&
+        ((this.entry.files[0].extension === '.wav' && this.entry.files[0].file === undefined) || this.entry.files[0].extension !== '.wav') &&
         this.entry.operations[0].state !== 'FINISHED'
       ) {
         this.renderer.addClass(result, 'yellow');
       }
 
       // set filename
-      this.renderer.setAttribute(
-        result,
-        'title',
-        this.entry.files[0].attributes.originalFileName,
-      );
-      const filename = this.renderer.createText(
-        ' ' +
-          this.entry.files[0].attributes.originalFileName.replace(
-            '_annot.json',
-            '.wav',
-          ) +
-          ' ',
-      );
+      this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes.originalFileName);
+      const filename = this.renderer.createText(' ' + this.entry.files[0].attributes.originalFileName.replace('_annot.json', '.wav') + ' ');
       this.renderer.appendChild(result, filename);
       this.renderer.appendChild(wrapper, result);
     } else {
@@ -310,9 +276,7 @@ export class ProcColIconDirective
         if (this.entry.entries.length > 0) {
           // set number of files
           const filesNumSpan = this.renderer.createElement('span');
-          const filesNum = this.renderer.createText(
-            ' (' + this.entry.entries.length + ')',
-          );
+          const filesNum = this.renderer.createText(' (' + this.entry.entries.length + ')');
           this.renderer.appendChild(filesNumSpan, filesNum);
           this.renderer.appendChild(result, filesNumSpan);
         }
@@ -325,10 +289,7 @@ export class ProcColIconDirective
     const result: HTMLElement = this.renderer.createElement('span');
 
     if (this.entry instanceof Task) {
-      if (
-        this.entry.files.length > 1 ||
-        this.entry.files[0].extension !== '.wav'
-      ) {
+      if (this.entry.files.length > 1 || this.entry.files[0].extension !== '.wav') {
         const badgeObj = this.getBadge(this.entry);
         this.renderer.addClass(result, 'ms-1');
         this.renderer.addClass(result, 'px-2');
@@ -349,11 +310,7 @@ export class ProcColIconDirective
   }
 
   private clearContents() {
-    for (
-      let i = 0;
-      i < (this.elementRef.nativeElement as HTMLElement).children.length;
-      i++
-    ) {
+    for (let i = 0; i < (this.elementRef.nativeElement as HTMLElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
       if (!(child === null || child === undefined)) {
@@ -370,25 +327,15 @@ export class ProcColIconDirective
     type: string;
     label: string;
   } {
-    if (
-      (task.files.length > 1 && task.files[1].file !== undefined) ||
-      task.operations[0].results.length > 1 ||
-      task.files[0].extension !== '.wav'
-    ) {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
-        label:
-          task.files[0].extension !== '.wav'
-            ? task.files[0].extension
-            : task.files[1].extension,
+        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
       };
     } else {
       return {
         type: 'warning',
-        label:
-          task.files[0].extension !== '.wav'
-            ? task.files[0].extension
-            : task.files[1].extension,
+        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
       };
     }
   }

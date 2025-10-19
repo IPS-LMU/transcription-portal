@@ -26,7 +26,7 @@ export interface OHConfiguration {
       active?: boolean;
       outagesURL?: string;
       outageTextURL?: string;
-    }
+    };
   };
   allowed_browsers: {
     name: string;

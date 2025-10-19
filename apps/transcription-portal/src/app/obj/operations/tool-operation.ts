@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
-import { ProviderLanguage } from '../oh-config';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation } from './operation';
+import { wait } from '@octra/utilities';
 
 export class ToolOperation extends Operation {
   public constructor(
@@ -15,29 +15,22 @@ export class ToolOperation extends Operation {
     task?: Task,
     state?: TaskStatus,
     id?: number,
-    serviceProvider?: ServiceProvider,
-    language?: string,
+    serviceProvider?: ServiceProvider
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider, language);
+    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
   }
 
   public resultType?: string;
 
   private active = true;
 
-  public start = (
-    inputs: FileInfo[],
-    operations: Operation[],
-    httpclient: HttpClient,
-    accessCode?: string,
-  ) => {
+  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     this._time.start = Date.now();
     this.changeState(TaskStatus.PROCESSING);
 
-    setTimeout(() => {
-      this.changeState(TaskStatus.FINISHED);
-      this.time.duration = 0;
-    }, 2000);
+    await wait(2);
+    this.changeState(TaskStatus.FINISHED);
+    this.time.duration = 0;
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
@@ -61,8 +54,7 @@ export class ToolOperation extends Operation {
         result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
         break;
       case TaskStatus.READY:
-        result =
-          '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
+        result = '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
         break;
       case TaskStatus.ERROR:
         result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
@@ -72,9 +64,8 @@ export class ToolOperation extends Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
-  public override clone(task?: Task): Operation {
-    const selectedTasks =
-      task === null || task === undefined ? this.task : task;
+  public override clone(task?: Task): ToolOperation {
+    const selectedTasks = task === null || task === undefined ? this.task : task;
     return new ToolOperation(
       this.name,
       this._commands,
@@ -83,27 +74,14 @@ export class ToolOperation extends Operation {
       selectedTasks,
       this.state,
       undefined,
-      this.serviceProvider,
-      this.language
-    ) as Operation;
+      this.serviceProvider
+    ) as ToolOperation;
   }
 
   public fromAny(operationObj: IOperation, commands: string[], task: Task): Operation {
-    const result = new ToolOperation(
-      operationObj.name,
-      commands,
-      this.title,
-      this.shortTitle,
-      task,
-      operationObj.state,
-      operationObj.id,
-    );
+    const result = new ToolOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
     for (const resultObj of operationObj.results) {
-      const resultClass = new FileInfo(
-        resultObj.fullname,
-        resultObj.type,
-        resultObj.size,
-      );
+      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
       resultClass.url = resultObj.url;
       result.results.push(resultClass);
     }
@@ -113,7 +91,7 @@ export class ToolOperation extends Operation {
     return result;
   }
 
-  public getToolURL(): string {
+  public async getToolURL(httpClient: HttpClient): Promise<string> {
     return '';
   }
 }

@@ -1,31 +1,19 @@
 import { DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import {
   NgbCollapse,
   NgbDropdown,
   NgbDropdownMenu,
   NgbDropdownToggle,
   NgbModal,
-  NgbNavModule, NgbPopover,
+  NgbNavModule,
+  NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
-import {
-  AnnotJSONConverter,
-  IFile,
-  OAnnotJSON,
-  PartiturConverter,
-} from '@octra/annotation';
+import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
@@ -37,6 +25,7 @@ import { AlertComponent } from '../../components/alert/alert.component';
 import { ProceedingsComponent } from '../../components/proceedings/proceedings.component';
 import { ProtocolFooterComponent } from '../../components/protocol-footer/protocol-footer.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
+import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
@@ -58,7 +47,6 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 
 @Component({
   selector: 'tportal-main',
@@ -94,10 +82,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   private alertService = inject(AlertService);
   settingsService = inject(SettingsService);
   private cd = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
   modalService = inject(OHModalService);
 
   public sidebarstate = 'hidden';
-  public toolURL?: SafeResourceUrl;
+  private toolURL?: string;
   isCollapsed = false;
   public test = 'inactive';
   public sidebarExpand = 'opened';
@@ -150,8 +139,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
       {
         complete: () => {
           // configuration loaded
-          const { annotationTasks, summarizationTasks, userSettings } =
-            this.storage.allloaded.value;
+          const { annotationTasks, summarizationTasks, userSettings } = this.storage.allloaded.value;
           this.cd.markForCheck();
 
           // idb loaded
@@ -160,6 +148,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             annotationTasks,
             summarizationTasks,
             userSettings,
+          }).catch((error) => {
+            console.error(error);
           });
           this.cd.markForCheck();
 
@@ -216,9 +206,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   public get toolSelectedOperation(): Operation | undefined {
-    return this.proceedings
-      ? this.proceedings.toolSelectedOperation
-      : undefined;
+    return this.proceedings ? this.proceedings.toolSelectedOperation : undefined;
   }
 
   public set toolSelectedOperation(value: Operation | undefined) {
@@ -261,17 +249,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   async openQueueModal() {
     this.settingsService.shortCutsEnabled = false;
-    const ref = openModal<QueueModalComponent>(
-      this.ngbModalService,
-      QueueModalComponent,
-      QueueModalComponent.options,
-    );
+    const ref = openModal<QueueModalComponent>(this.ngbModalService, QueueModalComponent, QueueModalComponent.options);
     const taskList = this.taskService.state.currentModeState.taskList;
-    ref.componentInstance.queue =
-      this.taskService.state.currentModeState.preprocessor.queue;
+    ref.componentInstance.queue = this.taskService.state.currentModeState.preprocessor.queue;
     ref.componentInstance.tasks = taskList?.getAllTasks() ?? [];
-    ref.componentInstance.operations =
-      this.taskService.state.currentModeState.operations;
+    ref.componentInstance.operations = this.taskService.state.currentModeState.operations;
     await ref.result;
     this.settingsService.shortCutsEnabled = true;
   }
@@ -304,85 +286,63 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     }
   }
 
-  onOperationClick(operation: Operation) {
-    if (
-      operation &&
-      operation instanceof ToolOperation &&
-      operation.state !== TaskStatus.PENDING
-    ) {
+  async onOperationClick(operation: Operation) {
+    if (operation && operation instanceof ToolOperation && operation.state !== TaskStatus.PENDING && operation.task) {
+      // operation is of type tool and ready
       const tool = operation as ToolOperation;
-      const task = tool.task!;
+      const task = operation.task;
       const uploadOperation = task.operations[0];
       const previousOperation = tool.previousOperation;
+      const isUploadOperationAudioFileNotAvailable = uploadOperation.results.length > 0 && !uploadOperation.results[0].available;
+      const isPreviousTaskDefinedAndLastResultNotAvailable =
+        previousOperation && previousOperation.results.length > 0 && !previousOperation.lastResult?.available;
 
-      if (
-        (tool.task &&
-          uploadOperation.results.length > 0 &&
-          !uploadOperation.lastResult?.available) ||
-        (!(previousOperation === null || previousOperation === undefined) &&
-          previousOperation.results.length > 0 &&
-          !previousOperation.lastResult?.available)
-      ) {
-        if (!uploadOperation.results[0].available) {
-          if (
-            tool.task?.files[0].file === null ||
-            tool.task?.files[0].file === undefined
-          ) {
+      if (isUploadOperationAudioFileNotAvailable || isPreviousTaskDefinedAndLastResultNotAvailable) {
+        if (isUploadOperationAudioFileNotAvailable) {
+          // audio file is not available
+          if (task && !task?.files[0].file) {
             this.alertService.showAlert(
               'warning',
-              `Please add the audio file "${tool.task?.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
+              `Please add the audio file "${task.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
               10,
             );
-            tool.task?.operations[0].changeState(TaskStatus.PENDING);
-            tool.task?.changeState(TaskStatus.PENDING);
+            task.operations[0].changeState(TaskStatus.PENDING);
+            task.changeState(TaskStatus.PENDING);
           } else {
             // start upload process
-            this.alertService.showAlert(
-              'info',
-              `Please wait until file ${tool.task.files[0].fullname}` +
-                ` being uploaded and do '${tool.title}' again.`,
-            );
-            uploadOperation.statechange.subscribe(
-              (state) => {
+            this.alertService.showAlert('info', `Please wait until file ${task.files[0].fullname}` + ` being uploaded and do '${tool.title}' again.`);
+            this.subscribe(uploadOperation.statechange, {
+              next: (state) => {
                 if (state.newState === 'FINISHED') {
                   this.alertService.showAlert(
                     'success',
-                    `file ${tool.task?.files[0].fullname}` +
-                      +` successfully uploaded. You can do '${tool.title}' for this file.`,
+                    `file ${task?.files[0].fullname}` + +` successfully uploaded. You can do '${tool.title}' for this file.`,
                   );
-                  if (tool.task) {
-                    this.storage.saveTask(
-                      tool.task,
-                      this.taskService.state.currentMode,
-                    );
+                  if (task) {
+                    this.storage.saveTask(task, this.taskService.state.currentMode);
                   }
                 }
               },
-              (error) => {
+              error: (error) => {
                 console.error(error);
               },
-            );
+            });
             this.taskService.start(this.taskService.state.currentMode);
           }
-        } else if (
-          uploadOperation?.lastResult?.available &&
-          !previousOperation?.lastResult?.available
-        ) {
-          this.alertService.showAlert(
-            'info',
-            `Please run ${previousOperation?.name} for this task again.`,
-            12,
-          );
+        } else if (!previousOperation?.lastResult?.available) {
+          // audio file available but no result of previous operation
+          this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
         }
       } else {
-        let file: FileInfo;
-        if (
-          tool.results.length > 0 &&
-          !tool.lastResult?.online &&
-          tool.lastResult?.available
-        ) {
-          // reupload result from tool operation
-          file = tool.lastResult;
+        // audio file exists and last result of previous operation exists
+
+        let file: FileInfo | undefined = undefined;
+        if (tool.results.length > 0) {
+          if (!tool.lastResult?.online && tool.lastResult?.available) {
+            // file for last result of current tool exists, but isn't available via URL
+            // reupload result from tool operation
+            file = tool.lastResult;
+          }
         } else if (
           previousOperation &&
           previousOperation.lastResult &&
@@ -394,104 +354,79 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
           file = previousOperation.lastResult;
         }
 
-        new Promise<void>((resolve, reject) => {
-          if (file && tool) {
-            console.log(`reupload...`);
-            this.upload(tool as Operation, file)
-              .then((url: string) => {
-                console.log(`uploaded: ${url}`);
-                if (
-                  tool.results.length > 0 &&
-                  !tool.lastResult?.online &&
-                  tool.lastResult?.available
-                ) {
-                  // reupload result from tool operation
-                  tool.lastResult.url = url;
-                  tool.lastResult.online = true;
-                } else if (
-                  !(
-                    previousOperation?.lastResult === null ||
-                    previousOperation?.lastResult === undefined
-                  ) &&
-                  !previousOperation.lastResult.online &&
-                  previousOperation.lastResult.available
-                ) {
-                  previousOperation.lastResult.url = url;
-                  previousOperation.lastResult.online = true;
-                }
-                if (tool.task) {
-                  this.storage.saveTask(
-                    tool.task,
-                    this.taskService.state.currentMode,
-                  );
-                }
-                resolve();
-              })
-              .catch((e) => {
-                reject(e);
-              });
-          } else {
-            resolve();
+        if (file && tool) {
+          console.log(`reupload...`);
+          console.log(file);
+          const url = await this.upload(tool as Operation, file);
+          console.log(`uploaded: ${url}`);
+          if (tool.results.length > 0 && !tool.lastResult?.online && tool.lastResult?.available) {
+            // reupload result from tool operation
+            tool.lastResult.url = url;
+            tool.lastResult.online = true;
+          } else if (
+            !(previousOperation?.lastResult === null || previousOperation?.lastResult === undefined) &&
+            !previousOperation.lastResult.online &&
+            previousOperation.lastResult.available
+          ) {
+            previousOperation.lastResult.url = url;
+            previousOperation.lastResult.online = true;
           }
-        })
-          .then(() => {
-            // continue after upload
-            if (tool.task) {
-              const index = tool.task.operations.findIndex((op) => {
-                return op.id === tool.id;
-              });
 
-              if (index < tool.task.operations.length) {
-                // start processing
-                tool.changeState(TaskStatus.PROCESSING);
-              }
-            }
+          if (task) {
+            this.storage.saveTask(task, this.taskService.state.currentMode);
+          }
+        }
 
-            this.toolURL = tool.getToolURL();
-
-            if (this.toolURL !== '') {
-              if (this.proceedings && this.toolLoader) {
-                this.proceedings.cd.markForCheck();
-                this.proceedings.cd.detectChanges();
-                this.toolLoader.url = tool.getToolURL();
-                this.toolLoader.name = tool.name;
-
-                if (
-                  !(
-                    this.toolSelectedOperation === null ||
-                    this.toolSelectedOperation === undefined
-                  ) &&
-                  operation.id !== this.toolSelectedOperation.id
-                ) {
-                  // some operation already initialized
-                  this.leaveToolOption();
-                }
-
-                this.toolSelectedOperation = operation;
-
-                setTimeout(() => {
-                  this.sidebarstate = 'opened';
-                }, 400);
-
-                this.showtool = true;
-                if (operation instanceof OCTRAOperation) {
-                  operation.time.start = Date.now();
-                } else if (operation instanceof EmuOperation) {
-                  operation.time.start = Date.now();
-                }
-                this.proceedings.togglePopover(false);
-                this.cd.markForCheck();
-                this.cd.detectChanges();
-                this.proceedings.cd.markForCheck();
-                this.proceedings.cd.detectChanges();
-              }
-            } else {
-              console.warn(`tool url is empty`);
-            }
-          })
-          .catch((error) => {
-            console.error(error);
+        // continue after upload
+        if (task) {
+          const index = task.operations.findIndex((op) => {
+            return op.id === tool.id;
           });
+
+          if (index < task.operations.length) {
+            // start processing
+            tool.changeState(TaskStatus.PROCESSING);
+          }
+        }
+
+        this.toolURL = await tool.getToolURL(this.httpClient);
+
+        if (this.toolURL !== '') {
+          if (this.proceedings && this.toolLoader) {
+            this.proceedings.cd.markForCheck();
+            this.proceedings.cd.detectChanges();
+            this.toolLoader.url = this.toolURL;
+            this.toolLoader.name = tool.name;
+
+            if (
+              !(this.toolSelectedOperation === null || this.toolSelectedOperation === undefined) &&
+              operation.id !== this.toolSelectedOperation.id
+            ) {
+              // some operation already initialized
+              this.leaveToolOption();
+            }
+
+            this.toolSelectedOperation = operation;
+
+            setTimeout(() => {
+              this.sidebarstate = 'opened';
+            }, 400);
+
+            this.showtool = true;
+            if (operation instanceof OCTRAOperation) {
+              operation.time.start = Date.now();
+            } else if (operation instanceof EmuOperation) {
+              operation.time.start = Date.now();
+            }
+            this.proceedings.togglePopover(false);
+            this.cd.markForCheck();
+            this.cd.detectChanges();
+            this.proceedings.cd.markForCheck();
+            this.proceedings.cd.detectChanges();
+          }
+        } else {
+          console.warn(`tool url is empty`);
+        }
       }
     }
   }
@@ -508,19 +443,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
       (async () => {
         if (data.name === 'OCTRA') {
-          if (
-            hasProperty($event.data, 'status') &&
-            $event.data.status === 'success' &&
-            hasProperty($event.data.data, 'annotation')
-          ) {
+          if (hasProperty($event.data, 'status') && $event.data.status === 'success' && hasProperty($event.data.data, 'annotation')) {
             const result: any = $event.data.data.annotation;
             let annotation: IFile | undefined;
 
             try {
               const converter = new AnnotJSONConverter();
-              const audio = this.toolSelectedOperation?.task!.files.find((a) =>
-                a.type.includes('audio'),
-              ) as AudioInfo;
+              const audio = this.toolSelectedOperation?.task!.files.find((a) => a.type.includes('audio')) as AudioInfo;
               const audiofile = new OAudiofile();
               audiofile.url = audio.url;
               audiofile.name = audio.fullname;
@@ -532,14 +461,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
               if (importResult.annotjson && !importResult.error) {
                 const exportConverter = new PartiturConverter();
-                const oAnnotJSON = OAnnotJSON.deserialize(
-                  importResult.annotjson,
-                );
-                const exportResult = exportConverter.export(
-                  oAnnotJSON!,
-                  audiofile,
-                  0,
-                );
+                const oAnnotJSON = OAnnotJSON.deserialize(importResult.annotjson);
+                const exportResult = exportConverter.export(oAnnotJSON!, audiofile, 0);
 
                 if (exportResult.file && !exportResult.error) {
                   annotation = exportResult.file;
@@ -561,27 +484,17 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             const blob = new File([annotation.content], annotation.name, {
               type: annotation?.type,
             });
-            const file = new FileInfo(
-              annotation.name,
-              annotation.type,
-              blob.size,
-              blob,
-            );
+            const file = new FileInfo(annotation.name, annotation.type, blob.size, blob);
             const inputs = this.toolSelectedOperation?.task?.files;
 
-            const url = await this.upload(
-              toolLoader.operation as ToolOperation,
-              file,
-            );
+            const url = await this.upload(toolLoader.operation as ToolOperation, file);
             file.url = url;
 
             if (!inputs) {
               return file;
             }
 
-            const name = (
-              inputs[0].attributes?.originalFileName ?? inputs[0].fullname
-            ).replace(/\.[^.]+$/g, '');
+            const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
 
             file.attributes = {
               originalFileName: `${name}${file.extension}`,
@@ -597,9 +510,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               throw new Error(`Can't find any inputs for this task.`);
             }
 
-            const fileName = (
-              inputs[0].attributes?.originalFileName ?? inputs[0].fullname
-            ).replace(/\.[^.]+$/g, '');
+            const fileName = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
 
             this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
             this._showtool = false;
@@ -611,18 +522,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               jsonText = JSON.stringify(json, null, 2);
             }
 
-            const file: File = FileInfo.getFileFromContent(
-              jsonText,
-              `${fileName}_annot.json`,
-              'text/plain',
-            );
-            const fileInfo = new FileInfo(
-              `${fileName}_annot.json`,
-              'text/plain',
-              file.size,
-              file,
-              Date.now(),
-            );
+            const file: File = FileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
+            const fileInfo = new FileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
 
             fileInfo.attributes = {
               originalFileName: `${fileName}_annot.json`,
@@ -638,49 +539,35 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
           if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
             this.toolSelectedOperation.results.push(file);
 
-            const index = this.toolSelectedOperation.task.operations.findIndex(
-              (op) => {
-                return (
-                  this.toolSelectedOperation &&
-                  op.id === this.toolSelectedOperation.id
-                );
-              },
-            );
+            const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
+              return this.toolSelectedOperation && op.id === this.toolSelectedOperation.id;
+            });
 
             // reset next operations
             if (index > -1) {
-              for (
-                let i = index + 1;
-                i < this.toolSelectedOperation.task.operations.length;
-                i++
-              ) {
+              for (let i = index + 1; i < this.toolSelectedOperation.task.operations.length; i++) {
                 const operation = this.toolSelectedOperation.task.operations[i];
                 operation.changeState(TaskStatus.PENDING);
               }
             }
 
             if (this.toolSelectedOperation instanceof OCTRAOperation) {
-              this.toolSelectedOperation.time.duration +=
-                Date.now() - this.toolSelectedOperation.time.start;
+              this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
             } else if (this.toolSelectedOperation instanceof EmuOperation) {
-              this.toolSelectedOperation.time.duration +=
-                Date.now() - this.toolSelectedOperation.time.start;
+              this.toolSelectedOperation.time.duration += Date.now() - this.toolSelectedOperation.time.start;
             }
 
             this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-            this.storage.saveTask(
-              this.toolSelectedOperation.task,
-              this.taskService.state.currentMode,
-            );
+            this.storage.saveTask(this.toolSelectedOperation.task, this.taskService.state.currentMode);
 
             setTimeout(() => {
               if (
                 this.toolSelectedOperation &&
                 this.toolSelectedOperation.task &&
                 this.toolSelectedOperation.task.status === 'FINISHED' &&
-                this.toolSelectedOperation.task.operations[1] &&
-                this.toolSelectedOperation.task.operations[1].serviceProvider &&
-                this.toolSelectedOperation.task.operations[1].language
+                this.toolSelectedOperation.task.asrOperation &&
+                this.toolSelectedOperation.task.asrOperation.serviceProvider &&
+                this.toolSelectedOperation.task.asrOperation.language
               ) {
                 this.toolSelectedOperation.task.restart(this.httpClient, [
                   {
@@ -714,10 +601,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   leaveToolOption() {
     if (this.toolSelectedOperation) {
-      if (
-        this.toolSelectedOperation.nextOperation &&
-        this.toolSelectedOperation.nextOperation.state === TaskStatus.FINISHED
-      ) {
+      if (this.toolSelectedOperation.nextOperation && this.toolSelectedOperation.nextOperation.state === TaskStatus.FINISHED) {
         this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
       } else if (this.toolSelectedOperation.state !== TaskStatus.FINISHED) {
         if (this.toolSelectedOperation.results.length > 0) {
@@ -740,8 +624,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   public getTime(): number {
     if (this.toolSelectedOperation?.task) {
-      const elem: AudioInfo = this.toolSelectedOperation.task
-        .files[0] as AudioInfo;
+      const elem: AudioInfo = this.toolSelectedOperation.task.files[0] as AudioInfo;
 
       if (!(elem.duration === null || elem.duration === undefined)) {
         return elem.duration.unix;
@@ -752,10 +635,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   public openSplitModal = () => {
-    const ref = this.ngbModalService.open(
-      SplitModalComponent,
-      SplitModalComponent.options,
-    );
+    const ref = this.ngbModalService.open(SplitModalComponent, SplitModalComponent.options);
     ref.result.then((reason) => {
       this.taskService.splitPrompt = reason;
       this.taskService.checkFiles(this.taskService.state.currentMode);
@@ -763,17 +643,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   };
 
   public dragBorder($event: any, part: string) {
-    if (
-      $event.type === 'mousemove' ||
-      $event.type === 'mouseenter' ||
-      $event.type === 'mouseleave'
-    ) {
+    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
       if (this.dragborder !== 'dragging') {
-        if (
-          part === 'left' &&
-          $event.pageX >= $event.target.clientWidth - 3 &&
-          $event.pageX <= $event.target.clientWidth + 3
-        ) {
+        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
           this.dragborder = 'active';
         } else if (part === 'right' && $event.pageX <= 10) {
           this.dragborder = 'active';
@@ -782,9 +654,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         }
       } else if ($event.type === 'mousemove') {
         // dragging
-        const procWidth = Math.floor(
-          (($event.pageX + 10) / window.innerWidth) * 100,
-        );
+        const procWidth = Math.floor((($event.pageX + 10) / window.innerWidth) * 100);
         const toolWidth = 100 - procWidth;
 
         this.newToolWidth = toolWidth;
@@ -832,9 +702,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   onFeedbackRequest(operation: Operation) {
     this.bugService.addEntry(
       ConsoleType.INFO,
-      `user clicked on report issue:\n` +
-        `operation: ${operation.name}, ${operation.state}\n` +
-        `protocol: ${operation.protocol}\n`,
+      `user clicked on report issue:\n` + `operation: ${operation.name}, ${operation.state}\n` + `protocol: ${operation.protocol}\n`,
     );
     this.modalService.openFeedbackModal();
   }
@@ -842,10 +710,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   private loadFirstModal() {
     if (!this.firstModalShown) {
       setTimeout(() => {
-        const ref = this.ngbModalService.open(
-          FirstModalComponent,
-          FirstModalComponent.options,
-        );
+        const ref = this.ngbModalService.open(FirstModalComponent, FirstModalComponent.options);
         ref.result.then(() => {
           this.storage.saveIntern('firstModalShown', true);
         });
@@ -904,10 +769,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   async openStatisticsModal() {
     this.settingsService.shortCutsEnabled = false;
-    const ref = this.ngbModalService.open(
-      StatisticsModalComponent,
-      StatisticsModalComponent.options,
-    );
+    const ref = this.ngbModalService.open(StatisticsModalComponent, StatisticsModalComponent.options);
     this.settingsService.shortCutsEnabled = false;
     ref.result
       .then(() => {
@@ -925,11 +787,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   openAboutModal() {
-    const ref = openModal<AboutModalComponent>(
-      this.ngbModalService,
-      AboutModalComponent,
-      AboutModalComponent.options,
-    );
+    const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
     return ref.result;
   }
 }

@@ -1,10 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  ActivatedRouteSnapshot,
-  CanActivate,
-  Router,
-  RouterStateSnapshot,
-} from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
 import { RoutingService } from '../routing.service';
 import { AppSettings } from './app.settings';
 import { CompatibilityService } from './compatibility.service';
@@ -17,11 +12,7 @@ export class CompatibilityGuard implements CanActivate {
   private compatibility = inject(CompatibilityService);
   private routingService = inject(RoutingService);
 
-
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot,
-  ): Promise<boolean> {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
     this.routingService.addStaticParams(route.queryParams);
 
     return new Promise<boolean>((resolve, reject) => {

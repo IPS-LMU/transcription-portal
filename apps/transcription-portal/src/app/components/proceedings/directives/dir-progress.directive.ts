@@ -1,4 +1,4 @@
-import { AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges, inject } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, inject, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
 import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
@@ -7,9 +7,7 @@ import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
   selector: '[tportalDirProgress]',
   standalone: true,
 })
-export class DirProgressDirective
-  implements OnChanges, AfterViewInit, OnDestroy
-{
+export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
@@ -66,29 +64,13 @@ export class DirProgressDirective
     const sum = counters.finished;
     this.elementRef.nativeElement.innerHTML = sum + '/' + allEntries;
 
-    this.renderer.setStyle(
-      this.elementRef.nativeElement,
-      'width',
-      `${(sum / allEntries) * 100}%`,
-    );
-    this.renderer.setAttribute(
-      this.elementRef.nativeElement,
-      'aria-valuenow',
-      `${(sum / allEntries) * 100}`,
-    );
+    this.renderer.setStyle(this.elementRef.nativeElement, 'width', `${(sum / allEntries) * 100}%`);
+    this.renderer.setAttribute(this.elementRef.nativeElement, 'aria-valuenow', `${(sum / allEntries) * 100}`);
 
     if (counters.failed > 0) {
-      this.renderer.setStyle(
-        this.elementRef.nativeElement,
-        'background-color',
-        `red`,
-      );
+      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `red`);
     } else {
-      this.renderer.setStyle(
-        this.elementRef.nativeElement,
-        'background-color',
-        `#7AB55C`,
-      );
+      this.renderer.setStyle(this.elementRef.nativeElement, 'background-color', `#7AB55C`);
     }
   }
 

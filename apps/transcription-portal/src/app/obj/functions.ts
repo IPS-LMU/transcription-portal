@@ -1,8 +1,4 @@
-import {
-  NgbModal,
-  NgbModalOptions,
-  NgbModalRef,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 export async function readFileAsArray(file: File) {
   return new Promise<ArrayBuffer>((resolve, reject) => {
@@ -23,12 +19,7 @@ export class NgbModalWrapper<T> extends NgbModalRef {
   }
 }
 
-export function openModal<T>(
-  service: NgbModal,
-  content: any,
-  options?: NgbModalOptions,
-  data?: Partial<T>,
-): NgbModalWrapper<T> {
+export function openModal<T>(service: NgbModal, content: any, options?: NgbModalOptions, data?: Partial<T>): NgbModalWrapper<T> {
   const ref = service.open(content, options);
 
   if (data) {

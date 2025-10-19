@@ -96,10 +96,7 @@ export class Preprocessor {
 
   private subscrManager = new SubscriptionManager();
 
-  public process: (
-    queueItem: QueueItem,
-    mode: PortalModeType,
-  ) => Promise<(Task | TaskDirectory)[]> = () => {
+  public process: (queueItem: QueueItem, mode: PortalModeType) => Promise<(Task | TaskDirectory)[]> = () => {
     return new Promise<(Task | TaskDirectory)[]>(() => {});
   };
 

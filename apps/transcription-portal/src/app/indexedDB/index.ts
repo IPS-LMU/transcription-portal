@@ -1,2 +1,2 @@
-export * from "./IndexedDBManager";
-export * from "./types";
+export * from './IndexedDBManager';
+export * from './types';

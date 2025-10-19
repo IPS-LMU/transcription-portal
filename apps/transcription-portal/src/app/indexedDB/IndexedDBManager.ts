@@ -1,11 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { AppInfo } from '../app.info';
-import {
-  IDBInternItem,
-  IDBTaskItem,
-  IDBUserDefaultSettingsItemData,
-  IDBUserSettingsItem,
-} from './types';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { IASROperation } from '../obj/operations/asr-operation';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -17,15 +13,13 @@ export class IndexedDBManager extends Dexie {
     super(dbname);
     this.version(2).stores({
       intern: 'name, value',
-      tasks:
-        'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+      tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
       userSettings: 'name, value',
     });
     this.version(3)
       .stores({
         intern: 'name, value',
-        tasks:
-          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
         userSettings: 'name, value',
       })
       .upgrade((transaction) => {
@@ -39,7 +33,7 @@ export class IndexedDBManager extends Dexie {
             }
 
             if (Object.keys(task).includes('language')) {
-              task.operations[1].language = (task as any)['language'];
+              (task.operations[1] as IASROperation).language = (task as any)['language'];
               delete (task as any)['language'];
             }
           });
@@ -47,12 +41,9 @@ export class IndexedDBManager extends Dexie {
     this.version(4)
       .stores({
         intern: 'name, value',
-        tasks:
-          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
-        annotation_tasks:
-          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
-        summarization_tasks:
-          'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        annotation_tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
+        summarization_tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
         userSettings: 'name, value',
       })
       .upgrade((transaction) => {
@@ -85,6 +76,7 @@ export class IndexedDBManager extends Dexie {
           summarizationWordLimit: undefined,
           summarizationProvider: '',
           translationLanguage: '',
+          diarization: false
         } as IDBUserDefaultSettingsItemData,
       },
       'defaultUserSettings',

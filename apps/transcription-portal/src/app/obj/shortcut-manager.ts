@@ -93,39 +93,35 @@ export class ShortcutManager {
     return this._pressedKey;
   }
 
-  public checkKeyEvent(
-    event: KeyboardEvent,
-  ): Promise<{ command: string; platform: string } | undefined> {
-    return new Promise<{ command: string; platform: string } | undefined>(
-      (resolve) => {
-        if (this.shortcutsEnabled) {
-          if (event.type === 'keydown') {
-            const shortcut = this.getShorcutCombination(event);
+  public checkKeyEvent(event: KeyboardEvent): Promise<{ command: string; platform: string } | undefined> {
+    return new Promise<{ command: string; platform: string } | undefined>((resolve) => {
+      if (this.shortcutsEnabled) {
+        if (event.type === 'keydown') {
+          const shortcut = this.getShorcutCombination(event);
 
-            if (this._pressedKey.code < 0) {
-              this._pressedKey.code = event.keyCode;
-              this._pressedKey.name = this.getNameByCode(event.keyCode);
-            }
-
-            const command = this.getCommand(shortcut, BrowserInfo.platform);
-            if (!(command === null || command === undefined)) {
-              event.preventDefault();
-              resolve({
-                platform: BrowserInfo.platform,
-                command,
-              });
-            }
-          } else if (event.type === 'keyup') {
-            if (event.keyCode === this._pressedKey.code) {
-              this._pressedKey.code = -1;
-              this._pressedKey.name = '';
-            }
+          if (this._pressedKey.code < 0) {
+            this._pressedKey.code = event.keyCode;
+            this._pressedKey.name = this.getNameByCode(event.keyCode);
           }
-        } else {
-          resolve(undefined);
+
+          const command = this.getCommand(shortcut, BrowserInfo.platform);
+          if (!(command === null || command === undefined)) {
+            event.preventDefault();
+            resolve({
+              platform: BrowserInfo.platform,
+              command,
+            });
+          }
+        } else if (event.type === 'keyup') {
+          if (event.keyCode === this._pressedKey.code) {
+            this._pressedKey.code = -1;
+            this._pressedKey.name = '';
+          }
         }
-      },
-    );
+      } else {
+        resolve(undefined);
+      }
+    });
   }
 
   private getCommand(shorcut: string, platform: string) {
@@ -160,9 +156,7 @@ export class ShortcutManager {
     if (!key) {
       return undefined;
     }
-    return (
-      typeof key === 'string' ? key : String.fromCharCode(key)
-    ).toUpperCase();
+    return (typeof key === 'string' ? key : String.fromCharCode(key)).toUpperCase();
   }
 
   private getShorcutCombination(event: KeyboardEvent) {

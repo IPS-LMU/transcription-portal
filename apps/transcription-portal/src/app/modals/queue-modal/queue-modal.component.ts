@@ -12,17 +12,8 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import {
-  NgbActiveModal,
-  NgbDropdown,
-  NgbModalOptions,
-  NgbPopover,
-} from '@ng-bootstrap/ng-bootstrap';
-import {
-  OctraASRLanguageSelectComponent,
-  OctraProviderSelectComponent,
-  ServiceProvider,
-} from '@octra/ngx-components';
+import { NgbActiveModal, NgbDropdown, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
+import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { AudioInfo, FileInfo } from '@octra/web-media';
 import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
@@ -44,15 +35,7 @@ import { StorageService } from '../../storage.service';
   styleUrls: ['./queue-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [
-    NgClass,
-    NgStyle,
-    TimePipe,
-    NgbPopover,
-    FormsModule,
-    OctraASRLanguageSelectComponent,
-    OctraProviderSelectComponent,
-  ],
+  imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
   protected activeModal = inject(NgbActiveModal);
@@ -68,26 +51,16 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
   get selectedSummarizationNumberOfWords(): number | undefined {
-    return isNaN(
-      Number(
-        this.taskService.state.currentModeState
-          .selectedSummarizationNumberOfWords,
-      ),
-    )
+    return isNaN(Number(this.taskService.state.currentModeState.selectedSummarizationNumberOfWords))
       ? undefined
-      : Number(
-          this.taskService.state.currentModeState
-            .selectedSummarizationNumberOfWords,
-        );
+      : Number(this.taskService.state.currentModeState.selectedSummarizationNumberOfWords);
   }
 
   set selectedSummarizationNumberOfWords(value: number) {
     if (isNaN(Number(value))) {
-      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
-        undefined;
+      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords = undefined;
     }
-    this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
-      Number(value);
+    this.taskService.state.currentModeState.selectedSummarizationNumberOfWords = Number(value);
   }
 
   tasks: Task[] = [];
@@ -131,27 +104,22 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   };
 
   ngOnInit(): void {
+    if (this.taskService.state.currentMode === 'summarization' && this.taskService.currentModeState) {
+      this.taskService.currentModeState.isDiarizationEnabled = false;
+    }
+
     this.renderer.addClass(this.elementRef.nativeElement, 'd-flex');
     this.renderer.addClass(this.elementRef.nativeElement, 'flex-column');
     this.renderer.addClass(this.elementRef.nativeElement, 'h-100');
 
-    this.languages.asr = AppSettings.languages?.asr.filter(
-      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null,
-    );
-    this.languages.maus = AppSettings.languages?.maus.filter(
-      (a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null,
-    );
+    this.languages.asr = AppSettings.languages?.asr.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null);
+    this.languages.maus = AppSettings.languages?.maus.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value) !== null);
 
-    this.asrProviders = AppSettings.configuration.api.services.filter(
-      (a) => a.type === 'ASR',
-    );
+    this.asrProviders = AppSettings.configuration.api.services.filter((a) => a.type === 'ASR');
 
-    this.summarizationProviders = AppSettings.configuration.api.services.filter(
-      (a) => a.type === 'Summarization',
-    );
+    this.summarizationProviders = AppSettings.configuration.api.services.filter((a) => a.type === 'Summarization');
 
-    this.taskService.state.currentModeState.selectedSummarizationProvider =
-      this.summarizationProviders[0];
+    this.taskService.state.currentModeState.selectedSummarizationProvider = this.summarizationProviders[0];
   }
 
   public get AppConfiguration(): OHConfiguration {
@@ -163,9 +131,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       return this.tasks.filter((a) => {
         return (
           a.status === TaskStatus.QUEUED &&
-          (a.files[0].file === undefined ||
-            a.files[0].extension !== '.wav' ||
-            (a.files.length > 1 && a.files[1].file === undefined))
+          (a.files[0].file === undefined || a.files[0].extension !== '.wav' || (a.files.length > 1 && a.files[1].file === undefined))
         );
       }).length;
     }
@@ -175,16 +141,12 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   onSubmit(form: NgForm) {
     if (form.valid) {
-      this.changeLanguageforAllQueuedTasks();
+      this.changeProcessingOptionsForEachQueuedTask();
       let j = 0;
 
       for (const task of this.tasks) {
         if (task.status === TaskStatus.QUEUED) {
-          if (
-            task.files[0] instanceof AudioInfo &&
-            task.files[0].file !== undefined &&
-            !this.isSomethingInvalid(task.id)
-          ) {
+          if (task.files[0] instanceof AudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
             task.changeState(TaskStatus.PENDING);
           }
 
@@ -220,19 +182,15 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         this.compatibleTable.push({
           id: task.id,
           fileName: task.files[0].fullname,
-          checks: this.checkAudioFileCompatibility(
-            task.files[0] as AudioInfo,
-            task.operations[1].serviceProvider?.provider,
-          ),
+          checks: this.checkAudioFileCompatibility(task.files[0] as AudioInfo, task.operations[1].serviceProvider?.provider),
         });
       }
     }
   }
 
-  changeLanguageforAllQueuedTasks() {
+  changeProcessingOptionsForEachQueuedTask() {
     if (this.taskService.state.currentModeState?.selectedASRLanguage) {
-      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords =
-        this.selectedSummarizationNumberOfWords;
+      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords = this.selectedSummarizationNumberOfWords;
       this.compatibleTable = [];
 
       const tasks = this.tasks.filter((a) => {
@@ -241,54 +199,46 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
       for (const task of tasks) {
         task.setOptions({
-          selectedSummarizationProvider:
-            this.taskService.state.currentModeState
-              .selectedSummarizationProvider,
-          selectedASRLanguage:
-            this.taskService.state.currentModeState.selectedASRLanguage,
-          selectedTargetLanguage:
-            this.taskService.state.currentModeState.selectedTranslationLanguage,
-          selectedMausLanguage:
-            this.taskService.state.currentModeState.selectedMausLanguage,
-          selectedASRProvider:
-            this.taskService.state.currentModeState.selectedASRProvider,
-          selectedSummarizationNumberOfWords:
-            this.taskService.state.currentModeState
-              .selectedSummarizationNumberOfWords,
+          asr: {
+            provider: this.taskService.state.currentModeState.selectedASRProvider,
+            language: this.taskService.state.currentModeState.selectedASRLanguage,
+            diarization: {
+              enabled: this.taskService.state.currentModeState.isDiarizationEnabled,
+              speakers: this.taskService.state.currentModeState.diarizationSpeakers,
+            },
+          },
+          translation: {
+            language: this.taskService.state.currentModeState.selectedTranslationLanguage,
+          },
+          maus: {
+            language: this.taskService.state.currentModeState.selectedMausLanguage,
+          },
+          summarization: {
+            provider: this.taskService.state.currentModeState.selectedSummarizationProvider,
+            numberOfWords: this.taskService.state.currentModeState.selectedSummarizationNumberOfWords,
+          },
         });
         this.storage.saveTask(task, this.taskService.state.currentMode);
 
-        const audioInfo: AudioInfo | undefined =
-          task.files[0] && task.files[0] instanceof AudioInfo
-            ? (task.files[0] as AudioInfo)
-            : undefined;
+        const audioInfo: AudioInfo | undefined = task.files[0] && task.files[0] instanceof AudioInfo ? (task.files[0] as AudioInfo) : undefined;
         if (audioInfo) {
           this.compatibleTable.push({
             id: task.id,
             fileName: !audioInfo ? '' : audioInfo.name,
-            checks: this.checkAudioFileCompatibility(
-              audioInfo,
-              task.operations[1].serviceProvider?.provider,
-            ),
+            checks: this.checkAudioFileCompatibility(audioInfo, task.operations[1].serviceProvider?.provider),
           });
         }
       }
 
       this.storage.saveDefaultUserSettings({
-        asrLanguage:
-          this.taskService.state.currentModeState.selectedASRLanguage,
-        mausLanguage:
-          this.taskService.state.currentModeState.selectedMausLanguage,
-        asrProvider:
-          this.taskService.state.currentModeState.selectedASRProvider?.provider,
-        summarizationProvider:
-          this.taskService.state.currentModeState.selectedSummarizationProvider
-            ?.provider,
-        translationLanguage:
-          this.taskService.state.currentModeState.selectedTranslationLanguage,
-        summarizationWordLimit:
-          this.taskService.state.currentModeState
-            .selectedSummarizationNumberOfWords,
+        asrLanguage: this.taskService.state.currentModeState.selectedASRLanguage,
+        mausLanguage: this.taskService.state.currentModeState.selectedMausLanguage,
+        asrProvider: this.taskService.state.currentModeState.selectedASRProvider?.provider,
+        summarizationProvider: this.taskService.state.currentModeState.selectedSummarizationProvider?.provider,
+        translationLanguage: this.taskService.state.currentModeState.selectedTranslationLanguage,
+        summarizationWordLimit: this.taskService.state.currentModeState.selectedSummarizationNumberOfWords,
+        diarization: this.taskService.state.currentModeState.isDiarizationEnabled,
+        diarizationSpeakers: this.taskService.state.currentModeState.diarizationSpeakers,
       });
 
       if (this.dropdown) {
@@ -338,10 +288,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
           currOperation.enabled = operation.enabled;
         }
       }
-    } else if (
-      operation instanceof SummarizationOperation ||
-      operation instanceof TranslationOperation
-    ) {
+    } else if (operation instanceof SummarizationOperation || operation instanceof TranslationOperation) {
       for (const task of tasks) {
         const currOperation = task.operations[index];
 
@@ -387,11 +334,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       return a.status === TaskStatus.QUEUED;
     });
 
-    for (
-      let j = 0;
-      j < this.taskService.state.currentModeState.operations.length;
-      j++
-    ) {
+    for (let j = 0; j < this.taskService.state.currentModeState.operations.length; j++) {
       const operation = this.taskService.state.currentModeState.operations[j];
 
       for (const task of tasks) {
@@ -423,25 +366,15 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     type: string;
     label: string;
   } {
-    if (
-      (task.files.length > 1 && task.files[1].file !== undefined) ||
-      task.operations[0].results.length > 1 ||
-      task.files[0].extension !== '.wav'
-    ) {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
-        label:
-          task.files[0].extension !== '.wav'
-            ? task.files[0].extension
-            : task.files[1].extension,
+        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
       };
     } else {
       return {
         type: 'warning',
-        label:
-          task.files[0].extension !== '.wav'
-            ? task.files[0].extension
-            : task.files[1].extension,
+        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
       };
     }
   }
@@ -471,9 +404,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       value: string;
     }[] = [];
 
-    const serviceInfo = AppSettings.configuration.api.services.find(
-      (a) => a.provider === asrName,
-    );
+    const serviceInfo = AppSettings.configuration.api.services.find((a) => a.provider === asrName);
     if (serviceInfo && audioInfo && audioInfo instanceof AudioInfo) {
       if (serviceInfo.maxSignalDuration) {
         if (audioInfo.duration.seconds > serviceInfo.maxSignalDuration) {
@@ -492,10 +423,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       }
 
       if (serviceInfo.maxSignalSize) {
-        if (
-          (audioInfo as FileInfo).size / 1000 / 1000 >
-          serviceInfo.maxSignalSize
-        ) {
+        if ((audioInfo as FileInfo).size / 1000 / 1000 > serviceInfo.maxSignalSize) {
           result.push({
             name: 'Signal length',
             isValid: false,
@@ -516,9 +444,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   isSomethingInvalid(taskID: number) {
     if (this.selectedASRInfo?.provider) {
-      const googleWithAccessCode =
-        this.selectedASRInfo.provider === 'Google' &&
-        this.taskService.accessCode.trim() !== '';
+      const googleWithAccessCode = this.selectedASRInfo.provider === 'Google' && this.taskService.accessCode.trim() !== '';
       const compatibleItem = this.compatibleTable.find((a) => a.id === taskID);
       if (compatibleItem && this.isASRSelected() && !googleWithAccessCode) {
         return compatibleItem.checks.findIndex((a) => !a.isValid) > -1;
@@ -543,11 +469,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   isASRSelected() {
-    return (
-      this.taskService.state.currentModeState.operations.find(
-        (a) => a.name === 'ASR',
-      )?.enabled ?? false
-    );
+    return this.taskService.state.currentModeState.operations.find((a) => a.name === 'ASR')?.enabled ?? false;
   }
 
   getChecksByID(id: number): CompatibleResult[] {

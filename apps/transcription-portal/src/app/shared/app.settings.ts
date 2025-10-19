@@ -18,10 +18,7 @@ export class AppSettings {
     this._configuration = configuration;
   }
 
-  public static getLanguageByCode(
-    code: string,
-    asr: string,
-  ): ProviderLanguage | undefined {
+  public static getLanguageByCode(code: string, asr: string): ProviderLanguage | undefined {
     if (!asr) {
       return undefined;
     }
@@ -30,7 +27,7 @@ export class AppSettings {
   }
 
   public static getServiceInformation(serviceProvider?: string) {
-    if(serviceProvider) {
+    if (serviceProvider) {
       if (!AppSettings.configuration.api.services) {
         throw new Error('services configuration is undefined');
       }

@@ -1,10 +1,5 @@
-import { Injectable, inject } from '@angular/core';
-import {
-  ActivatedRoute,
-  NavigationExtras,
-  QueryParamsHandling,
-  Router,
-} from '@angular/router';
+import { inject, Injectable } from '@angular/core';
+import { ActivatedRoute, NavigationExtras, QueryParamsHandling, Router } from '@angular/router';
 import { removeEmptyProperties, SubscriptionManager } from '@octra/utilities';
 import { environment } from '../environments/environment';
 
@@ -40,9 +35,7 @@ export class RoutingService {
 
   public addStaticParams(params: Record<string, string | undefined | null>) {
     this._staticQueryParams = {
-      ...removeEmptyProperties<Record<string, string | undefined | null>>(
-        params,
-      ),
+      ...removeEmptyProperties<Record<string, string | undefined | null>>(params),
       ...params,
     };
   }
@@ -54,10 +47,7 @@ export class RoutingService {
     queryParamsHandling: QueryParamsHandling | null | undefined = 'merge',
   ) {
     try {
-      if (
-        environment.debugging.enabled &&
-        environment.debugging.logging.routes
-      ) {
+      if (environment.debugging.enabled && environment.debugging.logging.routes) {
         console.log(`[RS/${label}] navigate to ${commands.join('/')}`);
       }
       await this.router.navigate(commands, {

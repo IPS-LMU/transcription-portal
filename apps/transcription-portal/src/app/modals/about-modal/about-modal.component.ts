@@ -149,7 +149,7 @@ export class AboutModalComponent implements OnInit {
   prepareLiterature() {
     this.literature.sort((a, b) => {
       if (a.year === b.year && a.month === b.month) {
-        return 0
+        return 0;
       } else {
         if (a.year === b.year) {
           return a.month > b.month ? -1 : 1;

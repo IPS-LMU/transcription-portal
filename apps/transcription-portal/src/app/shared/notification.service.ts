@@ -27,10 +27,7 @@ export class NotificationService {
 
   public allowNotifications() {
     if (Notify.needsPermission && Notify.isSupported()) {
-      Notify.requestPermission(
-        this.onPermissionGranted,
-        this.onPermissionDenied,
-      );
+      Notify.requestPermission(this.onPermissionGranted, this.onPermissionDenied);
     } else {
       this._permissionGranted = !Notify.needsPermission;
     }

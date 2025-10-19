@@ -13,14 +13,16 @@ export interface IDBUserDefaultSettingsItemData {
   mausLanguage?: string;
   summarizationProvider?: string;
   summarizationWordLimit?: number;
+  diarization?: boolean;
+  diarizationSpeakers?: number;
   translationLanguage?: string;
 }
-export type IDBUserDefaultSettingsItem = IDBUserSettingsItem<IDBUserDefaultSettingsItemData>
+export type IDBUserDefaultSettingsItem = IDBUserSettingsItem<IDBUserDefaultSettingsItemData>;
 
 export interface IDBNotificationSettingsItemData {
   enabled: boolean;
 }
-export type IDBNotificationSettingsItem = IDBUserSettingsItem<IDBNotificationSettingsItemData>
+export type IDBNotificationSettingsItem = IDBUserSettingsItem<IDBNotificationSettingsItemData>;
 
 export interface IDBTaskItem {
   id: number;

@@ -12,8 +12,7 @@ export class LuxonFormatPipe implements PipeTransform {
     if (window.navigator.languages) {
       language = window.navigator.languages[0];
     } else {
-      language =
-        (window.navigator as any).userLanguage || window.navigator.language;
+      language = (window.navigator as any).userLanguage || window.navigator.language;
     }
 
     const postfix = this.getPostfix(language);

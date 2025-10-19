@@ -10,10 +10,7 @@ import { interval } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
 })
-export class UrlModeModalComponent
-  extends SubscriberComponent
-  implements OnInit
-{
+export class UrlModeModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);
   private cd = inject(ChangeDetectorRef);
 

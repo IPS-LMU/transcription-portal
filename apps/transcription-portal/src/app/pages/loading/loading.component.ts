@@ -1,4 +1,3 @@
-
 import { Component, inject } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { RoutingService } from '../../routing.service';

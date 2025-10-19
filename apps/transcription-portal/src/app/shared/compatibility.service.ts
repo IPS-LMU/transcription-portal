@@ -83,44 +83,35 @@ export class CompatibilityService {
 
   testCompatibility(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-        this.rules[0].help += this.getValidBrowsers();
-        let valid = true;
+      this.rules[0].help += this.getValidBrowsers();
+      let valid = true;
 
-        const promises = [];
-        for (const rule of this.rules) {
-          promises.push(this.checkFeature(rule.name));
-        }
+      const promises = [];
+      for (const rule of this.rules) {
+        promises.push(this.checkFeature(rule.name));
+      }
 
-        Promise.all(promises)
-          .then((values) => {
-            for (let i = 0; i < values.length; i++) {
-              this.rules[i].state = values[i] ? 'ok' : 'failed';
-              if (!values[i]) {
-                valid = false;
-              }
+      Promise.all(promises)
+        .then((values) => {
+          for (let i = 0; i < values.length; i++) {
+            this.rules[i].state = values[i] ? 'ok' : 'failed';
+            if (!values[i]) {
+              valid = false;
             }
-            resolve(valid);
-          })
-          .catch((error) => {
-            reject(error);
-          });
+          }
+          resolve(valid);
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 
   getValidBrowsers(): string {
     let result = '';
 
-    if (
-      !(
-        AppSettings.configuration === null ||
-        AppSettings.configuration === undefined
-      )
-    ) {
-      for (
-        let i = 0;
-        i < AppSettings.configuration.allowed_browsers.length;
-        i++
-      ) {
+    if (!(AppSettings.configuration === null || AppSettings.configuration === undefined)) {
+      for (let i = 0; i < AppSettings.configuration.allowed_browsers.length; i++) {
         const browser = AppSettings.configuration.allowed_browsers[i];
         result += browser.name;
         if (i < AppSettings.configuration.allowed_browsers.length - 1) {
@@ -144,9 +135,7 @@ export class CompatibilityService {
         }
       } else {
         if (AppSettings.configuration.allowed_browsers.length > 0) {
-          const valid = this.isValidBrowser(
-            AppSettings.configuration.allowed_browsers,
-          );
+          const valid = this.isValidBrowser(AppSettings.configuration.allowed_browsers);
           resolve(valid);
         } else {
           resolve(true);

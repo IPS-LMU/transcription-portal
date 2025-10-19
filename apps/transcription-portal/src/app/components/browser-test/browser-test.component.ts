@@ -30,7 +30,7 @@ export class BrowserTestComponent implements OnInit {
         reject2();
       }
     });
-    if (this.compatibility.rules[0].state === "initialized") {
+    if (this.compatibility.rules[0].state === 'initialized') {
       const isValid = await this.compatibility.testCompatibility();
       if (isValid) {
         this.routingService.navigate('back to root after check ok', ['/']);

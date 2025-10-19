@@ -1,23 +1,13 @@
 <div class="modal-header">
   <h4 class="modal-title" id="modal-basic-title">Preview: {{ fileName }}</h4>
-  <button
-    type="button"
-    class="btn-close"
-    aria-label="Close"
-    (click)="activeModal.close('Cross click')"
-  ></button>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
   @if (!selectedFile?.isMediaFile()) {
-    @if(selectedFile?.type === 'text/plain') {
+    @if (selectedFile?.type === 'text/plain') {
       <textarea readonly class="w-100 h-100" [innerHTML]="fileContent"></textarea>
     } @else {
-      <ngx-codejar
-        [code]="fileContent"
-        [highlightMethod]="highlightMethod"
-        [readonly]="true"
-        [showLineNumbers]="true"
-      ></ngx-codejar>
+      <ngx-codejar [code]="fileContent" [highlightMethod]="highlightMethod" [readonly]="true" [showLineNumbers]="true"></ngx-codejar>
     }
   } @else if (selectedFile) {
     <audio controls class="w-100">
@@ -25,17 +15,6 @@
     </audio>
   }
 </div>
-<div
-  class="modal-footer"
-  (dragover)="cancelEvent($event)"
-  (drop)="cancelEvent($event)"
->
-  <a
-    [download]="fileName"
-    [href]="downloadURL"
-    class="btn btn-outline-primary"
-    target="_self"
-  >
-    DOWNLOAD
-  </a>
+<div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
+  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self"> DOWNLOAD </a>
 </div>

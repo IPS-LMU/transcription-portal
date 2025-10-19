@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { ChartData } from 'chart.js';
 import { interval, Subscription } from 'rxjs';
@@ -22,20 +22,13 @@ export class StatisticsService {
   constructor() {
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
-        const modeState =
-          this.taskService.state.modes[this.taskService.state.currentMode];
+        const modeState = this.taskService.state.modes[this.taskService.state.currentMode];
         const allTasks = [...(modeState.taskList?.getAllTasks() ?? [])];
         const allTasksCount = allTasks.length;
-        this.overAllProgress.waiting =
-          ((modeState.statistics.waiting + modeState.statistics.queued) /
-            allTasksCount) *
-          100;
-        this.overAllProgress.failed =
-          (modeState.statistics.errors / allTasksCount) * 100;
-        this.overAllProgress.processing =
-          (modeState.statistics.running / allTasksCount) * 100;
-        this.overAllProgress.finished =
-          (modeState.statistics.finished / allTasksCount) * 100;
+        this.overAllProgress.waiting = ((modeState.statistics.waiting + modeState.statistics.queued) / allTasksCount) * 100;
+        this.overAllProgress.failed = (modeState.statistics.errors / allTasksCount) * 100;
+        this.overAllProgress.processing = (modeState.statistics.running / allTasksCount) * 100;
+        this.overAllProgress.finished = (modeState.statistics.finished / allTasksCount) * 100;
         this.updateAverageDurations(this.taskService.state.currentMode);
       }),
     );
@@ -46,11 +39,7 @@ export class StatisticsService {
   }
 
   public updateAverageDurations(mode: 'annotation' | 'summarization') {
-    if (
-      this.taskService.statistics &&
-      this.taskService.state?.modes &&
-      Object.keys(this.taskService.state.modes).includes(mode)
-    ) {
+    if (this.taskService.statistics && this.taskService.state?.modes && Object.keys(this.taskService.state.modes).includes(mode)) {
       const modeState = this.taskService.state.modes[mode];
       const tasks = modeState.taskList?.getAllTasks() ?? [];
 
@@ -66,13 +55,7 @@ export class StatisticsService {
 
       if (mode === 'annotation') {
         this.averageDurations = {
-          labels: [
-            ['Upload'],
-            ['Speech Recognition'],
-            ['Manual Transcription'],
-            ['Word alignment'],
-            ['Phonetic Detail'],
-          ],
+          labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Word alignment'], ['Phonetic Detail']],
           datasets: [
             {
               data: [0, 0, 0, 0, 0],
@@ -81,13 +64,7 @@ export class StatisticsService {
         };
       } else {
         this.averageDurations = {
-          labels: [
-            ['Upload'],
-            ['Speech Recognition'],
-            ['Manual Transcription'],
-            ['Summarization'],
-            ['Translation'],
-          ],
+          labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Summarization'], ['Translation']],
           datasets: [
             {
               data: [0, 0, 0, 0, 0],
@@ -97,8 +74,7 @@ export class StatisticsService {
       }
 
       for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
-        this.averageDurations.datasets[0].data[i] =
-          Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
+        this.averageDurations.datasets[0].data[i] = Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
       }
     }
   }

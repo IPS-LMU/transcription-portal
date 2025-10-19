@@ -12,10 +12,7 @@ export class TimePipe implements PipeTransform {
 
       let showFull = false;
 
-      if (
-        !(args === null || args === undefined) &&
-        !(args[0] === null || args[0] === undefined)
-      ) {
+      if (!(args === null || args === undefined) && !(args[0] === null || args[0] === undefined)) {
         showFull = true;
       }
 

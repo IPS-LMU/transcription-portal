@@ -1,30 +1,11 @@
 <tportal-alert></tportal-alert>
-<div
-  (dragover)="onMissedDrop($event)"
-  (drop)="onMissedDrop($event)"
-  [hidden]="!settingsService.allLoaded"
-  id="app"
->
+<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded" id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
-    <div
-      class="container justify-content-center"
-      style="width: 100%; margin: 0; display: contents"
-    >
-      <ul
-        class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle"
-      >
+    <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
+      <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
-          <a
-            [title]="AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z'"
-            class="nav-link"
-            href="#"
-            ><span class="logo"
-              ><img
-                src="assets/TPortal-Logo_only.svg"
-                style="height: 40px; margin-top: -10px"
-              />
-              TranscriptionPortal</span
-            >
+          <a [title]="AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z'" class="nav-link" href="#"
+            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" /> TranscriptionPortal</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -41,51 +22,24 @@
           </a>
         </li>
       </ul>
-      <div
-        [ngbCollapse]="!isCollapsed"
-        class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-      >
-        <ul
-          class="nav navbar-nav flex-fill justify-content-center state-icons"
-          style="min-width: 300px"
-        >
+      <div [ngbCollapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="nav navbar-nav flex-fill justify-content-center state-icons" style="min-width: 300px">
           <li class="nav-item">
-            <div
-              [ngbTooltip]="queuedTipp"
-              class="totalState"
-              tooltipClass="state-tooltip"
-              placement="bottom"
-            >
+            <div [ngbTooltip]="queuedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.queued }}
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
-              <ng-template #queuedTipp
-                >{{ taskService.statistics.overall.queued }} audio files are
-                waiting for verification.
-              </ng-template>
+              <ng-template #queuedTipp>{{ taskService.statistics.overall.queued }} audio files are waiting for verification. </ng-template>
             </div>
-            <div
-              [ngbTooltip]="waitingTipp"
-              class="totalState"
-              tooltipClass="state-tooltip"
-              placement="bottom"
-            >
+            <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.waiting }}
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
-              <ng-template #waitingTipp
-                >{{ taskService.statistics.overall.waiting }} tasks are waiting
-                for processing.
-              </ng-template>
+              <ng-template #waitingTipp>{{ taskService.statistics.overall.waiting }} tasks are waiting for processing. </ng-template>
             </div>
-            <div
-              [ngbTooltip]="runningTipp"
-              class="totalState"
-              tooltipClass="state-tooltip"
-              placement="bottom"
-            >
+            <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.running }}
               </div>
@@ -96,96 +50,52 @@
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
-              <ng-template #runningTipp
-                >{{ taskService.statistics.overall.running }} tasks are running.
-              </ng-template>
+              <ng-template #runningTipp>{{ taskService.statistics.overall.running }} tasks are running. </ng-template>
             </div>
-            <div
-              [ngbTooltip]="finishedTipp"
-              class="totalState"
-              tooltipClass="state-tooltip"
-              placement="bottom"
-            >
+            <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.finished }}
               </div>
-              <i
-                class="bi bi-check-lg"
-                style="color: forestgreen; font-weight: bold"
-              ></i>
-              <ng-template #finishedTipp
-                >{{ taskService.statistics.overall.finished }} tasks are
-                finished.
-              </ng-template>
+              <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
+              <ng-template #finishedTipp>{{ taskService.statistics.overall.finished }} tasks are finished. </ng-template>
             </div>
-            <div
-              [ngbTooltip]="errorsTipp"
-              class="totalState"
-              tooltipClass="state-tooltip"
-              placement="bottom"
-            >
+            <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.errors }}
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.overall.errors }} tasks failed. For
-                further details please hover over the red "X" icon in a column.
+                >{{ taskService.statistics.overall.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
           </li>
         </ul>
       </div>
-      <div
-        [ngbCollapse]="!isCollapsed"
-        class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2"
-      >
-        <ul
-          class="nav navbar-nav flex-fill w-100 justify-content-end right-icons"
-        >
+      <div [ngbCollapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
           <li class="nav-item active">
             <a
-              style="
-                text-align: left;
-                vertical-align: middle;
-                cursor: pointer;
-                text-decoration: none;
-                color: purple;
-              "
+              style="text-align: left; vertical-align: middle; cursor: pointer; text-decoration: none; color: purple"
               (click)="openAboutModal()"
               ngbPopover="About"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-info-circle"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1">About</span></a
+              ><i class="bi bi-info-circle"></i> <span class="d-lg-none d-xl-inline-block ms-1">About</span></a
             >
           </li>
           <li class="nav-item active">
             <a
               href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/contents/v1.0.0/help.html"
-              style="
-                text-align: left;
-                vertical-align: middle;
-                margin-top: 20px;
-                cursor: pointer;
-                text-decoration: none;
-              "
+              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer; text-decoration: none"
               target="_blank"
               ngbPopover="Help"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i
-                class="bi bi-question-circle"
-                style="color: cornflowerblue"
-              ></i>
-              <span class="d-lg-none d-xl-inline-block ms-1">Help</span></a
+              ><i class="bi bi-question-circle" style="color: cornflowerblue"></i> <span class="d-lg-none d-xl-inline-block ms-1">Help</span></a
             >
           </li>
           @if (settingsService.feedbackEnabled) {
-            <li
-              (click)="modalService.openFeedbackModal()"
-              class="nav-item active"
-            >
+            <li (click)="modalService.openFeedbackModal()" class="nav-item active">
               <a
                 ngbPopover="Feedback"
                 placement="bottom-right"
@@ -197,39 +107,24 @@
                 }"
               >
                 <i class="bi bi-exclamation-circle pointer"></i
-                ><span style="cursor: pointer">
-                  <span class="d-lg-none d-xl-inline-block ms-1"
-                    >Feedback</span
-                  ></span
-                >
+                ><span style="cursor: pointer"> <span class="d-lg-none d-xl-inline-block ms-1">Feedback</span></span>
               </a>
             </li>
           }
           <li class="nav-item active" style="cursor: pointer">
             <span
               (click)="openStatisticsModal()"
-              style="
-                text-align: left;
-                vertical-align: middle;
-                margin-top: 20px;
-                cursor: pointer;
-                color: #ff6a00;
-              "
+              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer; color: #ff6a00"
               ngbPopover="Statistics"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-bar-chart-line"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1"
-                >Statistics</span
-              ></span
+              ><i class="bi bi-bar-chart-line"></i> <span class="d-lg-none d-xl-inline-block ms-1">Statistics</span></span
             >
           </li>
           <li class="nav-item active">
             <a
               class="pointer"
-              (click)="
-                notification.permissionGranted = !notification.permissionGranted
-              "
+              (click)="notification.permissionGranted = !notification.permissionGranted"
               ngbPopover="Notifications"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
@@ -244,17 +139,11 @@
                 class="bi"
                 style="cursor: pointer"
               ></i
-              ><span class="d-lg-none d-xl-inline-block ms-1"
-                >Notifications</span
-              >
+              ><span class="d-lg-none d-xl-inline-block ms-1">Notifications</span>
             </a>
           </li>
           <li class="nav-item active">
-            <div
-              ngbDropdown
-              class="d-inline-block"
-              [ngbCollapse]="settingsCollapsed"
-            >
+            <div ngbDropdown class="d-inline-block" [ngbCollapse]="settingsCollapsed">
               <div
                 class="pointer"
                 style="color: dimgray"
@@ -263,26 +152,15 @@
                 placement="bottom-right"
                 triggers="mouseenter:mouseleave"
               >
-                <i
-                  class="bi bi-gear-wide-connected"
-                  id="dropdownBasic2"
-                  style="cursor: pointer"
-                ></i
+                <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
                 ><span class="d-lg-none d-xl-inline-block ms-1">Settings</span>
               </div>
-              <div
-                ngbDropdownMenu
-                aria-labelledby="dropdownBasic2"
-                (mouseleave)="accessCodeInputFieldType = 'password'"
-                id="settings-dropdown"
-              >
+              <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
                 <table style="width: 100%">
                   <tbody>
                     <tr>
                       <td><i class="bi bi-key"></i></td>
-                      <td style="font-size: 0.9em">
-                        Access Code (for Google ASR only):
-                      </td>
+                      <td style="font-size: 0.9em">Access Code (for Google ASR only):</td>
                     </tr>
                     <tr>
                       <td></td>
@@ -299,17 +177,12 @@
                             />
                           </form>
                           <div class="input-group-append">
-                            <span
-                              class="input-group-text"
-                              (click)="toggleAccessCodeInputType()"
-                            >
+                            <span class="input-group-text" (click)="toggleAccessCodeInputType()">
                               <i
                                 class="bi"
                                 [ngClass]="{
-                                  'bi-eye-slash':
-                                    accessCodeInputFieldType === 'text',
-                                  'bi-eye':
-                                    accessCodeInputFieldType === 'password',
+                                  'bi-eye-slash': accessCodeInputFieldType === 'text',
+                                  'bi-eye': accessCodeInputFieldType === 'password',
                                 }"
                               ></i>
                             </span>
@@ -320,11 +193,7 @@
                     <tr>
                       <td><i class="bi bi-layout-sidebar-inset"></i></td>
                       <td>
-                        <span
-                          (click)="resetSideBarWidth()"
-                          style="cursor: pointer"
-                          >Reset sidebar width</span
-                        >
+                        <span (click)="resetSideBarWidth()" style="cursor: pointer">Reset sidebar width</span>
                       </td>
                     </tr>
                     <tr>
@@ -332,11 +201,7 @@
                         <i class="bi bi-eraser" style="color: red"></i>
                       </td>
                       <td style="padding-top: 20px">
-                        <span
-                          (click)="onClearClick()"
-                          style="cursor: pointer; color: red"
-                          >Clear all data</span
-                        >
+                        <span (click)="onClearClick()" style="cursor: pointer; color: red">Clear all data</span>
                       </td>
                     </tr>
                   </tbody>
@@ -348,22 +213,11 @@
       </div>
     </div>
   </nav>
-  <ul
-    ngbNav
-    #nav="ngbNav"
-    [(activeId)]="activeMode"
-    class="nav-tabs"
-    id="mode-tabs"
-  >
+  <ul ngbNav #nav="ngbNav" [(activeId)]="activeMode" class="nav-tabs" id="mode-tabs">
     <li [ngbNavItem]="1">
-      <button ngbNavLink (mousedown)="changeMode('annotation')">
-        Annotation
-      </button>
+      <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (
-          settingsService.allLoaded &&
-          taskService.state.modes.annotation.taskList !== undefined
-        ) {
+        @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -382,14 +236,9 @@
       </ng-template>
     </li>
     <li [ngbNavItem]="2">
-      <button ngbNavLink (mousedown)="changeMode('summarization')">
-        Summarization &amp; Translation
-      </button>
+      <button ngbNavLink (mousedown)="changeMode('summarization')">Summarization &amp; Translation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (
-          settingsService.allLoaded &&
-          taskService.state.modes.summarization.taskList !== undefined
-        ) {
+        @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -413,19 +262,10 @@
     <div class="row proceedings-header" style="padding-top: 0">
       <div class="col-4" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-          <i class="bi bi-plus"></i
-          ><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
+          <i class="bi bi-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
         </button>
         <!-- webkitdirectory directory multiple -->
-        <input
-          #fileinput
-          (change)="onFileChange($event)"
-          class="fileinput"
-          multiple
-          style="display: none"
-          type="file"
-          value="Select audio file"
-        />
+        <input #fileinput (change)="onFileChange($event)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
         <button
           (click)="onVerifyButtonClick()"
           [disabled]="taskService.currentModeStatistics.queued < 1"
@@ -445,11 +285,7 @@
         </div>
       </div>
       <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button
-          (click)="onStartClick()"
-          [disabled]="!taskService.state.currentModeState.newfiles"
-          class="btn btn-primary"
-        >
+        <button (click)="onStartClick()" [disabled]="!taskService.state.currentModeState.newfiles" class="btn btn-primary">
           <i
             [ngClass]="{
               'bi-play-fill': !taskService.isProcessing,
@@ -475,72 +311,46 @@
   @if (showtool) {
     <div class="row proceedings-header" style="padding-top: 0; height: 50px">
       <div class="col-2" style="text-align: left; padding-top: 5px">
-        <button
-          (click)="onBackButtonClicked()"
-          class="btn btn-primary"
-          style="width: 100%"
-        >
-          <i
-            aria-hidden="true"
-            class="bi bi-chevron-double-left"
-            style="font-size: 20px"
-          ></i>
+        <button (click)="onBackButtonClicked()" class="btn btn-primary" style="width: 100%">
+          <i aria-hidden="true" class="bi bi-chevron-double-left" style="font-size: 20px"></i>
         </button>
       </div>
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
           @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
             {{ toolSelectedOperation!.name }}:
-            {{
-              toolSelectedOperation!.previousOperation!.results[0].attributes
-                ?.originalFileName
-            }}
+            {{ toolSelectedOperation!.previousOperation!.results[0].attributes?.originalFileName }}
             , Language:
             @if (
               toolSelectedOperation !== undefined &&
               toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.operations[1].language !== undefined
+              toolSelectedOperation.task.asrOperation.language !== undefined
             ) {
-              {{ toolSelectedOperation.task.operations[1].language }}
+              {{ toolSelectedOperation.task.asrOperation.language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
           @if (
             toolSelectedOperation &&
             toolSelectedOperation.previousOperation!.results.length < 1 &&
-            toolSelectedOperation!.previousOperation!.previousOperation !==
-              undefined
+            toolSelectedOperation!.previousOperation!.previousOperation !== undefined
           ) {
             @if (toolSelectedOperation) {
               {{ toolSelectedOperation.name }}
             }
             :
-            {{
-              toolSelectedOperation!.previousOperation!.previousOperation!
-                .results[0]!.attributes?.originalFileName
-            }}
+            {{ toolSelectedOperation!.previousOperation!.previousOperation!.results[0]!.attributes?.originalFileName }}
             , Language:
-            @if (
-              toolSelectedOperation.task &&
-              toolSelectedOperation.task.operations[1].language !== undefined
-            ) {
-              {{ toolSelectedOperation.task!.operations[1].language }}
+            @if (toolSelectedOperation.task && toolSelectedOperation.task.asrOperation.language !== undefined) {
+              {{ toolSelectedOperation.task!.asrOperation.language }}
             }
             , Audio duration: {{ getTime() | time }}
           }
         </p>
       </div>
       <div class="col-2" style="text-align: right; padding-top: 5px">
-        <button
-          (click)="onBackButtonClicked()"
-          class="btn btn-primary"
-          style="width: 100%"
-        >
-          <i
-            aria-hidden="true"
-            class="bi bi-chevron-double-right"
-            style="font-size: 20px"
-          ></i>
+        <button (click)="onBackButtonClicked()" class="btn btn-primary" style="width: 100%">
+          <i aria-hidden="true" class="bi bi-chevron-double-right" style="font-size: 20px"></i>
         </button>
       </div>
     </div>
@@ -560,15 +370,11 @@
       }"
       [ngStyle]="{
         width: newProceedingsWidth + '%',
-        'border-right':
-          sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
+        'border-right': sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
       }"
       style="float: right"
     >
-      <div
-        [ngbNavOutlet]="nav"
-        class="d-flex flex-column flex-auto w-100 h-100 position-relative"
-      ></div>
+      <div [ngbNavOutlet]="nav" class="d-flex flex-column flex-auto w-100 h-100 position-relative"></div>
     </div>
     <div
       (mousedown)="dragBorder($event, 'right')"

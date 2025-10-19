@@ -21,10 +21,7 @@ import { DownloadService } from '../../shared/download.service';
   styleUrls: ['./download-modal.component.scss'],
   imports: [FormsModule, NgStyle],
 })
-export class DownloadModalComponent
-  extends SubscriberComponent
-  implements OnInit
-{
+export class DownloadModalComponent extends SubscriberComponent implements OnInit {
   private taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);
   private sanitizer = inject(DomSanitizer);
@@ -68,13 +65,7 @@ export class DownloadModalComponent
 
   process() {
     this.state = 'processing';
-    if (
-      this.type === 'column' &&
-      !(
-        this.column instanceof UploadOperation ||
-        this.column instanceof EmuOperation
-      )
-    ) {
+    if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
       this.doColumnZipping();
     } else if (this.type === 'line') {
       this.doLineZipping();
@@ -113,14 +104,10 @@ export class DownloadModalComponent
       for (const task of tasks) {
         const operation = task.operations[opIndex];
 
-        if (
-          operation.results.length > 0 &&
-          operation.state === TaskStatus.FINISHED
-        ) {
+        if (operation.results.length > 0 && operation.state === TaskStatus.FINISHED) {
           const result: FileInfo | undefined = operation.lastResult;
           if (result?.file) {
-            const originalName =
-              result.attributes?.originalFileName ?? result.fullname;
+            const originalName = result.attributes?.originalFileName ?? result.fullname;
 
             requestPackage.entries.push({
               path: originalName,
@@ -284,22 +271,13 @@ export class DownloadModalComponent
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
-          if (
-            operation.name !== task.operations[0].name &&
-            operation.state === TaskStatus.FINISHED &&
-            operation.results.length > 0
-          ) {
+          if (operation.name !== task.operations[0].name && operation.state === TaskStatus.FINISHED && operation.results.length > 0) {
             const opResult = operation.lastResult;
             const folderName = this.getFolderName(operation);
 
             if (opResult?.file) {
-              const fileName =
-                task.files[0].attributes.originalFileName.replace(
-                  /\.[^.]+$/g,
-                  '',
-                );
-              const originalName =
-                opResult.attributes?.originalFileName ?? opResult.fullname;
+              const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+              const originalName = opResult.attributes?.originalFileName ?? opResult.fullname;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
@@ -314,23 +292,14 @@ export class DownloadModalComponent
             promises.push(
               new Promise<void>((resolve2, reject2) => {
                 this.downloadService
-                  .getConversionFiles(
-                    operation,
-                    operation.lastResult,
-                    selectedConverters,
-                  )
+                  .getConversionFiles(operation, operation.lastResult, selectedConverters)
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
                     entries = entries.filter((a) => a);
 
                     for (const entry of entries) {
-                      const fileName =
-                        task.files[0].attributes.originalFileName.replace(
-                          /\.[^.]+$/g,
-                          '',
-                        );
-                      const originalName =
-                        entry.attributes?.originalFileName ?? entry.fullname;
+                      const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+                      const originalName = entry.attributes?.originalFileName ?? entry.fullname;
 
                       entryResult.push({
                         path: `${fileName}/${folderName2}/${originalName}`,
@@ -373,9 +342,7 @@ export class DownloadModalComponent
     }
 
     zip.generateAsync({ type: 'base64' }).then((base64) => {
-      this.archiveURL = this.sanitizer.bypassSecurityTrustResourceUrl(
-        'data:application/zip;base64,' + base64,
-      );
+      this.archiveURL = this.sanitizer.bypassSecurityTrustResourceUrl('data:application/zip;base64,' + base64);
       this.state = 'finished';
     });
   }

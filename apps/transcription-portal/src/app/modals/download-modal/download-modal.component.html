@@ -1,23 +1,13 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">
-    Download results by {{ type }}
-  </h4>
-  <button
-    type="button"
-    class="btn-close"
-    aria-label="Close"
-    (click)="activeModal.close('Cross click')"
-  ></button>
+  <h4 class="modal-title" id="modal-basic-title">Download results by {{ type }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
   <p style="text-align: justify">
-    This creates a zip-archive of all the selected results and optionally
-    conversions to other formats. If you do not select any additional
+    This creates a zip-archive of all the selected results and optionally conversions to other formats. If you do not select any additional
     conversions only the original results are added to the zip-archive.
   </p>
-  <p>
-    Please notice, that only the latest results are inserted to the package.
-  </p>
+  <p>Please notice, that only the latest results are inserted to the package.</p>
   <p>Add conversions (optional):</p>
   <div>
     @for (conversion of converters; track conversion; let i = $index) {
@@ -31,10 +21,7 @@
           type="checkbox"
         />
         <label [attr.for]="'check-' + i">
-          <i
-            [ngStyle]="{ color: conversion.color }"
-            class="bi bi-file-text"
-          ></i>
+          <i [ngStyle]="{ color: conversion.color }" class="bi bi-file-text"></i>
           {{ conversion.obj.name }} ({{ conversion.obj.extensions[0] }})</label
         >
       </div>
@@ -43,13 +30,7 @@
   </div>
   <br />
   @if (state === 'inactive') {
-    <button
-      (click)="process()"
-      class="btn btn-outline-primary"
-      style="width: 100%"
-    >
-      Get package
-    </button>
+    <button (click)="process()" class="btn btn-outline-primary" style="width: 100%">Get package</button>
   }
   @if (state === 'processing') {
     <a [attr.disabled]="true" class="btn btn-outline-info" style="width: 100%">
@@ -60,34 +41,17 @@
     </a>
   }
   @if (state === 'finished') {
-    <a
-      [attr.download]="archiveName"
-      [attr.href]="archiveURL"
-      class="btn btn-outline-success"
-      (click)="showRemoveLine = true"
-      style="width: 100%"
-    >
+    <a [attr.download]="archiveName" [attr.href]="archiveURL" class="btn btn-outline-success" (click)="showRemoveLine = true" style="width: 100%">
       DOWNLOAD
     </a>
   }
   @if (type === 'line' && state === 'finished' && showRemoveLine) {
     <p class="mt-3 text-center">Optional:</p>
-    <button
-      (click)="removeSelected()"
-      class="btn btn-outline-danger"
-      id="remove-check"
-      style="width: 100%"
-    >
+    <button (click)="removeSelected()" class="btn btn-outline-danger" id="remove-check" style="width: 100%">
       Remove selected lines from transcription portal (permanently)
     </button>
   }
 </div>
 <div class="modal-footer">
-  <button
-    type="button"
-    class="btn btn-outline-secondary"
-    (click)="activeModal.close()"
-  >
-    Close
-  </button>
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
 </div>

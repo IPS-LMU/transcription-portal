@@ -23,9 +23,7 @@ import { TaskService } from '../../../obj/tasks/task.service';
   selector: '[tportalProcColOperation]',
   standalone: true,
 })
-export class ProcColOperationDirective
-  implements AfterViewInit, OnChanges, OnDestroy
-{
+export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
   private sanitizer = inject(DomSanitizer);
@@ -38,28 +36,17 @@ export class ProcColOperationDirective
 
   @Output() appendClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
 
-  @Output() operationMouseEnter: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
-  @Output() operationMouseLeave: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
-  @Output() operationMouseOver: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
+  @Output() operationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() operationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
+  @Output() operationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
-  @Output() deleteIconClick: EventEmitter<MouseEvent> =
-    new EventEmitter<MouseEvent>();
+  @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   ngOnChanges(changes: SimpleChanges) {
-    if (
-      hasProperty(changes, 'shortStyle') &&
-      changes['shortStyle'].currentValue !== undefined
-    ) {
-      this.renderer.setStyle(
-        this.elementRef.nativeElement,
-        'max-width',
-        this.shortStyle ? '150px' : 'auto',
-      );
+    if (hasProperty(changes, 'shortStyle') && changes['shortStyle'].currentValue !== undefined) {
+      this.renderer.setStyle(this.elementRef.nativeElement, 'max-width', this.shortStyle ? '150px' : 'auto');
     }
     this.updateView();
   }
@@ -74,9 +61,7 @@ export class ProcColOperationDirective
       if (!(this.entry.files === null || this.entry.files === undefined)) {
         this.updateView();
       } else {
-        throw new Error(
-          'ProcOperationDirective error: entry of type Task does not have any files',
-        );
+        throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
       }
     } else {
       throw new Error('ProcOperationDirective error: no entry set');
@@ -99,20 +84,11 @@ export class ProcColOperationDirective
   }
 
   private updateView() {
-    if (
-      !(
-        this.elementRef.nativeElement === null ||
-        this.elementRef.nativeElement === undefined
-      )
-    ) {
+    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
       this.clearContents();
 
       if (this.entry) {
-        this.renderer.setStyle(
-          this.elementRef.nativeElement,
-          'text-align',
-          'center',
-        );
+        this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
         if (this.operation) {
           if (
@@ -132,22 +108,15 @@ export class ProcColOperationDirective
             // result is available
             if (this.operation.enabled) {
               let icon = null;
-              if (
-                !(this.operation.mouseover && this.operation.state === 'ERROR')
-              ) {
+              if (!(this.operation.mouseover && this.operation.state === 'ERROR')) {
                 const wrapper = this.renderer.createElement('div');
                 this.renderer.setStyle(wrapper, 'display', 'inline');
-                wrapper.innerHTML = this.operation.getStateIcon2(
-                  this.operation.state,
-                );
+                wrapper.innerHTML = this.operation.getStateIcon2(this.operation.state);
 
                 this.renderer.listen(wrapper, 'mouseover', this.onMouseOver);
                 this.renderer.listen(wrapper, 'mouseenter', this.onMouseEnter);
                 this.renderer.listen(wrapper, 'mouseleave', this.onMouseLeave);
-                this.renderer.appendChild(
-                  this.elementRef.nativeElement,
-                  wrapper,
-                );
+                this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
               } else {
                 icon = this.renderer.createElement('i');
                 this.renderer.addClass(icon, 'bi');
@@ -158,16 +127,10 @@ export class ProcColOperationDirective
                 this.renderer.listen(icon, 'click', this.onRepeatIconClick);
               }
 
-              this.renderer.removeClass(
-                this.elementRef.nativeElement,
-                'op-deactivated',
-              );
+              this.renderer.removeClass(this.elementRef.nativeElement, 'op-deactivated');
             } else {
               // operation disabled
-              this.renderer.addClass(
-                this.elementRef.nativeElement,
-                'op-deactivated',
-              );
+              this.renderer.addClass(this.elementRef.nativeElement, 'op-deactivated');
 
               const icon = this.renderer.createElement('i');
               this.renderer.addClass(icon, 'bi');
@@ -179,23 +142,15 @@ export class ProcColOperationDirective
           }
         }
       } else {
-        throw new Error(
-          'ProcOperationDirective error: entry is not of type Task',
-        );
+        throw new Error('ProcOperationDirective error: entry is not of type Task');
       }
     } else {
-      throw new Error(
-        'ProcOperationDirective error: updateView: nativeElement is undefined',
-      );
+      throw new Error('ProcOperationDirective error: updateView: nativeElement is undefined');
     }
   }
 
   private clearContents() {
-    for (
-      let i = 0;
-      i < (this.elementRef.nativeElement as HTMLElement).children.length;
-      i++
-    ) {
+    for (let i = 0; i < (this.elementRef.nativeElement as HTMLElement).children.length; i++) {
       const child = this.elementRef.nativeElement.children[i];
 
       if (!(child === null || child === undefined)) {

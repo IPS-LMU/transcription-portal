@@ -61,27 +61,17 @@ export class ResultsTableComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (
-      ((hasProperty(changes, 'operation') &&
-        changes['operation'].currentValue) ||
-        (hasProperty(changes, 'visible') &&
-          changes['visible'].currentValue &&
-          changes['visible'].currentValue)) &&
+      ((hasProperty(changes, 'operation') && changes['operation'].currentValue) ||
+        (hasProperty(changes, 'visible') && changes['visible'].currentValue && changes['visible'].currentValue)) &&
       this.operation
     ) {
-      if (
-        this.oldOperation.id !== this.operation.id ||
-        this.oldOperation.numOfResults !== this.operation.results.length
-      ) {
+      if (this.oldOperation.id !== this.operation.id || this.oldOperation.numOfResults !== this.operation.results.length) {
         if (!this.generationRunning) {
           this.generationRunning = true;
           this.generateTable();
         }
       }
-    } else if (
-      hasProperty(changes, 'visible') &&
-      changes['visible'].currentValue &&
-      !changes['visible'].previousValue
-    ) {
+    } else if (hasProperty(changes, 'visible') && changes['visible'].currentValue && !changes['visible'].previousValue) {
       this.generationRunning = false;
       this.somethingClicked = false;
     }
@@ -109,9 +99,7 @@ export class ResultsTableComponent implements OnChanges {
       }
     };
     this.convertedArray.forEach((v) => {
-      revokeURLIfNeeded(
-        (v.input?.url as any)?.changingThisBreaksApplicationSecurity,
-      );
+      revokeURLIfNeeded((v.input?.url as any)?.changingThisBreaksApplicationSecurity);
       v.conversions.forEach((s) => {
         revokeURLIfNeeded(s.result.url);
       });
@@ -128,13 +116,7 @@ export class ResultsTableComponent implements OnChanges {
         const promises: Promise<FileInfo[]>[] = [];
 
         for (const result of this.operation.results) {
-          promises.push(
-            this.downloadService.getConversionFiles(
-              this.operation,
-              this.operation.lastResult,
-              this.converters,
-            ),
-          );
+          promises.push(this.downloadService.getConversionFiles(this.operation, this.operation.lastResult, this.converters));
         }
 
         // read all file contents of results
@@ -146,10 +128,7 @@ export class ResultsTableComponent implements OnChanges {
                 const conversions = promiseResults[j];
 
                 const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) =>
-                    a.obj.extensions.findIndex(
-                      (b) => b.indexOf(result.extension) > -1,
-                    ) > -1,
+                  (a) => a.obj.extensions.findIndex((b) => b.indexOf(result.extension) > -1) > -1,
                 );
 
                 if (from) {
@@ -160,47 +139,26 @@ export class ResultsTableComponent implements OnChanges {
                     throw new Error(`result file is undefined`);
                   }
 
-                  let originalFileName: any =
-                    this.operation?.task?.files[0].attributes
-                      .originalFileName ??
-                    this.operation?.task?.files[0].fullname;
+                  let originalFileName: any = this.operation?.task?.files[0].attributes.originalFileName ?? this.operation?.task?.files[0].fullname;
                   originalFileName = FileInfo.extractFileName(originalFileName);
 
-                  const fileInfo = new FileInfo(
-                    result.file.name,
-                    result.type,
-                    result.size,
-                    result.file,
-                    result.createdAt,
-                  );
-                  fileInfo.url = result.file
-                    ? URL.createObjectURL(result.file)
-                    : '';
+                  const fileInfo = new FileInfo(result.file.name, result.type, result.size, result.file, result.createdAt);
+                  fileInfo.url = result.file ? URL.createObjectURL(result.file) : '';
                   fileInfo.attributes = {
                     originalFileName: `${originalFileName.name}${result.extension}`,
                   };
 
                   const resultObj = {
-                    url: result.file
-                      ? this.sanitizer.bypassSecurityTrustUrl(
-                          URL.createObjectURL(result.file),
-                        )
-                      : '',
+                    url: result.file ? this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)) : '',
                     info: fileInfo,
                   };
 
                   const audio: OAudiofile = new OAudiofile();
                   if (this.operation.task) {
-                    audio.sampleRate = (
-                      this.operation.task.files[0] as AudioInfo
-                    ).sampleRate;
-                    audio.duration = (
-                      this.operation.task.files[0] as AudioInfo
-                    ).duration.samples;
+                    audio.sampleRate = (this.operation.task.files[0] as AudioInfo).sampleRate;
+                    audio.duration = (this.operation.task.files[0] as AudioInfo).duration.samples;
                     audio.name = resultObj.info.fullname;
-                    audio.size = (
-                      this.operation.task.files[0] as AudioInfo
-                    ).size;
+                    audio.size = (this.operation.task.files[0] as AudioInfo).size;
                   }
 
                   const convElem = {
@@ -211,9 +169,7 @@ export class ResultsTableComponent implements OnChanges {
                   this.convertedArray.push(convElem);
                   this.convertedArray.sort(this.sortAlgorithm);
 
-                  const convertersWithoutFrom = this.converters.filter(
-                    (a) => a.obj.name !== importConverter.name,
-                  );
+                  const convertersWithoutFrom = this.converters.filter((a) => a.obj.name !== importConverter.name);
 
                   for (let k = 0; k < conversions.length; k++) {
                     const conversion = conversions[k];
@@ -236,12 +192,8 @@ export class ResultsTableComponent implements OnChanges {
 
                     if (conversion) {
                       res.result = conversion;
-                      const url = conversion.file
-                        ? URL.createObjectURL(conversion.file)
-                        : '';
-                      res.result.url = this.sanitizer.bypassSecurityTrustUrl(
-                        url,
-                      ) as any;
+                      const url = conversion.file ? URL.createObjectURL(conversion.file) : '';
+                      res.result.url = this.sanitizer.bypassSecurityTrustUrl(url) as any;
                       res.state = 'FINISHED';
                       convElem.conversions.push(res);
                     } else {
@@ -286,9 +238,7 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private updateGUI() {
-    this.selectedVersion = (
-      (this.operation?.results.length ?? 1) - 1
-    ).toString();
+    this.selectedVersion = ((this.operation?.results.length ?? 1) - 1).toString();
     this.cd.markForCheck();
     this.cd.detectChanges();
     if (this.operation) {

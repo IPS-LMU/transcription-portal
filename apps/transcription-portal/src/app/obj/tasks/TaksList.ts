@@ -29,22 +29,15 @@ export class TaskList {
     return this._entries;
   }
 
-  private _entryChanged: Subject<EntryChangeEvent> =
-    new Subject<EntryChangeEvent>();
+  private _entryChanged: Subject<EntryChangeEvent> = new Subject<EntryChangeEvent>();
 
   get entryChanged(): Subject<EntryChangeEvent> {
     return this._entryChanged;
   }
 
-  public addEntry(
-    newEntry: Task | TaskDirectory,
-    saveToDB: boolean = false,
-  ): Promise<void> {
+  public addEntry(newEntry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if (
-        this.findEntryById(newEntry.id) === null ||
-        this.findEntryById(newEntry.id) === undefined
-      ) {
+      if (this.findEntryById(newEntry.id) === null || this.findEntryById(newEntry.id) === undefined) {
         this._entries.push(newEntry);
         this._entryChanged.next({
           state: 'added',
@@ -58,11 +51,7 @@ export class TaskList {
     });
   }
 
-  public changeEntry(
-    id: number,
-    newEntry: Task | TaskDirectory,
-    saveToDB: boolean = false,
-  ): Promise<void> {
+  public changeEntry(id: number, newEntry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const foundEntry = this._entries.findIndex((a) => a.id === id);
 
@@ -188,10 +177,7 @@ export class TaskList {
     return result;
   }
 
-  public removeEntry(
-    entry: Task | TaskDirectory,
-    saveToDB: boolean = false,
-  ): Promise<void> {
+  public removeEntry(entry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const sendEvent = () => {
         this._entryChanged.next({
@@ -230,9 +216,7 @@ export class TaskList {
         } else {
           // is folder
           const taskIndex = this.entries.findIndex((a) => {
-            return (
-              a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id
-            );
+            return a instanceof TaskDirectory && (a as TaskDirectory).id === entry.id;
           });
 
           if (taskIndex > -1) {
@@ -249,14 +233,8 @@ export class TaskList {
     });
   }
 
-  public cleanup(
-    entry: Task | TaskDirectory,
-    saveToDB: boolean,
-  ): Promise<void> {
-    if (
-      !(entry === null || entry === undefined) &&
-      entry instanceof TaskDirectory
-    ) {
+  public cleanup(entry: Task | TaskDirectory, saveToDB: boolean): Promise<void> {
+    if (!(entry === null || entry === undefined) && entry instanceof TaskDirectory) {
       if (entry.entries.length === 0) {
         // remove dir
         return this.removeEntry(entry, saveToDB);

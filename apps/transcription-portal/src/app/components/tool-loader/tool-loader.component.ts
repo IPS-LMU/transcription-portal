@@ -24,8 +24,7 @@ export class ToolLoaderComponent {
 
   public set url(url: string | undefined) {
     if (!(url === null || url === undefined) && url !== '') {
-      this.selectedtool.url =
-        this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
     } else {
       this.selectedtool.url = undefined;
     }
