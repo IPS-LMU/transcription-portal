@@ -78,8 +78,8 @@ export class SummarizationOperation extends Operation {
         const res = await this.processSummarizationProject(httpclient, projectName);
       } catch (err: any) {
         // couldn't upload file or process summarization project
-        this.changeState(TaskStatus.ERROR);
-        this.updateProtocol(err?.error?.message ?? err?.message ?? err?.toString());
+        this.throwError(err);
+
         if (projectName) {
           await this.deleteSummarizationProject(httpclient, projectName);
         }
@@ -106,10 +106,9 @@ export class SummarizationOperation extends Operation {
                   this.changeState(TaskStatus.FINISHED);
                 }
               } else {
-                this.changeState(TaskStatus.ERROR);
-                this.updateProtocol(result.body.errorMessage);
-
+                this.throwError(new Error(result.body.errorMessage));
                 const errorLogFileURL: string = result.body.outputs.find((o: any) => o.filename === 'error.log')?.url;
+
                 if (errorLogFileURL) {
                   const errorLog = await downloadFile(errorLogFileURL, 'text');
                   console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
@@ -124,8 +123,7 @@ export class SummarizationOperation extends Operation {
         'status check',
       );
     } else {
-      this.changeState(TaskStatus.ERROR);
-      this.updateProtocol('Missing transcript file or audio file.');
+      this.throwError(new Error('Missing transcript file or audio file.'));
     }
   };
 
@@ -212,7 +210,7 @@ export class SummarizationOperation extends Operation {
             }),
         );
       } else {
-        reject('Missing service provider');
+        reject(new Error('Missing service provider'));
       }
     });
   }
@@ -238,7 +236,7 @@ export class SummarizationOperation extends Operation {
             }),
         );
       } else {
-        reject('Missing service provider');
+        reject(new Error('Missing service provider'));
       }
     });
   }
@@ -283,7 +281,7 @@ export class SummarizationOperation extends Operation {
             }),
         );
       } else {
-        reject('Missing service provider');
+        reject(new Error('Missing service provider'));
       }
     });
   }
@@ -301,7 +299,7 @@ export class SummarizationOperation extends Operation {
           }),
         );
       } else {
-        reject('Missing service provider');
+        reject(new Error('Missing service provider'));
       }
     });
   }

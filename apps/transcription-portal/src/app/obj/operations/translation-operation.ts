@@ -65,11 +65,7 @@ export class TranslationOperation extends Operation {
           );
 
           if (!importResult || !importResult.annotjson) {
-            const error = "Can't convert last result from a previous operation.";
-            this.updateProtocol(this.protocol + '<br/>' + error);
-            this.time.duration = Date.now() - this.time.start;
-            this.changeState(TaskStatus.ERROR);
-            console.error(error);
+            this.throwError(new Error("Can't convert last result from a previous operation."));
             return;
           } else {
             const textExport = new TextConverter().export(importResult.annotjson, audiofile, 0);
@@ -77,11 +73,7 @@ export class TranslationOperation extends Operation {
             if (textExport?.file && !textExport.error) {
               content = textExport.file.content;
             } else {
-              const error = "Can't convert last result from a previous operation to a text file.";
-              this.updateProtocol(this.protocol + '<br/>' + error);
-              this.time.duration = Date.now() - this.time.start;
-              this.changeState(TaskStatus.ERROR);
-              console.error(error);
+              this.throwError(new Error("Can't convert last result from a previous operation to a text file."));
               return;
             }
           }
@@ -105,7 +97,6 @@ export class TranslationOperation extends Operation {
       }
     } catch (e: any) {
       this.throwError(new Error(e?.error?.message ?? e?.message));
-      console.error(e);
     }
   };
 

@@ -374,8 +374,8 @@ export abstract class Operation {
   }
 
   protected throwError(error: Error) {
-    console.error(error);
     this.time.duration = Date.now() - this.time.start;
+    console.error(error);
     this.changeState(TaskStatus.ERROR);
     this.updateProtocol(error?.message?.replace(/\n/g, '<br/>'));
   }

@@ -164,7 +164,6 @@ export class UploadOperation extends Operation {
         }),
       );
     } else {
-      this.time.duration = Date.now() - this.time.start;
       this.throwError(new Error(this.protocol + '\n' + 'serviceProvider is undefined'));
     }
   };

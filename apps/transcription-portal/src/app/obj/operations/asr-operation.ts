@@ -79,17 +79,11 @@ export class ASROperation extends Operation {
               throw new Error('Missing result for ASR.');
             }
           } catch (e: any) {
-            this.updateProtocol(this.protocol + '<br/>' + e.message.replace('¶', ''));
-            this.time.duration = Date.now() - this.time.start;
-            this.changeState(TaskStatus.ERROR);
-            console.error(e);
+            this.throwError(e);
           }
         }
       } catch (e: any) {
-        this.updateProtocol(this.protocol + '<br/>' + e.message.replace('¶', ''));
-        this.time.duration = Date.now() - this.time.start;
-        this.changeState(TaskStatus.ERROR);
-        console.error(e);
+        this.throwError(e);
       }
     } else {
       this.updateProtocol(this.protocol + '<br/>' + 'serviceProvider is undefined');
@@ -222,7 +216,7 @@ export class ASROperation extends Operation {
             },
           });
       } else {
-        this.throwError(new Error('Missing ASR Provider.'));
+        reject(new Error('Missing ASR Provider.'));
       }
     });
   }

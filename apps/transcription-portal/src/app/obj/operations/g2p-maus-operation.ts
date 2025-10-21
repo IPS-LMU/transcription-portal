@@ -49,14 +49,10 @@ export class G2pMausOperation extends Operation {
         this.results.push(file);
         this.changeState(TaskStatus.FINISHED);
       } catch (e: any) {
-        this.updateProtocol(e.message);
-        this.changeState(TaskStatus.ERROR);
+        this.throwError(e)
       }
     } else {
-      this.updateProtocol(this.protocol + '<br/>' + 'serviceProvider is undefined');
-      this.time.duration = Date.now() - this.time.start;
-      this.changeState(TaskStatus.ERROR);
-      console.error('serviceProvider is undefined');
+      this.throwError(new Error('serviceProvider is undefined'));
     }
   };
 
