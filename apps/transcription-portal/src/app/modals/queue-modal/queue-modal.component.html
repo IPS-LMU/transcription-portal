@@ -50,7 +50,7 @@
               </tr>
               <tr class="align-middle">
                 <td class="fit">
-                  <label class="me-1">ASR Language<span class="text-danger">*</span>:</label>
+                  <label class="me-1">Content Language<span class="text-danger">*</span>:</label>
                 </td>
                 <td>
                   <octra-asr-language-select
@@ -67,12 +67,12 @@
                       selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
                       selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage,
                     }"
-                    placeholder="ASR Language"
-                    [title]="'ASR Language'"
+                    placeholder="Content Language"
+                    [title]="'Content Language'"
                     [required]="true"
                   ></octra-asr-language-select>
                   <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem"
-                    >The list of supported ASR languages depends on the selected ASR Provider.</span
+                    >The list of supported Content languages depends on the selected ASR Provider.</span
                   >
                 </td>
               </tr>
