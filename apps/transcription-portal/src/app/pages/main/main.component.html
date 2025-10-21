@@ -75,12 +75,13 @@
         <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
           <li class="nav-item active">
             <a
-              style="text-align: left; vertical-align: middle; cursor: pointer; text-decoration: none; color: purple"
+              style="text-align: left; vertical-align: middle; cursor: pointer; text-decoration: none"
               (click)="openAboutModal()"
               ngbPopover="About"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-info-circle"></i> <span class="d-lg-none d-xl-inline-block ms-1">About</span></a
+              ><i class="bi bi-info-circle" style="color: purple"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">About</span></a
             >
           </li>
           <li class="nav-item active">
@@ -91,34 +92,33 @@
               ngbPopover="Help"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-question-circle" style="color: cornflowerblue"></i> <span class="d-lg-none d-xl-inline-block ms-1">Help</span></a
+              ><i class="bi bi-question-circle" style="color: cornflowerblue"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Help</span></a
             >
           </li>
           @if (settingsService.feedbackEnabled) {
             <li (click)="modalService.openFeedbackModal()" class="nav-item active">
-              <a
-                ngbPopover="Feedback"
-                placement="bottom-right"
-                triggers="mouseenter:mouseleave"
-                class="text-decoration-none"
-                [ngClass]="{
-                  yellow: !bugService.hasErrors,
-                  red: bugService.hasErrors,
-                }"
-              >
-                <i class="bi bi-exclamation-circle pointer"></i
-                ><span style="cursor: pointer"> <span class="d-lg-none d-xl-inline-block ms-1">Feedback</span></span>
+              <a ngbPopover="Feedback" placement="bottom-right" triggers="mouseenter:mouseleave" class="text-decoration-none">
+                <i
+                  class="bi bi-exclamation-circle pointer"
+                  [ngClass]="{
+                    yellow: !bugService.hasErrors,
+                    red: bugService.hasErrors,
+                  }"
+                ></i
+                ><span style="cursor: pointer"> <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Feedback</span></span>
               </a>
             </li>
           }
           <li class="nav-item active" style="cursor: pointer">
             <span
               (click)="openStatisticsModal()"
-              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer; color: #ff6a00"
+              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer"
               ngbPopover="Statistics"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-bar-chart-line"></i> <span class="d-lg-none d-xl-inline-block ms-1">Statistics</span></span
+              ><i class="bi bi-bar-chart-line" style="color: #ff6a00"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Statistics</span></span
             >
           </li>
           <li class="nav-item active">
