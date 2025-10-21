@@ -70,7 +70,7 @@ import { StorageService } from '../../storage.service';
     NgbDropdownToggle,
     NgbNavModule,
     NgbPopover,
-  ],
+  ]
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
   taskService = inject(TaskService);

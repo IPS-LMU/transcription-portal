@@ -57,8 +57,8 @@ export class ASROperation extends Operation {
               this.task?.operations[2]?.enabled === false &&
               this.task?.operations[3]?.name === 'MAUS' &&
               this.task?.operations[3]?.enabled === false) ||
-            this.task?.operations[3]?.name === 'SUMMARIZATION';
-          // use G2P_CHUNKER only if Octra and Word alignment is disabled.
+            this.task?.operations[3]?.name === 'SUMMARIZATION' || (!this.diarization?.enabled && this.serviceProvider.provider === "Google");
+          // use G2P_CHUNKER only if Octra and Word alignment is disabled or summarization mode or if service provider is Google and diarization disabled
 
           try {
             if (g2pChunkerNeeded) {
