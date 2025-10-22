@@ -602,8 +602,8 @@ export class TaskService {
 
     const annotationTaskResult = await this.importTasksFromDB(dbEntries.annotationTasks, 'annotation');
     const summarizationTaskResult = await this.importTasksFromDB(dbEntries.summarizationTasks, 'summarization');
-    maxTaskCounter = annotationTaskResult.maxTaskCounter + summarizationTaskResult.maxTaskCounter;
-    maxOperationCounter = annotationTaskResult.maxOperationCounter + summarizationTaskResult.maxOperationCounter;
+    maxTaskCounter = Math.max(annotationTaskResult.maxTaskCounter, summarizationTaskResult.maxTaskCounter);
+    maxOperationCounter = Math.max(annotationTaskResult.maxOperationCounter, summarizationTaskResult.maxOperationCounter);
 
     if (TaskEntry.counter < maxTaskCounter) {
       console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
