@@ -131,7 +131,7 @@ export class UploadOperation extends Operation {
 
       this.subscrManager.add(
         UploadOperation.upload(files, url, httpclient).subscribe({
-          next: (obj) => {
+          next: async (obj) => {
             if (obj.type === 'progress') {
               this.progress = obj.progress!;
               this.updateEstimatedEnd();
@@ -149,7 +149,13 @@ export class UploadOperation extends Operation {
                   files[i].url = obj.urls[i];
                   const type = files[i].extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
                   const info = FileInfo.fromURL(files[i]!.url!, type, files[i]!.fullname, Date.now());
+
                   info.attributes = files[i].attributes;
+
+                  if (type === 'text/plain') {
+                    await info.updateContentFromURL(httpclient);
+                  }
+
                   this.results.push(info);
                 }
                 this.changeState(TaskStatus.FINISHED);
