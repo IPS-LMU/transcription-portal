@@ -107,6 +107,7 @@ tbody .bi.bi-arrow-up {
   background-color: #007bff24 !important;
   box-shadow: initial !important;
 }
+
 .flex-auto {
   flex: auto !important;
 }
@@ -132,4 +133,17 @@ tbody .bi.bi-arrow-up {
 
 #summarizationProviderMenu .list-group .list-group-item .row .col-3 {
   z-index: 10000;
+}
+
+.divider-text {
+  display: flex;
+  align-items: center;
+}
+
+.divider-text::before, .divider-text::after {
+  flex: 1;
+  content: '';
+  padding: 1px;
+  background-color: whitesmoke;
+  margin: 5px;
 }

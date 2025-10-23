@@ -1,8 +1,7 @@
-import Dexie, { Table, Transaction } from 'dexie';
+import Dexie, { Table } from 'dexie';
 import { AppInfo } from '../app.info';
-import { IASROperation } from '../obj/operations/asr-operation';
-import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
 import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { IASROperation } from '../obj/operations/asr-operation';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -144,5 +143,17 @@ export class IndexedDBManager extends Dexie {
         value: AppInfo.version,
       },
     ]);
+  }
+
+  async backup() {
+    const blob = await exportDB(this);
+    return URL.createObjectURL(blob);
+  }
+
+  async importBackup(backupFile: Blob) {
+    await importInto(this, backupFile, {
+      clearTablesBeforeImport: true
+    });
+    document.location.reload();
   }
 }

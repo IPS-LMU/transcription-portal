@@ -1,0 +1,18 @@
+<div class="modal-content">
+  <div class="modal-header" [ngClass]="{
+    'bg-danger': type === 'danger',
+    'text-light': type === 'danger'
+  }">
+    {{title}}
+  </div>
+  <div class="modal-body p-4" [innerHTML]="message">
+  </div>
+  <div class="modal-footer px-4">
+    <button (click)="no()" class="btn btn-primary" type="button">
+      No
+    </button>
+    <button (click)="yes()" class="btn btn-danger" type="button">
+      Yes
+    </button>
+  </div>
+</div>

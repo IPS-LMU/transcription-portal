@@ -54,6 +54,7 @@
     "codejar-linenumbers": "^1.0.1",
     "conventional-changelog-cli": "^2.1.0",
     "dexie": "^4.0.11",
+    "dexie-export-import": "^4.1.4",
     "highlight.js": "^11.11.1",
     "hotkeys-js": "^3.13.15",
     "jodit": "^4.6.2",

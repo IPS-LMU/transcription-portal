@@ -223,4 +223,12 @@ export class StorageService {
     });
     window.location.reload();
   }
+
+  async backup() {
+    return this.idbm.backup();
+  }
+
+  async importBackup(blob: Blob) {
+    return this.idbm.importBackup(blob);
+  }
 }
