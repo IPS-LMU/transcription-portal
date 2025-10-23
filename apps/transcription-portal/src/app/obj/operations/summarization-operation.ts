@@ -2,13 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
-import { joinURL, last, stringifyQueryParams, wait } from '@octra/utilities';
-import { AudioInfo, downloadFile, FileInfo, readFileContents } from '@octra/web-media';
+import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
+import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
+import { UploadOperation } from './upload-operation';
 
 export interface ISummarizationOperation extends IOperation {
   language?: string;
@@ -31,10 +32,13 @@ export class SummarizationOperation extends Operation {
     this.updateProtocol('');
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
-    this._time.start = Date.now();
+    this.time = {
+      start: Date.now(),
+    };
 
-    const transcriptFile = operations[2].enabled ? last(operations[2].results) : last(operations[1].results);
-    const audioinfo = operations[0].task!.files[0] as AudioInfo;
+    const currentRound = this.lastRound!;
+    const transcriptFile = operations[2].enabled ? operations[2].lastRound?.lastResult : operations[1].lastRound?.lastResult;
+    const audioinfo = (operations[0] as UploadOperation).wavFile;
 
     if (transcriptFile?.file && audioinfo) {
       let transcript = '';
@@ -93,7 +97,7 @@ export class SummarizationOperation extends Operation {
 
             if (result.status === 'success' && result.body.status === 'finished') {
               if (!result.body.errors) {
-                this.time.duration = Date.now() - this.time.start;
+                this.time!.duration = Date.now() - this.time!.start;
 
                 const summary = result.body.outputs.find((o: any) => o.filename.includes('summary.txt'));
 
@@ -102,7 +106,7 @@ export class SummarizationOperation extends Operation {
                   const file = new File([summaryText], `${projectName}.txt`, {
                     type: 'text/plain',
                   });
-                  this.results.push(new FileInfo(file.name, file.type, file.size, file));
+                  currentRound.results.push(new FileInfo(file.name, file.type, file.size, file));
                   this.changeState(TaskStatus.FINISHED);
                 }
               } else {
@@ -135,7 +139,6 @@ export class SummarizationOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state,
       undefined,
       this.serviceProvider,
       this.language,
@@ -152,21 +155,15 @@ export class SummarizationOperation extends Operation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider),
       operationObj.language,
     );
     result.maxNumberOfWords = operationObj.maxNumberOfWords;
 
-    for (const resultObj of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.attributes = resultObj.attributes;
-      result.results.push(resultClass);
+    for (const round of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(round));
     }
-
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
 
     return result;
@@ -178,12 +175,11 @@ export class SummarizationOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._language = language;
     this._description = 'Summarizes a given full text.';
   }
@@ -333,11 +329,8 @@ export class SummarizationOperation extends Operation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this._language,
       maxNumberOfWords: this.maxNumberOfWords,

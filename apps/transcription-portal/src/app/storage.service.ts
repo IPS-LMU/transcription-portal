@@ -116,7 +116,7 @@ export class StorageService {
     });
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
+  public async saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
       let promise: Promise<any>;

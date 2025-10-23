@@ -35,7 +35,7 @@ export class TaskList {
     return this._entryChanged;
   }
 
-  public addEntry(newEntry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
+  public addEntry(newEntry: Task | TaskDirectory, saveToDB = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (this.findEntryById(newEntry.id) === null || this.findEntryById(newEntry.id) === undefined) {
         this._entries.push(newEntry);
@@ -51,7 +51,7 @@ export class TaskList {
     });
   }
 
-  public changeEntry(id: number, newEntry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
+  public changeEntry(id: number, newEntry: Task | TaskDirectory, saveToDB = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const foundEntry = this._entries.findIndex((a) => a.id === id);
 
@@ -177,7 +177,7 @@ export class TaskList {
     return result;
   }
 
-  public removeEntry(entry: Task | TaskDirectory, saveToDB: boolean = false): Promise<void> {
+  public removeEntry(entry: Task | TaskDirectory, saveToDB = false): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const sendEvent = () => {
         this._entryChanged.next({

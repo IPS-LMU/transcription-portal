@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild, inject } from '@angular/core';
-import { NgbActiveModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { AfterViewInit, Component, OnDestroy, inject } from '@angular/core';
+import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
@@ -20,7 +20,6 @@ export class StatisticsModalComponent extends SubscriberComponent implements OnD
   taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);
 
-  @ViewChild('statisticsModal', { static: true }) statisticsModal?: NgbModalRef;
   public static options: NgbModalOptions = {
     size: 'xl',
     backdrop: true,

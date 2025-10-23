@@ -49,7 +49,7 @@ export class StatisticsService {
         for (let j = 0; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
-          durations[j] += operation.time.duration;
+          durations[j] += (operation.time?.duration ?? 0);
         }
       }
 

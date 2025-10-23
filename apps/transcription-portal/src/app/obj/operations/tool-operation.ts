@@ -3,7 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation } from './operation';
+import { IOperation, Operation, OperationProcessingRound } from './operation';
 import { wait } from '@octra/utilities';
 
 export class ToolOperation extends Operation {
@@ -13,11 +13,10 @@ export class ToolOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
   }
 
   public resultType?: string;
@@ -25,7 +24,9 @@ export class ToolOperation extends Operation {
   private active = true;
 
   public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this._time.start = Date.now();
+    this.time = {
+      start: Date.now(),
+    }
     this.changeState(TaskStatus.PROCESSING);
 
     await wait(2);
@@ -72,21 +73,16 @@ export class ToolOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTasks,
-      this.state,
       undefined,
       this.serviceProvider
     ) as ToolOperation;
   }
 
   public fromAny(operationObj: IOperation, commands: string[], task: Task): Operation {
-    const result = new ToolOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.state, operationObj.id);
-    for (const resultObj of operationObj.results) {
-      const resultClass = new FileInfo(resultObj.fullname, resultObj.type, resultObj.size);
-      resultClass.url = resultObj.url;
-      result.results.push(resultClass);
+    const result = new ToolOperation(operationObj.name, commands, this.title, this.shortTitle, task, operationObj.id);
+    for (const round of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(round));
     }
-    result._time = operationObj.time;
-    this.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
     return result;
   }

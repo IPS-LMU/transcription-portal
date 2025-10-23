@@ -341,7 +341,7 @@
                   [ngClass]="{
                     green:
                       (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                      (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online),
+                      (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
                     yellow:
                       ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
                       task.operations[0].state !== 'FINISHED',

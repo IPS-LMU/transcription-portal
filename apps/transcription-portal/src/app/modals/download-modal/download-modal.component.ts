@@ -104,8 +104,8 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       for (const task of tasks) {
         const operation = task.operations[opIndex];
 
-        if (operation.results.length > 0 && operation.state === TaskStatus.FINISHED) {
-          const result: FileInfo | undefined = operation.lastResult;
+        if (operation.rounds.length > 0 && operation.state === TaskStatus.FINISHED) {
+          const result: FileInfo | undefined = operation.lastRound?.lastResult;
           if (result?.file) {
             const originalName = result.attributes?.originalFileName ?? result.fullname;
 
@@ -271,17 +271,17 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
 
-          if (operation.name !== task.operations[0].name && operation.state === TaskStatus.FINISHED && operation.results.length > 0) {
-            const opResult = operation.lastResult;
+          if (operation.name !== task.operations[0].name && operation.state === TaskStatus.FINISHED && operation.rounds.length > 0) {
+            const opResult = operation.lastRound;
             const folderName = this.getFolderName(operation);
 
-            if (opResult?.file) {
+            if (opResult?.lastResult) {
               const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
-              const originalName = opResult.attributes?.originalFileName ?? opResult.fullname;
+              const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.fullname;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
-                file: opResult?.file,
+                file: opResult?.lastResult.file,
               });
             }
 
@@ -292,7 +292,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
             promises.push(
               new Promise<void>((resolve2, reject2) => {
                 this.downloadService
-                  .getConversionFiles(operation, operation.lastResult, selectedConverters)
+                  .getConversionFiles(operation, operation.lastRound?.lastResult, selectedConverters)
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
                     entries = entries.filter((a) => a);

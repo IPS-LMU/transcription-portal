@@ -117,8 +117,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-  public archiveURL = '';
-  public closeResult = '';
   public isDragging = false;
   public allDirOpened: 'opened' | 'closed' = 'opened';
   @Input() shortstyle = false;
@@ -415,13 +413,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (
-        (!(operation === null || operation === undefined) &&
-          !(operation.previousOperation === null || operation.previousOperation === undefined) &&
-          operation.previousOperation.results.length > 0 &&
-          operation.previousOperation.results[operation.previousOperation.results.length - 1].online) ||
-        (!(operation === null || operation === undefined) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
-      ) {
+      if (operation?.previousOperation?.lastRound?.lastResult?.online || operation?.lastRound?.lastResult?.online) {
         this.operationclick.emit(operation);
         console.log('row selected close');
         this.popover.state = 'closed';
@@ -637,16 +629,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     task.mouseover = true;
   }
 
-  calculateDuration(time: { start: number; duration: number }, operation: Operation) {
-    if (operation.state === TaskStatus.PROCESSING) {
-      return operation.time.duration + Math.max(0, Date.now() - operation.time.start);
-    } else {
-      if (time.duration > 0) {
+  calculateDuration(time: { start: number; duration?: number } | undefined, operation: Operation) {
+    if (operation.state === TaskStatus.PROCESSING && operation?.time) {
+      return (operation.time.duration ?? 0) + Math.max(0, Date.now() - operation.time.start);
+    } else if(time) {
+      if (time.duration && time.duration > 0) {
         return time.duration;
-      } else {
-        return 0;
       }
     }
+    return 0;
   }
 
   deactivateOperation(operation: Operation, index: number) {
@@ -762,7 +753,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public getPopoverColor(operation: Operation): string {
     if (operation) {
-      if (operation.state === TaskStatus.ERROR || (operation.results.length > 0 && !operation.lastResult?.available)) {
+      if (operation.state === TaskStatus.ERROR || (operation.rounds.length > 0 && !operation.lastRound?.lastResult?.available)) {
         return 'red';
       } else if (operation.state === TaskStatus.FINISHED && operation.protocol !== '') {
         return '#ffc33b';
@@ -839,7 +830,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     type: string;
     label: string;
   } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
         label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
@@ -890,8 +881,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.updateChanges();
   }
 
-  copyProtocolToClipboard(protocol: string) {
-    clipboard.writeText(protocol);
+  copyProtocolToClipboard(protocol?: string) {
+    if (protocol) {
+      clipboard.writeText(protocol);
+    }
   }
 
   onReportIconClick(operation: Operation) {
@@ -960,7 +953,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       const checkTask = (task: Task) => {
         for (const operation of task.operations) {
           if (!(operation instanceof UploadOperation)) {
-            if (operation.state === TaskStatus.FINISHED || operation.results.length > 0) {
+            if (operation.state === TaskStatus.FINISHED || operation.rounds.length > 0) {
               return true;
             }
           }

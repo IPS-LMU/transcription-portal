@@ -11,7 +11,6 @@ import {
   Renderer2,
   SimpleChanges,
 } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
@@ -26,7 +25,6 @@ import { TaskService } from '../../../obj/tasks/task.service';
 export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
-  private sanitizer = inject(DomSanitizer);
   private taskService = inject(TaskService);
 
   @Input() entry?: Task;
@@ -93,9 +91,9 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
         if (this.operation) {
           if (
             this.operation.state === 'FINISHED' &&
-            this.operation.results.length > 0 &&
-            this.operation.lastResult &&
-            !this.operation.lastResult.available
+            this.operation.rounds.length > 0 &&
+            this.operation.lastRound &&
+            !this.operation.lastRound.lastResult?.available
           ) {
             // result is not available
             const icon = this.renderer.createElement('i');

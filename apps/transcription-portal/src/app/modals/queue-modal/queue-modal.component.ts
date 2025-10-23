@@ -46,8 +46,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   protected settingsService = inject(SettingsService);
   private renderer = inject(Renderer2);
 
-  @ViewChild('dropdown', { static: false }) dropdown?: NgbDropdown;
-  @ViewChild('pop', { static: true }) popover?: NgbPopover;
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
   get selectedSummarizationNumberOfWords(): number | undefined {
@@ -241,10 +239,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         diarizationSpeakers: this.taskService.state.currentModeState.diarizationSpeakers,
       });
 
-      if (this.dropdown) {
-        this.dropdown.close();
-      }
-
       this.cd.markForCheck();
       this.cd.detectChanges();
     }
@@ -366,7 +360,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     type: string;
     label: string;
   } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
         label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
@@ -385,9 +379,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
   onMouseOut() {
     setTimeout(() => {
-      if (!this.mouseInDropdown && this.dropdown) {
-        this.dropdown.close();
-      }
     }, 500);
 
     this.mouseInDropdown = false;

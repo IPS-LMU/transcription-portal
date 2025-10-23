@@ -15,8 +15,8 @@
   [width]="popover.width"
 >
   @if (popover.operation !== undefined) {
-    @if (popover.operation.time.start > 0) {
-      @if (popover.operation.lastResult !== undefined && !popover.operation.lastResult.available) {
+    @if (popover.operation.time && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
+      @if (popover.operation.lastRound !== undefined && !popover.operation.lastRound.lastResult?.available) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">
@@ -29,7 +29,7 @@
         </div>
       </div>
     }
-    @if (popover.operation.results.length === 0 && popover.operation.serviceProvider !== undefined) {
+    @if (popover.operation.rounds.length === 0 && popover.operation.serviceProvider !== undefined) {
       <div class="service-preview">
         <div class="provided-by">Service provided by</div>
         <a [href]="popover.operation.serviceProvider.homepageURL" style="display: block; vertical-align: middle" target="_blank">
@@ -50,7 +50,7 @@
       </div>
       <div class="clearfix"></div>
     }
-    @if (popover.operation.results.length > 0) {
+    @if (popover.operation.rounds.length > 0) {
       <div style="overflow: hidden">
         <tportal-results-table
           #resultsTableComponent

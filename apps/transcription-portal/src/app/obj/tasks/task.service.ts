@@ -509,31 +509,33 @@ export class TaskService {
         for (const operation of task.operations) {
           maxOperationCounter = Math.max(maxOperationCounter, operation.id);
 
-          for (const opResult of operation.results) {
-            if (!(opResult.url === null || opResult.url === undefined)) {
-              try {
-                await this.existsFile(opResult.url);
+          for (const opRound of operation.rounds) {
+            for (const opResult of opRound.results) {
+              if (opResult.url) {
+                try {
+                  await this.existsFile(opResult.url);
 
-                opResult.online = true;
-                if (opResult.file === null || opResult.file === undefined) {
-                  const format: AudioFormat | undefined = AudioManager.getFileFormat(opResult.extension, AppInfo.audioFormats);
+                  opResult.online = true;
+                  if (opResult.file === null || opResult.file === undefined) {
+                    const format: AudioFormat | undefined = AudioManager.getFileFormat(opResult.extension, AppInfo.audioFormats);
 
-                  if (!format) {
-                    try {
-                      await opResult.updateContentFromURL(this.httpclient);
+                    if (!format) {
+                      try {
+                        await opResult.updateContentFromURL(this.httpclient);
 
-                      // TODO minimize task savings
-                      await this.storage.saveTask(task, mode);
-                    } catch (e) {
-                      console.error(e);
+                        // TODO minimize task savings
+                        await this.storage.saveTask(task, mode);
+                      } catch (e) {
+                        console.error(e);
+                      }
                     }
                   }
+                } catch (e) {
+                  opResult.online = false;
                 }
-              } catch (e) {
+              } else {
                 opResult.online = false;
               }
-            } else {
-              opResult.online = false;
             }
           }
         }
@@ -551,22 +553,24 @@ export class TaskService {
         for (const taskElem of taskDir.entries) {
           const task = taskElem as Task;
           for (const operation of task.operations) {
-            for (const opResult of operation.results) {
-              if (!(opResult.url === null || opResult.url === undefined)) {
-                try {
-                  opResult.online = true;
+            for (const opRound of operation.rounds) {
+              for (const opResult of opRound.results) {
+                if (opResult.url) {
+                  try {
+                    opResult.online = true;
 
-                  if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
-                    try {
-                      opResult.updateContentFromURL(this.httpclient);
-                      // TODO minimize task savings
-                      await this.storage.saveTask(task, mode);
-                    } catch (e) {
-                      console.error(e);
+                    if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
+                      try {
+                        await opResult.updateContentFromURL(this.httpclient);
+                        // TODO minimize task savings
+                        await this.storage.saveTask(task, mode);
+                      } catch (e) {
+                        console.error(e);
+                      }
                     }
+                  } catch (e) {
+                    opResult.online = false;
                   }
-                } catch (e) {
-                  opResult.online = false;
                 }
               }
             }
@@ -803,8 +807,11 @@ export class TaskService {
     for (const entry of tasks) {
       if (
         entry.status === TaskStatus.PENDING &&
-        ((!(entry.files[0].file === null || entry.files[0].file === undefined) && entry.files[0].extension === '.wav') ||
-          (entry.operations[0].results.length > 0 && entry.operations[0]?.lastResult?.online))
+        // TODO entry.operations[0].lastRound.lastResult?.online check does not make sense?
+        ((entry.files[0].file && entry.files[0].extension === '.wav') ||
+          (entry.operations[0].lastRound?.results &&
+            entry.operations[0].lastRound.results.length > 0 &&
+            entry.operations[0].lastRound.lastResult?.online))
       ) {
         return entry;
       } else if (entry.status === TaskStatus.READY) {
@@ -915,16 +922,14 @@ export class TaskService {
     queueItem: QueueItem,
     mode: PortalModeType,
   ) => {
-    // TODO define distribution of files to correct modes
-
     if (queueItem.file instanceof FileInfo) {
       const file = queueItem.file as FileInfo;
       return await this.processFileInfo(file, '', queueItem, mode);
-    } else if (queueItem.file instanceof DirectoryInfo) {
+    } else {
+      // is directory
       const dir = queueItem.file as DirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem, mode);
     }
-    return firstValueFrom(of([]));
   };
 
   public openSplitModal = () => {};
@@ -1221,7 +1226,13 @@ export class TaskService {
         };
 
         // new file
-        const task = new Task([newFileInfo], affectedMode.operations);
+        const task = new Task(
+          [newFileInfo],
+          affectedMode.operations.map((a) => {
+            a.addProcessingRound();
+            return a;
+          }),
+        );
         task.setOptions({
           asr: {
             provider: this.state.currentModeState.selectedASRProvider,

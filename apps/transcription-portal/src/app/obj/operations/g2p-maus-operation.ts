@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { ServiceProvider } from '@octra/ngx-components';
-import { extractFileNameFromURL } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
+import { UploadOperation } from './upload-operation';
 
 export interface IG2PMausOperation extends IOperation {
   language?: string;
@@ -27,29 +27,32 @@ export class G2pMausOperation extends Operation {
     if (this.serviceProvider) {
       this.updateProtocol('');
       this.changeState(TaskStatus.PROCESSING);
-      this._time.start = Date.now();
+      this.time = {
+        start: Date.now(),
+      };
 
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
       let url = this._commands[0]
         .replace('{{host}}', serviceProvider.host)
         .replace('{{language}}', this.language!)
-        .replace('{{audioURL}}', operations[0]!.results[0]!.url!);
+        .replace('{{audioURL}}', (operations[0] as UploadOperation).wavFile!.url!);
 
       // use G2P -> MAUS Pipe
-      if (this.previousOperation?.enabled && this.previousOperation?.lastResult?.url) {
-        url = url.replace('{{transcriptURL}}', this.previousOperation?.lastResult?.url);
+      if (this.previousOperation?.enabled && this.previousOperation?.lastRound?.lastResult?.url) {
+        url = url.replace('{{transcriptURL}}', this.previousOperation?.lastRound?.lastResult?.url);
       } else {
-        if (operations[1].lastResult?.url) {
-          url = url.replace('{{transcriptURL}}', operations[1].lastResult?.url);
+        if (operations[1].lastRound?.lastResult?.url) {
+          url = url.replace('{{transcriptURL}}', operations[1].lastRound?.lastResult?.url);
         }
       }
 
       try {
+        const currentRound = this.lastRound!;
         const file = await this.processWithG2PCHUNKERMAUS(url, inputs, httpclient);
-        this.results.push(file);
+        currentRound.results.push(file);
         this.changeState(TaskStatus.FINISHED);
       } catch (e: any) {
-        this.throwError(e)
+        this.throwError(e);
       }
     } else {
       this.throwError(new Error('serviceProvider is undefined'));
@@ -58,17 +61,7 @@ export class G2pMausOperation extends Operation {
 
   public clone(task?: Task): G2pMausOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new G2pMausOperation(
-      this.name,
-      this._commands,
-      this.title,
-      this.shortTitle,
-      selectedTask,
-      this.state,
-      undefined,
-      this.serviceProvider,
-      this.language,
-    );
+    return new G2pMausOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider, this.language);
   }
 
   public fromAny(operationObj: IG2PMausOperation, commands: string[], task: Task): G2pMausOperation {
@@ -78,19 +71,14 @@ export class G2pMausOperation extends Operation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider),
       operationObj.language,
     );
 
-    for (const resultElement of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultElement);
-      resultClass.attributes = resultElement.attributes;
-      result.results.push(resultClass);
+    for (const round of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(round));
     }
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
 
     return result;
@@ -102,12 +90,11 @@ export class G2pMausOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._language = language;
     this._description =
       'The transcript text is time-aligned with the signal, i. e. for every word in the text we get ' +
@@ -129,7 +116,7 @@ export class G2pMausOperation extends Operation {
         )
         .subscribe({
           next: (result: string) => {
-            this.time.duration = Date.now() - this.time.start;
+            this.time!.duration = Date.now() - this.time!.start;
 
             // convert result to json
             const x2js = new X2JS();
@@ -177,11 +164,8 @@ export class G2pMausOperation extends Operation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this._language,
     };

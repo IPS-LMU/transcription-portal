@@ -317,9 +317,9 @@
       </div>
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
-          @if (toolSelectedOperation!.previousOperation!.results.length > 0) {
+          @if (toolSelectedOperation!.previousOperation!.rounds.length > 0) {
             {{ toolSelectedOperation!.name }}:
-            {{ toolSelectedOperation!.previousOperation!.results[0].attributes?.originalFileName }}
+            {{ toolSelectedOperation!.previousOperation!.lastRound?.lastResult?.attributes?.originalFileName }}
             , Language:
             @if (
               toolSelectedOperation !== undefined &&
@@ -332,14 +332,14 @@
           }
           @if (
             toolSelectedOperation &&
-            toolSelectedOperation.previousOperation!.results.length < 1 &&
+            toolSelectedOperation.previousOperation!.rounds.length < 1 &&
             toolSelectedOperation!.previousOperation!.previousOperation !== undefined
           ) {
             @if (toolSelectedOperation) {
               {{ toolSelectedOperation.name }}
             }
             :
-            {{ toolSelectedOperation!.previousOperation!.previousOperation!.results[0]!.attributes?.originalFileName }}
+            {{ toolSelectedOperation.previousOperation?.previousOperation?.lastRound?.lastResult?.attributes?.originalFileName }}
             , Language:
             @if (toolSelectedOperation.task && toolSelectedOperation.task.asrOperation.language !== undefined) {
               {{ toolSelectedOperation.task!.asrOperation.language }}

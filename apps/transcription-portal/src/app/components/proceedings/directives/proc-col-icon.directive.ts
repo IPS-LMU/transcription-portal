@@ -25,7 +25,6 @@ import { TaskService } from '../../../obj/tasks/task.service';
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
-  private taskService = inject(TaskService);
 
   @Input() entry?: Task | TaskDirectory;
   @Input() shortStyle = false;
@@ -71,8 +70,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   }
 
   ngAfterViewInit() {
-    if (!(this.entry === null || this.entry === undefined)) {
-    } else {
+    if (!this.entry) {
       throw new Error('ProcColDirective error: no entry set');
     }
   }
@@ -92,8 +90,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   };
 
   private updateView() {
-    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
-      if (!(this.entry === null || this.entry === undefined)) {
+    if (this.elementRef.nativeElement) {
+      if (this.entry) {
         this.clearContents();
         const wrapper: HTMLElement = this.renderer.createElement('div');
         this.renderer.addClass(wrapper, 'd-flex');
@@ -327,7 +325,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     type: string;
     label: string;
   } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
         label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,

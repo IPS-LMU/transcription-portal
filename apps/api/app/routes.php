@@ -344,27 +344,40 @@ return function (App $app) {
     $newFilePath = null;
 
     try {
-      $file = $uploadedFiles['file'];
-      $error = $file->getError();
-      if ($error === UPLOAD_ERR_OK) {
-        $filename = moveUploadedFile($directory, $file);
-        $newFilePath = $directory . DIRECTORY_SEPARATOR . $filename;
+      $file = !empty($uploadedFiles) ? $uploadedFiles['file'] : null;
+      $noError = empty($file) || $file->getError() === UPLOAD_ERR_OK;
+      if ($noError) {
+        $multipart = [
+          [
+            "name" => "inputtemplate",
+            "contents" => "InputWavFile"
+          ],
+        ];
 
-        $basename = pathinfo($file->getClientFilename(), PATHINFO_FILENAME);
-        $file = null;
+        $basename = "";
+        if (!empty($file)) {
+          $filename = moveUploadedFile($directory, $file);
+          $newFilePath = $directory . DIRECTORY_SEPARATOR . $filename;
+
+          $basename = pathinfo($file->getClientFilename(), PATHINFO_FILENAME);
+
+          $file = null;
+          $multipart[] = [
+            'name' => 'file',
+            'contents' => Utils::streamFor(fopen($newFilePath, 'r')),
+            'filename' => $basename . ".wav"
+          ];
+        } else if (!empty($data["url"])) {
+          $multipart[] = [
+            "name" => "url",
+            "contents" => $data["url"]
+          ];
+          $basename = $data["basename"];
+        }
+
         $asrResponse = $lstClient->request("POST", "asrservice/" . $data["projectName"] . "/input/" . $basename . ".wav", [
           'allow_redirects' => true,
-          'multipart' => [
-            [
-              "name" => "inputtemplate",
-              "contents" => "InputWavFile"
-            ],
-            [
-              'name' => 'file',
-              'contents' => Utils::streamFor(fopen($newFilePath, 'r')),
-              'filename' => $basename . ".wav"
-            ]
-          ]
+          'multipart' => $multipart
         ]);
 
         if (!empty($newFilePath)) {

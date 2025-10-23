@@ -9,7 +9,7 @@ import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { UploadOperation } from './upload-operation';
 
 export interface IASROperation extends IOperation {
@@ -40,12 +40,17 @@ export class ASROperation extends Operation {
     this.updateProtocol('');
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
-    this._time.start = Date.now();
+    const currentRound = this.lastRound!;
+    currentRound.time = {
+      start: Date.now(),
+    };
 
     if (this.serviceProvider) {
       try {
         let asrResult: FileInfo | undefined;
         if (this.serviceProvider.provider === 'LSTWhisperX') {
+          console.log('inputs');
+          console.log(inputs);
           asrResult = await this.callASRFromRadboud(httpclient, inputs[0], accessCode);
         } else {
           asrResult = await this.callASRFromBASWebservices(httpclient, inputs[0], accessCode);
@@ -57,7 +62,8 @@ export class ASROperation extends Operation {
               this.task?.operations[2]?.enabled === false &&
               this.task?.operations[3]?.name === 'MAUS' &&
               this.task?.operations[3]?.enabled === false) ||
-            this.task?.operations[3]?.name === 'SUMMARIZATION' || (!this.diarization?.enabled && this.serviceProvider.provider === "Google");
+            this.task?.operations[3]?.name === 'SUMMARIZATION' ||
+            (!this.diarization?.enabled && this.serviceProvider.provider === 'Google');
           // use G2P_CHUNKER only if Octra and Word alignment is disabled or summarization mode or if service provider is Google and diarization disabled
 
           try {
@@ -65,7 +71,7 @@ export class ASROperation extends Operation {
               asrResult = await this.callG2PChunker(AppSettings.getServiceInformation('BAS')!, httpclient, asrResult);
             }
 
-            this.time.duration = Date.now() - this.time.start;
+            this.time!.duration = Date.now() - this.time!.start;
 
             if (asrResult.file) {
               const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
@@ -73,7 +79,7 @@ export class ASROperation extends Operation {
               asrResult.attributes = {
                 originalFileName: `${name}${asrResult.extension}`,
               };
-              this.results.push(asrResult);
+              currentRound.results.push(asrResult);
               this.changeState(TaskStatus.FINISHED);
             } else {
               throw new Error('Missing result for ASR.');
@@ -87,7 +93,7 @@ export class ASROperation extends Operation {
       }
     } else {
       this.updateProtocol(this.protocol + '<br/>' + 'serviceProvider is undefined');
-      this.time.duration = Date.now() - this.time.start;
+      this.time!.duration = Date.now() - this.time!.start;
       this.changeState(TaskStatus.ERROR);
       console.error('serviceProvider is undefined');
     }
@@ -101,7 +107,6 @@ export class ASROperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state,
       undefined,
       this.serviceProvider,
       this.language,
@@ -115,21 +120,15 @@ export class ASROperation extends Operation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider),
       operationObj.language,
     );
     result.diarization = operationObj.diarization;
 
-    for (const resultObj of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.attributes = resultObj.attributes;
-      result.results.push(resultClass);
+    for (const roundObj of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(roundObj));
     }
-
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
 
     return result;
@@ -141,12 +140,11 @@ export class ASROperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._language = language;
     this._description =
       'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
@@ -160,7 +158,7 @@ export class ASROperation extends Operation {
         let url =
           this._commands[0]
             .replace('{{host}}', this.serviceProvider.host)
-            .replace('{{audioURL}}', this.previousOperation?.lastResult?.url ?? '')
+            .replace('{{audioURL}}', this.previousOperation?.lastRound?.lastResult?.url ?? '')
             .replace('{{asrType}}', this.serviceProvider.provider!)
             .replace('{{language}}', this.language!) + `&diarization=${this.diarization?.enabled ?? false}`;
 
@@ -195,13 +193,14 @@ export class ASROperation extends Operation {
                 const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
                 file
                   .updateContentFromURL(httpClient)
-                  .then(() => {
+                  .then((content) => {
                     // add messages to protocol
                     if (json.warnings !== '') {
                       this.updateProtocol(this.protocol + '<br/>' + json.warnings.replace('¶', ''));
                     } else if (json.output !== '') {
                       this.updateProtocol(this.protocol + '<br/>' + json.output.replace('¶', ''));
                     }
+
                     resolve(file);
                   })
                   .catch((error) => {
@@ -223,12 +222,12 @@ export class ASROperation extends Operation {
 
   private async callASRFromRadboud(httpClient: HttpClient, input: FileInfo, accessCode?: string): Promise<FileInfo> {
     if (this.serviceProvider) {
-      if (input.file) {
+      if (input) {
         // 1. Create a new project with unique ID
         const projectName = await this.createLSTASRProject(httpClient, this.serviceProvider);
         await wait(1);
         // 2. Upload files
-        await this.uploadFileToLST(input.file, httpClient, projectName, this.serviceProvider);
+        await this.uploadFileToLST(input, httpClient, projectName, this.serviceProvider);
 
         const res = await this.processASRLSTProject(httpClient, projectName, this.serviceProvider);
 
@@ -242,7 +241,7 @@ export class ASROperation extends Operation {
                   if (result.status === 'success' && result.body.status === 'finished') {
                     this.subscrManager.removeByTag('status check');
                     if (!result.body.errors) {
-                      this.time.duration = Date.now() - this.time.start;
+                      this.time!.duration = Date.now() - this.time!.start;
 
                       const outputFile = result.body.outputs.find((o: any) => o.template === 'SRT');
 
@@ -254,17 +253,23 @@ export class ASROperation extends Operation {
                         const importResult = srtConverter.import(
                           { name: input.name + '.srt', type: 'text/plain', content: outputFileText, encoding: 'utf-8' },
                           audioFile,
-                          {
-                            sortSpeakerSegments: true,
-                            speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
-                          },
+                          this.diarization?.enabled
+                            ? {
+                                sortSpeakerSegments: true,
+                                speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
+                              }
+                            : undefined,
                         );
+                        console.log('IMPORT RESULT');
+                        console.log(importResult);
 
                         if (importResult.annotjson) {
                           const parConverter = new PartiturConverter();
                           const partiturOutpt = parConverter.export(importResult.annotjson, audioFile);
 
                           if (partiturOutpt.file) {
+                            console.log('EXPORT RESULT');
+                            console.log(partiturOutpt);
                             const file = new File([partiturOutpt.file.content], partiturOutpt.file.name, { type: partiturOutpt.file.type });
                             resolve(new FileInfo(file.name, partiturOutpt.file.type, file.size, file));
                           }
@@ -276,7 +281,7 @@ export class ASROperation extends Operation {
                       reject(result.body.errorMessage);
                     }
 
-                    await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
+                    // await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
                   }
                 }
               },
@@ -314,7 +319,7 @@ export class ASROperation extends Operation {
           const url = this._commands[1]
             .replace('{{host}}', asrService.host)
             .replace('{{transcriptURL}}', asrURL)
-            .replace('{{audioURL}}', this.previousOperation?.lastResult?.url ?? '')
+            .replace('{{audioURL}}', this.previousOperation?.lastRound?.lastResult?.url ?? '')
             .replace('{{asrType}}', `${asrService.provider}`)
             .replace('{{language}}', this.language!);
 
@@ -432,10 +437,20 @@ export class ASROperation extends Operation {
     });
   }
 
-  private uploadFileToLST(file: File, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
+  private uploadFileToLST(file: FileInfo, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
-      formData.append('file', file, file.name);
+      if (file.file) {
+        // upload with file
+        formData.append('file', file.file, file.name);
+      } else if (file.url) {
+        // upload with URL
+        formData.append('url', file.url);
+        formData.append('basename', file.name);
+      } else {
+        reject(new Error('Missing file or URL for upload.'));
+        return;
+      }
       formData.append('projectName', projectName);
       this.subscrManager.add(
         httpClient.post(joinURL(serviceProvider.host, '/project/upload'), formData).subscribe({
@@ -500,11 +515,8 @@ export class ASROperation extends Operation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this.language,
       diarization: this.diarization,

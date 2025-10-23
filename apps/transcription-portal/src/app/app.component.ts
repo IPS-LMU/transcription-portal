@@ -1,13 +1,8 @@
-import { Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/core';
+import { Component, inject, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { AppInfo } from './app.info';
-import { ProceedingsComponent } from './components/proceedings/proceedings.component';
-import { ProtocolFooterComponent } from './components/protocol-footer/protocol-footer.component';
-import { ToolLoaderComponent } from './components/tool-loader/tool-loader.component';
-import { FirstModalComponent } from './modals/first-modal/first-modal.component';
-import { SplitModalComponent } from './modals/split-modal/split-modal.component';
 import { TaskService } from './obj/tasks/task.service';
 import { ANIMATIONS } from './shared/Animations';
 import { AppSettings } from './shared/app.settings';
@@ -29,15 +24,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   bugService = inject(BugReportService);
   settingsService = inject(SettingsService);
   private activeRoute = inject(ActivatedRoute);
-
   public test = 'inactive';
-  @ViewChild('fileinput') fileinput!: ElementRef;
-  @ViewChild('folderinput') folderinput!: ElementRef;
-  @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('splitModal', { static: true }) splitModal!: SplitModalComponent;
-  @ViewChild('firstModal', { static: true }) firstModal!: FirstModalComponent;
-  @ViewChild('protocolFooter') protocolFooter!: ProtocolFooterComponent;
-  @ViewChild('toolLoader', { static: true }) toolLoader!: ToolLoaderComponent;
 
   constructor() {
     super();

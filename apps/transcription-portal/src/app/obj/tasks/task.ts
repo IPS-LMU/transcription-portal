@@ -409,10 +409,10 @@ export class Task {
           );
 
           let files;
-          if (this.files.length > 0 && !(this.files[0].file === null || this.files[0].file === undefined)) {
+          if (this.files.length > 0 && this.files[0].file) {
             files = this.files;
           } else {
-            files = this.operations[0].results;
+            files = this.operations[0].lastRound!.results!;
           }
 
           this.operations[nextoperation].start(files, this.operations, httpclient, '');

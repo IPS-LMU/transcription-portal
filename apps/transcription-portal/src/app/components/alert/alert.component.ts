@@ -20,7 +20,7 @@ export interface AlertEntry {
   animations: ANIMATIONS,
   imports: [NgStyle, NgbAlert],
 })
-export class AlertComponent implements OnInit, OnDestroy {
+export class AlertComponent implements OnDestroy {
   private alert = inject(AlertService);
 
   private static counter = 0;
@@ -67,8 +67,6 @@ export class AlertComponent implements OnInit, OnDestroy {
       this.queue.push(entry);
     }
   }
-
-  ngOnInit(): void {}
 
   onClose(entry: AlertEntry) {
     entry.animation = 'closed';
