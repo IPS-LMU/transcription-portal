@@ -30,6 +30,7 @@ import { FirstModalComponent } from '../../modals/first-modal/first-modal.compon
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { StatisticsModalComponent } from '../../modals/statistics-modal/statistics-modal.component';
+import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { OCTRAOperation } from '../../obj/operations/octra-operation';
@@ -690,8 +691,18 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
   }
 
-  public onClearClick() {
-    this.storage.clearAll();
+  public async onClearClick() {
+    const ref = openModal<YesNoModalComponent>(this.ngbModalService, YesNoModalComponent, YesNoModalComponent.options, {
+      title: "Confirmation needed",
+      type: "danger",
+      message:
+        '<p class="text-center">Are you sure you want to clear all data? If you click on "yes" all data related to the TranscriptionPortal is permanently removed.</p>',
+    });
+    const result = await ref.result;
+
+    if (result === 'yes') {
+      this.storage.clearAll();
+    }
   }
 
   onStartClick() {
