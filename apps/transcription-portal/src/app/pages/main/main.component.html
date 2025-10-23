@@ -143,7 +143,7 @@
             </a>
           </li>
           <li class="nav-item active">
-            <div ngbDropdown class="d-inline-block" [ngbCollapse]="settingsCollapsed">
+            <div ngbDropdown class="d-inline-block" [ngbCollapse]="settingsCollapsed" (openChange)="onSettingsDropdownChange($event)">
               <div
                 class="pointer"
                 style="color: dimgray"
@@ -156,56 +156,64 @@
                 ><span class="d-lg-none d-xl-inline-block ms-1">Settings</span>
               </div>
               <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
-                <table style="width: 100%">
-                  <tbody>
-                    <tr>
-                      <td><i class="bi bi-key"></i></td>
-                      <td style="font-size: 0.9em">Access Code (for Google ASR only):</td>
-                    </tr>
-                    <tr>
-                      <td></td>
-                      <td>
-                        <div class="input-group mb-3" id="accessCodeGroup">
-                          <form>
-                            <input
-                              class="form-control"
-                              [(ngModel)]="taskService.accessCode"
-                              id="accessCode"
-                              name="accessCode"
-                              placeholder="Enter access code..."
-                              [type]="accessCodeInputFieldType"
-                            />
-                          </form>
-                          <div class="input-group-append">
-                            <span class="input-group-text" (click)="toggleAccessCodeInputType()">
-                              <i
-                                class="bi"
-                                [ngClass]="{
-                                  'bi-eye-slash': accessCodeInputFieldType === 'text',
-                                  'bi-eye': accessCodeInputFieldType === 'password',
-                                }"
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><i class="bi bi-layout-sidebar-inset"></i></td>
-                      <td>
-                        <span (click)="resetSideBarWidth()" style="cursor: pointer">Reset sidebar width</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding-top: 20px">
-                        <i class="bi bi-eraser" style="color: red"></i>
-                      </td>
-                      <td style="padding-top: 20px">
-                        <span (click)="onClearClick()" style="cursor: pointer; color: red">Clear all data</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="list-group">
+                  <div class="list-group-item border-0">
+                    <div class="divider-text"><span class="text-secondary">ASR</span></div>
+                  </div>
+                  <div class="list-group-item border-0 d-flex flex-column flex-auto">
+                    <div style="font-size: 0.9em"><i class="bi bi-key"></i> Access Code (for Google ASR only):</div>
+                    <div class="input-group" id="accessCodeGroup">
+                      <form class="d-flex flex-auto">
+                        <input
+                          class="form-control d-flex flex-auto"
+                          [(ngModel)]="taskService.accessCode"
+                          id="accessCode"
+                          name="accessCode"
+                          placeholder="Enter access code..."
+                          [type]="accessCodeInputFieldType"
+                        />
+                      </form>
+                      <div class="input-group-append">
+                        <span class="input-group-text" (click)="toggleAccessCodeInputType()">
+                          <i
+                            class="bi"
+                            [ngClass]="{
+                              'bi-eye-slash': accessCodeInputFieldType === 'text',
+                              'bi-eye': accessCodeInputFieldType === 'password',
+                            }"
+                          ></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item border-0">
+                    <div class="divider-text"><span class="text-secondary">User interface</span></div>
+                  </div>
+                  <div class="list-group-item border-0 pointer" (click)="resetSideBarWidth()">
+                    <i class="bi bi-layout-sidebar-inset me-1"></i> <span style="cursor: pointer">Reset sidebar width</span>
+                  </div>
+                  <div class="list-group-item border-0">
+                    <div class="divider-text my-2"><span class="text-secondary">Local Database</span></div>
+                  </div>
+                  <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
+                    <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> Backup Database
+                    @if (dbBackup.safeURL) {
+                      <p>
+                        <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"><i class="bi bi-cloud-download-fill"></i> Download</a>
+                      </p>
+                    }
+                  </div>
+                  <div class="list-group-item border-0 pointer">
+                    <input type="file" class="d-none" #restoreInput (change)="onRestoreFileSelected(restoreInput)">
+                    <div class="w-100" (click)="restoreInput.click();">
+                      <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> Restore Database
+                    </div>
+                  </div>
+                  <div class="list-group-item border-0 pointer" (click)="onClearClick()">
+                    <i class="bi bi-eraser me-1" style="color: red"></i>
+                    <span style="cursor: pointer; color: red">Clear all data</span>
+                  </div>
+                </div>
               </div>
             </div>
           </li>

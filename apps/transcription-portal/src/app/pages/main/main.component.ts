@@ -2,7 +2,7 @@ import { DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer } from '@angular/platform-browser';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
   NgbCollapse,
   NgbDropdown,
@@ -18,12 +18,12 @@ import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
+import { DateTime } from 'luxon';
 import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
 import { ProceedingsComponent } from '../../components/proceedings/proceedings.component';
-import { ProtocolFooterComponent } from '../../components/protocol-footer/protocol-footer.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
@@ -70,7 +70,7 @@ import { StorageService } from '../../storage.service';
     NgbDropdownToggle,
     NgbNavModule,
     NgbPopover,
-  ]
+  ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
   taskService = inject(TaskService);
@@ -98,6 +98,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   private blockLeaving = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
 
+  protected dbBackup: {
+    url?: string;
+    safeURL?: SafeUrl;
+    filename?: string;
+  } = {};
+
   private tabOrder = {
     annotation: 1,
     summarization: 2,
@@ -108,9 +114,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   sumProjectName = '';
 
   @ViewChild('fileinput') fileinput?: ElementRef;
-  @ViewChild('folderinput') folderinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
-  @ViewChild('protocolFooter') protocolFooter?: ProtocolFooterComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
 
   constructor() {
@@ -123,9 +127,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
           });
         }
       },
-    });
-    this.subscribe(this.taskService.errorscountchange, () => {
-      this.protocolFooter?.blop();
     });
 
     this.subscribe(
@@ -144,13 +145,15 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
           // idb loaded
           this.taskService.init();
-          this.taskService.importDBData({
-            annotationTasks,
-            summarizationTasks,
-            userSettings,
-          }).catch((error) => {
-            console.error(error);
-          });
+          this.taskService
+            .importDBData({
+              annotationTasks,
+              summarizationTasks,
+              userSettings,
+            })
+            .catch((error) => {
+              console.error(error);
+            });
           this.cd.markForCheck();
 
           this.storage.idbm.intern
@@ -265,10 +268,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   onFilesAddButtonClicked() {
     this.fileinput?.nativeElement.click();
-  }
-
-  onFoldersAddButtonClicked() {
-    this.folderinput?.nativeElement.click();
   }
 
   onFileChange($event: Event) {
@@ -789,5 +788,32 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   openAboutModal() {
     const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
     return ref.result;
+  }
+
+  async backupDatabase() {
+    this.dbBackup.url = await this.storage.backup();
+    this.dbBackup.safeURL = this.sanitizer.bypassSecurityTrustResourceUrl(this.dbBackup.url);
+    this.dbBackup.filename = `tportal_backup_${DateTime.now().toISO()}.idb`;
+  }
+
+  onSettingsDropdownChange(opened: boolean) {
+    if (!opened) {
+      if (this.dbBackup?.url) {
+        URL.revokeObjectURL(this.dbBackup.url);
+        this.dbBackup = {};
+      }
+    }
+  }
+
+  async onRestoreFileSelected(restoreInput: HTMLInputElement) {
+    if (restoreInput.files && restoreInput.files.length === 1) {
+      const blob = restoreInput.files.item(0);
+      if (blob) {
+        await this.storage.importBackup(blob);
+      }
+    }
+
+    restoreInput.files = null;
+    restoreInput.value = '';
   }
 }

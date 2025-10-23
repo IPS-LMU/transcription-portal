@@ -1,7 +1,8 @@
 import Dexie, { Table } from 'dexie';
+import { exportDB, importDB, importInto } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 import { IASROperation } from '../obj/operations/asr-operation';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -76,7 +77,7 @@ export class IndexedDBManager extends Dexie {
           summarizationWordLimit: undefined,
           summarizationProvider: '',
           translationLanguage: '',
-          diarization: false
+          diarization: false,
         } as IDBUserDefaultSettingsItemData,
       },
       'defaultUserSettings',
@@ -99,5 +100,17 @@ export class IndexedDBManager extends Dexie {
         value: AppInfo.version,
       },
     ]);
+  }
+
+  async backup() {
+    const blob = await exportDB(this);
+    return URL.createObjectURL(blob);
+  }
+
+  async importBackup(backupFile: Blob) {
+    await importInto(this, backupFile, {
+      clearTablesBeforeImport: true
+    });
+    document.location.reload();
   }
 }
