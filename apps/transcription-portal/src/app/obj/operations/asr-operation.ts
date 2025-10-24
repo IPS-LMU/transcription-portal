@@ -253,12 +253,10 @@ export class ASROperation extends Operation {
                         const importResult = srtConverter.import(
                           { name: input.name + '.srt', type: 'text/plain', content: outputFileText, encoding: 'utf-8' },
                           audioFile,
-                          this.diarization?.enabled
-                            ? {
-                                sortSpeakerSegments: true,
-                                speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
-                              }
-                            : undefined,
+                          this.diarization?.enabled ? {
+                            sortSpeakerSegments: true,
+                            speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
+                          } : undefined,
                         );
                         console.log('IMPORT RESULT');
                         console.log(importResult);
