@@ -1,7 +1,9 @@
-import Dexie, { Table } from 'dexie';
+import Dexie, { Table, Transaction } from 'dexie';
+import { exportDB, importDB, importInto } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 import { IASROperation } from '../obj/operations/asr-operation';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -98,10 +100,10 @@ export class IndexedDBManager extends Dexie {
               }
 
               operation.rounds = rounds;
-              delete (operation as any)["results"];
-              delete (operation as any)["protocol"];
-              delete (operation as any)["state"];
-              delete (operation as any)["time"];
+              delete (operation as any)['results'];
+              delete (operation as any)['protocol'];
+              delete (operation as any)['state'];
+              delete (operation as any)['time'];
             }
           });
       }
@@ -151,8 +153,8 @@ export class IndexedDBManager extends Dexie {
   }
 
   async importBackup(backupFile: Blob) {
-    await importInto(this, backupFile, {
-      clearTablesBeforeImport: true
+    await importDB(backupFile, {
+      name: this.name
     });
     document.location.reload();
   }

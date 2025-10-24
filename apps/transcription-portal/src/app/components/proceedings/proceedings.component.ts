@@ -163,9 +163,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.subscrManager.add(
       this.taskService.state.currentModeState.taskList?.entryChanged.subscribe({
         next: (event) => {
-          console.log(`${event.state} ${event.entry.type} ${event.entry.id}`);
           this.cd.markForCheck();
-          this.cd.detectChanges();
         },
       }),
     );

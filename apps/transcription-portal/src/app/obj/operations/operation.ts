@@ -470,12 +470,8 @@ export abstract class Operation {
   addProcessingRound() {
     this._rounds.push(
       new OperationProcessingRound({
-        time: {
-          start: Date.now(),
-        },
-        status: TaskStatus.PROCESSING,
+        status: TaskStatus.PENDING,
         results: [],
-        protocol: '',
       }),
     );
   }

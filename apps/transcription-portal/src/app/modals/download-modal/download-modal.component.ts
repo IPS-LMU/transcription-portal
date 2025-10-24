@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { FileInfo } from '@octra/web-media';
 import * as JSZip from 'jszip';
 import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
 import { EmuOperation } from '../../obj/operations/emu-operation';
-import { Operation } from '../../obj/operations/operation';
+import { Operation, OperationProcessingRound } from '../../obj/operations/operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
@@ -105,7 +104,9 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         const operation = task.operations[opIndex];
 
         if (operation.rounds.length > 0 && operation.state === TaskStatus.FINISHED) {
-          const result: FileInfo | undefined = operation.lastRound?.lastResult;
+          const lastRound: OperationProcessingRound | undefined = operation.lastRound;
+          const result = lastRound?.results?.find((a) => !a.isMediaFile());
+
           if (result?.file) {
             const originalName = result.attributes?.originalFileName ?? result.fullname;
 
@@ -120,7 +121,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
             const promise = new Promise<void>((resolve, reject) => {
               this.downloadService
-                .getConversionFiles(operation, result, selectedConverters)
+                .getConversionFiles(operation, lastRound!, selectedConverters)
                 .then((files) => {
                   files = files.filter((a) => a);
                   for (const fileInfo of files) {
@@ -292,7 +293,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
             promises.push(
               new Promise<void>((resolve2, reject2) => {
                 this.downloadService
-                  .getConversionFiles(operation, operation.lastRound?.lastResult, selectedConverters)
+                  .getConversionFiles(operation, operation.lastRound!, selectedConverters)
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
                     entries = entries.filter((a) => a);

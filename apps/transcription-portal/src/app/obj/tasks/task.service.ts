@@ -1258,6 +1258,7 @@ export class TaskService {
         for (let i = 0; i < affectedMode.operations.length; i++) {
           const operation = affectedMode.operations[i];
           task.operations[i].enabled = operation.enabled;
+          task.operations[i].addProcessingRound();
         }
 
         return [task];
@@ -1293,6 +1294,7 @@ export class TaskService {
         for (let i = 0; i < affectedMode.operations.length; i++) {
           const operation = affectedMode.operations[i];
           value.operations[i].enabled = operation.enabled;
+          value.operations[i].addProcessingRound();
         }
         content.push(value);
       } else {

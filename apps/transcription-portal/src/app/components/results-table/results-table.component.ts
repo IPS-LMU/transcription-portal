@@ -29,10 +29,10 @@ export class ResultsTableComponent implements OnChanges {
   somethingClicked = false;
 
   public convertedArray: {
-    input?: {
+    originalResults?: {
       url: SafeUrl;
       info: FileInfo;
-    };
+    }[];
     number: number;
     conversions: {
       converter: {
@@ -99,7 +99,9 @@ export class ResultsTableComponent implements OnChanges {
       }
     };
     this.convertedArray.forEach((v) => {
-      revokeURLIfNeeded((v.input?.url as any)?.changingThisBreaksApplicationSecurity);
+      v.originalResults?.forEach((a) => {
+        revokeURLIfNeeded((a.url as any)?.changingThisBreaksApplicationSecurity);
+      });
       v.conversions.forEach((s) => {
         revokeURLIfNeeded(s.result.url);
       });
@@ -115,8 +117,8 @@ export class ResultsTableComponent implements OnChanges {
       if (this.operation.resultType !== '.wav') {
         const promises: Promise<FileInfo[]>[] = [];
 
-        for (const result of this.operation.rounds) {
-          promises.push(this.downloadService.getConversionFiles(this.operation, this.operation.lastRound?.lastResult, this.converters));
+        for (const round of this.operation.rounds) {
+          promises.push(this.downloadService.getConversionFiles(this.operation, round, this.converters));
         }
 
         // read all file contents of results
@@ -162,7 +164,7 @@ export class ResultsTableComponent implements OnChanges {
                   }
 
                   const convElem = {
-                    input: resultObj,
+                    originalResults: [resultObj],
                     conversions: [] as any[],
                     number: j,
                   };
@@ -221,12 +223,12 @@ export class ResultsTableComponent implements OnChanges {
           });
       } else {
         for (let i = 0; i < this.operation.rounds.length; i++) {
-          const result = this.operation.rounds[i];
+          const round = this.operation.rounds[i];
           this.convertedArray.push({
-            input: {
-              url: result.lastResult?.url ?? '',
-              info: result.lastResult!,
-            },
+            originalResults: round.results.map((a) => ({
+              url: a.url ?? '',
+              info: a,
+            })),
             conversions: [],
             number: i,
           });
