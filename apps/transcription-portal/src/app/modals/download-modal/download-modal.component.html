@@ -10,7 +10,7 @@
   <p>Please notice, that only the latest results are inserted to the package.</p>
   <p>Add conversions (optional):</p>
   <div>
-    @for (conversion of converters; track conversion; let i = $index) {
+    @for (conversion of converters; track conversion.obj.name; let i = $index) {
       <div class="conversion">
         <input
           (change)="state = 'inactive'; archiveURL = ''"

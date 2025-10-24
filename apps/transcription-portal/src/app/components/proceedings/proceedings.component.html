@@ -16,7 +16,7 @@
 >
   @if (popover.operation !== undefined) {
     @if (popover.operation.time && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
-      @if (popover.operation.lastRound !== undefined && !popover.operation.lastRound.lastResult?.available) {
+      @if (popover.operation.isFinished && !popover.operation.lastRound?.lastResult?.available) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">
@@ -29,7 +29,7 @@
         </div>
       </div>
     }
-    @if (popover.operation.rounds.length === 0 && popover.operation.serviceProvider !== undefined) {
+    @if (popover.operation.state === 'PROCESSING' && popover.operation.serviceProvider !== undefined) {
       <div class="service-preview">
         <div class="provided-by">Service provided by</div>
         <a [href]="popover.operation.serviceProvider.homepageURL" style="display: block; vertical-align: middle" target="_blank">
@@ -49,8 +49,7 @@
         </ul>
       </div>
       <div class="clearfix"></div>
-    }
-    @if (popover.operation.rounds.length > 0) {
+    } @else if (popover.operation.rounds.length > 0) {
       <div style="overflow: hidden">
         <tportal-results-table
           #resultsTableComponent
@@ -225,7 +224,7 @@
             }
           </th>
           <th style="width: 20%">File</th>
-          @for (operation of operations; track operation; let i = $index) {
+          @for (operation of operations; track operation.id; let i = $index) {
             <ng-container style="text-align: center">
               <th
                 (mousemove)="updateChanges()"
@@ -283,7 +282,7 @@
         <tr class="subTableHeader">
           <th style="width: 15px; padding-right: 0; text-align: center"></th>
           <th style="width: 20%"></th>
-          @for (operation of operations; track operation; let i = $index) {
+          @for (operation of operations; track operation.id; let i = $index) {
             <ng-container style="text-align: center">
               @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
                 <th
@@ -356,7 +355,7 @@
         >
         </tportal-context-menu>
         @if (taskList !== undefined) {
-          @for (entry of taskList.entries; track entry; let i = $index) {
+          @for (entry of taskList.entries; track entry.id; let i = $index) {
             <tr
               [entry]="entry"
               [rowSelected]="isEntrySelected(entry)"
@@ -387,7 +386,7 @@
               ></td>
               <!-- Task operations-->
               @if (entry.type === 'task') {
-                @for (operation of getTask(entry)!.operations; track operation; let opIndex = $index) {
+                @for (operation of getTask(entry)!.operations; track operation.id; let opIndex = $index) {
                   <td
                     (click)="onRowSelected(entry, operation)"
                     (mousedown)="onOperationClick($event, operation)"
@@ -416,7 +415,7 @@
                 </td>
               }
               @if (entry.type === 'folder') {
-                @for (operation of taskService.state.currentModeState.operations; track operation; let opIndex = $index) {
+                @for (operation of taskService.state.currentModeState.operations; track operation.id; let opIndex = $index) {
                   <td (click)="onRowSelected(entry)">
                     <div class="progress">
                       <div
@@ -442,7 +441,7 @@
             </tr>
             @if (entry.type === 'folder') {
               <!-- folder row -->
-              @for (dirEntry of getTaskDirEntries(entry); track dirEntry) {
+              @for (dirEntry of getTaskDirEntries(entry); track dirEntry.id) {
                 <tr
                   [@fadeToggleRow]="nameCol.dirOpened"
                   [entry]="dirEntry"
@@ -464,7 +463,7 @@
                     [shortStyle]="shortstyle"
                     tportalProcColIcon
                   ></td>
-                  @for (operation of dirEntry.operations; track operation) {
+                  @for (operation of dirEntry.operations; track operation.id) {
                     <td
                       (click)="onRowSelected(dirEntry, operation)"
                       (mousedown)="onOperationClick($event, operation)"
@@ -490,7 +489,7 @@
           }
         }
         <!-- Queue rows -->
-        @for (entry of queue; track entry; let i = $index) {
+        @for (entry of queue; track entry.id; let i = $index) {
           @if (entry.file !== undefined) {
             <tr style="cursor: pointer">
               @if (getDirEntriesFromItem(entry).length === 0) {
@@ -510,7 +509,7 @@
               }
             </tr>
           }
-          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry) {
+          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.fullname) {
             <tr>
               <td>
                 <div class="d-flex">

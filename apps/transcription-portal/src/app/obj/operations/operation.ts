@@ -100,22 +100,8 @@ export abstract class Operation {
   static counter = 0;
   public abstract resultType?: string;
   public mouseover = false;
-  public changed: Subject<void> = new Subject<void>();
+  public changes$: Subject<Operation> = new Subject<Operation>();
   private readonly _shortTitle: string | undefined;
-  private statesubj: Subject<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }> = new Subject<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }>();
-  public statechange: Observable<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }> = this.statesubj.asObservable();
   private readonly _id: number;
 
   protected subscrManager = new SubscriptionManager();
@@ -292,7 +278,7 @@ export abstract class Operation {
 
   set enabled(value: boolean) {
     this._enabled = value;
-    this.changed.next();
+    this.changes$.next(this);
   }
 
   public getStateIcon = (sanitizer: DomSanitizer, state: TaskStatus): SafeHtml => {
@@ -364,11 +350,7 @@ export abstract class Operation {
     this.state = state;
 
     if (oldstate !== state) {
-      this.statesubj.next({
-        opID: this.id,
-        oldState: oldstate,
-        newState: state,
-      });
+      this.changes$.next(this);
     }
 
     // check if there is any runable operation after this one.
@@ -474,6 +456,16 @@ export abstract class Operation {
         results: [],
       }),
     );
+  }
+
+  removeRoundsByIndex(start: number, length: number) {
+    this._rounds.splice(start, length);
+    this.changes$.next(this);
+  }
+
+  removeResultsByIndex(roundIndex: number, start: number, length: number) {
+    this._rounds[roundIndex].results.splice(start, length);
+    this.changes$.next(this);
   }
 }
 

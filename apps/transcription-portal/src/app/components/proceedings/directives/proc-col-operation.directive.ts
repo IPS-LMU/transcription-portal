@@ -68,13 +68,13 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     // listen to operation changes because these are not detected by default
     if (this.operation) {
       this.subscrmanager.add(
-        this.operation.statechange.subscribe(() => {
+        this.operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
 
       this.subscrmanager.add(
-        this.operation.changed.subscribe(() => {
+        this.operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
@@ -82,19 +82,15 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private updateView() {
-    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
+    if (this.elementRef.nativeElement) {
       this.clearContents();
 
       if (this.entry) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
         if (this.operation) {
-          if (
-            this.operation.state === 'FINISHED' &&
-            this.operation.rounds.length > 0 &&
-            this.operation.lastRound &&
-            !this.operation.lastRound.lastResult?.available
-          ) {
+          const anyResultNotAvailable = this.operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
+          if (this.operation.state === 'FINISHED' && anyResultNotAvailable) {
             // result is not available
             const icon = this.renderer.createElement('i');
 

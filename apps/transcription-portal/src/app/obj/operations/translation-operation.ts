@@ -3,13 +3,12 @@ import { convertFromSupportedConverters, ImportResult, TextConverter } from '@oc
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { wait } from '@octra/utilities';
-import { FileInfo, readFileContents } from '@octra/web-media';
+import { AudioInfo, FileInfo, readFileContents } from '@octra/web-media';
 import { AppInfo } from '../../app.info';
 import { AppSettings } from '../../shared/app.settings';
 import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
-import { UploadOperation } from './upload-operation';
 
 export interface ITranslationOperation extends IOperation {
   language?: string;
@@ -27,7 +26,9 @@ export class TranslationOperation extends Operation {
   }
 
   public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
+    if (this.lastRound?.lastResult) {
+      this.addProcessingRound();
+    }
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
     this.time = {
@@ -36,7 +37,7 @@ export class TranslationOperation extends Operation {
 
     let lastResult: FileInfo | undefined;
     const currentRound = this.lastRound!;
-    const audioinfo = (operations[0] as UploadOperation).wavFile;
+    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as AudioInfo;
 
     if (operations[3].enabled) {
       lastResult = operations[3].lastRound?.lastResult;
@@ -84,8 +85,6 @@ export class TranslationOperation extends Operation {
         }
 
         const result = await this.getTranslation(httpclient, content);
-        console.log('TRANSLATION RESULT');
-        console.log(result);
         this.time.duration = Date.now() - this.time.start;
         currentRound.results.push(
           new FileInfo(

@@ -4,9 +4,9 @@ import { AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized } from '@octra/w
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { AudioFileInfoSerialized, IDBTaskItem } from '../../indexedDB';
 import { OHCommand } from '../oh-config';
+import { ASROperation } from '../operations/asr-operation';
 import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
 import { TaskEntry } from './task-entry';
-import { ASROperation } from '../operations/asr-operation';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -23,16 +23,7 @@ export enum TaskStatus {
 export class Task {
   public fileschange: Subject<void> = new Subject<void>();
   public mouseover = false;
-  private opstatesubj = new ReplaySubject<{
-    opID: number;
-    oldState: TaskStatus | undefined;
-    newState: TaskStatus;
-  }>();
-  public opstatechange: Observable<{
-    opID: number;
-    oldState: TaskStatus | undefined;
-    newState: TaskStatus;
-  }> = this.opstatesubj.asObservable();
+  public readonly operationChanges$ = new ReplaySubject<Operation>();
   private statesubj = new ReplaySubject<{
     oldState: TaskStatus | undefined;
     newState: TaskStatus;
@@ -334,24 +325,22 @@ export class Task {
 
   protected listenToOperationChanges() {
     for (const operation of this._operations) {
-      const subscription = operation.statechange.subscribe((event) => {
-        if (event.newState === TaskStatus.ERROR) {
-          this.changeState(TaskStatus.ERROR);
-        }
-
-        this.opstatesubj.next({
-          opID: operation.id,
-          oldState: event.oldState,
-          newState: event.newState,
-        });
-
-        if (event.newState === TaskStatus.FINISHED) {
-          if (operation.nextOperation === null || operation.nextOperation === undefined) {
-            this.changeState(TaskStatus.FINISHED);
+      const subscriptionID = this.subscrmanager.add(
+        operation.changes$.subscribe((event) => {
+          if (event.state === TaskStatus.ERROR) {
+            this.changeState(TaskStatus.ERROR);
           }
-          subscription.unsubscribe();
-        }
-      });
+
+          this.operationChanges$.next(event);
+
+          if (event.isFinished) {
+            if (operation.nextOperation) {
+              this.changeState(TaskStatus.FINISHED);
+            }
+            this.subscrmanager.removeById(subscriptionID);
+          }
+        }),
+      );
     }
   }
 
@@ -392,20 +381,22 @@ export class Task {
           } else {
             this.changeState(TaskStatus.PROCESSING);
           }
-          const subscription = this.operations[nextoperation].statechange.subscribe(
-            (event) => {
-              if (event.newState === TaskStatus.FINISHED) {
-                subscription.unsubscribe();
-                this.startNextOperation(httpclient, accessCodes);
-              } else {
-                if (event.newState === TaskStatus.READY) {
-                  this.changeState(TaskStatus.READY);
+          const subscriptionID = this.subscrmanager.add(
+            this.operations[nextoperation].changes$.subscribe({
+              next: (changedOperation) => {
+                if (changedOperation.isFinished) {
+                  this.subscrmanager.removeById(subscriptionID);
+                  this.startNextOperation(httpclient, accessCodes);
+                } else {
+                  if (changedOperation.state === TaskStatus.READY) {
+                    this.changeState(TaskStatus.READY);
+                  }
                 }
-              }
-            },
-            (error) => {
-              console.error(error);
-            },
+              },
+              error: (error: any) => {
+                console.error(error);
+              },
+            }),
           );
 
           let files;
@@ -415,7 +406,11 @@ export class Task {
             files = this.operations[0].lastRound!.results!;
           }
 
-          this.operations[nextoperation].start(files, this.operations, httpclient, '');
+          if (!['OCTRA', 'Emu WebApp'].includes(this.operations[nextoperation].name)) {
+            this.operations[nextoperation].start(files, this.operations, httpclient, '');
+          } else {
+            this.operations[nextoperation].changeState(TaskStatus.READY);
+          }
         }
       }
     } else {

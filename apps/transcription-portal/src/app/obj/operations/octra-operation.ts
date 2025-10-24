@@ -31,12 +31,8 @@ export class OCTRAOperation extends ToolOperation {
 
   public override resultType = 'BAS Partitur Format';
 
-  protected operations: Operation[] | undefined;
-
   public override start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
-    this.operations = operations;
-    this.changeState(TaskStatus.READY);
+    throw new Error("Octra will not be started automatically.")
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
@@ -130,32 +126,22 @@ export class OCTRAOperation extends ToolOperation {
   }
 
   public override async getToolURL(httpClient: HttpClient): Promise<string> {
-    if (
-      this.operations &&
-      !(
-        (this.operations[0] as unknown as UploadOperation).wavFile === null ||
-        (this.operations[0] as unknown as UploadOperation).wavFile === undefined
-      ) &&
-      this.task
-    ) {
+    const wavFile = this.task ? (this.task?.operations[0] as UploadOperation)?.wavFile : undefined;
+    if (wavFile?.online && wavFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
-      const audio_url = encodeURIComponent((this.operations[0] as any)?.wavFile?.url) as string;
-      const audio_name = (this.operations[0] as unknown as UploadOperation)?.wavFile?.fullname;
+      const audio_url = encodeURIComponent(wavFile.url);
+      const audio_name = wavFile.fullname;
       let transcript: string | undefined;
       const embedded = `1`;
       const host = encodeURIComponent(serviceProvider.host);
 
       let transcriptFile: FileInfo | undefined = undefined;
 
-      if (this.rounds.length < 1 && this.previousOperation) {
+      if (!this.lastRound?.lastResult && this.previousOperation) {
         // no results, but previousOperation exists
-        if (this.previousOperation.rounds.length > 0 && this.previousOperation.lastRound) {
+        if (this.previousOperation.lastRound?.lastResult) {
           transcriptFile = this.previousOperation.lastRound?.lastResult;
-        } else if (
-          this.previousOperation.previousOperation &&
-          this.previousOperation.previousOperation.lastRound &&
-          this.previousOperation.previousOperation.rounds.length > 1
-        ) {
+        } else if (this.previousOperation.previousOperation?.lastRound?.lastResult) {
           transcriptFile = this.previousOperation.previousOperation.lastRound?.lastResult;
         }
       } else if (this.lastRound) {
@@ -165,7 +151,7 @@ export class OCTRAOperation extends ToolOperation {
       if (transcriptFile && transcriptFile?.file) {
         if (transcriptFile.extension === '.par') {
           const task = this.task;
-          const auiofile = task.files.find((a) => a.type.includes('audio')) as AudioInfo;
+          const auiofile = task?.files.find((a) => a.type.includes('audio')) as AudioInfo;
           const content = await readFileContents<string>(transcriptFile.file, 'text', 'utf-8');
           const importResult = new PartiturConverter().import(
             {

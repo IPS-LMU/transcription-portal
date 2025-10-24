@@ -49,8 +49,6 @@ export class ASROperation extends Operation {
       try {
         let asrResult: FileInfo | undefined;
         if (this.serviceProvider.provider === 'LSTWhisperX') {
-          console.log('inputs');
-          console.log(inputs);
           asrResult = await this.callASRFromRadboud(httpclient, inputs[0], accessCode);
         } else {
           asrResult = await this.callASRFromBASWebservices(httpclient, inputs[0], accessCode);
@@ -258,16 +256,11 @@ export class ASROperation extends Operation {
                             speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
                           } : undefined,
                         );
-                        console.log('IMPORT RESULT');
-                        console.log(importResult);
-
                         if (importResult.annotjson) {
                           const parConverter = new PartiturConverter();
                           const partiturOutpt = parConverter.export(importResult.annotjson, audioFile);
 
                           if (partiturOutpt.file) {
-                            console.log('EXPORT RESULT');
-                            console.log(partiturOutpt);
                             const file = new File([partiturOutpt.file.content], partiturOutpt.file.name, { type: partiturOutpt.file.type });
                             resolve(new FileInfo(file.name, partiturOutpt.file.type, file.size, file));
                           }

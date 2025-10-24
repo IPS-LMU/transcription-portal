@@ -90,7 +90,7 @@ export class DownloadService {
           if (!operation.task) {
             throw new Error('operation task is undefined');
           }
-          const audioinfo = operation.task.files[0] as AudioInfo;
+          const audioinfo = operation.task.files.find(a => a.isMediaFile()) as AudioInfo;
 
           audiofile.duration = audioinfo.duration.samples;
           audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;

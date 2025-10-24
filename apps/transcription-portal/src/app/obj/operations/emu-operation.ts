@@ -12,8 +12,6 @@ import { UploadOperation } from './upload-operation';
 export type IEmuWebAppOperation = IOperation;
 
 export class EmuOperation extends ToolOperation {
-  protected operations?: Operation[];
-
   public constructor(
     name: string,
     commands: string[],
@@ -33,9 +31,7 @@ export class EmuOperation extends ToolOperation {
   public override resultType = 'AnnotJSON';
 
   public override start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
-    this.operations = operations;
-    this.changeState(TaskStatus.READY);
+    throw new Error("Octra will not be started automatically.")
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {

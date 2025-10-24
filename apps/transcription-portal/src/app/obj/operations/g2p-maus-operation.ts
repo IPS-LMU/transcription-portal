@@ -25,7 +25,9 @@ export class G2pMausOperation extends Operation {
 
   public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
-      this.updateProtocol('');
+      if (this.lastRound?.lastResult) {
+        this.addProcessingRound();
+      }
       this.changeState(TaskStatus.PROCESSING);
       this.time = {
         start: Date.now(),

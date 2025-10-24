@@ -3,13 +3,12 @@ import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
-import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
+import { AudioInfo, downloadFile, FileInfo, readFileContents } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
-import { UploadOperation } from './upload-operation';
 
 export interface ISummarizationOperation extends IOperation {
   language?: string;
@@ -29,7 +28,9 @@ export class SummarizationOperation extends Operation {
   maxNumberOfWords?: number;
 
   public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
+    if (this.lastRound?.lastResult) {
+      this.addProcessingRound();
+    }
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
     this.time = {
@@ -38,7 +39,7 @@ export class SummarizationOperation extends Operation {
 
     const currentRound = this.lastRound!;
     const transcriptFile = operations[2].enabled ? operations[2].lastRound?.lastResult : operations[1].lastRound?.lastResult;
-    const audioinfo = (operations[0] as UploadOperation).wavFile;
+    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as AudioInfo;
 
     if (transcriptFile?.file && audioinfo) {
       let transcript = '';

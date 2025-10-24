@@ -217,8 +217,8 @@ export class StorageService {
     this.subscrmanager.destroy();
   }
 
-  public clearAll() {
-    this._idbm.delete({
+  public async clearAll() {
+    await this._idbm.delete({
       disableAutoOpen: true,
     });
     window.location.reload();

@@ -1,9 +1,9 @@
 import Dexie, { Table, Transaction } from 'dexie';
-import { exportDB, importDB, importInto } from 'dexie-export-import';
+import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
 import { IASROperation } from '../obj/operations/asr-operation';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -49,12 +49,33 @@ export class IndexedDBManager extends Dexie {
         summarization_tasks: 'id, type, state, folderPath, asrLanguage, asrProvider, mausLanguage, files, operations',
         userSettings: 'name, value',
       })
-      .upgrade((transaction) => {
-        transaction
+      .upgrade(async (transaction) => {
+        await transaction
           .table('tasks')
           .toArray()
           .then((tasks: IDBTaskItem[]) => {
             return transaction.table('annotation_tasks').bulkAdd(tasks);
+          });
+        await transaction
+          .table<IDBTaskItem, number>('annotation_tasks')
+          .toCollection()
+          .modify((task: any) => {
+            (task as IDBTaskItem).operations[0].serviceProvider = 'BAS';
+            if (task.asrLanguage) {
+              ((task as IDBTaskItem).operations[1] as IASROperation).language = task.asrLanguage;
+            }
+
+            if (task.asrProvider) {
+              ((task as IDBTaskItem).operations[1] as IASROperation).serviceProvider = task.asrProvider;
+            }
+
+            (task as IDBTaskItem).operations[2].serviceProvider = 'BAS';
+
+            if (task.mausLanguage) {
+              ((task as IDBTaskItem).operations[3] as IASROperation).language = task.asrLanguage;
+            }
+
+            (task as IDBTaskItem).operations[4].serviceProvider = 'BAS';
           });
       });
     // remove old tasks table
@@ -89,17 +110,41 @@ export class IndexedDBManager extends Dexie {
                 });
               } else {
                 // other operation: each results is equal to one round
-                for (const result of (operation as any).results) {
+                for (let i = 0; i < (operation as any).results.length; i++) {
+                  const result = (operation as any).results[i];
+                  const time = i === (operation as any).results.length - 1 ? (operation as any).time : undefined;
+
                   rounds.push({
                     protocol: (operation as any).protocol,
                     results: [result],
                     status: (operation as any).state,
-                    time: (operation as any).time,
+                    time,
                   });
                 }
               }
 
-              operation.rounds = rounds;
+              operation.rounds =
+                rounds.length > 0
+                  ? rounds
+                  : [
+                      {
+                        results: [],
+                        status: (operation as any).state,
+                      },
+                    ];
+
+              if (!operation.serviceProvider) {
+                if (operation.name === 'Translation') {
+                  operation.serviceProvider = 'LibreTranslate';
+                } else if (operation.name === 'Summarization') {
+                  operation.serviceProvider = 'LSTSummarization';
+                } else if (['Upload', 'OCTRA', 'Emu WebApp'].includes(operation.name)) {
+                  operation.serviceProvider = 'BAS';
+                } else if (operation.name === 'MAUS') {
+                  operation.serviceProvider = 'BAS';
+                }
+              }
+
               delete (operation as any)['results'];
               delete (operation as any)['protocol'];
               delete (operation as any)['state'];
@@ -153,8 +198,11 @@ export class IndexedDBManager extends Dexie {
   }
 
   async importBackup(backupFile: Blob) {
+    await this.delete({
+      disableAutoOpen: true,
+    });
     await importDB(backupFile, {
-      name: this.name
+      name: this.name,
     });
     document.location.reload();
   }

@@ -136,7 +136,7 @@ export class UploadOperation extends Operation {
             if (obj.type === 'progress') {
               this.progress = obj.progress!;
               this.updateEstimatedEnd();
-              this.changed.next();
+              this.changes$.next(this);
             } else if (obj.type === 'loadend') {
               currentRound.time!.duration = Date.now() - this.time!.start;
 
@@ -157,7 +157,12 @@ export class UploadOperation extends Operation {
                     await info.updateContentFromURL(httpclient);
                   }
 
-                  currentRound.results.push(info);
+                  const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
+                  if (existingIndex > -1) {
+                    currentRound.results[existingIndex] = info;
+                  } else {
+                    currentRound.results.push(info);
+                  }
                 }
                 this.changeState(TaskStatus.FINISHED);
               } else {

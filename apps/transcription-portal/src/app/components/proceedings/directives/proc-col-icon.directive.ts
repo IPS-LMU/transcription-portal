@@ -15,7 +15,6 @@ import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
 import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
-import { TaskService } from '../../../obj/tasks/task.service';
 
 @Directive({
   selector: '[tportalProcColIcon]',
