@@ -254,10 +254,10 @@ export class ASROperation extends Operation {
                         const importResult = srtConverter.import(
                           { name: input.name + '.srt', type: 'text/plain', content: outputFileText, encoding: 'utf-8' },
                           audioFile,
-                          {
+                          this.diarization?.enabled ? {
                             sortSpeakerSegments: true,
                             speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
-                          },
+                          } : undefined,
                         );
 
                         if (importResult.annotjson) {
