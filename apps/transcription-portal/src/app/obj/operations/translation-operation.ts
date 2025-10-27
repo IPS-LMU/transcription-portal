@@ -9,6 +9,7 @@ import { AppSettings } from '../../shared/app.settings';
 import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
+import { ASROperation } from './asr-operation';
 
 export interface ITranslationOperation extends IOperation {
   language?: string;
@@ -154,14 +155,16 @@ export class TranslationOperation extends Operation {
 
   private async getTranslation(httpClient: HttpClient, text: string) {
     return new Promise<any>((resolve, reject) => {
-      let source = 'en';
+      let source: string | undefined = 'en';
       if (this.task?.operations && this.language) {
         if (this.task?.operations[3].enabled) {
           // Summarization operation
           source = 'en';
-        } else {
+        } else if((this.task.operations[1] as ASROperation).language) {
           // ASR operation
-          source = convertISO639Language(this.language);
+          source = convertISO639Language((this.task.operations[1] as ASROperation).language!);
+        } else {
+          source = "en";
         }
       }
 
