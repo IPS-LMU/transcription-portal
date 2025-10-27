@@ -552,31 +552,40 @@ export class TaskService {
         }
       } else {
         const taskDir = TaskDirectory.fromAny(taskObj, AppSettings.configuration.api.commands, this.state.modes[mode].operations);
+        let saveDir = false;
 
         for (const taskElem of taskDir.entries) {
           const task = taskElem as Task;
           for (const operation of task.operations) {
             for (const opRound of operation.rounds) {
               for (const opResult of opRound.results) {
-                if (opResult.url) {
+                if (opResult.url && opResult.online) {
                   try {
                     opResult.online = true;
+                    await this.existsFile(opResult.url);
 
                     if ((opResult.file === null || opResult.file === undefined) && opResult.extension.indexOf('wav') < 0) {
                       try {
                         await opResult.updateContentFromURL(this.httpclient);
-                        // TODO minimize task savings
-                        await this.storage.saveTask(task, mode);
+                        saveDir = true;
                       } catch (e) {
                         console.error(e);
                       }
                     }
                   } catch (e) {
                     opResult.online = false;
+                    saveDir = true;
                   }
+                } else {
+                  opResult.online = false;
+                  saveDir = true;
                 }
               }
             }
+          }
+
+          if (saveDir) {
+            await this.storage.saveTask(taskDir, mode);
           }
         }
 

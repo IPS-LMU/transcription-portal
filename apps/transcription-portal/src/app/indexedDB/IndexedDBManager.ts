@@ -3,13 +3,13 @@ import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
 import { IASROperation } from '../obj/operations/asr-operation';
 import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
   intern!: Table<IDBInternItem, string>;
-  annotation_tasks!: Table<IDBTaskItem, number>;
-  summarization_tasks!: Table<IDBTaskItem, number>;
+  annotation_tasks!: Table<IDBTaskItem | IDBFolderItem, number>;
+  summarization_tasks!: Table<IDBTaskItem | IDBFolderItem, number>;
 
   constructor(dbname: string) {
     super(dbname);
@@ -28,15 +28,25 @@ export class IndexedDBManager extends Dexie {
         transaction
           .table('tasks')
           .toCollection()
-          .modify((task: IDBTaskItem) => {
-            if (Object.keys(task).includes('asr')) {
-              task.operations[1].serviceProvider = (task as any)['asr'];
-              delete (task as any)['asr'];
-            }
+          .modify((entry: IDBTaskItem | IDBFolderItem) => {
+            const changeTask = (task: IDBTaskItem) => {
+              if (Object.keys(task).includes('asr')) {
+                task.operations[1].serviceProvider = (task as any)['asr'];
+                delete (task as any)['asr'];
+              }
 
-            if (Object.keys(task).includes('language')) {
-              (task.operations[1] as IASROperation).language = (task as any)['language'];
-              delete (task as any)['language'];
+              if (Object.keys(task).includes('language')) {
+                (task.operations[1] as IASROperation).language = (task as any)['language'];
+                delete (task as any)['language'];
+              }
+            };
+
+            if (entry.type === 'task') {
+              changeTask(entry);
+            } else {
+              for (const task of (entry as IDBFolderItem).entries) {
+                changeTask(task);
+              }
             }
           });
       });
@@ -59,23 +69,33 @@ export class IndexedDBManager extends Dexie {
         await transaction
           .table<IDBTaskItem, number>('annotation_tasks')
           .toCollection()
-          .modify((task: any) => {
-            (task as IDBTaskItem).operations[0].serviceProvider = 'BAS';
-            if (task.asrLanguage) {
-              ((task as IDBTaskItem).operations[1] as IASROperation).language = task.asrLanguage;
+          .modify((entry: IDBTaskItem | IDBFolderItem) => {
+            const changeTask = (task: any) => {
+              (task as IDBTaskItem).operations[0].serviceProvider = 'BAS';
+              if (task.asrLanguage) {
+                ((task as IDBTaskItem).operations[1] as IASROperation).language = task.asrLanguage;
+              }
+
+              if (task.asrProvider) {
+                ((task as IDBTaskItem).operations[1] as IASROperation).serviceProvider = task.asrProvider;
+              }
+
+              (task as IDBTaskItem).operations[2].serviceProvider = 'BAS';
+
+              if (task.mausLanguage) {
+                ((task as IDBTaskItem).operations[3] as IASROperation).language = task.asrLanguage;
+              }
+
+              (task as IDBTaskItem).operations[4].serviceProvider = 'BAS';
+            };
+
+            if (entry.type === 'task') {
+              changeTask(entry);
+            } else {
+              for (const task of (entry as any).entries) {
+                changeTask(task);
+              }
             }
-
-            if (task.asrProvider) {
-              ((task as IDBTaskItem).operations[1] as IASROperation).serviceProvider = task.asrProvider;
-            }
-
-            (task as IDBTaskItem).operations[2].serviceProvider = 'BAS';
-
-            if (task.mausLanguage) {
-              ((task as IDBTaskItem).operations[3] as IASROperation).language = task.asrLanguage;
-            }
-
-            (task as IDBTaskItem).operations[4].serviceProvider = 'BAS';
           });
       });
     // remove old tasks table
@@ -95,60 +115,70 @@ export class IndexedDBManager extends Dexie {
         await transaction
           .table<IDBTaskItem, number>(affectedTableName)
           .toCollection()
-          .modify((task: IDBTaskItem) => {
-            // wrap results with ProceedingRounds
-            for (const operation of task.operations) {
-              const rounds: OperationProcessingRoundSerialized[] = [];
+          .modify((entry: IDBTaskItem | IDBFolderItem) => {
+            const changeTask = (task: any) => {
+              // wrap results with ProceedingRounds
+              for (const operation of task.operations) {
+                const rounds: OperationProcessingRoundSerialized[] = [];
 
-              if (operation.name === 'Upload') {
-                // results to one round
-                rounds.push({
-                  protocol: (operation as any).protocol,
-                  results: (operation as any).results,
-                  status: (operation as any).state,
-                  time: (operation as any).time,
-                });
-              } else {
-                // other operation: each results is equal to one round
-                for (let i = 0; i < (operation as any).results.length; i++) {
-                  const result = (operation as any).results[i];
-                  const time = i === (operation as any).results.length - 1 ? (operation as any).time : undefined;
-
+                if (operation.name === 'Upload') {
+                  // results to one round
                   rounds.push({
                     protocol: (operation as any).protocol,
-                    results: [result],
+                    results: (operation as any).results,
                     status: (operation as any).state,
-                    time,
+                    time: (operation as any).time,
                   });
+                } else {
+                  // other operation: each results is equal to one round
+                  for (let i = 0; i < (operation as any).results.length; i++) {
+                    const result = (operation as any).results[i];
+                    const time = i === (operation as any).results.length - 1 ? (operation as any).time : undefined;
+
+                    rounds.push({
+                      protocol: (operation as any).protocol,
+                      results: [result],
+                      status: (operation as any).state,
+                      time,
+                    });
+                  }
                 }
-              }
 
-              operation.rounds =
-                rounds.length > 0
-                  ? rounds
-                  : [
-                      {
-                        results: [],
-                        status: (operation as any).state,
-                      },
-                    ];
+                operation.rounds =
+                  rounds.length > 0
+                    ? rounds
+                    : [
+                        {
+                          results: [],
+                          status: (operation as any).state,
+                        },
+                      ];
 
-              if (!operation.serviceProvider) {
-                if (operation.name === 'Translation') {
-                  operation.serviceProvider = 'LibreTranslate';
-                } else if (operation.name === 'Summarization') {
-                  operation.serviceProvider = 'LSTSummarization';
-                } else if (['Upload', 'OCTRA', 'Emu WebApp'].includes(operation.name)) {
-                  operation.serviceProvider = 'BAS';
-                } else if (operation.name === 'MAUS') {
-                  operation.serviceProvider = 'BAS';
+                if (!operation.serviceProvider) {
+                  if (operation.name === 'Translation') {
+                    operation.serviceProvider = 'LibreTranslate';
+                  } else if (operation.name === 'Summarization') {
+                    operation.serviceProvider = 'LSTSummarization';
+                  } else if (['Upload', 'OCTRA', 'Emu WebApp'].includes(operation.name)) {
+                    operation.serviceProvider = 'BAS';
+                  } else if (operation.name === 'MAUS') {
+                    operation.serviceProvider = 'BAS';
+                  }
                 }
-              }
 
-              delete (operation as any)['results'];
-              delete (operation as any)['protocol'];
-              delete (operation as any)['state'];
-              delete (operation as any)['time'];
+                delete (operation as any)['results'];
+                delete (operation as any)['protocol'];
+                delete (operation as any)['state'];
+                delete (operation as any)['time'];
+              }
+            };
+
+            if (entry.type === 'task') {
+              changeTask(entry);
+            } else {
+              for (const task of (entry as any).entries) {
+                changeTask(task);
+              }
             }
           });
       }
@@ -207,3 +237,5 @@ export class IndexedDBManager extends Dexie {
     document.location.reload();
   }
 }
+
+export default IndexedDBManager;

@@ -26,11 +26,18 @@ export type IDBNotificationSettingsItem = IDBUserSettingsItem<IDBNotificationSet
 
 export interface IDBTaskItem {
   id: number;
-  type: 'folder' | 'task';
+  type: 'task';
   state: TaskStatus;
   folderPath: string;
   files: (FileInfoSerialized | AudioFileInfoSerialized)[];
   operations: IOperation[];
+}
+
+export interface IDBFolderItem {
+  id: number;
+  type: 'folder';
+  path: string;
+  entries: IDBTaskItem[];
 }
 
 export interface AudioFileInfoSerialized extends FileInfoSerialized {
