@@ -221,7 +221,10 @@
       </div>
     </div>
   </nav>
-  <ul ngbNav #nav="ngbNav" [(activeId)]="activeMode" class="nav-tabs" id="mode-tabs">
+  <ul ngbNav #nav="ngbNav" [(activeId)]="activeMode" class="nav-tabs" id="mode-tabs" [ngClass]="{
+    'with-feedback': settingsService.feedbackEnabled,
+    'no-feedback': !settingsService.feedbackEnabled
+  }">
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">

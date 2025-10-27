@@ -221,10 +221,17 @@ nav li {
 }
 
 @media (min-width: 1200px) and (max-width: 1970px) {
-  #mode-tabs {
+  #mode-tabs.with-feedback {
     margin-top: 80px;
   }
 }
+
+@media (min-width: 1200px) and (max-width: 1610px) {
+  #mode-tabs.no-feedback {
+    margin-top: 80px;
+  }
+}
+
 #mode-tabs .nav-item {
   opacity: 0.75;
 }
