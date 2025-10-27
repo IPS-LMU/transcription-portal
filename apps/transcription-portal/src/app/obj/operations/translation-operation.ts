@@ -8,8 +8,8 @@ import { AppInfo } from '../../app.info';
 import { AppSettings } from '../../shared/app.settings';
 import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { ASROperation } from './asr-operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
 export interface ITranslationOperation extends IOperation {
   language?: string;
@@ -46,6 +46,11 @@ export class TranslationOperation extends Operation {
       lastResult = operations[2].lastRound?.lastResult;
     } else if (operations[1].enabled) {
       lastResult = operations[1].lastRound?.lastResult;
+    } else {
+      const transcriptFromInputs = this.task?.files.find((a) => !a.isMediaFile());
+      if (transcriptFromInputs) {
+        lastResult = transcriptFromInputs;
+      }
     }
 
     try {
@@ -98,6 +103,8 @@ export class TranslationOperation extends Operation {
           ),
         );
         this.changeState(TaskStatus.FINISHED);
+      } else {
+        throw new Error('Can#t find transcript for translation');
       }
     } catch (e: any) {
       this.throwError(new Error(e?.error?.message ?? e?.message));
@@ -160,11 +167,11 @@ export class TranslationOperation extends Operation {
         if (this.task?.operations[3].enabled) {
           // Summarization operation
           source = 'en';
-        } else if((this.task.operations[1] as ASROperation).language) {
+        } else if ((this.task.operations[1] as ASROperation).language) {
           // ASR operation
           source = convertISO639Language((this.task.operations[1] as ASROperation).language!);
         } else {
-          source = "en";
+          source = 'en';
         }
       }
 
