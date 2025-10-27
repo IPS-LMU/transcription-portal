@@ -164,10 +164,7 @@ export class TranslationOperation extends Operation {
     return new Promise<any>((resolve, reject) => {
       let source: string | undefined = 'en';
       if (this.task?.operations && this.language) {
-        if (this.task?.operations[3].enabled) {
-          // Summarization operation
-          source = 'en';
-        } else if ((this.task.operations[1] as ASROperation).language) {
+         if ((this.task.operations[1] as ASROperation).language) {
           // ASR operation
           source = convertISO639Language((this.task.operations[1] as ASROperation).language!);
         } else {
