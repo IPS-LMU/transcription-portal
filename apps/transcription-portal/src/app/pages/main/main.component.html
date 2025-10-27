@@ -273,7 +273,7 @@
           <i class="bi bi-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
         </button>
         <!-- webkitdirectory directory multiple -->
-        <input #fileinput (change)="onFileChange($event)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
+        <input #fileinput (change)="onFileChange(fileinput)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
         <button
           (click)="onVerifyButtonClick()"
           [disabled]="taskService.currentModeStatistics.queued < 1"

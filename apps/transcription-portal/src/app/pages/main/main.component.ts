@@ -268,8 +268,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.fileinput?.nativeElement.click();
   }
 
-  onFileChange($event: Event) {
-    const files: FileList | null = ($event.target as HTMLInputElement).files;
+  onFileChange(input: HTMLInputElement) {
+    const files: FileList | null = input.files;
     const fileInfos: FileInfo[] = [];
 
     if (files) {
@@ -281,6 +281,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
       this.readNewFiles(fileInfos);
     }
+    input.value = '';
   }
 
   async onOperationClick(operation: Operation) {

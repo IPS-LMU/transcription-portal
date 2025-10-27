@@ -272,7 +272,7 @@ export class ASROperation extends Operation {
                       reject(result.body.errorMessage);
                     }
 
-                    // await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
+                    await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
                   }
                 }
               },

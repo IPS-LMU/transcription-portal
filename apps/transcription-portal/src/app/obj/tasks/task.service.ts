@@ -447,7 +447,7 @@ export class TaskService {
                 return b.name === entry.files[0].name;
               });
 
-              return a.status === TaskStatus.QUEUED && !(foundIt === null || foundIt === undefined);
+              return a.status === TaskStatus.QUEUED && foundIt;
             });
 
             if (!(foundTask === null || foundTask === undefined)) {
