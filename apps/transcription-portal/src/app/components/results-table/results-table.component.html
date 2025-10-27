@@ -9,7 +9,7 @@
           (mousedown)="disableClick($event)"
           (click)="disableClick($event)"
         >
-          @for (elem of convertedArray; track elem) {
+          @for (elem of convertedArray; track elem.number) {
             <option [value]="elem.number" (click)="disableClick($event)">
               @if ($index > 0) {
                 v{{ elem.number + 1 }}
@@ -23,49 +23,51 @@
     </div>
     <div class="container-fluid">
       <div class="row">
-        @for (elem of convertedArray; track elem) {
+        @for (elem of convertedArray; track elem.number) {
           @if (elem.number.toString() === selectedVersion) {
-            <div class="col-3 result-icon position-relative text-center" style="background-color: #bfdeef; border-collapse: separate">
-              <div class="result-icon-overlay position-absolute w-100 h-100" style="z-index: 1000">
-                <div class="overlay" style="z-index: 1001"></div>
-                <div class="position-absolute w-100 h-100" style="z-index: 1002">
-                  <div class="w-100" style="height: 70%">
-                    <div
-                      class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
-                      style="margin: 2% 5% 0 5%; width: 90%; height: 95%"
-                      (click)="onPreviewClick(elem.input?.info!)"
-                    >
-                      <i class="bi bi-eye-fill" style="color: white"></i>
+            @for (originalResult of elem.originalResults; track originalResult.info.fullname) {
+              <div class="col-3 result-icon position-relative text-center" style="background-color: #bfdeef; border-collapse: separate">
+                <div class="result-icon-overlay position-absolute w-100 h-100" style="z-index: 1000">
+                  <div class="overlay" style="z-index: 1001"></div>
+                  <div class="position-absolute w-100 h-100" style="z-index: 1002">
+                    <div class="w-100" style="height: 70%">
+                      <div
+                        class="btn btn-primary btn-sm p-0 align-items-center align-content-center pointer"
+                        style="margin: 2% 5% 0 5%; width: 90%; height: 95%"
+                        (click)="onPreviewClick(originalResult.info!)"
+                      >
+                        <i class="bi bi-eye-fill" style="color: white"></i>
+                      </div>
+                    </div>
+                    <div class="w-100" style="height: 30%">
+                      <a
+                        class="btn btn-secondary btn-sm p-0 pointer"
+                        [href]="originalResult.info.url"
+                        [title]="originalResult.info.attributes.originalFileName"
+                        [download]="originalResult.info.attributes.originalFileName"
+                        target="_blank"
+                        style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
+                      >
+                        <i class="bi bi-cloud-download-fill" style="color: white"></i>
+                      </a>
                     </div>
                   </div>
-                  <div class="w-100" style="height: 30%">
-                    <a
-                      class="btn btn-secondary btn-sm p-0 pointer"
-                      [href]="elem.input!.info.url"
-                      [title]="elem.input!.info.attributes.originalFileName"
-                      [download]="elem.input!.info.attributes.originalFileName"
-                      target="_blank"
-                      style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
-                    >
-                      <i class="bi bi-cloud-download-fill" style="color: white"></i>
-                    </a>
+                </div>
+                <div>
+                  <i class="bi bi-patch-check-fill position-absolute top-0 right-0" style="color: yellow; z-index: 900"></i>
+                  <i
+                    class="bi bi-file-earmark-text-fill fs-1"
+                    [ngStyle]="{
+                      color: 'darkblue',
+                    }"
+                  ></i>
+                  <div style="font-size: 0.75rem">
+                    {{ originalResult.info.extension }}
                   </div>
                 </div>
               </div>
-              <div>
-                <i class="bi bi-patch-check-fill position-absolute top-0 right-0" style="color: yellow; z-index: 900"></i>
-                <i
-                  class="bi bi-file-earmark-text-fill fs-1"
-                  [ngStyle]="{
-                    color: 'darkblue',
-                  }"
-                ></i>
-                <div style="font-size: 0.75rem">
-                  {{ elem.input?.info?.extension }}
-                </div>
-              </div>
-            </div>
-            @for (conversion of elem.conversions; track conversion) {
+            }
+            @for (conversion of elem.conversions; track conversion.converter.obj.name) {
               <div class="col-3 result-icon text-center position-relative" style="background-color: white; border-collapse: separate">
                 <div class="result-icon-overlay position-absolute w-100 h-100" style="z-index: 1000">
                   <div class="overlay" style="z-index: 1001"></div>

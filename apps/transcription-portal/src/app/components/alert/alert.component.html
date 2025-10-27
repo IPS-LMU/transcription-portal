@@ -4,7 +4,7 @@
   }"
   class="queue"
 >
-  @for (entry of queue; track entry) {
+  @for (entry of queue; track entry.id) {
     <ngb-alert [type]="entry.type" (closed)="onClose(entry)">
       {{ entry.message }}
       @if (entry.duration > -1) {

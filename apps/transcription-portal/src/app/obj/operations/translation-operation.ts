@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
-import { last, wait } from '@octra/utilities';
+import { wait } from '@octra/utilities';
 import { AudioInfo, FileInfo, readFileContents } from '@octra/web-media';
 import { AppInfo } from '../../app.info';
 import { AppSettings } from '../../shared/app.settings';
 import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
 export interface ITranslationOperation extends IOperation {
   language?: string;
@@ -26,24 +26,29 @@ export class TranslationOperation extends Operation {
   }
 
   public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
+    if (this.lastRound?.lastResult) {
+      this.addProcessingRound();
+    }
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
-    this._time.start = Date.now();
+    this.time = {
+      start: Date.now(),
+    };
 
     let lastResult: FileInfo | undefined;
-    const audioinfo = operations[0].task!.files[0] as AudioInfo;
+    const currentRound = this.lastRound!;
+    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as AudioInfo;
 
     if (operations[3].enabled) {
-      lastResult = last(operations[3].results);
+      lastResult = operations[3].lastRound?.lastResult;
     } else if (operations[2].enabled) {
-      lastResult = last(operations[2].results);
+      lastResult = operations[2].lastRound?.lastResult;
     } else if (operations[1].enabled) {
-      lastResult = last(operations[1].results);
+      lastResult = operations[1].lastRound?.lastResult;
     }
 
     try {
-      if (lastResult?.file) {
+      if (lastResult?.file && audioinfo) {
         let content = await readFileContents<string>(lastResult.file, 'text', 'utf-8');
 
         const audiofile = new OAudiofile();
@@ -80,10 +85,8 @@ export class TranslationOperation extends Operation {
         }
 
         const result = await this.getTranslation(httpclient, content);
-        console.log('TRANSLATION RESULT');
-        console.log(result);
         this.time.duration = Date.now() - this.time.start;
-        this.results.push(
+        currentRound.results.push(
           new FileInfo(
             lastResult.name + '.txt',
             'text/plain',
@@ -108,7 +111,6 @@ export class TranslationOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      this.state,
       undefined,
       this.serviceProvider,
       this.language,
@@ -122,20 +124,14 @@ export class TranslationOperation extends Operation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider),
       operationObj.language,
     );
 
-    for (const resultObj of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.attributes = resultObj.attributes;
-      result.results.push(resultClass);
+    for (const round of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(round));
     }
-
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
 
     return result;
@@ -147,12 +143,11 @@ export class TranslationOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
     language?: string,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._language = language;
     this._description = 'Translates a given annotation to a target language as full text.';
   }
@@ -205,11 +200,8 @@ export class TranslationOperation extends Operation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this.language,
     };

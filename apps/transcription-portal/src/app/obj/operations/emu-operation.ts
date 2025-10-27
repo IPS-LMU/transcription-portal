@@ -5,26 +5,23 @@ import { stringifyQueryParams } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
 
 export type IEmuWebAppOperation = IOperation;
 
 export class EmuOperation extends ToolOperation {
-  protected operations?: Operation[];
-
   public constructor(
     name: string,
     commands: string[],
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._description =
       'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
       'the associated words or phonemes. This is useful for interpreting a transcript, e. g. to determine the focus of' +
@@ -34,9 +31,7 @@ export class EmuOperation extends ToolOperation {
   public override resultType = 'AnnotJSON';
 
   public override start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    this.updateProtocol('');
-    this.operations = operations;
-    this.changeState(TaskStatus.READY);
+    throw new Error("Octra will not be started automatically.")
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
@@ -55,7 +50,7 @@ export class EmuOperation extends ToolOperation {
         result = '<i class="bi bi-gear-fill spin"></i>\n' + '<span class="sr-only">Loading...</span>';
         break;
       case TaskStatus.FINISHED:
-        if (this.previousOperation && this.previousOperation.results.length > 0 && this.previousOperation.lastResult?.available) {
+        if (this.previousOperation && this.previousOperation.rounds.length > 0 && this.previousOperation.lastRound?.lastResult?.available) {
           result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
         } else {
           result = '<i class="bi bi-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
@@ -103,7 +98,7 @@ export class EmuOperation extends ToolOperation {
 
   public override clone(task?: Task): EmuOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state, undefined, this.serviceProvider);
+    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider);
   }
 
   public override fromAny(operationObj: IEmuWebAppOperation, commands: string[], task: Task): Operation {
@@ -113,27 +108,22 @@ export class EmuOperation extends ToolOperation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation(operationObj.serviceProvider),
     );
 
-    for (const resultObj of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.attributes = resultObj.attributes;
-      result.results.push(resultClass);
+    for (const resultObj of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(resultObj));
     }
 
     if (result.state === TaskStatus.PROCESSING) {
-      if (result.results.length > 0) {
+      if (result.rounds.length > 0) {
         result.changeState(TaskStatus.FINISHED);
       } else {
         result.changeState(TaskStatus.READY);
       }
     }
 
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol);
     result.enabled = operationObj.enabled;
 
     return result;
@@ -143,7 +133,10 @@ export class EmuOperation extends ToolOperation {
     if (
       this.task?.operations &&
       this.serviceProvider &&
-      !((this.task.operations[0] as unknown as UploadOperation).wavFile === null || (this.task.operations[0] as unknown as  UploadOperation).wavFile === undefined)
+      !(
+        (this.task.operations[0] as unknown as UploadOperation).wavFile === null ||
+        (this.task.operations[0] as unknown as UploadOperation).wavFile === undefined
+      )
     ) {
       const urlParams: {
         audioGetUrl: string;
@@ -154,14 +147,20 @@ export class EmuOperation extends ToolOperation {
         audioGetUrl: (this.task.operations[0] as any).wavFile.url,
         saveToWindowParent: true,
       };
-      let result = null;
-      const lastResultMaus = this.previousOperation?.lastResult;
-      const lastResultEMU = this.lastResult;
+      let result: FileInfo | undefined = undefined;
+      const lastResultMaus = this.previousOperation?.lastRound;
+      const lastResultEMU = this.lastRound;
 
-      if (lastResultEMU && lastResultMaus && lastResultEMU.createdAt >= lastResultMaus.createdAt) {
-        result = lastResultEMU;
+      if (
+        lastResultEMU &&
+        lastResultMaus &&
+        lastResultEMU.lastResult?.createdAt &&
+        lastResultMaus.lastResult?.createdAt &&
+        lastResultEMU.lastResult?.createdAt >= lastResultMaus.lastResult.createdAt
+      ) {
+        result = lastResultEMU.lastResult;
       } else {
-        result = lastResultMaus;
+        result = lastResultMaus?.lastResult;
       }
 
       const labelType = result?.extension === '_annot.json' ? 'annotJSON' : 'TEXTGRID';
@@ -186,11 +185,8 @@ export class EmuOperation extends ToolOperation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
     };
   }

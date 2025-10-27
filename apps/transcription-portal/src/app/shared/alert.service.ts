@@ -8,8 +8,6 @@ export class AlertService {
     duration: number;
   }>();
 
-  constructor() {}
-
   public showAlert(type: 'danger' | 'warning' | 'info' | 'success', message: string, duration?: number) {
     this.alertsend.emit({
       type,

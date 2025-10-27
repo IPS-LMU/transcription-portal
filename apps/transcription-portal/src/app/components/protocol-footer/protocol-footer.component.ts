@@ -9,12 +9,10 @@ import { ANIMATIONS } from '../../shared/Animations';
   animations: [ANIMATIONS],
   standalone: true,
 })
-export class ProtocolFooterComponent implements OnInit {
+export class ProtocolFooterComponent {
   taskService = inject(TaskService);
 
   public test = 'inactive';
-
-  ngOnInit() {}
 
   blop() {
     this.test = 'blopped';

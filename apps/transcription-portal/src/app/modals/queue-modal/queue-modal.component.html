@@ -248,7 +248,7 @@
           <th>Valid?</th>
           <th class="text-start">File</th>
           <th>Language</th>
-          @for (operation of operations; track operation; let i = $index) {
+          @for (operation of operations; track operation.id; let i = $index) {
             <th>
               <div>
                 @if (operation.title === '') {
@@ -269,7 +269,7 @@
           <th></th>
           <th></th>
           <th></th>
-          @for (operation of operations; track operation; let i = $index) {
+          @for (operation of operations; track operation.id; let i = $index) {
             @if (operation.name === 'OCTRA' || operation.name === 'ASR' || operation.name === 'Summarization' || operation.name === 'Translation') {
               <th>
                 <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
@@ -288,14 +288,14 @@
         </tr>
       </thead>
       <tbody>
-        @for (task of tasks; track task) {
+        @for (task of tasks; track task.id) {
           @if (task.status === 'QUEUED') {
             <tr>
               <td class="compatible-col">
                 <ng-template #validationResult>
                   <table class="table table-sm table-striped">
                     <tbody>
-                      @for (check of getChecksByID(task.id); track check) {
+                      @for (check of getChecksByID(task.id); track check.name) {
                         <tr>
                           <td>
                             <i
@@ -341,7 +341,7 @@
                   [ngClass]="{
                     green:
                       (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                      (task.operations[0].results.length > 0 && task.operations[0].lastResult?.online),
+                      (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
                     yellow:
                       ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
                       task.operations[0].state !== 'FINISHED',
@@ -364,7 +364,7 @@
                 }
               </td>
               <td>{{ task.asrOperation.language }}</td>
-              @for (operation of task.operations; track operation) {
+              @for (operation of task.operations; track operation.id) {
                 <td>
                   @if (operation.enabled) {
                     <span><i class="bi bi-check-lg" style="color: black"></i></span>

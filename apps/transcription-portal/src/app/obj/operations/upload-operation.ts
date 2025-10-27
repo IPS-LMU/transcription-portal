@@ -1,14 +1,14 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
-import { FileInfo } from '@octra/web-media';
+import { AudioInfo, FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { TimePipe } from '../../shared/time.pipe';
 import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationOptions } from './operation';
+import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
 export type IUploadOperation = IOperation;
 
@@ -19,21 +19,20 @@ export class UploadOperation extends Operation {
     title?: string,
     shortTitle?: string,
     task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
   ) {
-    super(name, commands, title, shortTitle, task, state, id, serviceProvider);
+    super(name, commands, title, shortTitle, task, id, serviceProvider);
     this._description =
       'Drag and drop your audio and optional text files on the web page to upload them to the server ' +
       'for processing. Prior to upload, the format of the audio files will be checked; stereo files will be split into ' +
       'their left and right channel.';
   }
 
-  public get wavFile(): FileInfo | undefined {
-    return this.results.find((file) => {
+  public get wavFile(): AudioInfo | undefined {
+    return this.lastRound?.results?.find((file) => {
       return file.extension.indexOf('wav') > -1 && file.online;
-    });
+    }) as AudioInfo | undefined;
   }
 
   public resultType = '.wav';
@@ -122,22 +121,24 @@ export class UploadOperation extends Operation {
 
   public start = async (files: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
-      this._results = [];
       this.updateProtocol('');
       this.changeState(TaskStatus.UPLOADING);
-      this._time.start = Date.now();
 
+      const currentRound = this.lastRound!;
       const url = this._commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
 
+      currentRound.time = {
+        start: Date.now(),
+      };
       this.subscrManager.add(
         UploadOperation.upload(files, url, httpclient).subscribe({
           next: async (obj) => {
             if (obj.type === 'progress') {
               this.progress = obj.progress!;
               this.updateEstimatedEnd();
-              this.changed.next();
+              this.changes$.next(this);
             } else if (obj.type === 'loadend') {
-              this.time.duration = Date.now() - this.time.start;
+              currentRound.time!.duration = Date.now() - this.time!.start;
 
               // add messages to protocol
               if (obj.warnings) {
@@ -156,7 +157,12 @@ export class UploadOperation extends Operation {
                     await info.updateContentFromURL(httpclient);
                   }
 
-                  this.results.push(info);
+                  const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
+                  if (existingIndex > -1) {
+                    currentRound.results[existingIndex] = info;
+                  } else {
+                    currentRound.results.push(info);
+                  }
                 }
                 this.changeState(TaskStatus.FINISHED);
               } else {
@@ -176,7 +182,7 @@ export class UploadOperation extends Operation {
 
   public override getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
     let result = '';
-    switch (this._state) {
+    switch (this.state) {
       case TaskStatus.PENDING:
         result = '';
         break;
@@ -255,7 +261,7 @@ export class UploadOperation extends Operation {
 
   public clone(task?: Task): UploadOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, this.state, undefined, this.serviceProvider);
+    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider);
   }
 
   public fromAny(operationObj: IUploadOperation, commands: string[], task: Task): UploadOperation {
@@ -265,27 +271,21 @@ export class UploadOperation extends Operation {
       this.title,
       this.shortTitle,
       task,
-      operationObj.state,
       operationObj.id,
       AppSettings.getServiceInformation('BAS'),
     );
 
-    for (const resultObj of operationObj.results) {
-      const resultClass = FileInfo.fromAny(resultObj);
-      resultClass.attributes = resultObj.attributes;
-      result.results.push(resultClass);
+    for (const round of operationObj.rounds) {
+      result.rounds.push(OperationProcessingRound.fromAny(round));
     }
-
-    result._time = operationObj.time;
-    result.updateProtocol(operationObj.protocol.replace('¶', ''));
     result.enabled = operationObj.enabled;
 
     return result;
   }
 
   public updateEstimatedEnd = () => {
-    if (this.progress > 0) {
-      const timeTillNow = Date.now() - this.time.start;
+    if (this.progress > 0 && this.lastRound?.time) {
+      const timeTillNow = Date.now() - this.lastRound.time.start;
       const timeOnePercent = timeTillNow / this.progress;
       const time = Math.round((1 - this.progress) * timeOnePercent);
       this.estimatedEnd = Date.now() + time;
@@ -302,11 +302,8 @@ export class UploadOperation extends Operation {
     return {
       id: this.id,
       name: this.name,
-      state: this.state,
-      protocol: this.protocol,
-      time: this.time,
       enabled: this.enabled,
-      results: await this.serializeResults(),
+      rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
     };
   }

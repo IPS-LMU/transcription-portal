@@ -3,7 +3,7 @@ import { OAnnotJSON } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { AudioInfo, FileInfo } from '@octra/web-media';
 import { AppInfo, ConverterData } from '../app.info';
-import { Operation } from '../obj/operations/operation';
+import { Operation, OperationProcessingRound } from '../obj/operations/operation';
 
 @Injectable({
   providedIn: 'root',
@@ -27,9 +27,11 @@ export class DownloadService {
     }
   }
 
-  public getConversionFiles(operation: Operation, operationResult: FileInfo | undefined, converters: ConverterData[]): Promise<FileInfo[]> {
+  public getConversionFiles(operation: Operation, round: OperationProcessingRound, converters: ConverterData[]): Promise<FileInfo[]> {
     return new Promise<FileInfo[]>((resolve, reject) => {
-      if (!operationResult) {
+      const foundTranscriptResult = round.results.find((a) => !a.isMediaFile());
+
+      if (!foundTranscriptResult) {
         reject('operationResult is undefined!');
         return;
       }
@@ -40,8 +42,8 @@ export class DownloadService {
 
       for (const converter of converters) {
         for (const extension of converter.obj.extensions) {
-          if (operationResult.fullname.indexOf(extension) < 0) {
-            promises.push(this.getResultConversion(converter, operation, operationResult));
+          if (foundTranscriptResult.fullname.indexOf(extension) < 0) {
+            promises.push(this.getResultConversion(converter, operation, foundTranscriptResult));
             break;
           }
         }
@@ -88,7 +90,7 @@ export class DownloadService {
           if (!operation.task) {
             throw new Error('operation task is undefined');
           }
-          const audioinfo = operation.task.files[0] as AudioInfo;
+          const audioinfo = operation.task.files.find(a => a.isMediaFile()) as AudioInfo;
 
           audiofile.duration = audioinfo.duration.samples;
           audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;

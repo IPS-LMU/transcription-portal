@@ -18,7 +18,7 @@ export class LoadingComponent extends SubscriberComponent {
   constructor() {
     super();
     this.subscribe(this.settingsService.settingsload, {
-      next: (result) => {
+      next: () => {
         this.routingServer.navigate('navigate after settings loaded', ['/'], {
           queryParamsHandling: 'merge',
         });

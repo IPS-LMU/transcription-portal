@@ -1,22 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  ViewChild,
-  inject,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ANIMATIONS } from '../../shared/Animations';
 
 import { NgClass, NgStyle } from '@angular/common';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { SubscriptionManager } from '@octra/utilities';
+import { SubscriberComponent } from '@octra/ngx-utilities';
 import { AudioInfo, DirectoryInfo, FileInfo, Shortcut, ShortcutGroup } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
 import { HotkeysEvent } from 'hotkeys-js';
@@ -46,13 +34,13 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
+import { OCTRAOperation } from '../../obj/operations/octra-operation';
 
 @Component({
   selector: 'tportal-proceedings',
   templateUrl: './proceedings.component.html',
   styleUrls: ['./proceedings.component.scss'],
   animations: ANIMATIONS,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     PopoverComponent,
     NgStyle,
@@ -70,7 +58,7 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     NgbTooltip,
   ],
 })
-export class ProceedingsComponent implements OnInit, OnDestroy {
+export class ProceedingsComponent extends SubscriberComponent implements OnInit, OnDestroy {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
   taskService = inject(TaskService);
@@ -117,8 +105,6 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   @Input() queue: QueueItem[] = [];
   @Input() operations: Operation[] = [];
-  public archiveURL = '';
-  public closeResult = '';
   public isDragging = false;
   public allDirOpened: 'opened' | 'closed' = 'opened';
   @Input() shortstyle = false;
@@ -150,27 +136,17 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   private readonly fileAPIsupported: boolean = false;
   private shiftStart = -1;
   private selectionBlocked = false;
-  private subscrManager = new SubscriptionManager();
 
   maxColumnWidths = [10, 15, 15, 15, 15, 10];
 
   private shortcuts: Shortcut[] = [];
 
   constructor() {
+    super();
     // Check for the various FileInfo API support.
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
-
-    this.subscrManager.add(
-      this.taskService.state.currentModeState.taskList?.entryChanged.subscribe({
-        next: (event) => {
-          console.log(`${event.state} ${event.entry.type} ${event.entry.id}`);
-          this.cd.markForCheck();
-          this.cd.detectChanges();
-        },
-      }),
-    );
 
     this.initShortcuts();
   }
@@ -212,6 +188,14 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    if (this.taskService.state.currentModeState.taskList?.entryChanged) {
+      this.subscribe(this.taskService.state.currentModeState.taskList?.entryChanged, {
+        next: (event) => {
+          this.cd.markForCheck();
+        },
+      });
+    }
+
     this.cd.detach();
     if (!(this.cd as any).destroyed) {
       this.cd.markForCheck();
@@ -226,7 +210,8 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-  ngOnDestroy() {
+  override ngOnDestroy() {
+    super.ngOnDestroy();
     this.cd.detach();
   }
 
@@ -415,13 +400,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (
-        (!(operation === null || operation === undefined) &&
-          !(operation.previousOperation === null || operation.previousOperation === undefined) &&
-          operation.previousOperation.results.length > 0 &&
-          operation.previousOperation.results[operation.previousOperation.results.length - 1].online) ||
-        (!(operation === null || operation === undefined) && operation.results.length > 0 && operation.results[operation.results.length - 1].online)
-      ) {
+      if (operation?.previousOperation?.lastRound?.lastResult?.online || operation?.lastRound?.lastResult?.online) {
         this.operationclick.emit(operation);
         console.log('row selected close');
         this.popover.state = 'closed';
@@ -519,7 +498,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
       if (parentNode && this.popoverRef && this.inner) {
         this.popover.operation = operation;
-        if (operation.protocol !== '') {
+        if (operation.protocol) {
           this.popover.width = 500;
         } else {
           this.popover.width = 400;
@@ -637,16 +616,15 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     task.mouseover = true;
   }
 
-  calculateDuration(time: { start: number; duration: number }, operation: Operation) {
-    if (operation.state === TaskStatus.PROCESSING) {
-      return operation.time.duration + Math.max(0, Date.now() - operation.time.start);
-    } else {
-      if (time.duration > 0) {
+  calculateDuration(time: { start: number; duration?: number } | undefined, operation: Operation) {
+    if (operation.state === TaskStatus.PROCESSING && operation?.time) {
+      return (operation.time.duration ?? 0) + Math.max(0, Date.now() - operation.time.start);
+    } else if (time) {
+      if (time.duration && time.duration > 0) {
         return time.duration;
-      } else {
-        return 0;
       }
     }
+    return 0;
   }
 
   deactivateOperation(operation: Operation, index: number) {
@@ -762,9 +740,9 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
 
   public getPopoverColor(operation: Operation): string {
     if (operation) {
-      if (operation.state === TaskStatus.ERROR || (operation.results.length > 0 && !operation.lastResult?.available)) {
+      if (operation.state === TaskStatus.ERROR || (operation.isFinished && !operation.lastRound?.lastResult?.available)) {
         return 'red';
-      } else if (operation.state === TaskStatus.FINISHED && operation.protocol !== '') {
+      } else if (operation.state === TaskStatus.FINISHED && operation.protocol) {
         return '#ffc33b';
       }
     }
@@ -772,7 +750,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
   }
 
   public onOperationClick($event: MouseEvent, operation: Operation) {
-    if (operation instanceof UploadOperation || operation instanceof EmuOperation) {
+    if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
       this.popover.state = 'closed';
       console.log('operation click selected close');
       this.cd.markForCheck();
@@ -839,7 +817,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     type: string;
     label: string;
   } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].results.length > 1 || task.files[0].extension !== '.wav') {
+    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
       return {
         type: 'info',
         label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
@@ -890,8 +868,10 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
     this.updateChanges();
   }
 
-  copyProtocolToClipboard(protocol: string) {
-    clipboard.writeText(protocol);
+  copyProtocolToClipboard(protocol?: string) {
+    if (protocol) {
+      clipboard.writeText(protocol);
+    }
   }
 
   onReportIconClick(operation: Operation) {
@@ -960,7 +940,7 @@ export class ProceedingsComponent implements OnInit, OnDestroy {
       const checkTask = (task: Task) => {
         for (const operation of task.operations) {
           if (!(operation instanceof UploadOperation)) {
-            if (operation.state === TaskStatus.FINISHED || operation.results.length > 0) {
+            if (operation.state === TaskStatus.FINISHED || operation.rounds.length > 0) {
               return true;
             }
           }

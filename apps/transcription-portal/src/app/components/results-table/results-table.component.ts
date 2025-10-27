@@ -29,10 +29,10 @@ export class ResultsTableComponent implements OnChanges {
   somethingClicked = false;
 
   public convertedArray: {
-    input?: {
+    originalResults?: {
       url: SafeUrl;
       info: FileInfo;
-    };
+    }[];
     number: number;
     conversions: {
       converter: {
@@ -65,7 +65,7 @@ export class ResultsTableComponent implements OnChanges {
         (hasProperty(changes, 'visible') && changes['visible'].currentValue && changes['visible'].currentValue)) &&
       this.operation
     ) {
-      if (this.oldOperation.id !== this.operation.id || this.oldOperation.numOfResults !== this.operation.results.length) {
+      if (this.oldOperation.id !== this.operation.id || this.oldOperation.numOfResults !== this.operation.rounds.length) {
         if (!this.generationRunning) {
           this.generationRunning = true;
           this.generateTable();
@@ -99,7 +99,9 @@ export class ResultsTableComponent implements OnChanges {
       }
     };
     this.convertedArray.forEach((v) => {
-      revokeURLIfNeeded((v.input?.url as any)?.changingThisBreaksApplicationSecurity);
+      v.originalResults?.forEach((a) => {
+        revokeURLIfNeeded((a.url as any)?.changingThisBreaksApplicationSecurity);
+      });
       v.conversions.forEach((s) => {
         revokeURLIfNeeded(s.result.url);
       });
@@ -115,8 +117,8 @@ export class ResultsTableComponent implements OnChanges {
       if (this.operation.resultType !== '.wav') {
         const promises: Promise<FileInfo[]>[] = [];
 
-        for (const result of this.operation.results) {
-          promises.push(this.downloadService.getConversionFiles(this.operation, this.operation.lastResult, this.converters));
+        for (const round of this.operation.rounds) {
+          promises.push(this.downloadService.getConversionFiles(this.operation, round, this.converters));
         }
 
         // read all file contents of results
@@ -124,18 +126,18 @@ export class ResultsTableComponent implements OnChanges {
           .then((promiseResults: FileInfo[][]) => {
             if (this.operation) {
               for (let j = 0; j < promiseResults.length; j++) {
-                const result = this.operation.results[j];
+                const result = this.operation.rounds[j].lastResult;
                 const conversions = promiseResults[j];
 
                 const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) => a.obj.extensions.findIndex((b) => b.indexOf(result.extension) > -1) > -1,
+                  (a) => a.obj.extensions.findIndex((b) => b.indexOf(result!.extension) > -1) > -1,
                 );
 
                 if (from) {
                   const importConverter = from.obj;
                   this.originalLabel = importConverter.extensions[0];
 
-                  if (!result.file) {
+                  if (!result?.file) {
                     throw new Error(`result file is undefined`);
                   }
 
@@ -162,7 +164,7 @@ export class ResultsTableComponent implements OnChanges {
                   }
 
                   const convElem = {
-                    input: resultObj,
+                    originalResults: [resultObj],
                     conversions: [] as any[],
                     number: j,
                   };
@@ -220,13 +222,13 @@ export class ResultsTableComponent implements OnChanges {
             this.updateGUI();
           });
       } else {
-        for (let i = 0; i < this.operation.results.length; i++) {
-          const result = this.operation.results[i];
+        for (let i = 0; i < this.operation.rounds.length; i++) {
+          const round = this.operation.rounds[i];
           this.convertedArray.push({
-            input: {
-              url: result.url ?? '',
-              info: result,
-            },
+            originalResults: round.results.map((a) => ({
+              url: a.url ?? '',
+              info: a,
+            })),
             conversions: [],
             number: i,
           });
@@ -238,13 +240,13 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private updateGUI() {
-    this.selectedVersion = ((this.operation?.results.length ?? 1) - 1).toString();
+    this.selectedVersion = ((this.operation?.rounds.length ?? 1) - 1).toString();
     this.cd.markForCheck();
     this.cd.detectChanges();
     if (this.operation) {
       this.oldOperation = {
         id: this.operation.id,
-        numOfResults: this.operation.results.length,
+        numOfResults: this.operation.rounds.length,
       };
       this.generationRunning = false;
     }

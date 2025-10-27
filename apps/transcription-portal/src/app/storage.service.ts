@@ -116,7 +116,7 @@ export class StorageService {
     });
   }
 
-  public saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
+  public async saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const table = this.idbm[`${mode}_tasks`];
       let promise: Promise<any>;
@@ -217,8 +217,8 @@ export class StorageService {
     this.subscrmanager.destroy();
   }
 
-  public clearAll() {
-    this._idbm.delete({
+  public async clearAll() {
+    await this._idbm.delete({
       disableAutoOpen: true,
     });
     window.location.reload();

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
-import { SubscriptionManager } from '@octra/utilities';
+import { last, SubscriptionManager } from '@octra/utilities';
 import { FileInfo, FileInfoSerialized } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import { IDBTaskItem } from '../../indexedDB';
@@ -10,20 +10,69 @@ import { Task, TaskStatus } from '../tasks';
 export interface IOperation {
   id: number;
   name: string;
-  state: TaskStatus;
-  protocol: string;
-  time: {
-    start: number;
-    duration: number;
-  };
   enabled: boolean;
-  results: FileInfoSerialized[];
+  rounds: OperationProcessingRoundSerialized[];
   serviceProvider?: string;
   /*
   language?: string;
   mausLanguage?: string;
   summarizationMaxNumberOfWords?: string;
    */
+}
+
+export interface IOperationProcessingRoundWithoutResults {
+  status: TaskStatus;
+  time?: {
+    start: number;
+    duration?: number;
+  };
+  protocol?: string;
+}
+
+export interface OperationProcessingRoundSerialized extends IOperationProcessingRoundWithoutResults {
+  results: FileInfoSerialized[];
+}
+
+export class OperationProcessingRound implements IOperationProcessingRoundWithoutResults {
+  results: FileInfo[] = [];
+  status!: TaskStatus;
+  time?: { start: number; duration?: number };
+  protocol?: string;
+
+  get lastResult(): FileInfo | undefined {
+    return last(this.results);
+  }
+
+  constructor(partial?: Partial<OperationProcessingRound>) {
+    Object.assign(this, partial);
+  }
+
+  protected async serializeResults(): Promise<FileInfoSerialized[]> {
+    const promises: Promise<FileInfoSerialized>[] = [];
+    for (const resultObj of this.results) {
+      promises.push(resultObj.toAny());
+    }
+
+    return Promise.all(promises);
+  }
+
+  async toAny(): Promise<OperationProcessingRoundSerialized> {
+    return {
+      protocol: this.protocol,
+      results: await this.serializeResults(),
+      status: this.status,
+      time: this.time,
+    };
+  }
+
+  static fromAny(obj: OperationProcessingRoundSerialized): OperationProcessingRound {
+    return new OperationProcessingRound({
+      results: obj.results.map((a) => FileInfo.fromAny(a)),
+      time: obj.time,
+      protocol: obj.protocol?.replace('¶', ''),
+      status: obj.status,
+    });
+  }
 }
 
 export interface OperationOptions {
@@ -51,22 +100,8 @@ export abstract class Operation {
   static counter = 0;
   public abstract resultType?: string;
   public mouseover = false;
-  public changed: Subject<void> = new Subject<void>();
+  public changes$: Subject<Operation> = new Subject<Operation>();
   private readonly _shortTitle: string | undefined;
-  private statesubj: Subject<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }> = new Subject<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }>();
-  public statechange: Observable<{
-    opID: number;
-    oldState: TaskStatus;
-    newState: TaskStatus;
-  }> = this.statesubj.asObservable();
   private readonly _id: number;
 
   protected subscrManager = new SubscriptionManager();
@@ -77,7 +112,6 @@ export abstract class Operation {
     title?: string,
     shortTitle?: string,
     private _task?: Task,
-    state?: TaskStatus,
     id?: number,
     serviceProvider?: ServiceProvider,
   ) {
@@ -87,20 +121,11 @@ export abstract class Operation {
       this._id = id;
     }
 
-    if (!(title === null || title === undefined)) {
+    if (title) {
       this._title = title;
     }
 
-    if (!(shortTitle === null || shortTitle === undefined)) {
-      this._shortTitle = shortTitle;
-    }
-
-    if (!(state === null || state === undefined)) {
-      this.changeState(state);
-    } else {
-      this.changeState(TaskStatus.PENDING);
-    }
-
+    this._shortTitle = shortTitle;
     this._serviceProvider = serviceProvider;
   }
 
@@ -118,9 +143,9 @@ export abstract class Operation {
     return this.state === TaskStatus.FINISHED;
   }
 
-  public get lastResult(): FileInfo | undefined {
-    if (this.results.length > 0) {
-      return this.results[this.results.length - 1];
+  public get lastRound(): OperationProcessingRound | undefined {
+    if (this.rounds.length > 0) {
+      return this.rounds[this.rounds.length - 1];
     }
     return undefined;
   }
@@ -177,16 +202,22 @@ export abstract class Operation {
     this._estimatedEnd = value;
   }
 
-  protected _results: FileInfo[] = [];
+  protected _rounds: OperationProcessingRound[] = [];
 
-  get results(): FileInfo[] {
-    return this._results;
+  get rounds(): OperationProcessingRound[] {
+    return this._rounds;
   }
 
-  protected _state: TaskStatus = TaskStatus.PENDING;
-
   get state(): TaskStatus {
-    return this._state;
+    return this.lastRound?.status ?? TaskStatus.PENDING;
+  }
+
+  set state(value: TaskStatus) {
+    if (this.lastRound?.status) {
+      this.lastRound.status = value;
+    } else {
+      console.error("Can't set state value because lastResult is undefined");
+    }
   }
 
   get name(): string {
@@ -199,10 +230,16 @@ export abstract class Operation {
     return this._title;
   }
 
-  private _protocol = '';
+  get protocol(): string | undefined {
+    return this.lastRound?.protocol;
+  }
 
-  get protocol(): string {
-    return this._protocol;
+  set protocol(value: string | undefined) {
+    if (this.lastRound) {
+      this.lastRound.protocol = value;
+    } else {
+      console.error(`Can't set protocol for operation ${this.id} (${this.name}) because lastResult is undefined.`);
+    }
   }
 
   protected _description = '';
@@ -221,16 +258,16 @@ export abstract class Operation {
     this._serviceProvider = value;
   }
 
-  protected _time: {
-    start: number;
-    duration: number;
-  } = {
-    start: 0,
-    duration: 0,
-  };
+  get time(): { start: number; duration?: number } | undefined {
+    return this.lastRound?.time;
+  }
 
-  get time(): { start: number; duration: number } {
-    return this._time;
+  set time(value: { start: number; duration?: number } | undefined) {
+    if (this.lastRound) {
+      this.lastRound.time = value;
+    } else {
+      console.error("Can't set time value because lastRound is undefined");
+    }
   }
 
   private _enabled = true;
@@ -241,7 +278,7 @@ export abstract class Operation {
 
   set enabled(value: boolean) {
     this._enabled = value;
-    this.changed.next();
+    this.changes$.next(this);
   }
 
   public getStateIcon = (sanitizer: DomSanitizer, state: TaskStatus): SafeHtml => {
@@ -309,15 +346,11 @@ export abstract class Operation {
   };
 
   public changeState(state: TaskStatus) {
-    const oldstate = this._state;
-    this._state = state;
+    const oldstate = this.state;
+    this.state = state;
 
     if (oldstate !== state) {
-      this.statesubj.next({
-        opID: this.id,
-        oldState: oldstate,
-        newState: state,
-      });
+      this.changes$.next(this);
     }
 
     // check if there is any runable operation after this one.
@@ -345,19 +378,19 @@ export abstract class Operation {
   }
 
   protected updateProtocol(protocol: string) {
-    this._protocol = protocol;
-    this.parseProtocol(this._protocol);
+    this.protocol = protocol;
+    this.parseProtocol();
   }
 
-  private parseProtocol(protocol: string) {
-    if (protocol === '') {
+  private parseProtocol() {
+    if (!this.protocol) {
       this._parsedProtocol = [];
     } else {
       const result: {
         type: 'WARNING' | 'ERROR';
         message: string;
       }[] = [];
-      const text = protocol.replace(/<br\/>/g, '\n');
+      const text = this.protocol.replace(/<br\/>/g, '\n');
       const regex = /((?:ERROR)|(?:WARNING)): (.+)$/gm;
       let match = regex.exec(text);
 
@@ -374,7 +407,14 @@ export abstract class Operation {
   }
 
   protected throwError(error: Error) {
-    this.time.duration = Date.now() - this.time.start;
+    if (this.lastRound) {
+      this.lastRound.time = this.lastRound.time
+        ? {
+            ...this.lastRound.time,
+            duration: Date.now() - this.lastRound.time.start,
+          }
+        : undefined;
+    }
     console.error(error);
     this.changeState(TaskStatus.ERROR);
     this.updateProtocol(error?.message?.replace(/\n/g, '<br/>'));
@@ -394,17 +434,38 @@ export abstract class Operation {
     // not implemented
   }
 
+  // TODO implement onMouseClick()
+
   public overwriteOptions(options: OperationOptions) {
     throw new Error('Not implemented');
   }
 
-  protected async serializeResults(): Promise<FileInfoSerialized[]> {
-    const promises: Promise<FileInfoSerialized>[] = [];
-    for (const resultObj of this.results) {
-      promises.push(resultObj.toAny());
+  protected async serializeProcessingRounds(): Promise<OperationProcessingRoundSerialized[]> {
+    const promises: Promise<OperationProcessingRoundSerialized>[] = [];
+    for (const round of this.rounds) {
+      promises.push(round.toAny());
     }
 
     return Promise.all(promises);
+  }
+
+  addProcessingRound() {
+    this._rounds.push(
+      new OperationProcessingRound({
+        status: TaskStatus.PENDING,
+        results: [],
+      }),
+    );
+  }
+
+  removeRoundsByIndex(start: number, length: number) {
+    this._rounds.splice(start, length);
+    this.changes$.next(this);
+  }
+
+  removeResultsByIndex(roundIndex: number, start: number, length: number) {
+    this._rounds[roundIndex].results.splice(start, length);
+    this.changes$.next(this);
   }
 }
 

@@ -7,20 +7,17 @@ import { Operation } from '../../../obj/operations/operation';
   styleUrls: ['./context-menu.component.scss'],
   standalone: true,
 })
-export class ContextMenuComponent implements OnInit {
+export class ContextMenuComponent {
   @Input() selectedTasks: number[] = [];
   @Input() selectedOperationType?: Operation;
   @Output() optionselected: EventEmitter<string> = new EventEmitter<string>();
 
   @Input() hid = true;
 
-  constructor() {}
-
   public get entriesCount(): number {
     return this.selectedTasks.length;
   }
 
-  ngOnInit() {}
 
   onAction(action: string) {
     this.optionselected.emit(action);

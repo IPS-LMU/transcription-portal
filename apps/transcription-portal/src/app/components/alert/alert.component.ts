@@ -1,7 +1,8 @@
 import { NgStyle } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
-import { interval, Subject, Subscription } from 'rxjs';
+import { SubscriberComponent } from '@octra/ngx-utilities';
+import { interval } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
 
@@ -20,37 +21,34 @@ export interface AlertEntry {
   animations: ANIMATIONS,
   imports: [NgStyle, NgbAlert],
 })
-export class AlertComponent implements OnInit, OnDestroy {
+export class AlertComponent extends SubscriberComponent {
   private alert = inject(AlertService);
 
   private static counter = 0;
   public duration = 20;
   public queue: AlertEntry[] = [];
   public animation = 'closed';
-  private _success = new Subject<string>();
-  private counter: Subscription;
 
   constructor() {
-    this.alert.alertsend.subscribe(
-      (obj) => this.onAlertSend(obj),
-      (err) => {
+    super();
+    this.subscribe(this.alert.alertsend, {
+      next: (obj) => this.onAlertSend(obj),
+      error: (err) => {
         console.error(err);
       },
-    );
-
-    this.counter = interval(1000).subscribe(() => {
-      for (const queueItem of this.queue) {
-        queueItem.duration--;
-        if (queueItem.duration === 0) {
-          queueItem.animation = 'closed';
-          this.removeFromQueue(queueItem);
-        }
-      }
     });
-  }
 
-  ngOnDestroy() {
-    this.counter.unsubscribe();
+    this.subscribe(interval(1000), {
+      next: () => {
+        for (const queueItem of this.queue) {
+          queueItem.duration--;
+          if (queueItem.duration === 0) {
+            queueItem.animation = 'closed';
+            this.removeFromQueue(queueItem);
+          }
+        }
+      },
+    });
   }
 
   onAlertSend(obj: { type: 'danger' | 'warning' | 'info' | 'success'; message: string; duration: number }) {
@@ -67,8 +65,6 @@ export class AlertComponent implements OnInit, OnDestroy {
       this.queue.push(entry);
     }
   }
-
-  ngOnInit(): void {}
 
   onClose(entry: AlertEntry) {
     entry.animation = 'closed';

@@ -11,7 +11,6 @@ import {
   Renderer2,
   SimpleChanges,
 } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
@@ -26,7 +25,6 @@ import { TaskService } from '../../../obj/tasks/task.service';
 export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
-  private sanitizer = inject(DomSanitizer);
   private taskService = inject(TaskService);
 
   @Input() entry?: Task;
@@ -70,13 +68,13 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     // listen to operation changes because these are not detected by default
     if (this.operation) {
       this.subscrmanager.add(
-        this.operation.statechange.subscribe(() => {
+        this.operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
 
       this.subscrmanager.add(
-        this.operation.changed.subscribe(() => {
+        this.operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
@@ -84,19 +82,15 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private updateView() {
-    if (!(this.elementRef.nativeElement === null || this.elementRef.nativeElement === undefined)) {
+    if (this.elementRef.nativeElement) {
       this.clearContents();
 
       if (this.entry) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
         if (this.operation) {
-          if (
-            this.operation.state === 'FINISHED' &&
-            this.operation.results.length > 0 &&
-            this.operation.lastResult &&
-            !this.operation.lastResult.available
-          ) {
+          const anyResultNotAvailable = this.operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
+          if (this.operation.state === 'FINISHED' && anyResultNotAvailable) {
             // result is not available
             const icon = this.renderer.createElement('i');
 
