@@ -10,10 +10,8 @@ import {
   WebVTTConverter,
 } from '@octra/annotation';
 import { AudioFormat, WavFormat } from '@octra/web-media';
-import { environment } from '../environments/environment';
 
 export class AppInfo {
-  public static readonly debugging = environment.development;
   public static BUILD: {
     version: string;
     hash: string;

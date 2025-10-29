@@ -9,6 +9,7 @@ import { AppSettings } from './shared/app.settings';
 import { BugReportService, ConsoleType } from './shared/bug-report.service';
 import { NotificationService } from './shared/notification.service';
 import { SettingsService } from './shared/settings.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'tportal-root',
@@ -30,7 +31,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
     super();
 
     // overwrite console.log
-    if (!AppInfo.debugging) {
+    if (environment.debugging.enabled && environment.debugging.logging.console) {
       const oldLog = console.log;
       const serv = this.bugService;
       (() => {

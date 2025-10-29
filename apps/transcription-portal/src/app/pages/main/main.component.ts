@@ -606,7 +606,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   @HostListener('window:beforeunload', ['$event'])
   doSomething($event: Event) {
-    if (!AppInfo.debugging) {
+    if (environment.debugging.enabled) {
       $event.returnValue = this.blockLeaving;
     }
   }

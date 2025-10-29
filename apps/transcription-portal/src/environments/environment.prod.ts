@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   development: false,
   debugging: {
-    enabled: false,
+    enabled: true,
     logging: {
       console: true,
       actions: false,
