@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { ServiceProvider } from '@octra/ngx-components';
-import { FileInfo } from '@octra/web-media';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { UploadOperation } from './upload-operation';
 
@@ -23,7 +23,7 @@ export class G2pMausOperation extends Operation {
     this._language = value;
   }
 
-  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
       if (this.lastRound?.lastResult) {
         this.addProcessingRound();
@@ -61,9 +61,9 @@ export class G2pMausOperation extends Operation {
     }
   };
 
-  public clone(task?: Task): G2pMausOperation {
+  public clone(task?: Task, id?: number): G2pMausOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new G2pMausOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider, this.language);
+    return new G2pMausOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider, this.language);
   }
 
   public fromAny(operationObj: IG2PMausOperation, commands: string[], task: Task): G2pMausOperation {
@@ -103,8 +103,12 @@ export class G2pMausOperation extends Operation {
       'the appropriate fragment of the audio signal. MAUS generates such a word alignment from the transcript and the audio file.';
   }
 
-  private async processWithG2PCHUNKERMAUS(url: string, inputs: FileInfo[], httpClient: HttpClient): Promise<FileInfo> {
-    return new Promise<FileInfo>((resolve, reject) => {
+  private async processWithG2PCHUNKERMAUS(
+    url: string,
+    inputs: (TPortalFileInfo | TPortalAudioInfo)[],
+    httpClient: HttpClient,
+  ): Promise<TPortalFileInfo> {
+    return new Promise<TPortalFileInfo>((resolve, reject) => {
       httpClient
         .post(
           url,
@@ -133,7 +137,7 @@ export class G2pMausOperation extends Operation {
             }
 
             if (json.success === 'true') {
-              const file = FileInfo.fromURL(json.downloadLink, 'text/plain', undefined, Date.now());
+              const file = TPortalFileInfo.fromURL(json.downloadLink, 'text/plain', undefined, Date.now());
               file
                 .updateContentFromURL(httpClient)
                 .then(() => {
@@ -143,7 +147,7 @@ export class G2pMausOperation extends Operation {
                     originalFileName: `${name}${file.extension}`,
                   };
 
-                  resolve(file);
+                  resolve(file as TPortalFileInfo);
                 })
                 .catch((error: any) => reject(error));
             } else {

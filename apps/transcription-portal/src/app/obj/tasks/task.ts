@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { SubscriptionManager } from '@octra/utilities';
-import { AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized } from '@octra/web-media';
+import { FileInfoSerialized } from '@octra/web-media';
 import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { AudioFileInfoSerialized, IDBTaskItem } from '../../indexedDB';
 import { OHCommand } from '../oh-config';
 import { ASROperation } from '../operations/asr-operation';
 import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../TPortalFileInfoAttributes';
 import { TaskEntry } from './task-entry';
 
 export enum TaskStatus {
@@ -40,7 +41,7 @@ export class Task {
     return this._operations[1] as ASROperation;
   }
 
-  constructor(files: FileInfo[], operations: Operation[], directory?: TaskDirectory, id?: number) {
+  constructor(files: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], directory?: TaskDirectory, id?: number) {
     if (id === null || id === undefined) {
       this._id = ++TaskEntry.counter;
     } else {
@@ -64,13 +65,13 @@ export class Task {
     return this._id;
   }
 
-  private _files: FileInfo[];
+  private _files: (TPortalFileInfo | TPortalAudioInfo)[];
 
-  get files(): FileInfo[] {
+  get files(): (TPortalFileInfo | TPortalAudioInfo)[] {
     return this._files;
   }
 
-  set files(value: FileInfo[]) {
+  set files(value: (TPortalFileInfo | TPortalAudioInfo)[]) {
     this._files = value;
     this.fileschange.next();
   }
@@ -125,7 +126,7 @@ export class Task {
       let info;
 
       if (file.fullname.indexOf('wav') > 0) {
-        info = new AudioInfo(
+        info = new TPortalAudioInfo(
           file.fullname,
           file.type,
           file.size,
@@ -134,10 +135,10 @@ export class Task {
           (file as AudioFileInfoSerialized).channels,
           (file as AudioFileInfoSerialized).bitsPerSecond,
         );
-        info.attributes = file.attributes;
+        info.attributes = { ...file.attributes };
         info.hash = file.hash;
       } else {
-        info = FileInfo.fromAny(file);
+        info = TPortalFileInfo.fromAny<TPortalFileInfoAttributes>(file) as TPortalFileInfo;
       }
       task.files.push(info);
     }
@@ -221,7 +222,7 @@ export class Task {
     });
   }
 
-  public addFile(file: FileInfo) {
+  public addFile(file: TPortalFileInfo) {
     if (
       this._files.findIndex((a) => {
         return a.fullname === file.fullname;
@@ -245,7 +246,7 @@ export class Task {
     }
   }
 
-  public setFileObj(index: number, fileObj: FileInfo) {
+  public setFileObj(index: number, fileObj: TPortalFileInfo | TPortalAudioInfo) {
     if (index < this.files.length) {
       this.files[index] = fileObj;
       this.fileschange.next();
@@ -271,22 +272,7 @@ export class Task {
 
       Promise.all(filePromises)
         .then((serializedFiles) => {
-          for (let i = 0; i < serializedFiles.length; i++) {
-            const file = this.files[i];
-            const serializedFile: FileInfoSerialized | AudioFileInfoSerialized = serializedFiles[i];
-
-            if (file instanceof AudioInfo) {
-              const audioFile = file as AudioInfo;
-              (serializedFile as AudioFileInfoSerialized).sampleRate = audioFile.sampleRate;
-              (serializedFile as AudioFileInfoSerialized).bitsPerSecond = audioFile.bitrate;
-              (serializedFile as AudioFileInfoSerialized).channels = audioFile.channels;
-              (serializedFile as AudioFileInfoSerialized).duration = audioFile.duration.samples;
-            }
-            serializedFile.attributes = file.attributes;
-
-            result.files.push(serializedFile as never);
-          }
-
+          result.files.push(...serializedFiles);
           result.folderPath = this._directory === null || this._directory === undefined ? '' : this._directory.path;
 
           // read operation data
@@ -433,7 +419,7 @@ export class TaskDirectory {
     } else {
       this._id = ++TaskEntry.counter;
     }
-    this._foldername = DirectoryInfo.extractFolderName(path)!;
+    this._foldername = TPortalDirectoryInfo.extractFolderName(path)!;
   }
 
   get foldername(): string {
@@ -502,7 +488,7 @@ export class TaskDirectory {
         // console.log(`isFile ${item.fullPath}`);
         // Get file
         item.file((file: any) => {
-          const fileInfo = new FileInfo(file.fullName, file.type, 0, file);
+          const fileInfo = new TPortalFileInfo(file.fullName, file.type, 0, file);
           const task = new Task([fileInfo], []);
           // console.log("get file");
           resolve([task]);

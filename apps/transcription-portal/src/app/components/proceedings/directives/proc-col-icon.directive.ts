@@ -15,6 +15,7 @@ import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
 import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
+import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -29,7 +30,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
-  @Output() appendingClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  @Output() appendingClick: EventEmitter<TPortalFileInfo> = new EventEmitter<TPortalFileInfo>();
 
   @Output() infoMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output() infoMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
@@ -255,8 +256,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       }
 
       // set filename
-      this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes.originalFileName);
-      const filename = this.renderer.createText(' ' + this.entry.files[0].attributes.originalFileName.replace('_annot.json', '.wav') + ' ');
+      this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes?.originalFileName);
+      const filename = this.renderer.createText(' ' + this.entry.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
       this.renderer.appendChild(result, filename);
       this.renderer.appendChild(wrapper, result);
     } else {
@@ -297,7 +298,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.setStyle(result, 'font-size', '0.85rem');
         this.renderer.listen(result, 'click', () => {
           const files = (this.entry as Task).files;
-          this.appendingClick.emit(files[1]);
+          this.appendingClick.emit(files[1] as TPortalFileInfo);
         });
         const content = this.renderer.createText(badgeObj.label);
         this.renderer.appendChild(result, content);

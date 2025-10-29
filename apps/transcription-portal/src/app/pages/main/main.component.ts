@@ -1,6 +1,6 @@
 import { DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
@@ -17,7 +17,6 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty, wait } from '@octra/utilities';
-import { AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
 import { DateTime } from 'luxon';
 import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -39,6 +38,7 @@ import { ToolOperation } from '../../obj/operations/tool-operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
 import { TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
@@ -73,7 +73,7 @@ import { StorageService } from '../../storage.service';
     NgbPopover,
   ],
 })
-export class MainComponent extends SubscriberComponent implements OnDestroy {
+export class MainComponent extends SubscriberComponent implements OnDestroy, OnInit {
   taskService = inject(TaskService);
   private ngbModalService = inject(NgbModal);
   private httpClient = inject(HttpClient);
@@ -233,7 +233,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     return AppInfo;
   }
 
-  onAfterDrop(entries: (FileInfo | DirectoryInfo)[]) {
+  onAfterDrop(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     this.readNewFiles(entries);
   }
 
@@ -270,13 +270,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   onFileChange(input: HTMLInputElement) {
     const files: FileList | null = input.files;
-    const fileInfos: FileInfo[] = [];
+    const fileInfos: TPortalFileInfo[] = [];
 
     if (files) {
       // tslint:disable-next-line:prefer-for-of
       for (let i = 0; i < files.length; i++) {
         const file: File = files[i];
-        fileInfos.push(new FileInfo(file.name, file.type, file.size, file));
+        fileInfos.push(new TPortalFileInfo(file.name, file.type, file.size, file));
       }
 
       this.readNewFiles(fileInfos);
@@ -329,7 +329,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
       } else {
         // audio file exists and last result of previous operation exists
-        let file: FileInfo | undefined = undefined;
+        let file: TPortalFileInfo | undefined = undefined;
         if (tool.rounds.length > 0) {
           if (!tool.lastRound?.lastResult?.online && tool.lastRound?.lastResult?.available) {
             // file for last result of current tool exists, but isn't available via URL
@@ -430,14 +430,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
             try {
               const converter = new AnnotJSONConverter();
-              const audio = this.toolSelectedOperation?.task!.files.find((a) => a.type.includes('audio')) as AudioInfo;
+              const audio = this.toolSelectedOperation?.task!.files.find((a) => a.isMediaFile()) as any as TPortalAudioInfo;
               const audiofile = new OAudiofile();
               audiofile.url = audio.url;
               audiofile.name = audio.fullname;
               audiofile.type = audio.type;
               audiofile.size = audio.size;
               audiofile.duration = audio.duration.samples;
-              audiofile.sampleRate = (audio as AudioInfo).sampleRate;
+              audiofile.sampleRate = (audio as TPortalAudioInfo).sampleRate;
               const importResult = converter.import(result, audiofile);
 
               if (importResult.annotjson && !importResult.error) {
@@ -465,7 +465,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
             const blob = new File([annotation.content], annotation.name, {
               type: annotation?.type,
             });
-            const file = new FileInfo(annotation.name, annotation.type, blob.size, blob);
+            const file = new TPortalFileInfo(annotation.name, annotation.type, blob.size, blob);
             const inputs = this.toolSelectedOperation?.task?.files;
 
             const url = await this.upload(toolLoader.operation as ToolOperation, file);
@@ -501,8 +501,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
               jsonText = JSON.stringify(json, null, 2);
             }
 
-            const file: File = FileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
-            const fileInfo = new FileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
+            const file: File = TPortalFileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
+            const fileInfo = new TPortalFileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
 
             fileInfo.attributes = {
               originalFileName: `${fileName}_annot.json`,
@@ -514,7 +514,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         }
         return undefined;
       })()
-        .then(async (file: FileInfo | undefined) => {
+        .then(async (file: TPortalFileInfo | undefined) => {
           if (file) {
             if (this.toolSelectedOperation?.lastRound && this.toolSelectedOperation.task) {
               this.toolSelectedOperation.lastRound.results.push(file);
@@ -613,7 +613,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   public getTime(): number {
     if (this.toolSelectedOperation?.task) {
-      const elem: AudioInfo = this.toolSelectedOperation.task.files[0] as AudioInfo;
+      const elem: TPortalAudioInfo = this.toolSelectedOperation.task.files[0] as any as TPortalAudioInfo;
 
       if (!(elem.duration === null || elem.duration === undefined)) {
         return elem.duration.unix;
@@ -717,7 +717,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     }
   }
 
-  private readNewFiles(entries: (FileInfo | DirectoryInfo)[]) {
+  private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     if (entries && this.taskService.state.currentModeState.operations) {
       // filter and re-structure entries array to supported files and directories
       const filteredEntries = this.taskService.cleanUpInputArray(entries);
@@ -734,7 +734,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.settingsService.shortCutsEnabled = true;
   }
 
-  private upload(operation: Operation, file: FileInfo): Promise<string> {
+  private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const serviceProvider = AppSettings.getServiceInformation('BAS');
       if (operation && operation.task && serviceProvider) {
@@ -814,5 +814,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
     restoreInput.files = null;
     restoreInput.value = '';
+  }
+
+  ngOnInit() {
+    this.subscribe(this.taskService.somethingChanged, {
+      next: () => {
+        this.proceedings?.cd.markForCheck();
+        this.proceedings?.cd.detectChanges();
+      },
+    });
   }
 }

@@ -3,7 +3,7 @@ import { EventEmitter, inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
-import { AudioCutter, AudioFormat, AudioInfo, AudioManager, DirectoryInfo, FileInfo, getAudioInfo } from '@octra/web-media';
+import { AudioCutter, AudioFormat, AudioManager, FileInfo, getAudioInfo } from '@octra/web-media';
 import { DateTime } from 'luxon';
 import { interval, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
@@ -23,6 +23,7 @@ import { SummarizationOperation } from '../operations/summarization-operation';
 import { TranslationOperation } from '../operations/translation-operation';
 import { UploadOperation } from '../operations/upload-operation';
 import { Preprocessor, QueueItem } from '../preprocessor';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../TPortalFileInfoAttributes';
 import { EntryChangeEvent, Task, TaskDirectory, TaskList, TaskStatus } from './index';
 import { TaskEntry } from './task-entry';
 
@@ -160,8 +161,8 @@ export class TaskService {
   private storage = inject(StorageService);
   private sanitizer = inject(DomSanitizer);
   private alertService = inject(AlertService);
-  public errorscountchange = new EventEmitter<number>();
   public readonly state = new PortalState();
+  somethingChanged = new EventEmitter<void>();
 
   private options = {
     max_running_tasks: 3,
@@ -376,7 +377,7 @@ export class TaskService {
         let foundTask: Task | undefined;
         if (result instanceof Task) {
           for (const file of result.files) {
-            const escapedName = escapeRegex(result.files[0].attributes.originalFileName.replace(/(_annot)?\.[^.]+$/g, ''));
+            const escapedName = escapeRegex(result.files[0].attributes?.originalFileName.replace(/(_annot)?\.[^.]+$/g, ''));
             foundTask = this.getTaskWithOriginalFileName(new RegExp(`^${escapedName}((_annot)?.[^.]+)$`), mode);
 
             if (foundTask) {
@@ -428,7 +429,7 @@ export class TaskService {
                 const format2: AudioFormat | undefined = AudioManager.getFileFormat(entry.files[0].extension, AppInfo.audioFormats);
 
                 if (!(format1 && format2)) {
-                  entry.addFile(task.files[0]);
+                  entry.addFile(task.files[0] as TPortalFileInfo);
 
                   (result as TaskDirectory).entries.splice(v, 1);
                   tasks.splice(v, 1);
@@ -450,7 +451,7 @@ export class TaskService {
               return a.status === TaskStatus.QUEUED && foundIt;
             });
 
-            if (!(foundTask === null || foundTask === undefined)) {
+            if (foundTask) {
               const format1: AudioFormat | undefined = AudioManager.getFileFormat(foundTask.files[0].extension, AppInfo.audioFormats);
               const format2: AudioFormat | undefined = AudioManager.getFileFormat(entry.files[0].extension, AppInfo.audioFormats);
 
@@ -481,6 +482,7 @@ export class TaskService {
 
       if (this.state.modes[mode].preprocessor.queue.length === 0) {
         // check remaining unchecked files
+        const t = this.state.currentModeState.taskList?.entries;
         this.checkFiles(mode);
       }
     };
@@ -680,6 +682,7 @@ export class TaskService {
       for (const entryElem of this.state.modes[mode].taskList.entries) {
         if (entryElem instanceof TaskDirectory) {
           const entry = entryElem as TaskDirectory;
+          // TODO continue here
           if (entry.path.indexOf('_dir') > -1) {
             for (const dirElem of entry.entries) {
               const dirEntry = dirElem as Task;
@@ -689,7 +692,7 @@ export class TaskService {
                 if (
                   dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
-                  dirEntry.files[0].attributes.originalFileName.indexOf('_2.') > -1
+                  dirEntry.files[0].attributes?.originalFileName.indexOf('_2.') > -1
                 ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
@@ -698,7 +701,7 @@ export class TaskService {
                 if (
                   dirEntry.status === TaskStatus.QUEUED &&
                   dirEntry.files[0].available &&
-                  dirEntry.files[0].attributes.originalFileName.indexOf('_1.') > -1
+                  dirEntry.files[0].attributes?.originalFileName.indexOf('_1.') > -1
                 ) {
                   removeList.push(dirEntry);
                   nothingToDo = false;
@@ -901,28 +904,30 @@ export class TaskService {
     }
   }
 
-  public cleanUpInputArray(entries: (FileInfo | DirectoryInfo)[]): (FileInfo | DirectoryInfo)[] {
-    let result: (FileInfo | DirectoryInfo)[] = [];
+  public cleanUpInputArray(
+    entries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[],
+  ): (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[] {
+    let result: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[] = [];
 
     for (const entry of entries) {
       if (entry instanceof FileInfo) {
-        const file = entry as FileInfo;
+        const file = entry as TPortalFileInfo;
         const format: AudioFormat | undefined = AudioManager.getFileFormat(file.extension, AppInfo.audioFormats);
 
         if (format || this.validTranscript(file.extension)) {
           result.push(file);
         }
       } else {
-        const directory = entry as DirectoryInfo;
+        const directory = entry as TPortalDirectoryInfo;
 
-        const dir = directory.clone();
+        const dir = directory.clone() as TPortalDirectoryInfo;
 
         dir.entries = dir.entries.filter((a: any) => {
           const format: AudioFormat | undefined = AudioManager.getFileFormat(a.extension, AppInfo.audioFormats);
           return a instanceof FileInfo && (format || this.validTranscript(a.extension));
         });
         const rest = directory.entries.filter((a: any) => {
-          return a instanceof DirectoryInfo;
+          return a instanceof TPortalDirectoryInfo;
         });
 
         if (dir.entries.length > 0) {
@@ -940,11 +945,11 @@ export class TaskService {
     mode: PortalModeType,
   ) => {
     if (queueItem.file instanceof FileInfo) {
-      const file = queueItem.file as FileInfo;
+      const file = queueItem.file as TPortalFileInfo;
       return await this.processFileInfo(file, '', queueItem, mode);
     } else {
       // is directory
-      const dir = queueItem.file as DirectoryInfo;
+      const dir = queueItem.file as TPortalDirectoryInfo;
       return this.processDirectoryInfo(dir, queueItem, mode);
     }
   };
@@ -976,7 +981,7 @@ export class TaskService {
     return result;
   }
 
-  public getAppendingsExtension(file: FileInfo): string {
+  public getAppendingsExtension(file: TPortalFileInfo): string {
     for (const converter of AppInfo.converters) {
       for (const extension of converter.obj.extensions) {
         if (file.fullname.includes(extension)) {
@@ -1105,6 +1110,28 @@ export class TaskService {
             `You can now open phonetic
   details of ${fileName}.`,
           );
+        } else if (opName === 'Upload' && operation.state === TaskStatus.FINISHED && operation.lastRound?.lastResult) {
+          // check if there are other tasks that needs the same uploaded results
+          const uploadResults = operation.lastRound?.results ?? [];
+          const tasks = this.state.currentModeState.taskList?.getAllTasks() ?? [];
+          for (const otherTask of tasks) {
+            if (otherTask.operations[0].lastRound?.results) {
+              for (const uploadResult of uploadResults) {
+                const foundIndex =
+                  otherTask.operations[0].lastRound?.results.findIndex(
+                    (a) => a.attributes?.originalFileName === uploadResult.attributes?.originalFileName && a.hash === uploadResult.hash,
+                  ) ?? -1;
+
+                if (foundIndex > -1 && otherTask.operations[0].lastRound) {
+                  otherTask.operations[0].lastRound.results[foundIndex] = uploadResult.clone();
+                  otherTask.operations[0].lastRound.results[foundIndex].url = uploadResult.url;
+                  otherTask.operations[0].lastRound.results[foundIndex].attributes = { ...uploadResult.attributes };
+                  otherTask.operations[0].lastRound.results[foundIndex].online = true;
+                  otherTask.operations[0] = otherTask.operations[0].clone(otherTask, otherTask.operations[0].id);
+                }
+              }
+            }
+          }
         }
 
         this.updateStatistics();
@@ -1123,11 +1150,17 @@ export class TaskService {
         }
         await this.storage.saveTask(task, mode);
         await this.updateProtocolURL();
+        this.somethingChanged.emit();
       }),
     );
   }
 
-  private async processFileInfo(file: FileInfo, path: string, queueItem: QueueItem, mode: PortalModeType): Promise<(Task | TaskDirectory)[]> {
+  private async processFileInfo(
+    file: TPortalFileInfo | TPortalAudioInfo,
+    path: string,
+    queueItem: QueueItem,
+    mode: PortalModeType,
+  ): Promise<(Task | TaskDirectory)[]> {
     const affectedMode = this.state.modes[mode];
     if (!file?.file) {
       throw new Error('file is undefined');
@@ -1136,25 +1169,23 @@ export class TaskService {
     file.hash = await affectedMode.preprocessor.getHashString(file.file);
     const hashString = file.hash.length === 64 ? file.hash.slice(-20) : file.hash;
     const newName = `${hashString}${file.extension}`;
-    let newFileInfo: FileInfo | undefined;
+    let newFileInfo: TPortalFileInfo | TPortalAudioInfo | undefined;
     this.state.currentModeState.newfiles = true;
 
     if (newName !== file.fullname) {
       // no valid name, replace
-      const newfile = await FileInfo.renameFile(file.file, newName, {
+      const newfile = await TPortalFileInfo.renameFile(file.file, newName, {
         type: file.type,
         lastModified: file.file.lastModified,
       });
-      newFileInfo = new FileInfo(newfile.name, file.type, newfile.size, newfile);
-      newFileInfo.attributes = queueItem.file.attributes;
+      newFileInfo = new TPortalFileInfo(newfile.name, file.type, newfile.size, newfile);
+      newFileInfo.attributes = { ...queueItem.file.attributes };
       newFileInfo.attributes.originalFileName = file.fullname;
       newFileInfo.hash = file.hash;
       file = newFileInfo;
     } else {
-      newFileInfo = new FileInfo(file.fullname, file.type !== '' ? file.type : file.file.type, file.size, file.file);
-      newFileInfo.attributes = queueItem.file.attributes;
-      newFileInfo.attributes.originalFileName = file.fullname;
-      newFileInfo.hash = file.hash;
+      newFileInfo = file.clone()
+      newFileInfo.attributes = { ...queueItem.file.attributes };
       newFileInfo.attributes.originalFileName = file.fullname;
       file = newFileInfo;
     }
@@ -1166,8 +1197,6 @@ export class TaskService {
       throw new Error('hash is undefined');
     }
 
-    const foundOldFile = this.getTaskWithHashAndName(file.hash, file.attributes.originalFileName, mode);
-
     if (file?.file) {
       const arrayBuffer = await readFileAsArray(file.file);
       const format: AudioFormat | undefined = AudioManager.getFileFormat(file.extension, AppInfo.audioFormats);
@@ -1176,14 +1205,15 @@ export class TaskService {
       if (format && !isValidTranscript) {
         // it's an audio file
         await format.init(file.fullname, file.type, arrayBuffer);
-        const audioInfo = getAudioInfo(format, file.fullname, file.type, arrayBuffer);
+        const audioInfo = getAudioInfo<TPortalAudioInfo, TPortalFileInfoAttributes>(TPortalAudioInfo, format, file.fullname, file.type, arrayBuffer);
 
         if (audioInfo.channels > 1) {
-          const directory = new DirectoryInfo(path + file.attributes.originalFileName.replace(/\..+$/g, '') + '_dir/');
+          const directory = new TPortalDirectoryInfo(path + file.attributes?.originalFileName.replace(/\..+$/g, '') + '_dir/');
           const cutter = new AudioCutter(audioInfo);
-          const files: File[] = await cutter.splitChannelsToFiles(file.attributes.originalFileName, [0, 1], arrayBuffer);
+          const files: File[] = await cutter.splitChannelsToFiles(file.attributes?.originalFileName ?? "", [0, 1], arrayBuffer);
           if (this._splitPrompt === 'PENDING') {
             this.openSplitModal();
+            // while modal is visible the code here continues
             this._splitPrompt = 'ASKED';
           } else if (this._splitPrompt !== 'ASKED') {
             if (this._splitPrompt === 'FIRST') {
@@ -1193,25 +1223,27 @@ export class TaskService {
             }
           }
 
-          const fileInfos: FileInfo[] = [];
+          const fileInfos: TPortalFileInfo[] = [];
 
           if (files.length > 1) {
             for (let i = 0; i < files.length; i++) {
               const fileObj = files[i];
-              const fileInfo = FileInfo.fromFileObject(fileObj);
+              const fileInfo = TPortalFileInfo.fromFileObject(fileObj) as TPortalFileInfo;
               fileInfo.hash = await calcSHA256FromFile(fileObj);
-              fileInfo.attributes.originalFileName = `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}.${file.extension}`;
+              fileInfo.attributes = {
+                originalFileName: `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}${file.extension}`
+              };
               fileInfos.push(fileInfo);
             }
             directory.addEntries(fileInfos);
             const result = await this.processDirectoryInfo(directory, queueItem, mode);
             return result;
           } else {
-            return this.processFileInfo(FileInfo.fromFileObject(files[0]), path, queueItem, mode);
+            return this.processFileInfo(TPortalFileInfo.fromFileObject(files[0]) as TPortalFileInfo, path, queueItem, mode);
           }
         } else {
           // it's an audio file
-          newFileInfo = new AudioInfo(
+          newFileInfo = new TPortalAudioInfo(
             newName,
             file.file.type,
             file.file.size,
@@ -1221,6 +1253,9 @@ export class TaskService {
             audioInfo.bitrate,
           );
           newFileInfo.hash = file.hash;
+          newFileInfo.file = file.file;
+          newFileInfo.attributes = { ...file.attributes };
+          file = newFileInfo;
         }
       } else if (file.type.includes('audio')) {
         this.alertService.showAlert(
@@ -1232,52 +1267,71 @@ export class TaskService {
         throw new Error('no valid wave format!');
       }
 
+      let task: Task | undefined;
+      const foundOldFileInTask = this.getTaskWithHashAndName(
+        file.hash!,
+        file.attributes.originalFileName,
+        this.state.currentModeState.taskList?.entries ?? [],
+      );
       if (newFileInfo) {
-        if (newFileInfo.file === null || newFileInfo.file === undefined) {
-          newFileInfo.file = file.file;
-        }
+        if (!foundOldFileInTask) {
+          if (!newFileInfo.file) {
+            newFileInfo.file = file.file;
+          }
 
-        newFileInfo.attributes = {
-          ...file.attributes,
-        };
+          newFileInfo.attributes = {
+            ...file.attributes,
+          };
 
-        // new file
-        const task = new Task(
-          [newFileInfo],
-          affectedMode.operations.map((a) => {
-            a.addProcessingRound();
-            return a;
-          }),
-        );
-        task.setOptions({
-          asr: {
-            provider: this.state.currentModeState.selectedASRProvider,
-            language: this.state.currentModeState.selectedASRLanguage,
-            diarization: {
-              enabled: this.state.currentModeState.isDiarizationEnabled,
-              speakers: this.state.currentModeState.diarizationSpeakers,
+          // new file
+          task = new Task(
+            [newFileInfo],
+            affectedMode.operations.map((a) => {
+              const copy = a.clone();
+              return copy;
+            }),
+          );
+
+          // set state
+          for (let i = 0; i < affectedMode.operations.length; i++) {
+            const operation = affectedMode.operations[i];
+            task.operations[i].enabled = operation.enabled;
+          }
+
+          task.setOptions({
+            asr: {
+              provider: this.state.currentModeState.selectedASRProvider,
+              language: this.state.currentModeState.selectedASRLanguage,
+              diarization: {
+                enabled: this.state.currentModeState.isDiarizationEnabled,
+                speakers: this.state.currentModeState.diarizationSpeakers,
+              },
             },
-          },
-          maus: {
-            language: this.state.currentModeState.selectedMausLanguage,
-          },
-          translation: {
-            language: this.state.currentModeState.selectedTranslationLanguage,
-          },
-          summarization: {
-            provider: this.state.currentModeState.selectedSummarizationProvider,
-            numberOfWords: this.state.currentModeState.selectedSummarizationNumberOfWords,
-          },
-        });
+            maus: {
+              language: this.state.currentModeState.selectedMausLanguage,
+            },
+            translation: {
+              language: this.state.currentModeState.selectedTranslationLanguage,
+            },
+            summarization: {
+              provider: this.state.currentModeState.selectedSummarizationProvider,
+              numberOfWords: this.state.currentModeState.selectedSummarizationNumberOfWords,
+            },
+          });
 
-        // set state
-        for (let i = 0; i < affectedMode.operations.length; i++) {
-          const operation = affectedMode.operations[i];
-          task.operations[i].enabled = operation.enabled;
-          task.operations[i].addProcessingRound();
+          return [task];
+        } else {
+          // found file in another task
+          const index = foundOldFileInTask.files.findIndex(
+            (a) => a.attributes.originalFileName === file.attributes.originalFileName && a.hash === file.hash,
+          );
+          if (index > -1) {
+            const copy = file.clone();
+            foundOldFileInTask.setFileObj(index, copy);
+            foundOldFileInTask.operations[0].changeState(TaskStatus.PENDING);
+          }
+          return [];
         }
-
-        return [task];
       } else {
         throw new Error('fileinfo is undefined');
       }
@@ -1286,14 +1340,14 @@ export class TaskService {
     }
   }
 
-  private async processDirectoryInfo(dir: DirectoryInfo, queueItem: QueueItem, mode: PortalModeType): Promise<TaskDirectory[]> {
+  private async processDirectoryInfo(dir: TPortalDirectoryInfo, queueItem: QueueItem, mode: PortalModeType): Promise<TaskDirectory[]> {
     const affectedMode = this.state.modes[mode];
     const dirTask = new TaskDirectory(dir.path, dir.size);
     const processedValues: any = [];
 
     for (const dirEntry of dir.entries) {
       if (dirEntry instanceof FileInfo) {
-        const file = dirEntry as FileInfo;
+        const file = dirEntry as TPortalFileInfo;
         processedValues.push(await this.processFileInfo(file, dir.path, queueItem, mode));
       } else {
         throw new Error('file in dir is not a file!');
@@ -1336,29 +1390,32 @@ export class TaskService {
     return result;
   }
 
-  private getTaskWithHashAndName(hash: string, name: string, mode: PortalModeType): Task | undefined {
-    const taskList = this.state.modes[mode].taskList;
-    if (!taskList) {
-      throw new Error('undefined tasklist');
-    }
+  private getTaskWithHashAndName(hash: string, name: string, entries: (Task | TaskDirectory)[]): Task | undefined {
+    for (const entry of entries) {
+      if (entry instanceof Task) {
+        const task = entry;
+        if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
+          for (const file of task.files) {
+            const cmpHash = file.hash ?? `${file.name}_${file.size}`;
 
-    const tasks: Task[] = taskList.getAllTasks();
-
-    for (const task of tasks) {
-      if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
-        for (const file of task.files) {
-          const cmpHash = file.hash ?? `${file.name}_${file.size}`;
-          // console.log(`${cmpHash} === ${hash}`);
-          if (
-            cmpHash === hash &&
-            file.attributes.originalFileName === name &&
-            (task.operations[0].state === TaskStatus.PENDING || task.operations[0].state === TaskStatus.ERROR)
-          ) {
-            return task;
+            if (
+              cmpHash === hash &&
+              file.attributes.originalFileName === name &&
+              (task.operations[0].state === TaskStatus.PENDING ||
+                task.operations[0].state === TaskStatus.ERROR ||
+                !task.operations[0].lastRound?.results.find((a) => a.attributes.originalFileName === name)?.available)
+            ) {
+              return task;
+            }
           }
+        } else {
+          console.error('could not find originalFilename');
         }
       } else {
-        console.error('could not find originalFilename');
+        const found = this.getTaskWithHashAndName(hash, name, entry.entries);
+        if (found) {
+          return found;
+        }
       }
     }
 

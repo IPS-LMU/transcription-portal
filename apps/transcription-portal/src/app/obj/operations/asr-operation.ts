@@ -3,12 +3,13 @@ import { input } from '@angular/core';
 import { PartiturConverter, SRTConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { extractFileNameFromURL, joinURL, stringifyQueryParams, wait } from '@octra/utilities';
-import { AudioInfo, downloadFile, FileInfo } from '@octra/web-media';
+import { downloadFile } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { UploadOperation } from './upload-operation';
 
@@ -36,7 +37,7 @@ export class ASROperation extends Operation {
     speakers?: number;
   };
 
-  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     this.updateProtocol('');
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
@@ -47,11 +48,11 @@ export class ASROperation extends Operation {
 
     if (this.serviceProvider) {
       try {
-        let asrResult: FileInfo | undefined;
+        let asrResult: TPortalFileInfo | undefined;
         if (this.serviceProvider.provider === 'LSTWhisperX') {
-          asrResult = await this.callASRFromRadboud(httpclient, inputs[0], accessCode);
+          asrResult = await this.callASRFromRadboud(httpclient, inputs[0] as TPortalAudioInfo, accessCode);
         } else {
-          asrResult = await this.callASRFromBASWebservices(httpclient, inputs[0], accessCode);
+          asrResult = await this.callASRFromBASWebservices(httpclient, inputs[0] as TPortalAudioInfo, accessCode);
         }
 
         if (asrResult && this.serviceProvider) {
@@ -97,18 +98,9 @@ export class ASROperation extends Operation {
     }
   };
 
-  public clone(task?: Task): ASROperation {
+  public clone(task?: Task, id?: number): ASROperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new ASROperation(
-      this.name,
-      this._commands,
-      this.title,
-      this.shortTitle,
-      selectedTask,
-      undefined,
-      this.serviceProvider,
-      this.language,
-    );
+    return new ASROperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider, this.language);
   }
 
   public fromAny(operationObj: IASROperation, commands: string[], task: Task): Operation {
@@ -150,8 +142,8 @@ export class ASROperation extends Operation {
       'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
   }
 
-  private callASRFromBASWebservices(httpClient: HttpClient, input: FileInfo, accessCode?: string): Promise<FileInfo> {
-    return new Promise<FileInfo>((resolve, reject) => {
+  private callASRFromBASWebservices(httpClient: HttpClient, input: TPortalAudioInfo, accessCode?: string): Promise<TPortalFileInfo> {
+    return new Promise<TPortalFileInfo>((resolve, reject) => {
       if (this.serviceProvider) {
         let url =
           this._commands[0]
@@ -188,7 +180,7 @@ export class ASROperation extends Operation {
 
               if (json.success === 'true') {
                 const { extension } = extractFileNameFromURL(json.downloadLink);
-                const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
+                const file = TPortalFileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now()) as TPortalFileInfo;
                 file
                   .updateContentFromURL(httpClient)
                   .then((content) => {
@@ -218,7 +210,7 @@ export class ASROperation extends Operation {
     });
   }
 
-  private async callASRFromRadboud(httpClient: HttpClient, input: FileInfo, accessCode?: string): Promise<FileInfo> {
+  private async callASRFromRadboud(httpClient: HttpClient, input: TPortalAudioInfo, accessCode?: string): Promise<TPortalFileInfo> {
     if (this.serviceProvider) {
       if (input) {
         // 1. Create a new project with unique ID
@@ -229,7 +221,7 @@ export class ASROperation extends Operation {
 
         const res = await this.processASRLSTProject(httpClient, projectName, this.serviceProvider);
 
-        return new Promise<FileInfo>((resolve, reject) => {
+        return new Promise<TPortalFileInfo>((resolve, reject) => {
           this.subscrManager.add(
             interval(5000).subscribe({
               next: async () => {
@@ -247,14 +239,16 @@ export class ASROperation extends Operation {
                         const outputFileText = (await downloadFile(outputFile.url, 'text')) as any as string;
 
                         const srtConverter = new SRTConverter();
-                        const audioFile = this.task?.files.find((a) => a.type.includes('audio')) as AudioInfo;
+                        const audioFile = this.task?.files.find((a) => a.type.includes('audio')) as TPortalAudioInfo;
                         const importResult = srtConverter.import(
                           { name: input.name + '.srt', type: 'text/plain', content: outputFileText, encoding: 'utf-8' },
                           audioFile,
-                          this.diarization?.enabled ? {
-                            sortSpeakerSegments: true,
-                            speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
-                          } : undefined,
+                          this.diarization?.enabled
+                            ? {
+                                sortSpeakerSegments: true,
+                                speakerIdentifierPattern: '\\[(SPEAKER_[0-9]+)\\]: ',
+                              }
+                            : undefined,
                         );
                         if (importResult.annotjson) {
                           const parConverter = new PartiturConverter();
@@ -262,7 +256,7 @@ export class ASROperation extends Operation {
 
                           if (partiturOutpt.file) {
                             const file = new File([partiturOutpt.file.content], partiturOutpt.file.name, { type: partiturOutpt.file.type });
-                            resolve(new FileInfo(file.name, partiturOutpt.file.type, file.size, file));
+                            resolve(new TPortalFileInfo(file.name, partiturOutpt.file.type, file.size, file));
                           }
                         } else {
                           reject(new Error("Can't import LST SRT output to AnnotjSON."));
@@ -288,8 +282,8 @@ export class ASROperation extends Operation {
     }
   }
 
-  private callG2PChunker(asrService: ServiceProvider, httpClient: HttpClient, asrResult: FileInfo): Promise<FileInfo> {
-    return new Promise<FileInfo>((resolve, reject) => {
+  private callG2PChunker(asrService: ServiceProvider, httpClient: HttpClient, asrResult: TPortalFileInfo): Promise<TPortalFileInfo> {
+    return new Promise<TPortalFileInfo>((resolve, reject) => {
       new Promise<string>((resolve2, reject2) => {
         UploadOperation.upload([asrResult], AppSettings.getServiceInformation('BAS')!.host + 'uploadFileMulti', httpClient).subscribe({
           next: (event) => {
@@ -334,7 +328,7 @@ export class ASROperation extends Operation {
 
                 if (json.success === 'true') {
                   const { extension } = extractFileNameFromURL(json.downloadLink);
-                  const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
+                  const file = TPortalFileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
                   setTimeout(() => {
                     file
                       .updateContentFromURL(httpClient)
@@ -345,7 +339,7 @@ export class ASROperation extends Operation {
                         } else if (json.output !== '') {
                           this.updateProtocol('<br/>' + json.output.replace('¶', ''));
                         }
-                        resolve(file);
+                        resolve(file as TPortalFileInfo);
                       })
                       .catch((error) => {
                         reject(error);
@@ -428,7 +422,7 @@ export class ASROperation extends Operation {
     });
   }
 
-  private uploadFileToLST(file: FileInfo, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
+  private uploadFileToLST(file: TPortalAudioInfo, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
       if (file.file) {

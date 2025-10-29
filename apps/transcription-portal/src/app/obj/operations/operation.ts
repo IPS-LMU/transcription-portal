@@ -6,6 +6,7 @@ import { FileInfo, FileInfoSerialized } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import { IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 
 export interface IOperation {
   id: number;
@@ -34,12 +35,12 @@ export interface OperationProcessingRoundSerialized extends IOperationProcessing
 }
 
 export class OperationProcessingRound implements IOperationProcessingRoundWithoutResults {
-  results: FileInfo[] = [];
+  results: TPortalFileInfo[] = [];
   status!: TaskStatus;
   time?: { start: number; duration?: number };
   protocol?: string;
 
-  get lastResult(): FileInfo | undefined {
+  get lastResult(): TPortalFileInfo | undefined {
     return last(this.results);
   }
 
@@ -67,11 +68,15 @@ export class OperationProcessingRound implements IOperationProcessingRoundWithou
 
   static fromAny(obj: OperationProcessingRoundSerialized): OperationProcessingRound {
     return new OperationProcessingRound({
-      results: obj.results.map((a) => FileInfo.fromAny(a)),
+      results: obj.results.map((a) => TPortalFileInfo.fromAny(a) as TPortalFileInfo),
       time: obj.time,
       protocol: obj.protocol?.replace('¶', ''),
       status: obj.status,
     });
+  }
+
+  clone(){
+    return new OperationProcessingRound(this);
   }
 }
 
@@ -129,7 +134,7 @@ export abstract class Operation {
     this._serviceProvider = serviceProvider;
   }
 
-  public abstract start: (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => Promise<void>;
+  public abstract start: (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => Promise<void>;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;
@@ -369,7 +374,7 @@ export abstract class Operation {
     }
   }
 
-  public abstract clone(task?: Task): Operation;
+  public abstract clone(task?: Task, id?: number): Operation;
 
   public abstract fromAny(operationObj: IOperation, commands: string[], task: Task, taskObj: IDBTaskItem): Operation;
 

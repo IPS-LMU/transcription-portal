@@ -3,11 +3,12 @@ import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
-import { AudioInfo, downloadFile, FileInfo, readFileContents } from '@octra/web-media';
+import { downloadFile, readFileContents } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
 export interface ISummarizationOperation extends IOperation {
@@ -27,7 +28,7 @@ export class SummarizationOperation extends Operation {
   }
   maxNumberOfWords?: number;
 
-  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.lastRound?.lastResult) {
       this.addProcessingRound();
     }
@@ -39,7 +40,7 @@ export class SummarizationOperation extends Operation {
 
     const currentRound = this.lastRound!;
     const transcriptFile = operations[2].enabled ? operations[2].lastRound?.lastResult : operations[1].lastRound?.lastResult;
-    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as AudioInfo;
+    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as TPortalAudioInfo;
 
     if (transcriptFile?.file && audioinfo) {
       let transcript = '';
@@ -107,7 +108,7 @@ export class SummarizationOperation extends Operation {
                   const file = new File([summaryText], `${projectName}.txt`, {
                     type: 'text/plain',
                   });
-                  currentRound.results.push(new FileInfo(file.name, file.type, file.size, file));
+                  currentRound.results.push(new TPortalFileInfo(file.name, file.type, file.size, file));
                   this.changeState(TaskStatus.FINISHED);
                 }
               } else {
@@ -132,7 +133,7 @@ export class SummarizationOperation extends Operation {
     }
   };
 
-  public clone(task?: Task): SummarizationOperation {
+  public clone(task?: Task, id?: number): SummarizationOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
     const result = new SummarizationOperation(
       this.name,
@@ -140,7 +141,7 @@ export class SummarizationOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTask,
-      undefined,
+      id,
       this.serviceProvider,
       this.language,
     );

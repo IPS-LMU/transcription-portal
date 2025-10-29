@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Directive,
+  DoCheck,
   ElementRef,
   EventEmitter,
   inject,
@@ -17,22 +18,31 @@ import { Subscription } from 'rxjs';
 import { Operation } from '../../../obj/operations/operation';
 import { Task } from '../../../obj/tasks';
 import { TaskService } from '../../../obj/tasks/task.service';
+import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 
 @Directive({
   selector: '[tportalProcColOperation]',
-  standalone: true,
 })
 export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDestroy {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
   private taskService = inject(TaskService);
 
-  @Input() entry?: Task;
-  @Input() operation?: Operation;
+  @Input() set entry(value: Task | undefined) {
+    this._entry = value;
+    this.updateView();
+  }
+  @Input() set operation(value: Operation | undefined) {
+    this._operation = value;
+    this.updateView();
+  }
+
+  _operation?: Operation;
+  _entry?: Task;
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
-  @Output() appendClick: EventEmitter<FileInfo> = new EventEmitter<FileInfo>();
+  @Output() appendClick: EventEmitter<TPortalFileInfo> = new EventEmitter<TPortalFileInfo>();
 
   @Output() operationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output() operationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
@@ -54,9 +64,9 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   ngAfterViewInit() {
-    if (!(this.entry === null || this.entry === undefined)) {
+    if (!(this._entry === null || this._entry === undefined)) {
       // entry set
-      if (!(this.entry.files === null || this.entry.files === undefined)) {
+      if (!(this._entry.files === null || this._entry.files === undefined)) {
         this.updateView();
       } else {
         throw new Error('ProcOperationDirective error: entry of type Task does not have any files');
@@ -66,15 +76,15 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     }
 
     // listen to operation changes because these are not detected by default
-    if (this.operation) {
+    if (this._operation) {
       this.subscrmanager.add(
-        this.operation.changes$.subscribe(() => {
+        this._operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
 
       this.subscrmanager.add(
-        this.operation.changes$.subscribe(() => {
+        this._operation.changes$.subscribe(() => {
           this.updateView();
         }),
       );
@@ -85,12 +95,13 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     if (this.elementRef.nativeElement) {
       this.clearContents();
 
-      if (this.entry) {
+      if (this._entry) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
-        if (this.operation) {
-          const anyResultNotAvailable = this.operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
-          if (this.operation.state === 'FINISHED' && anyResultNotAvailable) {
+        if (this._operation) {
+          const anyResultNotAvailable = this._operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
+
+          if (this._operation.state === 'FINISHED' && anyResultNotAvailable) {
             // result is not available
             const icon = this.renderer.createElement('i');
 
@@ -100,12 +111,12 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
             this.renderer.appendChild(this.elementRef.nativeElement, icon);
           } else {
             // result is available
-            if (this.operation.enabled) {
+            if (this._operation.enabled) {
               let icon = null;
-              if (!(this.operation.mouseover && this.operation.state === 'ERROR')) {
+              if (!(this._operation.mouseover && this._operation.state === 'ERROR')) {
                 const wrapper = this.renderer.createElement('div');
                 this.renderer.setStyle(wrapper, 'display', 'inline');
-                wrapper.innerHTML = this.operation.getStateIcon2(this.operation.state);
+                wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
 
                 this.renderer.listen(wrapper, 'mouseover', this.onMouseOver);
                 this.renderer.listen(wrapper, 'mouseenter', this.onMouseEnter);
@@ -170,8 +181,8 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   };
 
   private onRepeatIconClick = () => {
-    if (this.entry?.operations && this.entry.operations[1].serviceProvider) {
-      this.entry.restartFailedOperation(this.taskService.httpclient, [
+    if (this._entry?.operations && this._entry.operations[1].serviceProvider) {
+      this._entry.restartFailedOperation(this.taskService.httpclient, [
         {
           name: 'GoogleASR',
           value: this.taskService.accessCode,

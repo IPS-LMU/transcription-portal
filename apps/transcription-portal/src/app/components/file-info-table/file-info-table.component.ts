@@ -1,8 +1,8 @@
 import { NgClass } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
-import { AudioInfo } from '@octra/web-media';
 import { FilesizePipe } from '../../shared/filesize.pipe';
 import { TimePipe } from '../../shared/time.pipe';
+import { TPortalAudioInfo } from '../../obj/TPortalFileInfoAttributes';
 
 @Component({
   selector: 'tportal-file-info-table',
@@ -11,7 +11,7 @@ import { TimePipe } from '../../shared/time.pipe';
   imports: [NgClass, TimePipe, FilesizePipe],
 })
 export class FileInfoTableComponent implements OnInit {
-  @Input() fileinfo?: AudioInfo;
+  @Input() fileinfo?: TPortalAudioInfo;
 
   constructor() {}
 

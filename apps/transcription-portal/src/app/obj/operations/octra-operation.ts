@@ -3,9 +3,10 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { AnnotationLevelType, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { stringifyQueryParams } from '@octra/utilities';
-import { AudioInfo, FileInfo, readFileContents } from '@octra/web-media';
+import { readFileContents } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
@@ -31,8 +32,13 @@ export class OCTRAOperation extends ToolOperation {
 
   public override resultType = 'BAS Partitur Format';
 
-  public override start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    throw new Error("Octra will not be started automatically.")
+  public override start = async (
+    inputs: (TPortalFileInfo | TPortalAudioInfo)[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => {
+    throw new Error('Octra will not be started automatically.');
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
@@ -93,9 +99,9 @@ export class OCTRAOperation extends ToolOperation {
     return result;
   };
 
-  public override clone(task?: Task): OCTRAOperation {
+  public override clone(task?: Task, id?: number): OCTRAOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new OCTRAOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider);
+    return new OCTRAOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider);
   }
 
   public override fromAny(operationObj: IOctraOperation, commands: string[], task: Task): OCTRAOperation {
@@ -135,7 +141,7 @@ export class OCTRAOperation extends ToolOperation {
       const embedded = `1`;
       const host = encodeURIComponent(serviceProvider.host);
 
-      let transcriptFile: FileInfo | undefined = undefined;
+      let transcriptFile: TPortalFileInfo | undefined = undefined;
 
       if (!this.lastRound?.lastResult && this.previousOperation) {
         // no results, but previousOperation exists
@@ -151,7 +157,7 @@ export class OCTRAOperation extends ToolOperation {
       if (transcriptFile && transcriptFile?.file) {
         if (transcriptFile.extension === '.par') {
           const task = this.task;
-          const auiofile = task?.files.find((a) => a.type.includes('audio')) as AudioInfo;
+          const auiofile = task?.files.find((a) => a.type.includes('audio')) as TPortalAudioInfo;
           const content = await readFileContents<string>(transcriptFile.file, 'text', 'utf-8');
           const importResult = new PartiturConverter().import(
             {
@@ -189,7 +195,7 @@ export class OCTRAOperation extends ToolOperation {
             const result = new PartiturConverter().export(importResult.annotjson, auiofile);
             if (result?.file) {
               const newFile = new File([result.file.content], result.file.name, { type: result.file.type });
-              transcript = await this.upload(new FileInfo(newFile.name, newFile.type, newFile.size, newFile), httpClient);
+              transcript = await this.upload(new TPortalFileInfo(newFile.name, newFile.type, newFile.size, newFile), httpClient);
             }
           }
         }
@@ -210,7 +216,7 @@ export class OCTRAOperation extends ToolOperation {
     return '';
   }
 
-  private upload(file: FileInfo, httpClient: HttpClient): Promise<string> {
+  private upload(file: TPortalFileInfo, httpClient: HttpClient): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
       const url = `${serviceProvider.host}uploadFileMulti`;

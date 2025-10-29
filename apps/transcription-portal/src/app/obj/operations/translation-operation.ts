@@ -3,11 +3,12 @@ import { convertFromSupportedConverters, ImportResult, TextConverter } from '@oc
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { wait } from '@octra/utilities';
-import { AudioInfo, FileInfo, readFileContents } from '@octra/web-media';
+import { readFileContents } from '@octra/web-media';
 import { AppInfo } from '../../app.info';
 import { AppSettings } from '../../shared/app.settings';
 import { convertISO639Language } from '../functions';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { ASROperation } from './asr-operation';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
@@ -26,7 +27,7 @@ export class TranslationOperation extends Operation {
     this._language = value;
   }
 
-  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.lastRound?.lastResult) {
       this.addProcessingRound();
     }
@@ -36,9 +37,9 @@ export class TranslationOperation extends Operation {
       start: Date.now(),
     };
 
-    let lastResult: FileInfo | undefined;
+    let lastResult: TPortalFileInfo | undefined;
     const currentRound = this.lastRound!;
-    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as AudioInfo;
+    const audioinfo = this.task?.files?.find((a) => a.isMediaFile()) as TPortalAudioInfo;
 
     if (operations[3].enabled) {
       lastResult = operations[3].lastRound?.lastResult;
@@ -49,7 +50,7 @@ export class TranslationOperation extends Operation {
     } else {
       const transcriptFromInputs = this.task?.files.find((a) => !a.isMediaFile());
       if (transcriptFromInputs) {
-        lastResult = transcriptFromInputs;
+        lastResult = transcriptFromInputs as TPortalFileInfo;
       }
     }
 
@@ -93,7 +94,7 @@ export class TranslationOperation extends Operation {
         const result = await this.getTranslation(httpclient, content);
         this.time.duration = Date.now() - this.time.start;
         currentRound.results.push(
-          new FileInfo(
+          new TPortalFileInfo(
             lastResult.name + '.txt',
             'text/plain',
             lastResult.size,
@@ -111,18 +112,9 @@ export class TranslationOperation extends Operation {
     }
   };
 
-  public clone(task?: Task): TranslationOperation {
+  public clone(task?: Task, id?: number): TranslationOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new TranslationOperation(
-      this.name,
-      this._commands,
-      this.title,
-      this.shortTitle,
-      selectedTask,
-      undefined,
-      this.serviceProvider,
-      this.language,
-    );
+    return new TranslationOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider, this.language);
   }
 
   public fromAny(operationObj: ITranslationOperation, commands: string[], task: Task): Operation {
@@ -164,7 +156,7 @@ export class TranslationOperation extends Operation {
     return new Promise<any>((resolve, reject) => {
       let source: string | undefined = 'en';
       if (this.task?.operations && this.language) {
-         if ((this.task.operations[1] as ASROperation).language) {
+        if ((this.task.operations[1] as ASROperation).language) {
           // ASR operation
           source = convertISO639Language((this.task.operations[1] as ASROperation).language!);
         } else {
