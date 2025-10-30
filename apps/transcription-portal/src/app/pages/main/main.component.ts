@@ -607,8 +607,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   @HostListener('window:beforeunload', ['$event'])
   doSomething($event: Event) {
     if (environment.debugging.enabled) {
-      $event.returnValue = this.blockLeaving;
+      return 'Are you sure you want to leave the TranscriptionPortal? Maybe running processes are going to be canceled.';
     }
+    return '';
   }
 
   public getTime(): number {
