@@ -4,6 +4,7 @@ import { Subject, timer } from 'rxjs';
 import { calcSHA256FromFile, cryptoSupported } from './CryptoHelper';
 import { Task, TaskDirectory } from './tasks';
 import { PortalModeType } from './tasks/task.service';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo } from './TPortalFileInfoAttributes';
 
 /**
  * Class that manages the files added to the queue and the process of converting files to Tasks
@@ -22,7 +23,7 @@ export class QueueItem {
   public results: (Task | TaskDirectory)[] = [];
   private readonly _id: number;
 
-  constructor(file: FileInfo | DirectoryInfo) {
+  constructor(file: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo) {
     this._file = file;
     this._id = ++QueueItem.counter;
     this._state = State.PENDING;
@@ -32,13 +33,13 @@ export class QueueItem {
     return this._id;
   }
 
-  private _file: FileInfo | DirectoryInfo;
+  private _file: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo;
 
-  get file(): FileInfo | DirectoryInfo {
+  get file(): TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo {
     return this._file;
   }
 
-  set file(value: FileInfo | DirectoryInfo) {
+  set file(value: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo) {
     this._file = value;
   }
 
@@ -110,16 +111,8 @@ export class Preprocessor {
     });
   }
 
-  public addToQueue(file: FileInfo | DirectoryInfo) {
+  public addToQueue(file: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo) {
     const queueItem = new QueueItem(file);
-    const fileBlob = (file as FileInfo).file;
-
-    if (fileBlob) {
-      calcSHA256FromFile(fileBlob).catch((e) => {
-        throw e;
-      });
-    }
-
     this._queue.push(queueItem);
     this._itemAdded.next(queueItem);
   }

@@ -5,6 +5,7 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
+import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 
 @Component({
   selector: 'tportal-file-preview-modal',
@@ -15,7 +16,7 @@ import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);
 
-  public selectedFile?: FileInfo;
+  public selectedFile?: TPortalFileInfo;
   public fileContent = '';
   public downloadURL?: SafeResourceUrl;
 
@@ -27,7 +28,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
   };
 
   get fileName(): string {
-    return this.selectedFile?.attributes.originalFileName ?? this.selectedFile?.fullname;
+    return this.selectedFile?.attributes?.originalFileName ?? this.selectedFile?.fullname ?? "NO NAME";
   }
 
   ngOnInit() {
@@ -43,7 +44,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
 
   private loadFileContent() {
     if (!(this.selectedFile === null || this.selectedFile === undefined)) {
-      FileInfo.getFileContent(this.selectedFile.file!)
+      TPortalFileInfo.getFileContent(this.selectedFile.file!)
         .then((text) => {
           this.fileContent = text;
         })

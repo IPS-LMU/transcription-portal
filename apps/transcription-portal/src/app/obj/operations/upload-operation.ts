@@ -1,13 +1,14 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
-import { AudioInfo, FileInfo } from '@octra/web-media';
+import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
 import * as X2JS from 'x2js';
 import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { TimePipe } from '../../shared/time.pipe';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 
 export type IUploadOperation = IOperation;
@@ -29,10 +30,10 @@ export class UploadOperation extends Operation {
       'their left and right channel.';
   }
 
-  public get wavFile(): AudioInfo | undefined {
+  public get wavFile(): TPortalAudioInfo | undefined {
     return this.lastRound?.results?.find((file) => {
       return file.extension.indexOf('wav') > -1 && file.online;
-    }) as AudioInfo | undefined;
+    }) as TPortalAudioInfo | undefined;
   }
 
   public resultType = '.wav';
@@ -119,7 +120,7 @@ export class UploadOperation extends Operation {
     return subj;
   }
 
-  public start = async (files: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (files: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
       this.updateProtocol('');
       this.changeState(TaskStatus.UPLOADING);
@@ -149,7 +150,7 @@ export class UploadOperation extends Operation {
                 for (let i = 0; i < files.length; i++) {
                   files[i].url = obj.urls[i];
                   const type = files[i].extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
-                  const info = FileInfo.fromURL(files[i]!.url!, type, files[i]!.fullname, Date.now());
+                  const info = TPortalFileInfo.fromURL(files[i]!.url!, type, files[i]!.fullname, Date.now()) as TPortalFileInfo;
 
                   info.attributes = files[i].attributes;
 
@@ -259,9 +260,11 @@ export class UploadOperation extends Operation {
     return result;
   };
 
-  public clone(task?: Task): UploadOperation {
+  public clone(task?: Task, id?: number): UploadOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider);
+    const result = new UploadOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider);
+    result._rounds = this.rounds.map((a) => a.clone());
+    return result;
   }
 
   public fromAny(operationObj: IUploadOperation, commands: string[], task: Task): UploadOperation {

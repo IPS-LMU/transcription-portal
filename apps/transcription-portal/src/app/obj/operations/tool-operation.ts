@@ -5,6 +5,7 @@ import { FileInfo } from '@octra/web-media';
 import { Task, TaskStatus } from '../tasks';
 import { IOperation, Operation, OperationProcessingRound } from './operation';
 import { wait } from '@octra/utilities';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 
 export class ToolOperation extends Operation {
   public constructor(
@@ -23,7 +24,7 @@ export class ToolOperation extends Operation {
 
   private active = true;
 
-  public start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
+  public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     this.time = {
       start: Date.now(),
     }
@@ -65,7 +66,7 @@ export class ToolOperation extends Operation {
     return sanitizer.bypassSecurityTrustHtml(result);
   };
 
-  public override clone(task?: Task): ToolOperation {
+  public override clone(task?: Task, id?: number): ToolOperation {
     const selectedTasks = task === null || task === undefined ? this.task : task;
     return new ToolOperation(
       this.name,
@@ -73,7 +74,7 @@ export class ToolOperation extends Operation {
       this.title,
       this.shortTitle,
       selectedTasks,
-      undefined,
+      id,
       this.serviceProvider
     ) as ToolOperation;
   }

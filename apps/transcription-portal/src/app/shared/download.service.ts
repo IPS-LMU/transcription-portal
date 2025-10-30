@@ -4,6 +4,7 @@ import { OAudiofile } from '@octra/media';
 import { AudioInfo, FileInfo } from '@octra/web-media';
 import { AppInfo, ConverterData } from '../app.info';
 import { Operation, OperationProcessingRound } from '../obj/operations/operation';
+import { TPortalAudioInfo, TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
 
 @Injectable({
   providedIn: 'root',
@@ -27,8 +28,8 @@ export class DownloadService {
     }
   }
 
-  public getConversionFiles(operation: Operation, round: OperationProcessingRound, converters: ConverterData[]): Promise<FileInfo[]> {
-    return new Promise<FileInfo[]>((resolve, reject) => {
+  public getConversionFiles(operation: Operation, round: OperationProcessingRound, converters: ConverterData[]): Promise<TPortalFileInfo[]> {
+    return new Promise<TPortalFileInfo[]>((resolve, reject) => {
       const foundTranscriptResult = round.results.find((a) => !a.isMediaFile());
 
       if (!foundTranscriptResult) {
@@ -37,7 +38,7 @@ export class DownloadService {
       }
       const promises: Promise<{
         converter: ConverterData;
-        result: FileInfo | undefined;
+        result: TPortalFileInfo | undefined;
       }>[] = [];
 
       for (const converter of converters) {
@@ -52,7 +53,7 @@ export class DownloadService {
       Promise.all(promises)
         .then((values: any) => {
           values = this.sortConvertedFiles(values);
-          resolve(values.filter((a: any) => a.result !== undefined).map((a: any) => a.result) as FileInfo[]);
+          resolve(values.filter((a: any) => a.result !== undefined).map((a: any) => a.result) as TPortalFileInfo[]);
         })
         .catch((error) => {
           reject(error);
@@ -63,7 +64,7 @@ export class DownloadService {
   private sortConvertedFiles(
     values: {
       converter: ConverterData;
-      result: FileInfo | undefined;
+      result: TPortalFileInfo | undefined;
     }[],
   ) {
     let index = values.findIndex((a) => a.converter.obj.name === 'PlainText');
@@ -75,22 +76,22 @@ export class DownloadService {
   public getResultConversion(
     converter: ConverterData,
     operation: Operation,
-    opResult: FileInfo,
+    opResult: TPortalFileInfo,
   ): Promise<{
     converter: ConverterData;
-    result: FileInfo | undefined;
+    result: TPortalFileInfo | undefined;
   }> {
     return new Promise<{
       converter: ConverterData;
-      result: FileInfo | undefined;
+      result: TPortalFileInfo | undefined;
     }>((resolve, reject) => {
-      FileInfo.getFileContent(opResult.file!)
+      TPortalFileInfo.getFileContent(opResult.file!)
         .then((content) => {
           const audiofile = new OAudiofile();
           if (!operation.task) {
             throw new Error('operation task is undefined');
           }
-          const audioinfo = operation.task.files.find(a => a.isMediaFile()) as AudioInfo;
+          const audioinfo = (operation.task.files.find(a => a.isMediaFile()) as (TPortalAudioInfo | undefined))!;
 
           audiofile.duration = audioinfo.duration.samples;
           audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
@@ -139,13 +140,13 @@ export class DownloadService {
               const conversion = converter.obj.export(annotJSON, audiofile, levelnum);
 
               if (conversion?.file) {
-                const file: File = FileInfo.getFileFromContent(
+                const file: File = TPortalFileInfo.getFileFromContent(
                   conversion.file.content,
                   audiofile.name.replace(/\.[^.]+$/g, '') + converter.obj.extensions[0],
                   conversion.file.type,
                 );
 
-                const fileInfo = new FileInfo(file.name, file.type, file.size, file);
+                const fileInfo = new TPortalFileInfo(file.name, file.type, file.size, file);
                 resolve({
                   converter,
                   result: fileInfo,

@@ -3,7 +3,7 @@ import { SubscriptionManager } from '@octra/utilities';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { environment } from '../environments/environment';
 import { AppInfo } from './app.info';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from './indexedDB';
+import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from './indexedDB';
 import { Operation } from './obj/operations/operation';
 import { Task, TaskDirectory } from './obj/tasks';
 import { TaskEntry } from './obj/tasks/task-entry';
@@ -117,31 +117,10 @@ export class StorageService {
   }
 
   public async saveTask(taskEntry: Task | TaskDirectory, mode: PortalModeType): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const table = this.idbm[`${mode}_tasks`];
-      let promise: Promise<any>;
-
-      if (taskEntry instanceof Task && taskEntry.directory) {
-        promise = taskEntry.directory.toAny();
-      } else {
-        promise = taskEntry.toAny();
-      }
-
-      promise
-        .then((data) => {
-          table
-            .put(data)
-            .then(() => {
-              resolve();
-            })
-            .catch((error) => {
-              reject(error);
-            });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+    const table = this.idbm[`${mode}_tasks`];
+    const data: IDBFolderItem | IDBTaskItem =
+      taskEntry instanceof Task && taskEntry.directory ? await taskEntry.directory.toAny() : await taskEntry.toAny();
+    await table.put(data);
   }
 
   public saveCounter(name: string, value: number) {

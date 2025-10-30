@@ -1,11 +1,21 @@
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ANIMATIONS } from '../../shared/Animations';
-
 import { NgClass, NgStyle } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { AudioInfo, DirectoryInfo, FileInfo, Shortcut, ShortcutGroup } from '@octra/web-media';
+import { Shortcut, ShortcutGroup } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
 import { HotkeysEvent } from 'hotkeys-js';
 import { DownloadModalComponent } from '../../modals/download-modal/download-modal.component';
@@ -14,6 +24,7 @@ import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
+import { OCTRAOperation } from '../../obj/operations/octra-operation';
 import { Operation } from '../../obj/operations/operation';
 import { SummarizationOperation } from '../../obj/operations/summarization-operation';
 import { ToolOperation } from '../../obj/operations/tool-operation';
@@ -22,6 +33,8 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { QueueItem } from '../../obj/preprocessor';
 import { Task, TaskDirectory, TaskList, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
+import { ANIMATIONS } from '../../shared/Animations';
 import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
@@ -34,7 +47,6 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
-import { OCTRAOperation } from '../../obj/operations/octra-operation';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -43,9 +55,7 @@ import { OCTRAOperation } from '../../obj/operations/octra-operation';
   animations: ANIMATIONS,
   imports: [
     PopoverComponent,
-    NgStyle,
     ResultsTableComponent,
-    NgClass,
     FileInfoTableComponent,
     OperationArrowComponent,
     ContextMenuComponent,
@@ -56,7 +66,10 @@ import { OCTRAOperation } from '../../obj/operations/octra-operation';
     TimePipe,
     LuxonFormatPipe,
     NgbTooltip,
+    NgStyle,
+    NgClass,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProceedingsComponent extends SubscriberComponent implements OnInit, OnDestroy {
   sanitizer = inject(DomSanitizer);
@@ -122,7 +135,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     return this.taskService.state.currentModeState.taskList;
   }
 
-  @Output() public afterdrop: EventEmitter<(FileInfo | DirectoryInfo)[]> = new EventEmitter<(FileInfo | DirectoryInfo)[]>();
+  @Output() public afterdrop = new EventEmitter<(TPortalFileInfo | TPortalDirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public operationhover: EventEmitter<Operation> = new EventEmitter<Operation>();
   @Output() public feedbackRequested = new EventEmitter<Operation>();
@@ -261,7 +274,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
       // TODO check browser support
       if ($event.dataTransfer) {
         const droppedfiles = $event.dataTransfer.items;
-        const files: (FileInfo | DirectoryInfo)[] = [];
+        const files: (TPortalFileInfo | TPortalDirectoryInfo)[] = [];
 
         for (let i = 0; i < droppedfiles.length; i++) {
           const item = droppedfiles[i].webkitGetAsEntry();
@@ -270,10 +283,10 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
               // TODO fix order!
               promises.push(
                 new Promise<void>((resolve, reject) => {
-                  DirectoryInfo.fromFolderObject(item)
+                  TPortalDirectoryInfo.fromFolderObject<any, TPortalFileInfoAttributes>(item)
                     .then((dir) => {
                       // check added directory
-                      files.push(dir);
+                      files.push(dir as TPortalDirectoryInfo);
                       resolve();
                     })
                     .catch((error) => {
@@ -288,7 +301,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
               if (!(file === null || file === undefined)) {
                 // check file
                 if (file.name.indexOf('.') > -1) {
-                  files.push(FileInfo.fromFileObject(file));
+                  files.push(TPortalFileInfo.fromFileObject(file) as TPortalFileInfo);
                   this.cd.markForCheck();
                   this.cd.detectChanges();
                 }
@@ -482,7 +495,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     if (show) {
       this.popover.state = 'opened';
     } else if (!this.resultsTableComponent?.somethingClicked) {
-      console.log('toggle popover test');
       this.popover.state = 'closed';
     }
 
@@ -522,8 +534,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
         this.popover.y = top + this.popoverRef.height + 20 > window.innerHeight ? top - this.popover.height - icon.offsetHeight + 10 : top;
       }
 
-      console.log(`Show popover at position (${this.popover.x}, ${this.popover.y}) and size ${this.popover.width}, ${this.popover.height})`);
-
       this.togglePopover(true);
     }
     this.popover.task = undefined;
@@ -535,7 +545,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     this.popover.mouseIn = false;
     setTimeout(() => {
       if (!this.popover.mouseIn) {
-        console.log('operation mouse leave');
         this.togglePopover(false);
       }
     }, 250);
@@ -830,7 +839,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     }
   }
 
-  public onPreviewClick(file: FileInfo) {
+  public onPreviewClick(file: TPortalFileInfo) {
     console.log('preview click close');
     this.popover.state = 'closed';
     this.cd.markForCheck();
@@ -962,9 +971,9 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     return false;
   }
 
-  public getDirEntriesFromItem(entry: QueueItem): FileInfo[] {
-    if (entry.file instanceof DirectoryInfo) {
-      return entry.file.entries as FileInfo[];
+  public getDirEntriesFromItem(entry: QueueItem): TPortalFileInfo[] {
+    if (entry.file instanceof TPortalDirectoryInfo) {
+      return entry.file.entries as TPortalFileInfo[];
     }
     return [];
   }
@@ -977,7 +986,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
   }
 
   public getFileInfo(entry: QueueItem) {
-    return entry.file instanceof FileInfo ? (entry.file as FileInfo) : undefined;
+    return entry.file instanceof TPortalFileInfo ? (entry.file as TPortalFileInfo) : undefined;
   }
 
   public getTaskDirectory(entry: Task | TaskDirectory): TaskDirectory | undefined {
@@ -994,8 +1003,8 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     return undefined;
   }
 
-  getAudioFileOfTask(task: Task): AudioInfo | undefined {
-    if (task.files.length > 0 && task.files[0] instanceof AudioInfo) {
+  getAudioFileOfTask(task: Task): TPortalAudioInfo | undefined {
+    if (task.files.length > 0 && task.files[0] instanceof TPortalAudioInfo) {
       return task.files[0];
     }
     return undefined;

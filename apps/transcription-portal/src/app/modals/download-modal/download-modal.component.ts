@@ -277,7 +277,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
             const folderName = this.getFolderName(operation);
 
             if (opResult?.lastResult) {
-              const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+              const fileName = task.files[0].attributes?.originalFileName.replace(/\.[^.]+$/g, '');
               const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.fullname;
 
               entryResult.push({
@@ -299,7 +299,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
                     entries = entries.filter((a) => a);
 
                     for (const entry of entries) {
-                      const fileName = task.files[0].attributes.originalFileName.replace(/\.[^.]+$/g, '');
+                      const fileName = task.files[0].attributes?.originalFileName.replace(/\.[^.]+$/g, '');
                       const originalName = entry.attributes?.originalFileName ?? entry.fullname;
 
                       entryResult.push({

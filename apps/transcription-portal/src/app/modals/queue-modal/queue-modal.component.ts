@@ -12,9 +12,8 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { NgbActiveModal, NgbDropdown, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
-import { AudioInfo, FileInfo } from '@octra/web-media';
 import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
@@ -24,6 +23,7 @@ import { TranslationOperation } from '../../obj/operations/translation-operation
 import { QueueItem } from '../../obj/preprocessor';
 import { Task, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
+import { TPortalAudioInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AppSettings } from '../../shared/app.settings';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
@@ -144,7 +144,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
       for (const task of this.tasks) {
         if (task.status === TaskStatus.QUEUED) {
-          if (task.files[0] instanceof AudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
+          if (task.files[0] instanceof TPortalAudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
             task.changeState(TaskStatus.PENDING);
           }
 
@@ -180,7 +180,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         this.compatibleTable.push({
           id: task.id,
           fileName: task.files[0].fullname,
-          checks: this.checkAudioFileCompatibility(task.files[0] as AudioInfo, task.operations[1].serviceProvider?.provider),
+          checks: this.checkAudioFileCompatibility(task.files[0] as TPortalAudioInfo, task.operations[1].serviceProvider?.provider),
         });
       }
     }
@@ -218,7 +218,8 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         });
         this.storage.saveTask(task, this.taskService.state.currentMode);
 
-        const audioInfo: AudioInfo | undefined = task.files[0] && task.files[0] instanceof AudioInfo ? (task.files[0] as AudioInfo) : undefined;
+        const audioInfo: TPortalAudioInfo | undefined =
+          task.files[0] && task.files[0] instanceof TPortalAudioInfo ? (task.files[0] as TPortalAudioInfo) : undefined;
         if (audioInfo) {
           this.compatibleTable.push({
             id: task.id,
@@ -378,13 +379,12 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   onMouseOut() {
-    setTimeout(() => {
-    }, 500);
+    setTimeout(() => {}, 500);
 
     this.mouseInDropdown = false;
   }
 
-  checkAudioFileCompatibility(audioInfo: AudioInfo, asrName?: string) {
+  checkAudioFileCompatibility(audioInfo: TPortalAudioInfo, asrName?: string) {
     if (!asrName) {
       return [];
     }
@@ -396,7 +396,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     }[] = [];
 
     const serviceInfo = AppSettings.configuration.api.services.find((a) => a.provider === asrName);
-    if (serviceInfo && audioInfo && audioInfo instanceof AudioInfo) {
+    if (serviceInfo && audioInfo && audioInfo instanceof TPortalAudioInfo) {
       if (serviceInfo.maxSignalDuration) {
         if (audioInfo.duration.seconds > serviceInfo.maxSignalDuration) {
           result.push({
@@ -414,7 +414,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
       }
 
       if (serviceInfo.maxSignalSize) {
-        if ((audioInfo as FileInfo).size / 1000 / 1000 > serviceInfo.maxSignalSize) {
+        if ((audioInfo as TPortalAudioInfo).size / 1000 / 1000 > serviceInfo.maxSignalSize) {
           result.push({
             name: 'Signal length',
             isValid: false,

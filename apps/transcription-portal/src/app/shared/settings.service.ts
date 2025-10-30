@@ -17,6 +17,7 @@ import { OHConfiguration } from '../obj/oh-config';
 import { TaskService } from '../obj/tasks/task.service';
 import { RoutingService } from '../routing.service';
 import { AppSettings } from './app.settings';
+import { TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService implements OnDestroy {
@@ -563,11 +564,11 @@ export class SettingsService implements OnDestroy {
                     }
                   }
 
-                  const info = FileInfo.fromURL(
+                  const info = TPortalFileInfo.fromURL(
                     progressElement.downloadURL,
                     mediaType ?? (extension === '.wav' ? (audioType ?? 'audio/wave') : (transcriptType ?? 'text/plain')),
                     `${filename}${extension}`,
-                  );
+                  ) as TPortalFileInfo;
 
                   info.file = new File([progressElement.result!], info.fullname, {
                     type: info.type,

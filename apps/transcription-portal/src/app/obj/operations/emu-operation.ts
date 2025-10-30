@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { stringifyQueryParams } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
+import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 import { IOperation, Operation, OperationOptions, OperationProcessingRound } from './operation';
 import { ToolOperation } from './tool-operation';
 import { UploadOperation } from './upload-operation';
@@ -30,8 +30,13 @@ export class EmuOperation extends ToolOperation {
 
   public override resultType = 'AnnotJSON';
 
-  public override start = async (inputs: FileInfo[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    throw new Error("Octra will not be started automatically.")
+  public override start = async (
+    inputs: (TPortalFileInfo | TPortalAudioInfo)[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => {
+    throw new Error('Octra will not be started automatically.');
   };
 
   public override getStateIcon = (sanitizer: DomSanitizer) => {
@@ -96,9 +101,9 @@ export class EmuOperation extends ToolOperation {
     return result;
   };
 
-  public override clone(task?: Task): EmuOperation {
+  public override clone(task?: Task, id?: number): EmuOperation {
     const selectedTask = task === null || task === undefined ? this.task : task;
-    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, undefined, this.serviceProvider);
+    return new EmuOperation(this.name, this._commands, this.title, this.shortTitle, selectedTask, id, this.serviceProvider);
   }
 
   public override fromAny(operationObj: IEmuWebAppOperation, commands: string[], task: Task): Operation {
@@ -147,7 +152,7 @@ export class EmuOperation extends ToolOperation {
         audioGetUrl: (this.task.operations[0] as any).wavFile.url,
         saveToWindowParent: true,
       };
-      let result: FileInfo | undefined = undefined;
+      let result: TPortalFileInfo | undefined = undefined;
       const lastResultMaus = this.previousOperation?.lastRound;
       const lastResultEMU = this.lastRound;
 
