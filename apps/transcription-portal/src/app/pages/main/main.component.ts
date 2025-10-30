@@ -721,10 +721,17 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     if (entries && this.taskService.state.currentModeState.operations) {
       // filter and re-structure entries array to supported files and directories
-      const filteredEntries = this.taskService.cleanUpInputArray(entries);
+      const { filteredEntries, unsupportedFiles } = this.taskService.cleanUpInputArray(entries);
 
       for (const entry of filteredEntries) {
         this.taskService.state.currentModeState.preprocessor.addToQueue(entry);
+      }
+
+      if (unsupportedFiles.length > 0) {
+        this.alertService.showAlert(
+          'warning',
+          `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only WAVE audio files and transcript formats are supported.`,
+        );
       }
     }
   }

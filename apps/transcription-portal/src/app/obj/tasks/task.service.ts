@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { IFile } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import { AudioCutter, AudioFormat, AudioManager, FileInfo, getAudioInfo } from '@octra/web-media';
@@ -904,10 +905,17 @@ export class TaskService {
     }
   }
 
-  public cleanUpInputArray(
-    entries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[],
-  ): (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[] {
-    let result: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[] = [];
+  public cleanUpInputArray(entries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[]): {
+    unsupportedFiles: IFile[];
+    filteredEntries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[];
+  } {
+    const result: {
+      unsupportedFiles: IFile[];
+      filteredEntries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[];
+    } = {
+      unsupportedFiles: [],
+      filteredEntries: [],
+    };
 
     for (const entry of entries) {
       if (entry instanceof FileInfo) {
@@ -915,7 +923,14 @@ export class TaskService {
         const format: AudioFormat | undefined = AudioManager.getFileFormat(file.extension, AppInfo.audioFormats);
 
         if (format || this.validTranscript(file.extension)) {
-          result.push(file);
+          result.filteredEntries.push(file);
+        } else {
+          result.unsupportedFiles.push({
+            content: '',
+            encoding: '',
+            name: file.name,
+            type: file.type,
+          });
         }
       } else {
         const directory = entry as TPortalDirectoryInfo;
@@ -931,9 +946,11 @@ export class TaskService {
         });
 
         if (dir.entries.length > 0) {
-          result.push(dir);
+          result.filteredEntries.push(dir);
         }
-        result = result.concat(this.cleanUpInputArray(rest));
+        const dirResult = this.cleanUpInputArray(rest);
+        result.filteredEntries = result.filteredEntries.concat(dirResult.filteredEntries);
+        result.unsupportedFiles = result.unsupportedFiles.concat(dirResult.unsupportedFiles);
       }
     }
 
@@ -1184,7 +1201,7 @@ export class TaskService {
       newFileInfo.hash = file.hash;
       file = newFileInfo;
     } else {
-      newFileInfo = file.clone()
+      newFileInfo = file.clone();
       newFileInfo.attributes = { ...queueItem.file.attributes };
       newFileInfo.attributes.originalFileName = file.fullname;
       file = newFileInfo;
@@ -1210,7 +1227,7 @@ export class TaskService {
         if (audioInfo.channels > 1) {
           const directory = new TPortalDirectoryInfo(path + file.attributes?.originalFileName.replace(/\..+$/g, '') + '_dir/');
           const cutter = new AudioCutter(audioInfo);
-          const files: File[] = await cutter.splitChannelsToFiles(file.attributes?.originalFileName ?? "", [0, 1], arrayBuffer);
+          const files: File[] = await cutter.splitChannelsToFiles(file.attributes?.originalFileName ?? '', [0, 1], arrayBuffer);
           if (this._splitPrompt === 'PENDING') {
             this.openSplitModal();
             // while modal is visible the code here continues
@@ -1231,7 +1248,7 @@ export class TaskService {
               const fileInfo = TPortalFileInfo.fromFileObject(fileObj) as TPortalFileInfo;
               fileInfo.hash = await calcSHA256FromFile(fileObj);
               fileInfo.attributes = {
-                originalFileName: `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}${file.extension}`
+                originalFileName: `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}${file.extension}`,
               };
               fileInfos.push(fileInfo);
             }

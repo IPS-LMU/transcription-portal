@@ -2,17 +2,20 @@
   [ngStyle]="{
     display: queue.length > 0 ? 'inherit' : 'none',
   }"
-  class="queue"
+  class="queue position-absolute bottom-0 end-0"
 >
   @for (entry of queue; track entry.id) {
-    <ngb-alert [type]="entry.type" (closed)="onClose(entry)">
-      {{ entry.message }}
+    <ngb-alert [type]="entry.type" (closed)="onClose(entry)" class="shadow">
+      <div class="d-inline" [innerHTML]="entry.message"></div>
       @if (entry.duration > -1) {
         (dismissed in {{ entry.duration }}s)
       }
     </ngb-alert>
   }
-  <button (click)="clear()" [@fadeToggle]="animation" class="btn btn-secondary" style="width: 100%; background-color: lightgray; border: none">
-    <i class="bi bi-trash"></i> Clear all
-  </button>
+
+  @if (queue.length > 1) {
+    <button (click)="clear()" [@fadeToggle]="animation" class="btn btn-secondary" style="width: 100%; background-color: lightgray; border: none">
+      <i class="bi bi-trash"></i> Clear all
+    </button>
+  }
 </div>
