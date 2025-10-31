@@ -1114,18 +1114,20 @@ export class TaskService {
         const fileName = (task.files[0].attributes?.originalFileName ?? task.files[0].fullname).replace(/\.[^.]+$/g, '');
 
         if (opName === 'ASR' && operation.isFinished) {
-          this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`);
+          this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`, "success");
         } else if (operation.state === TaskStatus.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`,
+            "danger"
           );
         } else if (opName === 'MAUS' && operation.state === TaskStatus.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
   details of ${fileName}.`,
+            "success"
           );
         } else if (opName === 'Upload' && operation.state === TaskStatus.FINISHED && operation.lastRound?.lastResult) {
           // check if there are other tasks that needs the same uploaded results

@@ -1,10 +1,12 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import * as Notify from 'notifyjs';
 import { Subject } from 'rxjs';
+import { AlertService } from './alert.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   public onPermissionChange: Subject<boolean> = new Subject<boolean>();
+  private alertService: AlertService = inject(AlertService);
 
   constructor() {
     this.allowNotifications();
@@ -34,7 +36,7 @@ export class NotificationService {
     this.onPermissionChange.next(this._permissionGranted);
   }
 
-  public showNotification(title: string, body: string) {
+  public showNotification(title: string, body: string, type: 'danger' | 'warning' | 'info' | 'success') {
     if (this.permissionGranted) {
       const myNotification = new Notify(title, {
         body,
@@ -42,6 +44,8 @@ export class NotificationService {
       });
 
       myNotification.show();
+    } else {
+      this.alertService.showAlert(type, body);
     }
   }
 
