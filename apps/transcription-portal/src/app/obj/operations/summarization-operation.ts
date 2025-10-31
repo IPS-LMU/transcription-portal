@@ -29,7 +29,7 @@ export class SummarizationOperation extends Operation {
   maxNumberOfWords?: number;
 
   public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
-    if (this.lastRound?.lastResult) {
+    if (!this.lastRound || this.lastRound?.lastResult) {
       this.addProcessingRound();
     }
     this.changeState(TaskStatus.PROCESSING);

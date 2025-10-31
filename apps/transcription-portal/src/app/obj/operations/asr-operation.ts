@@ -39,6 +39,11 @@ export class ASROperation extends Operation {
 
   public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     this.updateProtocol('');
+
+    if (!this.lastRound) {
+      this.addProcessingRound();
+    }
+
     this.changeState(TaskStatus.PROCESSING);
     await wait(2);
     const currentRound = this.lastRound!;

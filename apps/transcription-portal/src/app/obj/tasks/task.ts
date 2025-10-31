@@ -347,6 +347,11 @@ export class Task {
 
       for (let i = 0; i < this.operations.length; i++) {
         const operation = this.operations[i];
+
+        if (!operation.lastRound) {
+          operation.addProcessingRound();
+        }
+
         if (!operation.enabled && operation.state !== TaskStatus.SKIPPED) {
           operation.changeState(TaskStatus.SKIPPED);
         }
@@ -393,7 +398,9 @@ export class Task {
           }
 
           if (!['OCTRA', 'Emu WebApp'].includes(this.operations[nextoperation].name)) {
-            this.operations[nextoperation].start(files, this.operations, httpclient, '');
+            this.operations[nextoperation].start(files, this.operations, httpclient, '').catch((error) => {
+              this.operations[nextoperation].throwError(error);
+            });
           } else {
             this.operations[nextoperation].changeState(TaskStatus.READY);
           }

@@ -411,7 +411,7 @@ export abstract class Operation {
     }
   }
 
-  protected throwError(error: Error) {
+  throwError(error: Error) {
     if (this.lastRound) {
       this.lastRound.time = this.lastRound.time
         ? {

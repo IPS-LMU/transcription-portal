@@ -1313,6 +1313,7 @@ export class TaskService {
           for (let i = 0; i < affectedMode.operations.length; i++) {
             const operation = affectedMode.operations[i];
             task.operations[i].enabled = operation.enabled;
+            task.operations[i].addProcessingRound();
           }
 
           task.setOptions({

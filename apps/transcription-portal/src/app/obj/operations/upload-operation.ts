@@ -123,8 +123,12 @@ export class UploadOperation extends Operation {
   public start = async (files: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
       this.updateProtocol('');
-      this.changeState(TaskStatus.UPLOADING);
 
+      if (!this.lastRound) {
+        this.addProcessingRound();
+      }
+
+      this.changeState(TaskStatus.UPLOADING);
       const currentRound = this.lastRound!;
       const url = this._commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
 

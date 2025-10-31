@@ -25,7 +25,7 @@ export class G2pMausOperation extends Operation {
 
   public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     if (this.serviceProvider) {
-      if (this.lastRound?.lastResult) {
+      if (!this.lastRound || this.lastRound?.lastResult) {
         this.addProcessingRound();
       }
       this.changeState(TaskStatus.PROCESSING);
