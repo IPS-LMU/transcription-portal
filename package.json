@@ -1,6 +1,6 @@
 {
   "name": "transcription-portal",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "Julian Pömp, Christoph Draxler; Institut für Phonetik und Sprachverarbeitung, LMU München",
   "scripts": {
@@ -33,6 +33,7 @@
     "@angular/platform-browser-dynamic": "20.3.2",
     "@angular/router": "20.3.2",
     "@angular/service-worker": "20.3.2",
+    "@angular/pwa": "^20.3.2",
     "@jsverse/transloco": "^8.1.0",
     "@ng-bootstrap/ng-bootstrap": "^19.0.1",
     "@nx/angular": "22.0.2",

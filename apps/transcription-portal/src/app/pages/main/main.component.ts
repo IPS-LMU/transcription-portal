@@ -62,7 +62,6 @@ import { StorageService } from '../../storage.service';
     NgStyle,
     ProceedingsComponent,
     ToolLoaderComponent,
-    DatePipe,
     TimePipe,
     NgbCollapse,
     NgbTooltip,
@@ -71,6 +70,7 @@ import { StorageService } from '../../storage.service';
     NgbDropdownToggle,
     NgbNavModule,
     NgbPopover,
+    DatePipe,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy, OnInit {

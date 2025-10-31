@@ -40,7 +40,9 @@
           "node_modules/platform/platform.js",
           "node_modules/jquery/dist/jquery.min.js",
           "node_modules/jszip/dist/jszip.min.js"
-        ]
+        ],
+        "serviceWorker": true,
+        "ngswConfigPath": "apps/transcription-portal/ngsw-config.json"
       },
       "configurations": {
         "production": {
@@ -77,6 +79,14 @@
           "extractLicenses": false,
           "sourceMap": true,
           "namedChunks": true
+        },
+        "serving": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": false
         }
       },
       "defaultConfiguration": "production"
@@ -89,9 +99,12 @@
         },
         "development": {
           "buildTarget": "transcription-portal:build:development"
+        },
+        "serving": {
+          "buildTarget": "transcription-portal:build:serving"
         }
       },
-      "defaultConfiguration": "development",
+      "defaultConfiguration": "serving",
       "options": {
         "host": "127.0.0.1",
         "port": 3456

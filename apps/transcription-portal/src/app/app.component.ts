@@ -1,34 +1,37 @@
 import { Component, inject, OnDestroy } from '@angular/core';
-import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
+import { VersionCheckerService, VersionNotificationComponent } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
-import { AppInfo } from './app.info';
+import { environment } from '../environments/environment';
 import { TaskService } from './obj/tasks/task.service';
 import { ANIMATIONS } from './shared/Animations';
 import { AppSettings } from './shared/app.settings';
 import { BugReportService, ConsoleType } from './shared/bug-report.service';
 import { NotificationService } from './shared/notification.service';
 import { SettingsService } from './shared/settings.service';
-import { environment } from '../environments/environment';
 
 @Component({
   selector: 'tportal-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  providers: [],
+  providers: [VersionCheckerService],
   animations: [ANIMATIONS],
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, VersionNotificationComponent],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {
   taskService = inject(TaskService);
   notification = inject(NotificationService);
   bugService = inject(BugReportService);
   settingsService = inject(SettingsService);
-  private activeRoute = inject(ActivatedRoute);
-  public test = 'inactive';
+  versionChecker = inject(VersionCheckerService);
 
   constructor() {
     super();
+
+    this.versionChecker.init({
+      interval: 5 * 60 * 1000, // check every 5 minutes
+    });
 
     // overwrite console.log
     if (environment.debugging.enabled && environment.debugging.logging.console) {

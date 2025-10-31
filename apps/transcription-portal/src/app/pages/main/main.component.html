@@ -4,7 +4,7 @@
     <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
-          <a [title]="AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z'" class="nav-link" href="#"
+          <a class="nav-link" href="#" [ngbPopover]="versionPopover" popoverClass="version-popover"
             ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" /> TranscriptionPortal</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
@@ -20,6 +20,28 @@
               <span class="navbar-toggler-icon"></span>
             </button>
           </a>
+          <ng-template #versionPopover>
+            <div id="build-information">
+              <div>
+                <div class="fw-bold">Version:</div>
+                <div>
+                  {{ AppInfo.BUILD.version }}
+                </div>
+              </div>
+              <div>
+                <div class="fw-bold">Last updated:</div>
+                <div>
+                  {{ AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z' }}
+                </div>
+              </div>
+              <div>
+                <div class="fw-bold">Hash:</div>
+                <div style="font-size: 0.7rem">
+                  {{ AppInfo.BUILD.hash }}
+                </div>
+              </div>
+            </div>
+          </ng-template>
         </li>
       </ul>
       <div [ngbCollapse]="!isCollapsed" class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
@@ -199,13 +221,15 @@
                     <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> Backup Database
                     @if (dbBackup.safeURL) {
                       <p>
-                        <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"><i class="bi bi-cloud-download-fill"></i> Download</a>
+                        <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"
+                          ><i class="bi bi-cloud-download-fill"></i> Download</a
+                        >
                       </p>
                     }
                   </div>
                   <div class="list-group-item border-0 pointer">
-                    <input type="file" class="d-none" #restoreInput (change)="onRestoreFileSelected(restoreInput)">
-                    <div class="w-100" (click)="restoreInput.click();">
+                    <input type="file" class="d-none" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
+                    <div class="w-100" (click)="restoreInput.click()">
                       <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> Restore Database
                     </div>
                   </div>
@@ -221,10 +245,17 @@
       </div>
     </div>
   </nav>
-  <ul ngbNav #nav="ngbNav" [(activeId)]="activeMode" class="nav-tabs" id="mode-tabs" [ngClass]="{
-    'with-feedback': settingsService.feedbackEnabled,
-    'no-feedback': !settingsService.feedbackEnabled
-  }">
+  <ul
+    ngbNav
+    #nav="ngbNav"
+    [(activeId)]="activeMode"
+    class="nav-tabs"
+    id="mode-tabs"
+    [ngClass]="{
+      'with-feedback': settingsService.feedbackEnabled,
+      'no-feedback': !settingsService.feedbackEnabled,
+    }"
+  >
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">

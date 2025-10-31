@@ -8,7 +8,7 @@ const targetFolder = "assets";
 let baseHref = "";
 let dev = false;
 
-const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess", "3rdpartylicenses.txt", "manifest.json"];
+const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess", "3rdpartylicenses.txt", "manifest.json", "worker-basic.min.js", "3rdpartylicenses.txt", "ngsw.json", "ngsw-worker.js", "safety-worker.js"];
 
 let isUpdate = false;
 

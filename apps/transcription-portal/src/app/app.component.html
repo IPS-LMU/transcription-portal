@@ -1,1 +1,14 @@
+@if (versionChecker.isNewVersionAvailable) {
+  <octra-version-notification
+    class="position-absolute top-0 start-50 translate-middle-x"
+    [i18n]="{
+      'reload now': 'Reload now',
+      later: 'Later',
+      'new update': {
+        header: 'New update available',
+        body: 'A new update for the TranscriptionPortal is available. Make sure that no automatic processes are running and no tool is opened (Octra, Emu-webApp). Then reload the TranscriptionPortal to install the update.',
+      },
+    }"
+  ></octra-version-notification>
+}
 <router-outlet></router-outlet>
