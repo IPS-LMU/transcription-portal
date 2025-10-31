@@ -59,7 +59,7 @@ export class StorageService {
   }
 
   constructor() {
-    this._idbm = new IndexedDBManager(environment.production ? 'oh-portal' : 'oh-portal-dev');
+    this._idbm = new IndexedDBManager(environment.development ? 'oh-portal-dev' : 'oh-portal');
     this._idbm.open().catch((e) => {
       alert(e.message);
     });
