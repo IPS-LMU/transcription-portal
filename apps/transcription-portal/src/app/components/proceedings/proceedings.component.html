@@ -120,81 +120,106 @@
 >
   @if (taskList !== undefined && taskList.length === 0 && taskService.state.currentModeState.taskList!.entries.length === 0 && queue.length === 0) {
     <div class="tportal-placeholder">
-      <h1 style="margin-top: 10%; margin-bottom: 40px">Quickstart</h1>
-      <div class="row quickstart" style="padding: 20px 20px">
-        <div class="col-4">
-          <div style="width: 80px; height: 80px; margin: 0 auto">
-            <div
-              class="rounded-circle"
-              style="
-                background-color: cornflowerblue;
-                width: 80px;
-                height: 80px;
-                color: white;
-                text-align: center;
-                vertical-align: middle;
-                font-size: 2em;
-                display: table-cell;
-                margin: 0 auto;
-              "
-            >
-              1.
+      <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
+        @if (taskService.state.currentMode === 'annotation') {
+          Annotation
+        } @else if (taskService.state.currentMode === 'summarization') {
+          Summarization & Translation
+        }
+      </h1>
+      <p class="px-5">
+        The TranscriptionPortal offers two modes for processing audio files: Annotation mode and Summarization & Translation mode. You can switch
+        between the modes by clicking on the tabs at the left top corner.
+      </p>
+      <p class="px-5">
+        @if (taskService.state.currentMode === 'annotation') {
+          In annotation mode you are able to transcribe audio files automatically using ASR, correct the transcript using
+          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>,
+          automatically align the transcript into words and edit the phonetic details in
+          <a href="https://ips-lmu.github.io/EMU-webApp/" target="_blank" class="text-decoration-none">Emu-webApp</a>.
+        } @else if (taskService.state.currentMode === 'summarization') {
+          In summarization mode you automatically transcribe audio files using ASR, check the transcript in
+          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>, summarize
+          the transcript using AI and translate it to a selected language automatically.
+        }
+      </p>
+      <ng-template [ngTemplateOutlet]="quickstartNumeration"></ng-template>
+      <ng-template #quickstartNumeration>
+        <div class="row quickstart px-3 pt-5">
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                1.
+              </div>
             </div>
+            <h4>Add files</h4>
+            <p>
+              Drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or use the "1. ADD FILES" button. Later, you can
+              add files via drag & drop to the table rows, too.
+            </p>
           </div>
-          <h4>Add files</h4>
-          <p>
-            You can drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or you can use the "1. ADD FILES" button.
-            Later, you can add files via drag & drop to the table rows, too.
-          </p>
-        </div>
-        <!-- /.col-lg-4 -->
-        <div class="col-4">
-          <div style="width: 80px; height: 80px; margin: 0 auto">
-            <div
-              class="rounded-circle"
-              style="
-                background-color: cornflowerblue;
-                width: 80px;
-                height: 80px;
-                color: white;
-                text-align: center;
-                vertical-align: middle;
-                font-size: 2em;
-                display: table-cell;
-                margin: 0 auto;
-              "
-            >
-              2.
+          <!-- /.col-lg-4 -->
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                2.
+              </div>
             </div>
+            <h4>Check options</h4>
+            <p>Now set the options for the added files: Click on the "2. CHECK OPTIONS" Button and apply the changed options.</p>
           </div>
-          <h4>Verify new files</h4>
-          <p>Before the new files can be processed it's required to set few options. Click on the "2. Verify" Button.</p>
-        </div>
-        <!-- /.col-lg-4 -->
-        <div class="col-4">
-          <div style="width: 80px; height: 80px; margin: 0 auto">
-            <div
-              class="rounded-circle"
-              style="
-                background-color: cornflowerblue;
-                width: 80px;
-                height: 80px;
-                color: white;
-                text-align: center;
-                vertical-align: middle;
-                font-size: 2em;
-                display: table-cell;
-                margin: 0 auto;
-              "
-            >
-              3.
+          <!-- /.col-lg-4 -->
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                3.
+              </div>
             </div>
+            <h4>Start Processing</h4>
+            <p>After all files and options are checked, click on "3. START PROCESSING". The application starts the processing of pending tasks.</p>
           </div>
-          <h4>Start Processing</h4>
-          <p>After all files are verified you can click on "START PROCESSING". The application starts the processing of pending tasks.</p>
+          <!-- /.col-lg-4 -->
         </div>
-        <!-- /.col-lg-4 -->
-      </div>
+      </ng-template>
     </div>
   }
   @if (taskList !== undefined && taskList.length > 0 && !storage.ready) {

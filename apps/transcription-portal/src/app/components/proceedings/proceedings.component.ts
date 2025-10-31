@@ -1,4 +1,4 @@
-import { NgClass, NgStyle } from '@angular/common';
+import { NgClass, NgStyle, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -68,6 +68,7 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     NgbTooltip,
     NgStyle,
     NgClass,
+    NgTemplateOutlet,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
