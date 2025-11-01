@@ -1,5 +1,5 @@
 <tportal-alert></tportal-alert>
-<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded" id="app">
+<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="(appStoreService.appInitialized$ | async) === false" id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
     <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
@@ -259,7 +259,7 @@
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
+        @if ((appStoreService.appInitialized$ | async) && taskService.state.modes.annotation.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -280,7 +280,7 @@
     <li [ngbNavItem]="2">
       <button ngbNavLink (mousedown)="changeMode('summarization')">Summarization &amp; Translation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
+        @if ((appStoreService.appInitialized$ | async) && taskService.state.modes.summarization.taskList !== undefined) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"

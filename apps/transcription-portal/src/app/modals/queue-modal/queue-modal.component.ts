@@ -28,6 +28,7 @@ import { AppSettings } from '../../shared/app.settings';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
+import { AppStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -45,6 +46,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   private elementRef = inject(ElementRef);
   protected settingsService = inject(SettingsService);
   private renderer = inject(Renderer2);
+  private appStoreService = inject(AppStoreService);
 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
@@ -165,14 +167,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   ngOnDestroy() {
-    this.settingsService
-      .updateASRInfo(AppSettings.configuration)
-      .then((result) => {
-        console.log(`LOADED and updated!`);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    this.appStoreService.updateASRInfo();
 
     this.compatibleTable = [];
     for (const task of this.tasks) {
@@ -379,8 +374,6 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   }
 
   onMouseOut() {
-    setTimeout(() => {}, 500);
-
     this.mouseInDropdown = false;
   }
 

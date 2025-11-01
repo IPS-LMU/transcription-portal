@@ -1,4 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { AppPropertiesDto } from '@octra/api-types';
 import { OHConfiguration } from '../../obj/oh-config';
 
 export class AppActions {
@@ -32,7 +33,7 @@ export class AppActions {
     events: {
       do: emptyProps(),
       success: props<{
-        configuration: OHConfiguration
+        configuration: OHConfiguration;
       }>(),
       fail: props<{
         error: string;
@@ -53,4 +54,18 @@ export class AppActions {
       }>(),
     },
   });
+
+  static initOctraAPI = createActionGroup({
+    source: 'app/init octra api',
+    events: {
+      do: emptyProps(),
+      success: props<{
+        serverProperties: AppPropertiesDto;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
 }

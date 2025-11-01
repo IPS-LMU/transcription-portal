@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -48,6 +48,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
+import { AppStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-main',
@@ -71,19 +72,21 @@ import { StorageService } from '../../storage.service';
     NgbNavModule,
     NgbPopover,
     DatePipe,
+    AsyncPipe,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy, OnInit {
-  taskService = inject(TaskService);
-  private ngbModalService = inject(NgbModal);
-  private httpClient = inject(HttpClient);
-  notification = inject(NotificationService);
-  private storage = inject(StorageService);
-  bugService = inject(BugReportService);
-  private alertService = inject(AlertService);
-  settingsService = inject(SettingsService);
-  private sanitizer = inject(DomSanitizer);
-  modalService = inject(OHModalService);
+  protected taskService = inject(TaskService);
+  protected ngbModalService = inject(NgbModal);
+  protected httpClient = inject(HttpClient);
+  protected notification = inject(NotificationService);
+  protected storage = inject(StorageService);
+  protected bugService = inject(BugReportService);
+  protected alertService = inject(AlertService);
+  protected settingsService = inject(SettingsService);
+  protected sanitizer = inject(DomSanitizer);
+  protected modalService = inject(OHModalService);
+  protected appStoreService = inject(AppStoreService);
 
   public sidebarstate = 'hidden';
   private toolURL?: string;
@@ -832,4 +835,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
       },
     });
   }
+
+  protected readonly AppStoreService = AppStoreService;
 }

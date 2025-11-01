@@ -25,9 +25,9 @@ import { NotificationService } from './app/shared/notification.service';
 import { OHModalService } from './app/shared/ohmodal.service';
 import { SettingsService } from './app/shared/settings.service';
 import { StorageService } from './app/storage.service';
-import { AppEffects, appReducer, modeReducer } from './app/store';
-import { environment } from './environments/environment';
+import { AppEffects, appReducer, ExternalInformationEffects, externalInformationReducer, modeReducer } from './app/store';
 import { ModeEffects } from './app/store/mode/mode.effects';
+import { environment } from './environments/environment';
 
 if (environment.production) {
   enableProdMode();
@@ -71,8 +71,9 @@ bootstrapApplication(AppComponent, {
     provideStore({
       app: appReducer,
       modes: modeReducer,
+      externalInformation: externalInformationReducer,
     }),
-    provideEffects(AppEffects, ModeEffects),
+    provideEffects(AppEffects, ModeEffects, ExternalInformationEffects),
     provideStoreDevtools({
       maxAge: 25, // Retains last 25 states
       logOnly: !isDevMode(), // Restrict extension to log-only mode

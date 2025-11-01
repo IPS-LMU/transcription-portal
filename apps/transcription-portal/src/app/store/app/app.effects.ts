@@ -3,15 +3,18 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
+import { OctraAPIService } from '@octra/ngx-octra-api';
 import { hasProperty } from '@octra/utilities';
+import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import { catchError, exhaustMap, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OHConfiguration } from '../../obj/oh-config';
 import { AppSettings } from '../../shared/app.settings';
 import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
+import { ExternalInformationActions } from '../external-information';
 import { ModeActions } from '../mode';
 import { AppActions } from './app.actions';
-import { AppState } from './app.reducer';
+import { AppState, RootState } from './app.reducer';
 
 @Injectable()
 export class AppEffects {
@@ -20,6 +23,7 @@ export class AppEffects {
   versionChecker = inject(VersionCheckerService);
   bugService = inject(BugReportService);
   private http = inject(HttpClient);
+  private octraAPI = inject(OctraAPIService);
 
   initVersionChecker$ = createEffect(() =>
     this.actions$.pipe(
@@ -114,10 +118,25 @@ export class AppEffects {
   appInitSuccess$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(AppActions.initVersionChecker.success, AppActions.initConsoleLogger.success, ModeActions.initModes.success),
+        ofType(
+          AppActions.initVersionChecker.success,
+          AppActions.initConsoleLogger.success,
+          ModeActions.initModes.success,
+          ExternalInformationActions.loadExternInformation.success,
+        ),
         withLatestFrom(this.store),
-        tap(([a, state]: [any, AppState]) => {
-          if (state.consoleLoggingInitialized && state.modesInitialized && state.versionCheckerStarted) {
+        tap(([, state]: [any, RootState]) => {
+          if (
+            ![
+              state.app.consoleLoggingInitialized,
+              state.app.modesInitialized,
+              state.app.versionCheckerStarted,
+              state.externalInformation.asrInfoRetrieved,
+              state.externalInformation.asrQuotaRetrieved,
+              state.externalInformation.asrLanguagesInitialized,
+              state.externalInformation.mausLanguagesInitialized,
+            ].includes(false)
+          ) {
             this.store.dispatch(AppActions.initApplication.success());
           }
         }),
@@ -153,20 +172,66 @@ export class AppEffects {
     ),
   );
 
-  addTrackingCode$ = createEffect(
+  settingsLoaded$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(AppActions.loadSettings.success),
         withLatestFrom(this.store),
-        tap(([action, state]: [any, AppState]) => {
-          console.log("TRY TRACKING CODE");
-          // add tracking code
-          if (state.settings?.plugins.tracking && state.settings?.plugins.tracking.active && state.settings?.plugins.tracking.active !== '') {
-            this.appendTrackingCode(state.settings.plugins.tracking.active);
+        tap(([action, state]: [any, RootState]) => {
+          const settings = state.app.settings;
+          if (!settings) {
+            return;
           }
+          AppSettings.init(settings);
+
+          // add tracking code
+          if (settings.plugins.tracking && settings.plugins.tracking.active && settings?.plugins.tracking.active !== '') {
+            this.appendTrackingCode(settings.plugins.tracking.active);
+          }
+
+          if (settings.plugins.maintenance?.active && settings.plugins.maintenance?.outagesURL && settings.plugins.maintenance?.outageTextURL) {
+            const snackbar = new MaintenanceWarningSnackbar({
+              jsonURL: settings?.plugins.maintenance.outagesURL,
+              txtURL: settings?.plugins.maintenance.outageTextURL,
+              nrOfDaysBe4MaintToDisplayMessage: 3,
+              simulate: false,
+              verbose: false,
+            });
+            snackbar.initialize().catch((err) => {
+              console.error(err);
+            });
+          }
+
+          this.store.dispatch(AppActions.initOctraAPI.do());
         }),
       ),
     { dispatch: false },
+  );
+
+  initOctraAPI$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AppActions.initOctraAPI.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [any, RootState]) => {
+        // this._feedbackEnabled = (properties.send_feedback && properties.email_notification) ?? false;
+        if (!state.app.settings) {
+          return of(
+            AppActions.initOctraAPI.fail({
+              error: 'Missing settings',
+            }),
+          );
+        }
+
+        return this.octraAPI.init(state.app.settings.api.octraBackend.url, state.app.settings.api.octraBackend.key, undefined, false).pipe(
+          map((serverProperties) => {
+            return AppActions.initOctraAPI.success({ serverProperties });
+          }),
+          catchError((error: HttpErrorResponse) => {
+            return of(AppActions.initOctraAPI.fail({ error: error.error?.message ?? error.message }));
+          }),
+        );
+      }),
+    ),
   );
 
   private appendTrackingCode(type: string) {
