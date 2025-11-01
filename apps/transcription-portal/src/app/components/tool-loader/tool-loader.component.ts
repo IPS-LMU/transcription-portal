@@ -1,6 +1,6 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, Output, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, Output, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Operation } from '../../obj/operations/operation';
+import { StoreTaskOperation } from '../../store';
 
 @Component({
   selector: 'tportal-tool-loader',
@@ -19,7 +19,22 @@ export class ToolLoaderComponent {
   } = {
     name: '',
   };
-  @Input() public operation?: Operation;
+
+  @Input() set operation(
+    operation:
+      | {
+          operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
+          url?: string;
+        }
+      | undefined
+      | null,
+  ) {
+    this.selectedtool = {
+      name: operation?.operation?.name ?? '',
+      url: operation?.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.url) : undefined,
+    };
+  }
+
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
 
   public set url(url: string | undefined) {

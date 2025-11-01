@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
@@ -7,12 +7,9 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
 import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
-import { EmuOperation } from '../../obj/operations/emu-operation';
-import { Operation, OperationProcessingRound } from '../../obj/operations/operation';
-import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
-import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
+import { ModeStoreService, OperationFactory, StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreTaskOperation, TaskStatus } from '../../store';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -21,15 +18,19 @@ import { DownloadService } from '../../shared/download.service';
   imports: [FormsModule, NgStyle],
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
-  private taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);
   private sanitizer = inject(DomSanitizer);
   private downloadService = inject(DownloadService);
+  private modeStoreService = inject(ModeStoreService);
 
-  @Input() type: 'line' | 'column' = 'column';
-  private selectedTasks?: number[];
-  @Input() taskList?: Task[];
-  @Input() column?: Operation;
+  type: 'line' | 'column' = 'column';
+  private selectedTasks?: StoreItem[];
+  column?: OperationFactory;
+  private allTasks?: StoreItemTask[] | null;
+  private operations?: {
+    factory: OperationFactory;
+    enabled: boolean;
+  }[];
 
   public static options: NgbModalOptions = {
     size: 'md',
@@ -49,6 +50,21 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   ngOnInit() {
+    this.subscribe(this.modeStoreService.allTasks$, {
+      next: (allTasks) => {
+        this.allTasks = allTasks;
+      },
+    });
+    this.subscribe(this.modeStoreService.currentModeSelectedEntries$, {
+      next: (selectedModeEntries) => {
+        this.selectedTasks = selectedModeEntries;
+      },
+    });
+    this.subscribe(this.modeStoreService.defaultModeOperations$, {
+      next: (operations) => {
+        this.operations = operations;
+      },
+    });
     this.checkboxes = [];
 
     AppInfo.converters.forEach(() => {
@@ -64,7 +80,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   process() {
     this.state = 'processing';
-    if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
+    if (this.type === 'column' && !(this.column?.name === 'Upload' || this.column?.name === 'Emu WebApp')) {
       this.doColumnZipping();
     } else if (this.type === 'line') {
       this.doLineZipping();
@@ -72,10 +88,10 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   doColumnZipping() {
-    if (!this.taskService.state.currentModeState.taskList) {
-      throw new Error('taskList is undefined');
+    if (!this.allTasks || !this.operations) {
+      throw new Error('All tasks or operations are undefined.');
     }
-    // get url for resulty by column
+    // get url for results by column
     // prepare package
     const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
     const requestPackage: {
@@ -86,33 +102,32 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     } = {
       entries: [],
     };
-    const tasks = this.taskService.state.currentModeState.taskList.getAllTasks();
-
+    const tasks = this.allTasks;
     const promises: Promise<void>[] = [];
 
-    const opIndex = this.taskService.state.currentModeState.operations.findIndex((a) => {
+    const opIndex = this.operations.findIndex((a) => {
       if (!this.column) {
         throw new Error('column is undefined');
       }
-      return a.name === this.column.name;
+      return a.factory.name === this.column.name;
     });
 
-    if (opIndex > -1) {
+    if (opIndex > -1 && tasks) {
       // operation found
 
       for (const task of tasks) {
         const operation = task.operations[opIndex];
+        const lastRound = getLastOperationRound(operation);
 
-        if (operation.rounds.length > 0 && operation.state === TaskStatus.FINISHED) {
-          const lastRound: OperationProcessingRound | undefined = operation.lastRound;
-          const result = lastRound?.results?.find((a) => !a.isMediaFile());
+        if (operation.rounds.length > 0 && lastRound?.status === TaskStatus.FINISHED) {
+          const result = lastRound?.results?.find((a) => !a.type.includes('audio'));
 
-          if (result?.file) {
-            const originalName = result.attributes?.originalFileName ?? result.fullname;
+          if (result) {
+            const originalName = result.attributes?.originalFileName ?? result.name;
 
             requestPackage.entries.push({
               path: originalName,
-              file: result.file,
+              file: new File([result.content!], originalName, { type: result.type }),
             });
 
             const selectedConverters = AppInfo.converters.filter((a, i) => {
@@ -121,7 +136,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
             const promise = new Promise<void>((resolve, reject) => {
               this.downloadService
-                .getConversionFiles(operation, lastRound!, selectedConverters)
+                .getConversionFiles(task, operation, lastRound!, selectedConverters)
                 .then((files) => {
                   files = files.filter((a) => a);
                   for (const fileInfo of files) {
@@ -147,21 +162,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       console.error('opIndex is less than 0!');
     }
 
-    // TODO check if this is required
-    new Promise<void>((resolve, reject) => {
-      if (promises.length === 0) {
-        resolve();
-      } else {
-        Promise.all(promises).then(
-          () => {
-            resolve();
-          },
-          (error) => {
-            reject(error);
-          },
-        );
-      }
-    })
+    Promise.all(promises)
       .then(() => {
         if (requestPackage.entries.length > 0) {
           this.archiveName = `${this.column?.name}Results_${dateStr}.zip`;
@@ -194,23 +195,22 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
       const promises = [];
 
-      for (const index of this.selectedTasks) {
-        const entry = this.taskService.state.currentModeState.taskList?.getEntryByIndex(index);
-
-        if (entry instanceof TaskDirectory) {
+      for (const entry of this.selectedTasks) {
+        if (entry.type === 'folder') {
           promises.push(
             new Promise<void>((resolve, reject) => {
               const dirPromises = [];
+              const dirEntries = (entry as StoreItemTaskDirectory).entries.ids.map((id) => entry.entries!.entities[id]);
 
-              for (const dirEntry of entry.entries) {
-                dirPromises.push(this.processTask(dirEntry as Task));
+              for (const dirEntry of dirEntries) {
+                dirPromises.push(this.processTask(dirEntry as StoreItemTask));
               }
 
               Promise.all(dirPromises)
                 .then((values) => {
                   for (const value of values) {
                     for (const val of value) {
-                      val.path = `${entry.foldername}/${val.path}` as never;
+                      val.path = `${entry.folderName}/${val.path}` as never;
                       requestPackage.entries.push(val);
                     }
                   }
@@ -226,7 +226,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
           if (entry) {
             promises.push(
               new Promise<void>((resolve, reject) => {
-                this.processTask(entry)
+                this.processTask(entry as StoreItemTask)
                   .then((entries) => {
                     for (const entry2 of entries) {
                       requestPackage.entries.push(entry2);
@@ -254,7 +254,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     }
   }
 
-  processTask(task: Task): Promise<
+  processTask(task: StoreItemTask): Promise<
     {
       path: 'string';
       file: File;
@@ -271,18 +271,18 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         const promises = [];
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
+          const lastRound = getLastOperationRound(operation);
 
-          if (operation.name !== task.operations[0].name && operation.state === TaskStatus.FINISHED && operation.rounds.length > 0) {
-            const opResult = operation.lastRound;
+          if (operation.name !== task.operations[0].name && lastRound?.status === TaskStatus.FINISHED && operation.rounds.length > 0) {
             const folderName = this.getFolderName(operation);
-
-            if (opResult?.lastResult) {
+            const opResult = getLastOperationResultFromLatestRound(operation);
+            if (opResult) {
               const fileName = task.files[0].attributes?.originalFileName.replace(/\.[^.]+$/g, '');
-              const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.fullname;
+              const originalName = opResult.attributes?.originalFileName ?? opResult.name;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
-                file: opResult?.lastResult.file,
+                file: opResult.blob,
               });
             }
 
@@ -293,7 +293,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
             promises.push(
               new Promise<void>((resolve2, reject2) => {
                 this.downloadService
-                  .getConversionFiles(operation, operation.lastRound!, selectedConverters)
+                  .getConversionFiles(task, operation, getLastOperationRound(operation)!, selectedConverters)
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
                     entries = entries.filter((a) => a);
@@ -349,20 +349,13 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   removeSelected() {
-    if (this.selectedTasks && this.taskService.state.currentModeState.taskList) {
-      for (const index of this.selectedTasks) {
-        const entry = this.taskService.state.currentModeState.taskList.getEntryByIndex(index);
-        if (entry) {
-          this.taskService.state.currentModeState.taskList.removeEntry(entry, true);
-        } else {
-          throw new Error("Can't find entry");
-        }
-      }
+    if (this.selectedTasks) {
+      this.modeStoreService.removeStoreItems(this.selectedTasks.map((a) => a.id));
       this.activeModal.close();
     }
   }
 
-  getFolderName(operation: Operation) {
+  getFolderName(operation: StoreTaskOperation): string {
     switch (operation.name) {
       case 'ASR':
         return '1_Speech Recognition';

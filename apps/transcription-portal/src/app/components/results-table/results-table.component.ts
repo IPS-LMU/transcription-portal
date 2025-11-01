@@ -4,18 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Converter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { hasProperty } from '@octra/utilities';
+import { hasProperty, last } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
 import { timer } from 'rxjs';
 import { AppInfo, ConverterData } from '../../app.info';
-import { Operation } from '../../obj/operations/operation';
 import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { DownloadService } from '../../shared/download.service';
+import { OperationFactory, StoreItemTask, StoreTaskOperation } from '../../store';
+import { convertStoreFileToFileInfo } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, FormsModule],
 })
 export class ResultsTableComponent implements OnChanges {
@@ -23,7 +24,14 @@ export class ResultsTableComponent implements OnChanges {
   protected cd = inject(ChangeDetectorRef);
   private downloadService = inject(DownloadService);
 
-  @Input() operation?: Operation;
+  @Input() operation?: StoreTaskOperation;
+  @Input() task?: StoreItemTask;
+  @Input() defaultOperations?:
+    | {
+        factory: OperationFactory<any>;
+        enabled: boolean;
+      }[]
+    | null = [];
   @Input() visible = false;
 
   somethingClicked = false;
@@ -60,11 +68,7 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (
-      ((hasProperty(changes, 'operation') && changes['operation'].currentValue) ||
-        (hasProperty(changes, 'visible') && changes['visible'].currentValue && changes['visible'].currentValue)) &&
-      this.operation
-    ) {
+    if (this.visible && this.task && this.operation) {
       if (this.oldOperation.id !== this.operation.id || this.oldOperation.numOfResults !== this.operation.rounds.length) {
         if (!this.generationRunning) {
           this.generationRunning = true;
@@ -111,56 +115,64 @@ export class ResultsTableComponent implements OnChanges {
 
   private generateTable() {
     this.clearConvertedArray();
-    if (this.operation && this.operation.resultType) {
-      this.conversionExtension = this.operation.resultType.replace('/json', '');
+    const opFactory = (this.defaultOperations ?? []).find((a) => a.factory.name === this.operation?.name)?.factory;
 
-      if (this.operation.resultType !== '.wav') {
+    if (this.task && this.operation && opFactory?.resultType) {
+      this.conversionExtension = opFactory.resultType.replace('/json', '');
+
+      if (opFactory.resultType !== '.wav') {
         const promises: Promise<TPortalFileInfo[]>[] = [];
 
         for (const round of this.operation.rounds) {
-          promises.push(this.downloadService.getConversionFiles(this.operation, round, this.converters));
+          promises.push(this.downloadService.getConversionFiles(this.task, this.operation, round, this.converters));
         }
 
         // read all file contents of results
         Promise.all(promises)
           .then((promiseResults: TPortalFileInfo[][]) => {
-            if (this.operation) {
+            if (this.operation && this.task) {
               for (let j = 0; j < promiseResults.length; j++) {
-                const result = this.operation.rounds[j].lastResult;
+                const result = last(this.operation.rounds[j].results);
                 const conversions = promiseResults[j];
+                const { extension } = FileInfo.extractFileName(result!.name);
 
                 const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) => a.obj.extensions.findIndex((b) => b.indexOf(result!.extension) > -1) > -1,
+                  (a) =>
+                    a.obj.extensions.findIndex((b) => {
+                      return b.indexOf(extension) > -1;
+                    }) > -1,
                 );
 
                 if (from) {
                   const importConverter = from.obj;
                   this.originalLabel = importConverter.extensions[0];
 
-                  if (!result?.file) {
-                    throw new Error(`result file is undefined`);
+                  if (!result?.content) {
+                    throw new Error(`result content is undefined`);
                   }
 
-                  let originalFileName: any = this.operation?.task?.files[0].attributes?.originalFileName ?? this.operation?.task?.files[0].fullname;
+                  let originalFileName: any = this.task.files[0].attributes?.originalFileName ?? this.task.files[0].name;
                   originalFileName = TPortalFileInfo.extractFileName(originalFileName);
 
-                  const fileInfo = result.clone();
-                  fileInfo.url = result.file ? URL.createObjectURL(result.file) : '';
+                  const fileInfo = convertStoreFileToFileInfo(result);
+                  fileInfo.file = new File([result.content!], result.name, { type: result.type })
+                  fileInfo.url = URL.createObjectURL(fileInfo.file);
                   fileInfo.attributes = {
-                    originalFileName: `${originalFileName.name}${result.extension}`,
+                    ...result.attributes,
+                    originalFileName: `${originalFileName.name}${extension}`,
                   };
 
                   const resultObj = {
-                    url: result.file ? this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)) : '',
+                    url: fileInfo.url,
                     info: fileInfo,
                   };
 
                   const audio: OAudiofile = new OAudiofile();
-                  if (this.operation.task) {
-                    audio.sampleRate = (this.operation.task.files[0] as TPortalAudioInfo).sampleRate;
-                    audio.duration = (this.operation.task.files[0] as TPortalAudioInfo).duration.samples;
-                    audio.name = resultObj.info.fullname;
-                    audio.size = (this.operation.task.files[0] as TPortalAudioInfo).size;
+                  if (this.task) {
+                    audio.sampleRate = (this.task.files[0] as TPortalAudioInfo).sampleRate;
+                    audio.duration = (this.task.files[0] as TPortalAudioInfo).duration.samples;
+                    audio.name = (this.task.files[0] as TPortalAudioInfo).fullname;
+                    audio.size = (this.task.files[0] as TPortalAudioInfo).size;
                   }
 
                   const convElem = {
@@ -227,7 +239,7 @@ export class ResultsTableComponent implements OnChanges {
           this.convertedArray.push({
             originalResults: round.results.map((a) => ({
               url: a.url ?? '',
-              info: a,
+              info: convertStoreFileToFileInfo(a),
             })),
             conversions: [],
             number: i,
@@ -243,6 +255,7 @@ export class ResultsTableComponent implements OnChanges {
     this.selectedVersion = ((this.operation?.rounds.length ?? 1) - 1).toString();
     this.cd.markForCheck();
     this.cd.detectChanges();
+
     if (this.operation) {
       this.oldOperation = {
         id: this.operation.id,

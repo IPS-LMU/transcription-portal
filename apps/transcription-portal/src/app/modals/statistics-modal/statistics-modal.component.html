@@ -1,11 +1,13 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Statistics for {{ taskService.state.currentMode }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">Statistics for {{ modeStoreService.currentMode$ | async }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close()"></button>
 </div>
 <div class="modal-body">
   <div style="text-align: right">
-    @if (taskService.currentModeState?.protocolURL && taskService.currentModeState?.protocolFileName) {
-      <a [download]="taskService.currentModeState!.protocolFileName" [href]="taskService.currentModeState!.protocolURL">Download JSON</a>
+    @if (modeStoreService.currentModeProtocol$ | async) {
+      <a [download]="(modeStoreService.currentModeProtocol$ | async)?.fileName" [href]="(modeStoreService.currentModeProtocol$ | async)?.url"
+        >Download JSON</a
+      >
     }
   </div>
   <div class="row">

@@ -1,4 +1,5 @@
 import { NgbModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { AppInfo } from '../app.info';
 
 export async function readFileAsArray(file: File) {
   return new Promise<ArrayBuffer>((resolve, reject) => {
@@ -45,4 +46,16 @@ export function convertISO639Language(lang: string) {
     return (mappings as any)[key];
   }
   return lang;
+}
+
+export function validTranscript(extension: string): boolean {
+  let result = false;
+
+  for (const converter of AppInfo.converters) {
+    for (const extension1 of converter.obj.extensions) {
+      result = result || extension1.includes(extension);
+    }
+  }
+
+  return result;
 }

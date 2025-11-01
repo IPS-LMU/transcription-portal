@@ -1,14 +1,28 @@
-import { Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  inject,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'tportal-popover',
   templateUrl: './popover.component.html',
   styleUrls: ['./popover.component.scss'],
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy {
+export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy, OnInit {
+  private cd = inject(ChangeDetectorRef);
   @ViewChild('svg', { static: true }) svg?: ElementRef;
   @ViewChild('inner', { static: true }) inner?: ElementRef;
 
@@ -131,5 +145,11 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
         y: this.height - this.margin.bottom - 10,
       },
     };
+  }
+
+  ngOnInit() {
+    this.subscribe(interval(1000), {
+      next: () => this.cd.markForCheck(),
+    });
   }
 }

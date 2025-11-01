@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { RoutingService } from '../../routing.service';
-import { SettingsService } from '../../shared/settings.service';
+import { AppStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-loading',
@@ -10,18 +10,20 @@ import { SettingsService } from '../../shared/settings.service';
   styleUrl: './loading.component.scss',
 })
 export class LoadingComponent extends SubscriberComponent {
-  private settingsService = inject(SettingsService);
+  private appStoreService = inject(AppStoreService);
   private routingServer = inject(RoutingService);
 
   error?: string;
 
   constructor() {
     super();
-    this.subscribe(this.settingsService.settingsload, {
-      next: () => {
-        this.routingServer.navigate('navigate after settings loaded', ['/'], {
-          queryParamsHandling: 'merge',
-        });
+    this.subscribe(this.appStoreService.appInitialized$, {
+      next: (initialized) => {
+        if (initialized) {
+          this.routingServer.navigate('navigate after settings loaded', ['/'], {
+            queryParamsHandling: 'merge',
+          });
+        }
       },
       error: (error: Error) => {
         this.error = error.message;

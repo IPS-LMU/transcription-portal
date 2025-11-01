@@ -1,4 +1,4 @@
-import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo } from '@octra/web-media';
+import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized } from '@octra/web-media';
 
 export interface TPortalFileInfoAttributes {
   originalFileName: string;
@@ -22,6 +22,19 @@ export class TPortalFileInfo extends FileInfo<TPortalFileInfoAttributes> {
     result._hash = this._hash;
     result._online = this._online;
     result._url = this._url;
+    return result;
+  }
+
+  static override fromAny<TPortalFileInfoAttributes>(object: FileInfoSerialized): FileInfo {
+    const result = new TPortalFileInfo(object.fullname, object.type, object.size, undefined);
+
+    result._attributes = {
+      originalFileName: object.attributes?.originalFileName,
+    };
+    result._hash = object.hash;
+    result._online = object.online ?? false;
+    result._url = object.url;
+
     return result;
   }
 }

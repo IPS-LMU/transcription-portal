@@ -2,7 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { FileInfo } from '@octra/web-media';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
@@ -28,7 +27,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
   };
 
   get fileName(): string {
-    return this.selectedFile?.attributes?.originalFileName ?? this.selectedFile?.fullname ?? "NO NAME";
+    return this.selectedFile?.attributes?.originalFileName ?? this.selectedFile?.fullname ?? 'NO NAME';
   }
 
   ngOnInit() {
@@ -43,16 +42,14 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
   }
 
   private loadFileContent() {
-    if (!(this.selectedFile === null || this.selectedFile === undefined)) {
-      TPortalFileInfo.getFileContent(this.selectedFile.file!)
+    if (this.selectedFile?.file) {
+      TPortalFileInfo.getFileContent(this.selectedFile.file)
         .then((text) => {
           this.fileContent = text;
         })
         .catch((error: any) => {
           console.error(error);
         });
-    } else {
-      console.error(`selectedFile is null!`);
     }
   }
 

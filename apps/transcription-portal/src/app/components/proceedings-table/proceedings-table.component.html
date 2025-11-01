@@ -1,0 +1,568 @@
+<tportal-popover
+  #popoverRef
+  (mouseenter)="popover.mouseIn = true"
+  (mouseleave)="togglePopover(false)"
+  [@fadeToggleRow]="popover.state"
+  [borderColor]="getPopoverColor(popover.operation!)"
+  [height]="popover.height"
+  [ngStyle]="{
+    width: popover.width + 'px',
+    height: popover.height + 'px',
+    'margin-top': popover.y + 'px',
+    'margin-left': popover.x + 4 + 'px',
+  }"
+  [pointer]="popover.pointer"
+  [width]="popover.width"
+>
+  @if (popover.operation !== undefined && popover.lastOperationRound !== undefined) {
+    @if (
+      popover.lastOperationRound.time !== undefined &&
+      popover.lastOperationRound.time.start !== undefined &&
+      popover.lastOperationRound.time.start > 0
+    ) {
+      @if (
+        popover.lastOperationRound.status === 'FINISHED' && !popover.lastOperationRoundResult?.content && !popover.lastOperationRoundResult?.online
+      ) {
+        <p style="color: red">The latest result does not exist anymore.</p>
+      }
+      <div class="row g-0">
+        <div class="col" style="font-size: 0.85rem">
+          <i class="bi bi-clock" style="color: cornflowerblue"></i
+          ><span> {{ popover.lastOperationRound.time.start | luxonFormat: 'DATETIME_SHORT' }}</span>
+        </div>
+        <div class="col text-end" style="font-size: 0.85rem">
+          <i class="bi bi-hourglass" style="color: cornflowerblue"></i
+          ><span> {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}</span>
+        </div>
+      </div>
+    }
+    @if (popover.lastOperationRound.status === 'PROCESSING' && popover.operation.serviceProviderName !== undefined) {
+      <div class="service-preview">
+        <div class="provided-by">Service provided by</div>
+        <a
+          [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL"
+          style="display: block; vertical-align: middle"
+          target="_blank"
+        >
+          <img
+            [src]="getServerProvider(popover.operation.serviceProviderName)?.logoURL"
+            alt="EML Logo"
+            class="service-logo"
+            style="border: 1px solid lightgray"
+          />
+        </a>
+        <div class="service-terms">
+          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
+            ><i class="bi bi-journal-text"></i> Service terms</a
+          ><br />
+          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank"><i class="bi bi-globe"></i> Homepage</a
+          ><br />
+        </div>
+        <i (click)="onReportIconClick(popover.operation)" class="bi bi-exclamation-circle report-issue"></i>
+      </div>
+      <div class="service-remarks">
+        <ul>
+          <li>The processing time depends on the properties of the audio file and the service provider.</li>
+          <li>As soon as the service has finished processing the result appears here.</li>
+          <li>{{ getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy }}</li>
+        </ul>
+      </div>
+      <div class="clearfix"></div>
+    } @else if (popover.operation.rounds.length > 0) {
+      <div style="overflow: hidden">
+        <tportal-results-table
+          #resultsTableComponent
+          [visible]="popover.state === 'opened'"
+          (previewClick)="onPreviewClick($event)"
+          [operation]="popover.operation"
+          [defaultOperations]="operations"
+          [task]="popover.task"
+        ></tportal-results-table>
+      </div>
+    }
+    @if ((popover.lastOperationRound.parsedProtocol ?? []).length > 0) {
+      <div id="output-area">
+        <div style="width: 100%; text-align: right; padding: 0; margin-bottom: 0">
+          <button
+            (click)="copyProtocolToClipboard(popover.lastOperationRound.protocol)"
+            class="btn btn-sm btn-outline-info"
+            style="font-size: 11px; cursor: pointer; margin-bottom: 0"
+          >
+            <i class="bi bi-clipboard"></i> Copy to clipboard
+          </button>
+        </div>
+        <table class="table table-sm table-striped" id="output-table">
+          <tbody>
+            @for (item of popover.lastOperationRound.parsedProtocol ?? []; track item) {
+              <tr>
+                <td>
+                  @if (item.type === 'ERROR') {
+                    <i class="bi bi-exclamation-circle" style="color: red"></i>
+                  } @else {
+                    <i class="bi bi-exclamation-triangle" style="color: orange"></i>
+                  }
+                </td>
+                <td
+                  [ngClass]="{
+                    error: item.type === 'ERROR',
+                    warning: item.type === 'WARNING',
+                  }"
+                >
+                  {{ item.message }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+  @if (popover.lastOperationRound === undefined && popover.task) {
+    <div class="mb-3">File information:</div>
+    <tportal-file-info-table [fileinfo]="popover.task.files[0]" class="d-flex"></tportal-file-info-table>
+  }
+</tportal-popover>
+
+<div
+  #inner
+  (dragover)="onDragOver($event)"
+  (drop)="onDrop($event)"
+  (contextmenu)="cancelContextMenu($event)"
+  (mouseleave)="isDragging = false"
+  (scroll)="onTableScroll()"
+  (mousedown)="onTableMouseDown($event)"
+  (mouseup)="onTableMouseUp()"
+  class="inner"
+  style="border: 1px solid lightgray"
+>
+  @if (
+    entries !== undefined &&
+    entries !== null &&
+    entries.length === 0 &&
+    entries.length === 0 &&
+    (queue === undefined || queue === null || queue.length === 0)
+  ) {
+    <div class="tportal-placeholder">
+      <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
+        @if (currentMode === 'annotation') {
+          Annotation
+        } @else if (currentMode === 'summarization') {
+          Summarization & Translation
+        }
+      </h1>
+      <p class="px-5">
+        The TranscriptionPortal offers two modes for processing audio files: Annotation mode and Summarization & Translation mode. You can switch
+        between the modes by clicking on the tabs at the left top corner.
+      </p>
+      <p class="px-5">
+        @if (currentMode === 'annotation') {
+          In annotation mode you are able to transcribe audio files automatically using ASR, correct the transcript using
+          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>,
+          automatically align the transcript into words and edit the phonetic details in
+          <a href="https://ips-lmu.github.io/EMU-webApp/" target="_blank" class="text-decoration-none">Emu-webApp</a>.
+        } @else if (currentMode === 'summarization') {
+          In summarization mode you automatically transcribe audio files using ASR, check the transcript in
+          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>, summarize
+          the transcript using AI and translate it to a selected language automatically.
+        }
+      </p>
+      <ng-template [ngTemplateOutlet]="quickstartNumeration"></ng-template>
+      <ng-template #quickstartNumeration>
+        <div class="row quickstart px-3 pt-5">
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                1.
+              </div>
+            </div>
+            <h4>Add files</h4>
+            <p>
+              Drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or use the "1. ADD FILES" button. Later, you can
+              add files via drag & drop to the table rows, too.
+            </p>
+          </div>
+          <!-- /.col-lg-4 -->
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                2.
+              </div>
+            </div>
+            <h4>Check options</h4>
+            <p>Now set the options for the added files: Click on the "2. CHECK OPTIONS" Button and apply the changed options.</p>
+          </div>
+          <!-- /.col-lg-4 -->
+          <div class="col-4">
+            <div style="width: 80px; height: 80px; margin: 0 auto">
+              <div
+                class="rounded-circle"
+                style="
+                  background-color: cornflowerblue;
+                  width: 80px;
+                  height: 80px;
+                  color: white;
+                  text-align: center;
+                  vertical-align: middle;
+                  font-size: 2em;
+                  display: table-cell;
+                  margin: 0 auto;
+                "
+              >
+                3.
+              </div>
+            </div>
+            <h4>Start Processing</h4>
+            <p>After all files and options are checked, click on "3. START PROCESSING". The application starts the processing of pending tasks.</p>
+          </div>
+          <!-- /.col-lg-4 -->
+        </div>
+      </ng-template>
+    </div>
+  }
+  @if (operations !== undefined && operations !== null) {
+    <!-- Big proceedings table -->
+    <table
+      class="table table-striped"
+      [ngClass]="{
+        'fixed-table-layout': !shortstyle,
+      }"
+    >
+      <!-- TABLE HEADER -->
+      <thead>
+        <tr class="tableHeaderTop">
+          <th (click)="onOpenAllRows()" style="width: 25px; padding-right: 0; text-align: center; cursor: pointer">
+            @if (allDirOpened === 'opened') {
+              <i class="bi bi-chevron-up"></i>
+            }
+            @if (allDirOpened === 'closed') {
+              <i class="bi bi-chevron-down"></i>
+            }
+          </th>
+          <th style="width: 20%">File</th>
+          @for (operation of operations; track operation.factory.name; let i = $index) {
+            <ng-container style="text-align: center">
+              <th
+                (mousemove)="updateChanges()"
+                style="padding-left: 3px; padding-right: 3px"
+                [ngStyle]="{
+                  width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                }"
+              >
+                <div style="position: relative">
+                  <div
+                    style="display: block; position: relative; height: 25px; cursor: pointer"
+                    (click)="openArchiveDownload('column', operation.factory)"
+                  >
+                    <tportal-operation-arrow [first]="i === 0" [type]="'arrow'"></tportal-operation-arrow>
+                    <div style="z-index: 10; width: 100%; text-align: center">
+                      <ng-template #tipContent>{{ operation.factory.description }}</ng-template>
+                      <div
+                        [ngbTooltip]="tipContent"
+                        [container]="'body'"
+                        tooltipClass="operation-tooltip"
+                        placement="bottom"
+                        style="display: inline; padding: 0 3px"
+                      >
+                        @if (shortstyle) {
+                          {{ operation.factory.shortTitle }}
+                        }
+                        @if (!shortstyle) {
+                          <span class="d-none d-xl-inline-block">{{ operation.factory.title }}</span>
+                          <span class="d-inline-block d-xl-none">{{ operation.factory.shortTitle }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </th>
+            </ng-container>
+          }
+          <th [ngStyle]="{ width: !isClosed ? maxColumnWidths[5] + '%' : 'auto' }">
+            <div style="position: relative" class="ng-tns-c118-4">
+              <div style="display: block; position: relative; height: 25px; cursor: pointer" class="ng-tns-c118-4">
+                <tportal-operation-arrow [first]="false" [type]="'circle'"></tportal-operation-arrow>
+                <div style="z-index: 10; width: 100%; text-align: center" class="ng-tns-c118-4">
+                  <div style="display: inline; padding: 0 3px" class="operation-tooltip" aria-describedby="tooltip-9">
+                    @if (shortstyle) {
+                      <span><i class="bi bi-cloud-download"></i></span>
+                    }
+                    @if (!shortstyle) {
+                      <span class="d-none d-xl-inline-block">Export</span>
+                      <span class="d-inline-block d-xl-none"><i class="bi bi-cloud-download"></i></span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </th>
+        </tr>
+        <tr class="subTableHeader">
+          <th style="width: 15px; padding-right: 0; text-align: center"></th>
+          <th style="width: 20%"></th>
+          @for (operation of operations; track operation.factory.name; let i = $index) {
+            <ng-container style="text-align: center">
+              @if (operation.factory.name === 'OCTRA' || operation.factory.name === 'ASR') {
+                <th
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
+                </th>
+              } @else if (operation.factory.name === 'MAUS') {
+                <th
+                  colspan="2"
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
+                  <img
+                    src="assets/directory.png"
+                    style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
+                  />
+                </th>
+              } @else if (operation.factory.name === 'Summarization') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
+                </th>
+              } @else if (operation.factory.name === 'Translation') {
+                <th
+                  style="position: relative"
+                  [ngStyle]="{
+                    width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
+                  }"
+                >
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
+                </th>
+              } @else if (i === 0) {
+                <th></th>
+              }
+            </ng-container>
+          }
+          <th
+            [ngStyle]="{
+              width: !isClosed ? maxColumnWidths[5] + '%' : 'auto',
+            }"
+          ></th>
+        </tr>
+      </thead>
+      <!-- TABLE BODY -->
+      <tportal-context-menu
+        #contextmenuRef
+        (optionselected)="onContextMenuOptionSelected($event)"
+        [hid]="contextmenu.hidden"
+        [ngStyle]="{
+          'margin-top': contextmenu.y + 'px',
+          'margin-left': contextmenu.x + 'px',
+          visibility: contextmenu.hidden || ((modeStoreService.currentModeEntries$ | async) ?? []).length === 0 ? 'hidden' : 'initial',
+        }"
+        [selectedOperationType]="selectedOperation"
+        [selectedTasks]="modeStoreService.currentModeEntries$ | async"
+      >
+      </tportal-context-menu>
+      <tbody>
+        <!-- ready tasks and directories -->
+        @for (entry of entries; track entry.id; let entryIndex = $index) {
+          <ng-container
+            [ngTemplateOutlet]="taskOrDirRow"
+            [ngTemplateOutletContext]="{
+              entry,
+              entryIndex,
+              dirID: entry.type === 'folder' ? entry.id : undefined,
+              fade: 'opened',
+              contextmenuRef,
+            }"
+          ></ng-container>
+
+          @if (entry.type === 'folder') {
+            <!-- folder row -->
+            @for (dirEntry of getTaskDirEntries(entry); track dirEntry.id; let entryIndex = $index) {
+              <ng-container
+                [ngTemplateOutlet]="taskOrDirRow"
+                [ngTemplateOutletContext]="{
+                  dirID: entry.id,
+                  entry: dirEntry,
+                  entryIndex,
+                  fade: entry.opened === true ? 'opened' : 'closed',
+                  contextmenuRef,
+                }"
+              ></ng-container>
+            }
+          }
+        }
+
+        <!-- Queue rows -->
+        @for (entry of queue; track entry.id; let i = $index) {
+          @if (entry.infoItem !== undefined) {
+            <tr style="cursor: pointer">
+              @if (getDirEntriesFromItem(entry).length === 0) {
+                <td [attr.colspan]="operations.length + 3" [ngClass]="{ shorten: shortstyle }">
+                  <i aria-hidden="true" class="bi bi-database op-50"> </i>
+                  <span class="op-50" title="{{ entry.infoItem.name }}">
+                    {{ entry.infoItem.name }}
+                    <i class="bi bi-gear spin"></i>
+                  </span>
+                </td>
+              }
+              @if (getDirEntriesFromItem(entry).length > 0) {
+                <td [attr.colspan]="operations.length + 3">
+                  <i aria-hidden="true" class="bi bi-folder2-open blue op-50"></i>
+                  <span class="op-50" title="{{ entry.infoItem.name }}">{{ entry.infoItem.name }} <i class="bi bi-gear-fill spin"></i> </span>
+                </td>
+              }
+            </tr>
+          }
+          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.name) {
+            <tr>
+              <td>
+                <div class="d-flex">
+                  <i aria-hidden="true" class="bi bi-database op-50 me-1"></i>
+                  <span class="op-50 me-1">{{ dirEntry.name }}</span>
+                  <i class="bi bi-gear-fill spin"></i>
+                </div>
+              </td>
+              <td [attr.colspan]="operations.length + 2"></td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<ng-template
+  #taskOrDirRow
+  let-dirOpened="dirOpened"
+  let-dirID="dirID"
+  let-entry="entry"
+  let-entryIndex="entryIndex"
+  let-fade="fade"
+  let-contextmenuRef="contextmenuRef"
+>
+  <tr
+    [@fadeToggleRow]="fade"
+    [entry]="entry"
+    [rowSelected]="entry.selected"
+    [toolSelectedOperation]="modeStoreService.openedToolOperation$ | async"
+    (contextmenu)="onContextMenu($event, row, contextmenuRef)"
+    (click)="onContextBlur()"
+    (scroll)="cancelScroll($event)"
+    (mouseenter)="nameCol.mouseOver = true"
+    (mouseleave)="nameCol.mouseOver = false"
+    (blur)="nameCol.mouseOver = false"
+    tportalProceedingsRow
+    #row
+  >
+    <td
+      (appendingClick)="onPreviewClick($event)"
+      (click)="onRowSelected(entry)"
+      (deleteIconClick)="removeEntry($event, entry)"
+      (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+      (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+      (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+      (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+      (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+      (mouseover)="onNameMouseOver($event, getTask(entry))"
+      (tagClicked)="onTagClicked(dirID)"
+      [entry]="entry"
+      [shortStyle]="isClosed"
+      tportalProcColIcon
+      #nameCol="colIcon"
+    ></td>
+    @if (getTask(entry) !== undefined && entry.type === 'task') {
+      @for (operation of entry.operations; track operation.id; let i = $index) {
+        <td tportalProceedingsTableTd [storeTaskOperation]="operation" #td style="text-align: center" (mouseenter)="onOperationTDMouseEnter(entry)">
+          <tportal-proceedings-table-operation-selector
+            (mousedown)="onOperationClick($event, operation, i, entry)"
+            (mouseenter)="onOperationMouseEnter($event, entry, operation, td)"
+            (mouseleave)="onOperationMouseLeave($event, operation)"
+            (mouseover)="onOperationMouseOver($event, entry, operation, i)"
+            [storeTaskOperation]="operation"
+            [factory]="operations![i].factory"
+          ></tportal-proceedings-table-operation-selector>
+        </td>
+      }
+    } @else {
+      @for (operation of operations; track operation.factory.name; let opIndex = $index) {
+        <td>
+          <div class="progress">
+            <div
+              [dir]="getTaskDirectory(entry)"
+              [opIndex]="opIndex"
+              tportalDirProgress
+              aria-valuemax="100"
+              aria-valuemin="0"
+              class="progress-bar"
+              role="progressbar"
+            ></div>
+          </div>
+        </td>
+      }
+    }
+    <td class="export-col">
+      @if (isOneOperationFinished(entry)) {
+        <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(entry, entryIndex)">
+          <i class="bi bi-cloud-download"></i>
+        </button>
+      }
+    </td>
+  </tr>
+</ng-template>

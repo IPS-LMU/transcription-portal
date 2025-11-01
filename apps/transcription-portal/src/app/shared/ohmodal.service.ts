@@ -1,12 +1,12 @@
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { BugreportModalComponent } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { BrowserInfo } from '@octra/web-media';
 import { AppInfo } from '../app.info';
 import { openModal } from '../obj/functions';
+import { AppStoreService } from '../store';
 import { BugReportService } from './bug-report.service';
-import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,11 +14,28 @@ import { SettingsService } from './settings.service';
 export class OHModalService implements OnDestroy {
   private ngbModalService = inject(NgbModal);
   private bugreportService = inject(BugReportService);
-  private settingsService = inject(SettingsService);
+  private appStoreService = inject(AppStoreService);
 
   private subscrManager = new SubscriptionManager();
+  private userProfile: {
+    name: string;
+    email: string;
+  } = {
+    name: '',
+    email: '',
+  };
 
-  public openFeedbackModal() {
+  constructor() {
+    this.subscrManager.add(
+      this.appStoreService.userProfile$.subscribe({
+        next: (userProfile) => {
+          this.userProfile = userProfile;
+        },
+      }),
+    );
+  }
+
+  public async openFeedbackModal() {
     const pkgText = JSON.stringify(
       {
         type: 'bug',
@@ -49,10 +66,7 @@ export class OHModalService implements OnDestroy {
     const ref = openModal<BugreportModalComponent>(this.ngbModalService, BugreportModalComponent, BugreportModalComponent.options, {
       pkgText,
       showSenderFields: true,
-      _profile: {
-        name: '',
-        email: '',
-      },
+      _profile: this.userProfile,
     } as any);
 
     ref.componentInstance.i18n = {
@@ -66,6 +80,7 @@ export class OHModalService implements OnDestroy {
     this.subscrManager.add(
       ref.componentInstance.send.subscribe({
         next: ({ name, email, message, sendProtocol, screenshots }: any) => {
+          this.appStoreService.changeUserProfile(name, email);
           ref.componentInstance.sendStatus = 'sending';
           ref.componentInstance.waitForSendResponse(this.bugreportService.sendBugReport(name, email, message, sendProtocol, screenshots) as any);
         },

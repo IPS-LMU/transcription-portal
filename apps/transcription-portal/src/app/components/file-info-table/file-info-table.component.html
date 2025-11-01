@@ -7,7 +7,11 @@
       </tr>
       <tr>
         <td>Escaped filename:</td>
-        <td>{{ fileinfo.fullname }}</td>
+        <td>{{ fileinfo.name }}</td>
+      </tr>
+      <tr>
+        <td>Hash:</td>
+        <td>{{ fileinfo.hash }}</td>
       </tr>
       <tr>
         <td>Type:</td>
@@ -17,34 +21,34 @@
         <td>Size:</td>
         <td>{{ fileinfo.size | filesize }}</td>
       </tr>
-      @if (isWavFile()) {
+      @if (audioFile) {
         <tr>
           <td>Sampling rate:</td>
-          <td>{{ fileinfo.sampleRate }}</td>
+          <td>{{ audioFile.sampleRate }}</td>
         </tr>
         <tr>
           <td>Bits per Second:</td>
-          <td>{{ fileinfo.bitrate }}</td>
+          <td>{{ audioFile.bitrate }}</td>
         </tr>
         <tr>
           <td
             [ngClass]="{
-              red: fileinfo.channels > 1,
+              red: audioFile.channels > 1,
             }"
           >
             Channels:
           </td>
           <td
             [ngClass]="{
-              red: fileinfo.channels > 1,
+              red: audioFile.channels > 1,
             }"
           >
-            {{ fileinfo.channels }}
+            {{ audioFile.channels }}
           </td>
         </tr>
         <tr>
           <td>Duration:</td>
-          <td>{{ fileinfo.duration.unix | time }}</td>
+          <td>{{ (audioFile.duration / audioFile.sampleRate) * 1000 | time }}</td>
         </tr>
       }
     </tbody>

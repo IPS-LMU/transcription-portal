@@ -41,6 +41,6 @@ export interface OHCommand {
 
 export interface ProviderLanguage {
   value: string;
-  providersOnly?: string[];
   description: string;
+  providersOnly?: string[];
 }

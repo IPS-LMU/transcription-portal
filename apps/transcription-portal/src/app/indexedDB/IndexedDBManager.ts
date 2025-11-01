@@ -1,9 +1,8 @@
 import Dexie, { Table, Transaction } from 'dexie';
 import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
-import { IASROperation } from '../obj/operations/asr-operation';
-import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
-import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { IASROperation, IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
+import { OperationProcessingRoundSerialized } from '../store';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;

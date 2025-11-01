@@ -1,5 +1,5 @@
 <tportal-alert></tportal-alert>
-<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="!settingsService.allLoaded" id="app">
+<div (dragover)="onMissedDrop($event)" (drop)="onMissedDrop($event)" [hidden]="(appStoreService.appInitialized$ | async) === false" id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
     <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
@@ -49,45 +49,48 @@
           <li class="nav-item">
             <div [ngbTooltip]="queuedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.queued }}
+                {{ (modeStoreService.overallStatistics$ | async)?.queued }}
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
-              <ng-template #queuedTipp>{{ taskService.statistics.overall.queued }} audio files are waiting for verification. </ng-template>
+              <ng-template #queuedTipp
+                >{{ (modeStoreService.overallStatistics$ | async)?.queued }} audio files are waiting for verification.
+              </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.waiting }}
+                {{ (modeStoreService.overallStatistics$ | async)?.waiting }}
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
-              <ng-template #waitingTipp>{{ taskService.statistics.overall.waiting }} tasks are waiting for processing. </ng-template>
+              <ng-template #waitingTipp>{{ (modeStoreService.overallStatistics$ | async)?.waiting }} tasks are waiting for processing. </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.running }}
+                {{ (modeStoreService.overallStatistics$ | async)?.running }}
               </div>
               <i
                 [ngClass]="{
-                  spin: taskService.statistics.overall.running > 0,
+                  spin: (modeStoreService.overallStatistics$ | async)!.running > 0,
                 }"
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
-              <ng-template #runningTipp>{{ taskService.statistics.overall.running }} tasks are running. </ng-template>
+              <ng-template #runningTipp>{{ (modeStoreService.overallStatistics$ | async)?.running }} tasks are running. </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.finished }}
+                {{ (modeStoreService.overallStatistics$ | async)?.finished }}
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
-              <ng-template #finishedTipp>{{ taskService.statistics.overall.finished }} tasks are finished. </ng-template>
+              <ng-template #finishedTipp>{{ (modeStoreService.overallStatistics$ | async)?.finished }} tasks are finished. </ng-template>
             </div>
             <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.errors }}
+                {{ (modeStoreService.overallStatistics$ | async)?.errors }}
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.overall.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
+                >{{ (modeStoreService.overallStatistics$ | async)?.errors }} tasks failed. For further details please hover over the red "X" icon in a
+                column.
               </ng-template>
             </div>
           </li>
@@ -118,7 +121,7 @@
               <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Help</span></a
             >
           </li>
-          @if (settingsService.feedbackEnabled) {
+          @if (appStoreService.feedbackEnabled$ | async) {
             <li (click)="modalService.openFeedbackModal()" class="nav-item active">
               <a ngbPopover="Feedback" placement="bottom-right" triggers="mouseenter:mouseleave" class="text-decoration-none">
                 <i
@@ -188,7 +191,8 @@
                       <form class="d-flex flex-auto">
                         <input
                           class="form-control d-flex flex-auto"
-                          [(ngModel)]="taskService.accessCode"
+                          [ngModel]="appStoreService.accessCode$ | async"
+                          (ngModelChange)="changeAccessCode($event)"
                           id="accessCode"
                           name="accessCode"
                           placeholder="Enter access code..."
@@ -219,9 +223,12 @@
                   </div>
                   <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
                     <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> Backup Database
-                    @if (dbBackup.safeURL) {
+                    @if ((appStoreService.idbBackup$ | async)?.safeURL) {
                       <p>
-                        <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"
+                        <a
+                          class="btn btn-outline-info btn-sm w-100"
+                          [href]="(appStoreService.idbBackup$ | async)!.safeURL"
+                          [download]="(appStoreService.idbBackup$ | async)!.filename"
                           ><i class="bi bi-cloud-download-fill"></i> Download</a
                         >
                       </p>
@@ -252,24 +259,26 @@
     class="nav-tabs"
     id="mode-tabs"
     [ngClass]="{
-      'with-feedback': settingsService.feedbackEnabled,
-      'no-feedback': !settingsService.feedbackEnabled,
+      'with-feedback': (appStoreService.feedbackEnabled$ | async),
+      'no-feedback': !(appStoreService.feedbackEnabled$ | async),
     }"
   >
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
+        @if (appStoreService.appInitialized$ | async) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
-            [shortcutsEnabled]="settingsService.shortCutsEnabled"
+            [shortcutsEnabled]="(appStoreService.shortcutsEnabled$ | async)!"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
-            [operations]="taskService.state.modes.annotation.operations"
-            [queue]="taskService.state.modes.annotation.preprocessor.queue"
+            [entries]="modeStoreService.currentModeEntries$ | async"
+            currentMode="annotation"
+            [operations]="modeStoreService.defaultModeOperations$ | async"
+            [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
           >
@@ -280,17 +289,19 @@
     <li [ngbNavItem]="2">
       <button ngbNavLink (mousedown)="changeMode('summarization')">Summarization &amp; Translation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
+        @if (appStoreService.appInitialized$ | async) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
-            [shortcutsEnabled]="settingsService.shortCutsEnabled"
+            [shortcutsEnabled]="(appStoreService.shortcutsEnabled$ | async)!"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
-            [operations]="taskService.state.modes.summarization.operations"
-            [queue]="taskService.state.modes.summarization.preprocessor.queue"
+            [entries]="modeStoreService.currentModeEntries$ | async"
+            currentMode="summarization"
+            [operations]="modeStoreService.defaultModeOperations$ | async"
+            [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
           >
@@ -299,8 +310,12 @@
       </ng-template>
     </li>
   </ul>
+  <div class="alert alert-warning m-0">
+    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change
+    and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
+  </div>
   <!-- SUB-HEADER OVERVIEW -->
-  @if (!showtool) {
+  @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
     <div class="row proceedings-header" style="padding-top: 0">
       <div class="col-4" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
@@ -310,47 +325,44 @@
         <input #fileinput (change)="onFileChange(fileinput)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
         <button
           (click)="onVerifyButtonClick()"
-          [disabled]="taskService.currentModeStatistics.queued < 1"
+          [disabled]="(modeStoreService.currentModeStatistics$ | async)!.queued < 1"
           class="btn btn-primary"
           style="margin-left: 10px"
         >
           <i class="bi bi-clipboard-check-fill"></i>
           <span class="d-none d-lg-inline d-xl-inline"> 2. CHECK OPTIONS</span>
-          @if (taskService.currentModeStatistics.queued > 0) {
-            ({{ taskService.currentModeStatistics.queued }})
+          @if ((modeStoreService.currentModeStatistics$ | async)!.queued > 0) {
+            ({{ (modeStoreService.currentModeStatistics$ | async)!.queued }})
           }
         </button>
       </div>
       <div class="col-4">
         <div id="overall-state">
-          {{ taskService.stateLabel }}
+          {{ modeStoreService.currentOverallStateLabel$ | async }}
         </div>
       </div>
       <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button (click)="onStartClick()" [disabled]="!taskService.state.currentModeState.newfiles" class="btn btn-primary">
+        <button (click)="onStartClick()" class="btn btn-primary">
           <i
             [ngClass]="{
-              'bi-play-fill': !taskService.isProcessing,
-              'bi-stop-fill': taskService.isProcessing,
+              'bi-play-fill': (modeStoreService.overallState$ | async) !== 'processing',
+              'bi-stop-fill': (modeStoreService.overallState$ | async) === 'processing',
             }"
             aria-hidden="true"
             class="bi"
           ></i
           ><span class="d-none d-lg-inline d-xl-inline">
-            @if (!taskService.isProcessing) {
+            @if ((modeStoreService.overallState$ | async) !== 'processing') {
               3. START PROCESSING
-            }
-            @if (taskService.isProcessing) {
+            } @else {
               3. STOP PROCESSING
             }
           </span>
         </button>
       </div>
     </div>
-  }
-
-  <!-- SUB-HEADER TOOL -->
-  @if (showtool) {
+  } @else {
+    <!-- SUB-HEADER TOOL -->
     <div class="row proceedings-header" style="padding-top: 0; height: 50px">
       <div class="col-2" style="text-align: left; padding-top: 5px">
         <button (click)="onBackButtonClicked()" class="btn btn-primary" style="width: 100%">
@@ -359,35 +371,8 @@
       </div>
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
-          @if (toolSelectedOperation!.previousOperation!.rounds.length > 0) {
-            {{ toolSelectedOperation!.name }}:
-            {{ toolSelectedOperation!.previousOperation!.lastRound?.lastResult?.attributes?.originalFileName }}
-            , Language:
-            @if (
-              toolSelectedOperation !== undefined &&
-              toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.asrOperation.language !== undefined
-            ) {
-              {{ toolSelectedOperation.task.asrOperation.language }}
-            }
-            , Audio duration: {{ getTime() | time }}
-          }
-          @if (
-            toolSelectedOperation &&
-            toolSelectedOperation.previousOperation!.rounds.length < 1 &&
-            toolSelectedOperation!.previousOperation!.previousOperation !== undefined
-          ) {
-            @if (toolSelectedOperation) {
-              {{ toolSelectedOperation.name }}
-            }
-            :
-            {{ toolSelectedOperation.previousOperation?.previousOperation?.lastRound?.lastResult?.attributes?.originalFileName }}
-            , Language:
-            @if (toolSelectedOperation.task && toolSelectedOperation.task.asrOperation.language !== undefined) {
-              {{ toolSelectedOperation.task!.asrOperation.language }}
-            }
-            , Audio duration: {{ getTime() | time }}
-          }
+          {{ toolSelectedOperation?.operation?.name }}: {{ toolSelectedOperation?.audioFile?.attributes?.originalFileName }}, Language:
+          {{ toolSelectedOperation?.language }}, Audio duration: {{ toolSelectedOperation?.audioFile?.duration | time }}
         </p>
       </div>
       <div class="col-2" style="text-align: right; padding-top: 5px">
@@ -445,8 +430,8 @@
     >
       <tportal-tool-loader
         #toolLoader
-        (datareceived)="onToolDataReceived($event, toolLoader)"
-        [operation]="toolSelectedOperation"
+        (datareceived)="onToolDataReceived($event)"
+        [operation]="modeStoreService.openedToolOperation$ | async"
         style="height: 100%"
       ></tportal-tool-loader>
     </div>

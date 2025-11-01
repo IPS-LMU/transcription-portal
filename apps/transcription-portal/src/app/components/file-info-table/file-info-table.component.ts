@@ -2,7 +2,7 @@ import { NgClass } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { FilesizePipe } from '../../shared/filesize.pipe';
 import { TimePipe } from '../../shared/time.pipe';
-import { TPortalAudioInfo } from '../../obj/TPortalFileInfoAttributes';
+import { StoreAudioFile, StoreFile } from '../../store';
 
 @Component({
   selector: 'tportal-file-info-table',
@@ -11,8 +11,14 @@ import { TPortalAudioInfo } from '../../obj/TPortalFileInfoAttributes';
   imports: [NgClass, TimePipe, FilesizePipe],
 })
 export class FileInfoTableComponent implements OnInit {
-  @Input() fileinfo?: TPortalAudioInfo;
+  @Input() fileinfo?: StoreFile;
 
+  get audioFile(): StoreAudioFile | undefined {
+    if (this.fileinfo?.type.includes('audio')) {
+      return this.fileinfo as StoreAudioFile;
+    }
+    return undefined;
+  }
   constructor() {}
 
   isWavFile() {

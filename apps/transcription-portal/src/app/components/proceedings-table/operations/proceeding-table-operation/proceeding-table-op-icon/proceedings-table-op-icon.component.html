@@ -1,0 +1,22 @@
+@switch (lastOperationRound?.status) {
+  @case (TaskStatus.FINISHED) {
+    <i class="bi bi-check-lg" aria-hidden="true"></i>
+  }
+  @case (TaskStatus.ERROR) {
+    <i class="bi bi-x-lg" aria-hidden="true"></i>
+  }
+  @case (TaskStatus.PROCESSING) {
+    <i class="bi bi-gear-fill spin"></i>
+  }
+  @case (TaskStatus.READY) {
+    <div class="spinner-border spinner-border-small" role="status" aria-hidden="true">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  }
+  @case (TaskStatus.SKIPPED) {
+    <i class="bi bi-arrow-right-circle" style="color: gray" role="status" aria-hidden="true"></i>
+  }
+  @default {
+    <!-- show nothing -->
+  }
+}
