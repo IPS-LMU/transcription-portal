@@ -1,15 +1,15 @@
 import { inject, Injectable } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { catchError, exhaustMap, from, of, withLatestFrom } from 'rxjs';
+import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { Operation } from '../../obj/operations/operation';
 import { TaskEntry } from '../../obj/tasks/task-entry';
 import { TaskService } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb';
 import { TaskActions } from './task.actions';
-import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Injectable()
 export class TaskEffects {
@@ -40,7 +40,12 @@ export class TaskEffects {
           }),
         ).pipe(
           exhaustMap(() => {
-            return of(TaskActions.importTasks.success());
+            return of(
+              TaskActions.prepareTasks.do({
+                annotationTasks,
+                summarizationTasks,
+              }),
+            );
           }),
           catchError((error) => {
             console.error(error);
@@ -51,6 +56,24 @@ export class TaskEffects {
             );
           }),
         );
+      }),
+    ),
+  );
+
+  prepareTasks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TaskActions.prepareTasks.do),
+      exhaustMap(() => {
+        return of(TaskActions.prepareTasks.success());
+      }),
+    ),
+  );
+
+  prepareTasksSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TaskActions.prepareTasks.do),
+      exhaustMap(() => {
+        return of(TaskActions.importTasks.success());
       }),
     ),
   );

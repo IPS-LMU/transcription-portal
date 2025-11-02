@@ -43,7 +43,7 @@ export class AppEffects {
 
   initModes$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(AppActions.initApplication.do),
+      ofType(AppActions.loadSettings.success),
       map(() => ModeActions.initModes.do()),
     ),
   );

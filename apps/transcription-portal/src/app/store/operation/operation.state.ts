@@ -1,4 +1,4 @@
 import { EntityState } from '@ngrx/entity';
-import { Operation } from './operation';
+import { StoreTaskOperation } from './operation';
 
-export interface OperationState extends EntityState<Operation> {}
+export interface OperationState extends EntityState<StoreTaskOperation> {}

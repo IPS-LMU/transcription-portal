@@ -1,10 +1,13 @@
 import { EntityState } from '@ngrx/entity';
-import { TaskState } from '../task';
+import { StoreTask } from '../task';
+import { StoreTaskDirectory } from '../task-directory';
+import { Operation } from '../../obj/operations/operation';
 
 export interface Mode<O extends object> {
   name: string;
   options: O;
-  tasks: TaskState;
+  defaultOperations: Operation[];
+  tasks: EntityState<StoreTask | StoreTaskDirectory>;
 }
 
 export interface ModeState extends EntityState<Mode<any>> {

@@ -1,6 +1,5 @@
 import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { TaskDirectory } from '../../obj/tasks';
-import { Operation } from '../operation/operation';
+import { StoreTaskOperation } from '../operation';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -14,12 +13,12 @@ export enum TaskStatus {
   ERROR = 'ERROR',
 }
 
-export interface Task {
+export interface StoreTask {
   id: number;
   mouseOver: boolean;
   stopRequested: boolean;
   files: (TPortalFileInfo | TPortalAudioInfo)[];
-  operations: Operation[];
-  directory?: TaskDirectory;
+  operations: StoreTaskOperation[];
+  directoryID?: number;
   status: TaskStatus;
 }

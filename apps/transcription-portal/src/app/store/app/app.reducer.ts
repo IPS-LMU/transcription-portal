@@ -9,9 +9,9 @@ export interface AppState {
   versionCheckerStarted: boolean;
   modesInitialized: boolean;
   consoleLoggingInitialized: boolean;
-  idbInitialized?: boolean;
+  idbInitialized: boolean;
   feedbackEnabled?: boolean;
-  initialized?: boolean;
+  initialized: boolean;
   firstModalShown?: boolean;
   sidebarWidth?: number;
 
@@ -27,6 +27,8 @@ export const InitialAppState: AppState = {
   modesInitialized: false,
   consoleLoggingInitialized: false,
   feedbackEnabled: false,
+  idbInitialized: false,
+  initialized: false
 };
 
 export interface RootState {

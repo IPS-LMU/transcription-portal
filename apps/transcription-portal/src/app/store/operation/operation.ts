@@ -3,18 +3,16 @@ import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/op
 import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 
-export interface Operation {
+export interface StoreTaskOperation {
   id: number;
   taskID: number;
   name: string;
   title: string;
   description: string;
   enabled: boolean;
-  commands: string[];
-  parsedProtocol?: string;
   resultType?: string;
   mouseOver?: boolean;
-  shortTitle: string;
+  shortTitle?: string;
   serviceProviderBASName?: string;
   estimatedEnd?: number;
   rounds: OperationProcessingRound[];

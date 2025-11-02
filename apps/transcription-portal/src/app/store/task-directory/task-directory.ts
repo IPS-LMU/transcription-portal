@@ -1,7 +1,10 @@
-export interface TaskDirectory {
+import { EntityState } from '@ngrx/entity';
+import { StoreTask } from '../task';
+
+export interface StoreTaskDirectory {
   id: number;
   path: string;
   size?: number;
   folderName: string;
-  entries: (Task | TaskDirectory)[];
+  entries: EntityState<StoreTask | StoreTaskDirectory>;
 }
