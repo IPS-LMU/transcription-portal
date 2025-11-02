@@ -18,16 +18,13 @@ import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty, wait } from '@octra/utilities';
 import { DateTime } from 'luxon';
-import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
 import { ProceedingsComponent } from '../../components/proceedings/proceedings.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
-import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
-import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { StatisticsModalComponent } from '../../modals/statistics-modal/statistics-modal.component';
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
@@ -97,8 +94,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
   public settingsCollapsed = true;
-  private firstModalShown = false;
-  private blockLeaving = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
 
   protected dbBackup: {
@@ -107,14 +102,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     filename?: string;
   } = {};
 
-  private tabOrder = {
-    annotation: 1,
-    summarization: 2,
-  };
-
   activeMode = 1;
-
-  sumProjectName = '';
 
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsComponent;
@@ -131,67 +119,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         }
       },
     });
-
-    this.subscribe(
-      forkJoin<{
-        settings: Observable<boolean>;
-        idb: Observable<any>;
-      }>({
-        settings: this.settingsService.settingsload,
-        idb: this.storage.allloaded,
-      }),
-      {
-        complete: () => {
-          // configuration loaded
-          const { annotationTasks, summarizationTasks, userSettings } = this.storage.allloaded.value;
-
-          // idb loaded
-          this.taskService.init();
-          this.taskService
-            .importDBData({
-              annotationTasks,
-              summarizationTasks,
-              userSettings,
-            })
-            .catch((error) => {
-              console.error(error);
-            });
-
-          this.storage.idbm.intern
-            .get('firstModalShown')
-            .then((result) => {
-              if (!(result === null || result === undefined)) {
-                this.firstModalShown = result.value;
-              }
-              this.loadFirstModal();
-            })
-            .catch((err) => {
-              console.error(err);
-              this.loadFirstModal();
-            });
-
-          if (userSettings) {
-            // read userSettings
-            for (const userSetting of userSettings) {
-              switch (userSetting.name) {
-                case 'sidebarWidth':
-                  this.newProceedingsWidth = userSetting.value;
-                  break;
-                case 'accessCode':
-                  this.taskService.accessCode = userSetting.value;
-                  break;
-              }
-            }
-          }
-        },
-      },
-    );
-
-    window.onunload = () => {
-      return false;
-    };
-
-    this.taskService.openSplitModal = this.openSplitModal;
   }
 
   private _showtool = false;
@@ -247,7 +174,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     });
 
     if (tasks && tasks.length > 0) {
-      this.openQueueModal();
+      this.openQueueModal().catch((err) => {
+        console.error(err);
+      });
     }
   }
 
@@ -627,14 +556,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     return 0;
   }
 
-  public openSplitModal = () => {
-    const ref = this.ngbModalService.open(SplitModalComponent, SplitModalComponent.options);
-    ref.result.then((reason) => {
-      this.taskService.splitPrompt = reason;
-      this.taskService.checkFiles(this.taskService.state.currentMode);
-    });
-  };
-
   public dragBorder($event: any, part: string) {
     if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
       if (this.dragborder !== 'dragging') {
@@ -710,17 +631,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     this.modalService.openFeedbackModal();
   }
 
-  private loadFirstModal() {
-    if (!this.firstModalShown) {
-      setTimeout(() => {
-        const ref = this.ngbModalService.open(FirstModalComponent, FirstModalComponent.options);
-        ref.result.then(() => {
-          this.storage.saveIntern('firstModalShown', true);
-        });
-      }, 1000);
-    }
-  }
-
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     if (entries && this.taskService.state.currentModeState.operations) {
       // filter and re-structure entries array to supported files and directories
@@ -737,12 +647,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         );
       }
     }
-  }
-
-  public async openFeedbackModal() {
-    this.settingsService.shortCutsEnabled = false;
-    await this.modalService.openFeedbackModal();
-    this.settingsService.shortCutsEnabled = true;
   }
 
   private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {
@@ -835,6 +739,4 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
       },
     });
   }
-
-  protected readonly AppStoreService = AppStoreService;
 }

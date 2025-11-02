@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
 import { OHConfiguration, ProviderLanguage } from '../../obj/oh-config';
 import { ExternalInformationActions, ExternalInformationState } from '../external-information';
+import { IDBActions } from '../idb';
 import { ModeActions, ModeState } from '../mode';
 import { AppActions } from './app.actions';
 
@@ -8,8 +9,11 @@ export interface AppState {
   versionCheckerStarted: boolean;
   modesInitialized: boolean;
   consoleLoggingInitialized: boolean;
+  idbInitialized?: boolean;
   feedbackEnabled?: boolean;
   initialized?: boolean;
+  firstModalShown?: boolean;
+  sidebarWidth?: number;
 
   settings?: OHConfiguration;
   availableLanguages?: {
@@ -38,6 +42,36 @@ export const appReducer = createReducer(
     (state: AppState): AppState => ({
       ...state,
       initialized: true,
+    }),
+  ),
+  on(
+    IDBActions.initIDB.loaded,
+    (state: AppState, { intern }): AppState => ({
+      ...state,
+      firstModalShown: intern.find((a) => a.name === 'firstModalShown')?.value ?? false,
+      sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
+    }),
+  ),
+  on(
+    IDBActions.saveInternValues.success,
+    (state: AppState, { items }): AppState => ({
+      ...state,
+      firstModalShown: items.find((a) => a.name === 'firstModalShown')?.value ?? state.firstModalShown,
+      sidebarWidth: items.find((a) => a.name === 'sidebarWidth')?.value ?? state.sidebarWidth,
+    }),
+  ),
+  on(
+    IDBActions.initIDB.success,
+    (state: AppState): AppState => ({
+      ...state,
+      idbInitialized: true,
+    }),
+  ),
+  on(
+    IDBActions.initIDB.success,
+    (state: AppState): AppState => ({
+      ...state,
+      idbInitialized: true,
     }),
   ),
   on(

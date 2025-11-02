@@ -130,13 +130,6 @@ export class StorageService {
     });
   }
 
-  public saveIntern(name: string, value: any) {
-    this.idbm.intern.put({
-      name,
-      value,
-    });
-  }
-
   saveUserSettings<T>(name: string, value: T) {
     return this.idbm.userSettings.put({
       name,

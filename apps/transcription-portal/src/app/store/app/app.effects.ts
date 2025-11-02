@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
@@ -8,10 +9,12 @@ import { hasProperty } from '@octra/utilities';
 import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import { catchError, exhaustMap, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
 import { OHConfiguration } from '../../obj/oh-config';
 import { AppSettings } from '../../shared/app.settings';
 import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
 import { ExternalInformationActions } from '../external-information';
+import { IDBActions } from '../idb';
 import { ModeActions } from '../mode';
 import { AppActions } from './app.actions';
 import { AppState, RootState } from './app.reducer';
@@ -24,6 +27,7 @@ export class AppEffects {
   bugService = inject(BugReportService);
   private http = inject(HttpClient);
   private octraAPI = inject(OctraAPIService);
+  protected ngbModalService = inject(NgbModal);
 
   initVersionChecker$ = createEffect(() =>
     this.actions$.pipe(
@@ -135,6 +139,7 @@ export class AppEffects {
               state.externalInformation.asrQuotaRetrieved,
               state.externalInformation.asrLanguagesInitialized,
               state.externalInformation.mausLanguagesInitialized,
+              state.app.idbInitialized,
             ].includes(false)
           ) {
             this.store.dispatch(AppActions.initApplication.success());
@@ -234,6 +239,20 @@ export class AppEffects {
     ),
   );
 
+  checkFirstModal$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(IDBActions.initIDB.loaded),
+        withLatestFrom(this.store),
+        tap(([action, state]: [any, RootState]) => {
+          if (!state.app.firstModalShown) {
+            this.loadFirstModal();
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
   private appendTrackingCode(type: string) {
     // check if matomo is activated
     if (type === 'matomo') {
@@ -268,5 +287,23 @@ export class AppEffects {
     } else {
       console.error(`tracking type ${type} is not supported.`);
     }
+  }
+
+  private loadFirstModal() {
+    setTimeout(() => {
+      const ref = this.ngbModalService.open(FirstModalComponent, FirstModalComponent.options);
+      ref.result.then(() => {
+        this.store.dispatch(
+          IDBActions.saveInternValues.do({
+            items: [
+              {
+                name: 'firstModalShown',
+                value: true,
+              },
+            ],
+          }),
+        );
+      });
+    }, 1000);
   }
 }
