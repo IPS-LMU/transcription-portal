@@ -1,16 +1,18 @@
 import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { IDBUserDefaultSettingsItem } from '../../indexedDB';
-import { ASROperation } from '../../obj/operations/asr-operation';
-import { EmuOperation } from '../../obj/operations/emu-operation';
-import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
-import { OCTRAOperation } from '../../obj/operations/octra-operation';
-import { SummarizationOperation } from '../../obj/operations/summarization-operation';
-import { TranslationOperation } from '../../obj/operations/translation-operation';
-import { UploadOperation } from '../../obj/operations/upload-operation';
 import { AppSettings } from '../../shared/app.settings';
 import { IDBActions } from '../idb';
-import { getTaskReducers, StoreTask } from '../task';
+import {
+  ASROperationFactory,
+  EmuOperationFactory,
+  G2pMausOperationFactory,
+  OctraOperationFactory,
+  SummarizationOperationFactory,
+  TranslationOperationFactory,
+  UploadOperationFactory,
+} from '../operation';
+import { getTaskReducers, StoreTask, TaskStatus } from '../task';
 import { StoreTaskDirectory } from '../task-directory';
 import { ModeActions } from './mode.actions';
 import { Mode, ModeState } from './mode.state';
@@ -70,26 +72,85 @@ export const modeReducer = createReducer(
           options: {},
           tasks: taskAdapter.getInitialState(),
           defaultOperations: [
-            new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
-            new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
-            new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
-            new G2pMausOperation('MAUS', AppSettings.configuration.api.commands[3].calls, 'Word alignment', 'WA'),
-            new EmuOperation('Emu WebApp', AppSettings.configuration.api.commands[4].calls, 'Phonetic detail', 'PD'),
+            new UploadOperationFactory(),
+            new ASROperationFactory(),
+            new OctraOperationFactory(),
+            new G2pMausOperationFactory(),
+            new EmuOperationFactory(),
           ],
+          overallState: 'not started',
+          status: TaskStatus.READY,
+          selectedRows: new Set<number>(),
+          allSelected: false,
+          preprocessor: {},
+          statistics: {
+            queued: 0,
+            waiting: 0,
+            running: 0,
+            finished: 0,
+            errors: 0,
+          },
         },
         {
           name: 'summarization',
           options: {},
           tasks: taskAdapter.getInitialState(),
           defaultOperations: [
-            new UploadOperation('Upload', AppSettings.configuration.api.commands[0].calls, 'Upload', 'UL'),
-            new ASROperation('ASR', AppSettings.configuration.api.commands[1].calls, 'Speech Recognition', 'ASR'),
-            new OCTRAOperation('OCTRA', AppSettings.configuration.api.commands[2].calls, 'Manual Transcription', 'MT'),
-            new SummarizationOperation('Summarization', [''], 'Summarization', 'SUM'),
-            new TranslationOperation('Translation', [''], 'Translation', 'TR'),
+            new UploadOperationFactory(),
+            new ASROperationFactory(),
+            new OctraOperationFactory(),
+            new SummarizationOperationFactory(),
+            new TranslationOperationFactory(),
           ],
+          overallState: 'not started',
+          status: TaskStatus.READY,
+          selectedRows: new Set<number>(),
+          allSelected: false,
+          preprocessor: {},
+          statistics: {
+            queued: 0,
+            waiting: 0,
+            running: 0,
+            finished: 0,
+            errors: 0,
+          },
         },
       ],
+      state,
+    );
+  }),
+  on(ModeActions.selectRows.do, (state: ModeState, { rowIndexes }): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          selectedRows: new Set([...Array.from(state.entities[state.currentMode]?.selectedRows ?? new Set<number>()), ...rowIndexes]),
+        },
+      },
+      state,
+    );
+  }),
+  on(ModeActions.deselectRows.do, (state: ModeState, { rowIndexes }): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          selectedRows: new Set(
+            Array.from(state.entities[state.currentMode]?.selectedRows ?? new Set<number>()).filter((a) => !rowIndexes.includes(a)),
+          ),
+        },
+      },
+      state,
+    );
+  }),
+  on(ModeActions.setSelectedRows.do, (state: ModeState, { rowIndexes }): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          selectedRows: new Set(rowIndexes),
+        },
+      },
       state,
     );
   }),

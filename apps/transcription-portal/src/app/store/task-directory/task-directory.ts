@@ -3,6 +3,7 @@ import { StoreTask } from '../task';
 
 export interface StoreTaskDirectory {
   id: number;
+  type: 'folder';
   path: string;
   size?: number;
   folderName: string;

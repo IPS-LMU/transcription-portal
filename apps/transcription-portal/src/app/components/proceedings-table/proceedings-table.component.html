@@ -15,7 +15,7 @@
   [width]="popover.width"
 >
   @if (popover.operation !== undefined) {
-    @if (popover.operation.time && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
+    @if (getLatestRoundFromStoreOperation(popover.operation)?.time && getLatestRoundFromStoreOperation(popover.operation)?.time?.start !== undefined && (getLatestRoundFromStoreOperation(popover.operation)?.time?.start ?? 0) > 0) {
       @if (popover.operation.isFinished && !popover.operation.lastRound?.lastResult?.available) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
@@ -118,7 +118,7 @@
   (mouseup)="onTableMouseUp()"
   class="inner"
 >
-  @if (taskList !== undefined && taskList.length === 0 && taskService.state.currentModeState.taskList!.entries.length === 0 && queue.length === 0) {
+  @if (entries !== undefined && entries !== null && entries.length === 0 && entries.length === 0 && queue.length === 0) {
     <div class="tportal-placeholder">
       <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
         @if (taskService.state.currentMode === 'annotation') {
@@ -222,7 +222,7 @@
       </ng-template>
     </div>
   }
-  @if (taskList !== undefined && taskList.length > 0 && !storage.ready) {
+  @if (entries !== undefined && entries !== null && entries.length > 0 && !storage.ready) {
     <div id="loading">
       <div class="spinner-border fs-1" role="status">
         <span class="visually-hidden">Loading...</span>
@@ -249,7 +249,7 @@
             }
           </th>
           <th style="width: 20%">File</th>
-          @for (operation of operations; track operation.id; let i = $index) {
+          @for (operation of operations; track operation.name; let i = $index) {
             <ng-container style="text-align: center">
               <th
                 (mousemove)="updateChanges()"
@@ -263,8 +263,8 @@
                     <tportal-operation-arrow [first]="i === 0" [type]="'arrow'"></tportal-operation-arrow>
                     <div style="z-index: 10; width: 100%; text-align: center">
                       <ng-template #tipContent>{{ operation.description }}</ng-template>
+                      <!-- TODO (click)="openArchiveDownload('column', operation, taskService.currentModeState!.selectedRows)" -->
                       <div
-                        (click)="openArchiveDownload('column', operation, taskService.currentModeState!.selectedRows)"
                         [ngbTooltip]="tipContent"
                         [container]="'body'"
                         tooltipClass="operation-tooltip"
@@ -307,7 +307,7 @@
         <tr class="subTableHeader">
           <th style="width: 15px; padding-right: 0; text-align: center"></th>
           <th style="width: 20%"></th>
-          @for (operation of operations; track operation.id; let i = $index) {
+          @for (operation of operations; track operation.name; let i = $index) {
             <ng-container style="text-align: center">
               @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
                 <th
@@ -315,7 +315,8 @@
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
+                  <input class="header-checkbox" type="checkbox" />
                 </th>
               } @else if (operation.name === 'MAUS') {
                 <th
@@ -326,7 +327,8 @@
                   }"
                 >
                   <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                  <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
+                  <input class="header-checkbox" type="checkbox" />
                   <img
                     src="assets/directory.png"
                     style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
@@ -339,7 +341,8 @@
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
+                  <input class="header-checkbox" type="checkbox" />
                 </th>
               } @else if (operation.name === 'Translation') {
                 <th
@@ -348,7 +351,8 @@
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
+                  <input class="header-checkbox" type="checkbox" />
                 </th>
               } @else if (i === 0) {
                 <th></th>
@@ -364,189 +368,58 @@
       </thead>
       <!-- TABLE BODY -->
       <tbody>
-        <tportal-context-menu
-          (optionselected)="onContextMenuOptionSelected($event)"
-          [hid]="contextmenu.hidden"
-          [ngStyle]="{
-            'margin-top': contextmenu.y + 'px',
-            'margin-left': contextmenu.x + 'px',
-            display:
-              contextmenu.hidden || (this.taskService.currentModeState !== undefined && this.taskService.currentModeState.selectedRows.length === 0)
-                ? 'none'
-                : 'initial',
-          }"
-          [selectedOperationType]="selectedOperation"
-          [selectedTasks]="this.taskService.currentModeState!.selectedRows"
-        >
-        </tportal-context-menu>
-        @if (taskList !== undefined) {
-          @for (entry of taskList.entries; track entry.id; let i = $index) {
-            <tr
-              [entry]="entry"
-              [rowSelected]="isEntrySelected(entry)"
-              [toolSelectedOperation]="toolSelectedOperation"
-              (contextmenu)="onContextMenu($event, row)"
-              (click)="onContextBlur()"
-              (scroll)="cancelScroll($event)"
-              tportalProceedingsRow
-              #row
-            >
-              <td
-                #nameCol="colIcon"
-                (appendingClick)="onPreviewClick($event)"
-                (click)="onRowSelected(entry)"
-                (deleteIconClick)="removeEntry($event, getTask(entry))"
-                (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
-                (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
-                (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-                (mouseenter)="onNameMouseEnter($event, getTask(entry))"
-                (mouseleave)="onNameMouseLeave($event, getTask(entry))"
-                (mouseover)="onNameMouseOver($event, getTask(entry))"
-                (tagClicked)="onTagClicked()"
-                [dirOpened]="allDirOpened"
-                [entry]="entry"
-                [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
-                [shortStyle]="isClosed"
-                tportalProcColIcon
-              ></td>
-              <!-- Task operations-->
-              @if (entry.type === 'task') {
-                @for (operation of getTask(entry)!.operations; track operation.id; let opIndex = $index) {
-                  <td
-                    (click)="onRowSelected(entry, operation)"
-                    (mousedown)="onOperationClick($event, operation)"
-                    #td
-                    (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
-                    (operationMouseLeave)="onOperationMouseLeave($event, operation)"
-                    (operationMouseOver)="onOperationMouseOver($event, operation)"
-                    [entry]="getTask(entry)"
-                    [ngStyle]="{
-                      width: !isClosed ? maxColumnWidths[opIndex] + '%' : 'auto',
-                    }"
-                    [operation]="operation"
-                    tportalProcColOperation
-                    [title]="'task ' + entry.id + ', ' + operation.lastRound?.lastResult?.online"
-                  ></td>
-                }
-                <td class="export-col">
-                  @if (isOneOperationFinished(entry) && getTask(entry) !== undefined) {
-                    <button
-                      class="btn btn-outline-success"
-                      style="padding: 0 5px"
-                      (click)="onExportButtonClick(entry, getTask(entry)!.operations[1])"
-                    >
-                      <i class="bi bi-cloud-download"></i>
-                    </button>
-                  }
+        @for (entry of entries; track entry.id; let entryIndex = $index;) {
+          <tr>
+            <td
+            #nameCol="colIcon"
+            (appendingClick)="onPreviewClick($event)"
+            (click)="onRowSelected(entry)"
+            (deleteIconClick)="removeEntry($event, getTask(entry))"
+            (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+            (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+            (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+            (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+            (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+            (mouseover)="onNameMouseOver($event, getTask(entry))"
+            (tagClicked)="onTagClicked()"
+            [dirOpened]="allDirOpened"
+            [entry]="entry"
+            [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
+            [shortStyle]="isClosed"
+            tportalProcColIcon
+          ></td>
+            <td>{{ entry.type }} ({{ entry.id }})</td>
+            @if (entry.type === 'task') {
+              @for (operation of entry.operations; track operation.id) {
+                <td tportalProceedingsTableTd [storeTaskOperation]="operation">
+                  <tportal-proceedings-table-operation-selector [storeTaskOperation]="operation"></tportal-proceedings-table-operation-selector>
                 </td>
               }
-              @if (entry.type === 'folder') {
-                @for (operation of taskService.state.currentModeState.operations; track operation.id; let opIndex = $index) {
-                  <td (click)="onRowSelected(entry)">
-                    <div class="progress">
-                      <div
-                        [dir]="getTaskDirectory(entry)"
-                        [opIndex]="opIndex"
-                        tportalDirProgress
-                        aria-valuemax="100"
-                        aria-valuemin="0"
-                        class="progress-bar"
-                        role="progressbar"
-                      ></div>
-                    </div>
-                  </td>
-                }
-                <td class="export-col">
-                  @if (isOneOperationFinished(entry)) {
-                    <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(entry)">
-                      <i class="bi bi-cloud-download"></i>
-                    </button>
-                  }
+            } @else {
+              @for (operationFactory of operations; track operationFactory.name; let opIndex = $index) {
+                <td>
+                  <div class="progress">
+                    <div
+                      [dir]="getTaskDirectory(entry)"
+                      [opIndex]="opIndex"
+                      tportalDirProgress
+                      aria-valuemax="100"
+                      aria-valuemin="0"
+                      class="progress-bar"
+                      role="progressbar"
+                    ></div>
+                  </div>
                 </td>
-              }
-            </tr>
-            @if (entry.type === 'folder') {
-              <!-- folder row -->
-              @for (dirEntry of getTaskDirEntries(entry); track dirEntry.id) {
-                <tr
-                  [@fadeToggleRow]="nameCol.dirOpened"
-                  [entry]="dirEntry"
-                  [rowSelected]="isEntrySelected(dirEntry)"
-                  [toolSelectedOperation]="toolSelectedOperation"
-                  tportalProceedingsRow
-                >
-                  <td
-                    (click)="onRowSelected(dirEntry)"
-                    (deleteIconClick)="removeEntry($event, dirEntry)"
-                    (infoMouseEnter)="onInfoMouseEnter($event, dirEntry)"
-                    (infoMouseLeave)="onInfoMouseLeave($event, dirEntry)"
-                    (infoMouseOver)="onInfoMouseOver($event, dirEntry)"
-                    (mouseenter)="onNameMouseEnter($event, dirEntry)"
-                    (mouseleave)="onNameMouseLeave($event, dirEntry)"
-                    (mouseover)="onNameMouseOver($event, dirEntry)"
-                    [entry]="dirEntry"
-                    [mouseOver]="dirEntry.mouseover"
-                    [shortStyle]="shortstyle"
-                    tportalProcColIcon
-                  ></td>
-                  @for (operation of dirEntry.operations; track operation.id) {
-                    <td
-                      (click)="onRowSelected(dirEntry, operation)"
-                      (mousedown)="onOperationClick($event, operation)"
-                      #td
-                      (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
-                      (operationMouseLeave)="onOperationMouseLeave($event, operation)"
-                      (operationMouseOver)="onOperationMouseOver($event, operation)"
-                      [entry]="dirEntry"
-                      [operation]="operation"
-                      tportalProcColOperation
-                    ></td>
-                  }
-                  <td class="export-col">
-                    @if (isOneOperationFinished(dirEntry)) {
-                      <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(dirEntry, undefined)">
-                        <i class="bi bi-cloud-download"></i>
-                      </button>
-                    }
-                  </td>
-                </tr>
               }
             }
-          }
-        }
-        <!-- Queue rows -->
-        @for (entry of queue; track entry.id; let i = $index) {
-          @if (entry.file !== undefined) {
-            <tr style="cursor: pointer">
-              @if (getDirEntriesFromItem(entry).length === 0) {
-                <td [attr.colspan]="taskService.state.currentModeState.operations.length + 3" [ngClass]="{ shorten: shortstyle }">
-                  <i aria-hidden="true" class="bi bi-database op-50"> </i>
-                  <span class="op-50" title="{{ getFileInfo(entry)?.fullname }}">
-                    {{ getFileInfo(entry)?.fullname }}
-                    <i class="bi bi-gear spin"></i>
-                  </span>
-                </td>
+            <td class="export-col">
+              @if (isOneOperationFinished(entry)) {
+                <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(entry, entryIndex)">
+                  <i class="bi bi-cloud-download"></i>
+                </button>
               }
-              @if (getDirEntriesFromItem(entry).length > 0) {
-                <td [attr.colspan]="taskService.state.currentModeState.operations.length + 3">
-                  <i aria-hidden="true" class="bi bi-folder2-open blue op-50"></i>
-                  <span class="op-50" title="{{ entry.file.name }}">{{ entry.file.name }} <i class="bi bi-gear-fill spin"></i> </span>
-                </td>
-              }
-            </tr>
-          }
-          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.fullname) {
-            <tr>
-              <td>
-                <div class="d-flex">
-                  <i aria-hidden="true" class="bi bi-database op-50 me-1"></i>
-                  <span class="op-50 me-1">{{ dirEntry.fullname }}</span>
-                  <i class="bi bi-gear-fill spin"></i>
-                </div>
-              </td>
-              <td [attr.colspan]="taskService.state.currentModeState.operations.length + 2"></td>
-            </tr>
-          }
+            </td>
+          </tr>
         }
       </tbody>
     </table>

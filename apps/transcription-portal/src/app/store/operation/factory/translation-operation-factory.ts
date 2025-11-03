@@ -9,11 +9,11 @@ export interface TranslationOperationOptions {
 export type TranslationOperation = StoreTaskOperation<TranslationOperationOptions>;
 
 export class TranslationOperationFactory extends OperationFactory<TranslationOperation> {
-  protected readonly description = 'Summarizes a given full text.';
-  protected readonly name = 'Translation';
-  protected readonly resultType = 'Text';
-  protected readonly shortTitle = 'TR';
-  protected readonly title = 'Translation';
+  protected readonly _description = 'Summarizes a given full text.';
+  protected readonly _name = 'Translation';
+  protected readonly _resultType = 'Text';
+  protected readonly _shortTitle = 'TR';
+  protected readonly _title = 'Translation';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): TranslationOperation {
     return {

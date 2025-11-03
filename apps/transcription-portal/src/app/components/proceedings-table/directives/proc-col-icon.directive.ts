@@ -12,10 +12,10 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
-import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
+import { Task, TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
+import { StoreTask, StoreTaskDirectory } from '../../../store';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -26,7 +26,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-  @Input() entry?: Task | TaskDirectory;
+  @Input() entry?: StoreTask | StoreTaskDirectory;
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
@@ -267,14 +267,14 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
       // set filename
       if (this.entry) {
-        this.renderer.setAttribute(result, 'title', this.entry.foldername);
-        const filename = this.renderer.createText(' ' + this.entry.foldername);
+        this.renderer.setAttribute(result, 'title', (this.entry as StoreTaskDirectory).folderName);
+        const filename = this.renderer.createText(' ' + (this.entry as StoreTaskDirectory).folderName);
         this.renderer.appendChild(result, filename);
 
-        if (this.entry.entries.length > 0) {
+        if ((this.entry as StoreTaskDirectory).entries.ids.length > 0) {
           // set number of files
           const filesNumSpan = this.renderer.createElement('span');
-          const filesNum = this.renderer.createText(' (' + this.entry.entries.length + ')');
+          const filesNum = this.renderer.createText(' (' + (this.entry as StoreTaskDirectory).entries.ids.length + ')');
           this.renderer.appendChild(filesNumSpan, filesNum);
           this.renderer.appendChild(result, filesNumSpan);
         }
@@ -297,7 +297,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(result, 'text-light');
         this.renderer.setStyle(result, 'font-size', '0.85rem');
         this.renderer.listen(result, 'click', () => {
-          const files = (this.entry as Task).files;
+          const files = (this.entry as StoreTask).files;
           this.appendingClick.emit(files[1] as TPortalFileInfo);
         });
         const content = this.renderer.createText(badgeObj.label);

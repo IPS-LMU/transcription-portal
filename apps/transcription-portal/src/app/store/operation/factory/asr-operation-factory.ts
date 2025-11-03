@@ -12,14 +12,14 @@ export interface ASROperationOptions {
 export type ASROperation = StoreTaskOperation<ASROperationOptions>;
 
 export class ASROperationFactory extends OperationFactory<ASROperation> {
-  protected readonly description =
+  protected readonly _description =
     'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
     'The result of this process is a text file with a literal transcription of the audio file. \n' +
     'NOTE: audio files may be processed by commercial providers who may store and keep the data you send them!';
-  protected readonly name = 'ASR';
-  protected readonly resultType = 'BAS Partitur Format';
-  protected readonly shortTitle = 'ASR';
-  protected readonly title = 'Speech Recognition';
+  protected readonly _name = 'ASR';
+  protected readonly _resultType = 'BAS Partitur Format';
+  protected readonly _shortTitle = 'ASR';
+  protected readonly _title = 'Speech Recognition';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): ASROperation {
     return {

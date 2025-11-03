@@ -15,6 +15,7 @@ export enum TaskStatus {
 
 export interface StoreTask {
   id: number;
+  type: "task";
   mouseOver: boolean;
   stopRequested: boolean;
   files: (TPortalFileInfo | TPortalAudioInfo)[];

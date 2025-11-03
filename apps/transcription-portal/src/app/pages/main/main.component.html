@@ -259,7 +259,7 @@
     <li [ngbNavItem]="1">
       <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if ((appStoreService.appInitialized$ | async) && taskService.state.modes.annotation.taskList !== undefined) {
+        @if (appStoreService.appInitialized$ | async) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -268,8 +268,9 @@
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
-            [operations]="taskService.state.modes.annotation.operations"
-            [queue]="taskService.state.modes.annotation.preprocessor.queue"
+            [entries]="modeStoreService.selectedModeEntries$ | async"
+            [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
+            [selectedRows]="modeStoreService.selectedRows$ | async"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
           >
@@ -289,7 +290,7 @@
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
-            [operations]="taskService.state.modes.summarization.operations"
+            [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
             [queue]="taskService.state.modes.summarization.preprocessor.queue"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
@@ -347,10 +348,8 @@
         </button>
       </div>
     </div>
-  }
-
-  <!-- SUB-HEADER TOOL -->
-  @if (showtool) {
+  } @else {
+    <!-- SUB-HEADER TOOL -->
     <div class="row proceedings-header" style="padding-top: 0; height: 50px">
       <div class="col-2" style="text-align: left; padding-top: 5px">
         <button (click)="onBackButtonClicked()" class="btn btn-primary" style="width: 100%">

@@ -21,7 +21,7 @@ import { DateTime } from 'luxon';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
-import { ProceedingsComponent } from '../../components/proceedings/proceedings.component';
+import { ProceedingsTableComponent } from '../../components/proceedings-table/proceedings-table.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
@@ -45,7 +45,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AppStoreService } from '../../store';
+import { AppStoreService, ModeStoreService, StoreTaskOperation } from '../../store';
 
 @Component({
   selector: 'tportal-main',
@@ -58,7 +58,7 @@ import { AppStoreService } from '../../store';
     NgClass,
     FormsModule,
     NgStyle,
-    ProceedingsComponent,
+    ProceedingsTableComponent,
     ToolLoaderComponent,
     TimePipe,
     NgbCollapse,
@@ -84,6 +84,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   protected sanitizer = inject(DomSanitizer);
   protected modalService = inject(OHModalService);
   protected appStoreService = inject(AppStoreService);
+  protected modeStoreService = inject(ModeStoreService);
 
   public sidebarstate = 'hidden';
   private toolURL?: string;
@@ -105,7 +106,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   activeMode = 1;
 
   @ViewChild('fileinput') fileinput?: ElementRef;
-  @ViewChild('proceedings') proceedings?: ProceedingsComponent;
+  @ViewChild('proceedings') proceedings?: ProceedingsTableComponent;
   @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
 
   constructor() {
@@ -164,7 +165,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   onAfterDrop(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
-    this.readNewFiles(entries);
+    // TODO add this.readNewFiles(entries);
   }
 
   onVerifyButtonClick() {
@@ -211,12 +212,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         fileInfos.push(new TPortalFileInfo(file.name, file.type, file.size, file));
       }
 
-      this.readNewFiles(fileInfos);
+      // TODO add this.readNewFiles(fileInfos);
     }
     input.value = '';
   }
 
-  async onOperationClick(operation: Operation) {
+  async onOperationClick(operation: StoreTaskOperation) {
+    /* TODO reimplement
     if (operation && operation instanceof ToolOperation && operation.state !== TaskStatus.PENDING && operation.task) {
       // operation is of type tool and ready
       const tool = operation as ToolOperation;
@@ -342,9 +344,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         }
       }
     }
+
+     */
   }
 
-  onOperationHover(operation: Operation) {}
+  onOperationHover(operation: StoreTaskOperation) {}
 
   getShortCode(code: string) {
     return code.substring(code.length - 2);
@@ -623,7 +627,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     this.taskService.toggleProcessing();
   }
 
-  onFeedbackRequest(operation: Operation) {
+  onFeedbackRequest(operation: StoreTaskOperation) {
+    /*  TODO implement
     this.bugService.addEntry(
       ConsoleType.INFO,
       `user clicked on report issue:\n` + `operation: ${operation.name}, ${operation.state}\n` + `protocol: ${operation.protocol}\n`,
@@ -647,6 +652,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         );
       }
     }
+     */
   }
 
   private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {

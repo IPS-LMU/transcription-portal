@@ -9,12 +9,12 @@ export interface SummarizationOperationOptions {
 export type SummarizationOperation = StoreTaskOperation<SummarizationOperationOptions>;
 
 export class SummarizationOperationFactory extends OperationFactory<SummarizationOperation> {
-  protected readonly description =
+  protected readonly _description =
     'Summarizes a given full text.';
-  protected readonly name = 'Summarization';
-  protected readonly resultType = 'Text';
-  protected readonly shortTitle = 'SUM';
-  protected readonly title = 'Summarization';
+  protected readonly _name = 'Summarization';
+  protected readonly _resultType = 'Text';
+  protected readonly _shortTitle = 'SUM';
+  protected readonly _title = 'Summarization';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): SummarizationOperation {
     return {

@@ -1,6 +1,8 @@
+import { last } from '@octra/utilities';
 import { FileInfoSerialized } from '@octra/web-media';
 import { IDBTaskItem } from '../../indexedDB';
-import { IOperation, Operation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
+import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
+import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { StoreTask } from '../task';
 import { StoreTaskDirectory } from '../task-directory';
@@ -24,7 +26,7 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   return new StoreTaskOperationProcessingRound({
     protocol: round.protocol,
     results: round.results.map((a) => TPortalFileInfo.fromAny(a)) as TPortalFileInfo[],
-    status: round.status,
+    status: round.status
   });
 }
 
@@ -94,4 +96,12 @@ export async function convertStoreOperationRoundToIDBOperationRound(
 ): Promise<OperationProcessingRoundSerialized> {
   const results = await Promise.all<Promise<FileInfoSerialized>[]>(round.results.map((a) => a.toAny()));
   return { protocol: round.protocol, results, status: round.status };
+}
+
+export function getLatestRoundFromStoreOperation(operation: StoreTaskOperation) {
+  return operation.rounds ? last(operation.rounds) : undefined;
+}
+
+export function getOperationStatus(operation: StoreTaskOperation) {
+  return getLatestRoundFromStoreOperation(operation)?.status ?? TaskStatus.PENDING;
 }

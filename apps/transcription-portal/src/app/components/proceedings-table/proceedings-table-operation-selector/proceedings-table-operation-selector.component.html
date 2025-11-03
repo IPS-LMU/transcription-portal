@@ -1,0 +1,17 @@
+@switch (storeTaskOperation?.name) {
+  @case ('Upload') {
+    <tportal-proceedings-table-upload-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-upload-operation>
+  }
+  @case ("ASR") {
+    <tportal-proceedings-table-asr-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-asr-operation>
+  }
+  @case ("OCTRA") {
+    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-tool-operation>
+  }
+  @case ("Emu WebApp") {
+    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-tool-operation>
+  }
+  @case ("MAUS") {
+    <tportal-proceedings-table-word-alignment-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-word-alignment-operation>
+  }
+}

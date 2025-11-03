@@ -1,7 +1,8 @@
 import { AfterViewInit, Directive, ElementRef, inject, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
-import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
+import { Task, TaskStatus } from '../../../obj/tasks';
+import { StoreTaskDirectory } from '../../../store';
 
 @Directive({
   selector: '[tportalDirProgress]',
@@ -11,7 +12,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-  @Input() dir?: TaskDirectory;
+  @Input() dir?: StoreTaskDirectory;
   @Input() opIndex?: number;
 
   private subscrmanager = new SubscriptionManager<Subscription>();
@@ -39,7 +40,8 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     if (this.opIndex == undefined) {
       return;
     }
-    const allEntries = this.dir.entries.length;
+    const entries = this.dir?.entries.ids.map(id => this.dir!.entries.entities[id]) ?? [];
+    const allEntries = this.dir.entries.ids.length;
 
     const counters = {
       processing: 0,
@@ -47,7 +49,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
       failed: 0,
     };
 
-    for (const entry of this.dir.entries) {
+    for (const entry of entries) {
       if (entry instanceof Task) {
         const operation = entry.operations[this.opIndex];
 

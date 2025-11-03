@@ -15,16 +15,18 @@ export function convertIDBTaskToStoreTask(
   if (entry.type === 'task') {
     return {
       id: entry.id,
+      type: 'task',
       mouseOver: false,
       stopRequested: false,
       files: entry.files.map((a) => convertIDBFileToStoreFile(a)),
       operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id)),
       directoryID: directoryID,
       status: entry.state,
-    };
+    } as StoreTask;
   } else {
     const result = {
       id: entry.id,
+      type: 'folder',
       path: entry.path,
       folderName: TPortalDirectoryInfo.extractFolderName(entry.path) ?? `Folder ${entry.id}`,
       entries: taskAdapter.getInitialState(),
@@ -34,7 +36,7 @@ export function convertIDBTaskToStoreTask(
       result.entries,
     );
 
-    return result;
+    return result as StoreTaskDirectory;
   }
 }
 
