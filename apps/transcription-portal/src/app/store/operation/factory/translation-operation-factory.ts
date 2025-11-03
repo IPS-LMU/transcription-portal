@@ -6,7 +6,7 @@ export interface TranslationOperationOptions {
   maxNumberOfWords?: number;
 }
 
-export type TranslationOperation = StoreTaskOperation<TranslationOperationOptions>;
+export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions>{}
 
 export class TranslationOperationFactory extends OperationFactory<TranslationOperation> {
   protected readonly _description = 'Summarizes a given full text.';
@@ -16,7 +16,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
   protected readonly _title = 'Translation';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): TranslationOperation {
-    return {
+    return new TranslationOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -24,6 +24,6 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

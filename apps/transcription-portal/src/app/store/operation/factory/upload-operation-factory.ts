@@ -1,7 +1,7 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
-export type UploadOperation = StoreTaskOperation<any>;
+export class UploadOperation extends StoreTaskOperation<any>{}
 
 export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _description =
@@ -14,7 +14,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _title = 'Upload';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): UploadOperation {
-    return {
+    return new UploadOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -22,6 +22,6 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

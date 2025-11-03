@@ -1,5 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
+import { StoreTask } from './task';
+import { StoreTaskDirectory } from '../task-directory';
 
 export class TaskActions {
   static importTasks = createActionGroup({
@@ -22,4 +24,18 @@ export class TaskActions {
       success: emptyProps(),
     },
   });
+
+  static removeTaskOrFolder = createActionGroup({
+      source: 'tasks/remove task or folder',
+      events: {
+        do: props<{
+          item: StoreTask | StoreTaskDirectory
+        }>(),
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
 }

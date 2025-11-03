@@ -37,7 +37,6 @@ import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import { getIndexByEntry, ModeStoreService, OperationFactory, StoreTask, StoreTaskDirectory, StoreTaskOperation } from '../../store';
-import { getLatestRoundFromStoreOperation, getOperationStatus } from '../../store/operation/operation.functions';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
@@ -46,6 +45,8 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import { ServiceProvider } from '@octra/ngx-components';
+import { AppSettings } from '../../shared/app.settings';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -423,10 +424,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
       const previousOperation = operationIndex && operation && operationIndex > 0 ? (entry as StoreTask).operations[operationIndex - 1] : undefined;
 
-      if (
-        (previousOperation && getLatestRoundFromStoreOperation(previousOperation)?.lastResult?.online) ||
-        (operation && getLatestRoundFromStoreOperation(operation)?.lastResult?.online)
-      ) {
+      if ((previousOperation && previousOperation?.lastResult?.online) || (operation && operation?.lastResult?.online)) {
         this.operationclick.emit(operation);
         console.log('row selected close');
         this.popover.state = 'closed';
@@ -517,15 +515,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   onOperationMouseEnter($event: MouseEvent, operation: StoreTaskOperation, td: HTMLTableCellElement) {
     // show Popover for normal operations only
-    const operationStatus = getOperationStatus(operation);
-    const lastRoundProtocol = getLatestRoundFromStoreOperation(operation)?.protocol;
-    if (!(operationStatus === TaskStatus.PENDING || operationStatus === TaskStatus.SKIPPED || operationStatus === TaskStatus.READY)) {
+    if (!(operation.status === TaskStatus.PENDING || operation.status === TaskStatus.SKIPPED || operation.status === TaskStatus.READY)) {
       const icon: HTMLElement = $event.target as HTMLElement;
       const parentNode = td;
 
       if (parentNode && this.popoverRef && this.inner) {
         this.popover.operation = operation;
-        if (lastRoundProtocol) {
+        if (operation.protocol) {
           this.popover.width = 500;
         } else {
           this.popover.width = 400;
@@ -642,8 +638,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     // TODO check task.mouseover = true;
   }
 
-  calculateDuration(time: { start: number; duration?: number } | undefined, operation: Operation) {
-    if (operation.state === TaskStatus.PROCESSING && operation?.time) {
+  calculateDuration(time: { start: number; duration?: number } | undefined, operation: StoreTaskOperation) {
+    if (operation.status === TaskStatus.PROCESSING && operation?.time) {
       return (operation.time.duration ?? 0) + Math.max(0, Date.now() - operation.time.start);
     } else if (time) {
       if (time.duration && time.duration > 0) {
@@ -766,12 +762,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   public getPopoverColor(operation: StoreTaskOperation): string {
     if (operation) {
-      const lastRound = getLatestRoundFromStoreOperation(operation);
-      const operationStatus = getOperationStatus(operation);
-      const protocol = lastRound?.protocol;
-      if (operationStatus === TaskStatus.ERROR || (operationStatus === TaskStatus.FINISHED && !lastRound?.lastResult?.available)) {
+      if (operation.status === TaskStatus.ERROR || (operation.status === TaskStatus.FINISHED && !operation?.lastResult?.available)) {
         return 'red';
-      } else if (operationStatus === TaskStatus.FINISHED && protocol) {
+      } else if (operation.status === TaskStatus.FINISHED && operation.protocol) {
         return '#ffc33b';
       }
     }
@@ -833,15 +826,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.cd.detectChanges();
   };
 
-  public removeEntry(event: MouseEvent, entry?: Task | TaskDirectory) {
-    if (this.taskService.state.currentModeState.taskList && entry) {
-      this.taskService.state.currentModeState.taskList.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
-      setTimeout(() => {
-        this.taskService.currentModeState!.selectedRows = [];
-        this.cd.markForCheck();
-      }, 0);
+  public removeEntry(event: MouseEvent, entry?: StoreTask | StoreTask) {
+    if (entry) {
+      this.modeStoreService.removeTaskOrFolder(entry);
     }
   }
 
@@ -965,7 +952,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       const checkTask = (task: StoreTask) => {
         for (const operation of task.operations) {
           if (operation.name !== 'Upload') {
-            if (getOperationStatus(operation) === TaskStatus.FINISHED || operation.rounds.length > 0) {
+            if (operation.status === TaskStatus.FINISHED || operation.rounds.length > 0) {
               return true;
             }
           }
@@ -1012,9 +999,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return undefined;
   }
 
-  public getTask(entry: StoreTask | StoreTaskDirectory): Task | undefined {
-    if (entry instanceof Task) {
-      return entry as Task;
+  public getTask(entry: StoreTask | StoreTaskDirectory): StoreTask | undefined {
+    if (entry.type === "task") {
+      return entry as StoreTask;
     }
     return undefined;
   }
@@ -1026,5 +1013,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return undefined;
   }
 
-  protected readonly getLatestRoundFromStoreOperation = getLatestRoundFromStoreOperation;
+  getServerProvider(basName?: string): ServiceProvider | undefined{
+    return AppSettings.getServiceInformation(basName);
+  }
 }

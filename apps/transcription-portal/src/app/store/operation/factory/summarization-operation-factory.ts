@@ -6,7 +6,7 @@ export interface SummarizationOperationOptions {
   maxNumberOfWords?: number;
 }
 
-export type SummarizationOperation = StoreTaskOperation<SummarizationOperationOptions>;
+export class SummarizationOperation extends StoreTaskOperation<SummarizationOperationOptions>{}
 
 export class SummarizationOperationFactory extends OperationFactory<SummarizationOperation> {
   protected readonly _description =
@@ -17,7 +17,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
   protected readonly _title = 'Summarization';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): SummarizationOperation {
-    return {
+    return new SummarizationOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -25,6 +25,6 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

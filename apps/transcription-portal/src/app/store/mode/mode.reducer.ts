@@ -70,7 +70,7 @@ export const modeReducer = createReducer(
         {
           name: 'annotation',
           options: {},
-          tasks: taskAdapter.getInitialState(),
+          items: taskAdapter.getInitialState(),
           defaultOperations: [
             new UploadOperationFactory(),
             new ASROperationFactory(),
@@ -94,7 +94,7 @@ export const modeReducer = createReducer(
         {
           name: 'summarization',
           options: {},
-          tasks: taskAdapter.getInitialState(),
+          items: taskAdapter.getInitialState(),
           defaultOperations: [
             new UploadOperationFactory(),
             new ASROperationFactory(),

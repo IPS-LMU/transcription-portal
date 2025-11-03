@@ -1,7 +1,7 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
-export type EmuOperation = StoreTaskOperation<any>;
+export class EmuOperation extends StoreTaskOperation<any>{}
 
 export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _description =
@@ -14,7 +14,7 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _title = 'Phonetic detail';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): EmuOperation {
-    return {
+    return new EmuOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -22,6 +22,6 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

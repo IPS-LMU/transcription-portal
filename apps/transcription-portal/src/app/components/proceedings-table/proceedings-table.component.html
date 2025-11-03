@@ -15,8 +15,8 @@
   [width]="popover.width"
 >
   @if (popover.operation !== undefined) {
-    @if (getLatestRoundFromStoreOperation(popover.operation)?.time && getLatestRoundFromStoreOperation(popover.operation)?.time?.start !== undefined && (getLatestRoundFromStoreOperation(popover.operation)?.time?.start ?? 0) > 0) {
-      @if (popover.operation.isFinished && !popover.operation.lastRound?.lastResult?.available) {
+    @if (popover.operation.time !== undefined && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
+      @if (popover.operation.status === 'FINISHED' && !popover.operation.lastRound?.lastResult?.available) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">
@@ -29,15 +29,27 @@
         </div>
       </div>
     }
-    @if (popover.operation.state === 'PROCESSING' && popover.operation.serviceProvider !== undefined) {
+    @if (popover.operation.status === 'PROCESSING' && popover.operation.serviceProviderName !== undefined) {
       <div class="service-preview">
         <div class="provided-by">Service provided by</div>
-        <a [href]="popover.operation.serviceProvider.homepageURL" style="display: block; vertical-align: middle" target="_blank">
-          <img [src]="popover.operation.serviceProvider.logoURL" alt="EML Logo" class="service-logo" style="border: 1px solid lightgray" />
+        <a
+          [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL"
+          style="display: block; vertical-align: middle"
+          target="_blank"
+        >
+          <img
+            [src]="getServerProvider(popover.operation.serviceProviderName)?.logoURL"
+            alt="EML Logo"
+            class="service-logo"
+            style="border: 1px solid lightgray"
+          />
         </a>
         <div class="service-terms">
-          <a [href]="popover.operation.serviceProvider.termsURL" target="_blank"><i class="bi bi-journal-text"></i> Service terms</a><br />
-          <a [href]="popover.operation.serviceProvider.homepageURL" target="_blank"><i class="bi bi-globe"></i> Homepage</a><br />
+          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
+            ><i class="bi bi-journal-text"></i> Service terms</a
+          ><br />
+          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank"><i class="bi bi-globe"></i> Homepage</a
+          ><br />
         </div>
         <i (click)="onReportIconClick(popover.operation)" class="bi bi-exclamation-circle report-issue"></i>
       </div>
@@ -45,7 +57,7 @@
         <ul>
           <li>The processing time depends on the properties of the audio file and the service provider.</li>
           <li>As soon as the service has finished processing the result appears here.</li>
-          <li>{{ popover.operation.serviceProvider.dataStoragePolicy }}</li>
+          <li>{{ getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy }}</li>
         </ul>
       </div>
       <div class="clearfix"></div>
@@ -56,6 +68,7 @@
           [visible]="popover.state === 'opened'"
           (previewClick)="onPreviewClick($event)"
           [operation]="popover.operation"
+          [task]="popover.task"
         ></tportal-results-table>
       </div>
     }
@@ -97,11 +110,6 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>Language: {{ popover.task.asrOperation.language }}</span>
-    @if (popover.task && popover.task.asrOperation.serviceProvider) {
-      <span> , ASR: {{ popover.task.asrOperation.serviceProvider }} </span>
-    }
-    <br /><br />
     <span>File information:</span>
     <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
   }
@@ -368,26 +376,28 @@
       </thead>
       <!-- TABLE BODY -->
       <tbody>
-        @for (entry of entries; track entry.id; let entryIndex = $index;) {
+        @for (entry of entries; track entry.id; let entryIndex = $index) {
           <tr>
+            <!-- TODO check
+              [mouseOver]="false"
+            -->
             <td
-            #nameCol="colIcon"
-            (appendingClick)="onPreviewClick($event)"
-            (click)="onRowSelected(entry)"
-            (deleteIconClick)="removeEntry($event, getTask(entry))"
-            (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
-            (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
-            (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-            (mouseenter)="onNameMouseEnter($event, getTask(entry))"
-            (mouseleave)="onNameMouseLeave($event, getTask(entry))"
-            (mouseover)="onNameMouseOver($event, getTask(entry))"
-            (tagClicked)="onTagClicked()"
-            [dirOpened]="allDirOpened"
-            [entry]="entry"
-            [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
-            [shortStyle]="isClosed"
-            tportalProcColIcon
-          ></td>
+              #nameCol="colIcon"
+              (appendingClick)="onPreviewClick($event)"
+              (click)="onRowSelected(entry)"
+              (deleteIconClick)="removeEntry($event, getTask(entry))"
+              (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+              (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+              (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+              (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+              (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+              (mouseover)="onNameMouseOver($event, getTask(entry))"
+              (tagClicked)="onTagClicked()"
+              [dirOpened]="allDirOpened"
+              [entry]="entry"
+              [shortStyle]="isClosed"
+              tportalProcColIcon
+            ></td>
             <td>{{ entry.type }} ({{ entry.id }})</td>
             @if (entry.type === 'task') {
               @for (operation of entry.operations; track operation.id) {

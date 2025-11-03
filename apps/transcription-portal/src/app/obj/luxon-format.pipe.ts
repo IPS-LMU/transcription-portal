@@ -6,7 +6,11 @@ import { DateTime } from 'luxon';
   standalone: true,
 })
 export class LuxonFormatPipe implements PipeTransform {
-  transform(value: number, option: string): unknown {
+  transform(value: number | undefined | null, option: string): string {
+    if (!value) {
+      return '<UNDEFINED DATE>';
+    }
+
     let language = navigator.language || navigator.userAgent || 'en';
 
     if (window.navigator.languages) {

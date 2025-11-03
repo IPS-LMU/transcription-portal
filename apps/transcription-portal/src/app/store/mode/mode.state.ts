@@ -16,7 +16,7 @@ export interface Mode<O extends object> {
   name: string;
   options: O;
   defaultOperations: OperationFactory<any>[];
-  tasks: EntityState<StoreTask | StoreTaskDirectory>;
+  items: EntityState<StoreTask | StoreTaskDirectory>;
   newFiles?: boolean;
   overallState: 'processing' | 'waiting' | 'stopped' | 'not started';
   status: TaskStatus;

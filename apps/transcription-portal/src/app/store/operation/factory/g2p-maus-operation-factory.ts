@@ -4,7 +4,7 @@ import { OperationFactory } from './operation-factory';
 export interface G2pMausOperationOptions{
   language?: string;
 }
-export type G2pMausOperation = StoreTaskOperation<G2pMausOperationOptions>;
+export class G2pMausOperation extends StoreTaskOperation<G2pMausOperationOptions>{}
 
 export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation> {
   protected readonly _description =
@@ -16,7 +16,7 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation> 
   protected readonly _title = 'Word alignment';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): G2pMausOperation {
-    return {
+    return new G2pMausOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -24,6 +24,6 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation> 
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

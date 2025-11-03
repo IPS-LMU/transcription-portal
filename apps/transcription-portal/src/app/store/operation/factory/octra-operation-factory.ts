@@ -1,7 +1,9 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
-export type OctraOperation = StoreTaskOperation<any>;
+export class OctraOperation extends StoreTaskOperation<any> {
+
+}
 
 export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _description =
@@ -14,7 +16,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _title = 'Manual Transcription';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): OctraOperation {
-    return {
+    return new OctraOperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -22,6 +24,6 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

@@ -9,7 +9,7 @@ export interface ASROperationOptions {
   };
 }
 
-export type ASROperation = StoreTaskOperation<ASROperationOptions>;
+export class ASROperation extends StoreTaskOperation<ASROperationOptions>{}
 
 export class ASROperationFactory extends OperationFactory<ASROperation> {
   protected readonly _description =
@@ -22,7 +22,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation> {
   protected readonly _title = 'Speech Recognition';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): ASROperation {
-    return {
+    return new ASROperation({
       enabled: true,
       id,
       mouseOver: false,
@@ -30,6 +30,6 @@ export class ASROperationFactory extends OperationFactory<ASROperation> {
       options: {},
       rounds,
       taskID,
-    };
+    });
   }
 }

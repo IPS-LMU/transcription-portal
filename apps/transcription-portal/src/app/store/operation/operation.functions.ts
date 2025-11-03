@@ -9,24 +9,24 @@ import { StoreTaskDirectory } from '../task-directory';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
 export function convertIDBOperationToStoreOperation(operation: IOperation, taskID: number): StoreTaskOperation {
-  return {
+  return new StoreTaskOperation({
     enabled: operation.enabled,
     estimatedEnd: undefined,
     id: operation.id,
     mouseOver: false,
     name: operation.name,
     rounds: operation.rounds.map((a) => convertIDBOperationRoundToStoreRound(a)),
-    serviceProviderBASName: operation.serviceProvider,
+    serviceProviderName: operation.serviceProvider,
     taskID,
     options: operation.options,
-  };
+  });
 }
 
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {
   return new StoreTaskOperationProcessingRound({
     protocol: round.protocol,
     results: round.results.map((a) => TPortalFileInfo.fromAny(a)) as TPortalFileInfo[],
-    status: round.status
+    status: round.status,
   });
 }
 
@@ -86,7 +86,7 @@ export async function convertStoreOperationToIDBOperation(operation: StoreTaskOp
     rounds: await Promise.all<Promise<OperationProcessingRoundSerialized>[]>(
       operation.rounds.map((a) => convertStoreOperationRoundToIDBOperationRound(a)),
     ),
-    serviceProvider: operation.serviceProviderBASName,
+    serviceProvider: operation.serviceProviderName,
     options: operation.options,
   };
 }
@@ -96,12 +96,4 @@ export async function convertStoreOperationRoundToIDBOperationRound(
 ): Promise<OperationProcessingRoundSerialized> {
   const results = await Promise.all<Promise<FileInfoSerialized>[]>(round.results.map((a) => a.toAny()));
   return { protocol: round.protocol, results, status: round.status };
-}
-
-export function getLatestRoundFromStoreOperation(operation: StoreTaskOperation) {
-  return operation.rounds ? last(operation.rounds) : undefined;
-}
-
-export function getOperationStatus(operation: StoreTaskOperation) {
-  return getLatestRoundFromStoreOperation(operation)?.status ?? TaskStatus.PENDING;
 }

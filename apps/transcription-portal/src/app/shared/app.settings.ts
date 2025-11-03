@@ -26,13 +26,13 @@ export class AppSettings {
     return this.languages.asr.find((a) => a.value === code);
   }
 
-  public static getServiceInformation(serviceProvider?: string) {
-    if (serviceProvider) {
+  public static getServiceInformation(serviceProviderName?: string) {
+    if (serviceProviderName) {
       if (!AppSettings.configuration.api.services) {
         throw new Error('services configuration is undefined');
       }
       return AppSettings.configuration.api.services.find((a) => {
-        return a.provider === serviceProvider;
+        return a.provider === serviceProviderName;
       });
     }
     return undefined;

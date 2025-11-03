@@ -24,7 +24,7 @@ export const getTaskReducers = (
         {
           id,
           changes: {
-            tasks: taskAdapter.addMany((tasks as never)[id], state.entities[id]!.tasks),
+            items: taskAdapter.addMany((tasks as never)[id], state.entities[id]!.items),
           },
         },
         state,
@@ -32,5 +32,17 @@ export const getTaskReducers = (
     }
 
     return state;
+  }),
+  on(TaskActions.removeTaskOrFolder.do, (state: ModeState, { item }) => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: taskAdapter.removeOne(item.id, state.entities[state.currentMode]!.items),
+          selectedRows: new Set<number>()
+        },
+      },
+      state,
+    );
   }),
 ];

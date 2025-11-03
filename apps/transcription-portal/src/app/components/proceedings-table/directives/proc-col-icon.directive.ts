@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { Subscription } from 'rxjs';
-import { Task, TaskStatus } from '../../../obj/tasks';
+import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { StoreTask, StoreTaskDirectory } from '../../../store';
 
@@ -49,21 +49,8 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       // entry set
 
       // changes of entry must be observed specifically
-      if (this.entry instanceof Task) {
+      if (this.entry?.type === 'task') {
         this.subscrmanager.removeByTag('update');
-        this.subscrmanager.add(
-          this.entry.statechange.subscribe(() => {
-            this.updateView();
-          }),
-          'update',
-        );
-
-        this.subscrmanager.add(
-          this.entry.fileschange.subscribe(() => {
-            this.updateView();
-          }),
-          'update',
-        );
       }
     }
     this.updateView();
@@ -104,7 +91,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.appendIcon(wrapper);
         this.appendFileNameSpan(wrapper);
 
-        if (this.entry instanceof Task) {
+        if (this.entry.type === 'task') {
           this.appendAppendingsSpan(wrapper);
           const infoIcon = this.renderer.createElement('i');
           const deleteIcon = this.renderer.createElement('i');
@@ -150,89 +137,90 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
   private appendIcon(wrapper: HTMLElement) {
     let icon: HTMLElement;
-    if (this.entry instanceof Task) {
-      if (this.entry.directory === null || this.entry.directory === undefined) {
-        // normal line
+    if (this.entry) {
+      if (this.entry.type === 'task') {
+        if (!this.entry.directoryID) {
+          // normal line
+          icon = this.renderer.createElement('i');
+          this.renderer.addClass(icon, 'me-1');
+          this.renderer.addClass(icon, 'bi');
+          this.renderer.addClass(icon, 'bi-file-earmark-music');
+          this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+
+          switch (this.entry.status) {
+            case TaskStatus.FINISHED:
+              this.renderer.addClass(icon, 'green');
+              break;
+            case TaskStatus.ERROR:
+              this.renderer.addClass(icon, 'red');
+              break;
+            case TaskStatus.PENDING || this.entry.status === TaskStatus.READY:
+              this.renderer.addClass(icon, 'blue');
+              break;
+            case TaskStatus.PROCESSING:
+              this.renderer.addClass(icon, 'yellow');
+              break;
+          }
+
+          this.renderer.appendChild(wrapper, icon);
+        } else {
+          // task is part of a folder
+          const img = this.renderer.createElement('img');
+          this.renderer.setAttribute(img, 'src', 'assets/directory.png');
+          this.renderer.setStyle(img, 'width', '20px');
+          this.renderer.setStyle(img, 'margin-right', '3px');
+          this.renderer.appendChild(wrapper, img);
+
+          icon = this.renderer.createElement('i');
+          this.renderer.addClass(icon, 'me-1');
+          this.renderer.addClass(icon, 'bi');
+          this.renderer.addClass(icon, 'bi-file-earmark-music');
+          this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+
+          switch (this.entry.status) {
+            case TaskStatus.FINISHED:
+              this.renderer.addClass(icon, 'green');
+              break;
+            case TaskStatus.ERROR:
+              this.renderer.addClass(icon, 'red');
+              break;
+            case TaskStatus.PENDING || TaskStatus.READY:
+              this.renderer.addClass(icon, 'blue');
+              break;
+            case TaskStatus.PROCESSING:
+              this.renderer.addClass(icon, 'yellow');
+              break;
+          }
+
+          this.renderer.appendChild(wrapper, icon);
+        }
+      } else {
+        // TaskDirectory
+
+        const tag = this.renderer.createElement('span');
+        this.renderer.addClass(tag, 'bi');
+
+        if (this.dirOpened === 'opened') {
+          this.renderer.addClass(tag, 'bi-chevron-up');
+        } else {
+          this.renderer.addClass(tag, 'bi-chevron-down');
+        }
+        this.renderer.appendChild(wrapper, tag);
+        this.renderer.listen(tag, 'click', this.afterTagClicked);
+
         icon = this.renderer.createElement('i');
         this.renderer.addClass(icon, 'me-1');
         this.renderer.addClass(icon, 'bi');
-        this.renderer.addClass(icon, 'bi-file-earmark-music');
-        this.renderer.setAttribute(icon, 'aria-hidden', 'true');
 
-        switch (this.entry.status) {
-          case TaskStatus.FINISHED:
-            this.renderer.addClass(icon, 'green');
-            break;
-          case TaskStatus.ERROR:
-            this.renderer.addClass(icon, 'red');
-            break;
-          case TaskStatus.PENDING || this.entry.status === TaskStatus.READY:
-            this.renderer.addClass(icon, 'blue');
-            break;
-          case TaskStatus.PROCESSING:
-            this.renderer.addClass(icon, 'yellow');
-            break;
+        if (this.dirOpened === 'opened') {
+          this.renderer.addClass(icon, 'bi-folder2-open');
+        } else {
+          this.renderer.addClass(icon, 'bi-folder-fill');
         }
-
-        this.renderer.appendChild(wrapper, icon);
-      } else {
-        // task is part of a folder
-
-        const img = this.renderer.createElement('img');
-        this.renderer.setAttribute(img, 'src', 'assets/directory.png');
-        this.renderer.setStyle(img, 'width', '20px');
-        this.renderer.setStyle(img, 'margin-right', '3px');
-        this.renderer.appendChild(wrapper, img);
-
-        icon = this.renderer.createElement('i');
-        this.renderer.addClass(icon, 'me-1');
-        this.renderer.addClass(icon, 'bi');
-        this.renderer.addClass(icon, 'bi-file-earmark-music');
-        this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-
-        switch (this.entry.status) {
-          case TaskStatus.FINISHED:
-            this.renderer.addClass(icon, 'green');
-            break;
-          case TaskStatus.ERROR:
-            this.renderer.addClass(icon, 'red');
-            break;
-          case TaskStatus.PENDING || TaskStatus.READY:
-            this.renderer.addClass(icon, 'blue');
-            break;
-          case TaskStatus.PROCESSING:
-            this.renderer.addClass(icon, 'yellow');
-            break;
-        }
+        this.renderer.addClass(icon, 'blue');
 
         this.renderer.appendChild(wrapper, icon);
       }
-    } else {
-      // TaskDirectory
-
-      const tag = this.renderer.createElement('span');
-      this.renderer.addClass(tag, 'bi');
-
-      if (this.dirOpened === 'opened') {
-        this.renderer.addClass(tag, 'bi-chevron-up');
-      } else {
-        this.renderer.addClass(tag, 'bi-chevron-down');
-      }
-      this.renderer.appendChild(wrapper, tag);
-      this.renderer.listen(tag, 'click', this.afterTagClicked);
-
-      icon = this.renderer.createElement('i');
-      this.renderer.addClass(icon, 'me-1');
-      this.renderer.addClass(icon, 'bi');
-
-      if (this.dirOpened === 'opened') {
-        this.renderer.addClass(icon, 'bi-folder2-open');
-      } else {
-        this.renderer.addClass(icon, 'bi-folder-fill');
-      }
-      this.renderer.addClass(icon, 'blue');
-
-      this.renderer.appendChild(wrapper, icon);
     }
   }
 
@@ -245,28 +233,28 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       this.renderer.addClass(this.elementRef.nativeElement, 'shorten');
     }
 
-    if (this.entry instanceof Task) {
-      if (this.entry.files[0].extension === '.wav' && this.entry.files[0].file !== undefined) {
-        this.renderer.addClass(result, 'green');
-      } else if (
-        ((this.entry.files[0].extension === '.wav' && this.entry.files[0].file === undefined) || this.entry.files[0].extension !== '.wav') &&
-        this.entry.operations[0].state !== 'FINISHED'
-      ) {
-        this.renderer.addClass(result, 'yellow');
-      }
+    if (this.entry) {
+      if (this.entry.type === 'task') {
+        if (this.entry.files[0].extension === '.wav' && this.entry.files[0].file !== undefined) {
+          this.renderer.addClass(result, 'green');
+        } else if (
+          ((this.entry.files[0].extension === '.wav' && this.entry.files[0].file === undefined) || this.entry.files[0].extension !== '.wav') &&
+          this.entry.operations[0].status !== 'FINISHED'
+        ) {
+          this.renderer.addClass(result, 'yellow');
+        }
 
-      // set filename
-      this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes?.originalFileName);
-      const filename = this.renderer.createText(' ' + this.entry.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
-      this.renderer.appendChild(result, filename);
-      this.renderer.appendChild(wrapper, result);
-    } else {
-      // TaskDirectory
+        // set filename
+        this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes?.originalFileName);
+        const filename = this.renderer.createText(' ' + this.entry.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
+        this.renderer.appendChild(result, filename);
+        this.renderer.appendChild(wrapper, result);
+      } else {
+        // TaskDirectory
 
-      // this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
+        // this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
 
-      // set filename
-      if (this.entry) {
+        // set filename
         this.renderer.setAttribute(result, 'title', (this.entry as StoreTaskDirectory).folderName);
         const filename = this.renderer.createText(' ' + (this.entry as StoreTaskDirectory).folderName);
         this.renderer.appendChild(result, filename);
@@ -278,15 +266,16 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
           this.renderer.appendChild(filesNumSpan, filesNum);
           this.renderer.appendChild(result, filesNumSpan);
         }
+
+        this.renderer.appendChild(wrapper, result);
       }
-      this.renderer.appendChild(wrapper, result);
     }
   }
 
   private appendAppendingsSpan(wrapper: HTMLElement) {
     const result: HTMLElement = this.renderer.createElement('span');
 
-    if (this.entry instanceof Task) {
+    if (this.entry?.type === 'task') {
       if (this.entry.files.length > 1 || this.entry.files[0].extension !== '.wav') {
         const badgeObj = this.getBadge(this.entry);
         this.renderer.addClass(result, 'ms-1');
@@ -321,7 +310,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     }
   }
 
-  private getBadge(task: Task): {
+  private getBadge(task: StoreTask): {
     type: string;
     label: string;
   } {

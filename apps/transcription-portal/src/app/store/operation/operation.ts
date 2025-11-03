@@ -3,17 +3,43 @@ import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/op
 import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 
-export interface StoreTaskOperation<T extends object = any> {
-  id: number;
-  taskID: number;
-  name: string;
-  enabled: boolean;
+export class StoreTaskOperation<T extends object = any> {
+  id!: number;
+  taskID!: number;
+  name!: string;
+  enabled!: boolean;
   mouseOver?: boolean;
-  serviceProviderBASName?: string;
+  serviceProviderName?: string;
   estimatedEnd?: number;
-  rounds: StoreTaskOperationProcessingRound[];
+  rounds!: StoreTaskOperationProcessingRound[];
+  options!: T;
 
-  options: T;
+  // TODO implement
+  parsedProtocol: any[] = [];
+
+  get lastRound(): StoreTaskOperationProcessingRound | undefined {
+    return last(this.rounds);
+  }
+
+  get lastResult(): TPortalFileInfo | undefined {
+    return this.lastRound?.lastResult;
+  }
+
+  get status(): TaskStatus {
+    return this.lastRound?.status ?? TaskStatus.PENDING;
+  }
+
+  get protocol(): string | undefined {
+    return this.lastRound?.protocol;
+  }
+
+  get time(): { start: number; duration?: number } | undefined {
+    return this.lastRound?.time;
+  }
+
+  constructor(partial?: Partial<StoreTaskOperation<T>>) {
+    Object.assign(this, partial);
+  }
 }
 
 export class StoreTaskOperationProcessingRound implements IOperationProcessingRoundWithoutResults {
