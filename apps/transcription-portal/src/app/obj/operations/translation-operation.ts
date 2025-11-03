@@ -203,6 +203,9 @@ export class TranslationOperation extends Operation {
       rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this.language,
+      options: {
+        language: this.language,
+      }
     };
   }
 }

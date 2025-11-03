@@ -336,6 +336,10 @@ export class SummarizationOperation extends Operation {
       serviceProvider: this.serviceProvider?.provider,
       language: this._language,
       maxNumberOfWords: this.maxNumberOfWords,
+      options: {
+        language: this._language,
+        maxNumberOfWords: this.maxNumberOfWords,
+      }
     };
   }
 }

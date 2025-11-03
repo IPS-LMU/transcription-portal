@@ -1,5 +1,6 @@
 import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
+import { IDBUserDefaultSettingsItem } from '../../indexedDB';
 import { ASROperation } from '../../obj/operations/asr-operation';
 import { EmuOperation } from '../../obj/operations/emu-operation';
 import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
@@ -8,6 +9,7 @@ import { SummarizationOperation } from '../../obj/operations/summarization-opera
 import { TranslationOperation } from '../../obj/operations/translation-operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
 import { AppSettings } from '../../shared/app.settings';
+import { IDBActions } from '../idb';
 import { getTaskReducers, StoreTask } from '../task';
 import { StoreTaskDirectory } from '../task-directory';
 import { ModeActions } from './mode.actions';
@@ -22,6 +24,7 @@ export const modeAdapter: EntityAdapter<Mode<any>> = createEntityAdapter<Mode<an
 
 export const initialState: ModeState = modeAdapter.getInitialState({
   currentMode: 'annotation',
+  defaultUserSettings: {},
 });
 
 export const taskAdapter: EntityAdapter<StoreTask | StoreTaskDirectory> = createEntityAdapter<StoreTask | StoreTaskDirectory>({
@@ -30,6 +33,35 @@ export const taskAdapter: EntityAdapter<StoreTask | StoreTaskDirectory> = create
 
 export const modeReducer = createReducer(
   initialState,
+  on(IDBActions.initIDB.loaded, (state: ModeState, { userSettings }): ModeState => {
+    const defaultUserSettings = userSettings.find((a: IDBUserDefaultSettingsItem) => a.name === 'defaultUserSettings')?.value;
+
+    if (defaultUserSettings) {
+      const lang =
+        defaultUserSettings.asrLanguage && defaultUserSettings.asrProvider
+          ? AppSettings.getLanguageByCode(defaultUserSettings.asrLanguage, defaultUserSettings.asrProvider)
+          : undefined;
+
+      if (lang) {
+        state = {
+          ...state,
+          defaultUserSettings: {
+            ...state.defaultUserSettings,
+            selectedASRLanguage: defaultUserSettings.asrLanguage,
+            selectedMausLanguage: defaultUserSettings.mausLanguage,
+            selectedASRProvider: AppSettings.getServiceInformation(defaultUserSettings.asrProvider),
+            isDiarizationEnabled: defaultUserSettings.diarization ?? false,
+            diarizationSpeakers: defaultUserSettings.diarizationSpeakers,
+            selectedSummarizationProvider: defaultUserSettings.getServiceInformation(defaultUserSettings.summarizationProvider),
+            selectedTranslationLanguage: defaultUserSettings.translationLanguage,
+            selectedSummarizationNumberOfWords: defaultUserSettings.summarizationWordLimit,
+          },
+        };
+      }
+    }
+
+    return state;
+  }),
   on(ModeActions.initModes.do, (state: ModeState): ModeState => {
     return modeAdapter.addMany(
       [

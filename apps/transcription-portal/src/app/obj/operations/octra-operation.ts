@@ -249,6 +249,7 @@ export class OCTRAOperation extends ToolOperation {
       enabled: this.enabled,
       rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
+      options: {}
     };
   }
 }

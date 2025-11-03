@@ -312,6 +312,7 @@ export class UploadOperation extends Operation {
       enabled: this.enabled,
       rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
+      options: {}
     };
   }
 }

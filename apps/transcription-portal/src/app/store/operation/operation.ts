@@ -3,22 +3,20 @@ import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/op
 import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 
-export interface StoreTaskOperation {
+export interface StoreTaskOperation<T extends object = any> {
   id: number;
   taskID: number;
   name: string;
-  title: string;
-  description: string;
   enabled: boolean;
-  resultType?: string;
   mouseOver?: boolean;
-  shortTitle?: string;
   serviceProviderBASName?: string;
   estimatedEnd?: number;
-  rounds: OperationProcessingRound[];
+  rounds: StoreTaskOperationProcessingRound[];
+
+  options: T;
 }
 
-export class OperationProcessingRound implements IOperationProcessingRoundWithoutResults {
+export class StoreTaskOperationProcessingRound implements IOperationProcessingRoundWithoutResults {
   results: TPortalFileInfo[] = [];
   status!: TaskStatus;
   time?: { start: number; duration?: number };
@@ -28,7 +26,7 @@ export class OperationProcessingRound implements IOperationProcessingRoundWithou
     return last(this.results);
   }
 
-  constructor(partial?: Partial<OperationProcessingRound>) {
+  constructor(partial?: Partial<StoreTaskOperationProcessingRound>) {
     Object.assign(this, partial);
   }
 }

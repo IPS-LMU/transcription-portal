@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { last, SubscriptionManager } from '@octra/utilities';
-import { FileInfo, FileInfoSerialized } from '@octra/web-media';
-import { Observable, Subject } from 'rxjs';
+import { FileInfoSerialized } from '@octra/web-media';
+import { Subject } from 'rxjs';
 import { IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
@@ -14,11 +14,7 @@ export interface IOperation {
   enabled: boolean;
   rounds: OperationProcessingRoundSerialized[];
   serviceProvider?: string;
-  /*
-  language?: string;
-  mausLanguage?: string;
-  summarizationMaxNumberOfWords?: string;
-   */
+  options: any;
 }
 
 export interface IOperationProcessingRoundWithoutResults {
@@ -75,7 +71,7 @@ export class OperationProcessingRound implements IOperationProcessingRoundWithou
     });
   }
 
-  clone(){
+  clone() {
     return new OperationProcessingRound(this);
   }
 }
@@ -134,7 +130,12 @@ export abstract class Operation {
     this._serviceProvider = serviceProvider;
   }
 
-  public abstract start: (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => Promise<void>;
+  public abstract start: (
+    inputs: (TPortalFileInfo | TPortalAudioInfo)[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => Promise<void>;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;

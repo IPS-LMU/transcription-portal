@@ -15,8 +15,8 @@ export const getTaskReducers = (
       annotation: (StoreTask | StoreTaskDirectory)[];
       summarization: (StoreTask | StoreTaskDirectory)[];
     } = {
-      annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, state.entities['annotation']!.defaultOperations, taskAdapter)),
-      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, state.entities['summarization']!.defaultOperations, taskAdapter)),
+      annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter)),
+      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter)),
     };
 
     for (const id of Object.keys(tasks)) {

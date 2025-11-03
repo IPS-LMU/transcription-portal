@@ -510,6 +510,10 @@ export class ASROperation extends Operation {
       serviceProvider: this.serviceProvider?.provider,
       language: this.language,
       diarization: this.diarization,
+      options: {
+        language: this.language,
+        diarization: this.diarization,
+      }
     };
   }
 }

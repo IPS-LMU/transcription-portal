@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { catchError, exhaustMap, from, of, withLatestFrom } from 'rxjs';
+import { exhaustMap, of, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { Operation } from '../../obj/operations/operation';
 import { TaskEntry } from '../../obj/tasks/task-entry';
@@ -23,37 +23,12 @@ export class TaskEffects {
       ofType(IDBActions.initIDB.loaded),
       withLatestFrom(this.store),
       exhaustMap(([{ intern, annotationTasks, summarizationTasks, userSettings }, state]: [IDBLoadedResults, RootState]) => {
-        const taskCounter = intern?.find((a) => a.name === 'taskCounter')?.value ?? 0;
-        const operationCounter = intern?.find((a) => a.name === 'operationCounter')?.value ?? 0;
-        TaskEntry.counter = taskCounter.value;
-        Operation.counter = operationCounter.value;
+        // this.taskService.init();
 
-        this.taskService.init();
-        this.taskService.accessCode = userSettings.find((a) => a.name === 'accessCode')?.value;
-        this.taskService.openSplitModal = this.openSplitModal;
-
-        return from(
-          this.taskService.importDBData({
+        return of(
+          TaskActions.prepareTasks.do({
             annotationTasks,
             summarizationTasks,
-            userSettings,
-          }),
-        ).pipe(
-          exhaustMap(() => {
-            return of(
-              TaskActions.prepareTasks.do({
-                annotationTasks,
-                summarizationTasks,
-              }),
-            );
-          }),
-          catchError((error) => {
-            console.error(error);
-            return of(
-              TaskActions.importTasks.fail({
-                error: typeof error === 'string' ? error : error.message,
-              }),
-            );
           }),
         );
       }),
@@ -67,6 +42,19 @@ export class TaskEffects {
         return of(TaskActions.prepareTasks.success());
       }),
     ),
+  );
+
+  prepateTasksSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(TaskActions.prepareTasks.success),
+        withLatestFrom(this.store),
+        tap(([, state]: [any, RootState]) => {
+        }),
+      ),
+    {
+      dispatch: false,
+    },
   );
 
   prepareTasksSuccess$ = createEffect(() =>

@@ -14,6 +14,9 @@ export interface AppState {
   initialized: boolean;
   firstModalShown?: boolean;
   sidebarWidth?: number;
+  accessCode?: string;
+  notification?: boolean;
+  protocolURL?: string;
 
   settings?: OHConfiguration;
   availableLanguages?: {
@@ -28,7 +31,7 @@ export const InitialAppState: AppState = {
   consoleLoggingInitialized: false,
   feedbackEnabled: false,
   idbInitialized: false,
-  initialized: false
+  initialized: false,
 };
 
 export interface RootState {
@@ -48,10 +51,12 @@ export const appReducer = createReducer(
   ),
   on(
     IDBActions.initIDB.loaded,
-    (state: AppState, { intern }): AppState => ({
+    (state: AppState, { intern, userSettings }): AppState => ({
       ...state,
       firstModalShown: intern.find((a) => a.name === 'firstModalShown')?.value ?? false,
       sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
+      accessCode: userSettings.find((a) => a.name === 'accessCode')?.value,
+      notification: userSettings.find((a) => a.name === 'notification')?.value ?? false,
     }),
   ),
   on(

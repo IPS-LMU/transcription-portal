@@ -5,10 +5,8 @@ import { IFile } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { escapeRegex, flatten, SubscriptionManager } from '@octra/utilities';
 import { AudioCutter, AudioFormat, AudioManager, FileInfo, getAudioInfo } from '@octra/web-media';
-import { DateTime } from 'luxon';
 import { interval, Subscription } from 'rxjs';
 import { AppInfo } from '../../app.info';
-import { IDBNotificationSettingsItem, IDBTaskItem, IDBUserDefaultSettingsItem, IDBUserSettingsItem } from '../../indexedDB';
 import { AlertService } from '../../shared/alert.service';
 import { AppSettings } from '../../shared/app.settings';
 import { NotificationService } from '../../shared/notification.service';
@@ -495,16 +493,6 @@ export class TaskService {
 
     for (const taskObj of idbTasks) {
       if (taskObj.type === 'task') {
-        if (taskObj.asrLanguage) {
-          const firstLangObj = AppSettings.languages.asr.find((a) => {
-            return a.value === taskObj.asrLanguage;
-          });
-
-          if (firstLangObj) {
-            taskObj.asrLanguage = firstLangObj.value;
-          }
-        }
-
         const task = Task.fromAny(taskObj, AppSettings.configuration.api.commands, this.state.modes[mode].operations);
 
         maxTaskCounter = Math.max(maxTaskCounter, task.id);
@@ -605,70 +593,6 @@ export class TaskService {
       maxTaskCounter,
       maxOperationCounter,
     };
-  }
-
-  public async importDBData(dbEntries: {
-    annotationTasks: IDBTaskItem[];
-    summarizationTasks: IDBTaskItem[];
-    userSettings: IDBUserSettingsItem<any>[];
-  }) {
-    this.state.modes.annotation.newfiles = dbEntries.annotationTasks.length > 0;
-    this.state.modes.summarization.newfiles = dbEntries.summarizationTasks.length > 0;
-
-    // make sure that taskCounter and operation counter are equal to their biggest value
-    let maxTaskCounter = 0;
-    let maxOperationCounter = 0;
-
-    const annotationTaskResult = await this.importTasksFromDB(dbEntries.annotationTasks, 'annotation');
-    const summarizationTaskResult = await this.importTasksFromDB(dbEntries.summarizationTasks, 'summarization');
-    maxTaskCounter = Math.max(annotationTaskResult.maxTaskCounter, summarizationTaskResult.maxTaskCounter);
-    maxOperationCounter = Math.max(annotationTaskResult.maxOperationCounter, summarizationTaskResult.maxOperationCounter);
-
-    if (TaskEntry.counter < maxTaskCounter) {
-      console.warn(`Warning: Task counter was less than the biggest id. Reset counter.`);
-      TaskEntry.counter = maxTaskCounter;
-    }
-
-    if (Operation.counter < maxOperationCounter) {
-      console.warn(`Warning: Operation counter was less than the biggest id. Reset counter.`);
-      Operation.counter = maxOperationCounter;
-    }
-    await this.updateProtocolURL();
-
-    if (dbEntries.userSettings) {
-      // read userSettings
-      for (const userSetting of dbEntries.userSettings) {
-        if (userSetting.name === 'notification') {
-          this.notification.permissionGranted = (userSetting as IDBNotificationSettingsItem).value.enabled;
-        } else if (userSetting.name === 'defaultUserSettings') {
-          // search lang obj
-          const defaultUserSettings = (userSetting as IDBUserDefaultSettingsItem).value;
-          const lang =
-            defaultUserSettings.asrLanguage && defaultUserSettings.asrProvider
-              ? AppSettings.getLanguageByCode(defaultUserSettings.asrLanguage, defaultUserSettings.asrProvider)
-              : undefined;
-
-          if (lang) {
-            this.state.modes.annotation.selectedASRLanguage = defaultUserSettings.asrLanguage;
-            this.state.modes.annotation.selectedMausLanguage = defaultUserSettings.mausLanguage;
-            this.state.modes.summarization.selectedASRLanguage = defaultUserSettings.asrLanguage;
-          }
-
-          this.state.modes.annotation.selectedASRProvider = AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
-          this.state.modes.annotation.isDiarizationEnabled = defaultUserSettings.diarization ?? false;
-          this.state.modes.annotation.diarizationSpeakers = defaultUserSettings.diarizationSpeakers;
-          this.state.modes.summarization.selectedASRProvider = AppSettings.getServiceInformation(defaultUserSettings.asrProvider);
-          this.state.modes.summarization.selectedSummarizationProvider = AppSettings.getServiceInformation(defaultUserSettings.summarizationProvider);
-          this.state.modes.summarization.selectedTranslationLanguage = defaultUserSettings.translationLanguage;
-          this.state.modes.summarization.selectedSummarizationNumberOfWords = defaultUserSettings.summarizationWordLimit;
-          this.state.modes.summarization.isDiarizationEnabled = defaultUserSettings.diarization ?? false;
-          this.state.modes.summarization.diarizationSpeakers = defaultUserSettings.diarizationSpeakers;
-        }
-      }
-      // this.notification.permissionGranted = results[1][]
-    }
-    this.dbImported.next();
-    this.dbImported.complete();
   }
 
   public checkFiles(mode: PortalModeType) {
@@ -781,7 +705,6 @@ export class TaskService {
 
           task.statechange.subscribe(async (obj) => {
             await this.storage.saveTask(task, mode);
-            await this.updateProtocolURL();
           });
 
           await this.storage.saveTask(task, mode);
@@ -852,47 +775,6 @@ export class TaskService {
     }
 
     return undefined;
-  }
-
-  public updateProtocolURL(): Promise<SafeResourceUrl> {
-    return new Promise<SafeResourceUrl>((resolve, reject) => {
-      for (const mode of ['annotation', 'summarization'] as PortalModeType[]) {
-        const affectedMode = this.state.modes[mode];
-        if (affectedMode.protocolURL) {
-          URL.revokeObjectURL((affectedMode.protocolURL as any).changingThisBreaksApplicationSecurity.toString());
-        }
-
-        if (!affectedMode.taskList) {
-          throw new Error('undefined tasklist');
-        }
-        const promises: Promise<any>[] = [];
-        for (const entry of affectedMode.taskList.entries) {
-          promises.push(entry.toAny());
-        }
-
-        Promise.all(promises)
-          .then((values) => {
-            const json = {
-              version: '1.0.0',
-              encoding: 'UTF-8',
-              created: DateTime.now().toISO(),
-              entries: values,
-            };
-
-            affectedMode.protocolFileName = `oh_portal_${mode}_${DateTime.now().toISO()}.json`;
-            const file = new File([JSON.stringify(json, null, 2)], affectedMode.protocolFileName, {
-              type: 'text/plain',
-            });
-
-            const url = URL.createObjectURL(file);
-            affectedMode.protocolURL = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-            resolve(affectedMode.protocolURL);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      }
-    });
   }
 
   destroy() {
@@ -1114,20 +996,20 @@ export class TaskService {
         const fileName = (task.files[0].attributes?.originalFileName ?? task.files[0].fullname).replace(/\.[^.]+$/g, '');
 
         if (opName === 'ASR' && operation.isFinished) {
-          this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`, "success");
+          this.notification.showNotification(`"${operation.title}" successful`, `You can now transcribe ${fileName} manually.`, 'success');
         } else if (operation.state === TaskStatus.ERROR) {
           this.notification.showNotification(
             '"' + operation.title + '" Operation failed',
             `Operation failed for ${fileName}.
  For more information hover over the red "X" icon.`,
-            "danger"
+            'danger',
           );
         } else if (opName === 'MAUS' && operation.state === TaskStatus.FINISHED) {
           this.notification.showNotification(
             `"${operation.title}" successful`,
             `You can now open phonetic
   details of ${fileName}.`,
-            "success"
+            'success',
           );
         } else if (opName === 'Upload' && operation.state === TaskStatus.FINISHED && operation.lastRound?.lastResult) {
           // check if there are other tasks that needs the same uploaded results
@@ -1168,7 +1050,6 @@ export class TaskService {
           affectedMode.changeStatus(TaskStatus.READY);
         }
         await this.storage.saveTask(task, mode);
-        await this.updateProtocolURL();
         this.somethingChanged.emit();
       }),
     );

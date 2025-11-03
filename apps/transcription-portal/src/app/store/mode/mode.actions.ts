@@ -12,4 +12,16 @@ export class ModeActions {
       }
   });
 
+  static updateProtocolURL = createActionGroup({
+      source: 'modes/update protocol URL',
+      events: {
+        do: emptyProps(),
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
+
 }

@@ -1,7 +1,7 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { IDBFolderItem, IDBTaskItem } from '../../indexedDB';
-import { IOperation, Operation } from '../../obj/operations/operation';
+import { IOperation } from '../../obj/operations/operation';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
 import { StoreTaskDirectory } from '../task-directory';
@@ -9,7 +9,6 @@ import { StoreTask } from './task';
 
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,
-  defaultOperations: Operation[],
   taskAdapter: EntityAdapter<StoreTask | StoreTaskDirectory>,
   directoryID?: number,
 ): StoreTask | StoreTaskDirectory {
@@ -19,7 +18,7 @@ export function convertIDBTaskToStoreTask(
       mouseOver: false,
       stopRequested: false,
       files: entry.files.map((a) => convertIDBFileToStoreFile(a)),
-      operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id, defaultOperations[i])),
+      operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id)),
       directoryID: directoryID,
       status: entry.state,
     };
@@ -31,7 +30,7 @@ export function convertIDBTaskToStoreTask(
       entries: taskAdapter.getInitialState(),
     };
     result.entries = taskAdapter.addMany(
-      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, defaultOperations, taskAdapter, entry.id)),
+      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, entry.id)),
       result.entries,
     );
 

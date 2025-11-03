@@ -9,10 +9,12 @@ import { hasProperty } from '@octra/utilities';
 import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import { catchError, exhaustMap, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { IDBNotificationSettingsItem } from '../../indexedDB';
 import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
 import { OHConfiguration } from '../../obj/oh-config';
 import { AppSettings } from '../../shared/app.settings';
 import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
+import { NotificationService } from '../../shared/notification.service';
 import { ExternalInformationActions } from '../external-information';
 import { IDBActions } from '../idb';
 import { ModeActions } from '../mode';
@@ -28,6 +30,7 @@ export class AppEffects {
   private http = inject(HttpClient);
   private octraAPI = inject(OctraAPIService);
   protected ngbModalService = inject(NgbModal);
+  protected notification = inject(NotificationService);
 
   initVersionChecker$ = createEffect(() =>
     this.actions$.pipe(
@@ -245,6 +248,11 @@ export class AppEffects {
         ofType(IDBActions.initIDB.loaded),
         withLatestFrom(this.store),
         tap(([action, state]: [any, RootState]) => {
+          const notificationItem: IDBNotificationSettingsItem | undefined = action.userSettings.find(
+            (a: IDBNotificationSettingsItem) => a.name === 'notification',
+          );
+          this.notification.permissionGranted = notificationItem?.value.enabled ?? false;
+
           if (!state.app.firstModalShown) {
             this.loadFirstModal();
           }

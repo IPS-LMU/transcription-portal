@@ -174,6 +174,9 @@ export class G2pMausOperation extends Operation {
       rounds: await this.serializeProcessingRounds(),
       serviceProvider: this.serviceProvider?.provider,
       language: this._language,
+      options: {
+        language: this._language
+      }
     };
   }
 }
