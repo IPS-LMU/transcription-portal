@@ -15,370 +15,381 @@
       When you click "OK" you agree with the terms and conditions of the selected (third-party) services and the files are marked for further
       processing.
     </p>
-    <hr />
-    <h5>Options</h5>
-    <div class="row mb-3">
-      <div class="col-md-12 col-xl-8">
-        <form #form="ngForm">
-          <table class="table table-sm table-striped">
-            <tbody>
-              <tr>
-                <td class="fit">
-                  <label class="mt-2">ASR Service Provider<span class="text-danger">*</span>:</label>
-                </td>
-                <td>
-                  <octra-asr-provider-select
-                    [(ngModel)]="taskService.state.currentModeState.selectedASRProvider"
-                    [required]="true"
-                    (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                    [asrProviders]="asrProviders"
-                    [i18n]="{
-                      asrProvider: 'ASR Provider',
-                    }"
-                    name="asrProvider"
-                    id="asrProvider"
-                    class="d-block"
-                  ></octra-asr-provider-select>
 
-                  @if (selectedASRInfo !== undefined && isASRSelected() && selectedASRInfo.knownIssues !== undefined) {
-                    <div class="alert alert-info mt-3" style="font-size: 0.9em">
-                      <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
-                      {{ selectedASRInfo.knownIssues }}
-                    </div>
-                  }
-                </td>
-              </tr>
-              <tr class="align-middle">
-                <td class="fit">
-                  <label class="me-1">Content Language<span class="text-danger">*</span>:</label>
-                </td>
-                <td>
-                  <octra-asr-language-select
-                    [(ngModel)]="taskService.state.currentModeState.selectedASRLanguage"
-                    (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                    [languageSettings]="{
-                      services: AppSettings.configuration.api.services,
-                    }"
-                    name="asrLanguage"
-                    id="asrLanguage"
-                    class="d-block"
-                    [languages]="languages.asr"
-                    [options]="{
-                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
-                      selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage,
-                    }"
-                    placeholder="Content Language"
-                    [title]="'Content Language'"
-                    [required]="true"
-                  ></octra-asr-language-select>
-                  <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem"
-                    >The list of supported Content languages depends on the selected ASR Provider.</span
-                  >
-                </td>
-              </tr>
-              @if (taskService.state.currentMode === "annotation") {
-                <tr>
-                  <td class="fit">
-                    <label class="me-1" for="diarizationSwitch">Diarization:</label>
-                  </td>
-                  <td>
-                    <div class="form-check form-switch">
-                      <input
-                        class="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        id="diarizationSwitch"
-                        name="diarization"
-                        [(ngModel)]="taskService.state.currentModeState.isDiarizationEnabled"
-                        (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              }
-              @if (taskService.state.currentModeState.isDiarizationEnabled) {
-                <tr>
-                  <td class="fit">
-                    <label class="me-1" for="diarizationSwitch">Number of Speakers:</label>
-                  </td>
-                  <td>
-                    <input
-                      type="number"
-                      class="form-control form-control-sm"
-                      name="diarizationNumOfSpeakers"
-                      [(ngModel)]="taskService.state.currentModeState.diarizationSpeakers"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                    />
-                  </td>
-                </tr>
-              }
-              @if (taskService.state.currentMode === 'summarization') {
-                <tr class="align-middle fit">
-                  <td class="fit">
-                    <label for="asrProvider">Summarization Service Provider<span class="text-danger">*</span>:</label>
-                  </td>
-                  <td>
-                    <octra-asr-provider-select
-                      [(ngModel)]="taskService.state.currentModeState.selectedSummarizationProvider"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                      [asrProviders]="summarizationProviders"
-                      [title]="'Summarization Service Provider'"
-                      [required]="true"
-                      name="summarizationProvider"
-                      id="summarizationProvider"
-                      class="d-block"
-                      [i18n]="{
-                        asrProvider: 'Summarization Service Provider',
-                      }"
-                    ></octra-asr-provider-select>
-                  </td>
-                </tr>
-                <tr class="align-middle fit">
-                  <td class="fit">
-                    <label for="asrProvider">Max. number of words for summarization<span class="text-danger">*</span>:</label>
-                  </td>
-                  <td>
-                    <select
-                      class="form-select form-select-sm"
-                      name="summarizationNumberOfWords"
-                      [(ngModel)]="selectedSummarizationNumberOfWords"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                    >
-                      <option [value]="">Unlimited</option>
-                      <option [value]="10">Headline (10 words)</option>
-                      <option [value]="100">Paragraph (100 words)</option>
-                      <option [value]="400">Page (400 words)</option>
-                    </select>
-                  </td>
-                </tr>
-              }
-              @if (taskService.state.currentMode === 'annotation') {
-                <tr class="align-middle fit">
-                  <td class="fit"><label>Word Alignment Language:</label></td>
-                  <td>
-                    <octra-asr-language-select
-                      [(ngModel)]="taskService.state.currentModeState.selectedMausLanguage"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                      [languageSettings]="{
-                        services: AppSettings.configuration.api.services,
-                      }"
-                      [languages]="languages.maus"
-                      [title]="'MAUS Language'"
-                      name="mausLanguage"
-                      id="mausLanguage"
-                      placeholder="MAUS Language"
-                    ></octra-asr-language-select>
-                  </td>
-                </tr>
-              } @else {
-                <tr class="align-middle">
-                  <td class="fit"><label>Translate to:</label></td>
-                  <td>
-                    <div class="row g-1 align-items-center">
-                      <div class="col">
-                        <select
-                          class="form-select form-select-sm"
-                          [(ngModel)]="taskService.state.currentModeState.selectedTranslationLanguage"
-                          name="translationLanguage"
-                          [required]="true"
-                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
-                        >
-                          <option value=""></option>
-                          <option value="en">English</option>
-                          <option value="de">German</option>
-                          <option value="nl">Dutch</option>
-                          <option value="it">Italian</option>
-                        </select>
-                        <ng-template #translationProviderInfo>
-                          <div>
-                            <span class="d-block text-center">Translation provided by:</span>
-                            <a [href]="settingsService.translationServiceProvider?.homepageURL" target="_blank"
-                              ><img [src]="settingsService.translationServiceProvider?.logoURL" class="img-fluid"
-                            /></a>
-                          </div>
-                        </ng-template>
-                      </div>
-                      <div class="col-auto">
-                        <i class="bi bi-info-circle-fill pointer" style="color: cornflowerblue" [ngbPopover]="translationProviderInfo"></i>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </form>
-      </div>
-    </div>
-    @if (isOneAudiofileInvalid()) {
-      <div class="alert alert-danger" style="font-size: 0.9em">
-        One or more audio files do not fit the ASR provider's requirements:
-        @if (selectedASRInfo !== undefined) {
-          <ul>
-            @if (selectedASRInfo.maxSignalSize) {
-              <li>
-                Maximum size of audio file:
-                {{ selectedASRInfo.maxSignalSize }} MB
-              </li>
+    <div class="card shadow shadow-md mt-4">
+      <div class="card-header">Tasks</div>
+      <div class="card-body">
+        <p>Check the tasks that you want to perform.</p>
+        @if (isOneAudiofileInvalid()) {
+          <div class="alert alert-danger" style="font-size: 0.9em">
+            One or more audio files do not fit the ASR provider's requirements:
+            @if (selectedASRInfo !== undefined) {
+              <ul>
+                @if (selectedASRInfo.maxSignalSize) {
+                  <li>
+                    Maximum size of audio file:
+                    {{ selectedASRInfo.maxSignalSize }} MB
+                  </li>
+                }
+                @if (selectedASRInfo.maxSignalDuration) {
+                  <li>
+                    Maximum audio duration:
+                    {{ selectedASRInfo.maxSignalDuration * 1000 | time: ['full'] }}
+                    (H:m:s)
+                  </li>
+                }
+              </ul>
             }
-            @if (selectedASRInfo.maxSignalDuration) {
-              <li>
-                Maximum audio duration:
-                {{ selectedASRInfo.maxSignalDuration * 1000 | time: ['full'] }}
-                (H:m:s)
-              </li>
-            }
-          </ul>
+            <p>Incompatible audio files are marked with a red cross on the left. These audio files are not going to be processed.</p>
+          </div>
         }
-        <p>Incompatible audio files are marked with a red cross on the left. These audio files are not going to be processed.</p>
-      </div>
-    }
-    <hr />
-    <h5>Tasks</h5>
+        @if (orangeCount > 0) {
+          <p class="alert alert-warning" style="text-align: center; font-size: 0.9em">
+            Please close this window and re-add the files with file names in orange to the table. Otherwise these files are going to be skipped.
+          </p>
+        }
 
-    @if (orangeCount > 0) {
-      <p class="alert alert-warning" style="text-align: center; font-size: 0.9em">
-        Please close this window and re-add the files with file names in orange to the table. Otherwise these files are going to be skipped.
-      </p>
-    }
-
-    <table class="table table-responsive-md table-striped" id="queue">
-      <thead>
-        <tr>
-          <th>Valid?</th>
-          <th class="text-start">File</th>
-          <th>Language</th>
-          @for (operation of operations; track operation.id; let i = $index) {
-            <th>
-              <div>
-                @if (operation.title === '') {
-                  <span style="display: block">
-                    <ng-container>
-                      {{ operation.name }}
-                    </ng-container>
-                  </span>
-                } @else {
-                  <div [innerHTML]="operation.title"></div>
-                }
-              </div>
-            </th>
-          }
-        </tr>
-        <tr>
-          <th class="compatible-col"></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          @for (operation of operations; track operation.id; let i = $index) {
-            @if (operation.name === 'OCTRA' || operation.name === 'ASR' || operation.name === 'Summarization' || operation.name === 'Translation') {
-              <th>
-                <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
-              </th>
-            } @else if (operation.name === 'MAUS') {
-              <th colspan="2" style="position: relative">
-                <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
-                <img
-                  src="assets/directory.png"
-                  style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
-                />
-              </th>
-            }
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (task of tasks; track task.id) {
-          @if (task.status === 'QUEUED') {
+        <table class="table table-responsive-md table-striped" id="queue">
+          <thead>
             <tr>
-              <td class="compatible-col">
-                <ng-template #validationResult>
-                  <table class="table table-sm table-striped">
-                    <tbody>
-                      @for (check of getChecksByID(task.id); track check.name) {
-                        <tr>
-                          <td>
-                            <i
-                              class="bi"
-                              [ngClass]="{
-                                'bi-check-lg': check.isValid,
-                                'bi-x': !check.isValid,
-                              }"
-                              [ngStyle]="{
-                                color: check.isValid ? 'green' : 'red',
-                              }"
-                            ></i>
-                          </td>
-                          <td style="text-align: left">{{ check.name }}:</td>
-                          <td style="text-align: left">{{ check.value }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </ng-template>
-                <span
-                  #popoverResult="ngbPopover"
-                  (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
-                  (mouseleave)="popoverResult.close()"
-                  triggers=""
-                  [ngbPopover]="validationResult"
-                  [placement]="'right'"
-                >
-                  <i
-                    class="bi"
-                    [ngClass]="{
-                      'bi-check-lg': !isSomethingInvalid(task.id),
-                      'fbi-x': isSomethingInvalid(task.id),
-                    }"
-                    [ngStyle]="{
-                      color: isSomethingInvalid(task.id) ? 'red' : 'green',
-                    }"
-                  ></i>
-                </span>
-              </td>
-              <td class="text-start">
-                <span
-                  [ngClass]="{
-                    green:
-                      (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                      (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
-                    yellow:
-                      ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
-                      task.operations[0].state !== 'FINISHED',
-                    red: isSomethingInvalid(task.id),
-                  }"
-                  title="{{ task.files[0].attributes.originalFileName }}"
-                >
-                  {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
-                </span>
-                @if (task.files.length > 1 || task.files[0].extension !== '.wav') {
-                  <span
-                    [ngClass]="{
-                      'bg-info': getBadge(task).type === 'info',
-                      'bg-warning': getBadge(task).type === 'warning',
-                    }"
-                    class="badge"
-                  >
-                    {{ getBadge(task).label }}
-                  </span>
-                }
-              </td>
-              <td>{{ task.asrOperation.language }}</td>
-              @for (operation of task.operations; track operation.id) {
-                <td>
-                  @if (operation.enabled) {
-                    <span><i class="bi bi-check-lg" style="color: black"></i></span>
-                  }
-                  @if (!operation.enabled) {
-                    <span>skip</span>
-                  }
-                </td>
+              <th>Valid?</th>
+              <th class="text-start">File</th>
+              <th>Language</th>
+              @for (operation of operations; track operation.id; let i = $index) {
+                <th>
+                  <div>
+                    @if (operation.title === '') {
+                      <span style="display: block">
+                        <ng-container>
+                          {{ operation.name }}
+                        </ng-container>
+                      </span>
+                    } @else {
+                      <div [innerHTML]="operation.title"></div>
+                    }
+                  </div>
+                </th>
               }
             </tr>
-          }
-        }
-      </tbody>
-    </table>
+            <tr>
+              <th class="compatible-col"></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              @for (operation of operations; track operation.id; let i = $index) {
+                @if (
+                  operation.name === 'OCTRA' || operation.name === 'ASR' || operation.name === 'Summarization' || operation.name === 'Translation'
+                ) {
+                  <th>
+                    <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                  </th>
+                } @else if (operation.name === 'MAUS') {
+                  <th colspan="2" style="position: relative">
+                    <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
+                    <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                    <img
+                      src="assets/directory.png"
+                      style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
+                    />
+                  </th>
+                }
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (task of tasks; track task.id) {
+              @if (task.status === 'QUEUED') {
+                <tr>
+                  <td class="compatible-col">
+                    <ng-template #validationResult>
+                      <table class="table table-sm table-striped">
+                        <tbody>
+                          @for (check of getChecksByID(task.id); track check.name) {
+                            <tr>
+                              <td>
+                                <i
+                                  class="bi"
+                                  [ngClass]="{
+                                    'bi-check-lg': check.isValid,
+                                    'bi-x': !check.isValid,
+                                  }"
+                                  [ngStyle]="{
+                                    color: check.isValid ? 'green' : 'red',
+                                  }"
+                                ></i>
+                              </td>
+                              <td style="text-align: left">{{ check.name }}:</td>
+                              <td style="text-align: left">{{ check.value }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </ng-template>
+                    <span
+                      #popoverResult="ngbPopover"
+                      (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                      (mouseleave)="popoverResult.close()"
+                      triggers=""
+                      [ngbPopover]="validationResult"
+                      [placement]="'right'"
+                    >
+                      <i
+                        class="bi"
+                        [ngClass]="{
+                          'bi-check-lg': !isSomethingInvalid(task.id),
+                          'fbi-x': isSomethingInvalid(task.id),
+                        }"
+                        [ngStyle]="{
+                          color: isSomethingInvalid(task.id) ? 'red' : 'green',
+                        }"
+                      ></i>
+                    </span>
+                  </td>
+                  <td class="text-start">
+                    <span
+                      [ngClass]="{
+                        green:
+                          (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
+                          (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
+                        yellow:
+                          ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
+                          task.operations[0].state !== 'FINISHED',
+                        red: isSomethingInvalid(task.id),
+                      }"
+                      title="{{ task.files[0].attributes.originalFileName }}"
+                    >
+                      {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
+                    </span>
+                    @if (task.files.length > 1 || task.files[0].extension !== '.wav') {
+                      <span
+                        [ngClass]="{
+                          'bg-info': getBadge(task).type === 'info',
+                          'bg-warning': getBadge(task).type === 'warning',
+                        }"
+                        class="badge"
+                      >
+                        {{ getBadge(task).label }}
+                      </span>
+                    }
+                  </td>
+                  <td>{{ task.asrOperation.language }}</td>
+                  @for (operation of task.operations; track operation.id) {
+                    <td>
+                      @if (operation.enabled) {
+                        <span><i class="bi bi-check-lg" style="color: black"></i></span>
+                      }
+                      @if (!operation.enabled) {
+                        <span>skip</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card shadow shadow-md">
+      <div class="card-header">Options</div>
+      <div class="card-body">
+        <p>Set the options for your workflow, e.g. service provider and languages. Click on the <i class="bi bi-info-circle-fill" style="color: cornflowerblue"></i> for further information. The options are going to applied on the listed tasks above.</p>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <form #form="ngForm">
+              <table class="table table-sm table-striped">
+                <tbody>
+                  <tr>
+                    <td class="fit">
+                      <label class="mt-2">ASR Service Provider<span class="text-danger">*</span>:</label>
+                    </td>
+                    <td>
+                      <octra-asr-provider-select
+                        [(ngModel)]="taskService.state.currentModeState.selectedASRProvider"
+                        [required]="true"
+                        (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                        [asrProviders]="asrProviders"
+                        [i18n]="{
+                          asrProvider: 'ASR Provider',
+                        }"
+                        name="asrProvider"
+                        id="asrProvider"
+                        class="d-block"
+                      ></octra-asr-provider-select>
+
+                      @if (selectedASRInfo !== undefined && isASRSelected() && selectedASRInfo.knownIssues !== undefined) {
+                        <div class="alert alert-info mt-3" style="font-size: 0.9em">
+                          <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
+                          {{ selectedASRInfo.knownIssues }}
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                  <tr class="align-middle">
+                    <td class="fit">
+                      <label class="me-1">Content Language<span class="text-danger">*</span>:</label>
+                    </td>
+                    <td>
+                      <octra-asr-language-select
+                        [(ngModel)]="taskService.state.currentModeState.selectedASRLanguage"
+                        (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                        [languageSettings]="{
+                          services: AppSettings.configuration.api.services,
+                        }"
+                        name="asrLanguage"
+                        id="asrLanguage"
+                        class="d-block"
+                        [languages]="languages.asr"
+                        [options]="{
+                          selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
+                          selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage,
+                        }"
+                        placeholder="Content Language"
+                        [title]="'Content Language'"
+                        [required]="true"
+                      ></octra-asr-language-select>
+                      <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem"
+                        >The list of supported content languages depends on the selected ASR Provider.</span
+                      >
+                    </td>
+                  </tr>
+                  @if (taskService.state.currentMode === 'annotation') {
+                    <tr>
+                      <td class="fit">
+                        <label class="me-1" for="diarizationSwitch">Diarization:</label>
+                      </td>
+                      <td>
+                        <div class="form-check form-switch">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="diarizationSwitch"
+                            name="diarization"
+                            [(ngModel)]="taskService.state.currentModeState.isDiarizationEnabled"
+                            (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                  @if (taskService.state.currentModeState.isDiarizationEnabled) {
+                    <tr>
+                      <td class="fit">
+                        <label class="me-1" for="diarizationSwitch">Number of Speakers:</label>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          name="diarizationNumOfSpeakers"
+                          [(ngModel)]="taskService.state.currentModeState.diarizationSpeakers"
+                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                        />
+                      </td>
+                    </tr>
+                  }
+                  @if (taskService.state.currentMode === 'summarization') {
+                    <tr class="align-middle fit">
+                      <td class="fit">
+                        <label for="asrProvider">Summarization Service Provider<span class="text-danger">*</span>:</label>
+                      </td>
+                      <td>
+                        <octra-asr-provider-select
+                          [(ngModel)]="taskService.state.currentModeState.selectedSummarizationProvider"
+                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                          [asrProviders]="summarizationProviders"
+                          [title]="'Summarization Service Provider'"
+                          [required]="true"
+                          name="summarizationProvider"
+                          id="summarizationProvider"
+                          class="d-block"
+                          [i18n]="{
+                            asrProvider: 'Summarization Service Provider',
+                          }"
+                        ></octra-asr-provider-select>
+                      </td>
+                    </tr>
+                    <tr class="align-middle fit">
+                      <td class="fit">
+                        <label for="asrProvider">Max. number of words for summarization<span class="text-danger">*</span>:</label>
+                      </td>
+                      <td>
+                        <select
+                          class="form-select form-select-sm"
+                          name="summarizationNumberOfWords"
+                          [(ngModel)]="selectedSummarizationNumberOfWords"
+                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                        >
+                          <option [value]="">Unlimited</option>
+                          <option [value]="10">Headline (10 words)</option>
+                          <option [value]="100">Paragraph (100 words)</option>
+                          <option [value]="400">Page (400 words)</option>
+                        </select>
+                      </td>
+                    </tr>
+                  }
+                  @if (taskService.state.currentMode === 'annotation') {
+                    <tr class="align-middle fit">
+                      <td class="fit"><label>Word Alignment Language:</label></td>
+                      <td>
+                        <octra-asr-language-select
+                          [(ngModel)]="taskService.state.currentModeState.selectedMausLanguage"
+                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                          [languageSettings]="{
+                            services: AppSettings.configuration.api.services,
+                          }"
+                          [languages]="languages.maus"
+                          [title]="'MAUS Language'"
+                          name="mausLanguage"
+                          id="mausLanguage"
+                          placeholder="MAUS Language"
+                        ></octra-asr-language-select>
+                      </td>
+                    </tr>
+                  } @else {
+                    <tr class="align-middle">
+                      <td class="fit"><label>Translate to:</label></td>
+                      <td>
+                        <div class="row g-1 align-items-center">
+                          <div class="col">
+                            <select
+                              class="form-select form-select-sm"
+                              [(ngModel)]="taskService.state.currentModeState.selectedTranslationLanguage"
+                              name="translationLanguage"
+                              [required]="true"
+                              (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                            >
+                              <option value=""></option>
+                              <option value="en">English</option>
+                              <option value="de">German</option>
+                              <option value="nl">Dutch</option>
+                              <option value="it">Italian</option>
+                            </select>
+                            <ng-template #translationProviderInfo>
+                              <div>
+                                <span class="d-block text-center">Translation provided by:</span>
+                                <a [href]="settingsService.translationServiceProvider?.homepageURL" target="_blank"
+                                  ><img [src]="settingsService.translationServiceProvider?.logoURL" class="img-fluid"
+                                /></a>
+                              </div>
+                            </ng-template>
+                          </div>
+                          <div class="col-auto">
+                            <i class="bi bi-info-circle-fill pointer" style="color: cornflowerblue" [ngbPopover]="translationProviderInfo"></i>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="modal-footer">
