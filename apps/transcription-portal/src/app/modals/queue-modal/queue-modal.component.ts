@@ -120,6 +120,23 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     this.taskService.state.currentModeState.selectedSummarizationProvider = this.summarizationProviders[0];
   }
 
+  resetOptions() {
+    if (this.taskService.state.currentMode === 'annotation') {
+      this.taskService.state.currentModeState.diarizationSpeakers = undefined;
+      this.taskService.state.currentModeState.isDiarizationEnabled = false;
+      this.taskService.state.currentModeState.selectedMausLanguage = '';
+    } else {
+      this.taskService.state.currentModeState.selectedSummarizationProvider = undefined;
+      this.taskService.state.currentModeState.selectedTranslationLanguage = '';
+      this.taskService.state.currentModeState.selectedSummarizationNumberOfWords = undefined;
+    }
+
+    this.taskService.state.currentModeState.selectedASRLanguage = '';
+    this.taskService.state.currentModeState.selectedASRProvider = undefined;
+
+    this.changeProcessingOptionsForEachQueuedTask();
+  }
+
   public get AppConfiguration(): OHConfiguration {
     return AppSettings.configuration;
   }
@@ -229,20 +246,20 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         }
       }
 
-      this.storage.saveDefaultUserSettings({
-        asrLanguage: this.taskService.state.currentModeState.selectedASRLanguage,
-        mausLanguage: this.taskService.state.currentModeState.selectedMausLanguage,
-        asrProvider: this.taskService.state.currentModeState.selectedASRProvider?.provider,
-        summarizationProvider: this.taskService.state.currentModeState.selectedSummarizationProvider?.provider,
-        translationLanguage: this.taskService.state.currentModeState.selectedTranslationLanguage,
-        summarizationWordLimit: this.taskService.state.currentModeState.selectedSummarizationNumberOfWords,
-        diarization: this.taskService.state.currentModeState.isDiarizationEnabled,
-        diarizationSpeakers: this.taskService.state.currentModeState.diarizationSpeakers,
-      });
-
       this.cd.markForCheck();
       this.cd.detectChanges();
     }
+
+    this.storage.saveDefaultUserSettings({
+      asrLanguage: this.taskService.state.currentModeState.selectedASRLanguage,
+      mausLanguage: this.taskService.state.currentModeState.selectedMausLanguage,
+      asrProvider: this.taskService.state.currentModeState.selectedASRProvider?.provider,
+      summarizationProvider: this.taskService.state.currentModeState.selectedSummarizationProvider?.provider,
+      translationLanguage: this.taskService.state.currentModeState.selectedTranslationLanguage,
+      summarizationWordLimit: this.taskService.state.currentModeState.selectedSummarizationNumberOfWords,
+      diarization: this.taskService.state.currentModeState.isDiarizationEnabled,
+      diarizationSpeakers: this.taskService.state.currentModeState.diarizationSpeakers,
+    });
   }
 
   deactivateOperation(operation: Operation, index: number) {

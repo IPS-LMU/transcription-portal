@@ -192,7 +192,10 @@
     </div>
 
     <div class="card shadow shadow-md">
-      <div class="card-header">Options</div>
+      <div class="card-header"><div class="row g-0 align-items-center">
+        <div class="col">Options</div>
+        <div class="col-auto"><button class="btn btn-sm btn-outline-primary reset-button" (click)="resetOptions()"><i class="bi bi-arrow-counterclockwise"></i> Reset options</button></div>
+      </div></div>
       <div class="card-body">
         <p>Set the options for your workflow, e.g. service provider and languages. Click on the <i class="bi bi-info-circle-fill" style="color: cornflowerblue"></i> for further information. The options are going to applied on the listed tasks above.</p>
         <div class="row mb-3">
