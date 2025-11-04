@@ -19,7 +19,6 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return new TranslationOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

@@ -20,7 +20,6 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     return new SummarizationOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

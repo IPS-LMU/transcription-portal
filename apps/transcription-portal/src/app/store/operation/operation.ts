@@ -8,7 +8,6 @@ export class StoreTaskOperation<T extends object = any> {
   taskID!: number;
   name!: string;
   enabled!: boolean;
-  mouseOver?: boolean;
   serviceProviderName?: string;
   estimatedEnd?: number;
   rounds!: StoreTaskOperationProcessingRound[];

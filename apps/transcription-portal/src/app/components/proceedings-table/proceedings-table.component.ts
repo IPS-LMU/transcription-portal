@@ -47,6 +47,7 @@ import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.d
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
 import { ServiceProvider } from '@octra/ngx-components';
 import { AppSettings } from '../../shared/app.settings';
+import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -68,6 +69,7 @@ import { AppSettings } from '../../shared/app.settings';
     ProceedingsTableOperationSelectorComponent,
     DirProgressDirective,
     ProcColIconDirective,
+    ProceedingsRowDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -477,7 +479,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  isEntrySelected(entry: Task | TaskDirectory): boolean {
+  isEntrySelected(entry: StoreTask | StoreTaskDirectory): boolean {
     const taskList = this.taskService.state.currentModeState.taskList;
 
     if (taskList) {
@@ -1000,7 +1002,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   public getTask(entry: StoreTask | StoreTaskDirectory): StoreTask | undefined {
-    if (entry.type === "task") {
+    if (entry.type === 'task') {
       return entry as StoreTask;
     }
     return undefined;
@@ -1013,7 +1015,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return undefined;
   }
 
-  getServerProvider(basName?: string): ServiceProvider | undefined{
+  getServerProvider(basName?: string): ServiceProvider | undefined {
     return AppSettings.getServiceInformation(basName);
   }
 }

@@ -16,7 +16,6 @@ export function convertIDBTaskToStoreTask(
     return {
       id: entry.id,
       type: 'task',
-      mouseOver: false,
       stopRequested: false,
       files: entry.files.map((a) => convertIDBFileToStoreFile(a)),
       operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id)),

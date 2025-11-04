@@ -377,7 +377,17 @@
       <!-- TABLE BODY -->
       <tbody>
         @for (entry of entries; track entry.id; let entryIndex = $index) {
-          <tr>
+          <!-- TODO  CONTINUE HERE -->
+          <tr
+            [entry]="entry"
+            [rowSelected]="isEntrySelected(entry)"
+            [toolSelectedOperation]="toolSelectedOperation"
+            (contextmenu)="onContextMenu($event, row)"
+            (click)="onContextBlur()"
+            (scroll)="cancelScroll($event)"
+            tportalProceedingsRow
+            #row
+          >
             <!-- TODO check
               [mouseOver]="false"
             -->

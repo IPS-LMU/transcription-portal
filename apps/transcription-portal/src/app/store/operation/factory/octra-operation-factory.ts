@@ -19,7 +19,6 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     return new OctraOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

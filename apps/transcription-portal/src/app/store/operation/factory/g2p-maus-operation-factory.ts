@@ -19,7 +19,6 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation> 
     return new G2pMausOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

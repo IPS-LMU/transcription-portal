@@ -17,7 +17,6 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return new UploadOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

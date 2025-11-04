@@ -17,7 +17,6 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     return new EmuOperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,

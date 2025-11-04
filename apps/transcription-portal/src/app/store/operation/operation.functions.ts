@@ -1,8 +1,6 @@
-import { last } from '@octra/utilities';
 import { FileInfoSerialized } from '@octra/web-media';
 import { IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
-import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { StoreTask } from '../task';
 import { StoreTaskDirectory } from '../task-directory';
@@ -13,7 +11,6 @@ export function convertIDBOperationToStoreOperation(operation: IOperation, taskI
     enabled: operation.enabled,
     estimatedEnd: undefined,
     id: operation.id,
-    mouseOver: false,
     name: operation.name,
     rounds: operation.rounds.map((a) => convertIDBOperationRoundToStoreRound(a)),
     serviceProviderName: operation.serviceProvider,

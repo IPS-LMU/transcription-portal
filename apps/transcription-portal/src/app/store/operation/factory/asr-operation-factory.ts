@@ -25,7 +25,6 @@ export class ASROperationFactory extends OperationFactory<ASROperation> {
     return new ASROperation({
       enabled: true,
       id,
-      mouseOver: false,
       name: '',
       options: {},
       rounds,
