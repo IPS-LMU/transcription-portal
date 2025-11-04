@@ -13,7 +13,7 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
-import { ModeStoreService, StoreTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../../store';
+import { ModeStoreService, StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../../store';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -32,7 +32,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   private selectedTasks?: number[];
   taskList?: Task[];
   column?: Operation;
-  private allTasks?: StoreTask[] | null;
+  private allTasks?: StoreItemTask[] | null;
 
   public static options: NgbModalOptions = {
     size: 'md',
@@ -265,7 +265,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
      */
   }
 
-  processTask(task: StoreTask): Promise<
+  processTask(task: StoreItemTask): Promise<
     {
       path: 'string';
       file: File;

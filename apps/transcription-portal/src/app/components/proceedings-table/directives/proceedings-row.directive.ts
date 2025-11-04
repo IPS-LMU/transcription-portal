@@ -1,7 +1,7 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges, inject } from '@angular/core';
 import { hasProperty } from '@octra/utilities';
 import { Operation } from '../../../obj/operations/operation';
-import { StoreTask, StoreTaskDirectory } from '../../../store';
+import { StoreItem } from '../../../store';
 
 @Directive({
   selector: '[tportalProceedingsRow]',
@@ -11,9 +11,9 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-  @Input() entry?: StoreTask | StoreTaskDirectory;
+  @Input() entry?: StoreItem;
   @Input() toolSelectedOperation?: Operation;
-  @Input() rowSelected = false;
+  @Input() rowSelected? = false;
 
   constructor() {
     const elementRef = this.elementRef;

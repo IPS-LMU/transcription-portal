@@ -2,8 +2,7 @@ import { FileInfoSerialized } from '@octra/web-media';
 import { IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { StoreTask } from '../task';
-import { StoreTaskDirectory } from '../task-directory';
+import { StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
 export function convertIDBOperationToStoreOperation(operation: IOperation, taskID: number): StoreTaskOperation {
@@ -27,7 +26,7 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   });
 }
 
-export async function convertStoreTaskToIDBTask(task: StoreTask, taskDirectory: StoreTaskDirectory): Promise<IDBTaskItem> {
+export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirectory: StoreItemTaskDirectory): Promise<IDBTaskItem> {
   return new Promise<IDBTaskItem>((resolve, reject) => {
     const result: IDBTaskItem = {
       id: task.id,

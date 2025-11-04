@@ -4,14 +4,13 @@ import { IDBFolderItem, IDBTaskItem } from '../../indexedDB';
 import { IOperation } from '../../obj/operations/operation';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
-import { StoreTaskDirectory } from '../task-directory';
-import { StoreTask } from './task';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,
-  taskAdapter: EntityAdapter<StoreTask | StoreTaskDirectory>,
+  taskAdapter: EntityAdapter<StoreItem>,
   directoryID?: number,
-): StoreTask | StoreTaskDirectory {
+): StoreItem {
   if (entry.type === 'task') {
     return {
       id: entry.id,
@@ -21,7 +20,7 @@ export function convertIDBTaskToStoreTask(
       operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id)),
       directoryID: directoryID,
       status: entry.state,
-    } as StoreTask;
+    } as StoreItemTask;
   } else {
     const result = {
       id: entry.id,
@@ -35,7 +34,7 @@ export function convertIDBTaskToStoreTask(
       result.entries,
     );
 
-    return result as StoreTaskDirectory;
+    return result as StoreItemTaskDirectory;
   }
 }
 

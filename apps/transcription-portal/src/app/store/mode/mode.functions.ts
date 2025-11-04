@@ -1,26 +1,27 @@
-import { StoreTask } from '../task';
-import { StoreTaskDirectory } from '../task-directory';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 
-export function getIndexByEntry(selectedEntry: StoreTask | StoreTaskDirectory, entities: (StoreTask | StoreTaskDirectory)[]): number {
+export function getIndexByEntry(selectedEntry: StoreItem, entities: StoreItem[]): number {
   let result = -1;
 
   for (const entry of entities) {
     if (entry.type === 'task') {
-      if (entry.id === selectedEntry.id) {
+      const task = selectedEntry as StoreItemTask;
+      if (entry.id === task.id) {
         return result + 1;
       }
     } else {
       // TaskDirectory
+      const dir = selectedEntry as StoreItemTaskDirectory;
       if (entry.id !== selectedEntry.id) {
-        for (let j = 0; j < (entry as StoreTaskDirectory).entries.ids.length; j++) {
-          const id = (entry as StoreTaskDirectory).entries.ids[j];
-          const subEntry = (entry as StoreTaskDirectory).entries.entities[id]!;
+        for (let j = 0; j < dir.entries.ids.length; j++) {
+          const id = dir.entries.ids[j];
+          const subEntry = dir.entries.entities[id]!;
 
           if (subEntry.id === selectedEntry.id) {
             return result + j + 2;
           }
         }
-        result += (entry as StoreTaskDirectory).entries.ids.length;
+        result += dir.entries.ids.length;
       } else {
         return result + 1;
       }

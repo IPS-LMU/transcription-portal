@@ -15,7 +15,7 @@ import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { Subscription } from 'rxjs';
 import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
-import { StoreTask, StoreTaskDirectory } from '../../../store';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../../../store';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -26,7 +26,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-  @Input() entry?: StoreTask | StoreTaskDirectory;
+  @Input() entry?: StoreItem;
   @Input() shortStyle = false;
   @Input() mouseOver = false;
 
@@ -235,34 +235,35 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
     if (this.entry) {
       if (this.entry.type === 'task') {
-        if (this.entry.files[0].extension === '.wav' && this.entry.files[0].file !== undefined) {
+        const task = this.entry as StoreItemTask;
+        if (task.files[0].extension === '.wav' && task.files[0].file !== undefined) {
           this.renderer.addClass(result, 'green');
         } else if (
-          ((this.entry.files[0].extension === '.wav' && this.entry.files[0].file === undefined) || this.entry.files[0].extension !== '.wav') &&
-          this.entry.operations[0].status !== 'FINISHED'
+          ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
+          task.operations[0].status !== 'FINISHED'
         ) {
           this.renderer.addClass(result, 'yellow');
         }
 
         // set filename
-        this.renderer.setAttribute(result, 'title', this.entry.files[0].attributes?.originalFileName);
-        const filename = this.renderer.createText(' ' + this.entry.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
+        this.renderer.setAttribute(result, 'title', task.files[0].attributes?.originalFileName);
+        const filename = this.renderer.createText(' ' + task.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
         this.renderer.appendChild(result, filename);
         this.renderer.appendChild(wrapper, result);
       } else {
         // TaskDirectory
-
+        const dir = this.entry as StoreItemTaskDirectory;
         // this.renderer.setAttribute(this.elementRef.nativeElement, 'colspan', '' + (this.taskService.operations.length + 1));
 
         // set filename
-        this.renderer.setAttribute(result, 'title', (this.entry as StoreTaskDirectory).folderName);
-        const filename = this.renderer.createText(' ' + (this.entry as StoreTaskDirectory).folderName);
+        this.renderer.setAttribute(result, 'title', dir.folderName);
+        const filename = this.renderer.createText(' ' + dir.folderName);
         this.renderer.appendChild(result, filename);
 
-        if ((this.entry as StoreTaskDirectory).entries.ids.length > 0) {
+        if (dir.entries.ids.length > 0) {
           // set number of files
           const filesNumSpan = this.renderer.createElement('span');
-          const filesNum = this.renderer.createText(' (' + (this.entry as StoreTaskDirectory).entries.ids.length + ')');
+          const filesNum = this.renderer.createText(' (' + dir.entries.ids.length + ')');
           this.renderer.appendChild(filesNumSpan, filesNum);
           this.renderer.appendChild(result, filesNumSpan);
         }
@@ -276,8 +277,9 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     const result: HTMLElement = this.renderer.createElement('span');
 
     if (this.entry?.type === 'task') {
-      if (this.entry.files.length > 1 || this.entry.files[0].extension !== '.wav') {
-        const badgeObj = this.getBadge(this.entry);
+      const task = this.entry as StoreItemTask;
+      if (task.files.length > 1 || task.files[0].extension !== '.wav') {
+        const badgeObj = this.getBadge(task);
         this.renderer.addClass(result, 'ms-1');
         this.renderer.addClass(result, 'px-2');
         this.renderer.addClass(result, 'pill');
@@ -286,7 +288,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(result, 'text-light');
         this.renderer.setStyle(result, 'font-size', '0.85rem');
         this.renderer.listen(result, 'click', () => {
-          const files = (this.entry as StoreTask).files;
+          const files = task.files;
           this.appendingClick.emit(files[1] as TPortalFileInfo);
         });
         const content = this.renderer.createText(badgeObj.label);
@@ -310,7 +312,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     }
   }
 
-  private getBadge(task: StoreTask): {
+  private getBadge(task: StoreItemTask): {
     type: string;
     label: string;
   } {

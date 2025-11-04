@@ -9,10 +9,10 @@ import { TaskEntry } from '../../obj/tasks/task-entry';
 import { TaskService } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb';
-import { TaskActions } from './task.actions';
+import { StoreItemActions } from './store-item.actions';
 
 @Injectable()
-export class TaskEffects {
+export class StoreItemEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
   private taskService = inject(TaskService);
@@ -26,7 +26,7 @@ export class TaskEffects {
         // this.taskService.init();
 
         return of(
-          TaskActions.prepareTasks.do({
+          StoreItemActions.prepareTasks.do({
             annotationTasks,
             summarizationTasks,
           }),
@@ -37,9 +37,9 @@ export class TaskEffects {
 
   prepareTasks$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(TaskActions.prepareTasks.do),
+      ofType(StoreItemActions.prepareTasks.do),
       exhaustMap(() => {
-        return of(TaskActions.prepareTasks.success());
+        return of(StoreItemActions.prepareTasks.success());
       }),
     ),
   );
@@ -47,7 +47,7 @@ export class TaskEffects {
   prepateTasksSuccess$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(TaskActions.prepareTasks.success),
+        ofType(StoreItemActions.prepareTasks.success),
         withLatestFrom(this.store),
         tap(([, state]: [any, RootState]) => {
         }),
@@ -59,9 +59,9 @@ export class TaskEffects {
 
   prepareTasksSuccess$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(TaskActions.prepareTasks.do),
+      ofType(StoreItemActions.prepareTasks.do),
       exhaustMap(() => {
-        return of(TaskActions.importTasks.success());
+        return of(StoreItemActions.importTasks.success());
       }),
     ),
   );

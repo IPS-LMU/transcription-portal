@@ -3,7 +3,7 @@ import { OAnnotJSON } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { AppInfo, ConverterData } from '../app.info';
 import { TPortalAudioInfo, TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
-import { StoreTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../store';
+import { StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../store';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +28,7 @@ export class DownloadService {
   }
 
   public getConversionFiles(
-    task: StoreTask,
+    task: StoreItemTask,
     operation: StoreTaskOperation,
     round: StoreTaskOperationProcessingRound,
     converters: ConverterData[],
@@ -79,7 +79,7 @@ export class DownloadService {
 
   public getResultConversion(
     converter: ConverterData,
-    task: StoreTask,
+    task: StoreItemTask,
     operation: StoreTaskOperation,
     opResult: TPortalFileInfo,
   ): Promise<{

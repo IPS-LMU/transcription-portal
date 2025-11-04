@@ -9,7 +9,7 @@ import { timer } from 'rxjs';
 import { AppInfo, ConverterData } from '../../app.info';
 import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { DownloadService } from '../../shared/download.service';
-import { OperationFactory, StoreTask, StoreTaskOperation } from '../../store';
+import { OperationFactory, StoreItemTask, StoreTaskOperation } from '../../store';
 
 @Component({
   selector: 'tportal-results-table',
@@ -24,7 +24,7 @@ export class ResultsTableComponent implements OnChanges {
   private downloadService = inject(DownloadService);
 
   @Input() operation?: StoreTaskOperation;
-  @Input() task?: StoreTask;
+  @Input() task?: StoreItemTask;
   @Input() defaultOperations?: OperationFactory[] | undefined;
   @Input() visible = false;
 

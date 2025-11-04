@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Shortcut, ShortcutGroup } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
@@ -29,25 +30,24 @@ import { Operation } from '../../obj/operations/operation';
 import { SummarizationOperation } from '../../obj/operations/summarization-operation';
 import { TranslationOperation } from '../../obj/operations/translation-operation';
 import { QueueItem } from '../../obj/preprocessor';
-import { Task, TaskDirectory, TaskList, TaskStatus } from '../../obj/tasks';
+import { Task, TaskList, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { ANIMATIONS } from '../../shared/Animations';
+import { AppSettings } from '../../shared/app.settings';
 import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { getIndexByEntry, ModeStoreService, OperationFactory, StoreTask, StoreTaskDirectory, StoreTaskOperation } from '../../store';
+import { getIndexByEntry, ModeStoreService, OperationFactory, StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreTaskOperation } from '../../store';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
+import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
-import { ServiceProvider } from '@octra/ngx-components';
-import { AppSettings } from '../../shared/app.settings';
-import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -95,8 +95,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     width: number;
     height: number;
     operation?: StoreTaskOperation;
-    task?: StoreTask;
-    directory?: StoreTaskDirectory;
+    task?: StoreItemTask;
+    directory?: StoreItemTaskDirectory;
     pointer: 'left' | 'right' | 'bottom-left' | 'bottom-right';
     mouseIn: boolean;
   } = {
@@ -120,9 +120,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   rightMouseButtonPressed = false;
 
   @Input() queue: QueueItem[] = [];
-  @Input() entries?: (StoreTask | StoreTaskDirectory)[] | null;
+  @Input() entries?: StoreItem[] | null;
   @Input() operations?: OperationFactory[] | null = [];
-  @Input() selectedRows?: Set<number> | null = new Set<number>();
   public isDragging = false;
   public allDirOpened: 'opened' | 'closed' = 'opened';
   @Input() shortstyle = false;
@@ -369,30 +368,26 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  onRowSelected(entry: StoreTask | StoreTaskDirectory, operationIndex?: number, operation?: StoreTaskOperation) {
+  onRowSelected(entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
     if (!this.selectionBlocked) {
       const taskList = this.taskService.state.currentModeState.taskList;
       if (!operation || (!['OCTRA', 'Emu WebApp'].includes(operation.name) && taskList && this.taskService.currentModeState)) {
-        const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreTask | StoreTaskDirectory) => a.id === entry.id);
-        const search = (Array.from(this.selectedRows ?? new Set<number>()) ?? []).findIndex((a) => {
-          return a === indexFromTaskList;
-        });
+        const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreItem) => a.id === entry.id);
         const pressedKeys = this.shortcutService.pressedKeys;
 
         if (pressedKeys.has('ctrl') || pressedKeys.has('cmd')) {
           // de-/selection
 
-          if (search > -1) {
+          if (entry.selected) {
             // deselect
-            this.modeStoreService.deselectRows([search]);
+            this.modeStoreService.deselectRows([entry.id]);
           } else {
             // select
-            this.modeStoreService.deselectRows([indexFromTaskList]);
+            this.modeStoreService.deselectRows([entry.id]);
           }
         } else {
-          // shift selection
-
           if (pressedKeys.has('shift')) {
+            // shift selection
             // shift pressed
             if (this.shiftStart > -1) {
               let end = indexFromTaskList;
@@ -413,18 +408,15 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
               this.shiftStart = -1;
             }
           } else {
-            const oldId = (this.selectedRows?.size ?? 0 > 0) ? Array.from(this.selectedRows ?? new Set<number>())[0] : -1;
             this.modeStoreService.setSelectedRows([]);
-
-            if (indexFromTaskList !== oldId) {
-              this.shiftStart = indexFromTaskList;
-              this.modeStoreService.selectRows([indexFromTaskList]);
-            }
+            // TODO check this
+            this.shiftStart = indexFromTaskList;
+            this.modeStoreService.selectRows([indexFromTaskList]);
           }
         }
       }
 
-      const previousOperation = operationIndex && operation && operationIndex > 0 ? (entry as StoreTask).operations[operationIndex - 1] : undefined;
+      const previousOperation = operationIndex && operation && operationIndex > 0 ? (entry as StoreItemTask).operations[operationIndex - 1] : undefined;
 
       if ((previousOperation && previousOperation?.lastResult?.online) || (operation && operation?.lastResult?.online)) {
         this.operationclick.emit(operation);
@@ -477,31 +469,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
         }
       }
     }
-  }
-
-  isEntrySelected(entry: StoreTask | StoreTaskDirectory): boolean {
-    const taskList = this.taskService.state.currentModeState.taskList;
-
-    if (taskList) {
-      const tasklistIndex = taskList.getIndexByEntry(entry);
-      const search = this.taskService.currentModeState!.selectedRows.findIndex((a) => {
-        return a === tasklistIndex;
-      });
-
-      if (entry instanceof Task) {
-        if (search > -1) {
-          return true;
-        } else if (!(entry.directory === null || entry.directory === undefined)) {
-          return this.isEntrySelected(entry.directory);
-        }
-      } else {
-        if (search > -1) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
   togglePopover(show: boolean) {
@@ -574,39 +541,33 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 */
 
-  onNameMouseEnter($event: MouseEvent, entry?: StoreTask | StoreTaskDirectory) {
+  onNameMouseEnter($event: MouseEvent, entry?: StoreItem) {
     if (!entry) {
       return;
     }
     if (entry.type === 'task') {
       this.popover.directory = undefined;
-      this.popover.task = entry;
+      this.popover.task = entry as StoreItemTask;
     } else {
       this.popover.task = undefined;
-      this.popover.directory = entry;
+      this.popover.directory = entry as StoreItemTaskDirectory;
     }
     this.popover.operation = undefined;
   }
 
-  onNameMouseLeave($event: MouseEvent, entry?: StoreTask | StoreTaskDirectory) {
+  onNameMouseLeave($event: MouseEvent, entry?: StoreItem) {
     if (!entry) {
       return;
     }
-    if (entry instanceof Task) {
-      entry.mouseover = false;
-    }
   }
 
-  onNameMouseOver($event: MouseEvent, entry?: StoreTask | StoreTaskDirectory) {
+  onNameMouseOver($event: MouseEvent, entry?: StoreItem) {
     if (!entry) {
       return;
     }
-    if (entry instanceof Task) {
-      entry.mouseover = true;
-    }
   }
 
-  onInfoMouseEnter($event: MouseEvent, task?: StoreTask) {
+  onInfoMouseEnter($event: MouseEvent, task?: StoreItemTask) {
     if (!task) {
       return;
     }
@@ -625,7 +586,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  onInfoMouseLeave($event: MouseEvent, task?: StoreTask) {
+  onInfoMouseLeave($event: MouseEvent, task?: StoreItemTask) {
     if (!task) {
       return;
     }
@@ -633,7 +594,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     // TODO check task.mouseover = false;
   }
 
-  onInfoMouseOver($event: MouseEvent, task?: StoreTask) {
+  onInfoMouseOver($event: MouseEvent, task?: StoreItemTask) {
     if (!task) {
       return;
     }
@@ -828,7 +789,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.cd.detectChanges();
   };
 
-  public removeEntry(event: MouseEvent, entry?: StoreTask | StoreTask) {
+  public removeEntry(event: MouseEvent, entry?: StoreItemTask | StoreItemTask) {
     if (entry) {
       this.modeStoreService.removeTaskOrFolder(entry);
     }
@@ -943,15 +904,15 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.cd.markForCheck();
   }
 
-  onExportButtonClick(task: StoreTask | StoreTaskDirectory, rowIndex: number, operation?: OperationFactory) {
+  onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
     const selectedRows = [rowIndex];
     // this.selectedOperation = operation;
     this.openArchiveDownload('line', operation, selectedRows);
   }
 
-  isOneOperationFinished(entry: StoreTask | StoreTaskDirectory): boolean {
+  isOneOperationFinished(entry: StoreItem): boolean {
     if (entry) {
-      const checkTask = (task: StoreTask) => {
+      const checkTask = (task: StoreItemTask) => {
         for (const operation of task.operations) {
           if (operation.name !== 'Upload') {
             if (operation.status === TaskStatus.FINISHED || operation.rounds.length > 0) {
@@ -963,10 +924,11 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       };
 
       if (entry.type === 'task') {
-        return checkTask(entry as StoreTask);
+        return checkTask(entry as StoreItemTask);
       } else {
-        for (const index of (entry as StoreTaskDirectory).entries.ids) {
-          if (checkTask(entry.entries.entities[index] as StoreTask)) {
+        const dir = entry as StoreItemTaskDirectory;
+        for (const index of dir.entries.ids) {
+          if (checkTask(dir.entries.entities[index] as StoreItemTask)) {
             return true;
           }
         }
@@ -983,9 +945,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return [];
   }
 
-  public getTaskDirEntries(entry: StoreTask | StoreTaskDirectory): StoreTask[] {
+  public getTaskDirEntries(entry: StoreItem): StoreItemTask[] {
     if (entry.type === 'folder') {
-      return Object.keys((entry as StoreTaskDirectory).entries.entities).map((a) => (entry as StoreTaskDirectory).entries.entities[a]) as StoreTask[];
+      return Object.keys((entry as StoreItemTaskDirectory).entries.entities).map((a) => (entry as StoreItemTaskDirectory).entries.entities[a]) as StoreItemTask[];
     }
     return [];
   }
@@ -994,21 +956,21 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return entry.file instanceof TPortalFileInfo ? (entry.file as TPortalFileInfo) : undefined;
   }
 
-  public getTaskDirectory(entry: StoreTask | StoreTaskDirectory): StoreTaskDirectory | undefined {
+  public getTaskDirectory(entry: StoreItem): StoreItemTaskDirectory | undefined {
     if (entry.type === 'folder') {
-      return entry as StoreTaskDirectory;
+      return entry as StoreItemTaskDirectory;
     }
     return undefined;
   }
 
-  public getTask(entry: StoreTask | StoreTaskDirectory): StoreTask | undefined {
+  public getTask(entry: StoreItem): StoreItemTask | undefined {
     if (entry.type === 'task') {
-      return entry as StoreTask;
+      return entry as StoreItemTask;
     }
     return undefined;
   }
 
-  getAudioFileOfTask(task: StoreTask): TPortalAudioInfo | undefined {
+  getAudioFileOfTask(task: StoreItemTask): TPortalAudioInfo | undefined {
     if (task.files.length > 0 && task.files[0] instanceof TPortalAudioInfo) {
       return task.files[0];
     }

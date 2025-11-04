@@ -23,31 +23,4 @@ export class ModeActions {
       }
   });
 
-  static selectRows = createActionGroup({
-    source: 'modes/current mode/select rows',
-    events: {
-      do: props<{
-        rowIndexes: number[];
-      }>()
-    }
-  });
-
-  static deselectRows = createActionGroup({
-      source: 'modes/current mode/deselect rows',
-      events: {
-        do: props<{
-          rowIndexes: number[];
-        }>()
-      }
-  });
-
-  static setSelectedRows = createActionGroup({
-    source: 'modes/current mode/set selected rows',
-    events: {
-      do: props<{
-        rowIndexes: number[];
-      }>()
-    }
-  });
-
 }

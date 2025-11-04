@@ -12,8 +12,7 @@ import {
   TranslationOperationFactory,
   UploadOperationFactory,
 } from '../operation';
-import { getTaskReducers, StoreTask, TaskStatus } from '../task';
-import { StoreTaskDirectory } from '../task-directory';
+import { getTaskReducers, StoreItem, TaskStatus } from '../store-item';
 import { ModeActions } from './mode.actions';
 import { Mode, ModeState } from './mode.state';
 
@@ -29,7 +28,7 @@ export const initialState: ModeState = modeAdapter.getInitialState({
   defaultUserSettings: {},
 });
 
-export const taskAdapter: EntityAdapter<StoreTask | StoreTaskDirectory> = createEntityAdapter<StoreTask | StoreTaskDirectory>({
+export const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
   selectId: (task) => task.id,
 });
 
@@ -70,7 +69,7 @@ export const modeReducer = createReducer(
         {
           name: 'annotation',
           options: {},
-          items: taskAdapter.getInitialState(),
+          items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
             new UploadOperationFactory(),
             new ASROperationFactory(),
@@ -80,8 +79,6 @@ export const modeReducer = createReducer(
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
-          selectedRows: new Set<number>(),
-          allSelected: false,
           preprocessor: {},
           statistics: {
             queued: 0,
@@ -94,7 +91,7 @@ export const modeReducer = createReducer(
         {
           name: 'summarization',
           options: {},
-          items: taskAdapter.getInitialState(),
+          items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
             new UploadOperationFactory(),
             new ASROperationFactory(),
@@ -104,8 +101,6 @@ export const modeReducer = createReducer(
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
-          selectedRows: new Set<number>(),
-          allSelected: false,
           preprocessor: {},
           statistics: {
             queued: 0,
@@ -116,41 +111,6 @@ export const modeReducer = createReducer(
           },
         },
       ],
-      state,
-    );
-  }),
-  on(ModeActions.selectRows.do, (state: ModeState, { rowIndexes }): ModeState => {
-    return modeAdapter.updateOne(
-      {
-        id: state.currentMode,
-        changes: {
-          selectedRows: new Set([...Array.from(state.entities[state.currentMode]?.selectedRows ?? new Set<number>()), ...rowIndexes]),
-        },
-      },
-      state,
-    );
-  }),
-  on(ModeActions.deselectRows.do, (state: ModeState, { rowIndexes }): ModeState => {
-    return modeAdapter.updateOne(
-      {
-        id: state.currentMode,
-        changes: {
-          selectedRows: new Set(
-            Array.from(state.entities[state.currentMode]?.selectedRows ?? new Set<number>()).filter((a) => !rowIndexes.includes(a)),
-          ),
-        },
-      },
-      state,
-    );
-  }),
-  on(ModeActions.setSelectedRows.do, (state: ModeState, { rowIndexes }): ModeState => {
-    return modeAdapter.updateOne(
-      {
-        id: state.currentMode,
-        changes: {
-          selectedRows: new Set(rowIndexes),
-        },
-      },
       state,
     );
   }),

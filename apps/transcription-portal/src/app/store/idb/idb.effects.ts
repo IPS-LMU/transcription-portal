@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
 import { AppActions, RootState } from '../app';
-import { TaskActions } from '../task/task.actions';
+import { StoreItemActions } from '../store-item/store-item.actions';
 import { IDBActions } from './idb.actions';
 
 @Injectable()
@@ -88,7 +88,7 @@ export class IDBEffects {
 
   tasksLoaded$ = createEffect(() =>
       this.actions$.pipe(
-        ofType(TaskActions.importTasks.success),
+        ofType(StoreItemActions.importTasks.success),
         withLatestFrom(this.store),
         exhaustMap(([action, state]) => {
           return of(IDBActions.initIDB.success());
@@ -98,7 +98,7 @@ export class IDBEffects {
 
   idbInitFail$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(TaskActions.importTasks.fail),
+      ofType(StoreItemActions.importTasks.fail),
       withLatestFrom(this.store),
       exhaustMap(([action]) => {
         return of(IDBActions.initIDB.fail({ error: action.error }));

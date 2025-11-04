@@ -380,7 +380,7 @@
           <!-- TODO  CONTINUE HERE -->
           <tr
             [entry]="entry"
-            [rowSelected]="isEntrySelected(entry)"
+            [rowSelected]="entry.selected"
             [toolSelectedOperation]="toolSelectedOperation"
             (contextmenu)="onContextMenu($event, row)"
             (click)="onContextBlur()"
@@ -409,7 +409,7 @@
               tportalProcColIcon
             ></td>
             <td>{{ entry.type }} ({{ entry.id }})</td>
-            @if (entry.type === 'task') {
+            @if (getTask(entry) !== undefined && entry.type === 'task') {
               @for (operation of entry.operations; track operation.id) {
                 <td tportalProceedingsTableTd [storeTaskOperation]="operation">
                   <tportal-proceedings-table-operation-selector [storeTaskOperation]="operation"></tportal-proceedings-table-operation-selector>

@@ -1,8 +1,7 @@
 import { EntityState } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { OperationFactory } from '../operation';
-import { StoreTask, TaskStatus } from '../task';
-import { StoreTaskDirectory } from '../task-directory';
+import { StoreItemsState, TaskStatus } from '../store-item';
 
 export interface ModeStatistics {
   queued: number;
@@ -16,13 +15,11 @@ export interface Mode<O extends object> {
   name: string;
   options: O;
   defaultOperations: OperationFactory<any>[];
-  items: EntityState<StoreTask | StoreTaskDirectory>;
+  items: StoreItemsState;
   newFiles?: boolean;
   overallState: 'processing' | 'waiting' | 'stopped' | 'not started';
   status: TaskStatus;
   preprocessor: any;
-  selectedRows: Set<number>;
-  allSelected: boolean;
   statistics: ModeStatistics;
 }
 

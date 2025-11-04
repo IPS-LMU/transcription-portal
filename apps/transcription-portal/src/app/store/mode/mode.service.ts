@@ -2,32 +2,29 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
-import { StoreTask, TaskActions } from '../task';
-import { StoreTaskDirectory } from '../task-directory';
-import { ModeActions } from './mode.actions';
-import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations, selectSelectedRows } from './mode.selectors';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreItemActions } from '../store-item';
+import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations } from './mode.selectors';
 
 @Injectable({ providedIn: 'root' })
 export class ModeStoreService {
   store: Store<RootState> = inject(Store);
   selectedModeDefaultOperations$ = this.store.select(selectDefaultOperations);
   selectedModeEntries$ = this.store.select(selectCurrentModeEntries);
-  selectedRows$ = this.store.select(selectSelectedRows);
-  allTasks$: Observable<StoreTask[] | undefined> = this.store.select(selectAllTasks);
+  allTasks$: Observable<StoreItemTask[] | undefined> = this.store.select(selectAllTasks);
 
   selectRows(rowIndexes: number[]) {
-    this.store.dispatch(ModeActions.selectRows.do({ rowIndexes }));
+    this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes }));
   }
 
   deselectRows(rowIndexes: number[]) {
-    this.store.dispatch(ModeActions.deselectRows.do({ rowIndexes }));
+    this.store.dispatch(StoreItemActions.deselectItems.do({ ids: rowIndexes }));
   }
 
   setSelectedRows(rowIndexes: number[]) {
-    this.store.dispatch(ModeActions.setSelectedRows.do({ rowIndexes }));
+    this.store.dispatch(StoreItemActions.setSelectedItems.do({ ids: rowIndexes }));
   }
 
-  removeTaskOrFolder(item: StoreTask | StoreTaskDirectory) {
-    this.store.dispatch(TaskActions.removeTaskOrFolder.do({ item }));
+  removeTaskOrFolder(item: StoreItem) {
+    this.store.dispatch(StoreItemActions.removeTaskOrFolder.do({ item }));
   }
 }

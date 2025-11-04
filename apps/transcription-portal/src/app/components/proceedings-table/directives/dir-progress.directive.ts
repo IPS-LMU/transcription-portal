@@ -2,7 +2,7 @@ import { AfterViewInit, Directive, ElementRef, inject, Input, OnChanges, OnDestr
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
 import { Task, TaskStatus } from '../../../obj/tasks';
-import { StoreTaskDirectory } from '../../../store';
+import { StoreItemTask, StoreItemTaskDirectory } from '../../../store';
 
 @Directive({
   selector: '[tportalDirProgress]',
@@ -12,7 +12,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
-  @Input() dir?: StoreTaskDirectory;
+  @Input() dir?: StoreItemTaskDirectory;
   @Input() opIndex?: number;
 
   private subscrmanager = new SubscriptionManager<Subscription>();
@@ -40,7 +40,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     if (this.opIndex == undefined) {
       return;
     }
-    const entries = this.dir?.entries.ids.map(id => this.dir!.entries.entities[id]) ?? [];
+    const entries = this.dir?.entries.ids.map(id => this.dir!.entries.entities[id]!) ?? [];
     const allEntries = this.dir.entries.ids.length;
 
     const counters = {
@@ -50,14 +50,15 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     };
 
     for (const entry of entries) {
-      if (entry instanceof Task) {
-        const operation = entry.operations[this.opIndex];
+      if (entry.type === "task") {
+        const task = entry as StoreItemTask;
+        const operation = task.operations[this.opIndex];
 
-        if (operation.state === TaskStatus.PROCESSING) {
+        if (operation.status === TaskStatus.PROCESSING) {
           counters.processing++;
-        } else if (operation.state === TaskStatus.FINISHED) {
+        } else if (operation.status === TaskStatus.FINISHED) {
           counters.finished++;
-        } else if (operation.state === TaskStatus.ERROR) {
+        } else if (operation.status === TaskStatus.ERROR) {
           counters.failed++;
         }
       }
