@@ -18,6 +18,7 @@ import { TaskService } from '../obj/tasks/task.service';
 import { TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
 import { RoutingService } from '../routing.service';
 import { AppSettings } from './app.settings';
+import { PreprocessingStoreService } from '../store';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService implements OnDestroy {
@@ -26,6 +27,7 @@ export class SettingsService implements OnDestroy {
   private activeRoute = inject(ActivatedRoute);
   private modalService = inject(NgbModal);
   private routingService = inject(RoutingService);
+  private preprocessingStoreService = inject(PreprocessingStoreService);
 
   public shortCutsEnabled = true;
   private _feedbackEnabled = false;
@@ -364,8 +366,7 @@ export class SettingsService implements OnDestroy {
                   this.subscrManager.add(
                     timer(0).subscribe({
                       next: () => {
-                        // TODO select preprocessor by mode
-                        this.taskService.state.modes.annotation.preprocessor.addToQueue(info);
+                        this.preprocessingStoreService.addToQueue([info]);
                       },
                     }),
                   );

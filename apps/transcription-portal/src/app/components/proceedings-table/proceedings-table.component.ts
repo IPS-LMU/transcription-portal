@@ -29,7 +29,6 @@ import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
 import { Operation } from '../../obj/operations/operation';
 import { SummarizationOperation } from '../../obj/operations/summarization-operation';
 import { TranslationOperation } from '../../obj/operations/translation-operation';
-import { QueueItem } from '../../obj/preprocessor';
 import { Task, TaskList, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
@@ -38,7 +37,16 @@ import { AppSettings } from '../../shared/app.settings';
 import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { getIndexByEntry, ModeStoreService, OperationFactory, StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreTaskOperation } from '../../store';
+import {
+  getIndexByEntry,
+  ModeStoreService,
+  OperationFactory,
+  PreprocessingQueueItem,
+  StoreItem,
+  StoreItemTask,
+  StoreItemTaskDirectory,
+  StoreTaskOperation,
+} from '../../store';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
@@ -119,7 +127,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   rightMouseButtonPressed = false;
 
-  @Input() queue: QueueItem[] = [];
+  @Input() queue?: PreprocessingQueueItem[] | null;
   @Input() entries?: StoreItem[] | null;
   @Input() operations?: OperationFactory[] | null = [];
   public isDragging = false;
@@ -408,15 +416,15 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
               this.shiftStart = -1;
             }
           } else {
-            this.modeStoreService.setSelectedRows([]);
             // TODO check this
             this.shiftStart = indexFromTaskList;
-            this.modeStoreService.selectRows([indexFromTaskList]);
+            this.modeStoreService.selectRows([entry.id], true);
           }
         }
       }
 
-      const previousOperation = operationIndex && operation && operationIndex > 0 ? (entry as StoreItemTask).operations[operationIndex - 1] : undefined;
+      const previousOperation =
+        operationIndex && operation && operationIndex > 0 ? (entry as StoreItemTask).operations[operationIndex - 1] : undefined;
 
       if ((previousOperation && previousOperation?.lastResult?.online) || (operation && operation?.lastResult?.online)) {
         this.operationclick.emit(operation);
@@ -938,22 +946,24 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return false;
   }
 
-  public getDirEntriesFromItem(entry: QueueItem): TPortalFileInfo[] {
-    if (entry.file instanceof TPortalDirectoryInfo) {
-      return entry.file.entries as TPortalFileInfo[];
+  public getDirEntriesFromItem(entry: PreprocessingQueueItem): TPortalFileInfo[] {
+    if (entry.infoItem?.type === 'folder') {
+      return (entry.infoItem as TPortalDirectoryInfo).entries as TPortalFileInfo[];
     }
     return [];
   }
 
   public getTaskDirEntries(entry: StoreItem): StoreItemTask[] {
     if (entry.type === 'folder') {
-      return Object.keys((entry as StoreItemTaskDirectory).entries.entities).map((a) => (entry as StoreItemTaskDirectory).entries.entities[a]) as StoreItemTask[];
+      return Object.keys((entry as StoreItemTaskDirectory).entries.entities).map(
+        (a) => (entry as StoreItemTaskDirectory).entries.entities[a],
+      ) as StoreItemTask[];
     }
     return [];
   }
 
-  public getFileInfo(entry: QueueItem) {
-    return entry.file instanceof TPortalFileInfo ? (entry.file as TPortalFileInfo) : undefined;
+  public getFileInfo(entry: PreprocessingQueueItem) {
+    return entry.infoItem?.type !== 'folder' ? (entry.infoItem as TPortalFileInfo) : undefined;
   }
 
   public getTaskDirectory(entry: StoreItem): StoreItemTaskDirectory | undefined {
@@ -971,8 +981,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   getAudioFileOfTask(task: StoreItemTask): TPortalAudioInfo | undefined {
-    if (task.files.length > 0 && task.files[0] instanceof TPortalAudioInfo) {
-      return task.files[0];
+    if (task.files.length > 0 && task.files[0].type.includes('audio')) {
+      return task.files[0] as TPortalAudioInfo;
     }
     return undefined;
   }

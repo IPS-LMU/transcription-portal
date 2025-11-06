@@ -42,6 +42,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         ids: number[];
+        deselectOthers?: boolean;
       }>(),
     },
   });
@@ -51,6 +52,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         ids: number[];
+        deselectOthers?: boolean;
       }>(),
     },
   });

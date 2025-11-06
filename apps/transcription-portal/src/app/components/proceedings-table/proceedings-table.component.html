@@ -126,7 +126,7 @@
   (mouseup)="onTableMouseUp()"
   class="inner"
 >
-  @if (entries !== undefined && entries !== null && entries.length === 0 && entries.length === 0 && queue.length === 0) {
+  @if (entries !== undefined && entries !== null && entries.length === 0 && entries.length === 0 && (queue === undefined || queue === null || queue.length === 0)) {
     <div class="tportal-placeholder">
       <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
         @if (taskService.state.currentMode === 'annotation') {
@@ -237,7 +237,7 @@
       </div>
     </div>
   }
-  @if (storage.ready) {
+  @if (storage.ready && operations !== undefined && operations !== null) {
     <!-- Big proceedings table -->
     <table
       class="table table-striped"
@@ -376,6 +376,7 @@
       </thead>
       <!-- TABLE BODY -->
       <tbody>
+      <!-- ready tasks and directories -->
         @for (entry of entries; track entry.id; let entryIndex = $index) {
           <!-- TODO  CONTINUE HERE -->
           <tr
@@ -408,7 +409,6 @@
               [shortStyle]="isClosed"
               tportalProcColIcon
             ></td>
-            <td>{{ entry.type }} ({{ entry.id }})</td>
             @if (getTask(entry) !== undefined && entry.type === 'task') {
               @for (operation of entry.operations; track operation.id) {
                 <td tportalProceedingsTableTd [storeTaskOperation]="operation">
@@ -440,6 +440,41 @@
               }
             </td>
           </tr>
+        }
+
+      <!-- Queue rows -->
+        @for (entry of queue; track entry.id; let i = $index) {
+          @if (entry.infoItem !== undefined) {
+            <tr style="cursor: pointer">
+              @if (getDirEntriesFromItem(entry).length === 0) {
+                <td [attr.colspan]="operations.length + 3" [ngClass]="{ shorten: shortstyle }">
+                  <i aria-hidden="true" class="bi bi-database op-50"> </i>
+                  <span class="op-50" title="{{ getFileInfo(entry)?.fullname }}">
+                    {{ getFileInfo(entry)?.fullname }}
+                    <i class="bi bi-gear spin"></i>
+                  </span>
+                </td>
+              }
+              @if (getDirEntriesFromItem(entry).length > 0) {
+                <td [attr.colspan]="operations.length + 3">
+                  <i aria-hidden="true" class="bi bi-folder2-open blue op-50"></i>
+                  <span class="op-50" title="{{ entry.infoItem.name }}">{{ entry.infoItem.name }} <i class="bi bi-gear-fill spin"></i> </span>
+                </td>
+              }
+            </tr>
+          }
+          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.fullname) {
+            <tr>
+              <td>
+                <div class="d-flex">
+                  <i aria-hidden="true" class="bi bi-database op-50 me-1"></i>
+                  <span class="op-50 me-1">{{ dirEntry.fullname }}</span>
+                  <i class="bi bi-gear-fill spin"></i>
+                </div>
+              </td>
+              <td [attr.colspan]="operations.length + 2"></td>
+            </tr>
+          }
         }
       </tbody>
     </table>

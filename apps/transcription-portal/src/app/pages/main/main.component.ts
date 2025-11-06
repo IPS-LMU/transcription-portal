@@ -45,7 +45,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AppStoreService, ModeStoreService, StoreTaskOperation } from '../../store';
+import { AppStoreService, ModeStoreService, PreprocessingStoreService, StoreTaskOperation } from '../../store';
 
 @Component({
   selector: 'tportal-main',
@@ -85,6 +85,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   protected modalService = inject(OHModalService);
   protected appStoreService = inject(AppStoreService);
   protected modeStoreService = inject(ModeStoreService);
+  protected preprocessingStoreService = inject(PreprocessingStoreService);
 
   public sidebarstate = 'hidden';
   private toolURL?: string;
@@ -165,7 +166,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   onAfterDrop(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
-    // TODO add this.readNewFiles(entries);
+    this.readNewFiles(entries);
   }
 
   onVerifyButtonClick() {
@@ -212,7 +213,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         fileInfos.push(new TPortalFileInfo(file.name, file.type, file.size, file));
       }
 
-      // TODO add this.readNewFiles(fileInfos);
+      this.readNewFiles(fileInfos);
     }
     input.value = '';
   }
@@ -633,17 +634,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
       ConsoleType.INFO,
       `user clicked on report issue:\n` + `operation: ${operation.name}, ${operation.state}\n` + `protocol: ${operation.protocol}\n`,
     );
-    this.modalService.openFeedbackModal();
+    this.modalService.openFeedbackModal(); */
   }
 
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     if (entries && this.taskService.state.currentModeState.operations) {
       // filter and re-structure entries array to supported files and directories
       const { filteredEntries, unsupportedFiles } = this.taskService.cleanUpInputArray(entries);
-
-      for (const entry of filteredEntries) {
-        this.taskService.state.currentModeState.preprocessor.addToQueue(entry);
-      }
+      this.preprocessingStoreService.addToQueue(filteredEntries);
 
       if (unsupportedFiles.length > 0) {
         this.alertService.showAlert(
@@ -652,7 +650,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         );
       }
     }
-     */
   }
 
   private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {

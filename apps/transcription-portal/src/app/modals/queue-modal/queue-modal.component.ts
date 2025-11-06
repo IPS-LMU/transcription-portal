@@ -146,7 +146,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
 
       for (const task of this.tasks) {
         if (task.status === TaskStatus.QUEUED) {
-          if (task.files[0] instanceof TPortalAudioInfo && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
+          if (task.files[0].type.includes('audio') && task.files[0].file !== undefined && !this.isSomethingInvalid(task.id)) {
             task.changeState(TaskStatus.PENDING);
           }
 
@@ -214,7 +214,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
         this.storage.saveTask(task, this.taskService.state.currentMode);
 
         const audioInfo: TPortalAudioInfo | undefined =
-          task.files[0] && task.files[0] instanceof TPortalAudioInfo ? (task.files[0] as TPortalAudioInfo) : undefined;
+          task.files[0] && task.files[0].type.includes('audio') ? (task.files[0] as TPortalAudioInfo) : undefined;
         if (audioInfo) {
           this.compatibleTable.push({
             id: task.id,
@@ -389,7 +389,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
     }[] = [];
 
     const serviceInfo = AppSettings.configuration.api.services.find((a) => a.provider === asrName);
-    if (serviceInfo && audioInfo && audioInfo instanceof TPortalAudioInfo) {
+    if (serviceInfo && audioInfo && audioInfo.type.includes('audio')) {
       if (serviceInfo.maxSignalDuration) {
         if (audioInfo.duration.seconds > serviceInfo.maxSignalDuration) {
           result.push({

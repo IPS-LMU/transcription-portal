@@ -824,8 +824,8 @@ export class TaskService {
           return a instanceof FileInfo && (format || this.validTranscript(a.extension));
         });
         const rest = directory.entries.filter((a: any) => {
-          return a instanceof TPortalDirectoryInfo;
-        });
+          return a.type === 'folder';
+        }) as TPortalDirectoryInfo[];
 
         if (dir.entries.length > 0) {
           result.filteredEntries.push(dir);

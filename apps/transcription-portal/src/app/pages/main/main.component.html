@@ -270,6 +270,7 @@
             [isClosed]="sidebarExpand === 'closed'"
             [entries]="modeStoreService.selectedModeEntries$ | async"
             [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
+            [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
           >
@@ -290,7 +291,7 @@
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
             [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
-            [queue]="taskService.state.modes.summarization.preprocessor.queue"
+            [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"
             style="height: 100%"
           >

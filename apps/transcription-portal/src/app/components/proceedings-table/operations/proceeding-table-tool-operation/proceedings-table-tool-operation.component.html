@@ -1,1 +1,5 @@
-U {{ storeTaskOperation?.name }} ({{ storeTaskOperation?.id }})
+@if (storeTaskOperation?.status !== TaskStatus.READY) {
+  <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation" [title]="storeTaskOperation?.status"></tportal-proceedings-table-op-icon>
+} @else {
+  <i class="bi bi-pencil-square link" aria-hidden="true"></i>
+}

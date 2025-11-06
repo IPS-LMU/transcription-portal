@@ -12,6 +12,8 @@ import {
   TranslationOperationFactory,
   UploadOperationFactory,
 } from '../operation';
+import { PreprocessingQueueItem } from '../preprocessing';
+import { getPreprocessingReducers } from '../preprocessing/preprocessing.reducer';
 import { getTaskReducers, StoreItem, TaskStatus } from '../store-item';
 import { ModeActions } from './mode.actions';
 import { Mode, ModeState } from './mode.state';
@@ -25,6 +27,11 @@ export const modeAdapter: EntityAdapter<Mode<any>> = createEntityAdapter<Mode<an
 
 export const initialState: ModeState = modeAdapter.getInitialState({
   currentMode: 'annotation',
+  counters: {
+    storeItem: 1,
+    processingQueueItem: 1,
+    operation: 1,
+  },
   defaultUserSettings: {},
 });
 
@@ -32,9 +39,13 @@ export const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreIt
   selectId: (task) => task.id,
 });
 
+export const preprocessingAdapter: EntityAdapter<PreprocessingQueueItem> = createEntityAdapter<PreprocessingQueueItem>({
+  selectId: (item) => item.id,
+});
+
 export const modeReducer = createReducer(
   initialState,
-  on(IDBActions.initIDB.loaded, (state: ModeState, { userSettings }): ModeState => {
+  on(IDBActions.initIDB.loaded, (state: ModeState, { userSettings, intern }): ModeState => {
     const defaultUserSettings = userSettings.find((a: IDBUserDefaultSettingsItem) => a.name === 'defaultUserSettings')?.value;
 
     if (defaultUserSettings) {
@@ -61,7 +72,14 @@ export const modeReducer = createReducer(
       }
     }
 
-    return state;
+    return {
+      ...state,
+      counters: {
+        ...state.counters,
+        operation: intern.find((a) => a.name === 'operationCounter')?.value ?? 1,
+        storeItem: intern.find((a) => a.name === 'taskCounter')?.value ?? 1,
+      },
+    };
   }),
   on(ModeActions.initModes.do, (state: ModeState): ModeState => {
     return modeAdapter.addMany(
@@ -79,7 +97,7 @@ export const modeReducer = createReducer(
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
-          preprocessor: {},
+          preprocessor: preprocessingAdapter.getInitialState(),
           statistics: {
             queued: 0,
             waiting: 0,
@@ -101,7 +119,7 @@ export const modeReducer = createReducer(
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
-          preprocessor: {},
+          preprocessor: preprocessingAdapter.getInitialState(),
           statistics: {
             queued: 0,
             waiting: 0,
@@ -115,4 +133,5 @@ export const modeReducer = createReducer(
     );
   }),
   ...getTaskReducers(modeAdapter, taskAdapter),
+  ...getPreprocessingReducers(modeAdapter, preprocessingAdapter),
 );

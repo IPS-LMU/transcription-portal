@@ -1,7 +1,10 @@
 import { EntityState } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { OperationFactory } from '../operation';
+import { PreprocessingState } from '../preprocessing/preprocessing.state';
 import { StoreItemsState, TaskStatus } from '../store-item';
+
+export type TPortalModes = "annotation" | "summarization";
 
 export interface ModeStatistics {
   queued: number;
@@ -19,12 +22,18 @@ export interface Mode<O extends object> {
   newFiles?: boolean;
   overallState: 'processing' | 'waiting' | 'stopped' | 'not started';
   status: TaskStatus;
-  preprocessor: any;
+  preprocessor: PreprocessingState;
   statistics: ModeStatistics;
 }
 
 export interface ModeState extends EntityState<Mode<any>> {
-  currentMode: 'annotation' | 'summarization';
+  currentMode: TPortalModes;
+  counters: {
+    storeItem: number;
+    operation: number;
+    processingQueueItem: number;
+  }
+
   defaultUserSettings: {
     selectedASRLanguage?: string;
     selectedMausLanguage?: string;

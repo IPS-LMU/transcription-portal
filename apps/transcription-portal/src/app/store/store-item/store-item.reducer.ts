@@ -55,11 +55,11 @@ export const getTaskReducers = (
       state,
     );
   }),
-  on(StoreItemActions.selectItems.do, (state: ModeState, { ids }): ModeState => {
-    return setSelection(ids, true, state, modeAdapter, taskAdapter);
+  on(StoreItemActions.selectItems.do, (state: ModeState, { ids, deselectOthers }): ModeState => {
+    return setSelection(ids, true, state, modeAdapter, taskAdapter, deselectOthers);
   }),
-  on(StoreItemActions.deselectItems.do, (state: ModeState, { ids }): ModeState => {
-    return setSelection(ids, false, state, modeAdapter, taskAdapter);
+  on(StoreItemActions.deselectItems.do, (state: ModeState, { ids, deselectOthers }): ModeState => {
+    return setSelection(ids, false, state, modeAdapter, taskAdapter, deselectOthers);
   }),
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
@@ -72,9 +72,19 @@ function setSelection(
   state: ModeState,
   modeAdapter: EntityAdapter<Mode<any>>,
   taskAdapter: EntityAdapter<StoreItem>,
-  clearAll?: boolean,
+  deselectOthers?: boolean,
 ) {
-  const itemsState = !clearAll ? state.entities[state.currentMode]!.items : taskAdapter.removeAll(state.entities[state.currentMode]!.items);
+  const itemsState = !deselectOthers
+    ? state.entities[state.currentMode]!.items
+    : taskAdapter.updateMany(
+        state.entities[state.currentMode]!.items.ids.map((id) => ({
+          id: id as number,
+          changes: {
+            selected: false,
+          },
+        })),
+        state.entities[state.currentMode]!.items,
+      );
 
   return modeAdapter.updateOne(
     {

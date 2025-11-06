@@ -4,8 +4,6 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { exhaustMap, of, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
-import { Operation } from '../../obj/operations/operation';
-import { TaskEntry } from '../../obj/tasks/task-entry';
 import { TaskService } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb';
@@ -24,7 +22,6 @@ export class StoreItemEffects {
       withLatestFrom(this.store),
       exhaustMap(([{ intern, annotationTasks, summarizationTasks, userSettings }, state]: [IDBLoadedResults, RootState]) => {
         // this.taskService.init();
-
         return of(
           StoreItemActions.prepareTasks.do({
             annotationTasks,
@@ -49,8 +46,7 @@ export class StoreItemEffects {
       this.actions$.pipe(
         ofType(StoreItemActions.prepareTasks.success),
         withLatestFrom(this.store),
-        tap(([, state]: [any, RootState]) => {
-        }),
+        tap(([, state]: [any, RootState]) => {}),
       ),
     {
       dispatch: false,
@@ -59,7 +55,7 @@ export class StoreItemEffects {
 
   prepareTasksSuccess$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.prepareTasks.do),
+      ofType(StoreItemActions.prepareTasks.success),
       exhaustMap(() => {
         return of(StoreItemActions.importTasks.success());
       }),

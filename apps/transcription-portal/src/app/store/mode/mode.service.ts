@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
-import { StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreItemActions } from '../store-item';
+import { StoreItem, StoreItemActions, StoreItemTask } from '../store-item';
 import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations } from './mode.selectors';
 
 @Injectable({ providedIn: 'root' })
@@ -12,8 +12,8 @@ export class ModeStoreService {
   selectedModeEntries$ = this.store.select(selectCurrentModeEntries);
   allTasks$: Observable<StoreItemTask[] | undefined> = this.store.select(selectAllTasks);
 
-  selectRows(rowIndexes: number[]) {
-    this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes }));
+  selectRows(rowIndexes: number[], deselectOthers = false) {
+    this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes, deselectOthers }));
   }
 
   deselectRows(rowIndexes: number[]) {
