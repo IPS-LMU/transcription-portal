@@ -1,4 +1,4 @@
-import { NgClass, NgStyle } from '@angular/common';
+import { LowerCasePipe, NgClass, NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -28,6 +28,7 @@ import { AppSettings } from '../../shared/app.settings';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -35,7 +36,17 @@ import { StorageService } from '../../storage.service';
   styleUrls: ['./queue-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent],
+  imports: [
+    NgClass,
+    NgStyle,
+    TimePipe,
+    NgbPopover,
+    FormsModule,
+    OctraASRLanguageSelectComponent,
+    OctraProviderSelectComponent,
+    TranslocoPipe,
+    LowerCasePipe,
+  ],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
   protected activeModal = inject(NgbActiveModal);

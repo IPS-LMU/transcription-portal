@@ -1,11 +1,13 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Statistics for {{ taskService.state.currentMode }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.statistics.title' | transloco: { currentMode: taskService.state.currentMode } }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close()"></button>
 </div>
 <div class="modal-body">
   <div style="text-align: right">
     @if (taskService.currentModeState?.protocolURL && taskService.currentModeState?.protocolFileName) {
-      <a [download]="taskService.currentModeState!.protocolFileName" [href]="taskService.currentModeState!.protocolURL">Download JSON</a>
+      <a [download]="taskService.currentModeState!.protocolFileName" [href]="taskService.currentModeState!.protocolURL"
+        >{{ 'g.download' | transloco }} JSON</a
+      >
     }
   </div>
   <div class="row">
@@ -79,8 +81,8 @@
     </div>
   </div>
 
-  <h4 class="mt-5">Processing duration (minutes)</h4>
-  <p>Move the mouse over the pie chart for more information.</p>
+  <h4 class="mt-5">{{ 'modals.statistics.processing time.title' | transloco }}</h4>
+  <p>{{ 'modals.statistics.processing time.description' | transloco }}</p>
   @if (showCharts && statisticsService.averageDurations) {
     <div class="row">
       <div class="col-md-1"></div>
@@ -90,9 +92,9 @@
       <div class="col-md-1"></div>
     </div>
   } @else {
-    <p class="text-center mt-5">Please wait...</p>
+    <p class="text-center mt-5">{{ 'p.please wait' | transloco }}...</p>
   }
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close('Save click')">Cancel</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close('Save click')">{{ 'g.cancel' | transloco }}</button>
 </div>

@@ -17,7 +17,7 @@
   @if (popover.operation !== undefined) {
     @if (popover.operation.time && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
       @if (popover.operation.isFinished && !popover.operation.lastRound?.lastResult?.available) {
-        <p style="color: red">The latest result does not exist anymore.</p>
+        <p style="color: red">{{ 'popovers.results.last result unavailable' | transloco }}</p>
       }
       <div class="row g-0">
         <div class="col" style="font-size: 0.85rem">
@@ -31,20 +31,23 @@
     }
     @if (popover.operation.state === 'PROCESSING' && popover.operation.serviceProvider !== undefined) {
       <div class="service-preview">
-        <div class="provided-by">Service provided by</div>
+        <div class="provided-by">{{ 'p.service provided by' | transloco }}</div>
         <a [href]="popover.operation.serviceProvider.homepageURL" style="display: block; vertical-align: middle" target="_blank">
           <img [src]="popover.operation.serviceProvider.logoURL" alt="EML Logo" class="service-logo" style="border: 1px solid lightgray" />
         </a>
         <div class="service-terms">
-          <a [href]="popover.operation.serviceProvider.termsURL" target="_blank"><i class="bi bi-journal-text"></i> Service terms</a><br />
-          <a [href]="popover.operation.serviceProvider.homepageURL" target="_blank"><i class="bi bi-globe"></i> Homepage</a><br />
+          <a [href]="popover.operation.serviceProvider.termsURL" target="_blank"
+            ><i class="bi bi-journal-text"></i> {{ 'p.service terms' | transloco }}</a
+          ><br />
+          <a [href]="popover.operation.serviceProvider.homepageURL" target="_blank"><i class="bi bi-globe"></i> {{ 'g.homepage' | transloco }}</a
+          ><br />
         </div>
         <i (click)="onReportIconClick(popover.operation)" class="bi bi-exclamation-circle report-issue"></i>
       </div>
       <div class="service-remarks">
         <ul>
-          <li>The processing time depends on the properties of the audio file and the service provider.</li>
-          <li>As soon as the service has finished processing the result appears here.</li>
+          <li>{{ 'popovers.results.service remarks.processing time' | transloco }}</li>
+          <li>{{ 'popovers.results.service remarks.about the result' | transloco }}</li>
           <li>{{ popover.operation.serviceProvider.dataStoragePolicy }}</li>
         </ul>
       </div>
@@ -67,7 +70,7 @@
             class="btn btn-sm btn-outline-info"
             style="font-size: 11px; cursor: pointer; margin-bottom: 0"
           >
-            <i class="bi bi-clipboard"></i> Copy to clipboard
+            <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboards' | transloco }}
           </button>
         </div>
         <table class="table table-sm table-striped" id="output-table">
@@ -97,9 +100,9 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>Language: {{ popover.task.asrOperation.language }}</span>
+    <span>{{ 'g.language' | transloco }}: {{ popover.task.asrOperation.language }}</span>
     @if (popover.task && popover.task.asrOperation.serviceProvider) {
-      <span> , ASR: {{ popover.task.asrOperation.serviceProvider }} </span>
+      <span> , {{ 'g.asr' | transloco }}: {{ popover.task.asrOperation.serviceProvider }} </span>
     }
     <br /><br />
     <span>File information:</span>
@@ -122,27 +125,39 @@
     <div class="tportal-placeholder">
       <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
         @if (taskService.state.currentMode === 'annotation') {
-          Annotation
+          {{ 'modes.annotation.name' | transloco }}
         } @else if (taskService.state.currentMode === 'summarization') {
-          Summarization & Translation
+          {{ 'modes.summarization and translation.name' | transloco }}
         }
       </h1>
-      <p class="px-5">
-        The TranscriptionPortal offers two modes for processing audio files: Annotation mode and Summarization & Translation mode. You can switch
-        between the modes by clicking on the tabs at the left top corner.
-      </p>
-      <p class="px-5">
-        @if (taskService.state.currentMode === 'annotation') {
-          In annotation mode you are able to transcribe audio files automatically using ASR, correct the transcript using
-          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>,
-          automatically align the transcript into words and edit the phonetic details in
-          <a href="https://ips-lmu.github.io/EMU-webApp/" target="_blank" class="text-decoration-none">Emu-webApp</a>.
-        } @else if (taskService.state.currentMode === 'summarization') {
-          In summarization mode you automatically transcribe audio files using ASR, check the transcript in
-          <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>, summarize
-          the transcript using AI and translate it to a selected language automatically.
-        }
-      </p>
+      <p class="px-5" [innerHTML]="'quick start.introduction' | transloco"></p>
+      @if (taskService.state.currentMode === 'annotation') {
+        <p
+          class="px-5"
+          [innerHTML]="
+            'quick start.modes.annotation'
+              | transloco
+                : {
+                    Octra:
+                      '<a href=\'https:\/\/clarin.phonetik.uni-muenchen.de/apps/octra/octra/login\' class=\'text-decoration-none\' target=\'_blank\'>Octra</a>',
+                    EmuWebApp: '<a href=\'https:\/\/ips-lmu.github.io/EMU-webApp/\' target=\'_blank\' class=\'text-decoration-none\'>Emu-webApp</a>',
+                  }
+          "
+        ></p>
+      } @else if (taskService.state.currentMode === 'summarization') {
+        <p
+          class="px-5"
+          [innerHTML]="
+            'quick start.modes.summarization'
+              | transloco
+                : {
+                    Octra:
+                      '<a href=\'https:\/\/clarin.phonetik.uni-muenchen.de/apps/octra/octra/login\' class=\'text-decoration-none\' target=\'_blank\'>Octra</a>',
+                    EmuWebApp: '<a href=\'https:\/\/ips-lmu.github.io/EMU-webApp/\' target=\'_blank\' class=\'text-decoration-none\'>Emu-webApp</a>',
+                  }
+          "
+        ></p>
+      }
       <ng-template [ngTemplateOutlet]="quickstartNumeration"></ng-template>
       <ng-template #quickstartNumeration>
         <div class="row quickstart px-3 pt-5">
@@ -165,11 +180,10 @@
                 1.
               </div>
             </div>
-            <h4>Add files</h4>
-            <p>
-              Drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or use the "1. ADD FILES" button. Later, you can
-              add files via drag & drop to the table rows, too.
-            </p>
+            <h4>{{ 'buttons.add files' | transloco }}</h4>
+            <p
+              [innerHTML]="'quick start.add files.description' | transloco: { addFilesButton: '1. ' + ('buttons.add files' | transloco | uppercase) }"
+            ></p>
           </div>
           <!-- /.col-lg-4 -->
           <div class="col-4">
@@ -191,8 +205,12 @@
                 2.
               </div>
             </div>
-            <h4>Check options</h4>
-            <p>Now set the options for the added files: Click on the "2. CHECK OPTIONS" Button and apply the changed options.</p>
+            <h4>{{ 'buttons.check options' | transloco }}</h4>
+            <p
+              [innerHTML]="
+                'quick start.check options.description' | transloco: { checkOptionsButton: '2. ' + ('buttons.check options' | transloco | uppercase) }
+              "
+            ></p>
           </div>
           <!-- /.col-lg-4 -->
           <div class="col-4">
@@ -214,8 +232,13 @@
                 3.
               </div>
             </div>
-            <h4>Start Processing</h4>
-            <p>After all files and options are checked, click on "3. START PROCESSING". The application starts the processing of pending tasks.</p>
+            <h4>{{ 'buttons.start processing' | transloco }}</h4>
+            <p
+              [innerHTML]="
+                'quick start.start processing.description'
+                  | transloco: { startProcessingButton: '3. ' + ('buttons.start processing' | transloco | uppercase) }
+              "
+            ></p>
           </div>
           <!-- /.col-lg-4 -->
         </div>
@@ -295,7 +318,7 @@
                       <span><i class="bi bi-cloud-download"></i></span>
                     }
                     @if (!shortstyle) {
-                      <span class="d-none d-xl-inline-block">Export</span>
+                      <span class="d-none d-xl-inline-block">{{ 'g.export' | transloco }}</span>
                       <span class="d-inline-block d-xl-none"><i class="bi bi-cloud-download"></i></span>
                     }
                   </div>

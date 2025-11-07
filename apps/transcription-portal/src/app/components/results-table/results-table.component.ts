@@ -10,13 +10,14 @@ import { AppInfo, ConverterData } from '../../app.info';
 import { Operation } from '../../obj/operations/operation';
 import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { DownloadService } from '../../shared/download.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgStyle, FormsModule],
+  imports: [NgStyle, FormsModule, TranslocoPipe],
 })
 export class ResultsTableComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);

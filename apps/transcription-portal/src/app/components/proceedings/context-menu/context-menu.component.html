@@ -5,19 +5,23 @@
         <td><i class="bi bi-x"></i></td>
         <td>
           @if (entriesCount > 0) {
-            Delete selected lines
+            {{ 'context menu.delete selected lines' | transloco }}
           }
         </td>
       </tr>
       <tr (click)="onAction('download')">
         <td><i class="bi bi-download"></i></td>
-        <td>Download selected lines</td>
+        <td>
+          {{ 'context menu.download selected lines' | transloco }}
+        </td>
       </tr>
     }
     @if (selectedTasks.length > 0) {
       <tr class="pointer" (click)="onRemoveAttachments()">
         <td></td>
-        <td>Remove attachments</td>
+        <td>
+          {{ 'context menu.remove attachments' | transloco }}
+        </td>
       </tr>
     }
     <ng-content></ng-content>

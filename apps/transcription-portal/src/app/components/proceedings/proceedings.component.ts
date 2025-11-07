@@ -1,4 +1,4 @@
-import { NgClass, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -47,6 +47,7 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -69,6 +70,8 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     NgStyle,
     NgClass,
     NgTemplateOutlet,
+    TranslocoPipe,
+    UpperCasePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

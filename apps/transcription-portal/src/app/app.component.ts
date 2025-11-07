@@ -10,6 +10,7 @@ import { AppSettings } from './shared/app.settings';
 import { BugReportService, ConsoleType } from './shared/bug-report.service';
 import { NotificationService } from './shared/notification.service';
 import { SettingsService } from './shared/settings.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-root',
@@ -17,7 +18,7 @@ import { SettingsService } from './shared/settings.service';
   styleUrls: ['./app.component.scss'],
   providers: [VersionCheckerService],
   animations: [ANIMATIONS],
-  imports: [RouterOutlet, VersionNotificationComponent],
+  imports: [RouterOutlet, VersionNotificationComponent, TranslocoPipe],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {
   taskService = inject(TaskService);

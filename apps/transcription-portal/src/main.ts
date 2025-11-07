@@ -7,6 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideTransloco } from '@jsverse/transloco';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -22,6 +23,7 @@ import { OHModalService } from './app/shared/ohmodal.service';
 import { SettingsService } from './app/shared/settings.service';
 import { StorageService } from './app/storage.service';
 import { environment } from './environments/environment';
+import { TranslocoHttpLoader } from './transloco-http-loader';
 
 if (environment.production) {
   enableProdMode();
@@ -44,6 +46,15 @@ bootstrapApplication(AppComponent, {
       FormsModule,
       ReactiveFormsModule,
     ),
+    provideTransloco({
+      config: {
+        availableLangs: ['en'],
+        defaultLang: 'en',
+        reRenderOnLangChange: false,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
     TaskService,
     NotificationService,
     StorageService,

@@ -1,28 +1,23 @@
 <div class="modal-header">
-  <h4 class="modal-title pull-left">Queue</h4>
-  <button (click)="onSubmit(form)" class="btn btn-outline-primary" style="margin-left: 20px" type="button">OK</button>
+  <h4 class="modal-title pull-left">{{ 'modals.check options.title' | transloco }}</h4>
+  <button (click)="onSubmit(form)" class="btn btn-outline-primary" style="margin-left: 20px" type="button">{{ 'g.OK' | transloco }}</button>
   <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body d-flex flex-column h-100">
   <div>
-    <p style="font-size: 0.9em; text-align: justify; margin-bottom: 0">
-      The following tasks are going to be processed one after the other. Please check if all options are set as you wish. While you are selecting the
-      language you can click on the
-      <i class="bi bi-info-circle-fill" style="color: cornflowerblue"></i> on the right of an entry for further information like data storage policy
-      and terms and conditions.
-    </p>
-    <p style="font-size: 0.9em; text-align: justify; margin-top: 5px">
-      When you click "OK" you agree with the terms and conditions of the selected (third-party) services and the files are marked for further
-      processing.
-    </p>
+    <p
+      style="font-size: 0.9em; text-align: justify; margin-bottom: 0"
+      [innerHTML]="'modals.check options.introduction.paragraph1' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
+    ></p>
+    <p style="font-size: 0.9em; text-align: justify; margin-top: 5px" [innerHTML]="'modals.check options.introduction.paragraph1' | transloco"></p>
 
     <div class="card shadow shadow-md mt-4">
-      <div class="card-header">Tasks</div>
+      <div class="card-header">{{ 'g.tasks' | transloco }}</div>
       <div class="card-body">
-        <p>Check the tasks that you want to perform.</p>
+        <p [innerHTML]="'modals.check options.tasks.description' | transloco"></p>
         @if (isOneAudiofileInvalid()) {
           <div class="alert alert-danger" style="font-size: 0.9em">
-            One or more audio files do not fit the ASR provider's requirements:
+            <p [innerHTML]="'modals.check options.tasks.asr provider requirement mismatch' | transloco"></p>
             @if (selectedASRInfo !== undefined) {
               <ul>
                 @if (selectedASRInfo.maxSignalSize) {
@@ -40,32 +35,34 @@
                 }
               </ul>
             }
-            <p>Incompatible audio files are marked with a red cross on the left. These audio files are not going to be processed.</p>
+            <p [innerHTML]="'modals.check options.tasks.incompatible files' | transloco"></p>
           </div>
         }
         @if (orangeCount > 0) {
-          <p class="alert alert-warning" style="text-align: center; font-size: 0.9em">
-            Please close this window and re-add the files with file names in orange to the table. Otherwise these files are going to be skipped.
-          </p>
+          <p
+            class="alert alert-warning"
+            style="text-align: center; font-size: 0.9em"
+            [innerHTML]="'modals.check options.tasks.warning readding files' | transloco"
+          ></p>
         }
 
         <table class="table table-responsive-md table-striped" id="queue">
           <thead>
             <tr>
-              <th>Valid?</th>
-              <th class="text-start">File</th>
-              <th>Language</th>
+              <th>{{ 'g.valid' | transloco }}?</th>
+              <th class="text-start">{{ 'g.file' | transloco }}</th>
+              <th>{{ 'g.language' | transloco }}</th>
               @for (operation of operations; track operation.id; let i = $index) {
                 <th>
                   <div>
                     @if (operation.title === '') {
                       <span style="display: block">
                         <ng-container>
-                          {{ operation.name }}
+                          {{ 'operations.' + (operation.name | lowercase) + '.name' | transloco }}
                         </ng-container>
                       </span>
                     } @else {
-                      <div [innerHTML]="operation.title"></div>
+                      <div [innerHTML]="'operations.' + (operation.title | lowercase) + '.name' | transloco"></div>
                     }
                   </div>
                 </th>
@@ -179,7 +176,7 @@
                         <span><i class="bi bi-check-lg" style="color: black"></i></span>
                       }
                       @if (!operation.enabled) {
-                        <span>skip</span>
+                        <span>{{ 'g.skip' | transloco }}</span>
                       }
                     </td>
                   }
@@ -192,12 +189,20 @@
     </div>
 
     <div class="card shadow shadow-md">
-      <div class="card-header"><div class="row g-0 align-items-center">
-        <div class="col">Options</div>
-        <div class="col-auto"><button class="btn btn-sm btn-outline-primary reset-button" (click)="resetOptions()"><i class="bi bi-arrow-counterclockwise"></i> Reset options</button></div>
-      </div></div>
+      <div class="card-header">
+        <div class="row g-0 align-items-center">
+          <div class="col">{{ 'g.options' | transloco }}</div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-outline-primary reset-button" (click)="resetOptions()">
+              <i class="bi bi-arrow-counterclockwise"></i> {{ 'p.reset options' | transloco }}
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="card-body">
-        <p>Set the options for your workflow, e.g. service provider and languages. Click on the <i class="bi bi-info-circle-fill" style="color: cornflowerblue"></i> for further information. The options are going to applied on the listed tasks above.</p>
+        <p
+          [innerHTML]="'modals.check options.options.description' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
+        ></p>
         <div class="row mb-3">
           <div class="col-md-12">
             <form #form="ngForm">
@@ -205,7 +210,9 @@
                 <tbody>
                   <tr>
                     <td class="fit">
-                      <label class="mt-2">ASR Service Provider<span class="text-danger">*</span>:</label>
+                      <label class="mt-2"
+                        >{{ 'modals.check options.options.asr service provider.name' | transloco }}<span class="text-danger">*</span>:</label
+                      >
                     </td>
                     <td>
                       <octra-asr-provider-select
@@ -231,7 +238,9 @@
                   </tr>
                   <tr class="align-middle">
                     <td class="fit">
-                      <label class="me-1">Content Language<span class="text-danger">*</span>:</label>
+                      <label class="me-1"
+                        >{{ 'modals.check options.options.content language.name' | transloco }}<span class="text-danger">*</span>:</label
+                      >
                     </td>
                     <td>
                       <octra-asr-language-select
@@ -252,15 +261,15 @@
                         [title]="'Content Language'"
                         [required]="true"
                       ></octra-asr-language-select>
-                      <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem"
-                        >The list of supported content languages depends on the selected ASR Provider.</span
-                      >
+                      <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem">{{
+                        'modals.check options.options.content language.help' | transloco
+                      }}</span>
                     </td>
                   </tr>
                   @if (taskService.state.currentMode === 'annotation') {
                     <tr>
                       <td class="fit">
-                        <label class="me-1" for="diarizationSwitch">Diarization:</label>
+                        <label class="me-1" for="diarizationSwitch">{{ 'modals.check options.options.diarization.name' | transloco }}:</label>
                       </td>
                       <td>
                         <div class="form-check form-switch">
@@ -280,7 +289,7 @@
                   @if (taskService.state.currentModeState.isDiarizationEnabled) {
                     <tr>
                       <td class="fit">
-                        <label class="me-1" for="diarizationSwitch">Number of Speakers:</label>
+                        <label class="me-1" for="diarizationSwitch">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label>
                       </td>
                       <td>
                         <input
@@ -296,27 +305,32 @@
                   @if (taskService.state.currentMode === 'summarization') {
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label for="asrProvider">Summarization Service Provider<span class="text-danger">*</span>:</label>
+                        <label for="asrProvider"
+                          >{{ 'modals.check options.options.summarization service provider.name' | transloco
+                          }}<span class="text-danger">*</span>:</label
+                        >
                       </td>
                       <td>
                         <octra-asr-provider-select
                           [(ngModel)]="taskService.state.currentModeState.selectedSummarizationProvider"
                           (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                           [asrProviders]="summarizationProviders"
-                          [title]="'Summarization Service Provider'"
+                          [title]="'modals.check options.options.summarization service provider.name' | transloco"
                           [required]="true"
                           name="summarizationProvider"
                           id="summarizationProvider"
                           class="d-block"
                           [i18n]="{
-                            asrProvider: 'Summarization Service Provider',
+                            asrProvider: 'modals.check options.options.summarization service provider.name' | transloco,
                           }"
                         ></octra-asr-provider-select>
                       </td>
                     </tr>
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label for="asrProvider">Max. number of words for summarization<span class="text-danger">*</span>:</label>
+                        <label for="asrProvider"
+                          >{{ 'modals.check options.options.number of words.name' | transloco }}<span class="text-danger">*</span>:</label
+                        >
                       </td>
                       <td>
                         <select
@@ -325,17 +339,19 @@
                           [(ngModel)]="selectedSummarizationNumberOfWords"
                           (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                         >
-                          <option [value]="">Unlimited</option>
-                          <option [value]="10">Headline (10 words)</option>
-                          <option [value]="100">Paragraph (100 words)</option>
-                          <option [value]="400">Page (400 words)</option>
+                          <option [value]="">{{ 'modals.check options.options.number of words.values.unlimited' | transloco }}</option>
+                          <option [value]="10">{{ 'modals.check options.options.number of words.values.headline' | transloco }}</option>
+                          <option [value]="100">{{ 'modals.check options.options.number of words.values.paragraph' | transloco }}</option>
+                          <option [value]="400">{{ 'modals.check options.options.number of words.values.page' | transloco }}</option>
                         </select>
                       </td>
                     </tr>
                   }
                   @if (taskService.state.currentMode === 'annotation') {
                     <tr class="align-middle fit">
-                      <td class="fit"><label>Word Alignment Language:</label></td>
+                      <td class="fit">
+                        <label>{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label>
+                      </td>
                       <td>
                         <octra-asr-language-select
                           [(ngModel)]="taskService.state.currentModeState.selectedMausLanguage"
@@ -344,16 +360,18 @@
                             services: AppSettings.configuration.api.services,
                           }"
                           [languages]="languages.maus"
-                          [title]="'MAUS Language'"
+                          [title]="'modals.check options.options.word alignment language.name' | transloco"
                           name="mausLanguage"
                           id="mausLanguage"
-                          placeholder="MAUS Language"
+                          [placeholder]="'modals.check options.options.word alignment language.name' | transloco"
                         ></octra-asr-language-select>
                       </td>
                     </tr>
                   } @else {
                     <tr class="align-middle">
-                      <td class="fit"><label>Translate to:</label></td>
+                      <td class="fit">
+                        <label>{{ 'modals.check options.options.translation language.name' | transloco }}:</label>
+                      </td>
                       <td>
                         <div class="row g-1 align-items-center">
                           <div class="col">
@@ -365,14 +383,16 @@
                               (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                             >
                               <option value=""></option>
-                              <option value="en">English</option>
-                              <option value="de">German</option>
-                              <option value="nl">Dutch</option>
-                              <option value="it">Italian</option>
+                              <option value="en">{{ 'languages.en' | transloco }}</option>
+                              <option value="de">{{ 'languages.de' | transloco }}</option>
+                              <option value="nl">{{ 'languages.nl' | transloco }}</option>
+                              <option value="it">{{ 'languages.it' | transloco }}</option>
                             </select>
                             <ng-template #translationProviderInfo>
                               <div>
-                                <span class="d-block text-center">Translation provided by:</span>
+                                <span class="d-block text-center"
+                                  >{{ 'modals.check options.options.translation language.provided by' | transloco }}:</span
+                                >
                                 <a [href]="settingsService.translationServiceProvider?.homepageURL" target="_blank"
                                   ><img [src]="settingsService.translationServiceProvider?.logoURL" class="img-fluid"
                                 /></a>
@@ -396,7 +416,7 @@
   </div>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">Cancel</button>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'g.cancel' | transloco }}</button>
   <button
     (click)="onSubmit(form)"
     class="btn btn-outline-primary"
@@ -406,7 +426,7 @@
     #okPopover="ngbPopover"
     triggers="manual"
   >
-    OK
+    {{ 'g.OK' | transloco }}
   </button>
 </div>
-<ng-template #errorPopoverContent> Please fill in the required fields. </ng-template>
+<ng-template #errorPopoverContent> {{'modals.check options.missing fields' | transloco"}} </ng-template>

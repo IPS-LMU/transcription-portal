@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject }
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-url-mode-modal',
@@ -9,6 +10,7 @@ import { interval } from 'rxjs';
   styleUrls: ['./url-mode-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  imports: [TranslocoPipe],
 })
 export class UrlModeModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);

@@ -1,4 +1,4 @@
-import { DatePipe, NgClass, NgStyle } from '@angular/common';
+import { DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -48,6 +48,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-main',
@@ -71,6 +72,8 @@ import { StorageService } from '../../storage.service';
     NgbNavModule,
     NgbPopover,
     DatePipe,
+    TranslocoPipe,
+    UpperCasePipe,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy, OnInit {

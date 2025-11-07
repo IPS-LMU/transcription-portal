@@ -1,7 +1,7 @@
 @if (convertedArray.length > 0) {
   <div class="border">
     <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
-      <div class="col-sm text-light" style="font-size: 0.9rem">Result and Conversions</div>
+      <div class="col-sm text-light" style="font-size: 0.9rem">{{"popovers.results.result and conversions" | transloco}}</div>
       <div class="col-auto">
         <select
           class="form-select form-select-sm pointer"
@@ -14,7 +14,7 @@
               @if ($index > 0) {
                 v{{ elem.number + 1 }}
               } @else {
-                latest (v{{ elem.number + 1 }})
+                {{"g.latest" | transloco}} (v{{ elem.number + 1 }})
               }
             </option>
           }

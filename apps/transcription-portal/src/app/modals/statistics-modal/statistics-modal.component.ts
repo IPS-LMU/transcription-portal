@@ -7,13 +7,14 @@ import { BaseChartDirective } from 'ng2-charts';
 import { timer } from 'rxjs';
 import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
   providers: [StatisticsService],
-  imports: [NgCircleProgressModule, BaseChartDirective],
+  imports: [NgCircleProgressModule, BaseChartDirective, TranslocoPipe],
 })
 export class StatisticsModalComponent extends SubscriberComponent implements OnDestroy, AfterViewInit {
   statisticsService = inject(StatisticsService);

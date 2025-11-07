@@ -1,4 +1,4 @@
-import { NgStyle } from '@angular/common';
+import { NgStyle, UpperCasePipe } from '@angular/common';
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -13,12 +13,13 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-download-modal',
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
-  imports: [FormsModule, NgStyle],
+  imports: [FormsModule, NgStyle, TranslocoPipe, UpperCasePipe],
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
   private taskService = inject(TaskService);

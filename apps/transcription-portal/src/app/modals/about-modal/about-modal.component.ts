@@ -2,13 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { OctraAPIService } from '@octra/ngx-octra-api';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-about-modal',
   templateUrl: './about-modal.component.html',
   styleUrls: ['./about-modal.component.css'],
   standalone: true,
-  imports: [],
+  imports: [TranslocoPipe],
 })
 export class AboutModalComponent implements OnInit {
   bsModalRef = inject(NgbActiveModal);

@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Preview: {{ fileName }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.preview.title' | transloco: { fileName: fileName } }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
@@ -16,5 +16,5 @@
   }
 </div>
 <div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
-  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self"> DOWNLOAD </a>
+  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self"> {{ 'g.download' | transloco | uppercase }} </a>
 </div>

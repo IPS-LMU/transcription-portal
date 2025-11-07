@@ -1,11 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Operation } from '../../../obj/operations/operation';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-context-menu',
   templateUrl: './context-menu.component.html',
   styleUrls: ['./context-menu.component.scss'],
   standalone: true,
+  imports: [TranslocoPipe],
 })
 export class ContextMenuComponent {
   @Input() selectedTasks: number[] = [];
@@ -17,7 +19,6 @@ export class ContextMenuComponent {
   public get entriesCount(): number {
     return this.selectedTasks.length;
   }
-
 
   onAction(action: string) {
     this.optionselected.emit(action);

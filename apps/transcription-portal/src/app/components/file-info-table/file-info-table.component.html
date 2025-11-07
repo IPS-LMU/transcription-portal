@@ -2,28 +2,28 @@
   <table class="table table-responsive-md table-striped">
     <tbody>
       <tr>
-        <td>Original filename:</td>
+        <td>{{ 'popovers.file info.original filename' | transloco }}:</td>
         <td>{{ fileinfo.attributes.originalFileName }}</td>
       </tr>
       <tr>
-        <td>Escaped filename:</td>
+        <td>{{ 'popovers.file info.escaped filename' | transloco }}:</td>
         <td>{{ fileinfo.fullname }}</td>
       </tr>
       <tr>
-        <td>Type:</td>
+        <td>{{ 'popovers.file info.type' | transloco }}:</td>
         <td>{{ fileinfo.type }}</td>
       </tr>
       <tr>
-        <td>Size:</td>
+        <td>{{ 'popovers.file info.size' | transloco }}:</td>
         <td>{{ fileinfo.size | filesize }}</td>
       </tr>
       @if (isWavFile()) {
         <tr>
-          <td>Sampling rate:</td>
+          <td>{{ 'popovers.file info.sampling rate' | transloco }}:</td>
           <td>{{ fileinfo.sampleRate }}</td>
         </tr>
         <tr>
-          <td>Bits per Second:</td>
+          <td>{{ 'popovers.file info.bits per seconds' | transloco }}:</td>
           <td>{{ fileinfo.bitrate }}</td>
         </tr>
         <tr>
@@ -32,7 +32,7 @@
               red: fileinfo.channels > 1,
             }"
           >
-            Channels:
+            {{ 'popovers.file info.channels' | transloco }}:
           </td>
           <td
             [ngClass]="{
@@ -43,7 +43,7 @@
           </td>
         </tr>
         <tr>
-          <td>Duration:</td>
+          <td>{{ 'popovers.file info.duration' | transloco }}:</td>
           <td>{{ fileinfo.duration.unix | time }}</td>
         </tr>
       }

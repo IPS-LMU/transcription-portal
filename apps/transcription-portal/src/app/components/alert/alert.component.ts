@@ -5,6 +5,7 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';
@@ -19,7 +20,7 @@ export interface AlertEntry {
   templateUrl: './alert.component.html',
   styleUrls: ['./alert.component.scss'],
   animations: ANIMATIONS,
-  imports: [NgStyle, NgbAlert],
+  imports: [NgStyle, NgbAlert, TranslocoPipe],
 })
 export class AlertComponent extends SubscriberComponent {
   private alert = inject(AlertService);

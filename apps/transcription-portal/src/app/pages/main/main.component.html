@@ -23,19 +23,19 @@
           <ng-template #versionPopover>
             <div id="build-information">
               <div>
-                <div class="fw-bold">Version:</div>
+                <div class="fw-bold">{{ 'g.version' | transloco }}:</div>
                 <div>
                   {{ AppInfo.BUILD.version }}
                 </div>
               </div>
               <div>
-                <div class="fw-bold">Last updated:</div>
+                <div class="fw-bold">{{ 'g.last updated' | transloco }}:</div>
                 <div>
                   {{ AppInfo.BUILD.timestamp | date: 'dd.MM.yyyy H:mm z' }}
                 </div>
               </div>
               <div>
-                <div class="fw-bold">Hash:</div>
+                <div class="fw-bold">{{ 'g.hash' | transloco }}:</div>
                 <div style="font-size: 0.7rem">
                   {{ AppInfo.BUILD.hash }}
                 </div>
@@ -52,14 +52,18 @@
                 {{ taskService.statistics.overall.queued }}
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
-              <ng-template #queuedTipp>{{ taskService.statistics.overall.queued }} audio files are waiting for verification. </ng-template>
+              <ng-template #queuedTipp>
+                <div [innerHTML]="'status bar.queued' | transloco: { queued: taskService.statistics.overall.queued }"></div>
+              </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.waiting }}
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
-              <ng-template #waitingTipp>{{ taskService.statistics.overall.waiting }} tasks are waiting for processing. </ng-template>
+              <ng-template #waitingTipp>
+                <div [innerHTML]="'status bar.waiting' | transloco: { queued: taskService.statistics.overall.waiting }"></div>
+              </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
@@ -72,22 +76,26 @@
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
-              <ng-template #runningTipp>{{ taskService.statistics.overall.running }} tasks are running. </ng-template>
+              <ng-template #runningTipp>
+                <div [innerHTML]="'status bar.running' | transloco: { queued: taskService.statistics.overall.running }"></div>
+              </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.finished }}
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
-              <ng-template #finishedTipp>{{ taskService.statistics.overall.finished }} tasks are finished. </ng-template>
+              <ng-template #finishedTipp>
+                <div [innerHTML]="'status bar.finished' | transloco: { queued: taskService.statistics.overall.finished }"></div>
+              </ng-template>
             </div>
             <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.errors }}
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
-              <ng-template #errorsTipp
-                >{{ taskService.statistics.overall.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
+              <ng-template #errorsTipp>
+                <div [innerHTML]="'status bar.errors' | transloco: { queued: taskService.statistics.overall.errors }"></div>
               </ng-template>
             </div>
           </li>
@@ -103,7 +111,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-info-circle" style="color: purple"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">About</span></a
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.about' | transloco }}</span></a
             >
           </li>
           <li class="nav-item active">
@@ -114,8 +122,8 @@
               ngbPopover="Help"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-question-circle" style="color: cornflowerblue"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Help</span></a
+              ><i class="bi bi-book" style="color: cornflowerblue"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide' | transloco }}</span></a
             >
           </li>
           @if (settingsService.feedbackEnabled) {
@@ -128,7 +136,9 @@
                     red: bugService.hasErrors,
                   }"
                 ></i
-                ><span style="cursor: pointer"> <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Feedback</span></span>
+                ><span style="cursor: pointer">
+                  <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.feedback' | transloco }}</span></span
+                >
               </a>
             </li>
           }
@@ -140,7 +150,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-bar-chart-line" style="color: #ff6a00"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Statistics</span></span
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.statistics' | transloco }}</span></span
             >
           </li>
           <li class="nav-item active">
@@ -161,7 +171,7 @@
                 class="bi"
                 style="cursor: pointer"
               ></i
-              ><span class="d-lg-none d-xl-inline-block ms-1">Notifications</span>
+              ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.notifications' | transloco }}</span>
             </a>
           </li>
           <li class="nav-item active">
@@ -175,15 +185,17 @@
                 triggers="mouseenter:mouseleave"
               >
                 <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
-                ><span class="d-lg-none d-xl-inline-block ms-1">Settings</span>
+                ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.settings' | transloco }}</span>
               </div>
               <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
                 <div class="list-group">
                   <div class="list-group-item border-0">
-                    <div class="divider-text"><span class="text-secondary">ASR</span></div>
+                    <div class="divider-text">
+                      <span class="text-secondary">{{ 'g.asr' | transloco }}</span>
+                    </div>
                   </div>
                   <div class="list-group-item border-0 d-flex flex-column flex-auto">
-                    <div style="font-size: 0.9em"><i class="bi bi-key"></i> Access Code (for Google ASR only):</div>
+                    <div style="font-size: 0.9em"><i class="bi bi-key"></i> {{ 'settings.access code' | transloco }}:</div>
                     <div class="input-group" id="accessCodeGroup">
                       <form class="d-flex flex-auto">
                         <input
@@ -209,20 +221,25 @@
                     </div>
                   </div>
                   <div class="list-group-item border-0">
-                    <div class="divider-text"><span class="text-secondary">User interface</span></div>
+                    <div class="divider-text">
+                      <span class="text-secondary">{{ 'g.user interface' | transloco }}</span>
+                    </div>
                   </div>
                   <div class="list-group-item border-0 pointer" (click)="resetSideBarWidth()">
-                    <i class="bi bi-layout-sidebar-inset me-1"></i> <span style="cursor: pointer">Reset sidebar width</span>
+                    <i class="bi bi-layout-sidebar-inset me-1"></i>
+                    <span style="cursor: pointer">{{ 'settings.reset sidebar width' | transloco }}</span>
                   </div>
                   <div class="list-group-item border-0">
-                    <div class="divider-text my-2"><span class="text-secondary">Local Database</span></div>
+                    <div class="divider-text my-2">
+                      <span class="text-secondary">{{ 'g.local database' | transloco }}</span>
+                    </div>
                   </div>
                   <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
-                    <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> Backup Database
+                    <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> {{ 'settings.backup database' | transloco }}
                     @if (dbBackup.safeURL) {
                       <p>
                         <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"
-                          ><i class="bi bi-cloud-download-fill"></i> Download</a
+                          ><i class="bi bi-cloud-download-fill"></i> {{ 'g.download' | transloco }}</a
                         >
                       </p>
                     }
@@ -230,12 +247,12 @@
                   <div class="list-group-item border-0 pointer">
                     <input type="file" class="d-none" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
                     <div class="w-100" (click)="restoreInput.click()">
-                      <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> Restore Database
+                      <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> {{ 'settings.restore database' | transloco }}
                     </div>
                   </div>
                   <div class="list-group-item border-0 pointer" (click)="onClearClick()">
                     <i class="bi bi-eraser me-1" style="color: red"></i>
-                    <span style="cursor: pointer; color: red">Clear all data</span>
+                    <span style="cursor: pointer; color: red">{{ 'settings.clear all data' | transloco }}</span>
                   </div>
                 </div>
               </div>
@@ -257,7 +274,15 @@
     }"
   >
     <li [ngbNavItem]="1">
-      <button ngbNavLink (mousedown)="changeMode('annotation')">Annotation</button>
+      <button
+        ngbNavLink
+        (mousedown)="changeMode('annotation')"
+        [ngbTooltip]="'modes.annotation.description' | transloco"
+        [placement]="'bottom-end'"
+        [container]="'body'"
+      >
+        {{ 'modes.annotation.name' | transloco }}
+      </button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
         @if (settingsService.allLoaded && taskService.state.modes.annotation.taskList !== undefined) {
           <tportal-proceedings
@@ -278,7 +303,15 @@
       </ng-template>
     </li>
     <li [ngbNavItem]="2">
-      <button ngbNavLink (mousedown)="changeMode('summarization')">Summarization &amp; Translation</button>
+      <button
+        ngbNavLink
+        (mousedown)="changeMode('summarization')"
+        [ngbTooltip]="'modes.summarization and translation.description' | transloco"
+        [placement]="'bottom-end'"
+        [container]="'body'"
+      >
+        {{ 'modes.summarization and translation.name' | transloco }}
+      </button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
         @if (settingsService.allLoaded && taskService.state.modes.summarization.taskList !== undefined) {
           <tportal-proceedings
@@ -304,7 +337,7 @@
     <div class="row proceedings-header" style="padding-top: 0">
       <div class="col-4" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-          <i class="bi bi-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. ADD FILES</span>
+          <i class="bi bi-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. {{ 'buttons.add files' | transloco | uppercase }}</span>
         </button>
         <!-- webkitdirectory directory multiple -->
         <input #fileinput (change)="onFileChange(fileinput)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
@@ -315,7 +348,7 @@
           style="margin-left: 10px"
         >
           <i class="bi bi-clipboard-check-fill"></i>
-          <span class="d-none d-lg-inline d-xl-inline"> 2. CHECK OPTIONS</span>
+          <span class="d-none d-lg-inline d-xl-inline"> 2. {{ 'buttons.check options' | transloco | uppercase }}</span>
           @if (taskService.currentModeStatistics.queued > 0) {
             ({{ taskService.currentModeStatistics.queued }})
           }
@@ -338,10 +371,10 @@
           ></i
           ><span class="d-none d-lg-inline d-xl-inline">
             @if (!taskService.isProcessing) {
-              3. START PROCESSING
+              3. {{ 'buttons.start processing' | transloco | uppercase }}
             }
             @if (taskService.isProcessing) {
-              3. STOP PROCESSING
+              3. {{ 'buttons.stop processing' | transloco | uppercase }}
             }
           </span>
         </button>

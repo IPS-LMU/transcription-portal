@@ -1,17 +1,22 @@
 <div class="modal-header">
-  <h4 class="modal-title pull-left">About the TranscriptionPortal</h4>
+  <h4 class="modal-title pull-left">{{ 'modals.about.title' | transloco }}</h4>
   <button type="button" class="btn-close close pull-right" aria-label="Close" (click)="bsModalRef.close()">
     <span aria-hidden="true" class="visually-hidden">&times;</span>
   </button>
 </div>
 <div class="modal-body">
-  <p style="text-align: justify;">
-    The TranscriptionPortal is a web-application for processing audio files using automatic and manual tools combined in one workflow ("transcription chain"). Users can select the desired mode:
-    "Annotation" or "Translation & Summarization" for specific workflows. In Annotation mode they are able to process their audio files using ASR,
-    Manual Transcription (<a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/" target="_blank">OCTRA</a>), Word Alignment and Phonetic Detail (<a href="https://ips-lmu.github.io/EMU.html" target="_blank">Emu-webApp</a>). If users prefer to automatically summarize and translate transcripts using AI they are able to use the
-    "Summarization an Translation" mode.
-  </p>
-  <h5 class="mt-5 pt-0">Affiliations</h5>
+  <p
+    style="text-align: justify"
+    [innerHTML]="
+      'modals.about.summary'
+        | transloco
+          : {
+              Octra: '<a href=\'https:\/\/clarin.phonetik.uni-muenchen.de/apps/octra/octra/\' target=\'_blank\'>OCTRA</a>',
+              EmuWebApp: '<a href=\'https:\/\/ips-lmu.github.io/EMU.html\' target=\'_blank\'>Emu-webApp</a>',
+            }
+    "
+  ></p>
+  <h5 class="mt-5 pt-0">{{ 'g.affiliations' | transloco }}</h5>
   <div #logos class="align-items-center">
     <a href="http://www.en.phonetik.uni-muenchen.de/" target="_blank" class="d-inline-block"
       ><img src="assets/img/ipsx60.png" style="height: 60px"
@@ -22,18 +27,18 @@
     <a href="https://text-plus.org/" target="_blank" class="d-inline-block ms-3"><img src="assets/img/Text+Logo.png" style="height: 60px" /></a>
     <a href="https://atrium-research.eu/" target="_blank" class="d-inline-block ms-3"><img src="assets/img/AtriumLogo.png" style="height: 60px" /></a>
   </div>
-  <h5 class="mt-5">Development Team</h5>
+  <h5 class="mt-5">{{ 'g.development team' | transloco }}</h5>
   <table>
     <tbody>
       <tr>
-        <td class="pr-1">Project Manager:</td>
+        <td class="pr-1">{{ 'g.project manager' | transloco }}:</td>
         <td>
           Christoph Draxler
           <a href="https://www.en.phonetik.uni-muenchen.de/people/staff/draxler_christoph/index.html" target="_blank">(IPS, LMU München)</a>
         </td>
       </tr>
       <tr>
-        <td class="pr-1">Web Developer:</td>
+        <td class="pr-1">{{ 'g.web developer' | transloco }}r:</td>
         <td>
           Julian Pömp
           <a href="https://www.en.phonetik.uni-muenchen.de/people/staff/poemp_julian/index.html" target="_blank">(IPS, LMU München)</a>
@@ -41,23 +46,29 @@
       </tr>
     </tbody>
   </table>
-  <h5 class="mt-4">Open Source</h5>
-  The code of this project is available on
-  <a href="https://github.com/IPS-LMU/transcription-portal" target="_blank"><i class="bi bi-github"></i> Github</a>.
 
-  <h5 class="mt-4">Literature</h5>
+  <h5 class="mt-4">{{ 'g.open source' | transloco }}</h5>
+  <p
+    [innerHTML]="
+      'modals.about.github'
+        | transloco
+          : { GitHub: '<a href=\'https:\/\/github.com/IPS-LMU/transcription-portal\' target=\'_blank\'><i class=\'bi bi-github\'></i> GitHub</a>' }
+    "
+  ></p>
+
+  <h5 class="mt-4">{{ 'g.literature' | transloco }}</h5>
   <ul class="list-group" style="margin-left: 0">
     @for (item of literature; track item.name) {
       <li class="list-group-item">
         [{{ item.year }}] {{ item.title }}
         <a [href]="item.url" class="btn btn-outline-secondary btn-sm py-0 px-1 me-2" target="_blank"
-          >Download PDF <i class="bi bi-file-pdf-fill text-danger"></i
+          >{{ 'p.download pdf' | transloco }} <i class="bi bi-file-pdf-fill text-danger"></i
         ></a>
-        <a [href]="item.safeURL" target="_blank" class="btn btn-outline-secondary btn-sm py-0 px-1 me-2">Cite [.bib]</a>
+        <a [href]="item.safeURL" target="_blank" class="btn btn-outline-secondary btn-sm py-0 px-1 me-2">{{ 'g.cite' | transloco }} [.bib]</a>
       </li>
     }
   </ul>
 </div>
 <div class="modal-footer text-end">
-  <button type="button" class="btn btn-primary" (click)="bsModalRef.close()">Close</button>
+  <button type="button" class="btn btn-primary" (click)="bsModalRef.close()">{{ 'g.close' | transloco }}</button>
 </div>

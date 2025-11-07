@@ -6,12 +6,14 @@ import { FileInfo } from '@octra/web-media';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { UpperCasePipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
-  imports: [NgxCodeJarComponent],
+  imports: [NgxCodeJarComponent, TranslocoPipe, UpperCasePipe],
 })
 export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);
@@ -28,7 +30,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
   };
 
   get fileName(): string {
-    return this.selectedFile?.attributes?.originalFileName ?? this.selectedFile?.fullname ?? "NO NAME";
+    return this.selectedFile?.attributes?.originalFileName ?? this.selectedFile?.fullname ?? 'NO NAME';
   }
 
   ngOnInit() {
