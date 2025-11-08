@@ -1,3 +1,4 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
@@ -9,9 +10,9 @@ export interface ASROperationOptions {
   };
 }
 
-export class ASROperation extends StoreTaskOperation<ASROperationOptions>{}
+export class ASROperation extends StoreTaskOperation<ASROperationOptions> {}
 
-export class ASROperationFactory extends OperationFactory<ASROperation> {
+export class ASROperationFactory extends OperationFactory<ASROperation, ASROperationOptions> {
   protected readonly _description =
     'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
     'The result of this process is a text file with a literal transcription of the audio file. \n' +
@@ -29,6 +30,16 @@ export class ASROperationFactory extends OperationFactory<ASROperation> {
       options: {},
       rounds,
       taskID,
+    });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: ASROperation) {
+    return new ASROperation({
+      ...operation,
+      options: {
+        language: options.asr?.language,
+        diarization: options.asr?.diarization,
+      },
     });
   }
 }

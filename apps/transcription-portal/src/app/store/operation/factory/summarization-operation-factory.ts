@@ -1,16 +1,17 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
 export interface SummarizationOperationOptions {
   language?: string;
   maxNumberOfWords?: number;
+  provider?: string;
 }
 
-export class SummarizationOperation extends StoreTaskOperation<SummarizationOperationOptions>{}
+export class SummarizationOperation extends StoreTaskOperation<SummarizationOperationOptions> {}
 
-export class SummarizationOperationFactory extends OperationFactory<SummarizationOperation> {
-  protected readonly _description =
-    'Summarizes a given full text.';
+export class SummarizationOperationFactory extends OperationFactory<SummarizationOperation, SummarizationOperationOptions> {
+  protected readonly _description = 'Summarizes a given full text.';
   protected readonly _name = 'Summarization';
   protected readonly _resultType = 'Text';
   protected readonly _shortTitle = 'SUM';
@@ -24,6 +25,17 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
       options: {},
       rounds,
       taskID,
+    });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: SummarizationOperation): SummarizationOperation {
+    return new SummarizationOperation({
+      ...operation,
+      options: {
+        language: options.asr?.language,
+        maxNumberOfWords: options.summarization?.numberOfWords,
+        provider: options.summarization?.provider?.provider,
+      },
     });
   }
 }

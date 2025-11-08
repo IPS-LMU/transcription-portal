@@ -1,9 +1,8 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
-export class OctraOperation extends StoreTaskOperation<any> {
-
-}
+export class OctraOperation extends StoreTaskOperation<any> {}
 
 export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _description =
@@ -24,5 +23,10 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
       rounds,
       taskID,
     });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: OctraOperation) {
+    // no options to apply
+    return operation;
   }
 }

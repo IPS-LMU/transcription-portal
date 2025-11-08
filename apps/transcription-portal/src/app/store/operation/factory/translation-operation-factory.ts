@@ -1,14 +1,14 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
 export interface TranslationOperationOptions {
   language?: string;
-  maxNumberOfWords?: number;
 }
 
-export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions>{}
+export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions> {}
 
-export class TranslationOperationFactory extends OperationFactory<TranslationOperation> {
+export class TranslationOperationFactory extends OperationFactory<TranslationOperation, TranslationOperationOptions> {
   protected readonly _description = 'Summarizes a given full text.';
   protected readonly _name = 'Translation';
   protected readonly _resultType = 'Text';
@@ -23,6 +23,15 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       options: {},
       rounds,
       taskID,
+    });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: TranslationOperation): TranslationOperation {
+    return new TranslationOperation({
+      ...operation,
+      options: {
+        language: options.translation?.language,
+      },
     });
   }
 }

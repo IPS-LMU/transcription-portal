@@ -787,13 +787,13 @@ export class TaskService {
     }
   }
 
-  public cleanUpInputArray(entries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[]): {
+  public cleanUpInputArray(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]): {
     unsupportedFiles: IFile[];
-    filteredEntries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[];
+    filteredEntries: (TPortalFileInfo  | TPortalDirectoryInfo)[];
   } {
     const result: {
       unsupportedFiles: IFile[];
-      filteredEntries: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[];
+      filteredEntries: (TPortalFileInfo | TPortalDirectoryInfo)[];
     } = {
       unsupportedFiles: [],
       filteredEntries: [],

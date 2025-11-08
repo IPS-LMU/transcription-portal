@@ -7,6 +7,7 @@ export enum ProcessingQueueStatus {
   PROCESSING = 'PROCESSING',
   FINISHED = 'FINISHED',
   REMOVED = 'REMOVED',
+  WAIT_FOR_SPLIT = 'WAIT_FOR_SPLIT',
   ERROR = 'ERROR',
 }
 

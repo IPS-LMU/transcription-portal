@@ -1,4 +1,5 @@
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { AppInfo } from '../../app.info';
 
 export function getIndexByEntry(selectedEntry: StoreItem, entities: StoreItem[]): number {
   let result = -1;

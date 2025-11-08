@@ -1,5 +1,6 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import { StoreItemTaskOptions } from '../../store-item';
 
 export class EmuOperation extends StoreTaskOperation<any>{}
 
@@ -22,5 +23,9 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
       rounds,
       taskID,
     });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: EmuOperation): EmuOperation {
+    return operation;
   }
 }

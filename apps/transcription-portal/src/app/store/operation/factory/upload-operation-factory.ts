@@ -1,7 +1,8 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import { StoreItemTaskOptions } from '../../store-item';
 
-export class UploadOperation extends StoreTaskOperation<any>{}
+export class UploadOperation extends StoreTaskOperation<any> {}
 
 export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _description =
@@ -13,14 +14,19 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _shortTitle = 'UL';
   protected readonly _title = 'Upload';
 
-  create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): UploadOperation {
+  create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[], options: any = {}): UploadOperation {
     return new UploadOperation({
       enabled: true,
       id,
       name: '',
-      options: {},
+      options,
       rounds,
       taskID,
     });
+  }
+
+  override applyTaskOptions(options: StoreItemTaskOptions, operation: UploadOperation) {
+    // no options to apply
+    return operation;
   }
 }

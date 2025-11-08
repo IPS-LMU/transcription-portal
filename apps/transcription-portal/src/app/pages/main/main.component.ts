@@ -39,7 +39,7 @@ import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo } from '../../o
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
-import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
+import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
@@ -638,18 +638,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
-    if (entries && this.taskService.state.currentModeState.operations) {
-      // filter and re-structure entries array to supported files and directories
-      const { filteredEntries, unsupportedFiles } = this.taskService.cleanUpInputArray(entries);
-      this.preprocessingStoreService.addToQueue(filteredEntries);
-
-      if (unsupportedFiles.length > 0) {
-        this.alertService.showAlert(
-          'warning',
-          `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only WAVE audio files and transcript formats are supported.`,
-        );
-      }
-    }
+    this.preprocessingStoreService.addToQueue(entries);
   }
 
   private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {

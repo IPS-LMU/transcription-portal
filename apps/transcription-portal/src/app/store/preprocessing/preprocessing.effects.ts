@@ -1,24 +1,161 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { exhaustMap, withLatestFrom } from 'rxjs';
-import { PreprocessingActions } from './preprocessing.actions';
+import { IFile } from '@octra/annotation';
+import { DirectoryInfo, FileInfo } from '@octra/web-media';
+import { catchError, exhaustMap, from, map, mergeMap, of, tap, withLatestFrom } from 'rxjs';
+import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { TPortalModes } from '../mode';
+import { PreprocessingActions } from './preprocessing.actions';
+import { cleanUpInputArray, processFileOrDirectoryInfo } from './preprocessing.functions';
+import { ProcessingQueueStatus } from './preprocessing.state';
 
 @Injectable()
 export class PreprocessingEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
+  private alertService = inject(AlertService);
 
-  itemAdded$ = createEffect(() =>
+  itemsAdded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.addToQueue.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ infoItems }, state]: [{ infoItems: (FileInfo | DirectoryInfo<any>)[] }, RootState]) =>
+        of(
+          PreprocessingActions.addToQueue.filter({
+            mode: state.modes.currentMode,
+            infoItems,
+          }),
+        ),
+      ),
+    ),
+  );
+
+  itemsFiltered$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.addToQueue.filter),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, infoItems }]: [{ infoItems: (FileInfo | DirectoryInfo<any>)[]; mode: TPortalModes }, RootState]) => {
+        const result = cleanUpInputArray(infoItems);
+        return of(
+          PreprocessingActions.addToQueue.checkFiltered({
+            unsupportedFiles: result.unsupportedFiles,
+            filteredItems: result.filteredItems.map((a) =>
+              a.type === 'folder'
+                ? new TPortalDirectoryInfo((a as DirectoryInfo<any>).path, (a as DirectoryInfo<any>).size)
+                : new TPortalFileInfo(
+                    (a as FileInfo).fullname,
+                    (a as FileInfo).type,
+                    (a as FileInfo).size,
+                    (a as FileInfo).file,
+                    (a as FileInfo).createdAt,
+                  ),
+            ),
+            mode,
+          }),
+        );
+      }),
+    ),
+  );
+
+  filteredItemsAdded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.addToQueue.checkFiltered),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode }]: [{ mode: TPortalModes }, RootState]) => of(PreprocessingActions.processQueueItem.next({ mode }))),
+    ),
+  );
+
+  unsupportedItemsAdded$ = createEffect(
+    () =>
       this.actions$.pipe(
-        ofType(PreprocessingActions.addToQueue.do),
+        ofType(PreprocessingActions.addToQueue.checkFiltered),
         withLatestFrom(this.store),
-        exhaustMap(([{mode}, state]: [{mode: TPortalModes}, RootState]) => {
+        tap(([{ unsupportedFiles }]: [{ unsupportedFiles: IFile[] }, RootState]) => {
+          if (unsupportedFiles.length > 0) {
+            this.alertService.showAlert(
+              'warning',
+              `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only WAVE audio files and transcript formats are supported.`,
+            );
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  processNextItems$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(PreprocessingActions.processQueueItem.next),
+        withLatestFrom(this.store),
+        tap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
           const preprocessingState = state.modes.entities[mode]!.preprocessor;
-          const runnintQueueItems = preprocessingState.ids.map(a => preprocessingState.entities[a])
-        })
-      )
+          const queueItems = preprocessingState.ids.map((a) => preprocessingState.entities[a]).filter((a) => a !== undefined);
+          const runningQueueItems = queueItems.filter((a) => a.status === ProcessingQueueStatus.PROCESSING);
+
+          if (runningQueueItems.length === 0) {
+            const nextPendingItem = queueItems.find((a) => a?.status === ProcessingQueueStatus.PENDING);
+
+            if (nextPendingItem) {
+              // run next item
+              this.store.dispatch(
+                PreprocessingActions.processQueueItem.do({
+                  id: nextPendingItem.id,
+                  mode,
+                }),
+              );
+            }
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  processItem$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.processQueueItem.do),
+      withLatestFrom(this.store),
+      mergeMap(([{ mode, id }, state]: [{ mode: TPortalModes; id: number }, RootState]) => {
+        const preprocessingState = state.modes.entities[mode]!.preprocessor;
+        const item = preprocessingState.entities[id];
+
+        if (item) {
+          return from(processFileOrDirectoryInfo(item.infoItem, '', item, state.modes.entities[mode]!)).pipe(
+            map((results) =>
+              PreprocessingActions.processQueueItem.success({
+                id,
+                results,
+                mode,
+              }),
+            ),
+            catchError((err) => {
+              return of(
+                PreprocessingActions.processQueueItem.fail({
+                  error: typeof err === 'string' ? err : err.message,
+                }),
+              );
+            }),
+          );
+        } else {
+          return of(
+            PreprocessingActions.processQueueItem.fail({
+              error: `Can't process queue item with id ${id}: Not found.`,
+            }),
+          );
+        }
+      }),
+    ),
+  );
+
+  itemProcessed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.processQueueItem.success),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+        return of(PreprocessingActions.processQueueItem.next({ mode }));
+      }),
+    ),
   );
 }

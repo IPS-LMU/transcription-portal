@@ -12,7 +12,7 @@ export class PreprocessingStoreService {
   store: Store<RootState> = inject(Store);
   preprocessingQueue$: Observable<PreprocessingQueueItem[]> = this.store.select(selectPreprocessingQueue);
 
-  addToQueue(infoItems: (TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo)[]) {
+  addToQueue(infoItems: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     this.store.dispatch(
       PreprocessingActions.addToQueue.do({
         infoItems,

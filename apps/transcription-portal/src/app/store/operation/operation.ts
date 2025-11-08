@@ -2,6 +2,7 @@ import { last } from '@octra/utilities';
 import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { ServiceProvider } from '@octra/ngx-components';
 
 export class StoreTaskOperation<T extends object = any> {
   id!: number;

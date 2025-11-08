@@ -1,6 +1,7 @@
 import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { StoreTaskOperation } from '../operation';
 import { StoreItemsState } from './store-items-state';
+import { ServiceProvider } from '@octra/ngx-components';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -12,6 +13,27 @@ export enum TaskStatus {
   SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
   ERROR = 'ERROR',
+}
+
+export interface StoreItemTaskOptions {
+  asr?: {
+    language?: string;
+    provider?: ServiceProvider;
+    diarization?: {
+      enabled?: boolean;
+      speakers?: number;
+    };
+  };
+  maus?: {
+    language?: string;
+  };
+  summarization?: {
+    provider?: ServiceProvider;
+    numberOfWords?: number;
+  };
+  translation?: {
+    language?: string;
+  };
 }
 
 export interface StoreItem {
@@ -41,7 +63,7 @@ export interface StoreItemTaskDirectory extends Omit<StoreItem, 'stopRequested' 
 }
 
 export interface StoreItemTask extends Omit<StoreItem, 'path' | 'size' | 'folderName' | 'entries'> {
-  stopRequested: boolean;
+  stopRequested?: boolean;
   files: (TPortalFileInfo | TPortalAudioInfo)[];
   operations: StoreTaskOperation[];
   directoryID?: number;
