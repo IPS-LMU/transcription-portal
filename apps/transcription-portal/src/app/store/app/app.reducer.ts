@@ -1,9 +1,11 @@
 import { createReducer, on } from '@ngrx/store';
 import { OHConfiguration, ProviderLanguage } from '../../obj/oh-config';
-import { ExternalInformationActions, ExternalInformationState } from '../external-information';
-import { IDBActions } from '../idb';
-import { ModeActions, ModeState } from '../mode';
+import { ExternalInformationState } from '../external-information';
+import { IDBActions } from '../idb/idb.actions';
+import { ModeActions } from '../mode/mode.actions';
 import { AppActions } from './app.actions';
+import { ExternalInformationActions } from '../external-information/external-information.actions';
+import { ModeState } from '../mode';
 
 export interface AppState {
   versionCheckerStarted: boolean;

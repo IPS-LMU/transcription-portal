@@ -2,7 +2,7 @@ import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { IDBUserDefaultSettingsItem } from '../../indexedDB';
 import { AppSettings } from '../../shared/app.settings';
-import { IDBActions } from '../idb';
+import { IDBActions } from '../idb/idb.actions';
 import {
   ASROperationFactory,
   EmuOperationFactory,

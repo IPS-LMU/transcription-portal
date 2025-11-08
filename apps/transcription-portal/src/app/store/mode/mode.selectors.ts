@@ -4,7 +4,9 @@ import { RootState } from '../app';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { Mode } from './mode.state';
 
-export const selectCurrentMode = (state: RootState): Mode<any> | undefined => state.modes.entities[state.modes.currentMode];
+export const selectCurrentMode = (state: RootState): Mode<any> | undefined => {
+  return state.modes.entities[state.modes.currentMode];
+};
 export const selectDefaultOperations = createSelector(selectCurrentMode, (mode) => mode?.defaultOperations);
 export const selectCurrentModeEntries = createSelector(selectCurrentMode, (mode): StoreItem[] =>
   Object.keys(mode?.items?.entities ?? []).map((a) => mode!.items!.entities[a]!),

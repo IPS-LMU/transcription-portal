@@ -8,7 +8,8 @@ import { catchError, exhaustMap, forkJoin, map, Observable, of, retry, tap, with
 import * as X2JS from 'x2js';
 import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
-import { AppActions, RootState } from '../app';
+import { RootState } from '../app';
+import { AppActions } from '../app/app.actions';
 import { ASRInfo, ExternalInformationActions } from './external-information.actions';
 
 @Injectable()

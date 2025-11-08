@@ -42,6 +42,9 @@ import {
   ModeStoreService,
   OperationFactory,
   PreprocessingQueueItem,
+  StoreAudioFile,
+  StoreFile,
+  StoreFileDirectory,
   StoreItem,
   StoreItemTask,
   StoreItemTaskDirectory,
@@ -946,9 +949,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return false;
   }
 
-  public getDirEntriesFromItem(entry: PreprocessingQueueItem): TPortalFileInfo[] {
+  public getDirEntriesFromItem(entry: PreprocessingQueueItem): (StoreFile | StoreAudioFile)[] {
     if (entry.infoItem?.type === 'folder') {
-      return (entry.infoItem as TPortalDirectoryInfo).entries as TPortalFileInfo[];
+      return (entry.infoItem as StoreFileDirectory).entries as (StoreFile | StoreAudioFile)[];
     }
     return [];
   }

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { ExternalInformationActions } from '../external-information';
+import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { AppActions } from './app.actions';
 import { RootState } from './app.reducer';
 import { selectAppInitialized } from './app.selectors';

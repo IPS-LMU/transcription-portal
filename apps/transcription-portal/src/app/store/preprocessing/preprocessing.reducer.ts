@@ -1,7 +1,7 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
-import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { Mode, ModeState } from '../mode';
+import { StoreItemActions } from '../store-item/store-item.actions';
 import { PreprocessingActions } from './preprocessing.actions';
 import { PreprocessingQueueItem, ProcessingQueueStatus } from './preprocessing.state';
 
@@ -35,28 +35,13 @@ export const getPreprocessingReducers = (
       },
     ),
   ),
-  on(PreprocessingActions.processQueueItem.success, (state: ModeState, { mode, id, results }) =>
+  on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode, id }) =>
     // queue item successfully processed, set status to finished
     modeAdapter.updateOne(
       {
         id: mode,
         changes: {
-          preprocessor: preprocessingAdapter.updateOne(
-            {
-              id,
-              changes: {
-                status: results.find((a) => a.type !== 'folder' && (a as TPortalFileInfo).isMediaFile() && (a as TPortalAudioInfo).channels > 1)
-                  ? ProcessingQueueStatus.WAIT_FOR_SPLIT
-                  : ProcessingQueueStatus.FINISHED,
-                results,
-                infoItem: {
-                  ...state.entities[mode]!.preprocessor.entities[id]!.infoItem,
-                  blob: undefined, // remove info item so save memory
-                },
-              },
-            },
-            state.entities[mode]!.preprocessor,
-          ),
+          preprocessor: preprocessingAdapter.removeOne(id, state.entities[mode]!.preprocessor),
         },
       },
       state,

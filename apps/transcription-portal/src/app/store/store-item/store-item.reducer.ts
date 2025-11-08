@@ -3,7 +3,7 @@ import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { Mode, ModeState } from '../mode';
 import { StoreItem } from './store-item';
 import { StoreItemActions } from './store-item.actions';
-import { convertIDBTaskToStoreTask } from './store-item.functions';
+import { convertIDBTaskToStoreTask, updateTaskFilesWithSameFile } from './store-item.functions';
 
 export const getTaskReducers = (
   modeAdapter: EntityAdapter<Mode<any>>,
@@ -63,6 +63,34 @@ export const getTaskReducers = (
   }),
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
+  }),
+  on(StoreItemActions.importItemsFromProcessingQueue.do, (state: ModeState, { id, results, mode }) => {
+    const currentMode = state.entities![mode]!;
+
+    for (const result of results) {
+      const itemChange = updateTaskFilesWithSameFile(
+        result,
+        state.entities[mode]!.items,
+        taskAdapter,
+        state.counters,
+        currentMode.defaultOperations,
+        currentMode.options,
+      );
+      state = modeAdapter.updateOne(
+        {
+          id: mode,
+          changes: {
+            items: itemChange.state,
+          },
+        },
+        {
+          ...state,
+          counters: itemChange.counters,
+        },
+      );
+    }
+
+    return state;
   }),
 ];
 

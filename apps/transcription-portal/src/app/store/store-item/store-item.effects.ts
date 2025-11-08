@@ -6,7 +6,8 @@ import { exhaustMap, of, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { TaskService } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
-import { IDBActions, IDBLoadedResults } from '../idb';
+import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
+import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
 import { StoreItemActions } from './store-item.actions';
 
 @Injectable()
@@ -59,6 +60,35 @@ export class StoreItemEffects {
       exhaustMap(() => {
         return of(StoreItemActions.importTasks.success());
       }),
+    ),
+  );
+
+  importQueueItems$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(PreprocessingActions.processQueueItem.success),
+      exhaustMap((action) =>
+        of(
+          StoreItemActions.importItemsFromProcessingQueue.do({
+            id: action.id,
+            mode: action.mode,
+            results: action.results,
+          }),
+        ),
+      ),
+    ),
+  );
+
+  processingQueueImported$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.importItemsFromProcessingQueue.do),
+      exhaustMap((action) =>
+        of(
+          StoreItemActions.importItemsFromProcessingQueue.success({
+            id: action.id,
+            mode: action.mode,
+          }),
+        ),
+      ),
     ),
   );
 

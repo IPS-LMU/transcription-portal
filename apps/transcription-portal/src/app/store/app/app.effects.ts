@@ -15,9 +15,9 @@ import { OHConfiguration } from '../../obj/oh-config';
 import { AppSettings } from '../../shared/app.settings';
 import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
-import { ExternalInformationActions } from '../external-information';
-import { IDBActions } from '../idb';
-import { ModeActions } from '../mode';
+import { ExternalInformationActions } from '../external-information/external-information.actions';
+import { IDBActions } from '../idb/idb.actions';
+import { ModeActions } from '../mode/mode.actions';
 import { AppActions } from './app.actions';
 import { AppState, RootState } from './app.reducer';
 

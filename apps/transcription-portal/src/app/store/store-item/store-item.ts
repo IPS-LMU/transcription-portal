@@ -75,7 +75,7 @@ export interface StoreFile {
   type: string;
   size: number;
   attributes: TPortalFileInfoAttributes;
-  hash?: string;
+  hash: string;
   url?: string;
   online?: boolean;
   content?: string;

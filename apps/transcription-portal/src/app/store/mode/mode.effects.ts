@@ -5,7 +5,7 @@ import { VersionCheckerService } from '@octra/ngx-components';
 import { exhaustMap, map, of, withLatestFrom } from 'rxjs';
 import { PortalModeType } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
-import { ModeActions } from '../mode';
+import { ModeActions } from '../mode/mode.actions';
 
 @Injectable()
 export class ModeEffects {

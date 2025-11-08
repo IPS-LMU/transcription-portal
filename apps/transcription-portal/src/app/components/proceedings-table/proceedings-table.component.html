@@ -449,8 +449,8 @@
               @if (getDirEntriesFromItem(entry).length === 0) {
                 <td [attr.colspan]="operations.length + 3" [ngClass]="{ shorten: shortstyle }">
                   <i aria-hidden="true" class="bi bi-database op-50"> </i>
-                  <span class="op-50" title="{{ getFileInfo(entry)?.fullname }}">
-                    {{ getFileInfo(entry)?.fullname }}
+                  <span class="op-50" title="{{ entry.infoItem.name }}">
+                    {{ entry.infoItem.name}}
                     <i class="bi bi-gear spin"></i>
                   </span>
                 </td>
@@ -463,12 +463,12 @@
               }
             </tr>
           }
-          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.fullname) {
+          @for (dirEntry of getDirEntriesFromItem(entry); track dirEntry.name) {
             <tr>
               <td>
                 <div class="d-flex">
                   <i aria-hidden="true" class="bi bi-database op-50 me-1"></i>
-                  <span class="op-50 me-1">{{ dirEntry.fullname }}</span>
+                  <span class="op-50 me-1">{{ dirEntry.name }}</span>
                   <i class="bi bi-gear-fill spin"></i>
                 </div>
               </td>

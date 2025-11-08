@@ -5,9 +5,10 @@ import { catchError, exhaustMap, from, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
-import { AppActions, RootState } from '../app';
+import { RootState } from '../app';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { IDBActions } from './idb.actions';
+import { AppActions } from '../app/app.actions';
 
 @Injectable()
 export class IDBEffects {

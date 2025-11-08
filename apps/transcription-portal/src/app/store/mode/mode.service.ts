@@ -2,7 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
-import { StoreItem, StoreItemActions, StoreItemTask } from '../store-item';
+import { StoreItem, StoreItemTask } from '../store-item';
+import { StoreItemActions } from '../store-item/store-item.actions';
 import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations } from './mode.selectors';
 
 @Injectable({ providedIn: 'root' })

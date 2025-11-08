@@ -4,10 +4,8 @@ import { AppInfo } from '../../app.info';
 import { calcSHA256FromFile, cryptoSupported } from '../../obj/CryptoHelper';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { readFileAsArray, validTranscript } from '../../obj/functions';
-import { TaskStatus } from '../../obj/tasks';
 import { Mode } from '../mode';
-import { StoreTaskOperationProcessingRound } from '../operation';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 import { PreprocessingQueueItem } from './preprocessing.state';
 
 /*
@@ -188,7 +186,7 @@ export async function processFileOrDirectoryInfo(
     // TODO
     throw new Error('not implemented');
   } else {
-    const f = infoItem as TPortalFileInfo;
+    const f = infoItem as StoreFile;
     return processFileInfo(f, path, queueItem, modeState);
   }
 }
@@ -201,82 +199,79 @@ export async function processFileOrDirectoryInfo(
  * @param modeState
  */
 export async function processFileInfo(
-  file: TPortalFileInfo | TPortalAudioInfo,
+  file: StoreFile,
   path: string,
   queueItem: PreprocessingQueueItem,
   modeState: Mode<any>,
-): Promise<(TPortalFileInfo | TPortalAudioInfo)[]> {
-  let clonedFile = file.clone();
-  if (!clonedFile?.file) {
+): Promise<(StoreFile | StoreAudioFile)[]> {
+  let clonedFile = { ...file } as StoreFile | StoreAudioFile;
+  const blob = file.type.includes('audio') ? file.blob : new File([file.content!], file.name, { type: file.type });
+  const extension = FileInfo.extractFileName(clonedFile.name).extension;
+
+  if (!blob) {
     throw new Error('file is undefined');
   }
 
-  clonedFile.hash = await getHashString(clonedFile.file);
+  clonedFile.hash = await getHashString(blob);
   const hashString = clonedFile.hash.length === 64 ? clonedFile.hash.slice(-20) : clonedFile.hash;
-  const newName = `${hashString}${clonedFile.extension}`;
-  let newFileInfo: TPortalFileInfo | TPortalAudioInfo | undefined;
+  const newName = `${hashString}${extension}`;
 
-  if (newName !== clonedFile.fullname) {
+  if (newName !== clonedFile.name) {
     // no valid name, replace
-    const newfile = await TPortalFileInfo.renameFile(clonedFile.file, newName, {
+    const newfile = await TPortalFileInfo.renameFile(blob, newName, {
       type: clonedFile.type,
-      lastModified: clonedFile.file.lastModified,
+      lastModified: blob.lastModified,
     });
-    newFileInfo = new TPortalFileInfo(newfile.name, clonedFile.type, newfile.size, newfile);
-    newFileInfo.attributes = { ...queueItem.infoItem.attributes };
-    newFileInfo.attributes.originalFileName = clonedFile.fullname;
-    newFileInfo.hash = clonedFile.hash;
-    clonedFile = newFileInfo;
+
+    clonedFile = {
+      name: newfile.name,
+      type: clonedFile.type,
+      size: newfile.size,
+      blob: newfile,
+      attributes: { ...queueItem.infoItem.attributes, originalFileName: clonedFile.name },
+      hash: clonedFile.hash,
+    };
   } else {
-    newFileInfo = clonedFile! as TPortalFileInfo;
-    newFileInfo.attributes = { ...queueItem.infoItem.attributes };
-    newFileInfo.attributes.originalFileName = clonedFile.fullname;
-    clonedFile = newFileInfo;
+    clonedFile.attributes = { ...queueItem.infoItem.attributes };
+    clonedFile.attributes.originalFileName = clonedFile.name;
   }
 
-  if (!clonedFile?.file) {
-    throw new Error('file is undefined');
+  if (!clonedFile.type.includes('audio')) {
+    // it's a text file
+    return [clonedFile];
   }
+
   if (!clonedFile?.hash) {
     throw new Error('hash is undefined');
   }
 
-  if (clonedFile?.file) {
-    const arrayBuffer = await readFileAsArray(clonedFile.file);
-    const format: AudioFormat | undefined = AudioManager.getFileFormat(clonedFile.extension, AppInfo.audioFormats);
+  const arrayBuffer = await readFileAsArray(blob);
+  const format: AudioFormat | undefined = AudioManager.getFileFormat(extension, AppInfo.audioFormats);
 
-    if (format) {
-      // it's an audio file
-      await format.init(clonedFile.fullname, clonedFile.type, arrayBuffer);
-      const audioInfo = getAudioInfo<TPortalAudioInfo, TPortalFileInfoAttributes>(
-        TPortalAudioInfo,
-        format,
-        clonedFile.fullname,
-        clonedFile.type,
-        arrayBuffer,
-      );
+  if (format) {
+    // it's an audio file
+    await format.init(clonedFile.name, clonedFile.type, arrayBuffer);
+    const audioInfo = getAudioInfo<TPortalAudioInfo, TPortalFileInfoAttributes>(
+      TPortalAudioInfo,
+      format,
+      clonedFile.name,
+      clonedFile.type,
+      arrayBuffer,
+    );
 
-      newFileInfo = new TPortalAudioInfo(
-        newName,
-        clonedFile.file.type,
-        clonedFile.file.size,
-        format.sampleRate,
-        audioInfo.duration.samples,
-        audioInfo.channels,
-        audioInfo.bitrate,
-      );
-      newFileInfo.hash = clonedFile.hash;
-      newFileInfo.file = clonedFile.file;
-      newFileInfo.attributes = { ...clonedFile.attributes };
-      clonedFile = newFileInfo;
-    } else {
-      throw new Error('invalid audio file.');
-    }
-
-    return [clonedFile];
+    clonedFile = {
+      ...clonedFile,
+      sampleRate: audioInfo.sampleRate,
+      bitrate: audioInfo.bitrate,
+      duration: audioInfo.duration,
+      channels: audioInfo.channels,
+      audioBufferInfo: audioInfo.audioBufferInfo,
+    };
   } else {
-    throw new Error('file is null');
+    throw new Error('invalid audio file.');
   }
+
+  return [clonedFile];
 }
 
 export async function getHashString(fileBlob: File) {

@@ -1,10 +1,13 @@
 import { EntityAdapter } from '@ngrx/entity';
+import { ServiceProvider } from '@octra/ngx-components';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
 import { IDBFolderItem, IDBTaskItem } from '../../indexedDB';
 import { IOperation } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
+import { OperationFactory, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
+import { StoreItemsState } from './store-items-state';
 
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,
@@ -42,7 +45,7 @@ export function convertIDBFileToStoreFile(a: FileInfoSerialized | AudioFileInfoS
   const result: StoreFile | StoreAudioFile = {
     attributes: a.attributes,
     content: a.content,
-    hash: a.hash,
+    hash: a.hash!,
     online: a.online,
     size: a.size,
     type: a.type,
@@ -98,6 +101,169 @@ export function getTaskWithHashAndName(hash: string, name: string, entries: Stor
   return undefined;
 }
 
+export function updateTaskFilesWithSameFile(
+  addedStoreFile: StoreFile | StoreAudioFile | StoreFileDirectory,
+  itemsState: StoreItemsState,
+  adapter: EntityAdapter<StoreItem>,
+  counters: {
+    storeItem: number;
+    operation: number;
+    processingQueueItem: number;
+  },
+  defaultOperations: OperationFactory<any>[],
+  currentModeOptions: {
+    selectedASRLanguage?: string;
+    selectedMausLanguage?: string;
+    selectedTranslationLanguage?: string;
+    selectedASRProvider?: ServiceProvider;
+    selectedSummarizationProvider?: ServiceProvider;
+    selectedSummarizationNumberOfWords?: number;
+    isDiarizationEnabled?: boolean;
+    diarizationSpeakers?: number;
+  },
+): {
+  state: StoreItemsState;
+  counters: {
+    storeItem: number;
+    operation: number;
+    processingQueueItem: number;
+  };
+} {
+  const result: {
+    state: StoreItemsState;
+    counters: {
+      storeItem: number;
+      operation: number;
+      processingQueueItem: number;
+    };
+  } = {
+    state: itemsState,
+    counters: { ...counters },
+  };
+
+  let someThingFound = false;
+
+  for (const itemID of itemsState.ids) {
+    if (addedStoreFile.type !== 'folder' && itemsState.entities[itemID]?.type === 'task') {
+      const addedFile = addedStoreFile as StoreFile;
+      const task = itemsState.entities[itemID] as StoreItemTask;
+
+      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || task.operations[0].lastRound?.lastResult?.available == false) {
+        // first try to replace same file in a task
+        let somethingFoundInFiles = false;
+        for (let i = 0; i < task.files.length; i++) {
+          const file = task.files[i];
+
+          if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
+            somethingFoundInFiles = true;
+            someThingFound = true;
+            // replace blob file
+            result.state = adapter.updateOne(
+              {
+                id: task.id,
+                changes: {
+                  files: [
+                    ...task.files.slice(0, i),
+                    {
+                      ...task.files[i],
+                      blob: addedFile.blob,
+                      available: true,
+                      online: false,
+                    },
+                    ...task.files.slice(i + 1),
+                  ],
+                },
+              },
+              result.state,
+            );
+          }
+        }
+
+        // check if there is an audio or file with a matching name
+        if (!somethingFoundInFiles && task.files.length === 1) {
+          const firstFile = task.files[0];
+          const firstFileName = FileInfo.extractFileName(firstFile.attributes.originalFileName);
+          const storeFileName = FileInfo.extractFileName(addedStoreFile.attributes.originalFileName);
+
+          if (firstFile.type !== addedStoreFile.type && firstFileName.name === storeFileName.name) {
+            if (firstFile.type.includes('audio') || addedStoreFile.type.includes('audio')) {
+              someThingFound = true;
+              const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
+              result.state = adapter.updateOne(
+                {
+                  id: task.id,
+                  changes: {
+                    files,
+                  },
+                },
+                result.state,
+              );
+            }
+          }
+        }
+      }
+    } else {
+      const dir = itemsState.entities[itemID] as StoreItemTaskDirectory;
+    }
+  }
+
+  if (!someThingFound) {
+    if (addedStoreFile.type !== 'folder') {
+      // add file to a new task
+      const addedFile = addedStoreFile as StoreFile;
+      const newTaskID = counters.storeItem;
+      const operations = defaultOperations.map((operationFactory, i) => {
+        let operation = operationFactory.create(counters.operation + i, newTaskID, [
+          new StoreTaskOperationProcessingRound({
+            status: TaskStatus.PENDING,
+          }),
+        ]);
+        operation = operationFactory.applyTaskOptions(
+          {
+            asr: {
+              provider: currentModeOptions.selectedASRProvider,
+              language: currentModeOptions.selectedASRLanguage,
+              diarization: {
+                enabled: currentModeOptions.isDiarizationEnabled,
+                speakers: currentModeOptions.diarizationSpeakers,
+              },
+            },
+            maus: {
+              language: currentModeOptions.selectedMausLanguage,
+            },
+            translation: {
+              language: currentModeOptions.selectedTranslationLanguage,
+            },
+            summarization: {
+              provider: currentModeOptions.selectedSummarizationProvider,
+              numberOfWords: currentModeOptions.selectedSummarizationNumberOfWords,
+            },
+          },
+          operation,
+        );
+
+        return operation;
+      });
+
+      const newStoreItem: StoreItemTask = {
+        directoryID: 0,
+        files: [addedFile],
+        id: newTaskID,
+        operations,
+        status: TaskStatus.QUEUED,
+        type: 'task',
+      };
+
+      result.state = adapter.addOne(newStoreItem, result.state);
+      result.counters.storeItem = result.counters.storeItem + 1;
+    } else {
+      // TODO implement
+    }
+  }
+
+  return result;
+}
+
 export function extractFolderName(path: string): string | undefined {
   if (path !== '') {
     let extensionBegin = path.lastIndexOf('/');
@@ -141,7 +307,7 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
       content: undefined,
       duration: audio.duration,
       name: audio.fullname,
-      hash: audio.hash,
+      hash: audio.hash!,
       online: audio.online,
       sampleRate: audio.sampleRate,
       size: audio.size,
@@ -157,7 +323,7 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
       blob: f.file,
       content: f.file ? await readFileContents(f.file, 'text') : undefined,
       name: f.fullname,
-      hash: f.hash,
+      hash: f.hash!,
       online: f.online,
       size: f.size,
       type: f.type,
@@ -168,7 +334,16 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
 }
 
 export function convertStoreAudioFileToAudioInfo(audioFile: StoreAudioFile) {
-  const audioInfo = new AudioInfo(audioFile.name, audioFile.type, audioFile.size, audioFile.sampleRate, audioFile.duration, audioFile.channels, audioFile.bitrate, audioFile.audioBufferInfo);
+  const audioInfo = new AudioInfo(
+    audioFile.name,
+    audioFile.type,
+    audioFile.size,
+    audioFile.sampleRate,
+    audioFile.duration,
+    audioFile.channels,
+    audioFile.bitrate,
+    audioFile.audioBufferInfo,
+  );
   audioInfo.attributes = audioFile.attributes;
   audioInfo.online = audioFile.online ?? false;
   audioInfo.url = audioFile.url;

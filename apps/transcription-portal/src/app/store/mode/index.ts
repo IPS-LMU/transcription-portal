@@ -1,5 +1,4 @@
 export * from "./mode.state";
-export * from "./mode.actions";
 export * from "./mode.reducer";
 export * from "./mode.selectors";
 export * from "./mode.service";
