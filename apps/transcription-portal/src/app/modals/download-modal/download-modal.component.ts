@@ -8,9 +8,9 @@ import * as JSZip from 'jszip';
 import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
 import { EmuOperation } from '../../obj/operations/emu-operation';
-import { Operation, OperationProcessingRound } from '../../obj/operations/operation';
+import { Operation } from '../../obj/operations/operation';
 import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
+import { Task, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
 import { ModeStoreService, StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../../store';
@@ -113,14 +113,14 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
         if (operation.rounds.length > 0 && operation.status === TaskStatus.FINISHED) {
           const lastRound: StoreTaskOperationProcessingRound | undefined = operation.lastRound;
-          const result = lastRound?.results?.find((a) => !a.isMediaFile());
+          const result = lastRound?.results?.find((a) => !a.type.includes('audio'));
 
-          if (result?.file) {
-            const originalName = result.attributes?.originalFileName ?? result.fullname;
+          if (result) {
+            const originalName = result.attributes?.originalFileName ?? result.name;
 
             requestPackage.entries.push({
               path: originalName,
-              file: result.file,
+              file: new File([result.content!], originalName, { type: result.type }),
             });
 
             const selectedConverters = AppInfo.converters.filter((a, i) => {
@@ -289,11 +289,11 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
             if (opResult?.lastResult) {
               const fileName = task.files[0].attributes?.originalFileName.replace(/\.[^.]+$/g, '');
-              const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.fullname;
+              const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.name;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
-                file: opResult?.lastResult.file,
+                file: opResult?.lastResult.blob,
               });
             }
 

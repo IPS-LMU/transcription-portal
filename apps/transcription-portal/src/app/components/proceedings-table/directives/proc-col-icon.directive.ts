@@ -12,6 +12,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
 import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
@@ -236,10 +237,11 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     if (this.entry) {
       if (this.entry.type === 'task') {
         const task = this.entry as StoreItemTask;
-        if (task.files[0].extension === '.wav' && task.files[0].file !== undefined) {
+        const file0Extension = FileInfo.extractFileName(task.files[0].name).extension;
+        if (file0Extension === '.wav' && task.files[0].blob !== undefined) {
           this.renderer.addClass(result, 'green');
         } else if (
-          ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
+          ((file0Extension === '.wav' && task.files[0].blob === undefined) || file0Extension !== '.wav') &&
           task.operations[0].status !== 'FINISHED'
         ) {
           this.renderer.addClass(result, 'yellow');
@@ -278,7 +280,9 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
     if (this.entry?.type === 'task') {
       const task = this.entry as StoreItemTask;
-      if (task.files.length > 1 || task.files[0].extension !== '.wav') {
+      const file0Extension = FileInfo.extractFileName(task.files[0].name).extension;
+
+      if (task.files.length > 1 || file0Extension !== '.wav') {
         const badgeObj = this.getBadge(task);
         this.renderer.addClass(result, 'ms-1');
         this.renderer.addClass(result, 'px-2');
@@ -316,15 +320,18 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
     type: string;
     label: string;
   } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
+    const extension1 = FileInfo.extractFileName(task.files[0].name).extension;
+    const extension2 = task.files.length > 1 ? FileInfo.extractFileName(task.files[1].name).extension : undefined;
+
+    if ((task.files.length > 1 && task.files[1].blob !== undefined) || task.operations[0].rounds.length > 1 || extension1 !== '.wav') {
       return {
         type: 'info',
-        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
+        label: extension1 !== '.wav' ? extension1 : (extension2 ?? '<NO EXT>'),
       };
     } else {
       return {
         type: 'warning',
-        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
+        label: extension1 !== '.wav' ? extension1 : (extension2 ?? '<NO EXT>'),
       };
     }
   }

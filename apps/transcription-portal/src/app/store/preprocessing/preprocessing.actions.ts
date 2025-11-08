@@ -1,9 +1,8 @@
 import { createActionGroup, props } from '@ngrx/store';
 import { IFile } from '@octra/annotation';
 import { DirectoryInfo, FileInfo } from '@octra/web-media';
-import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { TPortalModes } from '../mode';
-import { StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 
 export class PreprocessingActions {
   static addToQueue = createActionGroup({
@@ -19,7 +18,7 @@ export class PreprocessingActions {
       checkFiltered: props<{
         mode: TPortalModes;
         unsupportedFiles: IFile[];
-        filteredItems: (TPortalFileInfo | TPortalDirectoryInfo)[];
+        filteredItems: (StoreFile | StoreFileDirectory)[];
       }>(),
     },
   });
@@ -37,7 +36,7 @@ export class PreprocessingActions {
       success: props<{
         id: number;
         mode: TPortalModes;
-        results: (StoreItemTask | StoreItemTaskDirectory)[];
+        results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
       }>(),
       fail: props<{
         error: string;

@@ -7,7 +7,7 @@ import { readFileAsArray, validTranscript } from '../../obj/functions';
 import { TaskStatus } from '../../obj/tasks';
 import { Mode } from '../mode';
 import { StoreTaskOperationProcessingRound } from '../operation';
-import { StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { PreprocessingQueueItem } from './preprocessing.state';
 
 /*
@@ -69,6 +69,61 @@ if (index > -1) {
 
  */
 
+/*
+add task from queued preprocessing
+
+    let task: StoreItemTask | undefined;
+    if (clonedFile) {
+      // new file
+      task = {
+        directoryID: 0,
+        files: [clonedFile],
+        id: 0, // TODO check,
+        operations: [],
+        status: TaskStatus.QUEUED,
+        type: 'task',
+      };
+
+      // TODO operation enabled missing
+
+      for (const operationFactory of modeState.defaultOperations) {
+        let op = operationFactory.create(0, 0, [
+          new StoreTaskOperationProcessingRound({
+            status: TaskStatus.PENDING,
+          }),
+        ]); // TODO CHECK
+        op = operationFactory.applyTaskOptions(
+          {
+            asr: {
+              provider: modeState.options.selectedASRProvider,
+              language: modeState.options.selectedASRLanguage,
+              diarization: {
+                enabled: modeState.options.isDiarizationEnabled,
+                speakers: modeState.options.diarizationSpeakers,
+              },
+            },
+            maus: {
+              language: modeState.options.selectedMausLanguage,
+            },
+            translation: {
+              language: modeState.options.selectedTranslationLanguage,
+            },
+            summarization: {
+              provider: modeState.options.selectedSummarizationProvider,
+              numberOfWords: modeState.options.selectedSummarizationNumberOfWords,
+            },
+          },
+          op,
+        );
+        task.operations.push(op);
+      }
+
+      return [task];
+    } else {
+      throw new Error('fileinfo is undefined');
+    }
+ */
+
 export function cleanUpInputArray(entries: (FileInfo | DirectoryInfo<any>)[]): {
   unsupportedFiles: IFile[];
   filteredItems: (FileInfo | DirectoryInfo<any>)[];
@@ -122,11 +177,11 @@ export function cleanUpInputArray(entries: (FileInfo | DirectoryInfo<any>)[]): {
 }
 
 export async function processFileOrDirectoryInfo(
-  infoItem: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo,
+  infoItem: StoreFile | StoreAudioFile | StoreFileDirectory,
   path: string,
   queueItem: PreprocessingQueueItem,
   modeState: Mode<any>,
-): Promise<(StoreItemTask | StoreItemTaskDirectory)[]> {
+): Promise<(StoreFile | StoreAudioFile | StoreFileDirectory)[]> {
   if (infoItem.type === 'folder') {
     // folder
     const dir = infoItem as TPortalDirectoryInfo;
@@ -138,12 +193,19 @@ export async function processFileOrDirectoryInfo(
   }
 }
 
+/**
+ * processes an FileInfo instance: hashing and retrieving audio information if needed.
+ * @param file
+ * @param path
+ * @param queueItem
+ * @param modeState
+ */
 export async function processFileInfo(
   file: TPortalFileInfo | TPortalAudioInfo,
   path: string,
   queueItem: PreprocessingQueueItem,
   modeState: Mode<any>,
-): Promise<(StoreItemTask | StoreItemTaskDirectory)[]> {
+): Promise<(TPortalFileInfo | TPortalAudioInfo)[]> {
   let clonedFile = file.clone();
   if (!clonedFile?.file) {
     throw new Error('file is undefined');
@@ -211,56 +273,7 @@ export async function processFileInfo(
       throw new Error('invalid audio file.');
     }
 
-    let task: StoreItemTask | undefined;
-    if (clonedFile) {
-      // new file
-      task = {
-        directoryID: 0,
-        files: [clonedFile],
-        id: 0, // TODO check,
-        operations: [],
-        status: TaskStatus.QUEUED,
-        type: 'task',
-      };
-
-      // TODO operation enabled missing
-
-      for (const operationFactory of modeState.defaultOperations) {
-        let op = operationFactory.create(0, 0, [
-          new StoreTaskOperationProcessingRound({
-            status: TaskStatus.PENDING,
-          }),
-        ]); // TODO CHECK
-        op = operationFactory.applyTaskOptions(
-          {
-            asr: {
-              provider: modeState.options.selectedASRProvider,
-              language: modeState.options.selectedASRLanguage,
-              diarization: {
-                enabled: modeState.options.isDiarizationEnabled,
-                speakers: modeState.options.diarizationSpeakers,
-              },
-            },
-            maus: {
-              language: modeState.options.selectedMausLanguage,
-            },
-            translation: {
-              language: modeState.options.selectedTranslationLanguage,
-            },
-            summarization: {
-              provider: modeState.options.selectedSummarizationProvider,
-              numberOfWords: modeState.options.selectedSummarizationNumberOfWords,
-            },
-          },
-          op,
-        );
-        task.operations.push(op);
-      }
-
-      return [task];
-    } else {
-      throw new Error('fileinfo is undefined');
-    }
+    return [clonedFile];
   } else {
     throw new Error('file is null');
   }

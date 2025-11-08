@@ -3,6 +3,7 @@ import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/op
 import { TaskStatus } from '../../obj/tasks';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { ServiceProvider } from '@octra/ngx-components';
+import { StoreFile } from '../store-item';
 
 export class StoreTaskOperation<T extends object = any> {
   id!: number;
@@ -21,7 +22,7 @@ export class StoreTaskOperation<T extends object = any> {
     return last(this.rounds);
   }
 
-  get lastResult(): TPortalFileInfo | undefined {
+  get lastResult(): StoreFile | undefined {
     return this.lastRound?.lastResult;
   }
 
@@ -43,12 +44,12 @@ export class StoreTaskOperation<T extends object = any> {
 }
 
 export class StoreTaskOperationProcessingRound implements IOperationProcessingRoundWithoutResults {
-  results: TPortalFileInfo[] = [];
+  results: StoreFile[] = [];
   status!: TaskStatus;
   time?: { start: number; duration?: number };
   protocol?: string;
 
-  get lastResult(): TPortalFileInfo | undefined {
+  get lastResult(): StoreFile | undefined {
     return last(this.results);
   }
 

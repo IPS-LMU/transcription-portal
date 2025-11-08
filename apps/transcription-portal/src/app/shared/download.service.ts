@@ -1,9 +1,17 @@
 import { Injectable } from '@angular/core';
 import { OAnnotJSON } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
+import { FileInfo } from '@octra/web-media';
 import { AppInfo, ConverterData } from '../app.info';
-import { TPortalAudioInfo, TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
-import { StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../store';
+import { TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
+import {
+  convertStoreAudioFileToAudioInfo,
+  StoreAudioFile,
+  StoreFile,
+  StoreItemTask,
+  StoreTaskOperation,
+  StoreTaskOperationProcessingRound,
+} from '../store';
 
 @Injectable({
   providedIn: 'root',
@@ -34,7 +42,7 @@ export class DownloadService {
     converters: ConverterData[],
   ): Promise<TPortalFileInfo[]> {
     return new Promise<TPortalFileInfo[]>((resolve, reject) => {
-      const foundTranscriptResult = round.results.find((a) => !a.isMediaFile());
+      const foundTranscriptResult = round.results.find((a) => !a.type.includes('audio'));
 
       if (!foundTranscriptResult) {
         reject('operationResult is undefined!');
@@ -47,7 +55,7 @@ export class DownloadService {
 
       for (const converter of converters) {
         for (const extension of converter.obj.extensions) {
-          if (foundTranscriptResult.fullname.indexOf(extension) < 0) {
+          if (foundTranscriptResult.name.indexOf(extension) < 0) {
             promises.push(this.getResultConversion(converter, task, operation, foundTranscriptResult));
             break;
           }
@@ -55,9 +63,18 @@ export class DownloadService {
       }
 
       Promise.all(promises)
-        .then((values: any) => {
+        .then((values: {
+          converter: ConverterData;
+          result: TPortalFileInfo | undefined;
+        }[]) => {
           values = this.sortConvertedFiles(values);
-          resolve(values.filter((a: any) => a.result !== undefined).map((a: any) => a.result) as TPortalFileInfo[]);
+          resolve(values.filter((a: {
+            converter: ConverterData;
+            result: TPortalFileInfo | undefined;
+          }) => a.result !== undefined).map((a: {
+            converter: ConverterData;
+            result: TPortalFileInfo | undefined;
+          }) => a.result) as TPortalFileInfo[]);
         })
         .catch((error) => {
           reject(error);
@@ -81,7 +98,7 @@ export class DownloadService {
     converter: ConverterData,
     task: StoreItemTask,
     operation: StoreTaskOperation,
-    opResult: TPortalFileInfo,
+    opResult: StoreFile,
   ): Promise<{
     converter: ConverterData;
     result: TPortalFileInfo | undefined;
@@ -90,89 +107,84 @@ export class DownloadService {
       converter: ConverterData;
       result: TPortalFileInfo | undefined;
     }>((resolve, reject) => {
-      TPortalFileInfo.getFileContent(opResult.file!)
-        .then((content) => {
-          const audiofile = new OAudiofile();
-          if (!task) {
-            throw new Error('operation task is undefined');
+      const audiofile = new OAudiofile();
+      if (!task) {
+        throw new Error('operation task is undefined');
+      }
+      const audioStoreFile = task.files.find((a) => a.type.includes('audio'));
+      const audioinfo = convertStoreAudioFileToAudioInfo(audioStoreFile as StoreAudioFile);
+      audiofile.duration = audioinfo.duration.samples;
+      audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
+      audiofile.sampleRate = audioinfo.sampleRate;
+      audiofile.size = audioinfo.size;
+
+      let annotJSON;
+
+      const from = AppInfo.converters.find((a) => {
+        for (const extension of a.obj.extensions) {
+          if (opResult.name.indexOf(extension) > -1) {
+            return true;
           }
-          const audioinfo = (task.files.find((a) => a.isMediaFile()) as TPortalAudioInfo | undefined)!;
+        }
+        return false;
+      });
 
-          audiofile.duration = audioinfo.duration.samples;
-          audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.fullname;
-          audiofile.sampleRate = audioinfo.sampleRate;
-          audiofile.size = audioinfo.size;
+      if (from) {
+        const importConverter = from.obj;
+        const { extension } = FileInfo.extractFileName(opResult.name);
 
-          let annotJSON;
-
-          const from = AppInfo.converters.find((a) => {
-            for (const extension of a.obj.extensions) {
-              if (opResult.fullname.indexOf(extension) > -1) {
-                return true;
-              }
-            }
-            return false;
-          });
-
-          if (!(from === null || from === undefined)) {
-            const importConverter = from.obj;
-
-            if (importConverter.name !== 'AnnotJSON') {
-              const importResult = importConverter.import(
-                {
-                  name: audiofile.name ? audiofile.name.replace(/\.[^.]+$/g, '') + opResult.extension : opResult.fullname,
-                  content,
-                  encoding: 'utf-8',
-                  type: 'text/plain',
-                },
-                audiofile,
-              );
-              if (importResult) {
-                if (!importResult.error) {
-                  annotJSON = importResult.annotjson;
-                } else {
-                  console.error(`importResult Error from ${importConverter.name}: ${importResult.error}`);
-                }
-              } else {
-                console.error(`importResult for import ${importConverter.name} is undefined!`);
-              }
+        if (importConverter.name !== 'AnnotJSON') {
+          const importResult = importConverter.import(
+            {
+              name: audiofile.name ? audiofile.name.replace(/\.[^.]+$/g, '') + extension : opResult.name,
+              content: opResult.content!,
+              encoding: 'utf-8',
+              type: 'text/plain',
+            },
+            audiofile,
+          );
+          if (importResult) {
+            if (!importResult.error) {
+              annotJSON = importResult.annotjson;
             } else {
-              annotJSON = OAnnotJSON.deserialize(JSON.parse(content));
-            }
-
-            if (annotJSON) {
-              const levelnum = this.getLevelNumforConverter(converter, annotJSON);
-              const conversion = converter.obj.export(annotJSON, audiofile, levelnum);
-
-              if (conversion?.file) {
-                const file: File = TPortalFileInfo.getFileFromContent(
-                  conversion.file.content,
-                  audiofile.name.replace(/\.[^.]+$/g, '') + converter.obj.extensions[0],
-                  conversion.file.type,
-                );
-
-                const fileInfo = new TPortalFileInfo(file.name, file.type, file.size, file);
-                resolve({
-                  converter,
-                  result: fileInfo,
-                });
-              } else {
-                // ignore
-                resolve({ converter, result: undefined });
-              }
-            } else {
-              console.log(`import is null of ${from.obj.name}`);
-              // ignore
-              resolve({ converter, result: undefined });
+              console.error(`importResult Error from ${importConverter.name}: ${importResult.error}`);
             }
           } else {
-            console.error(`found no importConverter for ${opResult.fullname}`);
+            console.error(`importResult for import ${importConverter.name} is undefined!`);
+          }
+        } else {
+          annotJSON = OAnnotJSON.deserialize(JSON.parse(opResult.content!));
+        }
+
+        if (annotJSON) {
+          const levelnum = this.getLevelNumforConverter(converter, annotJSON);
+          const conversion = converter.obj.export(annotJSON, audiofile, levelnum);
+
+          if (conversion?.file) {
+            const file: File = TPortalFileInfo.getFileFromContent(
+              conversion.file.content,
+              audiofile.name.replace(/\.[^.]+$/g, '') + converter.obj.extensions[0],
+              conversion.file.type,
+            );
+
+            const fileInfo = new TPortalFileInfo(file.name, file.type, file.size, file);
+            resolve({
+              converter,
+              result: fileInfo,
+            });
+          } else {
+            // ignore
             resolve({ converter, result: undefined });
           }
-        })
-        .catch((error: any) => {
-          reject(error);
-        });
+        } else {
+          console.log(`import is null of ${from.obj.name}`);
+          // ignore
+          resolve({ converter, result: undefined });
+        }
+      } else {
+        console.error(`found no importConverter for ${opResult.name}`);
+        resolve({ converter, result: undefined });
+      }
     });
   }
 }

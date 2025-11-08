@@ -1,6 +1,5 @@
 import { EntityState } from '@ngrx/entity';
-import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { StoreItem } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 
 export enum ProcessingQueueStatus {
   PENDING = 'PENDING',
@@ -12,9 +11,9 @@ export enum ProcessingQueueStatus {
 }
 
 export interface PreprocessingQueueItem {
-  results: StoreItem[];
+  results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
   id: number;
-  infoItem: TPortalFileInfo | TPortalAudioInfo | TPortalDirectoryInfo;
+  infoItem: StoreFile | StoreAudioFile | StoreFileDirectory;
   status: ProcessingQueueStatus;
 }
 

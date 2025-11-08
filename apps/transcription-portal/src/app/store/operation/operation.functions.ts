@@ -1,8 +1,7 @@
-import { FileInfoSerialized } from '@octra/web-media';
+import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
-import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { convertIDBFileToStoreFile, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
 export function convertIDBOperationToStoreOperation(operation: IOperation, taskID: number): StoreTaskOperation {
@@ -21,7 +20,7 @@ export function convertIDBOperationToStoreOperation(operation: IOperation, taskI
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {
   return new StoreTaskOperationProcessingRound({
     protocol: round.protocol,
-    results: round.results.map((a) => TPortalFileInfo.fromAny(a)) as TPortalFileInfo[],
+    results: round.results.map((a) => convertIDBFileToStoreFile(a)),
     status: round.status,
   });
 }
@@ -37,40 +36,29 @@ export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirecto
       operations: [],
     };
 
-    // read file data
-    const filePromises: Promise<FileInfoSerialized>[] = [];
-    for (const file of task.files) {
-      filePromises.push(file.toAny());
+    const serializedFiles = task.files.map(convertStoreFileToIDBFile);
+    result.files.push(...serializedFiles);
+    result.folderPath = !taskDirectory ? '' : taskDirectory.path;
+
+    // read operation data
+    const operationPromises: Promise<IOperation>[] = [];
+    for (const operation of task.operations) {
+      operationPromises.push(convertStoreOperationToIDBOperation(operation));
     }
 
-    Promise.all(filePromises)
-      .then((serializedFiles) => {
-        result.files.push(...serializedFiles);
-        result.folderPath = !taskDirectory ? '' : taskDirectory.path;
-
-        // read operation data
-        const operationPromises: Promise<IOperation>[] = [];
-        for (const operation of task.operations) {
-          operationPromises.push(convertStoreOperationToIDBOperation(operation));
-        }
-
-        if (operationPromises.length > 0) {
-          Promise.all(operationPromises)
-            .then((serializedOperations) => {
-              result.operations = serializedOperations;
-              resolve(result);
-            })
-            .catch((error) => {
-              console.error('not arrived');
-              reject(error);
-            });
-        } else {
+    if (operationPromises.length > 0) {
+      Promise.all(operationPromises)
+        .then((serializedOperations) => {
+          result.operations = serializedOperations;
           resolve(result);
-        }
-      })
-      .catch((error) => {
-        reject(error);
-      });
+        })
+        .catch((error) => {
+          console.error('not arrived');
+          reject(error);
+        });
+    } else {
+      resolve(result);
+    }
   });
 }
 
@@ -90,6 +78,37 @@ export async function convertStoreOperationToIDBOperation(operation: StoreTaskOp
 export async function convertStoreOperationRoundToIDBOperationRound(
   round: StoreTaskOperationProcessingRound,
 ): Promise<OperationProcessingRoundSerialized> {
-  const results = await Promise.all<Promise<FileInfoSerialized>[]>(round.results.map((a) => a.toAny()));
+  const results: (FileInfoSerialized | AudioFileInfoSerialized)[] = round.results.map((a) => convertStoreFileToIDBFile(a));
   return { protocol: round.protocol, results, status: round.status };
+}
+
+export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
+  if (file.type.includes('audio')) {
+    const audio = file as StoreAudioFile;
+
+    return {
+      fullname: audio.name,
+      attributes: audio.attributes,
+      hash: audio.hash,
+      type: audio.type,
+      size: audio.size,
+      audioBufferInfo: audio.audioBufferInfo,
+      duration: audio.duration,
+      channels: audio.channels,
+      sampleRate: audio.sampleRate,
+      url: audio.url,
+      online: audio.online,
+    };
+  } else {
+    return {
+      fullname: file.name,
+      attributes: file.attributes,
+      hash: file.hash,
+      type: file.type,
+      size: file.size,
+      url: file.url,
+      online: file.online,
+      content: file.content,
+    };
+  }
 }

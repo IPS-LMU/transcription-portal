@@ -3,11 +3,10 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Converter } from '@octra/annotation';
-import { OAudiofile } from '@octra/media';
 import { hasProperty } from '@octra/utilities';
 import { timer } from 'rxjs';
-import { AppInfo, ConverterData } from '../../app.info';
-import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { AppInfo } from '../../app.info';
+import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { DownloadService } from '../../shared/download.service';
 import { OperationFactory, StoreItemTask, StoreTaskOperation } from '../../store';
 
@@ -108,6 +107,7 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private generateTable() {
+    /*
     this.clearConvertedArray();
     const opFactory = (this.defaultOperations ?? []).find((a) => a.name === this.operation?.name);
 
@@ -237,6 +237,7 @@ export class ResultsTableComponent implements OnChanges {
         this.updateGUI();
       }
     }
+     */
   }
 
   private updateGUI() {

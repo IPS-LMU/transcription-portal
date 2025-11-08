@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { last, SubscriptionManager } from '@octra/utilities';
-import { FileInfoSerialized } from '@octra/web-media';
+import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { Subject } from 'rxjs';
 import { IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
@@ -27,7 +27,7 @@ export interface IOperationProcessingRoundWithoutResults {
 }
 
 export interface OperationProcessingRoundSerialized extends IOperationProcessingRoundWithoutResults {
-  results: FileInfoSerialized[];
+  results: (FileInfoSerialized | AudioFileInfoSerialized)[];
 }
 
 export class OperationProcessingRound implements IOperationProcessingRoundWithoutResults {

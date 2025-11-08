@@ -4,10 +4,10 @@ import { Store } from '@ngrx/store';
 import { IFile } from '@octra/annotation';
 import { DirectoryInfo, FileInfo } from '@octra/web-media';
 import { catchError, exhaustMap, from, map, mergeMap, of, tap, withLatestFrom } from 'rxjs';
-import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { TPortalModes } from '../mode';
+import { convertInfoFileItemToStoreFileItem, StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 import { PreprocessingActions } from './preprocessing.actions';
 import { cleanUpInputArray, processFileOrDirectoryInfo } from './preprocessing.functions';
 import { ProcessingQueueStatus } from './preprocessing.state';
@@ -39,22 +39,20 @@ export class PreprocessingEffects {
       withLatestFrom(this.store),
       exhaustMap(([{ mode, infoItems }]: [{ infoItems: (FileInfo | DirectoryInfo<any>)[]; mode: TPortalModes }, RootState]) => {
         const result = cleanUpInputArray(infoItems);
-        return of(
-          PreprocessingActions.addToQueue.checkFiltered({
-            unsupportedFiles: result.unsupportedFiles,
-            filteredItems: result.filteredItems.map((a) =>
-              a.type === 'folder'
-                ? new TPortalDirectoryInfo((a as DirectoryInfo<any>).path, (a as DirectoryInfo<any>).size)
-                : new TPortalFileInfo(
-                    (a as FileInfo).fullname,
-                    (a as FileInfo).type,
-                    (a as FileInfo).size,
-                    (a as FileInfo).file,
-                    (a as FileInfo).createdAt,
-                  ),
+
+        const promises: Promise<StoreFile | StoreAudioFile | StoreFileDirectory>[] = result.filteredItems.map((a: FileInfo | DirectoryInfo<any>) =>
+          convertInfoFileItemToStoreFileItem(a),
+        );
+        return from(Promise.all(promises)).pipe(
+          exhaustMap((filteredItems: (StoreFile | StoreAudioFile | StoreFileDirectory)[]) =>
+            of(
+              PreprocessingActions.addToQueue.checkFiltered({
+                unsupportedFiles: result.unsupportedFiles,
+                filteredItems,
+                mode,
+              }),
             ),
-            mode,
-          }),
+          ),
         );
       }),
     ),
