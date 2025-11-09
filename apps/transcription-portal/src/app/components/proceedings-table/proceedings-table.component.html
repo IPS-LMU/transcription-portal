@@ -458,16 +458,16 @@
     (contextmenu)="onContextMenu($event, row)"
     (click)="onContextBlur()"
     (scroll)="cancelScroll($event)"
+    (mouseenter)="nameCol.mouseOver = true"
+    (mouseleave)="nameCol.mouseOver = false"
+    (blur)="nameCol.mouseOver = false"
     tportalProceedingsRow
     #row
   >
-    <!-- TODO check
-      [mouseOver]="false"
-    -->
     <td
       (appendingClick)="onPreviewClick($event)"
       (click)="onRowSelected(entry)"
-      (deleteIconClick)="removeEntry($event, getTask(entry))"
+      (deleteIconClick)="removeEntry($event, entry)"
       (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
       (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
       (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
@@ -478,6 +478,7 @@
       [entry]="entry"
       [shortStyle]="isClosed"
       tportalProcColIcon
+      #nameCol="colIcon"
     ></td>
     @if (getTask(entry) !== undefined && entry.type === 'task') {
       @for (operation of entry.operations; track operation.id) {

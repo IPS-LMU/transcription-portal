@@ -56,7 +56,6 @@ import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
-import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
@@ -801,9 +800,9 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.cd.detectChanges();
   };
 
-  public removeEntry(event: MouseEvent, entry?: StoreItemTask | StoreItemTask) {
+  public removeEntry(event: MouseEvent, entry: StoreItem) {
     if (entry) {
-      this.modeStoreService.removeTaskOrFolder(entry);
+      this.modeStoreService.removeStoreItems([entry.id]);
     }
   }
 
@@ -990,4 +989,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   getServerProvider(basName?: string): ServiceProvider | undefined {
     return AppSettings.getServiceInformation(basName);
   }
+
+  protected readonly name = name;
 }

@@ -17,6 +17,8 @@ import { Subscription } from 'rxjs';
 import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../../../store';
+import { event } from 'jquery';
+import { files } from 'jszip';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -24,12 +26,20 @@ import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../../../store
   standalone: true,
 })
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
+  get mouseOver(): boolean {
+    return this._mouseOver;
+  }
+
+  set mouseOver(value: boolean) {
+    this._mouseOver = value;
+    this.updateView();
+  }
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
   @Input() entry?: StoreItem;
   @Input() shortStyle = false;
-  @Input() mouseOver = false;
+  private _mouseOver = false;
 
   @Output() appendingClick: EventEmitter<TPortalFileInfo> = new EventEmitter<TPortalFileInfo>();
 
@@ -95,21 +105,15 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         if (this.entry.type === 'task') {
           this.appendAppendingsSpan(wrapper);
           const infoIcon = this.renderer.createElement('i');
-          const deleteIcon = this.renderer.createElement('i');
 
           this.renderer.addClass(infoIcon, 'bi');
           this.renderer.addClass(infoIcon, 'bi-info-circle');
           this.renderer.setAttribute(infoIcon, 'aria-hidden', 'true');
-          this.renderer.addClass(deleteIcon, 'bi');
-          this.renderer.addClass(deleteIcon, 'bi-dash-circle');
-          this.renderer.setAttribute(deleteIcon, 'aria-hidden', 'true');
 
           if (this.mouseOver) {
-            this.renderer.setStyle(infoIcon, 'visibility', 'visible');
-            this.renderer.setStyle(deleteIcon, 'visibility', 'visible');
+            this.renderer.setStyle(infoIcon, 'visibility', 'visible')
           } else {
             this.renderer.setStyle(infoIcon, 'visibility', 'hidden');
-            this.renderer.setStyle(deleteIcon, 'visibility', 'hidden');
           }
 
           this.renderer.listen(infoIcon, 'mouseenter', (event) => {
@@ -122,13 +126,25 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
             this.infoMouseOver.emit(event);
           });
 
-          this.renderer.listen(deleteIcon, 'click', (event) => {
-            this.deleteIconClick.emit(event);
-          });
-
           this.renderer.appendChild(wrapper, infoIcon);
-          this.renderer.appendChild(wrapper, deleteIcon);
         }
+
+        const deleteIcon = this.renderer.createElement('i');
+        this.renderer.addClass(deleteIcon, 'bi');
+        this.renderer.addClass(deleteIcon, 'bi-dash-circle');
+        this.renderer.setAttribute(deleteIcon, 'aria-hidden', 'true');
+
+        if (this.mouseOver) {
+          this.renderer.setStyle(deleteIcon, 'visibility', 'visible');
+        } else {
+          this.renderer.setStyle(deleteIcon, 'visibility', 'hidden');
+        }
+
+        this.renderer.listen(deleteIcon, 'click', (event) => {
+          this.deleteIconClick.emit(event);
+        });
+        this.renderer.appendChild(wrapper, deleteIcon);
+
         this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
       }
     } else {
@@ -249,7 +265,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
         // set filename
         this.renderer.setAttribute(result, 'title', task.files[0].attributes?.originalFileName);
-        const filename = this.renderer.createText(' ' + task.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ' ');
+        const filename = this.renderer.createText(' ' + task.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ` (${this.entry.id})`);
         this.renderer.appendChild(result, filename);
         this.renderer.appendChild(wrapper, result);
       } else {

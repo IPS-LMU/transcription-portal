@@ -229,7 +229,7 @@ export class PreprocessingEffects {
             .map((id) => preprocessor.entities[id])
             .filter((a) => a?.status === ProcessingQueueStatus.WAIT_FOR_SPLIT);
 
-          if (waitForSplit && !preprocessor.splitModalVisible) {
+          if (waitForSplit.length > 0 && !preprocessor.splitModalVisible) {
             return of(PreprocessingActions.showSplitModal.do({ mode }));
           }
         }

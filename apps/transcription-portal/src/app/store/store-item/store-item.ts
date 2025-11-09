@@ -40,6 +40,7 @@ export interface StoreItem {
   id: number;
   type: 'task' | 'folder';
   selected?: boolean;
+  mouseOver?: boolean;
 
   // task
   stopRequested?: boolean;

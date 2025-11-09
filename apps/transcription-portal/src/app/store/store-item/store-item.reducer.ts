@@ -1,9 +1,10 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { Mode, ModeState } from '../mode';
-import { StoreItem } from './store-item';
+import { StoreItem, StoreItemTaskDirectory } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import { convertIDBTaskToStoreTask, updateTaskFilesWithSameFile } from './store-item.functions';
+import { StoreItemsState } from './store-items-state';
 
 export const getTaskReducers = (
   modeAdapter: EntityAdapter<Mode<any>>,
@@ -64,7 +65,18 @@ export const getTaskReducers = (
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
   }),
-  on(StoreItemActions.importItemsFromProcessingQueue.do, (state: ModeState, { id, results, mode }) => {
+  on(StoreItemActions.removeStoreItems.do, (state: ModeState, { ids }): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: removeStoreItemsWithIDs(ids, state.entities[state.currentMode]!.items, taskAdapter),
+        },
+      },
+      state,
+    );
+  }),
+  on(StoreItemActions.importItemsFromProcessingQueue.do, (state: ModeState, { results, mode }) => {
     const currentMode = state.entities![mode]!;
 
     for (const result of results) {
@@ -93,7 +105,6 @@ export const getTaskReducers = (
     return state;
   }),
   on(StoreItemActions.toggleTaskDirectoryOpened.do, (state: ModeState, { dirID }) => {
-    const t = "";
     state = modeAdapter.updateOne(
       {
         id: state.currentMode,
@@ -153,4 +164,49 @@ function setSelection(
     },
     state,
   );
+}
+
+function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const idIndex = ids.findIndex((a) => a === item.id);
+
+    if (idIndex > -1) {
+      itemsState = taskAdapter.removeOne(item.id, itemsState);
+      ids = [...ids.slice(0, idIndex), ...ids.slice(idIndex + 1)];
+      items.splice(i, 1);
+      i--;
+    } else if (item.type === 'folder') {
+      const folderState = removeStoreItemsWithIDs(ids, item.entries!, taskAdapter);
+      itemsState = taskAdapter.updateOne(
+        {
+          id: item.id,
+          changes: {
+            entries: folderState,
+          },
+        },
+        itemsState,
+      );
+
+
+      if (folderState.ids.length === 1) {
+        // only one remaining, remove dir
+        const id = folderState.ids[0]!;
+        const subsubItem = folderState.entities[id]!;
+
+        itemsState = taskAdapter.addOne(
+          {
+            ...subsubItem,
+            directoryID: undefined,
+          },
+          itemsState,
+        );
+        itemsState = taskAdapter.removeOne(item.id, itemsState);
+      }
+    }
+  }
+
+  return itemsState;
 }

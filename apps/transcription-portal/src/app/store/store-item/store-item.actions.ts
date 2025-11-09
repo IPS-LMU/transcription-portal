@@ -1,8 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem } from './store-item';
 import { TPortalModes } from '../mode';
-import { PreprocessingQueueItem } from '../preprocessing';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem } from './store-item';
 
 export class StoreItemActions {
   static importTasks = createActionGroup({
@@ -69,30 +68,48 @@ export class StoreItemActions {
   });
 
   static importItemsFromProcessingQueue = createActionGroup({
-      source: 'tasks/import items from queue',
-      events: {
-        do: props<{
-          id: number;
-          mode: TPortalModes;
-          results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
-        }>(),
-        success: props<{
-          mode: TPortalModes;
-          id: number;
-        }>(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'tasks/import items from queue',
+    events: {
+      do: props<{
+        id: number;
+        mode: TPortalModes;
+        results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        id: number;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
   static toggleTaskDirectoryOpened = createActionGroup({
-      source: 'tasks/toggle opened directory',
-      events: {
-        do: props<{
-          dirID: number;
-        }>()
-      }
+    source: 'tasks/toggle opened directory',
+    events: {
+      do: props<{
+        dirID: number;
+      }>(),
+    },
   });
 
+  static setItemMouseOver = createActionGroup({
+    source: 'tasks/set mouseover',
+    events: {
+      do: props<{
+        id: number;
+        mouseOver: boolean;
+      }>(),
+    },
+  });
+
+  static removeStoreItems = createActionGroup({
+    source: 'tasks/remove store items',
+    events: {
+      do: props<{
+        ids: number[];
+      }>(),
+    },
+  });
 }

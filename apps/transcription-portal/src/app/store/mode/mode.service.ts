@@ -32,4 +32,8 @@ export class ModeStoreService {
   toggleDirectoryOpened(dirID: number) {
     this.store.dispatch(StoreItemActions.toggleTaskDirectoryOpened.do({ dirID }));
   }
+
+  removeStoreItems(ids: number[]) {
+    this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
+  }
 }
