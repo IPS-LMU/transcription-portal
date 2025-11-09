@@ -9,13 +9,13 @@
   <p>What would you like to do?</p>
   <div class="row g-2">
     <div class="col-4">
-      <button (click)="splitModalDismissedProperly = true; dismiss('FIRST')" class="btn btn-primary h-100 w-100">Always<br />use 1. channel</button>
+      <button (click)="dismiss('FIRST')" class="btn btn-primary h-100 w-100">Always<br />use 1. channel</button>
     </div>
     <div class="col-4">
-      <button (click)="splitModalDismissedProperly = true; dismiss('SECOND')" class="btn btn-primary h-100 w-100">Always<br />use 2. channel</button>
+      <button (click)="dismiss('SECOND')" class="btn btn-primary h-100 w-100">Always<br />use 2. channel</button>
     </div>
     <div class="col-4">
-      <button (click)="splitModalDismissedProperly = true; dismiss('BOTH')" class="btn btn-primary h-100 w-100">Always<br />use both channels</button>
+      <button (click)="dismiss('BOTH')" class="btn btn-primary h-100 w-100">Always<br />use both channels</button>
     </div>
   </div>
 </div>

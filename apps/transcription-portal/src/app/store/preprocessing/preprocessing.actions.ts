@@ -1,4 +1,4 @@
-import { createActionGroup, props } from '@ngrx/store';
+import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IFile } from '@octra/annotation';
 import { DirectoryInfo, FileInfo } from '@octra/web-media';
 import { TPortalModes } from '../mode';
@@ -43,4 +43,52 @@ export class PreprocessingActions {
       }>(),
     },
   });
+
+  static showSplitModal = createActionGroup({
+    source: 'preprocessing/show split modal',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static setSplitType = createActionGroup({
+    source: 'preprocessing/set split type',
+    events: {
+      do: props<{
+        splitType: 'BOTH' | 'FIRST' | 'SECOND';
+        mode: TPortalModes;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static splitFiles = createActionGroup({
+      source: 'preprocessing/split files',
+      events: {
+        do: props<{
+          queueItemID: number;
+          mode: TPortalModes;
+        }>(),
+        success: props<{
+          queueItemID: number;
+          mode: TPortalModes;
+          results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
+        }>(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
 }

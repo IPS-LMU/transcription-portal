@@ -11,24 +11,12 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 export class SplitModalComponent extends SubscriberComponent {
   protected activeModal = inject(NgbActiveModal);
 
-  @Output() dissmissedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   public static options: NgbModalOptions = {
     size: 'lg',
     backdrop: 'static',
     keyboard: false,
-    fullscreen: 'mm',
+    fullscreen: 'sm',
   };
-
-  private _splitModalDismissedProperly = false;
-
-  get splitModalDismissedProperly(): boolean {
-    return this._splitModalDismissedProperly;
-  }
-
-  @Input() set splitModalDismissedProperly(value: boolean) {
-    this._splitModalDismissedProperly = value;
-    this.dissmissedChange.emit(this._splitModalDismissedProperly);
-  }
 
   dismiss(reason: string) {
     this.activeModal.close(reason);

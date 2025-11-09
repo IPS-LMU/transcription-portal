@@ -82,7 +82,6 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     DirProgressDirective,
     ProcColIconDirective,
     ProceedingsRowDirective,
-    ProcColOperationDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

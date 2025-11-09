@@ -5,8 +5,8 @@ export enum ProcessingQueueStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   FINISHED = 'FINISHED',
-  REMOVED = 'REMOVED',
   WAIT_FOR_SPLIT = 'WAIT_FOR_SPLIT',
+  NEEDS_SPLIT = 'NEEDS_SPLIT',
   ERROR = 'ERROR',
 }
 
@@ -17,4 +17,7 @@ export interface PreprocessingQueueItem {
   status: ProcessingQueueStatus;
 }
 
-export interface PreprocessingState extends EntityState<PreprocessingQueueItem> {}
+export interface PreprocessingState extends EntityState<PreprocessingQueueItem> {
+  splitModalVisible?: boolean;
+  splitType?: 'FIRST' | 'SECOND' | 'BOTH';
+}

@@ -66,14 +66,17 @@ export class StoreItemEffects {
   importQueueItems$ = createEffect(() =>
     this.actions$.pipe(
       ofType(PreprocessingActions.processQueueItem.success),
-      exhaustMap((action) =>
-        of(
-          StoreItemActions.importItemsFromProcessingQueue.do({
-            id: action.id,
-            mode: action.mode,
-            results: action.results,
-          }),
-        ),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [any, RootState]) =>
+        state.modes.entities[state.modes.currentMode]!.preprocessor.entities[action.id]!.status === 'FINISHED'
+          ? of(
+              StoreItemActions.importItemsFromProcessingQueue.do({
+                id: action.id,
+                mode: action.mode,
+                results: action.results,
+              }),
+            )
+          : of(),
       ),
     ),
   );

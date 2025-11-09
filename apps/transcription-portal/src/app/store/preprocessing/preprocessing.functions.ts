@@ -1,5 +1,5 @@
 import { IFile } from '@octra/annotation';
-import { AudioFormat, AudioManager, DirectoryInfo, FileInfo, getAudioInfo } from '@octra/web-media';
+import { AudioCutter, AudioFormat, AudioInfo, AudioManager, DirectoryInfo, FileInfo, getAudioInfo, readFileContents } from '@octra/web-media';
 import { AppInfo } from '../../app.info';
 import { calcSHA256FromFile, cryptoSupported } from '../../obj/CryptoHelper';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
@@ -7,64 +7,77 @@ import { readFileAsArray, validTranscript } from '../../obj/functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 import { PreprocessingQueueItem } from './preprocessing.state';
 
-/*
-TODO SPLIT AUDIO
-if (audioInfo.channels > 1) {
-        const directory = new TPortalDirectoryInfo(path + file.attributes?.originalFileName.replace(/\..+$/g, '') + '_dir/');
-        const cutter = new AudioCutter(audioInfo);
-        const files: File[] = await cutter.splitChannelsToFiles(file.attributes?.originalFileName ?? '', [0, 1], arrayBuffer);
-        if (splitPrompt === 'PENDING') {
-          queueItem = {
-            ...queueItem,
-            status: ProcessingQueueStatus.WAIT_FOR_SPLIT,
-          };
-        } else if (splitPrompt !== 'ASKED') {
-          if (splitPrompt === 'FIRST') {
-            files.splice(1, 1);
-          } else if (splitPrompt === 'SECOND') {
-            files.splice(0, 1);
-          }
-        }
+export async function splitAudioFile(
+  audioFile: StoreAudioFile,
+  splitType: 'FIRST' | 'BOTH' | 'SECOND',
+  path = '',
+): Promise<(StoreFile | StoreAudioFile | StoreFileDirectory)[]> {
+  if (audioFile.blob) {
+    const originalFileName = audioFile.attributes?.originalFileName ?? audioFile.name;
+    const audioInfo = new AudioInfo(
+      originalFileName,
+      audioFile.type,
+      audioFile.size,
+      audioFile.sampleRate,
+      audioFile.duration,
+      audioFile.channels,
+      audioFile.bitrate,
+      audioFile.audioBufferInfo,
+    );
+    const cutter = new AudioCutter(audioInfo);
+    const arrayBuffer = await readFileContents<ArrayBuffer>(audioFile.blob, 'arraybuffer');
+    const files: File[] = await cutter.splitChannelsToFiles(originalFileName, [0, 1], arrayBuffer);
 
-        const fileInfos: TPortalFileInfo[] = [];
+    if (splitType === 'FIRST') {
+      files.splice(1, 1);
+    } else if (splitType === 'SECOND') {
+      files.splice(0, 1);
+    } else {
+      // use all files => do not remove anything.
+    }
 
-        if (files.length > 1) {
-          for (let i = 0; i < files.length; i++) {
-            const fileObj = files[i];
-            const fileInfo = TPortalFileInfo.fromFileObject(fileObj) as TPortalFileInfo;
-            fileInfo.hash = await calcSHA256FromFile(fileObj);
-            fileInfo.attributes = {
-              originalFileName: `${file.attributes.originalFileName.replace(/\..+$/g, '')}_${i + 1}${file.extension}`,
-            };
-            fileInfos.push(fileInfo);
-          }
-          directory.addEntries(fileInfos);
-          const result = await processDirectoryInfo(directory, queueItem, preprocessingState, splitPrompt);
-          return result;
-        } else {
-          return processFileInfo(TPortalFileInfo.fromFileObject(files[0]) as TPortalFileInfo, path, queueItem, preprocessingState, splitPrompt);
-        }
-      }
+    const fileInfos: StoreAudioFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const fileObj = files[i];
+      const { name, extension } = FileInfo.extractFileName(originalFileName);
+      const num = splitType === 'BOTH' ? i + 1 : splitType === 'FIRST' ? 1 : 2;
+      const newFileName = `${name.replace(/\..+$/g, '')}_${num}${extension}`;
+      const fileInfo: StoreAudioFile = {
+        attributes: {
+          originalFileName: newFileName,
+        },
+        audioBufferInfo: audioInfo.audioBufferInfo,
+        available: true,
+        bitrate: audioInfo.bitrate,
+        blob: fileObj,
+        channels: 1,
+        duration: audioInfo.duration.samples,
+        hash: await calcSHA256FromFile(fileObj),
+        name: newFileName,
+        sampleRate: audioInfo.sampleRate,
+        size: fileObj.size,
+        type: fileObj.type,
+      };
+      fileInfos.push(fileInfo);
+    }
 
- */
-
-/* TODO move this to reducer after file added
-const foundOldFileInTask = getTaskWithHashAndName(
-file.hash!,
-file.attributes.originalFileName,
-modeState.items.ids.map((id) => modeState.items.entities[id]).filter((a) => a !== undefined),
-);
-// found file in another task
-const index = foundOldFileInTask.files.findIndex(
-  (a) => a.attributes.originalFileName === file.attributes.originalFileName && a.hash === file.hash,
-);
-if (index > -1) {
-  const copy = file.clone();
-  foundOldFileInTask.setFileObj(index, copy);
-  foundOldFileInTask.operations[0].changeState(TaskStatus.PENDING);
+    if (fileInfos.length > 1) {
+      const directoryName = audioFile.attributes?.originalFileName.replace(/\..+$/g, '') + '_dir';
+      const directory: StoreFileDirectory = {
+        attributes: { originalFileName: directoryName },
+        entries: fileInfos,
+        name: directoryName,
+        path: `${path}${directoryName}/`,
+        size: 0,
+        type: 'folder',
+      };
+      return [directory];
+    } else {
+      return fileInfos;
+    }
+  }
+  throw new Error('Missing blob for audio file to split.');
 }
-
- */
 
 /*
 add task from queued preprocessing
@@ -302,35 +315,3 @@ async function processDirectoryInfo(
 
   return [newDir];
 }
-
-/**
- * do we need this
-for (const value of values) {
-  if (value.type !== "folder") {
-    // set state
-    for (let i = 0; i < affectedMode.operations.length; i++) {
-      const operation = affectedMode.operations[i];
-      value.operations[i].enabled = operation.enabled;
-      value.operations[i].addProcessingRound();
-    }
-    content.push(value);
-  } else {
-    // is dir
-    if (value.entries.length === 1) {
-      content.push(value.entries[0]);
-    } else {
-      if (content.length > 0) {
-        dirTask.addEntries(content);
-        result.push(dirTask);
-        content = [];
-      }
-
-      result.push(value);
-    }
-  }
-}
-if (content.length > 0) {
-  dirTask.addEntries(content);
-  result.push(dirTask);
-}
- */
