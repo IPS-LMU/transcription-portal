@@ -86,4 +86,13 @@ export class StoreItemActions {
       }
   });
 
+  static toggleTaskDirectoryOpened = createActionGroup({
+      source: 'tasks/toggle opened directory',
+      events: {
+        do: props<{
+          dirID: number;
+        }>()
+      }
+  });
+
 }

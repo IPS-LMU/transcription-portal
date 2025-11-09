@@ -111,7 +111,7 @@
   }
   @if (popover.operation === undefined && popover.task) {
     <span>File information:</span>
-    <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
+    <!-- <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>-->
   }
 </tportal-popover>
 
@@ -126,7 +126,13 @@
   (mouseup)="onTableMouseUp()"
   class="inner"
 >
-  @if (entries !== undefined && entries !== null && entries.length === 0 && entries.length === 0 && (queue === undefined || queue === null || queue.length === 0)) {
+  @if (
+    entries !== undefined &&
+    entries !== null &&
+    entries.length === 0 &&
+    entries.length === 0 &&
+    (queue === undefined || queue === null || queue.length === 0)
+  ) {
     <div class="tportal-placeholder">
       <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
         @if (taskService.state.currentMode === 'annotation') {
@@ -376,73 +382,35 @@
       </thead>
       <!-- TABLE BODY -->
       <tbody>
-      <!-- ready tasks and directories -->
+        <!-- ready tasks and directories -->
         @for (entry of entries; track entry.id; let entryIndex = $index) {
-          <!-- TODO  CONTINUE HERE -->
-          <tr
-            [entry]="entry"
-            [rowSelected]="entry.selected"
-            [toolSelectedOperation]="toolSelectedOperation"
-            (contextmenu)="onContextMenu($event, row)"
-            (click)="onContextBlur()"
-            (scroll)="cancelScroll($event)"
-            tportalProceedingsRow
-            #row
-          >
-            <!-- TODO check
-              [mouseOver]="false"
-            -->
-            <td
-              #nameCol="colIcon"
-              (appendingClick)="onPreviewClick($event)"
-              (click)="onRowSelected(entry)"
-              (deleteIconClick)="removeEntry($event, getTask(entry))"
-              (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
-              (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
-              (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-              (mouseenter)="onNameMouseEnter($event, getTask(entry))"
-              (mouseleave)="onNameMouseLeave($event, getTask(entry))"
-              (mouseover)="onNameMouseOver($event, getTask(entry))"
-              (tagClicked)="onTagClicked()"
-              [dirOpened]="allDirOpened"
-              [entry]="entry"
-              [shortStyle]="isClosed"
-              tportalProcColIcon
-            ></td>
-            @if (getTask(entry) !== undefined && entry.type === 'task') {
-              @for (operation of entry.operations; track operation.id) {
-                <td tportalProceedingsTableTd [storeTaskOperation]="operation">
-                  <tportal-proceedings-table-operation-selector [storeTaskOperation]="operation"></tportal-proceedings-table-operation-selector>
-                </td>
-              }
-            } @else {
-              @for (operationFactory of operations; track operationFactory.name; let opIndex = $index) {
-                <td>
-                  <div class="progress">
-                    <div
-                      [dir]="getTaskDirectory(entry)"
-                      [opIndex]="opIndex"
-                      tportalDirProgress
-                      aria-valuemax="100"
-                      aria-valuemin="0"
-                      class="progress-bar"
-                      role="progressbar"
-                    ></div>
-                  </div>
-                </td>
-              }
+          <ng-container
+            [ngTemplateOutlet]="taskOrDirRow"
+            [ngTemplateOutletContext]="{
+              entry,
+              entryIndex,
+              dirID: entry.type === 'folder' ? entry.id : undefined,
+              fade: 'opened',
+            }"
+          ></ng-container>
+
+          @if (entry.type === 'folder') {
+            <!-- folder row -->
+            @for (dirEntry of getTaskDirEntries(entry); track dirEntry.id; let entryIndex = $index) {
+              <ng-container
+                [ngTemplateOutlet]="taskOrDirRow"
+                [ngTemplateOutletContext]="{
+                  dirID: entry.id,
+                  entry: dirEntry,
+                  entryIndex,
+                  fade: entry.opened === true ? 'opened' : 'closed',
+                }"
+              ></ng-container>
             }
-            <td class="export-col">
-              @if (isOneOperationFinished(entry)) {
-                <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(entry, entryIndex)">
-                  <i class="bi bi-cloud-download"></i>
-                </button>
-              }
-            </td>
-          </tr>
+          }
         }
 
-      <!-- Queue rows -->
+        <!-- Queue rows -->
         @for (entry of queue; track entry.id; let i = $index) {
           @if (entry.infoItem !== undefined) {
             <tr style="cursor: pointer">
@@ -450,7 +418,7 @@
                 <td [attr.colspan]="operations.length + 3" [ngClass]="{ shorten: shortstyle }">
                   <i aria-hidden="true" class="bi bi-database op-50"> </i>
                   <span class="op-50" title="{{ entry.infoItem.name }}">
-                    {{ entry.infoItem.name}}
+                    {{ entry.infoItem.name }}
                     <i class="bi bi-gear spin"></i>
                   </span>
                 </td>
@@ -480,3 +448,66 @@
     </table>
   }
 </div>
+
+<ng-template #taskOrDirRow let-dirOpened="dirOpened" let-dirID="dirID" let-entry="entry" let-entryIndex="entryIndex" let-fade="fade">
+  <tr
+    [@fadeToggleRow]="fade"
+    [entry]="entry"
+    [rowSelected]="entry.selected"
+    [toolSelectedOperation]="toolSelectedOperation"
+    (contextmenu)="onContextMenu($event, row)"
+    (click)="onContextBlur()"
+    (scroll)="cancelScroll($event)"
+    tportalProceedingsRow
+    #row
+  >
+    <!-- TODO check
+      [mouseOver]="false"
+    -->
+    <td
+      (appendingClick)="onPreviewClick($event)"
+      (click)="onRowSelected(entry)"
+      (deleteIconClick)="removeEntry($event, getTask(entry))"
+      (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+      (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+      (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+      (mouseenter)="onNameMouseEnter($event, getTask(entry))"
+      (mouseleave)="onNameMouseLeave($event, getTask(entry))"
+      (mouseover)="onNameMouseOver($event, getTask(entry))"
+      (tagClicked)="onTagClicked(dirID)"
+      [entry]="entry"
+      [shortStyle]="isClosed"
+      tportalProcColIcon
+    ></td>
+    @if (getTask(entry) !== undefined && entry.type === 'task') {
+      @for (operation of entry.operations; track operation.id) {
+        <td tportalProceedingsTableTd [storeTaskOperation]="operation">
+          <tportal-proceedings-table-operation-selector [storeTaskOperation]="operation"></tportal-proceedings-table-operation-selector>
+        </td>
+      }
+    } @else {
+      @for (operationFactory of operations; track operationFactory.name; let opIndex = $index) {
+        <td>
+          <div class="progress">
+            <div
+              [dir]="getTaskDirectory(entry)"
+              [opIndex]="opIndex"
+              tportalDirProgress
+              aria-valuemax="100"
+              aria-valuemin="0"
+              class="progress-bar"
+              role="progressbar"
+            ></div>
+          </div>
+        </td>
+      }
+    }
+    <td class="export-col">
+      @if (isOneOperationFinished(entry)) {
+        <button class="btn btn-outline-success" style="padding: 0 5px" (click)="onExportButtonClick(entry, entryIndex)">
+          <i class="bi bi-cloud-download"></i>
+        </button>
+      }
+    </td>
+  </tr>
+</ng-template>

@@ -92,6 +92,28 @@ export const getTaskReducers = (
 
     return state;
   }),
+  on(StoreItemActions.toggleTaskDirectoryOpened.do, (state: ModeState, { dirID }) => {
+    const t = "";
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: taskAdapter.updateOne(
+            {
+              id: dirID,
+              changes: {
+                opened: !(state.entities[state.currentMode]?.items.entities[dirID]?.opened ?? false),
+              },
+            },
+            state.entities[state.currentMode]!.items,
+          ),
+        },
+      },
+      state,
+    );
+
+    return state;
+  }),
 ];
 
 function setSelection(

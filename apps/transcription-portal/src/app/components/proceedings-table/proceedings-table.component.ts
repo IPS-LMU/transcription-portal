@@ -56,6 +56,7 @@ import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
+import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
@@ -81,6 +82,7 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     DirProgressDirective,
     ProcColIconDirective,
     ProceedingsRowDirective,
+    ProcColOperationDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -835,12 +837,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     });
   }
 
-  onTagClicked() {
-    this.selectionBlocked = true;
-
-    setTimeout(() => {
-      this.selectionBlocked = false;
-    }, 1000);
+  onTagClicked(dirID: number) {
+    this.modeStoreService.toggleDirectoryOpened(dirID);
   }
 
   onOpenAllRows() {

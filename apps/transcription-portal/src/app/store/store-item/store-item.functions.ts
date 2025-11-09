@@ -4,7 +4,8 @@ import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSe
 import { IDBFolderItem, IDBTaskItem } from '../../indexedDB';
 import { IOperation } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
-import { OperationFactory, StoreTaskOperationProcessingRound } from '../operation';
+import { taskAdapter } from '../mode';
+import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemsState } from './store-items-state';
@@ -102,7 +103,7 @@ export function getTaskWithHashAndName(hash: string, name: string, entries: Stor
 }
 
 export function updateTaskFilesWithSameFile(
-  addedStoreFile: StoreFile | StoreAudioFile | StoreFileDirectory,
+  addedStoreFileOrDirectory: StoreFile | StoreAudioFile | StoreFileDirectory,
   itemsState: StoreItemsState,
   adapter: EntityAdapter<StoreItem>,
   counters: {
@@ -144,8 +145,8 @@ export function updateTaskFilesWithSameFile(
   let someThingFound = false;
 
   for (const itemID of itemsState.ids) {
-    if (addedStoreFile.type !== 'folder' && itemsState.entities[itemID]?.type === 'task') {
-      const addedFile = addedStoreFile as StoreFile;
+    if (addedStoreFileOrDirectory.type !== 'folder' && itemsState.entities[itemID]?.type === 'task') {
+      const addedFile = addedStoreFileOrDirectory as StoreFile;
       const task = itemsState.entities[itemID] as StoreItemTask;
 
       if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || task.operations[0].lastRound?.lastResult?.available == false) {
@@ -183,10 +184,10 @@ export function updateTaskFilesWithSameFile(
         if (!somethingFoundInFiles && task.files.length === 1) {
           const firstFile = task.files[0];
           const firstFileName = FileInfo.extractFileName(firstFile.attributes.originalFileName);
-          const storeFileName = FileInfo.extractFileName(addedStoreFile.attributes.originalFileName);
+          const storeFileName = FileInfo.extractFileName(addedStoreFileOrDirectory.attributes.originalFileName);
 
-          if (firstFile.type !== addedStoreFile.type && firstFileName.name === storeFileName.name) {
-            if (firstFile.type.includes('audio') || addedStoreFile.type.includes('audio')) {
+          if (firstFile.type !== addedStoreFileOrDirectory.type && firstFileName.name === storeFileName.name) {
+            if (firstFile.type.includes('audio') || addedStoreFileOrDirectory.type.includes('audio')) {
               someThingFound = true;
               const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
               result.state = adapter.updateOne(
@@ -208,45 +209,13 @@ export function updateTaskFilesWithSameFile(
   }
 
   if (!someThingFound) {
-    if (addedStoreFile.type !== 'folder') {
+    if (addedStoreFileOrDirectory.type !== 'folder') {
       // add file to a new task
-      const addedFile = addedStoreFile as StoreFile;
-      const newTaskID = counters.storeItem;
-      const operations = defaultOperations.map((operationFactory, i) => {
-        let operation = operationFactory.create(counters.operation + i, newTaskID, [
-          new StoreTaskOperationProcessingRound({
-            status: TaskStatus.PENDING,
-          }),
-        ]);
-        operation = operationFactory.applyTaskOptions(
-          {
-            asr: {
-              provider: currentModeOptions.selectedASRProvider,
-              language: currentModeOptions.selectedASRLanguage,
-              diarization: {
-                enabled: currentModeOptions.isDiarizationEnabled,
-                speakers: currentModeOptions.diarizationSpeakers,
-              },
-            },
-            maus: {
-              language: currentModeOptions.selectedMausLanguage,
-            },
-            translation: {
-              language: currentModeOptions.selectedTranslationLanguage,
-            },
-            summarization: {
-              provider: currentModeOptions.selectedSummarizationProvider,
-              numberOfWords: currentModeOptions.selectedSummarizationNumberOfWords,
-            },
-          },
-          operation,
-        );
-
-        return operation;
-      });
+      const addedFile = addedStoreFileOrDirectory as StoreFile;
+      const newTaskID = result.counters.storeItem;
+      const operations = createOperationsByDefaultOperations(defaultOperations, newTaskID, result.counters, currentModeOptions);
 
       const newStoreItem: StoreItemTask = {
-        directoryID: 0,
         files: [addedFile],
         id: newTaskID,
         operations,
@@ -257,7 +226,52 @@ export function updateTaskFilesWithSameFile(
       result.state = adapter.addOne(newStoreItem, result.state);
       result.counters.storeItem = result.counters.storeItem + 1;
     } else {
-      // TODO implement
+      const addedFolder = addedStoreFileOrDirectory as StoreFileDirectory;
+      let folderIDCounter = result.counters.storeItem;
+      let newStoreItemCounter = folderIDCounter++;
+      const newStoreItem: StoreItemTaskDirectory = {
+        folderName: addedFolder.name,
+        id: folderIDCounter,
+        path: addedFolder.path,
+        size: addedFolder.size,
+        type: 'folder',
+        entries: taskAdapter.addMany(
+          addedFolder.entries?.map((storeFileOrDir) => {
+            if (storeFileOrDir.type === 'folder') {
+              const di = storeFileOrDir as StoreFileDirectory;
+              const d: StoreItemTaskDirectory = {
+                entries: { ...taskAdapter.getInitialState(), allSelected: false },
+                folderName: di.name,
+                id: folderIDCounter++,
+                path: di.path,
+                size: di.size,
+                type: 'folder',
+              };
+              newStoreItemCounter++;
+              return d;
+            } else {
+              // file
+              const fi = storeFileOrDir as StoreFile;
+              const f: StoreItemTask = {
+                directoryID: folderIDCounter,
+                files: [fi],
+                id: newStoreItemCounter,
+                operations: createOperationsByDefaultOperations(defaultOperations, newStoreItemCounter, result.counters, currentModeOptions),
+                status: TaskStatus.QUEUED,
+                type: 'task',
+              };
+              newStoreItemCounter++;
+              return f;
+            }
+          }) ?? [],
+          {
+            ...taskAdapter.getInitialState(),
+            allSelected: false,
+          },
+        ),
+      };
+      result.state = adapter.addOne(newStoreItem, result.state);
+      result.counters.storeItem = newStoreItemCounter;
     }
   }
 
@@ -368,4 +382,58 @@ export async function convertFileInfoDirectoryToStoreFileDirectory(directory: Di
   }
 
   return result;
+}
+
+export function createOperationsByDefaultOperations(
+  defaultOperations: OperationFactory<any>[],
+  taskID: number,
+  counters: {
+    storeItem: number;
+    operation: number;
+    processingQueueItem: number;
+  },
+  currentModeOptions: {
+    selectedASRLanguage?: string;
+    selectedMausLanguage?: string;
+    selectedTranslationLanguage?: string;
+    selectedASRProvider?: ServiceProvider;
+    selectedSummarizationProvider?: ServiceProvider;
+    selectedSummarizationNumberOfWords?: number;
+    isDiarizationEnabled?: boolean;
+    diarizationSpeakers?: number;
+  },
+): StoreTaskOperation[] {
+  return defaultOperations.map((operationFactory) => {
+    let operation = operationFactory.create(counters.operation, taskID, [
+      new StoreTaskOperationProcessingRound({
+        status: TaskStatus.PENDING,
+      }),
+    ]);
+    operation = operationFactory.applyTaskOptions(
+      {
+        asr: {
+          provider: currentModeOptions.selectedASRProvider,
+          language: currentModeOptions.selectedASRLanguage,
+          diarization: {
+            enabled: currentModeOptions.isDiarizationEnabled,
+            speakers: currentModeOptions.diarizationSpeakers,
+          },
+        },
+        maus: {
+          language: currentModeOptions.selectedMausLanguage,
+        },
+        translation: {
+          language: currentModeOptions.selectedTranslationLanguage,
+        },
+        summarization: {
+          provider: currentModeOptions.selectedSummarizationProvider,
+          numberOfWords: currentModeOptions.selectedSummarizationNumberOfWords,
+        },
+      },
+      operation,
+    );
+
+    counters.operation++;
+    return operation;
+  });
 }

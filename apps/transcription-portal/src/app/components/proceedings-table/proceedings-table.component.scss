@@ -277,3 +277,8 @@ table thead tr th:hover {
 .fixed-table-layout {
   table-layout: fixed;
 }
+
+table tbody tr td .bi.bi-chevron-up,
+table tbody tr td .bi.bi-chevron-down {
+  margin-right: 5px;
+}

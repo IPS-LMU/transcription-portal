@@ -4,7 +4,6 @@ import { AppInfo } from '../../app.info';
 import { calcSHA256FromFile, cryptoSupported } from '../../obj/CryptoHelper';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { readFileAsArray, validTranscript } from '../../obj/functions';
-import { Mode } from '../mode';
 import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 import { PreprocessingQueueItem } from './preprocessing.state';
 
@@ -178,16 +177,14 @@ export async function processFileOrDirectoryInfo(
   infoItem: StoreFile | StoreAudioFile | StoreFileDirectory,
   path: string,
   queueItem: PreprocessingQueueItem,
-  modeState: Mode<any>,
 ): Promise<(StoreFile | StoreAudioFile | StoreFileDirectory)[]> {
   if (infoItem.type === 'folder') {
     // folder
-    const dir = infoItem as TPortalDirectoryInfo;
-    // TODO
-    throw new Error('not implemented');
+    const dir = infoItem as StoreFileDirectory;
+    return processDirectoryInfo(dir, queueItem, path);
   } else {
     const f = infoItem as StoreFile;
-    return processFileInfo(f, path, queueItem, modeState);
+    return processFileInfo(f, queueItem);
   }
 }
 
@@ -198,12 +195,7 @@ export async function processFileOrDirectoryInfo(
  * @param queueItem
  * @param modeState
  */
-export async function processFileInfo(
-  file: StoreFile,
-  path: string,
-  queueItem: PreprocessingQueueItem,
-  modeState: Mode<any>,
-): Promise<(StoreFile | StoreAudioFile)[]> {
+export async function processFileInfo(file: StoreFile, queueItem: PreprocessingQueueItem): Promise<(StoreFile | StoreAudioFile)[]> {
   let clonedFile = { ...file } as StoreFile | StoreAudioFile;
   const blob = file.type.includes('audio') ? file.blob : new File([file.content!], file.name, { type: file.type });
   const extension = FileInfo.extractFileName(clonedFile.name).extension;
@@ -281,58 +273,64 @@ export async function getHashString(fileBlob: File) {
   return `${fileBlob.name}_${fileBlob.size}`;
 }
 
-/*
 async function processDirectoryInfo(
-  dir: TPortalDirectoryInfo,
+  dir: StoreFileDirectory,
   queueItem: PreprocessingQueueItem,
-  preprocessingState: PreprocessingState,
-  splitPrompt: string,
-): Promise<TaskDirectory[]> {
-  const dirTask = new TaskDirectory(dir.path, dir.size);
-  const processedValues: any = [];
+  path?: string,
+): Promise<(StoreFile | StoreAudioFile | StoreFileDirectory)[]> {
+  const processedValues: (StoreFile | StoreAudioFile)[][] = [];
+  const dirEntries = dir.entries ?? [];
 
-  for (const dirEntry of dir.entries) {
-    if (dirEntry instanceof FileInfo) {
-      const file = dirEntry as TPortalFileInfo;
-      processedValues.push(await processFileInfo(file, dir.path, queueItem, preprocessingState, splitPrompt));
+  for (const dirEntry of dirEntries) {
+    if (dirEntry.type !== 'folder') {
+      const file = dirEntry as StoreFile;
+      processedValues.push(await processFileInfo(file, queueItem));
     } else {
       throw new Error('file in dir is not a file!');
     }
   }
-  const result = [];
-  let content = [];
 
-  const values = flatten(processedValues) as StoreItem[];
+  const newDir: StoreFileDirectory = {
+    attributes: dir.attributes,
+    entries: processedValues.flat(),
+    hash: dir.hash,
+    name: dir.name,
+    path: path + '/' + dir.name,
+    size: dir.size,
+    type: 'folder',
+  };
 
-  for (const value of values) {
-    if (value instanceof Task) {
-      // set state
-      for (let i = 0; i < affectedMode.operations.length; i++) {
-        const operation = affectedMode.operations[i];
-        value.operations[i].enabled = operation.enabled;
-        value.operations[i].addProcessingRound();
-      }
-      content.push(value);
+  return [newDir];
+}
+
+/**
+ * do we need this
+for (const value of values) {
+  if (value.type !== "folder") {
+    // set state
+    for (let i = 0; i < affectedMode.operations.length; i++) {
+      const operation = affectedMode.operations[i];
+      value.operations[i].enabled = operation.enabled;
+      value.operations[i].addProcessingRound();
+    }
+    content.push(value);
+  } else {
+    // is dir
+    if (value.entries.length === 1) {
+      content.push(value.entries[0]);
     } else {
-      // is dir
-      if (value.entries.length === 1) {
-        content.push(value.entries[0]);
-      } else {
-        if (content.length > 0) {
-          dirTask.addEntries(content);
-          result.push(dirTask);
-          content = [];
-        }
-
-        result.push(value);
+      if (content.length > 0) {
+        dirTask.addEntries(content);
+        result.push(dirTask);
+        content = [];
       }
+
+      result.push(value);
     }
   }
-  if (content.length > 0) {
-    dirTask.addEntries(content);
-    result.push(dirTask);
-  }
-
-  return result;
+}
+if (content.length > 0) {
+  dirTask.addEntries(content);
+  result.push(dirTask);
 }
  */

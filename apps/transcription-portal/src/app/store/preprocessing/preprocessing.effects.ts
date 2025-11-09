@@ -3,7 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { IFile } from '@octra/annotation';
 import { DirectoryInfo, FileInfo } from '@octra/web-media';
-import { catchError, exhaustMap, from, map, of, tap, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, from, map, mergeMap, of, tap, withLatestFrom } from 'rxjs';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { TPortalModes } from '../mode';
@@ -120,7 +120,7 @@ export class PreprocessingEffects {
         const item = preprocessingState.entities[id];
 
         if (item) {
-          return from(processFileOrDirectoryInfo(item.infoItem, '', item, state.modes.entities[mode]!)).pipe(
+          return from(processFileOrDirectoryInfo(item.infoItem, '', item)).pipe(
             map((results) =>
               PreprocessingActions.processQueueItem.success({
                 id,

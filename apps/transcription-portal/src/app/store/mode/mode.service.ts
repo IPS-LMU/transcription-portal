@@ -28,4 +28,8 @@ export class ModeStoreService {
   removeTaskOrFolder(item: StoreItem) {
     this.store.dispatch(StoreItemActions.removeTaskOrFolder.do({ item }));
   }
+
+  toggleDirectoryOpened(dirID: number) {
+    this.store.dispatch(StoreItemActions.toggleTaskDirectoryOpened.do({ dirID }));
+  }
 }

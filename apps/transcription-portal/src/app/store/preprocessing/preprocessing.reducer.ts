@@ -35,7 +35,7 @@ export const getPreprocessingReducers = (
       },
     ),
   ),
-  on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode, id }) =>
+  on(PreprocessingActions.processQueueItem.success, (state: ModeState, { mode, id }) =>
     // queue item successfully processed, set status to finished
     modeAdapter.updateOne(
       {

@@ -1,5 +1,5 @@
 import { ServiceProvider } from '@octra/ngx-components';
-import { TPortalAudioInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
+import { TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { StoreTaskOperation } from '../operation';
 import { StoreItemsState } from './store-items-state';
 
@@ -53,6 +53,7 @@ export interface StoreItem {
   size?: number;
   folderName?: string;
   entries?: StoreItemsState;
+  opened?: boolean;
 }
 
 export interface StoreItemTaskDirectory extends Omit<StoreItem, 'stopRequested' | 'files' | 'operations' | 'directoryID' | 'status'> {
@@ -60,6 +61,7 @@ export interface StoreItemTaskDirectory extends Omit<StoreItem, 'stopRequested' 
   size?: number;
   folderName: string;
   entries: StoreItemsState;
+  opened?: boolean;
 }
 
 export interface StoreItemTask extends Omit<StoreItem, 'path' | 'size' | 'folderName' | 'entries'> {
@@ -84,7 +86,7 @@ export interface StoreFile {
 }
 
 export interface StoreFileDirectory {
-  type: "folder";
+  type: 'folder';
   name: string;
   size: number;
   path: string;
