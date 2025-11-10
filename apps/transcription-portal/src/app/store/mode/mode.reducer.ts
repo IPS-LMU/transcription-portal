@@ -89,11 +89,26 @@ export const modeReducer = createReducer(
           options: {},
           items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
-            new UploadOperationFactory(),
-            new ASROperationFactory(),
-            new OctraOperationFactory(),
-            new G2pMausOperationFactory(),
-            new EmuOperationFactory(),
+            {
+              factory: new UploadOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new ASROperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new OctraOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new G2pMausOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new EmuOperationFactory(),
+              enabled: true,
+            },
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
@@ -111,11 +126,26 @@ export const modeReducer = createReducer(
           options: {},
           items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
-            new UploadOperationFactory(),
-            new ASROperationFactory(),
-            new OctraOperationFactory(),
-            new SummarizationOperationFactory(),
-            new TranslationOperationFactory(),
+            {
+              factory: new UploadOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new ASROperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new OctraOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new SummarizationOperationFactory(),
+              enabled: true,
+            },
+            {
+              factory: new TranslationOperationFactory(),
+              enabled: true,
+            },
           ],
           overallState: 'not started',
           status: TaskStatus.READY,
@@ -132,6 +162,70 @@ export const modeReducer = createReducer(
       state,
     );
   }),
+  on(ModeActions.setDefaultOperationEnabled.do, (state: ModeState, { name, enabled }): ModeState => {
+    let defaultOperations = state.entities[state.currentMode]!.defaultOperations;
+    const operations = {
+      Upload: {
+        ...defaultOperations.find((a) => a.factory.name === 'Upload')!,
+      },
+      ASR: {
+        ...defaultOperations.find((a) => a.factory.name === 'ASR')!,
+      },
+      OCTRA: {
+        ...defaultOperations.find((a) => a.factory.name === 'OCTRA')!,
+      },
+      MAUS: {
+        ...defaultOperations.find((a) => a.factory.name === 'MAUS')!,
+      },
+      'Emu WebApp': {
+        ...defaultOperations.find((a) => a.factory.name === 'Emu WebApp')!,
+      },
+      Summarization: {
+        ...defaultOperations.find((a) => a.factory.name === 'Summarization')!,
+      },
+      Translation: {
+        ...defaultOperations.find((a) => a.factory.name === 'Translation')!,
+      },
+    };
+
+    if (state.currentMode === 'annotation') {
+      if (name === 'ASR' && enabled === false) {
+        operations.OCTRA.enabled = true;
+      } else if (name === 'OCTRA' && enabled === false) {
+        operations.ASR.enabled = true;
+      }
+
+      if (['MAUS', 'Emu WebApp'].includes(name)) {
+        operations.MAUS.enabled = enabled;
+        operations['Emu WebApp'].enabled = enabled;
+      }
+    }
+
+    (operations as any)[name].enabled = enabled;
+
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          defaultOperations:
+            state.currentMode === 'annotation'
+              ? [operations.Upload, operations.ASR, operations.OCTRA, operations.MAUS, operations['Emu WebApp']]
+              : [operations.Upload, operations.ASR, operations.OCTRA, operations.Summarization, operations.Translation],
+        },
+      },
+      state,
+    );
+  }),
+  on(
+    ModeActions.changeMode.do,
+    (state: ModeState, { mode }): ModeState => ({
+      ...state,
+      currentMode: mode,
+    }),
+  ),
   ...getTaskReducers(modeAdapter, taskAdapter),
   ...getPreprocessingReducers(modeAdapter, preprocessingAdapter),
 );
+
+// TODO continue here
+// TODO apply enabled operations on queued tasks

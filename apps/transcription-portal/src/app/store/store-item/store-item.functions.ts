@@ -1,7 +1,7 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
-import { IDBFolderItem, IDBTaskItem } from '../../indexedDB';
+import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { IOperation } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
 import { taskAdapter } from '../mode';
@@ -13,6 +13,10 @@ import { StoreItemsState } from './store-items-state';
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,
   taskAdapter: EntityAdapter<StoreItem>,
+  defaultOperations: {
+    factory: OperationFactory;
+    enabled: boolean;
+  }[],
   directoryID?: number,
 ): StoreItem {
   if (entry.type === 'task') {
@@ -21,7 +25,7 @@ export function convertIDBTaskToStoreTask(
       type: 'task',
       stopRequested: false,
       files: entry.files.map((a) => convertIDBFileToStoreFile(a)),
-      operations: entry.operations.map((a: IOperation, i: number) => convertIDBOperationToStoreOperation(a, entry.id)),
+      operations: entry.operations.map((a: IDBOperation, i: number) => convertIDBOperationToStoreOperation(a, entry, defaultOperations)),
       directoryID: directoryID,
       status: entry.state,
     } as StoreItemTask;
@@ -34,7 +38,7 @@ export function convertIDBTaskToStoreTask(
       entries: taskAdapter.getInitialState(),
     };
     result.entries = taskAdapter.addMany(
-      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, entry.id)),
+      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, defaultOperations)),
       result.entries,
     );
 
@@ -111,7 +115,10 @@ export function updateTaskFilesWithSameFile(
     operation: number;
     processingQueueItem: number;
   },
-  defaultOperations: OperationFactory<any>[],
+  defaultOperations: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[],
   currentModeOptions: {
     selectedASRLanguage?: string;
     selectedMausLanguage?: string;
@@ -205,6 +212,7 @@ export function updateTaskFilesWithSameFile(
       }
     } else {
       const dir = itemsState.entities[itemID] as StoreItemTaskDirectory;
+      // TODO implement
     }
   }
 
@@ -228,7 +236,7 @@ export function updateTaskFilesWithSameFile(
     } else {
       const addedFolder = addedStoreFileOrDirectory as StoreFileDirectory;
       let folderIDCounter = result.counters.storeItem;
-      let newStoreItemCounter = folderIDCounter++;
+      let newStoreItemCounter = folderIDCounter + 1;
       const newStoreItem: StoreItemTaskDirectory = {
         folderName: addedFolder.name,
         id: folderIDCounter,
@@ -385,7 +393,10 @@ export async function convertFileInfoDirectoryToStoreFileDirectory(directory: Di
 }
 
 export function createOperationsByDefaultOperations(
-  defaultOperations: OperationFactory<any>[],
+  defaultOperations: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[],
   taskID: number,
   counters: {
     storeItem: number;
@@ -403,16 +414,17 @@ export function createOperationsByDefaultOperations(
     diarizationSpeakers?: number;
   },
 ): StoreTaskOperation[] {
-  return defaultOperations.map((operationFactory) => {
-    let operation = operationFactory.create(counters.operation, taskID, [
+  return defaultOperations.map((defaultOperation) => {
+    let operation = defaultOperation.factory.create(counters.operation, taskID, [
       new StoreTaskOperationProcessingRound({
-        status: TaskStatus.PENDING,
+        status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
       }),
     ]);
-    operation = operationFactory.applyTaskOptions(
+    operation.enabled = defaultOperation.enabled;
+    operation = defaultOperation.factory.applyTaskOptions(
       {
         asr: {
-          provider: currentModeOptions.selectedASRProvider,
+          provider: currentModeOptions.selectedASRProvider?.provider,
           language: currentModeOptions.selectedASRLanguage,
           diarization: {
             enabled: currentModeOptions.isDiarizationEnabled,
@@ -426,7 +438,7 @@ export function createOperationsByDefaultOperations(
           language: currentModeOptions.selectedTranslationLanguage,
         },
         summarization: {
-          provider: currentModeOptions.selectedSummarizationProvider,
+          provider: currentModeOptions.selectedSummarizationProvider?.provider,
           numberOfWords: currentModeOptions.selectedSummarizationNumberOfWords,
         },
       },

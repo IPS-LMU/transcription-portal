@@ -1,11 +1,9 @@
 import { last } from '@octra/utilities';
 import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
-import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { ServiceProvider } from '@octra/ngx-components';
 import { StoreFile } from '../store-item';
 
-export class StoreTaskOperation<T extends object = any> {
+export class StoreTaskOperation<T extends object = any, O extends StoreTaskOperation = any> {
   id!: number;
   taskID!: number;
   name!: string;
@@ -38,8 +36,16 @@ export class StoreTaskOperation<T extends object = any> {
     return this.lastRound?.time;
   }
 
-  constructor(partial?: Partial<StoreTaskOperation<T>>) {
+  constructor(partial?: Partial<StoreTaskOperation<T, O>>) {
     Object.assign(this, partial);
+  }
+
+  clone(): O {
+    throw new Error('Not implemented');
+  }
+
+  duplicate(partial?: Partial<StoreTaskOperation<T, O>>): O {
+    throw new Error('Not implemented');
   }
 }
 

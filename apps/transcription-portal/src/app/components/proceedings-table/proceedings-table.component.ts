@@ -49,6 +49,7 @@ import {
   StoreItemTask,
   StoreItemTaskDirectory,
   StoreTaskOperation,
+  TPortalModes,
 } from '../../store';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
@@ -91,7 +92,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   storage = inject(StorageService);
   private ngbModalService = inject(NgbModal);
   private shortcutService = inject(ShortcutService);
-  private modeStoreService = inject(ModeStoreService);
+  protected modeStoreService = inject(ModeStoreService);
 
   public contextmenu = {
     x: 0,
@@ -132,7 +133,11 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   @Input() queue?: PreprocessingQueueItem[] | null;
   @Input() entries?: StoreItem[] | null;
-  @Input() operations?: OperationFactory[] | null = [];
+  @Input() currentMode?: TPortalModes;
+  @Input() operations?: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[] | null = [];
   public isDragging = false;
   public allDirOpened: 'opened' | 'closed' = 'opened';
   @Input() shortstyle = false;

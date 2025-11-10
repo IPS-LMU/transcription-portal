@@ -1,8 +1,16 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
-import { StoreItemTaskOptions } from '../../store-item';
 
-export class UploadOperation extends StoreTaskOperation<any> {}
+export class UploadOperation extends StoreTaskOperation<any, UploadOperation> {
+  override clone(): UploadOperation {
+    return new UploadOperation(this);
+  }
+
+  override duplicate(partial?: Partial<StoreTaskOperation<any, UploadOperation>>): UploadOperation {
+    return new UploadOperation(partial);
+  }
+}
 
 export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _description =
@@ -18,7 +26,8 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return new UploadOperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
+      serviceProviderName: 'BAS',
       options,
       rounds,
       taskID,

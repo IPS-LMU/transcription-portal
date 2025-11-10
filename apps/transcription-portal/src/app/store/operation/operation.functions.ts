@@ -1,20 +1,36 @@
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
-import { IDBTaskItem } from '../../indexedDB';
+import { IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
+import { TaskStatus } from '../../obj/tasks';
 import { convertIDBFileToStoreFile, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { OperationFactory } from './factory';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
-export function convertIDBOperationToStoreOperation(operation: IOperation, taskID: number): StoreTaskOperation {
-  return new StoreTaskOperation({
-    enabled: operation.enabled,
-    estimatedEnd: undefined,
-    id: operation.id,
-    name: operation.name,
-    rounds: operation.rounds.map((a) => convertIDBOperationRoundToStoreRound(a)),
-    serviceProviderName: operation.serviceProvider,
-    taskID,
-    options: operation.options,
-  });
+export function convertIDBOperationToStoreOperation(
+  operation: IDBOperation,
+  task: IDBTaskItem,
+  defaultOperations: {
+    factory: OperationFactory;
+    enabled: boolean;
+  }[],
+): StoreTaskOperation {
+  const { factory, enabled } = defaultOperations.find((a) => a.factory.name === operation.name)!;
+  let result = factory.create(
+    operation.id,
+    task.id,
+    operation.rounds.map((a) => convertIDBOperationRoundToStoreRound(a)),
+  );
+  result.serviceProviderName = operation.serviceProvider;
+  result.enabled = operation.enabled === undefined && task.state === TaskStatus.QUEUED ? enabled : operation.enabled;
+  result = factory.applyTaskOptions({
+    asr: {
+      language: (operation.name === "ASR") ? operation.language: undefined,
+      diarization: operation.diarization,
+      provider: operation.serviceProvider
+    }
+  }, result);
+
+  return result;
 }
 
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {

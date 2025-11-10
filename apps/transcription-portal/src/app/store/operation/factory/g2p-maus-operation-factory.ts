@@ -6,7 +6,15 @@ export interface G2pMausOperationOptions {
   language?: string;
 }
 
-export class G2pMausOperation extends StoreTaskOperation<G2pMausOperationOptions> {}
+export class G2pMausOperation extends StoreTaskOperation<G2pMausOperationOptions, G2pMausOperation> {
+  override clone(): G2pMausOperation {
+    return new G2pMausOperation(this);
+  }
+
+  override duplicate(partial?: Partial<StoreTaskOperation<any, G2pMausOperation>>): G2pMausOperation {
+    return new G2pMausOperation(partial);
+  }
+}
 
 export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, G2pMausOperationOptions> {
   protected readonly _description =
@@ -21,7 +29,8 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     return new G2pMausOperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
+      serviceProviderName: "BAS",
       options: {},
       rounds,
       taskID,
@@ -32,7 +41,7 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     return new G2pMausOperation({
       ...operation,
       options: {
-        language: options.maus?.language,
+        language: options.maus?.language === undefined ? operation.options?.language : options.maus?.language,
       },
     });
   }

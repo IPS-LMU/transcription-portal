@@ -110,8 +110,8 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>File information:</span>
-    <!-- <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>-->
+    <span class="mb-3">File information:</span>
+    <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
   }
 </tportal-popover>
 
@@ -135,9 +135,9 @@
   ) {
     <div class="tportal-placeholder">
       <h1 class="display-3" style="margin-top: 5%; margin-bottom: 20px">
-        @if (taskService.state.currentMode === 'annotation') {
+        @if (currentMode === 'annotation') {
           Annotation
-        } @else if (taskService.state.currentMode === 'summarization') {
+        } @else if (currentMode === 'summarization') {
           Summarization & Translation
         }
       </h1>
@@ -146,12 +146,12 @@
         between the modes by clicking on the tabs at the left top corner.
       </p>
       <p class="px-5">
-        @if (taskService.state.currentMode === 'annotation') {
+        @if (currentMode === 'annotation') {
           In annotation mode you are able to transcribe audio files automatically using ASR, correct the transcript using
           <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>,
           automatically align the transcript into words and edit the phonetic details in
           <a href="https://ips-lmu.github.io/EMU-webApp/" target="_blank" class="text-decoration-none">Emu-webApp</a>.
-        } @else if (taskService.state.currentMode === 'summarization') {
+        } @else if (currentMode === 'summarization') {
           In summarization mode you automatically transcribe audio files using ASR, check the transcript in
           <a href="https://clarin.phonetik.uni-muenchen.de/apps/octra/octra/login" class="text-decoration-none" target="_blank">Octra</a>, summarize
           the transcript using AI and translate it to a selected language automatically.
@@ -263,7 +263,7 @@
             }
           </th>
           <th style="width: 20%">File</th>
-          @for (operation of operations; track operation.name; let i = $index) {
+          @for (operation of operations; track operation.factory.name; let i = $index) {
             <ng-container style="text-align: center">
               <th
                 (mousemove)="updateChanges()"
@@ -276,7 +276,7 @@
                   <div style="display: block; position: relative; height: 25px; cursor: pointer">
                     <tportal-operation-arrow [first]="i === 0" [type]="'arrow'"></tportal-operation-arrow>
                     <div style="z-index: 10; width: 100%; text-align: center">
-                      <ng-template #tipContent>{{ operation.description }}</ng-template>
+                      <ng-template #tipContent>{{ operation.factory.description }}</ng-template>
                       <!-- TODO (click)="openArchiveDownload('column', operation, taskService.currentModeState!.selectedRows)" -->
                       <div
                         [ngbTooltip]="tipContent"
@@ -286,11 +286,11 @@
                         style="display: inline; padding: 0 3px"
                       >
                         @if (shortstyle) {
-                          {{ operation.shortTitle }}
+                          {{ operation.factory.shortTitle }}
                         }
                         @if (!shortstyle) {
-                          <span class="d-none d-xl-inline-block">{{ operation.title }}</span>
-                          <span class="d-inline-block d-xl-none">{{ operation.shortTitle }}</span>
+                          <span class="d-none d-xl-inline-block">{{ operation.factory.title }}</span>
+                          <span class="d-inline-block d-xl-none">{{ operation.factory.shortTitle }}</span>
                         }
                       </div>
                     </div>
@@ -321,18 +321,23 @@
         <tr class="subTableHeader">
           <th style="width: 15px; padding-right: 0; text-align: center"></th>
           <th style="width: 20%"></th>
-          @for (operation of operations; track operation.name; let i = $index) {
+          @for (operation of operations; track operation.factory.name; let i = $index) {
             <ng-container style="text-align: center">
-              @if (operation.name === 'OCTRA' || operation.name === 'ASR') {
+              @if (operation.factory.name === 'OCTRA' || operation.factory.name === 'ASR') {
                 <th
                   [ngStyle]="{
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
-                  <input class="header-checkbox" type="checkbox" />
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
                 </th>
-              } @else if (operation.name === 'MAUS') {
+              } @else if (operation.factory.name === 'MAUS') {
                 <th
                   colspan="2"
                   style="position: relative"
@@ -341,32 +346,47 @@
                   }"
                 >
                   <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
-                  <input class="header-checkbox" type="checkbox" />
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
                   <img
                     src="assets/directory.png"
                     style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
                   />
                 </th>
-              } @else if (operation.name === 'Summarization') {
+              } @else if (operation.factory.name === 'Summarization') {
                 <th
                   style="position: relative"
                   [ngStyle]="{
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
-                  <input class="header-checkbox" type="checkbox" />
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
                 </th>
-              } @else if (operation.name === 'Translation') {
+              } @else if (operation.factory.name === 'Translation') {
                 <th
                   style="position: relative"
                   [ngStyle]="{
                     width: !isClosed ? maxColumnWidths[i] + '%' : 'auto',
                   }"
                 >
-                  <!-- (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" -->
-                  <input class="header-checkbox" type="checkbox" />
+                  <input
+                    class="header-checkbox"
+                    type="checkbox"
+                    [checked]="operation.enabled"
+                    (change)="modeStoreService.setDefaultOperationEnabled(operation.factory.name, checkb.checked)"
+                    #checkb
+                  />
                 </th>
               } @else if (i === 0) {
                 <th></th>
@@ -487,7 +507,7 @@
         </td>
       }
     } @else {
-      @for (operationFactory of operations; track operationFactory.name; let opIndex = $index) {
+      @for (operation of operations; track operation.factory.name; let opIndex = $index) {
         <td>
           <div class="progress">
             <div

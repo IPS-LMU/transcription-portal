@@ -688,7 +688,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   changeMode(mode: 'annotation' | 'summarization') {
-    this.taskService.state.currentMode = mode;
+    this.modeStoreService.changeMode(mode);
   }
 
   openAboutModal() {

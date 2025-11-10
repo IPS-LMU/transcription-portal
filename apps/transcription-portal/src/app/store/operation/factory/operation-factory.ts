@@ -1,7 +1,7 @@
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { StoreItemTaskOptions } from '../../store-item';
 
-export abstract class OperationFactory<T extends StoreTaskOperation<R> = any, R extends object = any> {
+export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
   protected abstract readonly _name: string;
   protected abstract readonly _title: string;
   protected abstract readonly _description: string;

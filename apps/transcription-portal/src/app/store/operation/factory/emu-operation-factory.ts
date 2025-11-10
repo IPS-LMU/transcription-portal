@@ -1,9 +1,15 @@
+import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
-import { StoreItemTaskOptions } from '../../store-item';
 
-export class EmuOperation extends StoreTaskOperation<any>{}
-
+export class EmuOperation extends StoreTaskOperation<any, EmuOperation> {
+  override clone(): EmuOperation {
+    return new EmuOperation(this);
+  }
+  override duplicate(partial?: Partial<StoreTaskOperation<any, EmuOperation>>): EmuOperation {
+    return new EmuOperation(partial);
+  }
+}
 export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _description =
     'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
@@ -18,7 +24,8 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     return new EmuOperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
+      serviceProviderName: "BAS",
       options: {},
       rounds,
       taskID,

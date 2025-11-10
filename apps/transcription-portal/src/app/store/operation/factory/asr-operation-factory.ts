@@ -10,7 +10,15 @@ export interface ASROperationOptions {
   };
 }
 
-export class ASROperation extends StoreTaskOperation<ASROperationOptions> {}
+export class ASROperation extends StoreTaskOperation<ASROperationOptions, ASROperation> {
+  override clone(): ASROperation {
+    return new ASROperation(this);
+  }
+
+  override duplicate(partial?: Partial<StoreTaskOperation<any, ASROperation>>): ASROperation {
+    return new ASROperation(partial);
+  }
+}
 
 export class ASROperationFactory extends OperationFactory<ASROperation, ASROperationOptions> {
   protected readonly _description =
@@ -26,7 +34,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     return new ASROperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
       options: {},
       rounds,
       taskID,
@@ -36,9 +44,10 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   override applyTaskOptions(options: StoreItemTaskOptions, operation: ASROperation) {
     return new ASROperation({
       ...operation,
+      serviceProviderName: options.asr?.provider === undefined ? operation.serviceProviderName : options.asr?.provider,
       options: {
-        language: options.asr?.language,
-        diarization: options.asr?.diarization,
+        language: options.asr?.language === undefined ? operation.options?.language : options.asr?.language,
+        diarization: options.asr?.diarization === undefined ? operation.options?.diarization : options.asr?.diarization,
       },
     });
   }

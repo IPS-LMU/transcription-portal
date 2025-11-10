@@ -18,7 +18,7 @@ export enum TaskStatus {
 export interface StoreItemTaskOptions {
   asr?: {
     language?: string;
-    provider?: ServiceProvider;
+    provider?: string;
     diarization?: {
       enabled?: boolean;
       speakers?: number;
@@ -28,7 +28,7 @@ export interface StoreItemTaskOptions {
     language?: string;
   };
   summarization?: {
-    provider?: ServiceProvider;
+    provider?: string;
     numberOfWords?: number;
   };
   translation?: {
@@ -68,7 +68,7 @@ export interface StoreItemTaskDirectory extends Omit<StoreItem, 'stopRequested' 
 export interface StoreItemTask extends Omit<StoreItem, 'path' | 'size' | 'folderName' | 'entries'> {
   stopRequested?: boolean;
   files: (StoreFile | StoreAudioFile)[];
-  operations: StoreTaskOperation[];
+  operations: StoreTaskOperation<any, StoreTaskOperation>[];
   directoryID?: number;
   status: TaskStatus;
 }

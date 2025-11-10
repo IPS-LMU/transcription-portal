@@ -2,7 +2,15 @@ import { StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
-export class OctraOperation extends StoreTaskOperation<any> {}
+export class OctraOperation extends StoreTaskOperation<any, OctraOperation> {
+  override clone(): OctraOperation {
+    return new OctraOperation(this);
+  }
+
+  override duplicate(partial?: Partial<StoreTaskOperation<any, OctraOperation>>): OctraOperation {
+    return new OctraOperation(partial);
+  }
+}
 
 export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _description =
@@ -18,8 +26,9 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     return new OctraOperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
       options: {},
+      serviceProviderName: "BAS",
       rounds,
       taskID,
     });

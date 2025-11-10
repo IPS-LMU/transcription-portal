@@ -84,4 +84,18 @@ export class ModeEffects {
       }),
     ),
   );
+
+  defaultOptionsEnabledChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ModeActions.setDefaultOperationEnabled.do),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) => {
+        return of(
+          ModeActions.setDefaultOperationEnabled.success({
+            defaultOptions: state.modes.entities[state.modes.currentMode]!.defaultOperations,
+          }),
+        );
+      }),
+    ),
+  );
 }

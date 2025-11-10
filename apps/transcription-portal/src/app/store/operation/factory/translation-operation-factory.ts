@@ -6,7 +6,15 @@ export interface TranslationOperationOptions {
   language?: string;
 }
 
-export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions> {}
+export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions, TranslationOperation> {
+  override clone(): TranslationOperation {
+    return new TranslationOperation(this);
+  }
+
+  override duplicate(partial?: Partial<StoreTaskOperation<any, TranslationOperation>>): TranslationOperation {
+    return new TranslationOperation(partial);
+  }
+}
 
 export class TranslationOperationFactory extends OperationFactory<TranslationOperation, TranslationOperationOptions> {
   protected readonly _description = 'Summarizes a given full text.';
@@ -19,8 +27,9 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return new TranslationOperation({
       enabled: true,
       id,
-      name: '',
+      name: this.name,
       options: {},
+      serviceProviderName: 'LibreTranslate',
       rounds,
       taskID,
     });
@@ -30,7 +39,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return new TranslationOperation({
       ...operation,
       options: {
-        language: options.translation?.language,
+        language: options.translation?.language === undefined ? operation.options?.language : options.translation?.language,
       },
     });
   }

@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { RootState } from '../app';
 import { StoreItem, StoreItemTask } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
+import { ModeActions } from './mode.actions';
 import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations } from './mode.selectors';
+import { TPortalModes } from './mode.state';
 
 @Injectable({ providedIn: 'root' })
 export class ModeStoreService {
@@ -35,5 +37,20 @@ export class ModeStoreService {
 
   removeStoreItems(ids: number[]) {
     this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
+  }
+
+  setDefaultOperationEnabled(name: string, enabled: boolean) {
+    this.store.dispatch(
+      ModeActions.setDefaultOperationEnabled.do({
+        name,
+        enabled,
+      }),
+    );
+  }
+
+  changeMode(mode: TPortalModes) {
+    this.store.dispatch(ModeActions.changeMode.do({
+      mode
+    }));
   }
 }

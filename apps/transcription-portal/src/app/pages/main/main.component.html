@@ -269,6 +269,7 @@
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
             [entries]="modeStoreService.selectedModeEntries$ | async"
+            currentMode="annotation"
             [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"
@@ -281,7 +282,7 @@
     <li [ngbNavItem]="2">
       <button ngbNavLink (mousedown)="changeMode('summarization')">Summarization &amp; Translation</button>
       <ng-template ngbNavContent class="d-flex w-100 h-100">
-        @if ((appStoreService.appInitialized$ | async) && taskService.state.modes.summarization.taskList !== undefined) {
+        @if (appStoreService.appInitialized$ | async) {
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
@@ -290,6 +291,8 @@
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
             [isClosed]="sidebarExpand === 'closed'"
+            [entries]="modeStoreService.selectedModeEntries$ | async"
+            currentMode="summarization"
             [operations]="modeStoreService.selectedModeDefaultOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="sidebarstate === 'opened'"

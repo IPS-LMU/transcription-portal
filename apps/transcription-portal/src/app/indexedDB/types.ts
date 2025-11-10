@@ -1,5 +1,5 @@
 import { FileInfoSerialized } from '@octra/web-media';
-import { IOperation } from '../obj/operations/operation';
+import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
 import { TaskStatus } from '../obj/tasks';
 
 export interface IDBUserSettingsItem<T> {
@@ -30,7 +30,7 @@ export interface IDBTaskItem {
   state: TaskStatus;
   folderPath: string;
   files: (FileInfoSerialized | AudioFileInfoSerialized)[];
-  operations: IOperation[];
+  operations: IDBOperation[];
 }
 
 export interface IDBFolderItem {
@@ -50,4 +50,18 @@ export interface AudioFileInfoSerialized extends FileInfoSerialized {
 export interface IDBInternItem {
   name: string;
   value: any;
+}
+
+export interface IDBOperation {
+  id: number;
+  name: string;
+  enabled: boolean;
+  rounds: OperationProcessingRoundSerialized[];
+  serviceProvider?: string;
+  diarization?: {
+    enabled?: boolean;
+    speakers?: number;
+  };
+  language?: string;
+  maxNumbersOfWords?: number;
 }

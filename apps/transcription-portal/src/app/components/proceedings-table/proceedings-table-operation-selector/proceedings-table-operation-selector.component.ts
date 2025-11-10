@@ -3,7 +3,8 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import { StoreTaskOperation } from '../../../store';
 import { ProceedingsTableAsrOperationComponent,
   ProceedingsTableToolOperationComponent, ProceedingsTableUploadOperationComponent,
-  ProceedingsTableWordAlignmentOperationComponent
+  ProceedingsTableTranslationOperationComponent, ProceedingsTableWordAlignmentOperationComponent,
+  ProceedingsTableSummarizationOperationComponent
 } from '../operations';
 
 @Component({
@@ -13,7 +14,9 @@ import { ProceedingsTableAsrOperationComponent,
     ProceedingsTableUploadOperationComponent,
     ProceedingsTableAsrOperationComponent,
     ProceedingsTableToolOperationComponent,
+    ProceedingsTableTranslationOperationComponent,
     ProceedingsTableWordAlignmentOperationComponent,
+    ProceedingsTableSummarizationOperationComponent,
   ],
   styleUrls: ['./proceedings-table-operation-selector.component.scss'],
 })

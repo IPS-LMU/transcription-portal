@@ -4,7 +4,7 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { last, SubscriptionManager } from '@octra/utilities';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { Subject } from 'rxjs';
-import { IDBTaskItem } from '../../indexedDB';
+import { IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
 
@@ -377,7 +377,7 @@ export abstract class Operation {
 
   public abstract clone(task?: Task, id?: number): Operation;
 
-  public abstract fromAny(operationObj: IOperation, commands: string[], task: Task, taskObj: IDBTaskItem): Operation;
+  public abstract fromAny(operationObj: IDBOperation, commands: string[], task: Task, taskObj: IDBTaskItem): Operation;
 
   async toAny(): Promise<IOperation> {
     throw new Error('Not implemented.');

@@ -4,7 +4,7 @@ import { OperationFactory } from '../operation';
 import { PreprocessingState } from '../preprocessing/preprocessing.state';
 import { StoreItemsState, TaskStatus } from '../store-item';
 
-export type TPortalModes = "annotation" | "summarization";
+export type TPortalModes = 'annotation' | 'summarization';
 
 export interface ModeStatistics {
   queued: number;
@@ -17,7 +17,10 @@ export interface ModeStatistics {
 export interface Mode<O extends object> {
   name: string;
   options: O;
-  defaultOperations: OperationFactory<any>[];
+  defaultOperations: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[];
   items: StoreItemsState;
   newFiles?: boolean;
   overallState: 'processing' | 'waiting' | 'stopped' | 'not started';
@@ -32,7 +35,7 @@ export interface ModeState extends EntityState<Mode<any>> {
     storeItem: number;
     operation: number;
     processingQueueItem: number;
-  }
+  };
 
   defaultUserSettings: {
     selectedASRLanguage?: string;

@@ -265,7 +265,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
         // set filename
         this.renderer.setAttribute(result, 'title', task.files[0].attributes?.originalFileName);
-        const filename = this.renderer.createText(' ' + task.files[0].attributes?.originalFileName.replace('_annot.json', '.wav') + ` (${this.entry.id})`);
+        const filename = this.renderer.createText(' ' + task.files[0].attributes?.originalFileName.replace('_annot.json', '.wav'));
         this.renderer.appendChild(result, filename);
         this.renderer.appendChild(wrapper, result);
       } else {
@@ -275,7 +275,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
 
         // set filename
         this.renderer.setAttribute(result, 'title', dir.folderName);
-        const filename = this.renderer.createText(' ' + dir.folderName);
+        const filename = this.renderer.createText(` ${dir.folderName}`);
         this.renderer.appendChild(result, filename);
 
         if (dir.entries.ids.length > 0) {

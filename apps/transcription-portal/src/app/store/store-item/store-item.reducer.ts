@@ -1,7 +1,10 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
+import { TaskStatus } from '../../obj/tasks';
 import { Mode, ModeState } from '../mode';
-import { StoreItem, StoreItemTaskDirectory } from './store-item';
+import { ModeActions } from '../mode/mode.actions';
+import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import { convertIDBTaskToStoreTask, updateTaskFilesWithSameFile } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
@@ -15,8 +18,8 @@ export const getTaskReducers = (
       annotation: StoreItem[];
       summarization: StoreItem[];
     } = {
-      annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter)),
-      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter)),
+      annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
+      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
     };
 
     for (const id of Object.keys(tasks)) {
@@ -125,6 +128,59 @@ export const getTaskReducers = (
 
     return state;
   }),
+  on(ModeActions.setDefaultOperationEnabled.success, (state: ModeState, { defaultOptions }) => ({
+    ...modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.status === TaskStatus.QUEUED,
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              if (item.type === 'task') {
+                const task = item as StoreItemTask;
+                for (let i = 0; i < state.entities[state.currentMode]!.defaultOperations.length; i++) {
+                  const defaultOperation = state.entities[state.currentMode]!.defaultOperations[i];
+                  const lastRoundIndex = itemsState.entities[item.id]!.operations![i].rounds.length - 1;
+
+                  if (lastRoundIndex > -1) {
+                    const changedItem = itemsState.entities[item.id]!.operations![i].duplicate({
+                      ...(itemsState.entities[item.id]!.operations as StoreTaskOperation<any, any>[])[i],
+                      rounds: [
+                        ...itemsState.entities[item.id]!.operations![i].rounds.slice(0, lastRoundIndex),
+                        new StoreTaskOperationProcessingRound({
+                          ...itemsState.entities[item.id]!.operations![i].rounds![lastRoundIndex],
+                          status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
+                        }),
+                      ],
+                      enabled: defaultOperation.enabled,
+                    });
+
+                    itemsState = taskAdapter.updateOne(
+                      {
+                        id: item.id,
+                        changes: {
+                          operations: [
+                            ...itemsState.entities[item.id]!.operations!.slice(0, i),
+                            changedItem,
+                            ...itemsState.entities[item.id]!.operations!.slice(i + 1),
+                          ],
+                        },
+                      },
+                      itemsState,
+                    );
+                  }
+                }
+              }
+              return itemsState;
+            },
+          ),
+        },
+      },
+      state,
+    ),
+  })),
 ];
 
 function setSelection(
@@ -166,20 +222,24 @@ function setSelection(
   );
 }
 
-function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {
+function applyFunctionOnStoreItemsWhereRecursive(
+  where: (item: StoreItem) => boolean,
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
+  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
+) {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const idIndex = ids.findIndex((a) => a === item.id);
 
-    if (idIndex > -1) {
-      itemsState = taskAdapter.removeOne(item.id, itemsState);
-      ids = [...ids.slice(0, idIndex), ...ids.slice(idIndex + 1)];
+    if (where(item)) {
+      itemsState = applyFunction(item, itemsState);
       items.splice(i, 1);
       i--;
     } else if (item.type === 'folder') {
-      const folderState = removeStoreItemsWithIDs(ids, item.entries!, taskAdapter);
+      const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction);
       itemsState = taskAdapter.updateOne(
         {
           id: item.id,
@@ -190,11 +250,67 @@ function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, tas
         itemsState,
       );
 
+      if (afterAppliedOnFolder) {
+        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
+      }
+    }
+  }
 
-      if (folderState.ids.length === 1) {
+  return itemsState;
+}
+
+function applyFunctionOnStoreItemsWithIDsRecursive(
+  ids: number[],
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
+  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
+) {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const idIndex = ids.findIndex((a) => a === item.id);
+
+    if (idIndex > -1) {
+      itemsState = applyFunction(item, itemsState);
+      ids = [...ids.slice(0, idIndex), ...ids.slice(idIndex + 1)];
+      items.splice(i, 1);
+      i--;
+    } else if (item.type === 'folder') {
+      const folderState = applyFunctionOnStoreItemsWithIDsRecursive(ids, item.entries!, taskAdapter, applyFunction);
+      itemsState = taskAdapter.updateOne(
+        {
+          id: item.id,
+          changes: {
+            entries: folderState,
+          },
+        },
+        itemsState,
+      );
+
+      if (afterAppliedOnFolder) {
+        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
+      }
+    }
+  }
+
+  return itemsState;
+}
+
+function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {
+  return applyFunctionOnStoreItemsWithIDsRecursive(
+    ids,
+    itemsState,
+    taskAdapter,
+    (item, itemsState) => {
+      return taskAdapter.removeOne(item.id, itemsState);
+    },
+    (item, itemsState, folderItemsState) => {
+      if (folderItemsState.ids.length === 1) {
         // only one remaining, remove dir
-        const id = folderState.ids[0]!;
-        const subsubItem = folderState.entities[id]!;
+        const id = folderItemsState.ids[0]!;
+        const subsubItem = folderItemsState.entities[id]!;
 
         itemsState = taskAdapter.addOne(
           {
@@ -203,10 +319,9 @@ function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, tas
           },
           itemsState,
         );
-        itemsState = taskAdapter.removeOne(item.id, itemsState);
+        return taskAdapter.removeOne(item.id, itemsState);
       }
-    }
-  }
-
-  return itemsState;
+      return itemsState;
+    },
+  );
 }
