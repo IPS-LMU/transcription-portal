@@ -5,7 +5,13 @@ import { RootState } from '../app';
 import { StoreItem, StoreItemTask } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
-import { selectAllTasks, selectCurrentModeEntries, selectDefaultOperations } from './mode.selectors';
+import {
+  selectAllTasks,
+  selectCurrentModeEntries,
+  selectCurrentModeStatistics,
+  selectDefaultOperations,
+  selectDefaultOptions,
+} from './mode.selectors';
 import { TPortalModes } from './mode.state';
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +20,8 @@ export class ModeStoreService {
   selectedModeDefaultOperations$ = this.store.select(selectDefaultOperations);
   selectedModeEntries$ = this.store.select(selectCurrentModeEntries);
   allTasks$: Observable<StoreItemTask[] | undefined> = this.store.select(selectAllTasks);
+  defaultUserSettings$ = this.store.select(selectDefaultOptions);
+  currentModeStatistics$ = this.store.select(selectCurrentModeStatistics);
 
   selectRows(rowIndexes: number[], deselectOthers = false) {
     this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes, deselectOthers }));
@@ -49,8 +57,10 @@ export class ModeStoreService {
   }
 
   changeMode(mode: TPortalModes) {
-    this.store.dispatch(ModeActions.changeMode.do({
-      mode
-    }));
+    this.store.dispatch(
+      ModeActions.changeMode.do({
+        mode,
+      }),
+    );
   }
 }

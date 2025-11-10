@@ -28,7 +28,7 @@
                 </td>
                 <td>
                   <octra-asr-provider-select
-                    [(ngModel)]="taskService.state.currentModeState.selectedASRProvider"
+                    [ngModel]="modeStoreService.defaultUserSettings$ | async"
                     [required]="true"
                     (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                     [asrProviders]="asrProviders"

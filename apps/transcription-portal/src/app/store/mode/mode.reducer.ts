@@ -15,8 +15,10 @@ import {
 import { PreprocessingQueueItem } from '../preprocessing';
 import { getPreprocessingReducers } from '../preprocessing/preprocessing.reducer';
 import { getTaskReducers, StoreItem, TaskStatus } from '../store-item';
+import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
-import { Mode, ModeState } from './mode.state';
+import { getAllTasks } from './mode.functions';
+import { Mode, ModeState, ModeStatistics, TPortalModes } from './mode.state';
 
 export const modeAdapter: EntityAdapter<Mode<any>> = createEntityAdapter<Mode<any>>({
   selectId: (mode) => mode.name,
@@ -227,5 +229,3 @@ export const modeReducer = createReducer(
   ...getPreprocessingReducers(modeAdapter, preprocessingAdapter),
 );
 
-// TODO continue here
-// TODO apply enabled operations on queued tasks

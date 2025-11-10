@@ -170,16 +170,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   onVerifyButtonClick() {
-    const taskList = this.taskService.state.currentModeState.taskList;
-    const tasks = taskList?.getAllTasks().filter((a) => {
-      return a.status === TaskStatus.QUEUED;
+    this.openQueueModal().catch((err) => {
+      console.error(err);
     });
-
-    if (tasks && tasks.length > 0) {
-      this.openQueueModal().catch((err) => {
-        console.error(err);
-      });
-    }
   }
 
   async openQueueModal() {

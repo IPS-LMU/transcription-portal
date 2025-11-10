@@ -7,6 +7,8 @@ import { Mode } from './mode.state';
 export const selectCurrentMode = (state: RootState): Mode<any> | undefined => {
   return state.modes.entities[state.modes.currentMode];
 };
+export const selectDefaultOptions = (state: RootState)=> state.modes.defaultUserSettings;
+export const selectCurrentModeStatistics = createSelector(selectCurrentMode, (mode) => mode!.statistics);
 export const selectDefaultOperations = createSelector(selectCurrentMode, (mode) => mode?.defaultOperations);
 export const selectCurrentModeEntries = createSelector(selectCurrentMode, (mode): StoreItem[] =>
   Object.keys(mode?.items?.entities ?? []).map((a) => mode!.items!.entities[a]!),

@@ -1,4 +1,4 @@
-import { NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, NgClass, NgStyle } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -28,7 +28,7 @@ import { AppSettings } from '../../shared/app.settings';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AppStoreService } from '../../store';
+import { AppStoreService, ModeStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -36,7 +36,7 @@ import { AppStoreService } from '../../store';
   styleUrls: ['./queue-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent],
+  imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent, AsyncPipe],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {
   protected activeModal = inject(NgbActiveModal);
@@ -47,6 +47,7 @@ export class QueueModalComponent implements OnDestroy, OnInit {
   protected settingsService = inject(SettingsService);
   private renderer = inject(Renderer2);
   private appStoreService = inject(AppStoreService);
+  protected modeStoreService = inject(ModeStoreService);
 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 

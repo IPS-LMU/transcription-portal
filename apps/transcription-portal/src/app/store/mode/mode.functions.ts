@@ -1,5 +1,4 @@
-import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
-import { AppInfo } from '../../app.info';
+import { StoreItem, StoreItemsState, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 
 export function getIndexByEntry(selectedEntry: StoreItem, entities: StoreItem[]): number {
   let result = -1;
@@ -31,4 +30,20 @@ export function getIndexByEntry(selectedEntry: StoreItem, entities: StoreItem[])
   }
 
   return result;
+}
+
+export function getAllTasks(itemsState: StoreItemsState): StoreItemTask[] {
+  const results: StoreItemTask[] = [];
+  const items = itemsState.ids.map((id) => itemsState.entities[id]!);
+
+  for (const item of items) {
+    if (item.type === 'task') {
+      const t = item as StoreItemTask;
+      results.push(t);
+    } else {
+      const d = item as StoreItemTaskDirectory;
+      results.push(...getAllTasks(d.entries));
+    }
+  }
+  return results;
 }

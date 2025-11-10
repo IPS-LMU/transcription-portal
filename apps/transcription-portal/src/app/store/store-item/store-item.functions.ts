@@ -4,7 +4,7 @@ import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSe
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { IOperation } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
-import { taskAdapter } from '../mode';
+import { getAllTasks, modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
@@ -448,4 +448,41 @@ export function createOperationsByDefaultOperations(
     counters.operation++;
     return operation;
   });
+}
+
+
+export function updateStatistics(modeState: ModeState, mode: TPortalModes): ModeState {
+  const currentMode = modeState.entities[mode]!;
+  const tasks = getAllTasks(currentMode.items);
+  const statistics: ModeStatistics = { queued: 0, waiting: 0, running: 0, finished: 0, errors: 0 };
+
+  for (const task of tasks) {
+    switch (task.status) {
+      case TaskStatus.READY || TaskStatus.PENDING:
+        statistics.waiting++;
+        break;
+      case TaskStatus.QUEUED:
+        statistics.queued++;
+        break;
+      case TaskStatus.UPLOADING || TaskStatus.PROCESSING:
+        statistics.running++;
+        break;
+      case TaskStatus.ERROR:
+        statistics.errors++;
+        break;
+      case TaskStatus.FINISHED:
+        statistics.finished++;
+        break;
+    }
+  }
+
+  return modeAdapter.updateOne(
+    {
+      id: mode,
+      changes: {
+        statistics,
+      },
+    },
+    modeState,
+  );
 }

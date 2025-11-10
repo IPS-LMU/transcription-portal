@@ -314,14 +314,14 @@
         <input #fileinput (change)="onFileChange(fileinput)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
         <button
           (click)="onVerifyButtonClick()"
-          [disabled]="taskService.currentModeStatistics.queued < 1"
+          [disabled]="(modeStoreService.currentModeStatistics$ | async)!.queued < 1"
           class="btn btn-primary"
           style="margin-left: 10px"
         >
           <i class="bi bi-clipboard-check-fill"></i>
           <span class="d-none d-lg-inline d-xl-inline"> 2. CHECK OPTIONS</span>
-          @if (taskService.currentModeStatistics.queued > 0) {
-            ({{ taskService.currentModeStatistics.queued }})
+          @if ((modeStoreService.currentModeStatistics$ | async)!.queued > 0) {
+            ({{ (modeStoreService.currentModeStatistics$ | async)!.queued }})
           }
         </button>
       </div>

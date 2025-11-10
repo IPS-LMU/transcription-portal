@@ -1,12 +1,12 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { TaskStatus } from '../../obj/tasks';
-import { Mode, ModeState } from '../mode';
+import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemActions } from './store-item.actions';
-import { convertIDBTaskToStoreTask, updateTaskFilesWithSameFile } from './store-item.functions';
+import { convertIDBTaskToStoreTask, updateStatistics, updateTaskFilesWithSameFile } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
 
 export const getTaskReducers = (
@@ -14,10 +14,7 @@ export const getTaskReducers = (
   taskAdapter: EntityAdapter<StoreItem>,
 ): ReducerTypes<ModeState, readonly ActionCreator[]>[] => [
   on(StoreItemActions.prepareTasks.do, (state: ModeState, { annotationTasks, summarizationTasks }) => {
-    const tasks: {
-      annotation: StoreItem[];
-      summarization: StoreItem[];
-    } = {
+    const tasks: Record<TPortalModes, StoreItem[]> = {
       annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
       summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
     };
@@ -32,6 +29,7 @@ export const getTaskReducers = (
         },
         state,
       );
+      state = updateStatistics(state, id as TPortalModes);
     }
 
     return state;
@@ -181,6 +179,8 @@ export const getTaskReducers = (
       state,
     ),
   })),
+  // update statistics if task changes
+  on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
 ];
 
 function setSelection(
