@@ -38,7 +38,7 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: G2pMausOperation) {
-    return new G2pMausOperation({
+    return operation.duplicate({
       ...operation,
       options: {
         language: options.maus?.language === undefined ? operation.options?.language : options.maus?.language,

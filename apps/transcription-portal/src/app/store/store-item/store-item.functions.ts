@@ -2,7 +2,6 @@ import { EntityAdapter } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
-import { IOperation } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
 import { getAllTasks, modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
@@ -62,6 +61,7 @@ export function convertIDBFileToStoreFile(a: FileInfoSerialized | AudioFileInfoS
     const audio = a as AudioFileInfoSerialized;
     return {
       ...result,
+      duration: audio.duration,
       bitrate: audio.bitsPerSecond,
       sampleRate: audio.sampleRate,
       channels: audio.channels,
@@ -450,7 +450,6 @@ export function createOperationsByDefaultOperations(
   });
 }
 
-
 export function updateStatistics(modeState: ModeState, mode: TPortalModes): ModeState {
   const currentMode = modeState.entities[mode]!;
   const tasks = getAllTasks(currentMode.items);
@@ -458,7 +457,10 @@ export function updateStatistics(modeState: ModeState, mode: TPortalModes): Mode
 
   for (const task of tasks) {
     switch (task.status) {
-      case TaskStatus.READY || TaskStatus.PENDING:
+      case TaskStatus.PENDING:
+        statistics.waiting++;
+        break;
+      case TaskStatus.READY:
         statistics.waiting++;
         break;
       case TaskStatus.QUEUED:

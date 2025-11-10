@@ -36,7 +36,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: SummarizationOperation): SummarizationOperation {
-    return new SummarizationOperation({
+    return operation.duplicate({
       ...operation,
       serviceProviderName: options.summarization?.provider === undefined ? operation.serviceProviderName : options.summarization?.provider,
       options: {

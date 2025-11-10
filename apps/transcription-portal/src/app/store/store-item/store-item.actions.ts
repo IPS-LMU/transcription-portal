@@ -1,7 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
-import { TPortalModes } from '../mode';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem } from './store-item';
+import { DefaultUserSettings, TPortalModes } from '../mode';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions } from './store-item';
 
 export class StoreItemActions {
   static importTasks = createActionGroup({
@@ -112,4 +112,14 @@ export class StoreItemActions {
       }>(),
     },
   });
+
+  static changeProcessingOptionsForEachQueuedTask = createActionGroup({
+      source: 'tasks/change options for each task',
+      events: {
+        do: props<{
+          options: StoreItemTaskOptions;
+        }>()
+      }
+  });
+
 }

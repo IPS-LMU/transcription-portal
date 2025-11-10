@@ -15,10 +15,8 @@ import {
 import { PreprocessingQueueItem } from '../preprocessing';
 import { getPreprocessingReducers } from '../preprocessing/preprocessing.reducer';
 import { getTaskReducers, StoreItem, TaskStatus } from '../store-item';
-import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
-import { getAllTasks } from './mode.functions';
-import { Mode, ModeState, ModeStatistics, TPortalModes } from './mode.state';
+import { Mode, ModeState } from './mode.state';
 
 export const modeAdapter: EntityAdapter<Mode<any>> = createEntityAdapter<Mode<any>>({
   selectId: (mode) => mode.name,
@@ -225,7 +223,13 @@ export const modeReducer = createReducer(
       currentMode: mode,
     }),
   ),
+  on(
+    ModeActions.setDefaultSettings.do,
+    (state: ModeState, { defaultUserSettings }): ModeState => ({
+      ...state,
+      defaultUserSettings,
+    }),
+  ),
   ...getTaskReducers(modeAdapter, taskAdapter),
   ...getPreprocessingReducers(modeAdapter, preprocessingAdapter),
 );
-

@@ -49,45 +49,45 @@
           <li class="nav-item">
             <div [ngbTooltip]="queuedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.queued }}
+                {{ (modeStoreService.overallStatistics$ | async)?.queued }}
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
-              <ng-template #queuedTipp>{{ taskService.statistics.overall.queued }} audio files are waiting for verification. </ng-template>
+              <ng-template #queuedTipp>{{ (modeStoreService.overallStatistics$ | async)?.queued }} audio files are waiting for verification. </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.waiting }}
+                {{ (modeStoreService.overallStatistics$ | async)?.waiting }}
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
-              <ng-template #waitingTipp>{{ taskService.statistics.overall.waiting }} tasks are waiting for processing. </ng-template>
+              <ng-template #waitingTipp>{{ (modeStoreService.overallStatistics$ | async)?.waiting }} tasks are waiting for processing. </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.running }}
+                {{ (modeStoreService.overallStatistics$ | async)?.running }}
               </div>
               <i
                 [ngClass]="{
-                  spin: taskService.statistics.overall.running > 0,
+                  spin: (modeStoreService.overallStatistics$ | async)!.running > 0,
                 }"
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
-              <ng-template #runningTipp>{{ taskService.statistics.overall.running }} tasks are running. </ng-template>
+              <ng-template #runningTipp>{{ (modeStoreService.overallStatistics$ | async)?.running}} tasks are running. </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
                 {{ taskService.statistics.overall.finished }}
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
-              <ng-template #finishedTipp>{{ taskService.statistics.overall.finished }} tasks are finished. </ng-template>
+              <ng-template #finishedTipp>{{ (modeStoreService.overallStatistics$ | async)?.finished }} tasks are finished. </ng-template>
             </div>
             <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.errors }}
+                {{ (modeStoreService.overallStatistics$ | async)?.errors }}
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ taskService.statistics.overall.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
+                >{{ (modeStoreService.overallStatistics$ | async)?.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
               </ng-template>
             </div>
           </li>

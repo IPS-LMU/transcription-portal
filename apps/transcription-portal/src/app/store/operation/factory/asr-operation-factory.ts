@@ -42,7 +42,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: ASROperation) {
-    return new ASROperation({
+    return operation.duplicate({
       ...operation,
       serviceProviderName: options.asr?.provider === undefined ? operation.serviceProviderName : options.asr?.provider,
       options: {

@@ -1,6 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { TPortalModes } from './mode.state';
+import { DefaultUserSettings, TPortalModes } from './mode.state';
 import { OperationFactory } from '../operation';
+import { TaskStatus } from '../store-item';
 
 export class ModeActions {
   static initModes = createActionGroup({
@@ -49,4 +50,14 @@ export class ModeActions {
       }>()
     },
   });
+
+  static setDefaultSettings = createActionGroup({
+      source: 'tasks/set default settings',
+      events: {
+        do: props<{
+          defaultUserSettings: DefaultUserSettings;
+        }>()
+      }
+  });
+
 }

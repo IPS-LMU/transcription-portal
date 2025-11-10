@@ -110,8 +110,8 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span class="mb-3">File information:</span>
-    <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
+    <div class="mb-3">File information:</div>
+    <tportal-file-info-table [fileinfo]="popover.task.files[0]" class="d-flex"></tportal-file-info-table>
   }
 </tportal-popover>
 

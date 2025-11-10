@@ -1,10 +1,9 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
-import { TaskStatus } from '../../obj/tasks';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import { convertIDBTaskToStoreTask, updateStatistics, updateTaskFilesWithSameFile } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
@@ -56,6 +55,39 @@ export const getTaskReducers = (
       },
       state,
     );
+  }),
+  on(StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, (state: ModeState, { options }): ModeState => {
+    const currentMode = state.entities[state.currentMode]!;
+    const defaultOperations = currentMode.defaultOperations;
+
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.status === TaskStatus.QUEUED,
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    operations: defaultOperations.map((op, i) => op.factory.applyTaskOptions(options, item.operations![i])),
+                    status: TaskStatus.PENDING,
+                  },
+                },
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
   }),
   on(StoreItemActions.selectItems.do, (state: ModeState, { ids, deselectOthers }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, deselectOthers);

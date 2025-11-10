@@ -14,6 +14,17 @@ export interface ModeStatistics {
   errors: number;
 }
 
+export interface DefaultUserSettings {
+  selectedASRLanguage?: string;
+  selectedMausLanguage?: string;
+  selectedTranslationLanguage?: string;
+  selectedASRProvider?: ServiceProvider;
+  selectedSummarizationProvider?: ServiceProvider;
+  selectedSummarizationNumberOfWords?: number;
+  isDiarizationEnabled?: boolean;
+  diarizationSpeakers?: number;
+}
+
 export interface Mode<O extends object> {
   name: string;
   options: O;
@@ -37,16 +48,7 @@ export interface ModeState extends EntityState<Mode<any>> {
     processingQueueItem: number;
   };
 
-  defaultUserSettings: {
-    selectedASRLanguage?: string;
-    selectedMausLanguage?: string;
-    selectedTranslationLanguage?: string;
-    selectedASRProvider?: ServiceProvider;
-    selectedSummarizationProvider?: ServiceProvider;
-    selectedSummarizationNumberOfWords?: number;
-    isDiarizationEnabled?: boolean;
-    diarizationSpeakers?: number;
-  };
+  defaultUserSettings: DefaultUserSettings;
 }
 
 export interface AnnotationModeOptions {}

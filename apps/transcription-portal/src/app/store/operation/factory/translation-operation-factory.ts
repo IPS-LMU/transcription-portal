@@ -36,7 +36,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: TranslationOperation): TranslationOperation {
-    return new TranslationOperation({
+    return operation.duplicate({
       ...operation,
       options: {
         language: options.translation?.language === undefined ? operation.options?.language : options.translation?.language,

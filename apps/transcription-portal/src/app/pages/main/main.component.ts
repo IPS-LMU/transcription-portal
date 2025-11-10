@@ -178,10 +178,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   async openQueueModal() {
     this.settingsService.shortCutsEnabled = false;
     const ref = openModal<QueueModalComponent>(this.ngbModalService, QueueModalComponent, QueueModalComponent.options);
-    const taskList = this.taskService.state.currentModeState.taskList;
-    ref.componentInstance.queue = this.taskService.state.currentModeState.preprocessor.queue;
-    ref.componentInstance.tasks = taskList?.getAllTasks() ?? [];
-    ref.componentInstance.operations = this.taskService.state.currentModeState.operations;
     await ref.result;
     this.settingsService.shortCutsEnabled = true;
   }

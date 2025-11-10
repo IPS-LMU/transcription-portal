@@ -2,17 +2,20 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
-import { StoreItem, StoreItemTask } from '../store-item';
+import { StoreItem, StoreItemTask, StoreItemTaskOptions } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
 import {
+  selectAllCurrentTasks,
   selectAllTasks,
+  selectCurrentMode,
   selectCurrentModeEntries,
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
+  selectOverallStatistics,
 } from './mode.selectors';
-import { TPortalModes } from './mode.state';
+import { DefaultUserSettings, TPortalModes } from './mode.state';
 
 @Injectable({ providedIn: 'root' })
 export class ModeStoreService {
@@ -22,6 +25,9 @@ export class ModeStoreService {
   allTasks$: Observable<StoreItemTask[] | undefined> = this.store.select(selectAllTasks);
   defaultUserSettings$ = this.store.select(selectDefaultOptions);
   currentModeStatistics$ = this.store.select(selectCurrentModeStatistics);
+  overallStatistics$ = this.store.select(selectOverallStatistics);
+  allCurrentTasks$ = this.store.select(selectAllCurrentTasks);
+  currentMode$ = this.store.select(selectCurrentMode);
 
   selectRows(rowIndexes: number[], deselectOthers = false) {
     this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes, deselectOthers }));
@@ -62,5 +68,17 @@ export class ModeStoreService {
         mode,
       }),
     );
+  }
+
+  applyTaskOptionsOnQueuedTasks(options: StoreItemTaskOptions) {
+    this.store.dispatch(
+      StoreItemActions.changeProcessingOptionsForEachQueuedTask.do({
+        options,
+      }),
+    );
+  }
+
+  setDefaultUserSettings(defaultUserSettings: DefaultUserSettings) {
+    this.store.dispatch(ModeActions.setDefaultSettings.do({ defaultUserSettings }));
   }
 }

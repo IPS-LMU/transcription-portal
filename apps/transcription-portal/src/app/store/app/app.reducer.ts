@@ -1,11 +1,11 @@
 import { createReducer, on } from '@ngrx/store';
 import { OHConfiguration, ProviderLanguage } from '../../obj/oh-config';
 import { ExternalInformationState } from '../external-information';
+import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { IDBActions } from '../idb/idb.actions';
+import { ModeState } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { AppActions } from './app.actions';
-import { ExternalInformationActions } from '../external-information/external-information.actions';
-import { ModeState } from '../mode';
 
 export interface AppState {
   versionCheckerStarted: boolean;
@@ -22,8 +22,8 @@ export interface AppState {
 
   settings?: OHConfiguration;
   availableLanguages?: {
-    asr: ProviderLanguage[];
-    maus: ProviderLanguage[];
+    asr?: ProviderLanguage[];
+    maus?: ProviderLanguage[];
   };
 }
 
@@ -109,6 +109,46 @@ export const appReducer = createReducer(
     (state: AppState, { configuration }): AppState => ({
       ...state,
       settings: configuration,
+    }),
+  ),
+  on(
+    ExternalInformationActions.getMAUSLanguages.success,
+    (state: AppState, { mausLanguages }): AppState => ({
+      ...state,
+      availableLanguages: state.availableLanguages
+        ? {
+            ...state.availableLanguages,
+            maus: mausLanguages
+              .map((a) => ({
+                value: a.ParameterValue.Value,
+                description: a.ParameterValue.Description,
+                providersOnly: a.ParameterValue.ProvidersOnly,
+              }))
+              .filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
+          }
+        : {
+            maus: mausLanguages
+              .map((a) => ({
+                value: a.ParameterValue.Value,
+                description: a.ParameterValue.Description,
+                providersOnly: a.ParameterValue.ProvidersOnly,
+              }))
+              .filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
+          },
+    }),
+  ),
+  on(
+    ExternalInformationActions.getASRLanguages.success,
+    (state: AppState, { asrLanguages }): AppState => ({
+      ...state,
+      availableLanguages: state.availableLanguages
+        ? {
+            ...state.availableLanguages,
+            asr: asrLanguages.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
+          }
+        : {
+            asr: asrLanguages.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
+          },
     }),
   ),
   on(

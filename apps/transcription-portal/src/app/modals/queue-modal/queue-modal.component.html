@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title pull-left">Queue</h4>
+  <h4 class="modal-title pull-left">Queue ({{ currentMode }})</h4>
   <button (click)="onSubmit(form)" class="btn btn-outline-primary" style="margin-left: 20px" type="button">OK</button>
   <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
@@ -28,9 +28,9 @@
                 </td>
                 <td>
                   <octra-asr-provider-select
-                    [ngModel]="modeStoreService.defaultUserSettings$ | async"
+                    [(ngModel)]="defaultUserSettings.selectedASRProvider"
+                    (ngModelChange)="onASRProviderChange($event)"
                     [required]="true"
-                    (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                     [asrProviders]="asrProviders"
                     [i18n]="{
                       asrProvider: 'ASR Provider',
@@ -54,18 +54,18 @@
                 </td>
                 <td>
                   <octra-asr-language-select
-                    [(ngModel)]="taskService.state.currentModeState.selectedASRLanguage"
-                    (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                    [(ngModel)]="defaultUserSettings.selectedASRLanguage"
+                    (ngModelChange)="onOptionChange()"
                     [languageSettings]="{
-                      services: AppSettings.configuration.api.services,
+                      services: appSettings?.api?.services ?? [],
                     }"
                     name="asrLanguage"
                     id="asrLanguage"
                     class="d-block"
                     [languages]="languages.asr"
                     [options]="{
-                      selectedServiceProvider: taskService.state.currentModeState.selectedASRProvider,
-                      selectedASRLanguage: taskService.state.currentModeState.selectedASRLanguage,
+                      selectedServiceProvider: defaultUserSettings.selectedASRProvider,
+                      selectedASRLanguage: defaultUserSettings.selectedASRLanguage,
                     }"
                     placeholder="Content Language"
                     [title]="'Content Language'"
@@ -76,7 +76,7 @@
                   >
                 </td>
               </tr>
-              @if (taskService.state.currentMode === "annotation") {
+              @if (currentMode === 'annotation') {
                 <tr>
                   <td class="fit">
                     <label class="me-1" for="diarizationSwitch">Diarization:</label>
@@ -89,14 +89,14 @@
                         role="switch"
                         id="diarizationSwitch"
                         name="diarization"
-                        [(ngModel)]="taskService.state.currentModeState.isDiarizationEnabled"
-                        (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                        [(ngModel)]="defaultUserSettings.isDiarizationEnabled"
+                        (ngModelChange)="onOptionChange()"
                       />
                     </div>
                   </td>
                 </tr>
               }
-              @if (taskService.state.currentModeState.isDiarizationEnabled) {
+              @if (defaultUserSettings.isDiarizationEnabled) {
                 <tr>
                   <td class="fit">
                     <label class="me-1" for="diarizationSwitch">Number of Speakers:</label>
@@ -106,21 +106,21 @@
                       type="number"
                       class="form-control form-control-sm"
                       name="diarizationNumOfSpeakers"
-                      [(ngModel)]="taskService.state.currentModeState.diarizationSpeakers"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                      [(ngModel)]="defaultUserSettings.diarizationSpeakers"
+                      (ngModelChange)="onOptionChange()"
                     />
                   </td>
                 </tr>
               }
-              @if (taskService.state.currentMode === 'summarization') {
+              @if (currentMode === 'summarization') {
                 <tr class="align-middle fit">
                   <td class="fit">
                     <label for="asrProvider">Summarization Service Provider<span class="text-danger">*</span>:</label>
                   </td>
                   <td>
                     <octra-asr-provider-select
-                      [(ngModel)]="taskService.state.currentModeState.selectedSummarizationProvider"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                      [(ngModel)]="defaultUserSettings.selectedSummarizationProvider"
+                      (ngModelChange)="onOptionChange()"
                       [asrProviders]="summarizationProviders"
                       [title]="'Summarization Service Provider'"
                       [required]="true"
@@ -141,8 +141,8 @@
                     <select
                       class="form-select form-select-sm"
                       name="summarizationNumberOfWords"
-                      [(ngModel)]="selectedSummarizationNumberOfWords"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                      [(ngModel)]="defaultUserSettings.selectedSummarizationNumberOfWords"
+                      (ngModelChange)="onOptionChange()"
                     >
                       <option [value]="">Unlimited</option>
                       <option [value]="10">Headline (10 words)</option>
@@ -152,15 +152,15 @@
                   </td>
                 </tr>
               }
-              @if (taskService.state.currentMode === 'annotation') {
+              @if (currentMode === 'annotation') {
                 <tr class="align-middle fit">
                   <td class="fit"><label>Word Alignment Language:</label></td>
                   <td>
                     <octra-asr-language-select
-                      [(ngModel)]="taskService.state.currentModeState.selectedMausLanguage"
-                      (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
+                      [(ngModel)]="defaultUserSettings.selectedMausLanguage"
+                      (ngModelChange)="onOptionChange()"
                       [languageSettings]="{
-                        services: AppSettings.configuration.api.services,
+                        services: appSettings?.api?.services ?? [],
                       }"
                       [languages]="languages.maus"
                       [title]="'MAUS Language'"
@@ -178,10 +178,10 @@
                       <div class="col">
                         <select
                           class="form-select form-select-sm"
-                          [(ngModel)]="taskService.state.currentModeState.selectedTranslationLanguage"
+                          [(ngModel)]="defaultUserSettings.selectedTranslationLanguage"
+                          (ngModelChange)="onOptionChange()"
                           name="translationLanguage"
                           [required]="true"
-                          (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                         >
                           <option value=""></option>
                           <option value="en">English</option>
@@ -190,12 +190,14 @@
                           <option value="it">Italian</option>
                         </select>
                         <ng-template #translationProviderInfo>
-                          <div>
-                            <span class="d-block text-center">Translation provided by:</span>
-                            <a [href]="settingsService.translationServiceProvider?.homepageURL" target="_blank"
-                              ><img [src]="settingsService.translationServiceProvider?.logoURL" class="img-fluid"
-                            /></a>
-                          </div>
+                          @if (translationProvider) {
+                            <div>
+                              <span class="d-block text-center">Translation provided by:</span>
+                              <a [href]="translationProvider.homepageURL" target="_blank"
+                                ><img [src]="translationProvider.logoURL" class="img-fluid"
+                              /></a>
+                            </div>
+                          }
                         </ng-template>
                       </div>
                       <div class="col-auto">
@@ -248,17 +250,17 @@
           <th>Valid?</th>
           <th class="text-start">File</th>
           <th>Language</th>
-          @for (operation of operations; track operation.id; let i = $index) {
+          @for (operation of operations; track operation.factory.name; let i = $index) {
             <th>
               <div>
-                @if (operation.title === '') {
+                @if (operation.factory.title === '') {
                   <span style="display: block">
                     <ng-container>
-                      {{ operation.name }}
+                      {{ operation.factory.name }}
                     </ng-container>
                   </span>
                 } @else {
-                  <div [innerHTML]="operation.title"></div>
+                  <div [innerHTML]="operation.factory.title"></div>
                 }
               </div>
             </th>
@@ -269,15 +271,32 @@
           <th></th>
           <th></th>
           <th></th>
-          @for (operation of operations; track operation.id; let i = $index) {
-            @if (operation.name === 'OCTRA' || operation.name === 'ASR' || operation.name === 'Summarization' || operation.name === 'Translation') {
+          @for (operation of operations; track operation.factory.name; let i = $index) {
+            @if (
+              operation.factory.name === 'OCTRA' ||
+              operation.factory.name === 'ASR' ||
+              operation.factory.name === 'Summarization' ||
+              operation.factory.name === 'Translation'
+            ) {
               <th>
-                <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                <input
+                  (change)="deactivateOperation(operation.factory.name, checkOp.checked)"
+                  #checkOp
+                  [checked]="operation.enabled"
+                  class="header-checkbox"
+                  type="checkbox"
+                />
               </th>
-            } @else if (operation.name === 'MAUS') {
+            } @else if (operation.factory.name === 'MAUS') {
               <th colspan="2" style="position: relative">
                 <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                <input
+                  (change)="deactivateOperation(operation.factory.name, checkOp.checked)"
+                  #checkOp
+                  [checked]="operation.enabled"
+                  class="header-checkbox"
+                  type="checkbox"
+                />
                 <img
                   src="assets/directory.png"
                   style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
@@ -288,94 +307,92 @@
         </tr>
       </thead>
       <tbody>
-        @for (task of tasks; track task.id) {
-          @if (task.status === 'QUEUED') {
-            <tr>
-              <td class="compatible-col">
-                <ng-template #validationResult>
-                  <table class="table table-sm table-striped">
-                    <tbody>
-                      @for (check of getChecksByID(task.id); track check.name) {
-                        <tr>
-                          <td>
-                            <i
-                              class="bi"
-                              [ngClass]="{
-                                'bi-check-lg': check.isValid,
-                                'bi-x': !check.isValid,
-                              }"
-                              [ngStyle]="{
-                                color: check.isValid ? 'green' : 'red',
-                              }"
-                            ></i>
-                          </td>
-                          <td style="text-align: left">{{ check.name }}:</td>
-                          <td style="text-align: left">{{ check.value }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </ng-template>
-                <span
-                  #popoverResult="ngbPopover"
-                  (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
-                  (mouseleave)="popoverResult.close()"
-                  triggers=""
-                  [ngbPopover]="validationResult"
-                  [placement]="'right'"
-                >
-                  <i
-                    class="bi"
-                    [ngClass]="{
-                      'bi-check-lg': !isSomethingInvalid(task.id),
-                      'fbi-x': isSomethingInvalid(task.id),
-                    }"
-                    [ngStyle]="{
-                      color: isSomethingInvalid(task.id) ? 'red' : 'green',
-                    }"
-                  ></i>
-                </span>
-              </td>
-              <td class="text-start">
+        @for (task of queuedTasks; track task.id) {
+          <tr>
+            <td class="compatible-col">
+              <ng-template #validationResult>
+                <table class="table table-sm table-striped">
+                  <tbody>
+                    @for (check of getChecksByID(task.id); track check.name) {
+                      <tr>
+                        <td>
+                          <i
+                            class="bi"
+                            [ngClass]="{
+                              'bi-check-lg': check.isValid,
+                              'bi-x': !check.isValid,
+                            }"
+                            [ngStyle]="{
+                              color: check.isValid ? 'green' : 'red',
+                            }"
+                          ></i>
+                        </td>
+                        <td style="text-align: left">{{ check.name }}:</td>
+                        <td style="text-align: left">{{ check.value }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </ng-template>
+              <span
+                #popoverResult="ngbPopover"
+                (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                (mouseleave)="popoverResult.close()"
+                triggers=""
+                [ngbPopover]="validationResult"
+                [placement]="'right'"
+              >
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-check-lg': !isSomethingInvalid(task.id),
+                    'bi-x': isSomethingInvalid(task.id),
+                  }"
+                  [ngStyle]="{
+                    color: isSomethingInvalid(task.id) ? 'red' : 'green',
+                  }"
+                ></i>
+              </span>
+            </td>
+            <td class="text-start">
+              <span
+                [ngClass]="{
+                  green:
+                    (getExtension(task.files[0]) === '.wav' && task.files[0].blob !== undefined) ||
+                    (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
+                  yellow:
+                    ((getExtension(task.files[0]) === '.wav' && task.files[0].blob === undefined) || getExtension(task.files[0]) !== '.wav') &&
+                    task.operations[0].status !== 'FINISHED',
+                  red: isSomethingInvalid(task.id),
+                }"
+                title="{{ task.files[0].attributes.originalFileName }}"
+              >
+                {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
+              </span>
+              @if (task.files.length > 1 || getExtension(task.files[0]) !== '.wav') {
                 <span
                   [ngClass]="{
-                    green:
-                      (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                      (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
-                    yellow:
-                      ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
-                      task.operations[0].state !== 'FINISHED',
-                    red: isSomethingInvalid(task.id),
+                    'bg-info': getBadge(task).type === 'info',
+                    'bg-warning': getBadge(task).type === 'warning',
                   }"
-                  title="{{ task.files[0].attributes.originalFileName }}"
+                  class="badge"
                 >
-                  {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
+                  {{ getBadge(task).label }}
                 </span>
-                @if (task.files.length > 1 || task.files[0].extension !== '.wav') {
-                  <span
-                    [ngClass]="{
-                      'bg-info': getBadge(task).type === 'info',
-                      'bg-warning': getBadge(task).type === 'warning',
-                    }"
-                    class="badge"
-                  >
-                    {{ getBadge(task).label }}
-                  </span>
+              }
+            </td>
+            <td>{{ task.operations[1].options.language }}</td>
+            @for (operation of task.operations; track operation.id) {
+              <td>
+                @if (operation.enabled) {
+                  <span><i class="bi bi-check-lg" style="color: black"></i></span>
+                }
+                @if (!operation.enabled) {
+                  <span>skip</span>
                 }
               </td>
-              <td>{{ task.asrOperation.language }}</td>
-              @for (operation of task.operations; track operation.id) {
-                <td>
-                  @if (operation.enabled) {
-                    <span><i class="bi bi-check-lg" style="color: black"></i></span>
-                  }
-                  @if (!operation.enabled) {
-                    <span>skip</span>
-                  }
-                </td>
-              }
-            </tr>
-          }
+            }
+          </tr>
         }
       </tbody>
     </table>

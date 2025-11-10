@@ -1,9 +1,9 @@
 import { createSelector } from '@ngrx/store';
-import { Mode, selectCurrentMode } from '../mode';
+import { Mode, selectCurrentModeState } from '../mode';
 import { PreprocessingState } from './preprocessing.state';
 
 export const selectPreprocessor = createSelector(
-  selectCurrentMode,
+  selectCurrentModeState,
   (state: Mode<any> | undefined): PreprocessingState | undefined => {
     return state?.preprocessor;
   },

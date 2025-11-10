@@ -1,4 +1,5 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { ProviderLanguage } from '../../obj/oh-config';
 
 export interface ASRQuotaInfo {
   asrName: string;
@@ -59,9 +60,7 @@ export class ExternalInformationActions {
     events: {
       do: emptyProps(),
       success: props<{
-        asrLanguages: {
-          ParameterValue: { Value: string; Description: string };
-        }[];
+        asrLanguages: ProviderLanguage[];
       }>(),
       fail: props<{
         error: string;
@@ -75,7 +74,7 @@ export class ExternalInformationActions {
       do: emptyProps(),
       success: props<{
         mausLanguages: {
-          ParameterValue: { Value: string; Description: string };
+          ParameterValue: { Value: string; Description: string; ProvidersOnly?: string[] };
         }[];
       }>(),
       fail: props<{
