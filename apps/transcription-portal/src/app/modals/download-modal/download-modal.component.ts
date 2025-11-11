@@ -1,5 +1,5 @@
 import { NgStyle, UpperCasePipe } from '@angular/common';
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
@@ -20,6 +20,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
   imports: [FormsModule, NgStyle, TranslocoPipe, UpperCasePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
   private taskService = inject(TaskService);
@@ -27,10 +28,10 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   private sanitizer = inject(DomSanitizer);
   private downloadService = inject(DownloadService);
 
-  @Input() type: 'line' | 'column' = 'column';
+  type: 'line' | 'column' = 'column';
   private selectedTasks?: number[];
-  @Input() taskList?: Task[];
-  @Input() column?: Operation;
+  taskList?: Task[];
+  column?: Operation;
 
   public static options: NgbModalOptions = {
     size: 'md',

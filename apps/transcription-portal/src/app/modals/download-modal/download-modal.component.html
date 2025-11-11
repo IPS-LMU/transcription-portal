@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">{{"modals.downloads.title" | transloco: {type: "Download results by {{type}}"} }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{"modals.downloads.title" | transloco: {type} }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
@@ -30,12 +30,12 @@
     <button (click)="process()" class="btn btn-outline-primary" style="width: 100%">{{ 'modals.downloads.get package' | transloco }}</button>
   }
   @if (state === 'processing') {
-    <a [attr.disabled]="true" class="btn btn-outline-info" style="width: 100%">
+    <button [disabled]="true" class="btn btn-outline-info" style="width: 100%">
       <div class="spinner-border m-5" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
       {{ 'p.please wait' | transloco }}...
-    </a>
+    </button>
   }
   @if (state === 'finished') {
     <a [attr.download]="archiveName" [attr.href]="archiveURL" class="btn btn-outline-success" (click)="showRemoveLine = true" style="width: 100%">

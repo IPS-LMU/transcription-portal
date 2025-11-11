@@ -594,9 +594,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
       if (this.toolSelectedOperation.nextOperation && this.toolSelectedOperation.nextOperation.state === TaskStatus.FINISHED) {
         this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
       } else if (this.toolSelectedOperation.state !== TaskStatus.FINISHED) {
-        if (this.toolSelectedOperation.rounds.length > 0) {
-          this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-        } else {
+        if (this.toolSelectedOperation.rounds.length > 0 && this.toolSelectedOperation.lastRound?.status !== TaskStatus.FINISHED) {
           this.toolSelectedOperation.changeState(TaskStatus.READY);
         }
       }
