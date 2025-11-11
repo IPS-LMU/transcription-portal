@@ -1,4 +1,12 @@
-import { StoreItemTaskOptions } from '../../store-item';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
+import { FileInfo } from '@octra/web-media';
+import { Observable, Subject, throwError } from 'rxjs';
+import * as X2JS from 'x2js';
+import { environment } from '../../../../environments/environment';
+import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
+import { TaskStatus } from '../../../obj/tasks';
+import { AppSettings } from '../../../shared/app.settings';
+import { convertFileInfoToStoreFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 
@@ -38,4 +46,173 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     // no options to apply
     return operation;
   }
+
+  override run(operation: UploadOperation, task: StoreItemTask, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
+    const clonedOperation = operation.clone();
+
+    if (operation.serviceProviderName) {
+      const subj = new Subject<{ operation: StoreTaskOperation }>();
+      if (!operation.lastRound) {
+        operation.addProcessingRound();
+      }
+
+      let currentRound = operation.lastRound!;
+      currentRound.protocol = '';
+      currentRound.status = TaskStatus.UPLOADING;
+      subj.next({ operation: clonedOperation });
+      const url = this.commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
+
+      currentRound.time = {
+        start: Date.now(),
+      };
+
+      UploadOperationFactory.upload(task.files, url, httpClient).subscribe({
+        next: async (obj) => {
+          if (obj.type === 'progress') {
+            currentRound.progress = obj.progress!;
+            currentRound = this.updateEstimatedEnd(currentRound);
+            subj.next({ operation: clonedOperation });
+          } else if (obj.type === 'loadend') {
+            currentRound.time!.duration = Date.now() - currentRound.time!.start;
+
+            // add messages to protocol
+            if (obj.warnings) {
+              currentRound.protocol += obj.warnings + '<br/>';
+            }
+
+            if (obj.urls && obj.urls.length === task.files.length) {
+              for (let i = 0; i < task.files.length; i++) {
+                const file = task.files[i];
+                file.url = obj.urls[i];
+                const { name, extension } = FileInfo.extractFileName(file.name);
+                const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
+                const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
+
+                info.attributes = file.attributes;
+
+                if (type === 'text/plain') {
+                  await info.updateContentFromURL(httpClient);
+                }
+
+                const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
+                if (existingIndex > -1) {
+                  currentRound.results[existingIndex] = await convertFileInfoToStoreFile(info);
+                } else {
+                  currentRound.results.push(await convertFileInfoToStoreFile(info));
+                }
+              }
+              subj.next({ operation: clonedOperation });
+              subj.complete();
+            } else {
+              subj.error(new Error('Number of returned URLs do not match number of files.'));
+            }
+          }
+        },
+        error: (err) => {
+          subj.error(new Error(err?.error?.message ?? err?.message));
+        },
+      });
+
+      return subj;
+    } else {
+      return throwError(() => new Error(clonedOperation.protocol + '\n' + 'serviceProvider is undefined'));
+    }
+  }
+
+  public static upload(
+    files: StoreFile[],
+    url: string,
+    httpClient: HttpClient,
+  ): Subject<{
+    type: 'progress' | 'loadend';
+    progress?: number;
+    urls?: string[];
+    warnings?: string;
+  }> {
+    const subj = new Subject<{
+      type: 'progress' | 'loadend';
+      progress?: number;
+      urls?: string[];
+      warnings?: string;
+    }>();
+
+    const form: FormData = new FormData();
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.blob) {
+        form.append('file' + i, files[i]!.blob!);
+      } else if (file.content) {
+        form.append('file' + i, new File([file.content], file.name, { type: file.type }));
+      }
+    }
+
+    const headers: any = {};
+
+    if (environment.production) {
+      headers['ngsw-bypass'] = 'true';
+    }
+
+    (
+      httpClient.post(url, form, {
+        reportProgress: true,
+        observe: 'events' as any,
+        headers,
+        responseType: 'text',
+      }) as any as Observable<HttpEvent<ArrayBuffer>>
+    ).subscribe({
+      next: (event: HttpEvent<any>) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          let progress = -1;
+          if (event.total) {
+            progress = event.loaded / event.total;
+          }
+          subj.next({
+            type: 'progress',
+            progress,
+          });
+        } else if (event.type === HttpEventType.Response) {
+          const result = event.body as string;
+          const x2js = new X2JS();
+          let json: any = x2js.xml2js(result);
+          json = json.UploadFileMultiResponse;
+          let warnings: string | undefined;
+
+          if (json.warnings !== '') {
+            warnings = json.warnings.replace('¶', '');
+          }
+
+          if (json.success) {
+            const urls = Array.isArray(json.fileList.entry) ? json.fileList.entry.map((a: any) => a.value) : [json.fileList.entry.value];
+
+            subj.next({
+              type: 'loadend',
+              warnings,
+              urls,
+            });
+            subj.complete();
+          } else {
+            subj.error(new Error(json.message));
+          }
+        }
+      },
+      error: (err: HttpErrorResponse) => {
+        subj.error(err);
+      },
+    });
+
+    return subj;
+  }
+
+  public updateEstimatedEnd = (round: StoreTaskOperationProcessingRound) => {
+    if (round.progress && round.time) {
+      const timeTillNow = Date.now() - round.time.start;
+      const timeOnePercent = timeTillNow / round.progress;
+      const time = Math.round((1 - round.progress) * timeOnePercent);
+      round.estimatedEnd = Date.now() + time;
+    } else {
+      round.estimatedEnd = 0;
+    }
+    return round;
+  };
 }

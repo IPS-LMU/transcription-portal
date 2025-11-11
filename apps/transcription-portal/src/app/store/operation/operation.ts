@@ -1,5 +1,5 @@
 import { last } from '@octra/utilities';
-import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/operation';
+import { IOperationProcessingRoundWithoutResults, OperationProcessingRound } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
 import { StoreFile } from '../store-item';
 
@@ -47,6 +47,15 @@ export class StoreTaskOperation<T extends object = any, O extends StoreTaskOpera
   duplicate(partial?: Partial<StoreTaskOperation<T, O>>): O {
     throw new Error('Not implemented');
   }
+
+  addProcessingRound() {
+    this.rounds.push(
+      new StoreTaskOperationProcessingRound({
+        status: TaskStatus.PENDING,
+        results: [],
+      }),
+    );
+  }
 }
 
 export class StoreTaskOperationProcessingRound implements IOperationProcessingRoundWithoutResults {
@@ -54,6 +63,8 @@ export class StoreTaskOperationProcessingRound implements IOperationProcessingRo
   status!: TaskStatus;
   time?: { start: number; duration?: number };
   protocol?: string;
+  progress?: number;
+  estimatedEnd?: number | undefined;
 
   get lastResult(): StoreFile | undefined {
     return last(this.results);
