@@ -2,7 +2,8 @@ import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
 import { TaskStatus } from '../../obj/tasks';
-import { convertIDBFileToStoreFile, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { convertIDBFileToStoreFile } from '../store-item/store-item.functions';
 import { OperationFactory } from './factory';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
@@ -14,6 +15,7 @@ export function convertIDBOperationToStoreOperation(
     enabled: boolean;
   }[],
 ): StoreTaskOperation {
+  console.log(`look for ${operation.name} in ${defaultOperations.map((a) => a.factory.name).join(', ')}`);
   const { factory, enabled } = defaultOperations.find((a) => a.factory.name === operation.name)!;
   let result = factory.create(
     operation.id,
@@ -22,13 +24,16 @@ export function convertIDBOperationToStoreOperation(
   );
   result.serviceProviderName = operation.serviceProvider;
   result.enabled = operation.enabled === undefined && task.state === TaskStatus.QUEUED ? enabled : operation.enabled;
-  result = factory.applyTaskOptions({
-    asr: {
-      language: (operation.name === "ASR") ? operation.language: undefined,
-      diarization: operation.diarization,
-      provider: operation.serviceProvider
-    }
-  }, result);
+  result = factory.applyTaskOptions(
+    {
+      asr: {
+        language: operation.name === 'ASR' ? operation.language : undefined,
+        diarization: operation.diarization,
+        provider: operation.serviceProvider,
+      },
+    },
+    result,
+  );
 
   return result;
 }

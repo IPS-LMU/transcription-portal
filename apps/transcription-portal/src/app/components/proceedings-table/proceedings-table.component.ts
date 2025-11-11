@@ -38,7 +38,6 @@ import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import {
-  getIndexByEntry,
   ModeStoreService,
   OperationFactory,
   PreprocessingQueueItem,
@@ -60,6 +59,7 @@ import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import { getIndexByEntry } from '../../store/mode/mode.functions';
 
 @Component({
   selector: 'tportal-proceedings',

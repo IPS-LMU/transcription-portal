@@ -10,10 +10,11 @@ import { SplitModalComponent } from '../../modals/split-modal/split-modal.compon
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { TPortalModes } from '../mode';
-import { convertInfoFileItemToStoreFileItem, StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
 import { PreprocessingActions } from './preprocessing.actions';
 import { cleanUpInputArray, processFileOrDirectoryInfo, splitAudioFile } from './preprocessing.functions';
 import { ProcessingQueueStatus } from './preprocessing.state';
+import { convertInfoFileItemToStoreFileItem } from '../store-item/store-item.functions';
 
 @Injectable()
 export class PreprocessingEffects {

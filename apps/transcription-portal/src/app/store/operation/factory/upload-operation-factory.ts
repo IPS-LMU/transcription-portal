@@ -6,9 +6,10 @@ import { environment } from '../../../../environments/environment';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { TaskStatus } from '../../../obj/tasks';
 import { AppSettings } from '../../../shared/app.settings';
-import { convertFileInfoToStoreFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
 
 export class UploadOperation extends StoreTaskOperation<any, UploadOperation> {
   override clone(): UploadOperation {
@@ -47,7 +48,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return operation;
   }
 
-  override run(operation: UploadOperation, task: StoreItemTask, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
+  override run(task: StoreItemTask, operation: UploadOperation, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
     const clonedOperation = operation.clone();
 
     if (operation.serviceProviderName) {

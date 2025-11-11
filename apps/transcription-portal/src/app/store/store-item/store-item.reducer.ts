@@ -15,7 +15,7 @@ export const getTaskReducers = (
   on(StoreItemActions.prepareTasks.do, (state: ModeState, { annotationTasks, summarizationTasks }) => {
     const tasks: Record<TPortalModes, StoreItem[]> = {
       annotation: annotationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
-      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['annotation']!.defaultOperations)),
+      summarization: summarizationTasks.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, state.entities['summarization']!.defaultOperations)),
     };
 
     for (const id of Object.keys(tasks)) {

@@ -5,13 +5,13 @@ import { FileInfo } from '@octra/web-media';
 import { AppInfo, ConverterData } from '../app.info';
 import { TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
 import {
-  convertStoreAudioFileToAudioInfo,
   StoreAudioFile,
   StoreFile,
   StoreItemTask,
   StoreTaskOperation,
   StoreTaskOperationProcessingRound,
 } from '../store';
+import { convertStoreAudioFileToAudioInfo } from '../store/store-item/store-item.functions';
 
 @Injectable({
   providedIn: 'root',

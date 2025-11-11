@@ -1,11 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
-import { FileInfo } from '@octra/web-media';
-import { Task, TaskStatus } from '../tasks';
-import { IOperation, Operation, OperationProcessingRound } from './operation';
 import { wait } from '@octra/utilities';
+import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
+import { IOperation, Operation, OperationProcessingRound } from './operation';
 
 export class ToolOperation extends Operation {
   public constructor(
@@ -15,7 +14,7 @@ export class ToolOperation extends Operation {
     shortTitle?: string,
     task?: Task,
     id?: number,
-    serviceProvider?: ServiceProvider
+    serviceProvider?: ServiceProvider,
   ) {
     super(name, commands, title, shortTitle, task, id, serviceProvider);
   }
@@ -27,7 +26,7 @@ export class ToolOperation extends Operation {
   public start = async (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => {
     this.time = {
       start: Date.now(),
-    }
+    };
     this.changeState(TaskStatus.PROCESSING);
 
     await wait(2);
@@ -68,15 +67,7 @@ export class ToolOperation extends Operation {
 
   public override clone(task?: Task, id?: number): ToolOperation {
     const selectedTasks = task === null || task === undefined ? this.task : task;
-    return new ToolOperation(
-      this.name,
-      this._commands,
-      this.title,
-      this.shortTitle,
-      selectedTasks,
-      id,
-      this.serviceProvider
-    ) as ToolOperation;
+    return new ToolOperation(this.name, this._commands, this.title, this.shortTitle, selectedTasks, id, this.serviceProvider) as ToolOperation;
   }
 
   public fromAny(operationObj: IOperation, commands: string[], task: Task): Operation {

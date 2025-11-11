@@ -47,7 +47,7 @@ export class AppEffects {
   initModes$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AppActions.loadSettings.success),
-      map(() => ModeActions.initModes.do()),
+      map(({ configuration }) => ModeActions.initModes.do({ settings: configuration })),
     ),
   );
 

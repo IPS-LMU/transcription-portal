@@ -1,7 +1,8 @@
 import { Observable } from 'rxjs';
-import { StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { HttpClient } from '@angular/common/http';
+import { SubscriptionManager } from '@octra/utilities';
 
 export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
   protected abstract readonly _name: string;
@@ -10,6 +11,7 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
   protected abstract readonly _shortTitle: string;
   protected abstract readonly _resultType: string;
   protected readonly commands: string[];
+  protected readonly subscrManager = new SubscriptionManager();
 
   constructor(commands: string[]) {
     this.commands = commands;
@@ -40,8 +42,8 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
   abstract applyTaskOptions(options: StoreItemTaskOptions, operation: T): T;
 
   abstract run(
+    storeItemTask: StoreItemTask,
     operation: T,
-    task: StoreItemTask,
     httpClient: HttpClient,
   ): Observable<{
     operation: StoreTaskOperation;

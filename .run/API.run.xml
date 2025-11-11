@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="API" type="PhpBuiltInWebServerConfigurationType" factoryName="PHP Built-in Web Server" document_root="$PROJECT_DIR$/apps/api/" host="127.0.0.1" port="52678" router_script="$PROJECT_DIR$/apps/api/public/index.php" use_router_script="true">
+    <method v="2" />
+  </configuration>
+</component>

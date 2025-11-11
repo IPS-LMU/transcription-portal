@@ -1,6 +1,15 @@
-import { StoreItemTaskOptions } from '../../store-item';
+import { HttpClient } from '@angular/common/http';
+import { AnnotationLevelType, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
+import { OAudiofile } from '@octra/media';
+import { stringifyQueryParams } from '@octra/utilities';
+import { FileInfo, readFileContents } from '@octra/web-media';
+import { Observable, throwError } from 'rxjs';
+import { AppSettings } from '../../../shared/app.settings';
+import { getHashString } from '../../preprocessing/preprocessing.functions';
+import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import { UploadOperationFactory } from './upload-operation-factory';
 
 export class OctraOperation extends StoreTaskOperation<any, OctraOperation> {
   override clone(): OctraOperation {
@@ -28,7 +37,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
       id,
       name: this.name,
       options: {},
-      serviceProviderName: "BAS",
+      serviceProviderName: 'BAS',
       rounds,
       taskID,
     });
@@ -37,5 +46,145 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   override applyTaskOptions(options: StoreItemTaskOptions, operation: OctraOperation) {
     // no options to apply
     return operation;
+  }
+
+  override run(
+    storeItemTask: StoreItemTask,
+    operation: OctraOperation,
+    httpClient: HttpClient,
+  ): Observable<{ operation: StoreTaskOperation }> {
+    return throwError(() => new Error('Not implemented'));
+  }
+
+  public async getToolURL(task: StoreItemTask, operation: StoreTaskOperation, httpClient: HttpClient): Promise<string> {
+    const clonedOperation = operation.clone();
+    const wavFile = task?.operations[0].lastRound?.results.find((a) => a.type.includes('audio'));
+    const currentRound = clonedOperation.lastRound!;
+    const opIndex = task.operations.findIndex((a) => a.name === operation.name);
+    const previousOperation = task.operations[opIndex - 1];
+
+    if (wavFile?.online && wavFile?.url) {
+      const serviceProvider = AppSettings.getServiceInformation('BAS')!;
+      const audio_url = encodeURIComponent(wavFile.url);
+      const audio_name = wavFile.name;
+      let transcript: string | undefined;
+      const embedded = `1`;
+      const host = encodeURIComponent(serviceProvider.host);
+
+      let transcriptFile: StoreFile | undefined = undefined;
+
+      if (!currentRound?.lastResult && previousOperation) {
+        // no results, but previousOperation exists
+        if (previousOperation.lastRound?.lastResult) {
+          transcriptFile = previousOperation.lastRound?.lastResult;
+        } else if (task.operations[0].lastRound?.results.find((a) => !a.type.includes('audio'))) {
+          transcriptFile = task.operations[0].lastRound?.results.find((a) => !a.type.includes('audio'));
+        }
+      } else if (currentRound) {
+        transcriptFile = currentRound?.lastResult;
+      }
+
+      if (transcriptFile && transcriptFile?.blob) {
+        const { extension } = FileInfo.extractFileName(transcriptFile.name);
+        if (extension === '.par') {
+          const audiofile = task?.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
+          const oAudio = new OAudiofile();
+          oAudio.name = audiofile.name;
+          oAudio.url = audiofile.url;
+          oAudio.type = audiofile.type;
+          oAudio.size = audiofile.size;
+          oAudio.duration = audiofile.duration;
+          oAudio.sampleRate = audiofile.sampleRate;
+          const content = await readFileContents<string>(transcriptFile.blob, 'text', 'utf-8');
+          const importResult = new PartiturConverter().import(
+            {
+              name: transcriptFile.attributes?.originalFileName ?? transcriptFile.name,
+              type: transcriptFile.type,
+              content,
+              encoding: 'utf-8',
+            },
+            oAudio,
+          );
+
+          if (importResult && importResult.annotjson) {
+            for (const level of importResult.annotjson.levels as OSegmentLevel<OSegment>[]) {
+              if (level.type === AnnotationLevelType.SEGMENT) {
+                for (let i = 0; i < level.items.length; i++) {
+                  const item = level.items[i];
+                  const nextItem = i < level.items.length - 1 ? level.items[i + 1] : undefined;
+
+                  if (nextItem) {
+                    const gapSamples = nextItem.sampleDur;
+
+                    if (item.getFirstLabelWithoutName('Speaker')?.value !== '' && nextItem.getFirstLabelWithoutName('Speaker')?.value !== '') {
+                      // concat
+                      item.replaceFirstLabelWithoutName('Speaker', (value) => {
+                        return [value, nextItem.getFirstLabelWithoutName('Speaker')?.value].filter((a) => a !== undefined && a !== '').join(' ');
+                      });
+                      item.sampleDur += gapSamples;
+                      level.items.splice(i + 1, 1);
+                      i--;
+                    }
+                  }
+                }
+              }
+            }
+
+            const result = new PartiturConverter().export(importResult.annotjson, oAudio);
+            if (result?.file) {
+              const newFile = new File([result.file.content], result.file.name, { type: result.file.type });
+              transcript = await this.upload(
+                {
+                  name: newFile.name,
+                  type: newFile.type,
+                  size: newFile.size,
+                  blob: newFile,
+                  attributes: {
+                    originalFileName: newFile.name,
+                  },
+                  hash: await getHashString(newFile),
+                },
+                httpClient,
+              );
+            }
+          }
+        }
+
+        if (!transcript) {
+          transcript = transcriptFile.url;
+        }
+      }
+
+      return `${this.commands[0]}/${stringifyQueryParams({
+        audio_url,
+        audio_name,
+        transcript,
+        host,
+        embedded,
+      })}`;
+    }
+    return '';
+  }
+
+  private upload(file: StoreFile, httpClient: HttpClient): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const serviceProvider = AppSettings.getServiceInformation('BAS')!;
+      const url = `${serviceProvider.host}uploadFileMulti`;
+      const subj = UploadOperationFactory.upload([file], url, httpClient);
+      subj.subscribe({
+        next: (obj) => {
+          if (obj.type === 'loadend') {
+            // add messages to protocol
+            if (obj.warnings) {
+              console.warn(obj.warnings);
+            }
+            resolve(obj.urls![0]);
+          }
+        },
+        error: (err) => {
+          reject(err);
+        },
+      });
+    });
   }
 }

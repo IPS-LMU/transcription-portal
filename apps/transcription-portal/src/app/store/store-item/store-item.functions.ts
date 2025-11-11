@@ -3,11 +3,12 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { TaskStatus } from '../../obj/tasks';
-import { getAllTasks, modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
+import { modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemsState } from './store-items-state';
+import { getAllTasks } from '../mode/mode.functions';
 
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,

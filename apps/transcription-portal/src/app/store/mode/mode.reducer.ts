@@ -81,7 +81,7 @@ export const modeReducer = createReducer(
       },
     };
   }),
-  on(ModeActions.initModes.do, (state: ModeState): ModeState => {
+  on(ModeActions.initModes.do, (state: ModeState, { settings }): ModeState => {
     return modeAdapter.addMany(
       [
         {
@@ -90,23 +90,23 @@ export const modeReducer = createReducer(
           items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
             {
-              factory: new UploadOperationFactory(),
+              factory: new UploadOperationFactory(settings.api.commands.find((a) => a.name === 'Upload')!.calls),
               enabled: true,
             },
             {
-              factory: new ASROperationFactory(),
+              factory: new ASROperationFactory(settings.api.commands.find((a) => a.name === 'ASR')!.calls),
               enabled: true,
             },
             {
-              factory: new OctraOperationFactory(),
+              factory: new OctraOperationFactory(settings.api.commands.find((a) => a.name === 'OCTRA')!.calls),
               enabled: true,
             },
             {
-              factory: new G2pMausOperationFactory(),
+              factory: new G2pMausOperationFactory(settings.api.commands.find((a) => a.name === 'MAUS')!.calls),
               enabled: true,
             },
             {
-              factory: new EmuOperationFactory(),
+              factory: new EmuOperationFactory(settings.api.commands.find((a) => a.name === 'Emu WebApp')!.calls),
               enabled: true,
             },
           ],
@@ -127,23 +127,23 @@ export const modeReducer = createReducer(
           items: taskAdapter.getInitialState({ allSelected: false }),
           defaultOperations: [
             {
-              factory: new UploadOperationFactory(),
+              factory: new UploadOperationFactory(settings.api.commands.find((a) => a.name === 'Upload')!.calls),
               enabled: true,
             },
             {
-              factory: new ASROperationFactory(),
+              factory: new ASROperationFactory(settings.api.commands.find((a) => a.name === 'ASR')!.calls),
               enabled: true,
             },
             {
-              factory: new OctraOperationFactory(),
+              factory: new OctraOperationFactory(settings.api.commands.find((a) => a.name === 'OCTRA')!.calls),
               enabled: true,
             },
             {
-              factory: new SummarizationOperationFactory(),
+              factory: new SummarizationOperationFactory(settings.api.commands.find((a) => a.name === 'Summarization')?.calls ?? []),
               enabled: true,
             },
             {
-              factory: new TranslationOperationFactory(),
+              factory: new TranslationOperationFactory(settings.api.commands.find((a) => a.name === 'Translation')?.calls ?? []),
               enabled: true,
             },
           ],
@@ -163,7 +163,7 @@ export const modeReducer = createReducer(
     );
   }),
   on(ModeActions.setDefaultOperationEnabled.do, (state: ModeState, { name, enabled }): ModeState => {
-    let defaultOperations = state.entities[state.currentMode]!.defaultOperations;
+    const defaultOperations = state.entities[state.currentMode]!.defaultOperations;
     const operations = {
       Upload: {
         ...defaultOperations.find((a) => a.factory.name === 'Upload')!,

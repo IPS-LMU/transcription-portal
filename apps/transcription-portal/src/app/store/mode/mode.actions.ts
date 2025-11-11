@@ -1,13 +1,15 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
-import { DefaultUserSettings, TPortalModes } from './mode.state';
+import { OHConfiguration } from '../../obj/oh-config';
 import { OperationFactory } from '../operation';
-import { TaskStatus } from '../store-item';
+import { DefaultUserSettings, TPortalModes } from './mode.state';
 
 export class ModeActions {
   static initModes = createActionGroup({
     source: 'modes/initialize',
     events: {
-      do: emptyProps(),
+      do: props<{
+        settings: OHConfiguration;
+      }>(),
       success: emptyProps(),
       fail: props<{
         error: string;
@@ -37,8 +39,8 @@ export class ModeActions {
         defaultOptions: {
           factory: OperationFactory;
           enabled: boolean;
-        }[]
-      }>()
+        }[];
+      }>(),
     },
   });
 
@@ -47,17 +49,16 @@ export class ModeActions {
     events: {
       do: props<{
         mode: TPortalModes;
-      }>()
+      }>(),
     },
   });
 
   static setDefaultSettings = createActionGroup({
-      source: 'tasks/set default settings',
-      events: {
-        do: props<{
-          defaultUserSettings: DefaultUserSettings;
-        }>()
-      }
+    source: 'tasks/set default settings',
+    events: {
+      do: props<{
+        defaultUserSettings: DefaultUserSettings;
+      }>(),
+    },
   });
-
 }
