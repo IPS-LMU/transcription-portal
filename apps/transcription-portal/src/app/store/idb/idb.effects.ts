@@ -4,11 +4,12 @@ import { Store } from '@ngrx/store';
 import { catchError, exhaustMap, from, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
-import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
+import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
 import { RootState } from '../app';
+import { ExternalInformationActions } from '../external-information/external-information.actions';
+import { ModeActions } from '../mode/mode.actions';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { IDBActions } from './idb.actions';
-import { AppActions } from '../app/app.actions';
 
 @Injectable()
 export class IDBEffects {
@@ -25,9 +26,8 @@ export class IDBEffects {
   idbInit$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(AppActions.loadSettings.success),
-        withLatestFrom(this.store),
-        tap(([, state]: [any, RootState]) => {
+        ofType(ExternalInformationActions.loadExternInformation.success),
+        tap(() => {
           this._idbm = new IndexedDBManager(environment.development ? 'oh-portal-dev' : 'oh-portal');
           this._idbm.on('ready', async () => {
             this.store.dispatch(IDBActions.initIDB.ready());
@@ -88,13 +88,13 @@ export class IDBEffects {
   );
 
   tasksLoaded$ = createEffect(() =>
-      this.actions$.pipe(
-        ofType(StoreItemActions.importTasks.success),
-        withLatestFrom(this.store),
-        exhaustMap(([action, state]) => {
-          return of(IDBActions.initIDB.success());
-        })
-      )
+    this.actions$.pipe(
+      ofType(StoreItemActions.importTasks.success),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) => {
+        return of(IDBActions.initIDB.success());
+      }),
+    ),
   );
 
   idbInitFail$ = createEffect(() =>
@@ -123,6 +123,39 @@ export class IDBEffects {
           catchError((err) => {
             return of(IDBActions.saveInternValues.fail({ error: typeof err === 'string' ? err : err.message }));
           }),
+        );
+      }),
+    ),
+  );
+
+  saveUserSettings$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ModeActions.setDefaultSettings.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ defaultUserSettings }]) => {
+        const value: IDBUserDefaultSettingsItemData = {
+          asrLanguage: defaultUserSettings.selectedASRLanguage,
+          asrProvider: defaultUserSettings.selectedASRProvider?.provider,
+          mausLanguage: defaultUserSettings.selectedMausLanguage,
+          summarizationProvider: defaultUserSettings.selectedSummarizationProvider?.provider,
+          diarization: defaultUserSettings.isDiarizationEnabled,
+          diarizationSpeakers: defaultUserSettings.diarizationSpeakers,
+          translationLanguage: defaultUserSettings.selectedTranslationLanguage,
+        };
+        return from(
+          this._idbm.userSettings.put({
+            name: 'defaultUserSettings',
+            value,
+          }),
+        ).pipe(
+          exhaustMap(() => of(IDBActions.saveDefaultUseSettings.success())),
+          catchError((err) =>
+            of(
+              IDBActions.saveDefaultUseSettings.fail({
+                error: typeof err === 'string' ? err : err.message,
+              }),
+            ),
+          ),
         );
       }),
     ),

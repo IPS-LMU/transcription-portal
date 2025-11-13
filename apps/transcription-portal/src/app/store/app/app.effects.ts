@@ -130,6 +130,7 @@ export class AppEffects {
           AppActions.initConsoleLogger.success,
           ModeActions.initModes.success,
           ExternalInformationActions.loadExternInformation.success,
+          IDBActions.initIDB.success
         ),
         withLatestFrom(this.store),
         tap(([, state]: [any, RootState]) => {
@@ -164,6 +165,7 @@ export class AppEffects {
           })
           .pipe(
             map((configuration) => {
+              AppSettings.init(configuration);
               return AppActions.loadSettings.success({
                 configuration,
               });

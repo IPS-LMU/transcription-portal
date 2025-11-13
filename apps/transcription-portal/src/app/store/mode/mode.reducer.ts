@@ -64,7 +64,7 @@ export const modeReducer = createReducer(
             selectedASRProvider: AppSettings.getServiceInformation(defaultUserSettings.asrProvider),
             isDiarizationEnabled: defaultUserSettings.diarization ?? false,
             diarizationSpeakers: defaultUserSettings.diarizationSpeakers,
-            selectedSummarizationProvider: defaultUserSettings.getServiceInformation(defaultUserSettings.summarizationProvider),
+            selectedSummarizationProvider: AppSettings.getServiceInformation(defaultUserSettings.summarizationProvider),
             selectedTranslationLanguage: defaultUserSettings.translationLanguage,
             selectedSummarizationNumberOfWords: defaultUserSettings.summarizationWordLimit,
           },

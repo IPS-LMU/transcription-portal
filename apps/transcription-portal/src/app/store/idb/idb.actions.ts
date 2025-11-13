@@ -42,4 +42,15 @@ export class IDBActions {
       }
   });
 
+
+  static saveDefaultUseSettings = createActionGroup({
+      source: 'idb/save default user settings',
+      events: {
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
 }
