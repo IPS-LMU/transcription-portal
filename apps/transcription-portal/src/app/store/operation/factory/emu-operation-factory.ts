@@ -1,21 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { stringifyQueryParams } from '@octra/utilities';
+import { stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
-import { Observable, throwError } from 'rxjs';
+import { Observable, Subscription, throwError } from 'rxjs';
 import { UploadOperation } from '../../../obj/operations/upload-operation';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import {getLastOperationResultFromLatestRound, getLastOperationRound} from '../operation.functions';
 
-export class EmuOperation extends StoreTaskOperation<any, EmuOperation> {
-  override clone(): EmuOperation {
-    return new EmuOperation(this);
-  }
-  override duplicate(partial?: Partial<StoreTaskOperation<any, EmuOperation>>): EmuOperation {
-    return new EmuOperation(partial);
-  }
-}
+export type EmuOperation = StoreTaskOperation<any, EmuOperation>
 export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _description =
     'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
@@ -27,7 +21,7 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _title = 'Phonetic detail';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): EmuOperation {
-    return new EmuOperation({
+    return {
       enabled: true,
       id,
       name: this.name,
@@ -35,14 +29,15 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
       options: {},
       rounds,
       taskID,
-    });
+    }
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: EmuOperation): EmuOperation {
     return operation;
   }
 
-  override run(storeItemTask: StoreItemTask, operation: EmuOperation, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
+  override run(storeItemTask: StoreItemTask, operation: EmuOperation, httpClient: HttpClient,
+               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
 
@@ -69,13 +64,13 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
       let result: StoreFile | undefined = undefined;
       const opIndex = task.operations.findIndex((a) => a.name === operation.name);
       const previousOperation = task.operations[opIndex - 1];
-      const lastResultMaus = previousOperation?.lastRound;
-      const lastResultEMU = operation.lastRound;
+      const lastResultMaus = getLastOperationRound(previousOperation);
+      const lastResultEMU = getLastOperationRound(operation);
 
       if (lastResultEMU && lastResultMaus) {
-        result = lastResultEMU.lastResult;
+        result = getLastOperationResultFromLatestRound(operation);
       } else {
-        result = lastResultMaus?.lastResult;
+        result = getLastOperationResultFromLatestRound(previousOperation);
       }
 
       const { extension } = FileInfo.extractFileName(result!.name);

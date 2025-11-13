@@ -1,6 +1,7 @@
 import { Component, SimpleChanges } from '@angular/core';
 import { TimePipe } from '../../../../shared/time.pipe';
 import { TaskStatus } from '../../../../store';
+import { getLastOperationRound } from '../../../../store/operation/operation.functions';
 import { ProceedingsTableOpIconComponent } from '../proceeding-table-operation/proceeding-table-op-icon/proceedings-table-op-icon.component';
 import { ProceedingsTableOperationComponent } from '../proceeding-table-operation/proceedings-table-operation.component';
 
@@ -24,9 +25,15 @@ export class ProceedingsTableUploadOperationComponent extends ProceedingsTableOp
     return this.storeTaskOperation?.estimatedEnd ? this.storeTaskOperation?.estimatedEnd - Date.now() : 0;
   }
 
+  get lastOperationRound() {
+    return this.storeTaskOperation ? getLastOperationRound(this.storeTaskOperation) : undefined;
+  }
+
   public updateEstimatedEnd = () => {
-    if (this.progress > 0 && this.storeTaskOperation?.lastRound?.time) {
-      const timeTillNow = Date.now() - this.storeTaskOperation?.lastRound?.time.start;
+    const lastRound = this.storeTaskOperation ? getLastOperationRound(this.storeTaskOperation) : undefined;
+
+    if (this.progress > 0 && lastRound?.time) {
+      const timeTillNow = Date.now() - lastRound?.time.start;
       const timeOnePercent = timeTillNow / this.progress;
       const time = Math.round((1 - this.progress) * timeOnePercent);
       // this.estimatedEnd = Date.now() + time;

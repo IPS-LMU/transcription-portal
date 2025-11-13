@@ -1,25 +1,19 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
+import {SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
-import { Observable, Subject, throwError } from 'rxjs';
+import { Observable, Subject, Subscription, throwError } from 'rxjs';
 import * as X2JS from 'x2js';
 import { environment } from '../../../../environments/environment';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { TaskStatus } from '../../../obj/tasks';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { OperationFactory } from './operation-factory';
 import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
+import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { addProcessingRound, getLastOperationRound } from '../operation.functions';
+import { OperationFactory } from './operation-factory';
 
-export class UploadOperation extends StoreTaskOperation<any, UploadOperation> {
-  override clone(): UploadOperation {
-    return new UploadOperation(this);
-  }
-
-  override duplicate(partial?: Partial<StoreTaskOperation<any, UploadOperation>>): UploadOperation {
-    return new UploadOperation(partial);
-  }
-}
+export type UploadOperation = StoreTaskOperation<any, UploadOperation>;
 
 export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _description =
@@ -32,7 +26,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
   protected readonly _title = 'Upload';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[], options: any = {}): UploadOperation {
-    return new UploadOperation({
+    return {
       enabled: true,
       id,
       name: this.name,
@@ -40,7 +34,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
       options,
       rounds,
       taskID,
-    });
+    };
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: UploadOperation) {
@@ -48,70 +42,99 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return operation;
   }
 
-  override run(task: StoreItemTask, operation: UploadOperation, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
-    const clonedOperation = operation.clone();
+  override run(task: StoreItemTask, operation: UploadOperation, httpClient: HttpClient,
+               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
+    let clonedOperation = { ...operation };
 
-    if (operation.serviceProviderName) {
+    if (clonedOperation.serviceProviderName) {
       const subj = new Subject<{ operation: StoreTaskOperation }>();
-      if (!operation.lastRound) {
-        operation.addProcessingRound();
-      }
 
-      let currentRound = operation.lastRound!;
-      currentRound.protocol = '';
-      currentRound.status = TaskStatus.UPLOADING;
-      subj.next({ operation: clonedOperation });
-      const url = this.commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
+      wait(0).then(() => {
+        try {
+          if (!getLastOperationRound(clonedOperation)) {
+            clonedOperation = addProcessingRound(clonedOperation);
+          }
 
-      currentRound.time = {
-        start: Date.now(),
-      };
+          let currentRound: StoreTaskOperationProcessingRound = {
+            ...getLastOperationRound(clonedOperation)!,
+          };
+          currentRound.protocol = '';
+          currentRound.status = TaskStatus.UPLOADING;
+          this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+          const url = this.commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
 
-      UploadOperationFactory.upload(task.files, url, httpClient).subscribe({
-        next: async (obj) => {
-          if (obj.type === 'progress') {
-            currentRound.progress = obj.progress!;
-            currentRound = this.updateEstimatedEnd(currentRound);
-            subj.next({ operation: clonedOperation });
-          } else if (obj.type === 'loadend') {
-            currentRound.time!.duration = Date.now() - currentRound.time!.start;
+          currentRound = {
+            ...currentRound,
+            time: {
+              start: Date.now(),
+            },
+          };
 
-            // add messages to protocol
-            if (obj.warnings) {
-              currentRound.protocol += obj.warnings + '<br/>';
-            }
+          UploadOperationFactory.upload(task.files, url, httpClient).subscribe({
+            next: async (obj) => {
+              if (obj.type === 'progress') {
+                currentRound = { ...currentRound, progress: obj.progress };
+                currentRound = this.updateEstimatedEnd(currentRound);
 
-            if (obj.urls && obj.urls.length === task.files.length) {
-              for (let i = 0; i < task.files.length; i++) {
-                const file = task.files[i];
-                file.url = obj.urls[i];
-                const { name, extension } = FileInfo.extractFileName(file.name);
-                const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
-                const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
+                this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+              } else if (obj.type === 'loadend') {
+                currentRound = {
+                  ...currentRound,
+                  time: {
+                    ...currentRound.time!,
+                    duration: Date.now() - currentRound.time!.start,
+                  },
+                  protocol: obj.warnings ? currentRound.protocol + obj.warnings + '<br/>' : currentRound.protocol,
+                };
 
-                info.attributes = file.attributes;
+                if (obj.urls && obj.urls.length === task.files.length) {
+                  for (let i = 0; i < task.files.length; i++) {
+                    const file = { ...task.files[i] };
+                    // TODO change file url in task
+                    file.url = obj.urls[i];
+                    const { extension } = FileInfo.extractFileName(file.name);
+                    const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
+                    const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
 
-                if (type === 'text/plain') {
-                  await info.updateContentFromURL(httpClient);
-                }
+                    info.attributes = file.attributes;
 
-                const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
-                if (existingIndex > -1) {
-                  currentRound.results[existingIndex] = await convertFileInfoToStoreFile(info);
+                    if (type === 'text/plain') {
+                      await info.updateContentFromURL(httpClient);
+                    }
+
+                    const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
+                    if (existingIndex > -1) {
+                      currentRound = {
+                        ...currentRound,
+                        results: [
+                          ...currentRound.results.slice(0, existingIndex),
+                          await convertFileInfoToStoreFile(info),
+                          ...currentRound.results.slice(existingIndex + 1),
+                        ],
+                      };
+                    } else {
+                      currentRound = {
+                        ...currentRound,
+                        results: [...currentRound.results, await convertFileInfoToStoreFile(info)],
+                      };
+                    }
+                  }
+                  currentRound.status = TaskStatus.FINISHED;
+
+                  this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+                  subj.complete();
                 } else {
-                  currentRound.results.push(await convertFileInfoToStoreFile(info));
+                  subj.error(new Error('Number of returned URLs do not match number of files.'));
                 }
               }
-              subj.next({ operation: clonedOperation });
-              subj.complete();
-            } else {
-              subj.error(new Error('Number of returned URLs do not match number of files.'));
-            }
-          }
-        },
-        error: (err) => {
-          subj.error(new Error(err?.error?.message ?? err?.message));
-        },
+            },
+            error: (err) => {
+              subj.error(new Error(err?.error?.message ?? err?.message));
+            },
+          });
+        } catch (e) {
+          subj.error(e);
+        }
       });
 
       return subj;

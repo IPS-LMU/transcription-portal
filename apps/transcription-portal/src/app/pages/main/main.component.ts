@@ -614,7 +614,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   onStartClick() {
-    this.taskService.toggleProcessing();
+    this.modeStoreService.startProcessing();
   }
 
   onFeedbackRequest(operation: StoreTaskOperation) {

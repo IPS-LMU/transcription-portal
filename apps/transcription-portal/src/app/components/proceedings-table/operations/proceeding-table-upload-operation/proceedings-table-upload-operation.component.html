@@ -1,4 +1,4 @@
-@if (storeTaskOperation?.status !== TaskStatus.UPLOADING) {
+@if (lastOperationRound?.status !== TaskStatus.UPLOADING) {
   <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-op-icon>
 } @else {
   @if (this.progress > 0) {

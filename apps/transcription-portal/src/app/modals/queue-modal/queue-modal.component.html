@@ -359,10 +359,10 @@
                 [ngClass]="{
                   green:
                     (getExtension(task.files[0]) === '.wav' && task.files[0].blob !== undefined) ||
-                    (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
+                    (task.operations[0].rounds.length > 0 && getLastOperationResultFromLatestRound(task.operations[0])?.online),
                   yellow:
                     ((getExtension(task.files[0]) === '.wav' && task.files[0].blob === undefined) || getExtension(task.files[0]) !== '.wav') &&
-                    task.operations[0].status !== 'FINISHED',
+                    getLastOperationRound(task.operations[0])?.status !== 'FINISHED',
                   red: isSomethingInvalid(task.id),
                 }"
                 title="{{ task.files[0].attributes.originalFileName }}"

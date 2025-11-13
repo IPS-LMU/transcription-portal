@@ -1,3 +1,4 @@
+import { last } from '@octra/utilities';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
@@ -39,11 +40,11 @@ export function convertIDBOperationToStoreOperation(
 }
 
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {
-  return new StoreTaskOperationProcessingRound({
+  return {
     protocol: round.protocol,
     results: round.results.map((a) => convertIDBFileToStoreFile(a)),
     status: round.status,
-  });
+  };
 }
 
 export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirectory: StoreItemTaskDirectory): Promise<IDBTaskItem> {
@@ -132,4 +133,22 @@ export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
       content: file.content,
     };
   }
+}
+
+export function getLastOperationRound(operation: StoreTaskOperation) {
+  return last(operation.rounds);
+}
+
+export function addProcessingRound(operation: StoreTaskOperation, round?: StoreTaskOperationProcessingRound) {
+  operation.rounds.push(
+    round ?? {
+      status: TaskStatus.PENDING,
+      results: [],
+    },
+  );
+  return operation;
+}
+
+export function getLastOperationResultFromLatestRound(operation: StoreTaskOperation) {
+  return last(getLastOperationRound(operation)?.results ?? []);
 }

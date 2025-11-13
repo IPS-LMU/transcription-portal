@@ -13,6 +13,7 @@ import {
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
+  selectOverallState,
   selectOverallStatistics,
 } from './mode.selectors';
 import { DefaultUserSettings, TPortalModes } from './mode.state';
@@ -28,6 +29,7 @@ export class ModeStoreService {
   overallStatistics$ = this.store.select(selectOverallStatistics);
   allCurrentTasks$ = this.store.select(selectAllCurrentTasks);
   currentMode$ = this.store.select(selectCurrentMode);
+  overallState$ = this.store.select(selectOverallState);
 
   selectRows(rowIndexes: number[], deselectOthers = false) {
     this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes, deselectOthers }));
@@ -80,5 +82,9 @@ export class ModeStoreService {
 
   setDefaultUserSettings(defaultUserSettings: DefaultUserSettings) {
     this.store.dispatch(ModeActions.setDefaultSettings.do({ defaultUserSettings }));
+  }
+
+  startProcessing() {
+    this.store.dispatch(StoreItemActions.startProcessing.do())
   }
 }

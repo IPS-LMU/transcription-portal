@@ -52,7 +52,9 @@
                 {{ (modeStoreService.overallStatistics$ | async)?.queued }}
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
-              <ng-template #queuedTipp>{{ (modeStoreService.overallStatistics$ | async)?.queued }} audio files are waiting for verification. </ng-template>
+              <ng-template #queuedTipp
+                >{{ (modeStoreService.overallStatistics$ | async)?.queued }} audio files are waiting for verification.
+              </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
@@ -72,7 +74,7 @@
                 class="bi bi-gear-fill"
                 style="color: orange"
               ></i>
-              <ng-template #runningTipp>{{ (modeStoreService.overallStatistics$ | async)?.running}} tasks are running. </ng-template>
+              <ng-template #runningTipp>{{ (modeStoreService.overallStatistics$ | async)?.running }} tasks are running. </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
@@ -87,7 +89,8 @@
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp
-                >{{ (modeStoreService.overallStatistics$ | async)?.errors }} tasks failed. For further details please hover over the red "X" icon in a column.
+                >{{ (modeStoreService.overallStatistics$ | async)?.errors }} tasks failed. For further details please hover over the red "X" icon in a
+                column.
               </ng-template>
             </div>
           </li>
@@ -331,11 +334,11 @@
         </div>
       </div>
       <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button (click)="onStartClick()" [disabled]="!taskService.state.currentModeState.newfiles" class="btn btn-primary">
+        <button (click)="onStartClick()" [disabled]="((modeStoreService.currentModeStatistics$ | async)?.waiting ?? 0) === 0 && ((modeStoreService.currentModeStatistics$ | async)?.running ?? 0) === 0" class="btn btn-primary">
           <i
             [ngClass]="{
-              'bi-play-fill': !taskService.isProcessing,
-              'bi-stop-fill': taskService.isProcessing,
+              'bi-play-fill': (modeStoreService.overallState$ | async) === 'not started',
+              'bi-stop-fill': (modeStoreService.overallState$ | async) !== 'not started',
             }"
             aria-hidden="true"
             class="bi"

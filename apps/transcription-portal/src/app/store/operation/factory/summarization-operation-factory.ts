@@ -2,15 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
-import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
+import { joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
 import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
-import { interval, Observable, Subject } from 'rxjs';
+import { interval, Observable, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import { TaskStatus } from '../../../obj/tasks';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { addProcessingRound, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 
 export interface SummarizationOperationOptions {
@@ -18,15 +19,7 @@ export interface SummarizationOperationOptions {
   maxNumberOfWords?: number;
 }
 
-export class SummarizationOperation extends StoreTaskOperation<SummarizationOperationOptions, SummarizationOperation> {
-  override clone(): SummarizationOperation {
-    return new SummarizationOperation(this);
-  }
-
-  override duplicate(partial?: Partial<StoreTaskOperation<any, SummarizationOperation>>): SummarizationOperation {
-    return new SummarizationOperation(partial);
-  }
-}
+export type SummarizationOperation = StoreTaskOperation<SummarizationOperationOptions, SummarizationOperation>;
 
 export class SummarizationOperationFactory extends OperationFactory<SummarizationOperation, SummarizationOperationOptions> {
   protected readonly _description = 'Summarizes a given full text.';
@@ -36,18 +29,18 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
   protected readonly _title = 'Summarization';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): SummarizationOperation {
-    return new SummarizationOperation({
+    return {
       enabled: true,
       id,
       name: this.name,
       options: {},
       rounds,
       taskID,
-    });
+    };
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: SummarizationOperation): SummarizationOperation {
-    return operation.duplicate({
+    return {
       ...operation,
       serviceProviderName: options.summarization?.provider === undefined ? operation.serviceProviderName : options.summarization?.provider,
       options: {
@@ -55,21 +48,22 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
         maxNumberOfWords:
           options.summarization?.numberOfWords === undefined ? operation.options?.maxNumberOfWords : options.summarization?.numberOfWords,
       },
-    });
+    };
   }
 
   override run(
     storeItemTask: StoreItemTask,
     operation: SummarizationOperation,
     httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>
   ): Observable<{ operation: SummarizationOperation }> {
     const subj = new Subject<{ operation: SummarizationOperation }>();
-    const clonedOperation = operation.clone();
+    let clonedOperation = { ...operation };
 
-    if (!clonedOperation.lastRound || clonedOperation.lastRound?.lastResult) {
-      clonedOperation.addProcessingRound();
+    if (!getLastOperationResultFromLatestRound(clonedOperation)) {
+      clonedOperation = addProcessingRound(clonedOperation);
     }
-    const currentRound = clonedOperation.lastRound!;
+    const currentRound = getLastOperationRound(clonedOperation)!;
     currentRound.status = TaskStatus.PROCESSING;
     currentRound.time = {
       start: Date.now(),
@@ -77,8 +71,8 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     subj.next({ operation: clonedOperation });
 
     const transcriptFile = storeItemTask.operations[2].enabled
-      ? storeItemTask.operations[2].lastRound?.lastResult
-      : storeItemTask.operations[1].lastRound?.lastResult;
+      ? getLastOperationResultFromLatestRound(storeItemTask.operations[2])
+      : getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
     const audioinfo = storeItemTask.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
 
     (async (): Promise<{
@@ -115,7 +109,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
         const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
         let projectName: string | undefined = undefined;
         try {
-          projectName = await this.createSummarizationProject(httpClient, serviceProvider!);
+          projectName = await this.createSummarizationProject(httpClient, serviceProvider!, subscrManager);
 
           await this.uploadFile(
             new File([transcript], `${projectName}.txt`, {
@@ -124,16 +118,17 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
             httpClient,
             projectName,
             serviceProvider!,
+            subscrManager
           );
 
           await wait(3);
-          await this.processSummarizationProject(httpClient, projectName, clonedOperation, serviceProvider!);
+          await this.processSummarizationProject(httpClient, projectName, clonedOperation, serviceProvider!, subscrManager);
           return { projectName, serviceProvider: serviceProvider! };
         } catch (err: any) {
           // couldn't upload file or process summarization project
 
           if (projectName) {
-            await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!);
+            await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
           }
           throw new Error(err);
         }
@@ -142,16 +137,16 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
       }
     })()
       .then(({ serviceProvider, projectName }) => {
-        this.subscrManager.add(
+        subscrManager.add(
           interval(5000).subscribe({
             next: async () => {
-              const result = await this.getProjectStatus(httpClient, projectName, serviceProvider!);
+              const result = await this.getProjectStatus(httpClient, projectName, serviceProvider!, subscrManager);
 
               if (result.status === 'success' && result.body.status === 'finished') {
-                this.subscrManager.removeByTag(`status check (${clonedOperation.id}`);
+                subscrManager.removeByTag(`status check (${clonedOperation.id}`);
 
                 if (!result.body.errors) {
-                  clonedOperation.time!.duration = Date.now() - clonedOperation.time!.start;
+                  currentRound.time!.duration = Date.now() - currentRound.time!.start;
 
                   const summary = result.body.outputs.find((o: any) => o.filename.includes('summary.txt'));
 
@@ -181,8 +176,8 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
                   }
                 }
 
-                this.subscrManager.removeByTag(`status check (${clonedOperation.id}`);
-                await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!);
+                subscrManager.removeByTag(`status check (${clonedOperation.id}`);
+                await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
                 throw new Error(result.body.errorMessage);
               }
             },
@@ -197,10 +192,11 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     return subj;
   }
 
-  deleteSummarizationProject(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
+  deleteSummarizationProject(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
+                             subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<void>((resolve, reject) => {
       if (serviceProvider) {
-        this.subscrManager.add(
+        subscrManager.add(
           httpclient
             .delete(joinURL(serviceProvider.host, '/project'), {
               responseType: 'json',
@@ -224,11 +220,12 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     projectName: string,
     clonedOperation: StoreTaskOperation,
     serviceProvider: ServiceProvider,
+    subscrManager: SubscriptionManager<Subscription>
   ) {
     return new Promise<void>((resolve, reject) => {
       console.log(`Process project with options ${clonedOperation.options.language} and ${clonedOperation.options.maxNumberOfWords}`);
       if (serviceProvider) {
-        this.subscrManager.add(
+        subscrManager.add(
           httpclient
             .post(
               joinURL(serviceProvider.host, '/project/process'),
@@ -250,12 +247,13 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     });
   }
 
-  async createSummarizationProject(httpClient: HttpClient, serviceProvider: ServiceProvider) {
+  async createSummarizationProject(httpClient: HttpClient, serviceProvider: ServiceProvider,
+                                   subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<string>((resolve, reject) => {
       if (serviceProvider) {
         const projectName = `tportal_session_${UUID.v7().replace(/-/g, '')}`;
 
-        this.subscrManager.add(
+        subscrManager.add(
           httpClient
             .post(
               joinURL(serviceProvider.host, '/project/create'),
@@ -277,10 +275,11 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     });
   }
 
-  getProjectStatus(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
+  getProjectStatus(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
+                   subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<any>((resolve, reject) => {
       if (serviceProvider) {
-        this.subscrManager.add(
+        subscrManager.add(
           httpclient
             .get(
               joinURL(
@@ -319,13 +318,14 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     return 'auto';
   }
 
-  uploadFile(file: File, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider) {
+  uploadFile(file: File, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
+             subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<void>((resolve, reject) => {
       if (serviceProvider) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('projectName', projectName);
-        this.subscrManager.add(
+        subscrManager.add(
           httpClient.post(joinURL(serviceProvider.host, '/project/upload'), formData).subscribe({
             next: () => resolve(),
             error: reject,

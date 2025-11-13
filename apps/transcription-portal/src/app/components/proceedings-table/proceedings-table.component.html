@@ -14,22 +14,22 @@
   [pointer]="popover.pointer"
   [width]="popover.width"
 >
-  @if (popover.operation !== undefined) {
-    @if (popover.operation.time !== undefined && popover.operation.time.start !== undefined && popover.operation.time.start > 0) {
-      @if (popover.operation.status === 'FINISHED' && !popover.operation.lastRound?.lastResult?.available) {
+  @if (popover.operation !== undefined && popover.lastOperationRound !== undefined) {
+    @if (popover.lastOperationRound.time !== undefined && popover.lastOperationRound.time.start !== undefined && popover.lastOperationRound.time.start > 0) {
+      @if (popover.lastOperationRound.status === 'FINISHED' && !popover.lastOperationRoundResult?.available) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">
         <div class="col" style="font-size: 0.85rem">
-          <i class="bi bi-clock" style="color: cornflowerblue"></i><span> {{ popover.operation.time.start | luxonFormat: 'DATETIME_SHORT' }}</span>
+          <i class="bi bi-clock" style="color: cornflowerblue"></i><span> {{ popover.lastOperationRound.time.start | luxonFormat: 'DATETIME_SHORT' }}</span>
         </div>
         <div class="col text-end" style="font-size: 0.85rem">
           <i class="bi bi-hourglass" style="color: cornflowerblue"></i
-          ><span> {{ calculateDuration(popover.operation.time, popover.operation) | time: 'true' }}</span>
+          ><span> {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}</span>
         </div>
       </div>
     }
-    @if (popover.operation.status === 'PROCESSING' && popover.operation.serviceProviderName !== undefined) {
+    @if (popover.lastOperationRound.status === 'PROCESSING' && popover.operation.serviceProviderName !== undefined) {
       <div class="service-preview">
         <div class="provided-by">Service provided by</div>
         <a
@@ -72,11 +72,11 @@
         ></tportal-results-table>
       </div>
     }
-    @if (popover.operation.parsedProtocol.length > 0) {
+    @if ((popover.lastOperationRound.parsedProtocol ?? []).length > 0) {
       <div id="output-area">
         <div style="width: 100%; text-align: right; padding: 0; margin-bottom: 0">
           <button
-            (click)="copyProtocolToClipboard(popover.operation.protocol)"
+            (click)="copyProtocolToClipboard(popover.lastOperationRound.protocol)"
             class="btn btn-sm btn-outline-info"
             style="font-size: 11px; cursor: pointer; margin-bottom: 0"
           >
@@ -85,7 +85,7 @@
         </div>
         <table class="table table-sm table-striped" id="output-table">
           <tbody>
-            @for (item of popover.operation.parsedProtocol; track item) {
+            @for (item of (popover.lastOperationRound.parsedProtocol ?? []); track item) {
               <tr>
                 <td>
                   @if (item.type === 'ERROR') {
@@ -109,7 +109,7 @@
       </div>
     }
   }
-  @if (popover.operation === undefined && popover.task) {
+  @if (popover.lastOperationRound === undefined && popover.task) {
     <div class="mb-3">File information:</div>
     <tportal-file-info-table [fileinfo]="popover.task.files[0]" class="d-flex"></tportal-file-info-table>
   }

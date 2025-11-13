@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
-import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { HttpClient } from '@angular/common/http';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { SubscriptionManager } from '@octra/utilities';
 
 export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
@@ -11,7 +11,6 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
   protected abstract readonly _shortTitle: string;
   protected abstract readonly _resultType: string;
   protected readonly commands: string[];
-  protected readonly subscrManager = new SubscriptionManager();
 
   constructor(commands: string[]) {
     this.commands = commands;
@@ -45,7 +44,23 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
     storeItemTask: StoreItemTask,
     operation: T,
     httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>
   ): Observable<{
     operation: StoreTaskOperation;
   }>;
+
+  sendOperationWithUpdatedRound(
+    subj: Subject<{
+      operation: StoreTaskOperation;
+    }>,
+    operation: StoreTaskOperation,
+    currentRound: StoreTaskOperationProcessingRound,
+  ) {
+    subj.next({
+      operation: {
+        ...operation,
+        rounds: [...(operation.rounds.length > 0 ? operation.rounds.slice(0, operation.rounds.length - 1) : []), currentRound],
+      },
+    });
+  }
 }

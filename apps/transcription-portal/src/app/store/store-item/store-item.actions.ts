@@ -1,7 +1,8 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
-import { DefaultUserSettings, TPortalModes } from '../mode';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions } from './store-item';
+import { TPortalModes } from '../mode';
+import { StoreTaskOperation } from '../operation';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
 
 export class StoreItemActions {
   static importTasks = createActionGroup({
@@ -114,12 +115,112 @@ export class StoreItemActions {
   });
 
   static changeProcessingOptionsForEachQueuedTask = createActionGroup({
-      source: 'tasks/change options for each task',
-      events: {
-        do: props<{
-          options: StoreItemTaskOptions;
-        }>()
-      }
+    source: 'tasks/change options for each task',
+    events: {
+      do: props<{
+        options: StoreItemTaskOptions;
+      }>(),
+    },
   });
 
+  static toggleProcessing = createActionGroup({
+    source: 'tasks/toggle processing',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static startProcessing = createActionGroup({
+    source: 'tasks/start processing',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static processNextStoreItem = createActionGroup({
+    source: 'tasks/start next processing',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+      }>(),
+      nothingToDo: props<{
+        mode: TPortalModes;
+      }>(),
+    },
+  });
+
+  static processStoreItem = createActionGroup({
+    source: 'tasks/process item',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        id: number;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        id: number;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static changeTaskStatus = createActionGroup({
+    source: 'tasks/change status',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        id: number;
+        status: TaskStatus;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static stopProcessing = createActionGroup({
+    source: 'tasks/stop processing',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static processNextOperation = createActionGroup({
+    source: 'tasks/start next operation',
+    events: {
+      do: props<{
+        taskID: number;
+        mode: TPortalModes;
+      }>(),
+      success: props<{
+        taskID: number;
+        mode: TPortalModes;
+        operation: StoreTaskOperation;
+      }>(),
+      fail: props<{
+        error: string;
+        taskID: number;
+        mode: TPortalModes;
+        operationID: number;
+      }>(),
+    },
+  });
+
+  static changeOperation = createActionGroup({
+    source: 'tasks/change operation',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operation: StoreTaskOperation;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
 }

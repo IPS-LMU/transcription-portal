@@ -2,10 +2,16 @@ import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
+import { StoreTaskOperation } from '../operation';
+import { StoreItem, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
-import { convertIDBTaskToStoreTask, updateStatistics, updateTaskFilesWithSameFile } from './store-item.functions';
+import {
+  applyFunctionOnStoreItemsWhereRecursive,
+  applyFunctionOnStoreItemsWithIDsRecursive,
+  convertIDBTaskToStoreTask,
+  updateStatistics,
+  updateTaskFilesWithSameFile,
+} from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
 
 export const getTaskReducers = (
@@ -95,6 +101,46 @@ export const getTaskReducers = (
   on(StoreItemActions.deselectItems.do, (state: ModeState, { ids, deselectOthers }): ModeState => {
     return setSelection(ids, false, state, modeAdapter, taskAdapter, deselectOthers);
   }),
+  on(StoreItemActions.startProcessing.do, (state: ModeState): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          overallState: 'processing',
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.status === TaskStatus.ERROR,
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    status: TaskStatus.PENDING,
+                  },
+                },
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+  }),
+  on(
+    StoreItemActions.stopProcessing.do,
+    (state: ModeState): ModeState =>
+      modeAdapter.updateOne(
+        {
+          id: state.currentMode,
+          changes: {
+            overallState: 'stopped',
+          },
+        },
+        state,
+      ),
+  ),
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
   }),
@@ -175,17 +221,17 @@ export const getTaskReducers = (
                   const lastRoundIndex = itemsState.entities[item.id]!.operations![i].rounds.length - 1;
 
                   if (lastRoundIndex > -1) {
-                    const changedItem = itemsState.entities[item.id]!.operations![i].duplicate({
+                    const changedItem = {
                       ...(itemsState.entities[item.id]!.operations as StoreTaskOperation<any, any>[])[i],
                       rounds: [
                         ...itemsState.entities[item.id]!.operations![i].rounds.slice(0, lastRoundIndex),
-                        new StoreTaskOperationProcessingRound({
+                        {
                           ...itemsState.entities[item.id]!.operations![i].rounds![lastRoundIndex],
                           status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
-                        }),
+                        },
                       ],
                       enabled: defaultOperation.enabled,
-                    });
+                    };
 
                     itemsState = taskAdapter.updateOne(
                       {
@@ -213,6 +259,79 @@ export const getTaskReducers = (
   })),
   // update statistics if task changes
   on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
+  on(StoreItemActions.processStoreItem.do, (state, { id, mode }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([id], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+            return taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  status: TaskStatus.PROCESSING,
+                },
+              },
+              itemsState,
+            );
+          }),
+        },
+      },
+      state,
+    );
+  }),
+  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) =>
+    modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) =>
+            taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+                    if (op.id === operation.id) {
+                      return operation;
+                    }
+                    return op;
+                  }),
+                },
+              },
+              itemsState,
+            ),
+          ),
+        },
+      },
+      state,
+    ),
+  ),
+  on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operationID }) =>
+    modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) =>
+            taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+                    if (op.id === operationID) {
+                      return { ...op, status: TaskStatus.ERROR, protocol: op.protocol + error + '<br/>' };
+                    }
+                    return op;
+                  }),
+                },
+              },
+              itemsState,
+            ),
+          ),
+        },
+      },
+      state,
+    ),
+  ),
 ];
 
 function setSelection(
@@ -252,82 +371,6 @@ function setSelection(
     },
     state,
   );
-}
-
-function applyFunctionOnStoreItemsWhereRecursive(
-  where: (item: StoreItem) => boolean,
-  itemsState: StoreItemsState,
-  taskAdapter: EntityAdapter<StoreItem>,
-  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
-  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
-) {
-  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-
-    if (where(item)) {
-      itemsState = applyFunction(item, itemsState);
-      items.splice(i, 1);
-      i--;
-    } else if (item.type === 'folder') {
-      const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction);
-      itemsState = taskAdapter.updateOne(
-        {
-          id: item.id,
-          changes: {
-            entries: folderState,
-          },
-        },
-        itemsState,
-      );
-
-      if (afterAppliedOnFolder) {
-        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
-      }
-    }
-  }
-
-  return itemsState;
-}
-
-function applyFunctionOnStoreItemsWithIDsRecursive(
-  ids: number[],
-  itemsState: StoreItemsState,
-  taskAdapter: EntityAdapter<StoreItem>,
-  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
-  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
-) {
-  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const idIndex = ids.findIndex((a) => a === item.id);
-
-    if (idIndex > -1) {
-      itemsState = applyFunction(item, itemsState);
-      ids = [...ids.slice(0, idIndex), ...ids.slice(idIndex + 1)];
-      items.splice(i, 1);
-      i--;
-    } else if (item.type === 'folder') {
-      const folderState = applyFunctionOnStoreItemsWithIDsRecursive(ids, item.entries!, taskAdapter, applyFunction);
-      itemsState = taskAdapter.updateOne(
-        {
-          id: item.id,
-          changes: {
-            entries: folderState,
-          },
-        },
-        itemsState,
-      );
-
-      if (afterAppliedOnFolder) {
-        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
-      }
-    }
-  }
-
-  return itemsState;
 }
 
 function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {

@@ -2,28 +2,22 @@ import { HttpClient } from '@angular/common/http';
 import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { FileInfo, readFileContents } from '@octra/web-media';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { AppInfo } from '../../../app.info';
 import { convertISO639Language } from '../../../obj/functions';
 import { TaskStatus } from '../../../obj/tasks';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { addProcessingRound, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
+import { SubscriptionManager } from '@octra/utilities';
 
 export interface TranslationOperationOptions {
   language?: string;
 }
 
-export class TranslationOperation extends StoreTaskOperation<TranslationOperationOptions, TranslationOperation> {
-  override clone(): TranslationOperation {
-    return new TranslationOperation(this);
-  }
-
-  override duplicate(partial?: Partial<StoreTaskOperation<any, TranslationOperation>>): TranslationOperation {
-    return new TranslationOperation(partial);
-  }
-}
+export type TranslationOperation = StoreTaskOperation<TranslationOperationOptions, TranslationOperation>;
 
 export class TranslationOperationFactory extends OperationFactory<TranslationOperation, TranslationOperationOptions> {
   protected readonly _description = 'Summarizes a given full text.';
@@ -33,7 +27,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
   protected readonly _title = 'Translation';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): TranslationOperation {
-    return new TranslationOperation({
+    return {
       enabled: true,
       id,
       name: this.name,
@@ -41,25 +35,26 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       serviceProviderName: 'LibreTranslate',
       rounds,
       taskID,
-    });
+    };
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: TranslationOperation): TranslationOperation {
-    return operation.duplicate({
+    return {
       ...operation,
       options: {
         language: options.translation?.language === undefined ? operation.options?.language : options.translation?.language,
       },
-    });
+    };
   }
 
-  override run(storeItemTask: StoreItemTask, operation: TranslationOperation, httpClient: HttpClient): Observable<{ operation: StoreTaskOperation }> {
+  override run(storeItemTask: StoreItemTask, operation: TranslationOperation, httpClient: HttpClient,
+               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
     const subj = new Subject<{ operation: TranslationOperation }>();
-    const clonedOperation = operation.clone();
-    if (!clonedOperation.lastRound || operation.lastRound?.lastResult) {
-      clonedOperation.addProcessingRound();
+    let clonedOperation = { ...operation };
+    if (!getLastOperationResultFromLatestRound(clonedOperation)) {
+      clonedOperation = addProcessingRound(clonedOperation);
     }
-    const currentRound = clonedOperation.lastRound!;
+    const currentRound = getLastOperationRound(clonedOperation)!;
     currentRound.status = TaskStatus.PROCESSING;
     currentRound.time = {
       start: Date.now(),
@@ -69,11 +64,11 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     const audioinfo = storeItemTask?.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
 
     if (storeItemTask.operations[3].enabled) {
-      lastResult = storeItemTask.operations[3].lastRound?.lastResult;
+      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[3]);
     } else if (storeItemTask.operations[2].enabled) {
-      lastResult = storeItemTask.operations[2].lastRound?.lastResult;
+      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[2]);
     } else if (storeItemTask.operations[1].enabled) {
-      lastResult = storeItemTask.operations[1].lastRound?.lastResult;
+      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
     } else {
       const transcriptFromInputs = storeItemTask?.files.find((a) => !a.type.includes('audio'));
       if (transcriptFromInputs) {
@@ -119,7 +114,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
               }
             }
 
-            this.getTranslation(httpClient, content, storeItemTask, clonedOperation)
+            this.getTranslation(httpClient, content, storeItemTask, clonedOperation, subscrManager)
               .then((result) => {
                 currentRound.time!.duration = Date.now() - currentRound.time!.start;
                 const { name } = FileInfo.extractFileName(lastResult.name);
@@ -155,7 +150,8 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return subj;
   }
 
-  private async getTranslation(httpClient: HttpClient, text: string, storeItemTask: StoreItemTask, operation: StoreTaskOperation) {
+  private async getTranslation(httpClient: HttpClient, text: string, storeItemTask: StoreItemTask, operation: StoreTaskOperation,
+                               subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<any>((resolve, reject) => {
       let source: string | undefined = 'en';
       if (storeItemTask?.operations && operation.options.language) {
@@ -167,7 +163,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
         }
       }
 
-      this.subscrManager.add(
+      subscrManager.add(
         httpClient
           .post(
             'https://translate.cls.ru.nl/translate',

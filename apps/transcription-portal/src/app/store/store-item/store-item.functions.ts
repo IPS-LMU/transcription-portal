@@ -4,11 +4,11 @@ import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSe
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { TaskStatus } from '../../obj/tasks';
 import { modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
-import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { convertIDBOperationToStoreOperation } from '../operation/operation.functions';
+import { getAllTasks } from '../mode/mode.functions';
+import { OperationFactory, StoreTaskOperation } from '../operation';
+import { convertIDBOperationToStoreOperation, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemsState } from './store-items-state';
-import { getAllTasks } from '../mode/mode.functions';
 
 export function convertIDBTaskToStoreTask(
   entry: IDBTaskItem | IDBFolderItem,
@@ -80,13 +80,14 @@ export function getTaskWithHashAndName(hash: string, name: string, entries: Stor
       if (!(task.files[0].attributes.originalFileName === null || task.files[0].attributes.originalFileName === undefined)) {
         for (const file of task.files) {
           const cmpHash = file.hash ?? `${file.name}_${file.size}`;
+          const lastUploadRound = getLastOperationRound(task.operations[0]);
 
           if (
             cmpHash === hash &&
             file.attributes.originalFileName === name &&
-            (task.operations[0].status === TaskStatus.PENDING ||
-              task.operations[0].status === TaskStatus.ERROR ||
-              !task.operations[0].lastRound?.results.find((a) => a.attributes.originalFileName === name)?.available)
+            (lastUploadRound?.status === TaskStatus.PENDING ||
+              lastUploadRound?.status === TaskStatus.ERROR ||
+              !lastUploadRound?.results.find((a) => a.attributes.originalFileName === name)?.available)
           ) {
             return task;
           }
@@ -156,8 +157,10 @@ export function updateTaskFilesWithSameFile(
     if (addedStoreFileOrDirectory.type !== 'folder' && itemsState.entities[itemID]?.type === 'task') {
       const addedFile = addedStoreFileOrDirectory as StoreFile;
       const task = itemsState.entities[itemID] as StoreItemTask;
+      const lastUploadRoundResult = getLastOperationResultFromLatestRound(task.operations[0]);
 
-      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || task.operations[0].lastRound?.lastResult?.available == false) {
+      // TODO check if last result of upload should be checked
+      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || lastUploadRoundResult?.available == false) {
         // first try to replace same file in a task
         let somethingFoundInFiles = false;
         for (let i = 0; i < task.files.length; i++) {
@@ -417,9 +420,10 @@ export function createOperationsByDefaultOperations(
 ): StoreTaskOperation[] {
   return defaultOperations.map((defaultOperation) => {
     let operation = defaultOperation.factory.create(counters.operation, taskID, [
-      new StoreTaskOperationProcessingRound({
+      {
         status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
-      }),
+        results: [],
+      },
     ]);
     operation.enabled = defaultOperation.enabled;
     operation = defaultOperation.factory.applyTaskOptions(
@@ -488,4 +492,123 @@ export function updateStatistics(modeState: ModeState, mode: TPortalModes): Mode
     },
     modeState,
   );
+}
+
+export function applyFunctionOnStoreItemsWithIDsRecursive(
+  ids: number[],
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
+  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
+) {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const idIndex = ids.findIndex((a) => a === item.id);
+
+    if (idIndex > -1) {
+      itemsState = applyFunction(item, itemsState);
+      ids = [...ids.slice(0, idIndex), ...ids.slice(idIndex + 1)];
+      items.splice(i, 1);
+      i--;
+    } else if (item.type === 'folder') {
+      const folderState = applyFunctionOnStoreItemsWithIDsRecursive(ids, item.entries!, taskAdapter, applyFunction);
+      itemsState = taskAdapter.updateOne(
+        {
+          id: item.id,
+          changes: {
+            entries: folderState,
+          },
+        },
+        itemsState,
+      );
+
+      if (afterAppliedOnFolder) {
+        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
+      }
+    }
+  }
+
+  return itemsState;
+}
+
+export function applyFunctionOnStoreItemsWhereRecursive(
+  where: (item: StoreItem) => boolean,
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
+  afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
+) {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    if (where(item)) {
+      itemsState = applyFunction(item, itemsState);
+      items.splice(i, 1);
+      i--;
+    } else if (item.type === 'folder') {
+      const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction);
+      itemsState = taskAdapter.updateOne(
+        {
+          id: item.id,
+          changes: {
+            entries: folderState,
+          },
+        },
+        itemsState,
+      );
+
+      if (afterAppliedOnFolder) {
+        itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
+      }
+    }
+  }
+
+  return itemsState;
+}
+
+export function getTaskItemsWhereRecursive(where: (item: StoreItem) => boolean, itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+  const filtered: StoreItemTask[] = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    if (where(item)) {
+      filtered.push(item as StoreItemTask);
+      items.splice(i, 1);
+      i--;
+    } else if (item.type === 'folder') {
+      const folderFiltered = getTaskItemsWhereRecursive(where, item.entries!, taskAdapter);
+      filtered.push(...folderFiltered);
+    }
+  }
+
+  return filtered;
+}
+
+export function getOneTaskItemWhereRecursive(
+  where: (item: StoreItem) => boolean,
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+): StoreItemTask | undefined {
+  const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    if (where(item)) {
+      return item as StoreItemTask;
+    } else if (item.type === 'folder') {
+      const folderFiltered = getOneTaskItemWhereRecursive(where, item.entries!, taskAdapter);
+      if (folderFiltered) {
+        return folderFiltered;
+      }
+    }
+  }
+
+  return undefined;
 }

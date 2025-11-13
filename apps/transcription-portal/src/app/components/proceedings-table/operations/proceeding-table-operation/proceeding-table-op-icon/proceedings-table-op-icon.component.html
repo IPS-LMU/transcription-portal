@@ -1,4 +1,4 @@
-@switch (storeTaskOperation?.status) {
+@switch (lastOperationRound?.status) {
   @case (TaskStatus.FINISHED) {
     <i class="bi bi-check-lg" aria-hidden="true"></i>
   }
@@ -14,7 +14,7 @@
     </div>
   }
   @case (TaskStatus.SKIPPED) {
-    <i class="bi bi-arrow-right-circle" style="color: gray;" role="status" aria-hidden="true"></i>
+    <i class="bi bi-arrow-right-circle" style="color: gray" role="status" aria-hidden="true"></i>
   }
   @default {
     <!-- show nothing -->

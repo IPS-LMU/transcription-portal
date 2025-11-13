@@ -1,8 +1,9 @@
 import { AfterViewInit, Directive, ElementRef, inject, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
-import { Task, TaskStatus } from '../../../obj/tasks';
+import { TaskStatus } from '../../../obj/tasks';
 import { StoreItemTask, StoreItemTaskDirectory } from '../../../store';
+import { getLastOperationRound } from '../../../store/operation/operation.functions';
 
 @Directive({
   selector: '[tportalDirProgress]',
@@ -40,7 +41,7 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     if (this.opIndex == undefined) {
       return;
     }
-    const entries = this.dir?.entries.ids.map(id => this.dir!.entries.entities[id]!) ?? [];
+    const entries = this.dir?.entries.ids.map((id) => this.dir!.entries.entities[id]!) ?? [];
     const allEntries = this.dir.entries.ids.length;
 
     const counters = {
@@ -50,15 +51,15 @@ export class DirProgressDirective implements OnChanges, AfterViewInit, OnDestroy
     };
 
     for (const entry of entries) {
-      if (entry.type === "task") {
+      if (entry.type === 'task') {
         const task = entry as StoreItemTask;
         const operation = task.operations[this.opIndex];
-
-        if (operation.status === TaskStatus.PROCESSING) {
+        const opLastRound = getLastOperationRound(operation);
+        if (opLastRound?.status === TaskStatus.PROCESSING) {
           counters.processing++;
-        } else if (operation.status === TaskStatus.FINISHED) {
+        } else if (opLastRound?.status === TaskStatus.FINISHED) {
           counters.finished++;
-        } else if (operation.status === TaskStatus.ERROR) {
+        } else if (opLastRound?.status === TaskStatus.ERROR) {
           counters.failed++;
         }
       }

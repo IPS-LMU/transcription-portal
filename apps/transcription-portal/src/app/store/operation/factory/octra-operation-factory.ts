@@ -1,25 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { AnnotationLevelType, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { stringifyQueryParams } from '@octra/utilities';
+import { stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
 import { FileInfo, readFileContents } from '@octra/web-media';
-import { Observable, throwError } from 'rxjs';
+import { Observable, Subscription, throwError } from 'rxjs';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
 
-export class OctraOperation extends StoreTaskOperation<any, OctraOperation> {
-  override clone(): OctraOperation {
-    return new OctraOperation(this);
-  }
-
-  override duplicate(partial?: Partial<StoreTaskOperation<any, OctraOperation>>): OctraOperation {
-    return new OctraOperation(partial);
-  }
-}
+export type OctraOperation = StoreTaskOperation<any, OctraOperation>;
 
 export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _description =
@@ -32,7 +25,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
   protected readonly _title = 'Manual Transcription';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): OctraOperation {
-    return new OctraOperation({
+    return {
       enabled: true,
       id,
       name: this.name,
@@ -40,7 +33,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
       serviceProviderName: 'BAS',
       rounds,
       taskID,
-    });
+    };
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: OctraOperation) {
@@ -48,20 +41,20 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     return operation;
   }
 
-  override run(
-    storeItemTask: StoreItemTask,
-    operation: OctraOperation,
-    httpClient: HttpClient,
-  ): Observable<{ operation: StoreTaskOperation }> {
+  override run(storeItemTask: StoreItemTask, operation: OctraOperation, httpClient: HttpClient,
+               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
 
   public async getToolURL(task: StoreItemTask, operation: StoreTaskOperation, httpClient: HttpClient): Promise<string> {
-    const clonedOperation = operation.clone();
-    const wavFile = task?.operations[0].lastRound?.results.find((a) => a.type.includes('audio'));
-    const currentRound = clonedOperation.lastRound!;
+    const clonedOperation = { ...operation };
+    const wavFile = getLastOperationRound(task?.operations[0])?.results.find((a) => a.type.includes('audio'));
+    const currentRound = getLastOperationRound(clonedOperation);
+    const currentOperationLastResult = getLastOperationResultFromLatestRound(clonedOperation);
+    const uploadOperationLastRound = getLastOperationRound(task.operations[0]);
     const opIndex = task.operations.findIndex((a) => a.name === operation.name);
     const previousOperation = task.operations[opIndex - 1];
+    const previousOperationLastResult = getLastOperationResultFromLatestRound(previousOperation);
 
     if (wavFile?.online && wavFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
@@ -73,15 +66,15 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
 
       let transcriptFile: StoreFile | undefined = undefined;
 
-      if (!currentRound?.lastResult && previousOperation) {
+      if (!currentOperationLastResult && previousOperation) {
         // no results, but previousOperation exists
-        if (previousOperation.lastRound?.lastResult) {
-          transcriptFile = previousOperation.lastRound?.lastResult;
-        } else if (task.operations[0].lastRound?.results.find((a) => !a.type.includes('audio'))) {
-          transcriptFile = task.operations[0].lastRound?.results.find((a) => !a.type.includes('audio'));
+        if (previousOperationLastResult) {
+          transcriptFile = previousOperationLastResult;
+        } else if (uploadOperationLastRound?.results.find((a) => !a.type.includes('audio'))) {
+          transcriptFile = uploadOperationLastRound?.results.find((a) => !a.type.includes('audio'));
         }
       } else if (currentRound) {
-        transcriptFile = currentRound?.lastResult;
+        transcriptFile = currentOperationLastResult;
       }
 
       if (transcriptFile && transcriptFile?.blob) {

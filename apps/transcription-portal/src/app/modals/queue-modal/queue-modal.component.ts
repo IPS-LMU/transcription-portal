@@ -18,6 +18,7 @@ import {
   TaskStatus,
   TPortalModes,
 } from '../../store';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -379,6 +380,9 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
   getExtension(file: StoreFile) {
     return FileInfo.extractFileName(file.name).extension;
   }
+
+  protected readonly getLastOperationRound = getLastOperationRound;
+  protected readonly getLastOperationResultFromLatestRound = getLastOperationResultFromLatestRound;
 }
 
 interface CompatibleResult {

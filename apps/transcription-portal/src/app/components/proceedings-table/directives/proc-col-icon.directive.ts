@@ -17,8 +17,7 @@ import { Subscription } from 'rxjs';
 import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../../../store';
-import { event } from 'jquery';
-import { files } from 'jszip';
+import { getLastOperationRound } from '../../../store/operation/operation.functions';
 
 @Directive({
   selector: '[tportalProcColIcon]',
@@ -111,7 +110,7 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
           this.renderer.setAttribute(infoIcon, 'aria-hidden', 'true');
 
           if (this.mouseOver) {
-            this.renderer.setStyle(infoIcon, 'visibility', 'visible')
+            this.renderer.setStyle(infoIcon, 'visibility', 'visible');
           } else {
             this.renderer.setStyle(infoIcon, 'visibility', 'hidden');
           }
@@ -254,11 +253,13 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
       if (this.entry.type === 'task') {
         const task = this.entry as StoreItemTask;
         const file0Extension = FileInfo.extractFileName(task.files[0].name).extension;
+        const uploadOperationLastRound = getLastOperationRound(task.operations[0]);
+
         if (file0Extension === '.wav' && task.files[0].blob !== undefined) {
           this.renderer.addClass(result, 'green');
         } else if (
           ((file0Extension === '.wav' && task.files[0].blob === undefined) || file0Extension !== '.wav') &&
-          task.operations[0].status !== 'FINISHED'
+          uploadOperationLastRound!.status !== 'FINISHED'
         ) {
           this.renderer.addClass(result, 'yellow');
         }

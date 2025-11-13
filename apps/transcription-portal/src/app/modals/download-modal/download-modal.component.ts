@@ -13,7 +13,8 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
-import { ModeStoreService, StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../../store';
+import { ModeStoreService, StoreItemTask, StoreTaskOperation } from '../../store';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -110,9 +111,9 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
       for (const task of tasks) {
         const operation = task.operations[opIndex];
+        const lastRound = getLastOperationRound(operation);
 
-        if (operation.rounds.length > 0 && operation.status === TaskStatus.FINISHED) {
-          const lastRound: StoreTaskOperationProcessingRound | undefined = operation.lastRound;
+        if (operation.rounds.length > 0 && lastRound?.status === TaskStatus.FINISHED) {
           const result = lastRound?.results?.find((a) => !a.type.includes('audio'));
 
           if (result) {
@@ -282,18 +283,18 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         const promises = [];
         for (let j = 1; j < task.operations.length; j++) {
           const operation = task.operations[j];
+          const lastRound = getLastOperationRound(operation);
 
-          if (operation.name !== task.operations[0].name && operation.status === TaskStatus.FINISHED && operation.rounds.length > 0) {
-            const opResult = operation.lastRound;
+          if (operation.name !== task.operations[0].name && lastRound?.status === TaskStatus.FINISHED && operation.rounds.length > 0) {
             const folderName = this.getFolderName(operation);
-
-            if (opResult?.lastResult) {
+            const opResult = getLastOperationResultFromLatestRound(operation);
+            if (opResult) {
               const fileName = task.files[0].attributes?.originalFileName.replace(/\.[^.]+$/g, '');
-              const originalName = opResult.lastResult.attributes?.originalFileName ?? opResult.lastResult.name;
+              const originalName = opResult.attributes?.originalFileName ?? opResult.name;
 
               entryResult.push({
                 path: `${fileName}/${folderName}/${originalName}`,
-                file: opResult?.lastResult.blob,
+                file: opResult.blob,
               });
             }
 
@@ -304,7 +305,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
             promises.push(
               new Promise<void>((resolve2, reject2) => {
                 this.downloadService
-                  .getConversionFiles(task, operation, operation.lastRound!, selectedConverters)
+                  .getConversionFiles(task, operation, getLastOperationRound(operation)!, selectedConverters)
                   .then((entries) => {
                     const folderName2 = this.getFolderName(operation);
                     entries = entries.filter((a) => a);
