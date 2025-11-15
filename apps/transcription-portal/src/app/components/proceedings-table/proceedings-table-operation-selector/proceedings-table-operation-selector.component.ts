@@ -1,6 +1,6 @@
 import { Component, ElementRef, inject, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { StoreTaskOperation } from '../../../store';
+import { OperationFactory, StoreTaskOperation } from '../../../store';
 import { ProceedingsTableAsrOperationComponent,
   ProceedingsTableToolOperationComponent, ProceedingsTableUploadOperationComponent,
   ProceedingsTableTranslationOperationComponent, ProceedingsTableWordAlignmentOperationComponent,
@@ -22,6 +22,7 @@ import { ProceedingsTableAsrOperationComponent,
 })
 export class ProceedingsTableOperationSelectorComponent extends SubscriberComponent implements OnChanges {
   @Input() storeTaskOperation?: StoreTaskOperation;
+  @Input() factory?: OperationFactory;
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 

@@ -5,7 +5,7 @@ import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { TaskStatus } from '../../obj/tasks';
 import { modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
 import { getAllTasks } from '../mode/mode.functions';
-import { OperationFactory, StoreTaskOperation } from '../operation';
+import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
 import { StoreItemsState } from './store-items-state';
@@ -611,4 +611,57 @@ export function getOneTaskItemWhereRecursive(
   }
 
   return undefined;
+}
+
+export function changeTaskOperation(
+  taskID: number,
+  operationID: number,
+  change: (operation: StoreTaskOperation, itemsState: StoreItemsState) => StoreTaskOperation,
+  taskAdapter: EntityAdapter<StoreItem>,
+  state: StoreItemsState,
+): StoreItemsState {
+  return applyFunctionOnStoreItemsWithIDsRecursive([taskID], state, taskAdapter, (item, itemsState) => {
+    return taskAdapter.updateOne(
+      {
+        id: item.id,
+        changes: {
+          operations: itemsState.entities[item.id]!.operations!.map((operation) => {
+            if (operation.id === operationID) {
+              return change(operation, itemsState);
+            }
+            return operation;
+          }),
+        },
+      },
+      itemsState,
+    );
+  });
+}
+
+export function addRoundToOperation(
+  taskID: number,
+  operationID: number,
+  taskAdapter: EntityAdapter<StoreItem>,
+  state: StoreItemsState,
+  create?: (operation: StoreTaskOperation, itemsState: StoreItemsState) => StoreTaskOperationProcessingRound,
+) {
+  return changeTaskOperation(
+    taskID,
+    operationID,
+    (operation, itemsState) => {
+      const newRound = create
+        ? create(operation, itemsState)
+        : {
+            status: TaskStatus.PENDING,
+            results: [],
+          };
+
+      return {
+        ...operation,
+        rounds: [...operation.rounds, newRound],
+      };
+    },
+    taskAdapter,
+    state,
+  );
 }

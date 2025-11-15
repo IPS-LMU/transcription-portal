@@ -1,15 +1,15 @@
 @switch (storeTaskOperation?.name) {
   @case ('Upload') {
-    <tportal-proceedings-table-upload-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-upload-operation>
+    <tportal-proceedings-table-upload-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-upload-operation>
   }
   @case ('ASR') {
-    <tportal-proceedings-table-asr-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-asr-operation>
+    <tportal-proceedings-table-asr-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-asr-operation>
   }
   @case ('OCTRA') {
-    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-tool-operation>
+    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-tool-operation>
   }
   @case ('Emu WebApp') {
-    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-tool-operation>
+    <tportal-proceedings-table-tool-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-tool-operation>
   }
   @case ('MAUS') {
     <tportal-proceedings-table-word-alignment-operation
@@ -17,10 +17,10 @@
     ></tportal-proceedings-table-word-alignment-operation>
   }
   @case ('Summarization') {
-    <tportal-proceedings-table-summarization-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-summarization-operation>
+    <tportal-proceedings-table-summarization-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-summarization-operation>
   }
   @case ('Translation') {
-    <tportal-proceedings-table-translation-operation [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-translation-operation>
+    <tportal-proceedings-table-translation-operation [storeTaskOperation]="storeTaskOperation" [factory]="factory"></tportal-proceedings-table-translation-operation>
   }
   @default {
     {{ storeTaskOperation?.name }} NOT FOUND

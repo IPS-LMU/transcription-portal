@@ -162,7 +162,17 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   @Output() public afterdrop = new EventEmitter<(TPortalFileInfo | TPortalDirectoryInfo)[]>();
-  @Output() public operationclick: EventEmitter<StoreTaskOperation> = new EventEmitter<StoreTaskOperation>();
+  @Output() public operationclick: EventEmitter<{
+    operation: StoreTaskOperation;
+    task: StoreItemTask;
+    opIndex: number;
+    factory: OperationFactory;
+  }> = new EventEmitter<{
+    operation: StoreTaskOperation;
+    task: StoreItemTask;
+    opIndex: number;
+    factory: OperationFactory;
+  }>();
   @Output() public operationhover: EventEmitter<StoreTaskOperation> = new EventEmitter<StoreTaskOperation>();
   @Output() public feedbackRequested = new EventEmitter<StoreTaskOperation>();
   @ViewChild('inner', { static: true }) inner?: ElementRef;
@@ -442,7 +452,12 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       const previousOperationLastResult = previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
 
       if ((previousOperation && previousOperationLastResult?.online) || (operation && previousOperationLastResult?.online)) {
-        this.operationclick.emit(operation);
+        this.operationclick.emit({
+          operation: operation as any,
+          task: entry as any,
+          opIndex: operationIndex!,
+          factory: this.operations![operationIndex!].factory,
+        });
         console.log('row selected close');
         this.popover.state = 'closed';
       }
@@ -770,21 +785,20 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return '#3a70dd';
   }
 
-  /*
-  public onOperationClick($event: MouseEvent, operation: Operation) {
-    if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
+  public onOperationClick($event: MouseEvent, operation: StoreTaskOperation, index: number, task: StoreItemTask) {
+    if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
       this.popover.state = 'closed';
       console.log('operation click selected close');
       this.cd.markForCheck();
       this.cd.detectChanges();
       this.selectedOperation = undefined;
     } else {
-      this.selectedOperation = operation;
+      this.selectedOperation = this.operations![index].factory;
     }
-    this.operationclick.emit(operation);
+    this.operationclick.emit({
+      operation, opIndex: index, factory: this.operations![index].factory, task
+    });
   }
-
- */
 
   openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined, selectedLines: number[]) {
     if (operation !== null && operation !== undefined && operation.name !== 'Upload') {

@@ -171,7 +171,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         mode: TPortalModes;
-        id: number;
+        taskID: number;
         status: TaskStatus;
       }>(),
       success: emptyProps(),
@@ -216,11 +216,51 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         operation: StoreTaskOperation;
-      }>(),
-      success: emptyProps(),
-      fail: props<{
-        error: string;
-      }>(),
+      }>()
     },
   });
+
+  static runOperationWithTool = createActionGroup({
+      source: 'tasks/open operation with tool',
+      events: {
+        do: props<{
+          taskID: number;
+          operationID: number;
+        }>(),
+        success: props<{
+          mode: TPortalModes;
+          taskID: number;
+          operationID: number;
+          url?: string;
+        }>(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
+  static reuploadFile = createActionGroup({
+      source: 'tasks/reupload file',
+      events: {
+        do: props<{
+          mode: TPortalModes;
+          taskID: number;
+          operationID: number;
+          roundIndex?: number;
+          file: StoreFile;
+        }>(),
+        success: props<{
+          mode: TPortalModes;
+          taskID: number;
+          operationID: number;
+          roundIndex?: number;
+          file: StoreFile;
+        }>(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
+
 }

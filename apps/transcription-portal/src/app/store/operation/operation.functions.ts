@@ -47,7 +47,7 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   };
 }
 
-export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirectory: StoreItemTaskDirectory): Promise<IDBTaskItem> {
+export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem> {
   return new Promise<IDBTaskItem>((resolve, reject) => {
     const result: IDBTaskItem = {
       id: task.id,

@@ -355,6 +355,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                                   originalFileName: file.name,
                                 },
                                 hash: await getHashString(file),
+                                available: true,
                               },
                             });
                           }
@@ -449,7 +450,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                     setTimeout(() => {
                       file
                         .updateContentFromURL(httpClient)
-                        .then(() => {
+                        .then((content) => {
                           let warnings: string | undefined = undefined;
 
                           if (json.warnings !== '') {
@@ -458,14 +459,24 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                             warnings = '<br/>' + json.output.replace('¶', '');
                           }
                           resolve({
-                            result: file as StoreFile,
+                            result: {
+                              name: file.name,
+                              attributes: { originalFileName: file.name },
+                              type: file.type,
+                              size: file.size,
+                              content,
+                              hash: '',
+                              url: file.url,
+                              available: true,
+                              online: true,
+                            },
                             warnings,
                           });
                         })
                         .catch((error) => {
                           reject(error);
                         });
-                    }, 5000);
+                    }, 1000);
                   } else {
                     reject(json.output);
                   }

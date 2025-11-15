@@ -45,7 +45,8 @@ import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AppStoreService, ModeStoreService, PreprocessingStoreService, StoreTaskOperation } from '../../store';
+import { AppStoreService, ModeStoreService, OperationFactory, PreprocessingStoreService, StoreItemTask, StoreTaskOperation } from '../../store';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-main',
@@ -207,135 +208,22 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     input.value = '';
   }
 
-  async onOperationClick(operation: StoreTaskOperation) {
-    /* TODO reimplement
-    if (operation && operation instanceof ToolOperation && operation.state !== TaskStatus.PENDING && operation.task) {
-      // operation is of type tool and ready
-      const tool = operation as ToolOperation;
-      const task = operation.task;
-      const uploadOperation = task.operations[0];
-      const previousOperation = tool.previousOperation;
-      const availableUploadedAudioFile = uploadOperation.lastRound?.results.find((a) => a.isMediaFile());
-      const droppedAudioFile = task.files.find((a) => a.isMediaFile())?.file;
-      const isPreviousTaskDefinedAndLastResultNotAvailable = !previousOperation?.lastRound?.lastResult?.available;
-
-      if (!availableUploadedAudioFile?.available && !droppedAudioFile) {
-        // audio file is not available
-        this.alertService.showAlert(
-          'warning',
-          `Please add the audio file "${task.files[0].attributes.originalFileName}" and run "${tool.title}" again.`,
-          10,
-        );
-        task.operations[0].changeState(TaskStatus.PENDING);
-        task.changeState(TaskStatus.PENDING);
-      } else if (!availableUploadedAudioFile?.online && droppedAudioFile) {
-        // start upload process
-        this.alertService.showAlert('info', `Please wait until file ${task.files[0].fullname}` + ` being uploaded and do '${tool.title}' again.`);
-        this.subscribe(uploadOperation.changes$, {
-          next: (operation) => {
-            if (operation.isFinished) {
-              this.alertService.showAlert(
-                'success',
-                `file ${task?.files[0].fullname}` + +` successfully uploaded. You can do '${tool.title}' for this file.`,
-              );
-              if (task) {
-                this.storage.saveTask(task, this.taskService.state.currentMode);
-              }
-            }
-          },
-          error: (error) => {
-            console.error(error);
-          },
-        });
-        this.taskService.start(this.taskService.state.currentMode);
-      } else if (isPreviousTaskDefinedAndLastResultNotAvailable && previousOperation?.enabled) {
-        // audio file available but no result of previous operation
-        this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
-      } else {
-        // audio file exists and last result of previous operation exists
-        let file: TPortalFileInfo | undefined = undefined;
-        if (tool.rounds.length > 0) {
-          if (!tool.lastRound?.lastResult?.online && tool.lastRound?.lastResult?.available) {
-            // file for last result of current tool exists, but isn't available via URL
-            // reupload result from tool operation
-            file = tool.lastRound.lastResult;
-          }
-        } else if (
-          previousOperation &&
-          previousOperation.lastRound &&
-          !previousOperation.lastRound.lastResult?.online &&
-          previousOperation.lastRound.lastResult?.available
-        ) {
-          // reupload result from previous operation
-          // local available, reupload
-          file = previousOperation.lastRound.lastResult;
-        }
-
-        if (file && tool) {
-          const url = await this.upload(tool as Operation, file);
-          if (tool.rounds.length > 0 && !tool.lastRound?.lastResult?.online && tool.lastRound?.lastResult?.available) {
-            // reupload result from tool operation
-            tool.lastRound.lastResult.url = url;
-            tool.lastRound.lastResult.online = true;
-          } else if (
-            !(previousOperation?.lastRound === null || previousOperation?.lastRound === undefined) &&
-            !previousOperation.lastRound?.lastResult?.online &&
-            previousOperation.lastRound?.lastResult?.available
-          ) {
-            previousOperation.lastRound.lastResult.url = url;
-            previousOperation.lastRound.lastResult.online = true;
-          }
-
-          if (task) {
-            this.storage.saveTask(task, this.taskService.state.currentMode);
-          }
-        }
-
-        // continue after upload
-        this.toolURL = await tool.getToolURL(this.httpClient);
-
-        if (this.toolURL !== '') {
-          if (tool.isFinished) {
-            // start new round
-            tool.addProcessingRound();
-          }
-          tool.changeState(TaskStatus.PROCESSING);
-
-          if (this.proceedings && this.toolLoader) {
-            this.proceedings.cd.markForCheck();
-            this.proceedings.cd.detectChanges();
-            this.toolLoader.url = this.toolURL;
-            this.toolLoader.name = tool.name;
-
-            if (this.toolSelectedOperation && operation.id !== this.toolSelectedOperation.id) {
-              // some operation already initialized
-              this.leaveToolOperation();
-            }
-
-            this.toolSelectedOperation = operation;
-
-            setTimeout(() => {
-              this.sidebarstate = 'opened';
-            }, 400);
-
-            this.showtool = true;
-            if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
-              operation.time = {
-                start: Date.now(),
-              };
-            }
-
-            this.proceedings.togglePopover(false);
-            this.proceedings.cd.markForCheck();
-            this.proceedings.cd.detectChanges();
-          }
-        } else {
-          console.warn(`tool url is empty`);
-        }
-      }
+  async onOperationClick({
+    operation
+  }: {
+    operation: StoreTaskOperation;
+    task: StoreItemTask;
+    opIndex: number;
+    factory: OperationFactory;
+  }) {
+    if (
+      operation &&
+      ['OCTRA', 'Emu WebApp'].includes(operation.name) &&
+      getLastOperationRound(operation)?.status !== TaskStatus.PENDING &&
+      operation.taskID
+    ) {
+      this.modeStoreService.openOperationWithTool(operation);
     }
-
-     */
   }
 
   onOperationHover(operation: StoreTaskOperation) {}

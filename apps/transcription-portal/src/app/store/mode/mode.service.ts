@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
+import { StoreTaskOperation } from '../operation';
 import { StoreItem, StoreItemTask, StoreItemTaskOptions } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
@@ -85,6 +86,23 @@ export class ModeStoreService {
   }
 
   startProcessing() {
-    this.store.dispatch(StoreItemActions.startProcessing.do())
+    this.store.dispatch(StoreItemActions.startProcessing.do());
+  }
+
+  changeOperation(mode: TPortalModes, taskID: number, operation: StoreTaskOperation) {
+    this.store.dispatch(
+      StoreItemActions.changeOperation.do({
+        mode,
+        taskID,
+        operation,
+      }),
+    );
+  }
+
+  openOperationWithTool(operation: StoreTaskOperation) {
+    this.store.dispatch(StoreItemActions.runOperationWithTool.do({
+      taskID: operation.taskID,
+      operationID: operation.id
+    }));
   }
 }

@@ -1,6 +1,6 @@
-import { Component, SimpleChanges } from '@angular/core';
+import { Component, Input, SimpleChanges } from '@angular/core';
 import { TimePipe } from '../../../../shared/time.pipe';
-import { TaskStatus } from '../../../../store';
+import { OperationFactory, TaskStatus } from '../../../../store';
 import { getLastOperationRound } from '../../../../store/operation/operation.functions';
 import { ProceedingsTableOpIconComponent } from '../proceeding-table-operation/proceeding-table-op-icon/proceedings-table-op-icon.component';
 import { ProceedingsTableOperationComponent } from '../proceeding-table-operation/proceedings-table-operation.component';
@@ -12,6 +12,8 @@ import { ProceedingsTableOperationComponent } from '../proceeding-table-operatio
   imports: [ProceedingsTableOpIconComponent, TimePipe],
 })
 export class ProceedingsTableUploadOperationComponent extends ProceedingsTableOperationComponent {
+  @Input() factory?: OperationFactory;
+
   constructor() {
     super();
   }

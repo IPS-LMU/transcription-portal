@@ -1,14 +1,18 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
+import { TaskStatus } from '../../obj/tasks';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation } from '../operation';
-import { StoreItem, StoreItemTask, TaskStatus } from './store-item';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
+import { StoreItem, StoreItemTask } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   applyFunctionOnStoreItemsWhereRecursive,
   applyFunctionOnStoreItemsWithIDsRecursive,
+  changeTaskOperation,
   convertIDBTaskToStoreTask,
+  getTaskItemsWhereRecursive,
   updateStatistics,
   updateTaskFilesWithSameFile,
 } from './store-item.functions';
@@ -260,7 +264,7 @@ export const getTaskReducers = (
   // update statistics if task changes
   on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
   on(StoreItemActions.processStoreItem.do, (state, { id, mode }) => {
-    return modeAdapter.updateOne(
+    state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
@@ -279,9 +283,34 @@ export const getTaskReducers = (
       },
       state,
     );
+
+    state = updateStatistics(state, mode);
+    return state;
   }),
-  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) =>
-    modeAdapter.updateOne(
+  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
+    const taskItem = state.entities[mode]!.items.entities[taskID]!;
+    let taskStatus = taskItem!.status;
+    const lastRound = getLastOperationRound(operation);
+
+    if (lastRound?.status === TaskStatus.ERROR) {
+      taskStatus = TaskStatus.ERROR;
+    } else if (lastRound?.status === TaskStatus.READY) {
+      taskStatus = TaskStatus.READY;
+    } else {
+      if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.PENDING) {
+        // reuploading needed for upload
+        taskStatus = TaskStatus.PENDING;
+      } else {
+        const allOperationsFinished = taskItem
+          .operations!.filter((op) => op.enabled)
+          .map((op) => getLastOperationRound(op)?.status === TaskStatus.FINISHED);
+        if (allOperationsFinished) {
+          taskStatus = TaskStatus.FINISHED;
+        }
+      }
+    }
+
+    state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
@@ -290,6 +319,7 @@ export const getTaskReducers = (
               {
                 id: item.id,
                 changes: {
+                  status: taskStatus,
                   operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
                     if (op.id === operation.id) {
                       return operation;
@@ -304,10 +334,13 @@ export const getTaskReducers = (
         },
       },
       state,
-    ),
-  ),
-  on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operationID }) =>
-    modeAdapter.updateOne(
+    );
+
+    state = updateStatistics(state, mode);
+    return state;
+  }),
+  on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operationID }) => {
+    state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
@@ -330,8 +363,187 @@ export const getTaskReducers = (
         },
       },
       state,
-    ),
-  ),
+    );
+
+    state = updateStatistics(state, mode);
+    return state;
+  }),
+  on(StoreItemActions.reuploadFile.success, (state: ModeState, { mode, taskID, operationID, file, roundIndex }) => {
+    const currentState = state.entities[state.currentMode]!;
+    const task = currentState.items.entities[taskID]!;
+    const taskOperations = task.operations!;
+    const opIndex = taskOperations.findIndex((a) => a.id === operationID)!;
+    const operation = taskOperations[opIndex];
+    const previousOperation = opIndex > 0 ? taskOperations[opIndex - 1] : undefined;
+    const previousOperationLastRound = previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
+
+    if (
+      operation.rounds.length > 0 &&
+      !getLastOperationResultFromLatestRound(operation)?.online &&
+      getLastOperationResultFromLatestRound(operation)?.available
+    ) {
+      // reupload result from tool operation
+      return modeAdapter.updateOne(
+        {
+          id: mode,
+          changes: {
+            items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    operations: itemsState.entities[item.id]!.operations!.map((op) => {
+                      if (op.id === operationID) {
+                        return {
+                          ...op,
+                          rounds: [
+                            ...op.rounds.slice(0, op.rounds.length - 1),
+                            {
+                              ...getLastOperationRound(operation)!,
+                              results: getLastOperationRound(operation)!.results.map((result) => {
+                                if (result.name === file.name) {
+                                  return {
+                                    ...result,
+                                    url: file.url,
+                                    online: true,
+                                  };
+                                }
+
+                                return result;
+                              }),
+                            },
+                          ],
+                        };
+                      }
+
+                      return op;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            }),
+          },
+        },
+        state,
+      );
+    } else if (previousOperation && previousOperationLastRound?.online && previousOperationLastRound?.available) {
+      return modeAdapter.updateOne(
+        {
+          id: mode,
+          changes: {
+            items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    operations: itemsState.entities[item.id]!.operations!.map((op) => {
+                      if (op.id === previousOperation.id) {
+                        return {
+                          ...op,
+                          rounds: [
+                            ...op.rounds.slice(0, op.rounds.length - 1),
+                            {
+                              ...getLastOperationRound(previousOperation)!,
+                              results: getLastOperationRound(previousOperation)!.results.map((result) => {
+                                if (result.name === file.name) {
+                                  return {
+                                    ...result,
+                                    url: file.url,
+                                    online: true,
+                                  };
+                                }
+
+                                return result;
+                              }),
+                            },
+                          ],
+                        };
+                      }
+
+                      return op;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            }),
+          },
+        },
+        state,
+      );
+    }
+
+    return state;
+  }),
+  on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, url }) => {
+    const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items, taskAdapter)[0];
+    const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
+    let operation = task.operations![operationIndex];
+    const { factory } = state.entities[mode]!.defaultOperations[operationIndex];
+
+    if (url !== '') {
+      if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
+        // start new round
+        operation = {
+          ...operation,
+          rounds: [
+            ...operation.rounds,
+            {
+              status: TaskStatus.PENDING,
+              results: [],
+            },
+          ],
+        };
+      }
+      operation = {
+        ...operation,
+        rounds: [
+          ...operation.rounds.slice(0, operation.rounds.length - 1),
+          {
+            ...operation.rounds[operation.rounds.length - 1],
+            status: TaskStatus.PROCESSING,
+            time: {
+              start: Date.now(),
+            },
+          },
+        ],
+      };
+
+      state = modeAdapter.updateOne(
+        {
+          id: mode,
+          changes: {
+            items: {
+              ...changeTaskOperation(
+                taskID,
+                operationID,
+                () => {
+                  return {
+                    ...operation,
+                  };
+                },
+                taskAdapter,
+                state.entities[mode]!.items,
+              ),
+              openedTool: {
+                url: url!,
+                operationID,
+                taskID,
+              },
+            },
+          },
+        },
+        {
+          ...state,
+        },
+      );
+    } else {
+      console.warn(`tool url is empty`);
+    }
+
+    return state;
+  }),
 ];
 
 function setSelection(

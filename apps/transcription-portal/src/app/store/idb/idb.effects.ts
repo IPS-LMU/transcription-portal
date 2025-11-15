@@ -1,15 +1,25 @@
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { Store } from '@ngrx/store';
+import { Table } from 'dexie';
 import { catchError, exhaustMap, from, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
-import { IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
+import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
 import { RootState } from '../app';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
+import { TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
+import { convertStoreTaskToIDBTask } from '../operation/operation.functions';
+import { StoreItem } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
+import { getTaskItemsWhereRecursive } from '../store-item/store-item.functions';
 import { IDBActions } from './idb.actions';
+
+const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
+  selectId: (task) => task.id,
+});
 
 @Injectable()
 export class IDBEffects {
@@ -156,6 +166,46 @@ export class IDBEffects {
               }),
             ),
           ),
+        );
+      }),
+    ),
+  );
+
+  saveTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.changeOperation.do, StoreItemActions.changeTaskStatus.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
+        const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
+          mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
+        const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items, taskAdapter)[0];
+        return from(convertStoreTaskToIDBTask(task)).pipe(
+          exhaustMap((idbTask) => {
+            return from(table.put(idbTask, task.id)).pipe(
+              exhaustMap(() => {
+                return of(
+                  IDBActions.saveTask.success({
+                    mode,
+                    taskID,
+                  }),
+                );
+              }),
+              catchError((err) => {
+                return of(
+                  IDBActions.saveTask.fail({
+                    error: typeof err === 'string' ? err : err?.message,
+                  }),
+                );
+              }),
+            );
+          }),
+          catchError((err) => {
+            return of(
+              IDBActions.saveTask.fail({
+                error: typeof err === 'string' ? err : err?.message,
+              }),
+            );
+          }),
         );
       }),
     ),
