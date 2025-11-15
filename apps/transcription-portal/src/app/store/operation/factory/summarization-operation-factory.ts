@@ -6,10 +6,9 @@ import { joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra
 import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
-import { TaskStatus } from '../../../obj/tasks';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
-import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';

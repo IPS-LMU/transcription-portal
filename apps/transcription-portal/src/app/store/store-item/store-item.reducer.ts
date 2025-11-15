@@ -1,11 +1,10 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
-import { TaskStatus } from '../../obj/tasks';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
-import { StoreItem, StoreItemTask } from './store-item';
+import { StoreItem, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   applyFunctionOnStoreItemsWhereRecursive,
@@ -526,11 +525,11 @@ export const getTaskReducers = (
                 taskAdapter,
                 state.entities[mode]!.items,
               ),
-              openedTool: {
-                url: url!,
-                operationID,
-                taskID,
-              },
+            },
+            openedTool: {
+              url: url!,
+              operationID,
+              taskID,
             },
           },
         },

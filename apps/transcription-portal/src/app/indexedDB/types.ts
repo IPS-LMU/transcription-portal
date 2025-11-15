@@ -1,6 +1,5 @@
 import { FileInfoSerialized } from '@octra/web-media';
-import { OperationProcessingRoundSerialized } from '../obj/operations/operation';
-import { TaskStatus } from '../obj/tasks';
+import { OperationProcessingRoundSerialized, TaskStatus } from '../store';
 
 export interface IDBUserSettingsItem<T> {
   name: string;
@@ -64,4 +63,25 @@ export interface IDBOperation {
   };
   language?: string;
   maxNumbersOfWords?: number;
+}
+
+export interface IOperation {
+  id: number;
+  name: string;
+  enabled: boolean;
+  rounds: OperationProcessingRoundSerialized[];
+  serviceProvider?: string;
+  /*
+  language?: string;
+  mausLanguage?: string;
+  summarizationMaxNumberOfWords?: string;
+   */
+}
+
+export interface IASROperation extends IOperation {
+  language?: string;
+  diarization?: {
+    enabled?: boolean;
+    speakers?: number;
+  };
 }

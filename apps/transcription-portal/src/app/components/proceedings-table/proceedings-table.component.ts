@@ -1,4 +1,4 @@
-import { NgClass, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -24,13 +24,6 @@ import { HotkeysEvent } from 'hotkeys-js';
 import { DownloadModalComponent } from '../../modals/download-modal/download-modal.component';
 import { FilePreviewModalComponent } from '../../modals/file-preview-modal/file-preview-modal.component';
 import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
-import { ASROperation } from '../../obj/operations/asr-operation';
-import { G2pMausOperation } from '../../obj/operations/g2p-maus-operation';
-import { Operation } from '../../obj/operations/operation';
-import { SummarizationOperation } from '../../obj/operations/summarization-operation';
-import { TranslationOperation } from '../../obj/operations/translation-operation';
-import { Task, TaskList, TaskStatus } from '../../obj/tasks';
-import { TaskService } from '../../obj/tasks/task.service';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
@@ -49,9 +42,9 @@ import {
   StoreItemTaskDirectory,
   StoreTaskOperation,
   StoreTaskOperationProcessingRound,
+  TaskStatus,
   TPortalModes,
 } from '../../store';
-import { getIndexByEntry } from '../../store/mode/mode.functions';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
@@ -84,13 +77,13 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     DirProgressDirective,
     ProcColIconDirective,
     ProceedingsRowDirective,
+    AsyncPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProceedingsTableComponent extends SubscriberComponent implements OnInit, OnDestroy, OnChanges {
+class ProceedingsTableComponent extends SubscriberComponent implements OnInit, OnDestroy, OnChanges {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
-  taskService = inject(TaskService);
   storage = inject(StorageService);
   private ngbModalService = inject(NgbModal);
   private shortcutService = inject(ShortcutService);
@@ -157,10 +150,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  protected get taskList(): TaskList | undefined {
-    return this.taskService.state.currentModeState.taskList;
-  }
-
   @Output() public afterdrop = new EventEmitter<(TPortalFileInfo | TPortalDirectoryInfo)[]>();
   @Output() public operationclick: EventEmitter<{
     operation: StoreTaskOperation;
@@ -181,7 +170,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   public resultsTableComponent?: ResultsTableComponent;
 
   public selectedOperation?: OperationFactory;
-  public toolSelectedOperation?: Operation;
   private readonly fileAPIsupported: boolean = false;
   private shiftStart = -1;
   private selectionBlocked = false;
@@ -243,28 +231,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  ngOnInit() {
-    if (this.taskService.state.currentModeState.taskList?.entryChanged) {
-      this.subscribe(this.taskService.state.currentModeState.taskList?.entryChanged, {
-        next: (event) => {
-          this.cd.markForCheck();
-        },
-      });
-    }
-
-    this.cd.detach();
-    if (!(this.cd as any).destroyed) {
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-    }
-
-    setInterval(() => {
-      if (!(this.cd as any).destroyed) {
-        this.cd.detectChanges();
-        this.cd.markForCheck();
-      }
-    }, 500);
-  }
+  ngOnInit() {}
 
   override ngOnDestroy() {
     super.ngOnDestroy();
@@ -300,10 +267,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   cancelScroll($event: Event) {
     $event.stopPropagation();
     $event.preventDefault();
-  }
-
-  public getStateIcon(operation: Operation) {
-    return operation.getStateIcon(this.sanitizer, operation.state);
   }
 
   onDrop($event: DragEvent) {
@@ -383,6 +346,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   onContextMenu($event: MouseEvent, row: HTMLTableRowElement) {
     $event.preventDefault();
     $event.stopPropagation();
+
+    /* TODO ADD
     const task = this.popover.task ?? this.popover.directory;
     const taskList = this.taskService.state.currentModeState.taskList;
 
@@ -397,10 +362,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.contextmenu.hidden = false;
       this.cd.markForCheck();
       this.cd.detectChanges();
+
     }
+     */
   }
 
   onRowSelected(entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
+    /* TODO ADD
     if (!this.selectionBlocked) {
       const taskList = this.taskService.state.currentModeState.taskList;
       if (!operation || (!['OCTRA', 'Emu WebApp'].includes(operation.name) && taskList && this.taskService.currentModeState)) {
@@ -465,17 +433,16 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.cd.markForCheck();
       this.cd.detectChanges();
     }
+     */
   }
 
   onContextMenuOptionSelected(option: string) {
-    if (this.taskService.currentModeState && this.taskService.currentModeState.selectedRows.length > 0) {
-      if (option === 'delete') {
-        this.deleteSelectedTasks();
-      } else if (option === 'appendings-remove') {
-        this.removeAppendings();
-      } else if (option === 'download') {
-        this.openArchiveDownload('line', this.selectedOperation, this.taskService.currentModeState.selectedRows);
-      }
+    if (option === 'delete') {
+      this.deleteSelectedTasks();
+    } else if (option === 'appendings-remove') {
+      this.removeAppendings();
+    } else if (option === 'download') {
+      // TODO ADD this.openArchiveDownload('line', this.selectedOperation, this.taskService.currentModeState.selectedRows);
     }
     this.contextmenu.hidden = true;
     this.cd.markForCheck();
@@ -483,6 +450,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   removeAppendings() {
+    /*
     const taskList = this.taskService.state.currentModeState.taskList;
     if (taskList && this.taskService.currentModeState) {
       for (const index of this.taskService.currentModeState.selectedRows) {
@@ -507,6 +475,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
         }
       }
     }
+
+     */
   }
 
   togglePopover(show: boolean) {
@@ -562,7 +532,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     // TODO check operation.onMouseEnter();
   }
 
-  onOperationMouseLeave($event: MouseEvent, operation: Operation) {
+  onOperationMouseLeave($event: MouseEvent, operation: StoreTaskOperation) {
+   /* TODO ADD
     operation.mouseover = false;
     this.popover.mouseIn = false;
     setTimeout(() => {
@@ -571,6 +542,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       }
     }, 250);
     operation.onMouseLeave();
+    */
   }
 
   /*
@@ -659,117 +631,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return 0;
   }
 
-  deactivateOperation(operation: Operation, index: number) {
-    // TODO improve code!
-    const taskList = this.taskService.state.currentModeState.taskList;
-
-    if (taskList) {
-      const tasks = taskList.getAllTasks().filter((a) => {
-        return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
-      });
-
-      operation.enabled = !operation.enabled;
-      const previous = this.taskService.state.currentModeState.operations[index - 1];
-      const next = this.taskService.state.currentModeState.operations[index + 1];
-      if (operation instanceof ASROperation) {
-        if (!next.enabled && !operation.enabled) {
-          next.enabled = true;
-
-          for (const task of tasks) {
-            const taskOperation = task.operations[index + 1];
-            const currOperation = task.operations[index];
-
-            if (taskOperation.state === TaskStatus.PENDING) {
-              taskOperation.enabled = next.enabled;
-            }
-            if (currOperation.state === TaskStatus.PENDING) {
-              currOperation.enabled = operation.enabled;
-            }
-          }
-        }
-      } else if (operation instanceof G2pMausOperation) {
-        next.enabled = !next.enabled;
-
-        for (const task of tasks) {
-          const taskOperation = task.operations[index + 1];
-          const currOperation = task.operations[index];
-
-          if (taskOperation.state === TaskStatus.PENDING) {
-            taskOperation.enabled = next.enabled;
-          }
-          if (currOperation.state === TaskStatus.PENDING) {
-            currOperation.enabled = operation.enabled;
-          }
-        }
-      } else if (operation instanceof SummarizationOperation || operation instanceof TranslationOperation) {
-        for (const task of tasks) {
-          const currOperation = task.operations[index];
-
-          if (currOperation.state === TaskStatus.PENDING) {
-            currOperation.enabled = operation.enabled;
-          }
-        }
-      } else if (!previous.enabled && !operation.enabled) {
-        previous.enabled = true;
-
-        for (const task of tasks) {
-          const taskOperation = task.operations[index - 1];
-          const currOperation = task.operations[index];
-          let hasTranscript = false;
-          if (currOperation?.task) {
-            // check if transcript was added to the task
-            hasTranscript =
-              currOperation.task.files.findIndex((a) => {
-                return this.taskService.validTranscript(a.extension);
-              }) > -1;
-          }
-
-          if (!hasTranscript) {
-            if (taskOperation.state === TaskStatus.PENDING) {
-              taskOperation.enabled = previous.enabled;
-            }
-
-            if (currOperation.state === TaskStatus.PENDING) {
-              currOperation.enabled = operation.enabled;
-            }
-          }
-        }
-      }
-
-      this.updateEnableState();
-    }
-  }
-
-  public updateEnableState() {
-    const taskList = this.taskService.state.currentModeState.taskList;
-    if (taskList) {
-      const tasks = taskList.getAllTasks().filter((a) => {
-        return a.status === TaskStatus.QUEUED || a.status === TaskStatus.PENDING;
-      });
-
-      for (let j = 0; j < this.taskService.state.currentModeState.operations.length; j++) {
-        const operation = this.taskService.state.currentModeState.operations[j];
-
-        for (const task of tasks) {
-          const currOperation = task.operations[j];
-          if (currOperation?.task) {
-            // check if transcript was added to the task
-            const hasTranscript =
-              currOperation.task.files.findIndex((a) => {
-                return this.taskService.validTranscript(a.extension);
-              }) > -1;
-
-            if (!hasTranscript) {
-              if (currOperation.state === TaskStatus.PENDING) {
-                currOperation.enabled = operation.enabled;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
   public getPopoverColor(operation: StoreTaskOperation): string {
     if (operation) {
       const lastRound = getLastOperationRound(operation);
@@ -796,7 +657,10 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.selectedOperation = this.operations![index].factory;
     }
     this.operationclick.emit({
-      operation, opIndex: index, factory: this.operations![index].factory, task
+      operation,
+      opIndex: index,
+      factory: this.operations![index].factory,
+      task,
     });
   }
 
@@ -823,6 +687,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   };
 
   onShortcutRowsSelectAll = (keyboardEvent: KeyboardEvent, shortcut: Shortcut, hotkeyEvent: HotkeysEvent, shortcutGroup: ShortcutGroup) => {
+    /* TODO add
     this.taskService.currentModeState!.selectedRows = [];
     if (!this.taskService.currentModeState!.allSelected) {
       // select all
@@ -835,30 +700,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     } else {
       this.taskService.currentModeState!.allSelected = false;
     }
-    this.cd.markForCheck();
-    this.cd.detectChanges();
+
+     */
   };
 
   public removeEntry(event: MouseEvent, entry: StoreItem) {
     if (entry) {
       this.modeStoreService.removeStoreItems([entry.id]);
-    }
-  }
-
-  public getBadge(task: Task): {
-    type: string;
-    label: string;
-  } {
-    if ((task.files.length > 1 && task.files[1].file !== undefined) || task.operations[0].rounds.length > 1 || task.files[0].extension !== '.wav') {
-      return {
-        type: 'info',
-        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
-      };
-    } else {
-      return {
-        type: 'warning',
-        label: task.files[0].extension !== '.wav' ? task.files[0].extension : task.files[1].extension,
-      };
     }
   }
 
@@ -912,6 +760,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   private deleteSelectedTasks() {
+    /* TOOD ADD
     const removeQueue = [];
     const taskList = this.taskService.state.currentModeState.taskList;
     if (taskList && this.taskService.currentModeState) {
@@ -948,6 +797,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.taskService.currentModeState!.selectedRows = [];
     this.shiftStart = -1;
     this.cd.markForCheck();
+
+     */
   }
 
   onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
@@ -1032,3 +883,5 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   protected readonly name = name;
 }
+
+export default ProceedingsTableComponent;

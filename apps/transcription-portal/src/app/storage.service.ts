@@ -1,16 +1,9 @@
 import { Injectable } from '@angular/core';
-import { SubscriptionManager } from '@octra/utilities';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { environment } from '../environments/environment';
-import { AppInfo } from './app.info';
-import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from './indexedDB';
-import { Operation } from './obj/operations/operation';
-import { Task, TaskDirectory } from './obj/tasks';
-import { TaskEntry } from './obj/tasks/task-entry';
-import { PortalModeType } from './obj/tasks/task.service';
 
 @Injectable({ providedIn: 'root' })
 export class StorageService {
+  /* TODO REMOVE FILE
+
   get idbm(): IndexedDBManager {
     return this._idbm;
   }
@@ -203,4 +196,5 @@ export class StorageService {
   async importBackup(blob: Blob) {
     return this.idbm.importBackup(blob);
   }
+   */
 }

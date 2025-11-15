@@ -5,20 +5,21 @@ import { ChartConfiguration } from 'chart.js';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { BaseChartDirective } from 'ng2-charts';
 import { timer } from 'rxjs';
-import { TaskService } from '../../obj/tasks/task.service';
 import { StatisticsService } from '../../shared/statistics.service';
+import { ModeStoreService } from '../../store';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
   providers: [StatisticsService],
-  imports: [NgCircleProgressModule, BaseChartDirective],
+  imports: [NgCircleProgressModule, BaseChartDirective, AsyncPipe],
 })
 export class StatisticsModalComponent extends SubscriberComponent implements OnDestroy, AfterViewInit {
   statisticsService = inject(StatisticsService);
-  taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);
+  protected modeStoreService = inject(ModeStoreService);
 
   public static options: NgbModalOptions = {
     size: 'xl',

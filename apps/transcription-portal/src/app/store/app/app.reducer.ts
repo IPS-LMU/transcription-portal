@@ -17,7 +17,7 @@ export interface AppState {
   firstModalShown?: boolean;
   sidebarWidth?: number;
   accessCode?: string;
-  notification?: boolean;
+  notificationEnabled?: boolean;
   protocolURL?: string;
 
   settings?: OHConfiguration;
@@ -58,7 +58,7 @@ export const appReducer = createReducer(
       firstModalShown: intern.find((a) => a.name === 'firstModalShown')?.value ?? false,
       sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
       accessCode: userSettings.find((a) => a.name === 'accessCode')?.value,
-      notification: userSettings.find((a) => a.name === 'notification')?.value ?? false,
+      notificationEnabled: userSettings.find((a) => a.name === 'notification')?.value ?? false,
     }),
   ),
   on(
@@ -201,6 +201,27 @@ export const appReducer = createReducer(
             }) ?? [],
         },
       },
+    }),
+  ),
+  on(
+    AppActions.changeNotificationEnabled.do,
+    (state: AppState, { enabled }): AppState => ({
+      ...state,
+      notificationEnabled: enabled,
+    }),
+  ),
+  on(
+    AppActions.changeSidebarWidth.do,
+    (state: AppState, { sidebarWidth }): AppState => ({
+      ...state,
+      sidebarWidth,
+    }),
+  ),
+  on(
+    AppActions.changeAccessCode.do,
+    (state: AppState, { accessCode }): AppState => ({
+      ...state,
+      accessCode,
     }),
   ),
 );

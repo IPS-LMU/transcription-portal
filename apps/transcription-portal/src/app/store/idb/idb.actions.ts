@@ -44,7 +44,7 @@ export class IDBActions {
   });
 
 
-  static saveDefaultUseSettings = createActionGroup({
+  static saveDefaultUserSettings = createActionGroup({
       source: 'idb/save default user settings',
       events: {
         success: emptyProps(),
@@ -53,6 +53,57 @@ export class IDBActions {
         }>(),
       }
   });
+
+  static saveNotificationEnabled = createActionGroup({
+      source: 'idb/save notification enabled',
+      events: {
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
+  static saveSidebarWidth = createActionGroup({
+      source: 'idb/save sidebar width',
+      events: {
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
+  static saveAccessCode = createActionGroup({
+    source: 'idb/save access code',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    }
+  });
+
+  static saveRemovedTasksOrFolder = createActionGroup({
+    source: 'idb/save removed task or folder',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    }
+  });
+
+  static saveRemovedStoreItems = createActionGroup({
+    source: 'idb/save removed store items',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    }
+  });
+
 
 
   static saveTask = createActionGroup({

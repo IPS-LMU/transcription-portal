@@ -1,6 +1,5 @@
-import { IOperationProcessingRoundWithoutResults } from '../../obj/operations/operation';
-import { TaskStatus } from '../../obj/tasks';
-import { StoreFile } from '../store-item';
+import { StoreFile, TaskStatus } from '../store-item';
+import { FileInfoSerialized } from '@octra/web-media';
 
 export interface StoreTaskOperation<T extends object = any, O extends StoreTaskOperation = any> {
   id: number;
@@ -12,6 +11,19 @@ export interface StoreTaskOperation<T extends object = any, O extends StoreTaskO
   rounds: StoreTaskOperationProcessingRound[];
   options: T;
   protocol?: string;
+}
+
+export interface IOperationProcessingRoundWithoutResults {
+  status: TaskStatus;
+  time?: {
+    start: number;
+    duration?: number;
+  };
+  protocol?: string;
+}
+
+export interface OperationProcessingRoundSerialized extends IOperationProcessingRoundWithoutResults {
+  results: FileInfoSerialized[];
 }
 
 export interface StoreTaskOperationProcessingRound extends IOperationProcessingRoundWithoutResults {

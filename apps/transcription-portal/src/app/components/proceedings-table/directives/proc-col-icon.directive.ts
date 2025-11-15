@@ -14,9 +14,8 @@ import {
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
-import { TaskStatus } from '../../../obj/tasks';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
-import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../../../store';
+import { StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../../../store';
 import { getLastOperationRound } from '../../../store/operation/operation.functions';
 
 @Directive({

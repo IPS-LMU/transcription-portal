@@ -3,9 +3,9 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
 import { exhaustMap, map, of, withLatestFrom } from 'rxjs';
-import { PortalModeType } from '../../obj/tasks/task.service';
 import { RootState } from '../app';
 import { ModeActions } from '../mode/mode.actions';
+import { TPortalModes } from './mode.state';
 
 @Injectable()
 export class ModeEffects {
@@ -40,7 +40,7 @@ export class ModeEffects {
           version: '2.0.0',
           modes: [],
         };
-        for (const mode of ['annotation', 'summarization'] as PortalModeType[]) {
+        for (const mode of ['annotation', 'summarization'] as TPortalModes[]) {
           const protocolMode = {
             name: mode,
             tasks: [],

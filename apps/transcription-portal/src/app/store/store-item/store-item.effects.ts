@@ -6,24 +6,22 @@ import { Store } from '@ngrx/store';
 import { SubscriptionManager } from '@octra/utilities';
 import { exhaustMap, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
-import { TaskStatus } from '../../obj/tasks';
-import { TaskService } from '../../obj/tasks/task.service';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
-import { taskAdapter, TPortalModes } from '../mode';
+import { TPortalModes } from '../mode';
 import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { StoreFile } from './store-item';
+import { StoreFile, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import { getOneTaskItemWhereRecursive, getTaskItemsWhereRecursive } from './store-item.functions';
+import { taskAdapter } from '../mode/mode.adapters';
 
 @Injectable()
 export class StoreItemEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
-  private taskService = inject(TaskService);
   protected ngbModalService = inject(NgbModal);
   protected httpClient = inject(HttpClient);
   protected alertService = inject(AlertService);
@@ -370,7 +368,7 @@ export class StoreItemEffects {
               'info',
               `Please wait until file ${task.files![0].attributes.originalFileName}` + ` being uploaded and do '${factory.title}' again.`,
             );
-            this.taskService.start(this.taskService.state.currentMode);
+            this.store.dispatch(StoreItemActions.startProcessing.do());
           } else if (isPreviousTaskDefinedAndLastResultNotAvailable && previousOperation?.enabled) {
             // audio file available but no result of previous operation
             this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
@@ -511,8 +509,11 @@ export class StoreItemEffects {
   public openSplitModal = () => {
     const ref = this.ngbModalService.open(SplitModalComponent, SplitModalComponent.options);
     ref.result.then((reason) => {
-      this.taskService.splitPrompt = reason;
-      this.taskService.checkFiles(this.taskService.state.currentMode);
+      /** TODO add
+       *
+       *       this.taskService.splitPrompt = reason;
+       *       this.taskService.checkFiles(this.taskService.state.currentMode);
+       */
     });
   };
 }

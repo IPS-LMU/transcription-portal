@@ -1,8 +1,7 @@
 import { AfterViewInit, Directive, ElementRef, inject, Input, OnChanges, OnDestroy, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { interval, Subscription } from 'rxjs';
-import { TaskStatus } from '../../../obj/tasks';
-import { StoreItemTask, StoreItemTaskDirectory } from '../../../store';
+import { StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../../../store';
 import { getLastOperationRound } from '../../../store/operation/operation.functions';
 
 @Directive({

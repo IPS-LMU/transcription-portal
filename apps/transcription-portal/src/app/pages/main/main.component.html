@@ -78,7 +78,7 @@
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
               <div class="number">
-                {{ taskService.statistics.overall.finished }}
+                {{ (modeStoreService.overallStatistics$ | async)?.finished }}
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
               <ng-template #finishedTipp>{{ (modeStoreService.overallStatistics$ | async)?.finished }} tasks are finished. </ng-template>
@@ -191,7 +191,8 @@
                       <form class="d-flex flex-auto">
                         <input
                           class="form-control d-flex flex-auto"
-                          [(ngModel)]="taskService.accessCode"
+                          [ngModel]="appStoreService.accessCode$ | async"
+                          (ngModelChange)="changeAccessCode($event)"
                           id="accessCode"
                           name="accessCode"
                           placeholder="Enter access code..."
@@ -330,11 +331,18 @@
       </div>
       <div class="col-4">
         <div id="overall-state">
-          {{ taskService.stateLabel }}
+          {{ modeStoreService.currentOverallStateLabel$ | async }}
         </div>
       </div>
       <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button (click)="onStartClick()" [disabled]="((modeStoreService.currentModeStatistics$ | async)?.waiting ?? 0) === 0 && ((modeStoreService.currentModeStatistics$ | async)?.running ?? 0) === 0" class="btn btn-primary">
+        <button
+          (click)="onStartClick()"
+          [disabled]="
+            ((modeStoreService.currentModeStatistics$ | async)?.waiting ?? 0) === 0 &&
+            ((modeStoreService.currentModeStatistics$ | async)?.running ?? 0) === 0
+          "
+          class="btn btn-primary"
+        >
           <i
             [ngClass]="{
               'bi-play-fill': (modeStoreService.overallState$ | async) === 'not started',
@@ -344,10 +352,9 @@
             class="bi"
           ></i
           ><span class="d-none d-lg-inline d-xl-inline">
-            @if (!taskService.isProcessing) {
+            @if ((modeStoreService.overallState$ | async) !== 'processing') {
               3. START PROCESSING
-            }
-            @if (taskService.isProcessing) {
+            } @else {
               3. STOP PROCESSING
             }
           </span>
@@ -364,6 +371,7 @@
       </div>
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
+          <!-- TODO ADD
           @if (toolSelectedOperation!.previousOperation!.rounds.length > 0) {
             {{ toolSelectedOperation!.name }}:
             {{ toolSelectedOperation!.previousOperation!.lastRound?.lastResult?.attributes?.originalFileName }}
@@ -393,6 +401,7 @@
             }
             , Audio duration: {{ getTime() | time }}
           }
+          -->
         </p>
       </div>
       <div class="col-2" style="text-align: right; padding-top: 5px">
@@ -451,7 +460,7 @@
       <tportal-tool-loader
         #toolLoader
         (datareceived)="onToolDataReceived($event, toolLoader)"
-        [operation]="toolSelectedOperation"
+        [operation]="modeStoreService.openedToolOperation$ | async"
         style="height: 100%"
       ></tportal-tool-loader>
     </div>

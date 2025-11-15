@@ -5,15 +5,9 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
-import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
-import { EmuOperation } from '../../obj/operations/emu-operation';
-import { Operation } from '../../obj/operations/operation';
-import { UploadOperation } from '../../obj/operations/upload-operation';
-import { Task, TaskStatus } from '../../obj/tasks';
-import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
-import { ModeStoreService, StoreItemTask, StoreTaskOperation } from '../../store';
+import { ModeStoreService, StoreItemTask, StoreTaskOperation, TaskStatus } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
@@ -23,7 +17,6 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
   imports: [FormsModule, NgStyle],
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
-  private taskService = inject(TaskService);
   protected activeModal = inject(NgbActiveModal);
   private sanitizer = inject(DomSanitizer);
   private downloadService = inject(DownloadService);
@@ -32,7 +25,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   type: 'line' | 'column' = 'column';
   private selectedTasks?: number[];
   taskList?: Task[];
-  column?: Operation;
+  column?: StoreTaskOperation;
   private allTasks?: StoreItemTask[] | null;
 
   public static options: NgbModalOptions = {
@@ -72,15 +65,19 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   process() {
+    /* TODO ADD
+
     this.state = 'processing';
     if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
       this.doColumnZipping();
     } else if (this.type === 'line') {
-      this.doLineZipping();
+      // TODO ADD this.doLineZipping();
     }
+     */
   }
 
   doColumnZipping() {
+    /* TODO ADD
     if (!this.taskService.state.currentModeState.taskList) {
       throw new Error('taskList is undefined');
     }
@@ -361,7 +358,8 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   removeSelected() {
-    if (this.selectedTasks && this.taskService.state.currentModeState.taskList) {
+    if (this.selectedTasks) {
+      /* TODO ADD
       for (const index of this.selectedTasks) {
         const entry = this.taskService.state.currentModeState.taskList.getEntryByIndex(index);
         if (entry) {
@@ -371,6 +369,8 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         }
       }
       this.activeModal.close();
+
+       */
     }
   }
 

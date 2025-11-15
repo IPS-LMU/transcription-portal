@@ -6,6 +6,7 @@ import { StoreItemsState, TaskStatus } from '../store-item';
 
 export type TPortalModes = 'annotation' | 'summarization';
 
+export type OverallState = 'processing' | 'waiting' | 'stopped' | 'not started';
 export interface ModeStatistics {
   queued: number;
   waiting: number;
@@ -33,8 +34,15 @@ export interface Mode<O extends object> {
     enabled: boolean;
   }[];
   items: StoreItemsState;
+  allSelected?: boolean;
+  openedTool?: {
+    taskID: number;
+    operationID: number;
+    url: string;
+  },
   newFiles?: boolean;
-  overallState: 'processing' | 'waiting' | 'stopped' | 'not started';
+  overallState: OverallState;
+  overallStateLabel?: string;
   status: TaskStatus;
   preprocessor: PreprocessingState;
   statistics: ModeStatistics;

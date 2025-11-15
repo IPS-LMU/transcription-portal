@@ -1,4 +1,3 @@
-import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { IDBUserDefaultSettingsItem } from '../../indexedDB';
 import { AppSettings } from '../../shared/app.settings';
@@ -12,18 +11,11 @@ import {
   TranslationOperationFactory,
   UploadOperationFactory,
 } from '../operation';
-import { PreprocessingQueueItem } from '../preprocessing';
 import { getPreprocessingReducers } from '../preprocessing/preprocessing.reducer';
-import { getTaskReducers, StoreItem, TaskStatus } from '../store-item';
+import { getTaskReducers, TaskStatus } from '../store-item';
 import { ModeActions } from './mode.actions';
-import { Mode, ModeState } from './mode.state';
-
-export const modeAdapter: EntityAdapter<Mode<any>> = createEntityAdapter<Mode<any>>({
-  selectId: (mode) => mode.name,
-  sortComparer: (a: Mode<any>, b: Mode<any>) => {
-    return a.name.localeCompare(b.name);
-  },
-});
+import { modeAdapter, preprocessingAdapter, taskAdapter } from './mode.adapters';
+import { ModeState } from './mode.state';
 
 export const initialState: ModeState = modeAdapter.getInitialState({
   currentMode: 'annotation',
@@ -33,14 +25,6 @@ export const initialState: ModeState = modeAdapter.getInitialState({
     operation: 1,
   },
   defaultUserSettings: {},
-});
-
-export const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
-  selectId: (task) => task.id,
-});
-
-export const preprocessingAdapter: EntityAdapter<PreprocessingQueueItem> = createEntityAdapter<PreprocessingQueueItem>({
-  selectId: (item) => item.id,
 });
 
 export const modeReducer = createReducer(
@@ -87,7 +71,7 @@ export const modeReducer = createReducer(
         {
           name: 'annotation',
           options: {},
-          items: taskAdapter.getInitialState({ allSelected: false }),
+          items: taskAdapter.getInitialState(),
           defaultOperations: [
             {
               factory: new UploadOperationFactory(settings.api.commands.find((a) => a.name === 'Upload')!.calls),
@@ -124,7 +108,7 @@ export const modeReducer = createReducer(
         {
           name: 'summarization',
           options: {},
-          items: taskAdapter.getInitialState({ allSelected: false }),
+          items: taskAdapter.getInitialState(),
           defaultOperations: [
             {
               factory: new UploadOperationFactory(settings.api.commands.find((a) => a.name === 'Upload')!.calls),

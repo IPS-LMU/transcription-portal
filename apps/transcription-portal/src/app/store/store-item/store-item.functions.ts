@@ -2,12 +2,12 @@ import { EntityAdapter } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
-import { TaskStatus } from '../../obj/tasks';
-import { modeAdapter, ModeState, ModeStatistics, taskAdapter, TPortalModes } from '../mode';
+import { ModeState, ModeStatistics, TPortalModes } from '../mode';
+import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
 import { getAllTasks } from '../mode/mode.functions';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertIDBOperationToStoreOperation, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory } from './store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemsState } from './store-items-state';
 
 export function convertIDBTaskToStoreTask(
@@ -252,7 +252,7 @@ export function updateTaskFilesWithSameFile(
             if (storeFileOrDir.type === 'folder') {
               const di = storeFileOrDir as StoreFileDirectory;
               const d: StoreItemTaskDirectory = {
-                entries: { ...taskAdapter.getInitialState(), allSelected: false },
+                entries: taskAdapter.getInitialState(),
                 folderName: di.name,
                 id: folderIDCounter++,
                 path: di.path,
@@ -276,10 +276,7 @@ export function updateTaskFilesWithSameFile(
               return f;
             }
           }) ?? [],
-          {
-            ...taskAdapter.getInitialState(),
-            allSelected: false,
-          },
+          taskAdapter.getInitialState(),
         ),
       };
       result.state = adapter.addOne(newStoreItem, result.state);
@@ -483,11 +480,26 @@ export function updateStatistics(modeState: ModeState, mode: TPortalModes): Mode
     }
   }
 
+  let overallStateLabel = '';
+
+  if (statistics.queued > 0) {
+    overallStateLabel = `${statistics.queued} tasks(s) are queued and need to have options applied on.`;
+  } else if (statistics.waiting > 0) {
+    overallStateLabel = `${statistics.waiting} task(s) are waiting for interaction.`;
+  } else if (statistics.running > 0) {
+    overallStateLabel = `${statistics.running} task(s) are currently running.`;
+  } else if (statistics.errors > 0) {
+    overallStateLabel = `${statistics.errors} task(s) reported errors.`;
+  } else if (statistics.finished > 0) {
+    overallStateLabel = `${statistics.finished} task(s) have been finished.`;
+  }
+
   return modeAdapter.updateOne(
     {
       id: mode,
       changes: {
         statistics,
+        overallStateLabel,
       },
     },
     modeState,

@@ -3,11 +3,12 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { Store } from '@ngrx/store';
 import { Table } from 'dexie';
-import { catchError, exhaustMap, from, of, tap, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, from, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
 import { RootState } from '../app';
+import { AppActions } from '../app/app.actions';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
@@ -158,10 +159,84 @@ export class IDBEffects {
             value,
           }),
         ).pipe(
-          exhaustMap(() => of(IDBActions.saveDefaultUseSettings.success())),
+          exhaustMap(() => of(IDBActions.saveDefaultUserSettings.success())),
           catchError((err) =>
             of(
-              IDBActions.saveDefaultUseSettings.fail({
+              IDBActions.saveDefaultUserSettings.fail({
+                error: typeof err === 'string' ? err : err.message,
+              }),
+            ),
+          ),
+        );
+      }),
+    ),
+  );
+
+  saveNotificationEnabled$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AppActions.changeNotificationEnabled.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ enabled }, state]) => {
+        return from(
+          this._idbm.userSettings.put({
+            name: 'notification',
+            value: {
+              enabled,
+            },
+          }),
+        ).pipe(
+          map(() => IDBActions.saveNotificationEnabled.success()),
+          catchError((err) =>
+            of(
+              IDBActions.saveNotificationEnabled.fail({
+                error: typeof err === 'string' ? err : err.message,
+              }),
+            ),
+          ),
+        );
+      }),
+    ),
+  );
+
+  saveSidebarWidth$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AppActions.changeSidebarWidth.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ sidebarWidth }, state]) => {
+        return from(
+          this._idbm.userSettings.put({
+            name: 'sidebarWidth',
+            value: sidebarWidth,
+          }),
+        ).pipe(
+          map(() => IDBActions.saveSidebarWidth.success()),
+          catchError((err) =>
+            of(
+              IDBActions.saveSidebarWidth.fail({
+                error: typeof err === 'string' ? err : err.message,
+              }),
+            ),
+          ),
+        );
+      }),
+    ),
+  );
+
+  saveAccessCode = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AppActions.changeAccessCode.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ accessCode }, state]) => {
+        return from(
+          this._idbm.userSettings.put({
+            name: 'accessCode',
+            value: accessCode,
+          }),
+        ).pipe(
+          map(() => IDBActions.saveAccessCode.success()),
+          catchError((err) =>
+            of(
+              IDBActions.saveAccessCode.fail({
                 error: typeof err === 'string' ? err : err.message,
               }),
             ),
@@ -208,6 +283,60 @@ export class IDBEffects {
           }),
         );
       }),
+    ),
+  );
+
+  saveRemovedTask$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.removeTaskOrFolder.do),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ item }, state]: [
+          {
+            item: StoreItem;
+          },
+          RootState,
+        ]) => {
+          const table = state.modes.currentMode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
+          return from(table.delete(item.id)).pipe(
+            exhaustMap(() => of(IDBActions.saveRemovedTasksOrFolder.success())),
+            catchError((err) =>
+              of(
+                IDBActions.saveRemovedTasksOrFolder.fail({
+                  error: typeof err === 'string' ? err : err?.message,
+                }),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  saveRemovedStoreItems = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.removeStoreItems.do),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ ids }, state]: [
+          {
+            ids: number[];
+          },
+          RootState,
+        ]) => {
+          const table = state.modes.currentMode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
+          return from(table.bulkDelete(ids)).pipe(
+            exhaustMap(() => of(IDBActions.saveRemovedStoreItems.success())),
+            catchError((err) =>
+              of(
+                IDBActions.saveRemovedStoreItems.fail({
+                  error: typeof err === 'string' ? err : err?.message,
+                }),
+              ),
+            ),
+          );
+        },
+      ),
     ),
   );
 

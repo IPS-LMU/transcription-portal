@@ -68,4 +68,41 @@ export class AppActions {
     },
   });
 
+  static changeNotificationEnabled = createActionGroup({
+    source: 'app/change notification enabled',
+    events: {
+      do: props<{
+        enabled: boolean;
+      }>(),
+      success: props<{
+        enabled: boolean;
+      }>(),
+    },
+  });
+
+  static changeSidebarWidth = createActionGroup({
+    source: 'app/change sidebar width',
+    events: {
+      do: props<{
+        sidebarWidth: number;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static changeAccessCode = createActionGroup({
+    source: 'app/change access code',
+    events: {
+      do: props<{
+        accessCode: string;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
 }

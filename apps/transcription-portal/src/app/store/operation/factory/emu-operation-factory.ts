@@ -2,14 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subscription, throwError } from 'rxjs';
-import { UploadOperation } from '../../../obj/operations/upload-operation';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
-import {getLastOperationResultFromLatestRound, getLastOperationRound} from '../operation.functions';
 
-export type EmuOperation = StoreTaskOperation<any, EmuOperation>
+export type EmuOperation = StoreTaskOperation<any, EmuOperation>;
 export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _description =
     'The phonetic detail editor presents an interactive audio-visual display of the audio signal and ' +
@@ -29,29 +28,26 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
       options: {},
       rounds,
       taskID,
-    }
+    };
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: EmuOperation): EmuOperation {
     return operation;
   }
 
-  override run(storeItemTask: StoreItemTask, operation: EmuOperation, httpClient: HttpClient,
-               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
+  override run(
+    storeItemTask: StoreItemTask,
+    operation: EmuOperation,
+    httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>,
+  ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
 
   public async getToolURL(task: StoreItemTask, operation: StoreTaskOperation, httpClient: HttpClient): Promise<string> {
     const serviceProvider = AppSettings.getServiceInformation(operation.serviceProviderName);
 
-    if (
-      task?.operations &&
-      serviceProvider &&
-      !(
-        (task.operations[0] as unknown as UploadOperation).wavFile === null ||
-        (task.operations[0] as unknown as UploadOperation).wavFile === undefined
-      )
-    ) {
+    if (task?.operations && serviceProvider && getLastOperationRound(task.operations[0])?.results.find((a) => a.type.includes('audio'))) {
       const urlParams: {
         audioGetUrl: string;
         labelGetUrl?: string;

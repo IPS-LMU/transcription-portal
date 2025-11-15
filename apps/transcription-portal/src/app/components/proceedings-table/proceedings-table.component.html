@@ -241,14 +241,7 @@
       </ng-template>
     </div>
   }
-  @if (entries !== undefined && entries !== null && entries.length > 0 && !storage.ready) {
-    <div id="loading">
-      <div class="spinner-border fs-1" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  }
-  @if (storage.ready && operations !== undefined && operations !== null) {
+  @if (operations !== undefined && operations !== null) {
     <!-- Big proceedings table -->
     <table
       class="table table-striped"
@@ -479,7 +472,7 @@
     [@fadeToggleRow]="fade"
     [entry]="entry"
     [rowSelected]="entry.selected"
-    [toolSelectedOperation]="toolSelectedOperation"
+    [toolSelectedOperation]="modeStoreService.openedToolOperation$ | async"
     (contextmenu)="onContextMenu($event, row)"
     (click)="onContextBlur()"
     (scroll)="cancelScroll($event)"

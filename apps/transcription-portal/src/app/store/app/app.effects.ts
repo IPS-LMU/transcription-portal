@@ -5,7 +5,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
-import { hasProperty } from '@octra/utilities';
+import { hasProperty, SubscriptionManager } from '@octra/utilities';
 import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import { catchError, exhaustMap, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -31,6 +31,7 @@ export class AppEffects {
   private octraAPI = inject(OctraAPIService);
   protected ngbModalService = inject(NgbModal);
   protected notification = inject(NotificationService);
+  private subscrManager = new SubscriptionManager();
 
   initVersionChecker$ = createEffect(() =>
     this.actions$.pipe(
@@ -122,6 +123,27 @@ export class AppEffects {
     ),
   );
 
+  ApplicationInitSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(AppActions.initApplication.success),
+        tap(() => {
+          this.subscrManager.add(
+            this.notification.onPermissionChange.subscribe({
+              next: (enabled) => {
+                this.store.dispatch(
+                  AppActions.changeNotificationEnabled.do({
+                    enabled,
+                  }),
+                );
+              },
+            }),
+          );
+        }),
+      ),
+    { dispatch: false },
+  );
+
   appInitSuccess$ = createEffect(
     () =>
       this.actions$.pipe(
@@ -130,7 +152,7 @@ export class AppEffects {
           AppActions.initConsoleLogger.success,
           ModeActions.initModes.success,
           ExternalInformationActions.loadExternInformation.success,
-          IDBActions.initIDB.success
+          IDBActions.initIDB.success,
         ),
         withLatestFrom(this.store),
         tap(([, state]: [any, RootState]) => {

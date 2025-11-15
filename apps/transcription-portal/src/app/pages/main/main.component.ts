@@ -1,6 +1,6 @@
-import { AsyncPipe, DatePipe, NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, DatePipe, JsonPipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
@@ -13,40 +13,36 @@ import {
   NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
-import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
-import { OAudiofile } from '@octra/media';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { hasProperty, wait } from '@octra/utilities';
-import { DateTime } from 'luxon';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
-import { ProceedingsTableComponent } from '../../components/proceedings-table/proceedings-table.component';
+import ProceedingsTableComponent from '../../components/proceedings-table/proceedings-table.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
 import { StatisticsModalComponent } from '../../modals/statistics-modal/statistics-modal.component';
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
-import { EmuOperation } from '../../obj/operations/emu-operation';
-import { OCTRAOperation } from '../../obj/operations/octra-operation';
-import { Operation } from '../../obj/operations/operation';
-import { ToolOperation } from '../../obj/operations/tool-operation';
-import { UploadOperation } from '../../obj/operations/upload-operation';
-import { TaskStatus } from '../../obj/tasks';
-import { TaskService } from '../../obj/tasks/task.service';
-import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
-import { AppSettings } from '../../shared/app.settings';
 import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
-import { AppStoreService, ModeStoreService, OperationFactory, PreprocessingStoreService, StoreItemTask, StoreTaskOperation } from '../../store';
-import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
+import {
+  AppStoreService,
+  ModeStoreService,
+  OperationFactory,
+  PreprocessingStoreService,
+  StoreItemTask,
+  StoreTaskOperation,
+  TaskStatus,
+} from '../../store';
+import { getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-main',
@@ -61,7 +57,6 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
     NgStyle,
     ProceedingsTableComponent,
     ToolLoaderComponent,
-    TimePipe,
     NgbCollapse,
     NgbTooltip,
     NgbDropdown,
@@ -71,10 +66,10 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
     NgbPopover,
     DatePipe,
     AsyncPipe,
+    JsonPipe,
   ],
 })
-export class MainComponent extends SubscriberComponent implements OnDestroy, OnInit {
-  protected taskService = inject(TaskService);
+export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected ngbModalService = inject(NgbModal);
   protected httpClient = inject(HttpClient);
   protected notification = inject(NotificationService);
@@ -98,7 +93,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   public newToolWidth = 70;
   public settingsCollapsed = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
-
+  protected toolSelectedOperation?: StoreTaskOperation;
   protected dbBackup: {
     url?: string;
     safeURL?: SafeUrl;
@@ -113,13 +108,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
 
   constructor() {
     super();
-    this.subscribe(this.notification.onPermissionChange, {
-      next: (result) => {
-        if (this.storage.ready) {
-          this.storage.saveUserSettings('notification', {
-            enabled: result,
-          });
-        }
+    this.subscribe(this.modeStoreService.openedToolOperation$, {
+      next: (toolOperation) => {
+        this.toolSelectedOperation = toolOperation;
       },
     });
   }
@@ -137,16 +128,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
 
   public get isdevelopment(): boolean {
     return environment.development;
-  }
-
-  public get toolSelectedOperation(): Operation | undefined {
-    return this.proceedings ? this.proceedings.toolSelectedOperation : undefined;
-  }
-
-  public set toolSelectedOperation(value: Operation | undefined) {
-    if (this.proceedings) {
-      this.proceedings.toolSelectedOperation = value;
-    }
   }
 
   public get animationObject(): any {
@@ -208,14 +189,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     input.value = '';
   }
 
-  async onOperationClick({
-    operation
-  }: {
-    operation: StoreTaskOperation;
-    task: StoreItemTask;
-    opIndex: number;
-    factory: OperationFactory;
-  }) {
+  async onOperationClick({ operation }: { operation: StoreTaskOperation; task: StoreItemTask; opIndex: number; factory: OperationFactory }) {
     if (
       operation &&
       ['OCTRA', 'Emu WebApp'].includes(operation.name) &&
@@ -233,6 +207,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   onToolDataReceived(data: any, toolLoader: ToolLoaderComponent) {
+    /* TODO add
     const $event = data.event;
 
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
@@ -381,6 +356,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
           console.error(error);
         });
     }
+
+     */
   }
 
   onBackButtonClicked() {
@@ -397,6 +374,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   leaveToolOperation() {
+    /* TODO ADD
     if (this.toolSelectedOperation) {
       if (this.toolSelectedOperation.lastRound && !this.toolSelectedOperation.lastRound.lastResult && this.toolSelectedOperation.rounds.length > 1) {
         // remove empty round
@@ -416,6 +394,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     this.toolSelectedOperation = undefined;
     this.proceedings?.cd.markForCheck();
     this.proceedings?.cd.detectChanges();
+
+     */
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -427,6 +407,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   public getTime(): number {
+    /* TODO ADD
     if (this.toolSelectedOperation?.task) {
       const elem: TPortalAudioInfo = this.toolSelectedOperation.task.files[0] as any as TPortalAudioInfo;
 
@@ -434,6 +415,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
         return elem.duration.unix;
       }
     }
+
+     */
 
     return 0;
   }
@@ -455,7 +438,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
 
         this.newToolWidth = toolWidth;
         this.newProceedingsWidth = procWidth;
-        this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
+        this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
       }
     }
 
@@ -484,7 +467,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   resetSideBarWidth() {
     this.newProceedingsWidth = 30;
     this.newToolWidth = 70;
-    this.storage.saveUserSettings('sidebarWidth', this.newProceedingsWidth);
+    this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
   }
 
   public async onClearClick() {
@@ -497,7 +480,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     const result = await ref.result;
 
     if (result === 'yes') {
+      /* TODO add
       this.storage.clearAll();
+
+       */
     }
   }
 
@@ -516,29 +502,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
 
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
     this.preprocessingStoreService.addToQueue(entries);
-  }
-
-  private upload(operation: Operation, file: TPortalFileInfo): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      const serviceProvider = AppSettings.getServiceInformation('BAS');
-      if (operation && operation.task && serviceProvider) {
-        const url = `${serviceProvider.host}uploadFileMulti`;
-        this.subscribe(UploadOperation.upload([file], url, this.httpClient), {
-          next: (obj) => {
-            if (obj.type === 'loadend') {
-              // add messages to protocol
-              if (obj.warnings) {
-                console.warn(obj.warnings);
-              }
-              resolve(obj.urls![0]);
-            }
-          },
-          error: (err) => {
-            reject(err);
-          },
-        });
-      }
-    });
   }
 
   toggleAccessCodeInputType() {
@@ -574,9 +537,11 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
   }
 
   async backupDatabase() {
+    /* TODO ADD
     this.dbBackup.url = await this.storage.backup();
     this.dbBackup.safeURL = this.sanitizer.bypassSecurityTrustResourceUrl(this.dbBackup.url);
     this.dbBackup.filename = `tportal_backup_${DateTime.now().toISO()}.idb`;
+     */
   }
 
   onSettingsDropdownChange(opened: boolean) {
@@ -592,7 +557,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     if (restoreInput.files && restoreInput.files.length === 1) {
       const blob = restoreInput.files.item(0);
       if (blob) {
-        await this.storage.importBackup(blob);
+        // TODO add await this.storage.importBackup(blob);
       }
     }
 
@@ -600,12 +565,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     restoreInput.value = '';
   }
 
-  ngOnInit() {
-    this.subscribe(this.taskService.somethingChanged, {
-      next: () => {
-        this.proceedings?.cd.markForCheck();
-        this.proceedings?.cd.detectChanges();
-      },
-    });
+  changeAccessCode(accessCode: string) {
+    this.appStoreService.changeAccessCode(accessCode);
   }
 }

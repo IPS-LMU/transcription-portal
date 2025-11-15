@@ -1,7 +1,6 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges, inject } from '@angular/core';
 import { hasProperty } from '@octra/utilities';
-import { Operation } from '../../../obj/operations/operation';
-import { StoreItem } from '../../../store';
+import { StoreItem, StoreTaskOperation } from '../../../store';
 
 @Directive({
   selector: '[tportalProceedingsRow]',
@@ -12,7 +11,7 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   private renderer = inject(Renderer2);
 
   @Input() entry?: StoreItem;
-  @Input() toolSelectedOperation?: Operation;
+  @Input() toolSelectedOperation?: StoreTaskOperation | null;
   @Input() rowSelected? = false;
 
   constructor() {
@@ -22,17 +21,9 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
     renderer.setStyle(elementRef.nativeElement, 'cursor', 'pointer');
   }
 
-  private get toolSelected(): boolean {
-    return (
-      this.toolSelectedOperation !== undefined &&
-      this.toolSelectedOperation.task !== undefined &&
-      this.toolSelectedOperation.task.id === this.entry?.id
-    );
-  }
-
   ngOnChanges(changes: SimpleChanges) {
     if (hasProperty(changes, 'toolSelectedOperation')) {
-      if (this.toolSelected) {
+      if (this.toolSelectedOperation) {
         this.renderer.addClass(this.elementRef.nativeElement, 'tool-selected');
       } else {
         this.renderer.removeClass(this.elementRef.nativeElement, 'tool-selected');

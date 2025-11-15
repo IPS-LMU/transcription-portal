@@ -1,13 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { SubscriptionManager } from '@octra/utilities';
 import { ChartData } from 'chart.js';
-import { interval, Subscription } from 'rxjs';
-import { TaskService } from '../obj/tasks/task.service';
+import { Subscription } from 'rxjs';
 
 @Injectable()
 export class StatisticsService {
-  private taskService = inject(TaskService);
-
   public overAllProgress = {
     waiting: 0,
     processing: 0,
@@ -20,6 +17,7 @@ export class StatisticsService {
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   constructor() {
+    /* TODO ADD
     this.subscrmanager.add(
       interval(1000).subscribe(() => {
         const modeState = this.taskService.state.modes[this.taskService.state.currentMode];
@@ -32,6 +30,8 @@ export class StatisticsService {
         this.updateAverageDurations(this.taskService.state.currentMode);
       }),
     );
+
+     */
   }
 
   public destroy() {
@@ -39,6 +39,8 @@ export class StatisticsService {
   }
 
   public updateAverageDurations(mode: 'annotation' | 'summarization') {
+    /* TODO ADD
+
     if (this.taskService.statistics && this.taskService.state?.modes && Object.keys(this.taskService.state.modes).includes(mode)) {
       const modeState = this.taskService.state.modes[mode];
       const tasks = modeState.taskList?.getAllTasks() ?? [];
@@ -77,5 +79,6 @@ export class StatisticsService {
         this.averageDurations.datasets[0].data[i] = Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
       }
     }
+     */
   }
 }

@@ -16,7 +16,6 @@ import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
 import { AppComponent } from './app/app.component';
-import { TaskService } from './app/obj/tasks/task.service';
 import { AlertService } from './app/shared/alert.service';
 import { BugReportService } from './app/shared/bug-report.service';
 import { CompatibilityService } from './app/shared/compatibility.service';
@@ -59,7 +58,6 @@ bootstrapApplication(AppComponent, {
       FormsModule,
       ReactiveFormsModule,
     ),
-    TaskService,
     NotificationService,
     StorageService,
     BugReportService,

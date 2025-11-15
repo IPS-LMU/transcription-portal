@@ -1,12 +1,10 @@
 import { last } from '@octra/utilities';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
-import { IDBOperation, IDBTaskItem } from '../../indexedDB';
-import { IOperation, OperationProcessingRoundSerialized } from '../../obj/operations/operation';
-import { TaskStatus } from '../../obj/tasks';
-import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { IDBOperation, IDBTaskItem, IOperation } from '../../indexedDB';
+import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../store-item';
 import { convertIDBFileToStoreFile } from '../store-item/store-item.functions';
 import { OperationFactory } from './factory';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
+import { OperationProcessingRoundSerialized, StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
 
 export function convertIDBOperationToStoreOperation(
   operation: IDBOperation,
@@ -93,7 +91,7 @@ export async function convertStoreOperationToIDBOperation(operation: StoreTaskOp
       operation.rounds.map((a) => convertStoreOperationRoundToIDBOperationRound(a)),
     ),
     serviceProvider: operation.serviceProviderName,
-    options: operation.options,
+    // TODO MISSING OPTIONS
   };
 }
 

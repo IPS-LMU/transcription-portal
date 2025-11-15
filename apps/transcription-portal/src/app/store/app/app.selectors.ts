@@ -3,3 +3,4 @@ import { RootState } from './app.reducer';
 export const selectAppInitialized = (state: RootState) => state.app.initialized;
 export const selectAppSettings = (state: RootState) => state.app.settings;
 export const selectAvailableLanguages = (state: RootState) => state.app.availableLanguages;
+export const selectAccessCode = (state: RootState) => state.app.accessCode;

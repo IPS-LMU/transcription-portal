@@ -31,11 +31,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         item: StoreItem;
-      }>(),
-      success: emptyProps(),
-      fail: props<{
-        error: string;
-      }>(),
+      }>()
     },
   });
 

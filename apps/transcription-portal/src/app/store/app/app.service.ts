@@ -3,7 +3,7 @@ import { Store } from '@ngrx/store';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { AppActions } from './app.actions';
 import { RootState } from './app.reducer';
-import { selectAppInitialized, selectAppSettings, selectAvailableLanguages } from './app.selectors';
+import { selectAccessCode, selectAppInitialized, selectAppSettings, selectAvailableLanguages } from './app.selectors';
 
 @Injectable({ providedIn: 'root' })
 export class AppStoreService {
@@ -11,6 +11,7 @@ export class AppStoreService {
   appInitialized$ = this.store.select(selectAppInitialized);
   appSettings$ = this.store.select(selectAppSettings);
   availableLanguages$ = this.store.select(selectAvailableLanguages);
+  accessCode$ = this.store.select(selectAccessCode);
 
   initApplication() {
     this.store.dispatch(AppActions.initApplication.do());
@@ -18,5 +19,17 @@ export class AppStoreService {
 
   updateASRInfo() {
     this.store.dispatch(ExternalInformationActions.updateASRInfo.do());
+  }
+
+  changeNotificationEnabled(enabled: boolean) {
+    this.store.dispatch(AppActions.changeNotificationEnabled.do({enabled}));
+  }
+
+  changeSidebarWidth(sidebarWidth: number) {
+    this.store.dispatch(AppActions.changeSidebarWidth.do({sidebarWidth}));
+  }
+
+  changeAccessCode(accessCode: string) {
+    this.store.dispatch(AppActions.changeAccessCode.do({accessCode}))
   }
 }
