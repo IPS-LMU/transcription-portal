@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
-import {SubscriptionManager, wait } from '@octra/utilities';
+import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription, throwError } from 'rxjs';
 import * as X2JS from 'x2js';
@@ -7,7 +7,6 @@ import { environment } from '../../../../environments/environment';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
-import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
@@ -41,8 +40,12 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return operation;
   }
 
-  override run(task: StoreItemTask, operation: UploadOperation, httpClient: HttpClient,
-               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
+  override run(
+    task: StoreItemTask,
+    operation: UploadOperation,
+    httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>,
+  ): Observable<{ operation: StoreTaskOperation }> {
     let clonedOperation = { ...operation };
 
     if (clonedOperation.serviceProviderName) {
@@ -60,7 +63,6 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
           currentRound.protocol = '';
           currentRound.status = TaskStatus.UPLOADING;
           this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
-          const url = this.commands[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
 
           currentRound = {
             ...currentRound,
@@ -69,7 +71,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
             },
           };
 
-          UploadOperationFactory.upload(task.files, url, httpClient).subscribe({
+          UploadOperationFactory.upload(task.files, httpClient).subscribe({
             next: async (obj) => {
               if (obj.type === 'progress') {
                 currentRound = { ...currentRound, progress: obj.progress };
@@ -94,11 +96,10 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
                     const { extension } = FileInfo.extractFileName(file.name);
                     const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
                     const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
-
-                    info.attributes = file.attributes;
+                    let content: string | undefined;
 
                     if (type === 'text/plain') {
-                      await info.updateContentFromURL(httpClient);
+                      content = await info.updateContentFromURL(httpClient);
                     }
 
                     const existingIndex = currentRound.results.findIndex((a) => a.attributes?.originalFileName === info.attributes?.originalFileName);
@@ -107,14 +108,34 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
                         ...currentRound,
                         results: [
                           ...currentRound.results.slice(0, existingIndex),
-                          await convertFileInfoToStoreFile(info),
+                          {
+                            ...file,
+                            name: file.name,
+                            attributes: file.attributes,
+                            url: info.url,
+                            online: true,
+                            content,
+                            blob: undefined,
+                          },
                           ...currentRound.results.slice(existingIndex + 1),
                         ],
                       };
                     } else {
+                      // append result
                       currentRound = {
                         ...currentRound,
-                        results: [...currentRound.results, await convertFileInfoToStoreFile(info)],
+                        results: [
+                          ...currentRound.results,
+                          {
+                            ...file,
+                            name: file.name,
+                            attributes: file.attributes,
+                            url: info.url,
+                            online: true,
+                            content,
+                            blob: undefined,
+                          },
+                        ],
                       };
                     }
                   }
@@ -144,7 +165,6 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
 
   public static upload(
     files: StoreFile[],
-    url: string,
     httpClient: HttpClient,
   ): Subject<{
     type: 'progress' | 'loadend';
@@ -152,6 +172,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     urls?: string[];
     warnings?: string;
   }> {
+    const url = AppSettings.configuration.api.commands[0].calls[0].replace('{{host}}', AppSettings.getServiceInformation('BAS')!.host);
     const subj = new Subject<{
       type: 'progress' | 'loadend';
       progress?: number;

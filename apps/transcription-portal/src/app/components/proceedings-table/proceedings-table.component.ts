@@ -636,7 +636,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
       const lastRound = getLastOperationRound(operation);
       if (
         lastRound?.status === TaskStatus.ERROR ||
-        (lastRound?.status === TaskStatus.FINISHED && !getLastOperationResultFromLatestRound(operation)!.available)
+        (lastRound?.status === TaskStatus.FINISHED && !(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.blob))
       ) {
         return 'red';
       } else if (lastRound?.status === TaskStatus.FINISHED && operation.protocol) {

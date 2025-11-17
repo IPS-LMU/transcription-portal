@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
-import { StoreTaskOperation } from '../operation';
-import { StoreItem, StoreItemTask, StoreItemTaskOptions } from '../store-item';
+import { ASROperation, StoreTaskOperation } from '../operation';
+import { StoreAudioFile, StoreItem, StoreItemTask, StoreItemTaskOptions } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
 import {
@@ -103,10 +103,13 @@ export class ModeStoreService {
     );
   }
 
-  openOperationWithTool(operation: StoreTaskOperation) {
+  openOperationWithTool(operation: StoreTaskOperation, task: StoreItemTask) {
     this.store.dispatch(StoreItemActions.runOperationWithTool.do({
       taskID: operation.taskID,
-      operationID: operation.id
+      operationID: operation.id,
+      operationName: operation.name,
+      audioFile: task.files.find(a => a.type.includes("audio"))as StoreAudioFile,
+      language: (task.operations[0] as ASROperation).options.language!
     }));
   }
 }

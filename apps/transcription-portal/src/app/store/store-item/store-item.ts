@@ -82,7 +82,6 @@ export interface StoreFile {
   url?: string;
   online?: boolean;
   content?: string;
-  available?: boolean;
   blob?: File;
 }
 

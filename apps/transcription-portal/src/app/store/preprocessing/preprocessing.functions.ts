@@ -47,7 +47,6 @@ export async function splitAudioFile(
           originalFileName: newFileName,
         },
         audioBufferInfo: audioInfo.audioBufferInfo,
-        available: true,
         bitrate: audioInfo.bitrate,
         blob: fileObj,
         channels: 1,
@@ -218,7 +217,7 @@ export async function processFileInfo(file: StoreFile, queueItem: PreprocessingQ
   }
 
   clonedFile.hash = await getHashString(blob);
-  const hashString = clonedFile.hash.length === 64 ? clonedFile.hash.slice(-20) : clonedFile.hash;
+  const hashString = getEscapedFileName(clonedFile.hash);
   const newName = `${hashString}${extension}`;
 
   if (newName !== clonedFile.name) {
@@ -314,4 +313,8 @@ async function processDirectoryInfo(
   };
 
   return [newDir];
+}
+
+export function getEscapedFileName(hash: string) {
+  return hash.length === 64 ? hash.slice(-20) : hash;
 }

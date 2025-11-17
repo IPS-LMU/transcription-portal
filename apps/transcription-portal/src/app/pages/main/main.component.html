@@ -308,7 +308,7 @@
     </li>
   </ul>
   <!-- SUB-HEADER OVERVIEW -->
-  @if (!showtool) {
+  @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
     <div class="row proceedings-header" style="padding-top: 0">
       <div class="col-4" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
@@ -371,37 +371,8 @@
       </div>
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
-          <!-- TODO ADD
-          @if (toolSelectedOperation!.previousOperation!.rounds.length > 0) {
-            {{ toolSelectedOperation!.name }}:
-            {{ toolSelectedOperation!.previousOperation!.lastRound?.lastResult?.attributes?.originalFileName }}
-            , Language:
-            @if (
-              toolSelectedOperation !== undefined &&
-              toolSelectedOperation.task !== undefined &&
-              toolSelectedOperation.task.asrOperation.language !== undefined
-            ) {
-              {{ toolSelectedOperation.task.asrOperation.language }}
-            }
-            , Audio duration: {{ getTime() | time }}
-          }
-          @if (
-            toolSelectedOperation &&
-            toolSelectedOperation.previousOperation!.rounds.length < 1 &&
-            toolSelectedOperation!.previousOperation!.previousOperation !== undefined
-          ) {
-            @if (toolSelectedOperation) {
-              {{ toolSelectedOperation.name }}
-            }
-            :
-            {{ toolSelectedOperation.previousOperation?.previousOperation?.lastRound?.lastResult?.attributes?.originalFileName }}
-            , Language:
-            @if (toolSelectedOperation.task && toolSelectedOperation.task.asrOperation.language !== undefined) {
-              {{ toolSelectedOperation.task!.asrOperation.language }}
-            }
-            , Audio duration: {{ getTime() | time }}
-          }
-          -->
+          {{ toolSelectedOperation?.operation?.name }}: {{ toolSelectedOperation?.audioFile?.attributes?.originalFileName }}, Language:
+          {{ toolSelectedOperation?.language }}, Audio duration: {{ toolSelectedOperation?.audioFile?.duration | time }}
         </p>
       </div>
       <div class="col-2" style="text-align: right; padding-top: 5px">

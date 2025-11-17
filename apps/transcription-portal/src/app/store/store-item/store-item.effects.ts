@@ -2,21 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store } from '@ngrx/store';
+import { Action, Store } from '@ngrx/store';
 import { SubscriptionManager } from '@octra/utilities';
-import { exhaustMap, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
+import { exhaustMap, forkJoin, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
-import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
+import { taskAdapter } from '../mode/mode.adapters';
+import { ASROperation, OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { StoreFile, TaskStatus } from './store-item';
+import { StoreAudioFile, StoreFile, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
-import { getOneTaskItemWhereRecursive, getTaskItemsWhereRecursive } from './store-item.functions';
-import { taskAdapter } from '../mode/mode.adapters';
+import {
+  getLatestResultFromPreviousEnabledOperation,
+  getOneTaskItemWhereRecursive,
+  getTaskItemsWhereRecursive,
+  isStoreFileAvailable,
+} from './store-item.functions';
 
 @Injectable()
 export class StoreItemEffects {
@@ -304,6 +309,27 @@ export class StoreItemEffects {
     ),
   );
 
+  updateTaskFilesAfterUpload$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(StoreItemActions.processNextOperation.success),
+        withLatestFrom(this.store),
+        tap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
+          if (operation.name === 'Upload') {
+            // something uploaded
+            this.store.dispatch(
+              StoreItemActions.updateTaskFiles.do({
+                mode,
+                taskID,
+                files: getLastOperationRound(operation)?.results ?? [],
+              }),
+            );
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
   toggleProcessing$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.toggleProcessing.do),
@@ -323,98 +349,116 @@ export class StoreItemEffects {
       this.actions$.pipe(
         ofType(StoreItemActions.runOperationWithTool.do),
         withLatestFrom(this.store),
-        tap(([{ taskID, operationID }, state]: [{ operationID: number; taskID: number }, RootState]) => {
-          // operation is of type tool and ready
-          const currentState = state.modes.entities[state.modes.currentMode]!;
-          const task = getOneTaskItemWhereRecursive((item) => item.id === taskID, currentState.items, taskAdapter)!;
-          const taskOperations = task.operations!;
-          const opIndex = taskOperations.findIndex((a) => a.id === operationID)!;
-          const { factory } = currentState.defaultOperations[opIndex]!;
-          const operation = taskOperations[opIndex];
-          const uploadOperation = taskOperations[0];
-          const previousOperation = opIndex > 0 ? taskOperations[opIndex - 1] : undefined;
-          const availableUploadedAudioFile = getLastOperationRound(uploadOperation)?.results.find((a) => a.type.includes('audio'));
-          const droppedAudioFile = task.files!.find((a) => a.type.includes('audio'))?.blob;
-          const isPreviousTaskDefinedAndLastResultNotAvailable = previousOperation
-            ? !getLastOperationResultFromLatestRound(previousOperation)?.available
-            : false;
+        tap(
+          ([{ taskID, operationID, audioFile, operationName, language }, state]: [
+            { operationID: number; taskID: number; operationName: string; language: string; audioFile: StoreAudioFile },
+            RootState,
+          ]) => {
+            // operation is of type tool and ready
+            const currentState = state.modes.entities[state.modes.currentMode]!;
+            const task = getOneTaskItemWhereRecursive((item) => item.id === taskID, currentState.items, taskAdapter)!;
+            const taskOperations = task.operations!;
+            const opIndex = taskOperations.findIndex((a) => a.id === operationID)!;
+            const { factory } = currentState.defaultOperations[opIndex]!;
+            let operation = taskOperations[opIndex];
+            const uploadOperation = taskOperations[0];
+            const previousOperation = opIndex > 0 ? taskOperations[opIndex - 1] : undefined;
+            const availableUploadedAudioFile = getLastOperationRound(uploadOperation)?.results.find((a) => a.type.includes('audio'));
+            const droppedAudioFile = task.files!.find((a) => a.type.includes('audio'))?.blob;
+            const isPreviousTaskDefinedAndLastResultNotAvailable = previousOperation
+              ? !isStoreFileAvailable(getLastOperationResultFromLatestRound(previousOperation))
+              : false;
 
-          if (!availableUploadedAudioFile?.available && !droppedAudioFile) {
-            // audio file is not available
-            this.alertService.showAlert(
-              'warning',
-              `Please add the audio file "${task.files![0].attributes.originalFileName}" and run "${factory.title}" again.`,
-              10,
-            );
-            this.store.dispatch(
-              StoreItemActions.changeOperation.do({
-                mode: state.modes.currentMode,
-                taskID,
-                operation: {
-                  ...operation,
-                  rounds: [
-                    {
-                      ...operation.rounds[0],
-                      status: TaskStatus.PENDING,
-                    },
-                    ...operation.rounds.slice(1),
-                  ],
-                },
-              }),
-            );
-          } else if (!availableUploadedAudioFile?.online && droppedAudioFile) {
-            // start upload process
-            this.alertService.showAlert(
-              'info',
-              `Please wait until file ${task.files![0].attributes.originalFileName}` + ` being uploaded and do '${factory.title}' again.`,
-            );
-            this.store.dispatch(StoreItemActions.startProcessing.do());
-          } else if (isPreviousTaskDefinedAndLastResultNotAvailable && previousOperation?.enabled) {
-            // audio file available but no result of previous operation
-            this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
-          } else {
-            // audio file exists and last result of previous operation exists
-            let file: StoreFile | undefined = undefined;
-            if (operation.rounds.length > 0) {
-              if (!getLastOperationResultFromLatestRound(operation)?.online && getLastOperationResultFromLatestRound(operation)?.available) {
-                // file for last result of current tool exists, but isn't available via URL
-                // reupload result from tool operation
-                file = getLastOperationResultFromLatestRound(operation);
-              }
-            } else if (
-              previousOperation &&
-              getLastOperationRound(previousOperation) &&
-              !getLastOperationResultFromLatestRound(previousOperation)?.online &&
-              getLastOperationResultFromLatestRound(previousOperation)?.available
-            ) {
-              // reupload result from previous operation
-              // local available, reupload
-              file = getLastOperationResultFromLatestRound(previousOperation);
-            }
-
-            if (file && operation) {
+            if (!availableUploadedAudioFile?.online && !droppedAudioFile) {
+              // audio file is not available
+              this.alertService.showAlert(
+                'warning',
+                `Please add the audio file "${task.files![0].attributes.originalFileName}" and run "${factory.title}" again.`,
+                10,
+              );
               this.store.dispatch(
-                StoreItemActions.reuploadFile.do({
+                StoreItemActions.changeOperation.do({
                   mode: state.modes.currentMode,
                   taskID,
-                  operationID,
-                  file,
+                  operation: {
+                    ...operation,
+                    rounds: [
+                      {
+                        ...operation.rounds[0],
+                        status: TaskStatus.PENDING,
+                      },
+                      ...operation.rounds.slice(1),
+                    ],
+                  },
                 }),
               );
+            } else if (!availableUploadedAudioFile?.online && droppedAudioFile) {
+              // start upload process
+              this.alertService.showAlert(
+                'info',
+                `Please wait until file ${task.files![0].attributes.originalFileName}` + ` being uploaded and do '${factory.title}' again.`,
+              );
+              this.store.dispatch(StoreItemActions.startProcessing.do());
+            } else if (previousOperation?.enabled && getLastOperationRound(previousOperation)?.status !== 'FINISHED') {
+              // audio file available but no result of previous operation
+              this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
             } else {
-              (factory as OctraOperationFactory).getToolURL(task, operation, this.httpClient).then((url) => {
+              // audio file exists and last result of previous operation exists
+              let file: StoreFile | undefined = undefined;
+              if (getLastOperationRound(operation)?.status === 'FINISHED') {
+                if (!(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.url)) {
+                  // file for last result of current tool exists, but isn't available via URL
+                  // reupload result from tool operation
+                  file = getLastOperationResultFromLatestRound(operation);
+                }
+              } else if (
+                previousOperation &&
+                getLastOperationRound(previousOperation) &&
+                !(getLastOperationResultFromLatestRound(previousOperation)?.online || getLastOperationResultFromLatestRound(previousOperation)?.url)
+              ) {
+                // reupload result from previous operation
+                // local available, reupload
+                file = getLastOperationResultFromLatestRound(previousOperation);
+                operation = previousOperation;
+              }
+
+              if (file && operation) {
                 this.store.dispatch(
-                  StoreItemActions.runOperationWithTool.success({
-                    taskID,
-                    operationID,
+                  StoreItemActions.reuploadFilesForOperations.do({
                     mode: state.modes.currentMode,
-                    url,
+                    list: [
+                      {
+                        taskID,
+                        operationID: operation.id,
+                        roundIndex: operation.rounds.length - 1,
+                        files: [file],
+                      },
+                    ],
+                    actionAfterSuccess: StoreItemActions.runOperationWithTool.prepare({
+                      mode: state.modes.currentMode,
+                      taskID,
+                      operationID,
+                      operationName,
+                      roundIndex: operation.rounds.length - 1,
+                      language,
+                    }),
                   }),
                 );
-              });
+              } else {
+                this.store.dispatch(
+                  StoreItemActions.runOperationWithTool.prepare({
+                    taskID,
+                    operationID,
+                    operationName,
+                    roundIndex: operation.rounds.length - 1,
+                    mode: state.modes.currentMode,
+                    language,
+                  }),
+                );
+              }
             }
-          }
-        }),
+          },
+        ),
       ),
     { dispatch: false },
   );
@@ -422,41 +466,47 @@ export class StoreItemEffects {
   reuploadFile$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(StoreItemActions.reuploadFile.do),
+        ofType(StoreItemActions.reuploadFilesForOperations.do),
         withLatestFrom(this.store),
         tap(
-          ([{ mode, taskID, operationID, roundIndex, file }, state]: [
+          ([{ mode, list, actionAfterSuccess }, state]: [
             {
               mode: TPortalModes;
-              taskID: number;
-              operationID: number;
-              roundIndex?: number;
-              file: StoreFile;
+              list: {
+                taskID: number;
+                operationID: number;
+                roundIndex: number;
+                files: StoreFile[];
+              }[];
+              actionAfterSuccess: Action;
             },
             RootState,
           ]) => {
+            // TODO this can be changed to exhaustMap
             this.subscrManager.add(
-              UploadOperationFactory.upload(
-                [file],
-                state.app.settings!.api!.commands!.find((a) => a.name === 'Upload')!.calls[0],
-                this.httpClient,
-              ).subscribe({
-                next: (httpEvent) => {
-                  if (httpEvent.type === 'loadend') {
-                    this.store.dispatch(
-                      StoreItemActions.reuploadFile.success({
-                        mode,
-                        taskID,
-                        operationID,
-                        roundIndex,
-                        file,
-                      }),
-                    );
-                  }
+              forkJoin(list.map((listItem) => UploadOperationFactory.upload(listItem.files, this.httpClient))).subscribe({
+                next: (httpEvents) => {
+                  this.store.dispatch(
+                    StoreItemActions.reuploadFilesForOperations.success({
+                      mode,
+                      list: httpEvents.map((httpEvent, i) => ({
+                        taskID: list[i].taskID,
+                        operationID: list[i].operationID,
+                        roundIndex: list[i].roundIndex,
+                        files: httpEvent.urls!.map((url, j) => ({
+                          ...list[i].files[j],
+                          online: true,
+                          url: httpEvent.urls![j],
+                          blob: undefined,
+                        })),
+                      })),
+                      actionAfterSuccess,
+                    }),
+                  );
                 },
                 error: (err: any) => {
                   this.store.dispatch(
-                    StoreItemActions.reuploadFile.fail({
+                    StoreItemActions.reuploadFilesForOperations.fail({
                       error: typeof err === 'string' ? err : err?.message,
                     }),
                   );
@@ -471,36 +521,67 @@ export class StoreItemEffects {
 
   reuploadFileSuccess$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.reuploadFile.success),
+      ofType(StoreItemActions.reuploadFilesForOperations.success),
       withLatestFrom(this.store),
       exhaustMap(
-        ([{ mode, taskID, operationID, roundIndex, file }, state]: [
+        ([{ actionAfterSuccess }]: [
           {
-            mode: TPortalModes;
-            taskID: number;
-            operationID: number;
-            roundIndex?: number;
-            file: StoreFile;
+            actionAfterSuccess: Action;
           },
+          RootState,
+        ]) => of(actionAfterSuccess),
+      ),
+    ),
+  );
+
+  openToolPrepare$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.runOperationWithTool.prepare),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ taskID, operationID, operationName, language, mode, roundIndex: number }, state]: [
+          { operationID: number; taskID: number; operationName: string; language: string; mode: TPortalModes; roundIndex: number },
           RootState,
         ]) => {
           const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items, taskAdapter)[0];
           const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
           const operation = task.operations![operationIndex];
           const { factory } = state.modes.entities[mode]!.defaultOperations[operationIndex];
+          const audioFile = task.files.find((a) => a.type.includes('audio')) as StoreAudioFile | undefined;
+          let transcriptFile: StoreFile | undefined = getLastOperationResultFromLatestRound(operation);
 
-          return from((factory as OctraOperationFactory).getToolURL(task, operation, this.httpClient)).pipe(
-            exhaustMap((url) => {
-              return of(
-                StoreItemActions.runOperationWithTool.success({
-                  taskID,
-                  operationID,
-                  mode,
-                  url,
-                }),
-              );
-            }),
-          );
+          if (audioFile) {
+            if (!transcriptFile) {
+              // get from previous enabled operation
+              transcriptFile = getLatestResultFromPreviousEnabledOperation(task, operation);
+            }
+            if (!transcriptFile) {
+              // get task files
+              transcriptFile = task.files.find((a) => !a.type.includes('audio'));
+            }
+
+            return from((factory as OctraOperationFactory).getToolURL(audioFile, transcriptFile, this.httpClient)).pipe(
+              exhaustMap((url) => {
+                return of(
+                  StoreItemActions.runOperationWithTool.success({
+                    taskID,
+                    operationID,
+                    mode,
+                    url,
+                    audioFile: task.files.find((a) => a.type.includes('audio')) as StoreAudioFile,
+                    language: (task.operations[1] as ASROperation).options.language!,
+                    operationName: operation.name,
+                  }),
+                );
+              }),
+            );
+          } else {
+            return of(
+              StoreItemActions.runOperationWithTool.fail({
+                error: "Can't find audio file.",
+              }),
+            );
+          }
         },
       ),
     ),

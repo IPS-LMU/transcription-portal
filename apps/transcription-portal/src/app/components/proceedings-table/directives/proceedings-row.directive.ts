@@ -11,7 +11,9 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
   private renderer = inject(Renderer2);
 
   @Input() entry?: StoreItem;
-  @Input() toolSelectedOperation?: StoreTaskOperation | null;
+  @Input() toolSelectedOperation?: {
+    operation?: StoreTaskOperation | null;
+  } | null;
   @Input() rowSelected? = false;
 
   constructor() {

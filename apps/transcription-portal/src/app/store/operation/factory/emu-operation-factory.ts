@@ -2,10 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subscription, throwError } from 'rxjs';
-import { AppSettings } from '../../../shared/app.settings';
-import { StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 
 export type EmuOperation = StoreTaskOperation<any, EmuOperation>;
@@ -44,43 +42,26 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(task: StoreItemTask, operation: StoreTaskOperation, httpClient: HttpClient): Promise<string> {
-    const serviceProvider = AppSettings.getServiceInformation(operation.serviceProviderName);
+  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, httpClient: HttpClient): Promise<string> {
+    const urlParams: {
+      audioGetUrl: string;
+      labelGetUrl?: string;
+      labelType?: string;
+      saveToWindowParent: boolean;
+    } = {
+      audioGetUrl: audioFile.url!,
+      saveToWindowParent: true,
+    };
 
-    if (task?.operations && serviceProvider && getLastOperationRound(task.operations[0])?.results.find((a) => a.type.includes('audio'))) {
-      const urlParams: {
-        audioGetUrl: string;
-        labelGetUrl?: string;
-        labelType?: string;
-        saveToWindowParent: boolean;
-      } = {
-        audioGetUrl: (task.operations[0] as any).wavFile.url,
-        saveToWindowParent: true,
-      };
-      let result: StoreFile | undefined = undefined;
-      const opIndex = task.operations.findIndex((a) => a.name === operation.name);
-      const previousOperation = task.operations[opIndex - 1];
-      const lastResultMaus = getLastOperationRound(previousOperation);
-      const lastResultEMU = getLastOperationRound(operation);
-
-      if (lastResultEMU && lastResultMaus) {
-        result = getLastOperationResultFromLatestRound(operation);
-      } else {
-        result = getLastOperationResultFromLatestRound(previousOperation);
-      }
-
-      const { extension } = FileInfo.extractFileName(result!.name);
+    if (transcriptFile?.url) {
+      const { extension } = FileInfo.extractFileName(transcriptFile!.name);
       const labelType = extension === '_annot.json' ? 'annotJSON' : 'TEXTGRID';
+      urlParams.labelGetUrl = transcriptFile.url;
+      urlParams.labelType = labelType;
 
-      if (result?.url) {
-        urlParams.labelGetUrl = result.url;
-        urlParams.labelType = labelType;
-
-        return `${this.commands[0]}${stringifyQueryParams(urlParams)}`;
-      } else if (!result?.url) {
-        console.error(`result url is null or undefined`);
-      }
+      return `${this.commands[0]}${stringifyQueryParams(urlParams)}`;
+    } else {
+      throw new Error(`result url is null or undefined`);
     }
-    return '';
   }
 }

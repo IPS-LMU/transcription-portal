@@ -1,4 +1,4 @@
-import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { Action, createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreTaskOperation } from '../operation';
@@ -222,11 +222,26 @@ export class StoreItemActions {
         do: props<{
           taskID: number;
           operationID: number;
+          operationName: string;
+          language: string;
+          audioFile: StoreAudioFile;
+        }>(),
+        prepare: props<{
+          mode: TPortalModes;
+          taskID: number;
+          operationID: number;
+          roundIndex: number;
+          operationName: string;
+          language: string;
         }>(),
         success: props<{
           mode: TPortalModes;
           taskID: number;
           operationID: number;
+          operationName: string;
+          language: string;
+          audioFile: StoreAudioFile;
+          transcript?: StoreFile;
           url?: string;
         }>(),
         fail: props<{
@@ -235,26 +250,44 @@ export class StoreItemActions {
       }
   });
 
-  static reuploadFile = createActionGroup({
-      source: 'tasks/reupload file',
+  static reuploadFilesForOperations = createActionGroup({
+      source: 'tasks/reupload files for operations',
       events: {
         do: props<{
           mode: TPortalModes;
-          taskID: number;
-          operationID: number;
-          roundIndex?: number;
-          file: StoreFile;
+          list: {
+            taskID: number;
+            operationID: number;
+            roundIndex: number;
+            files: StoreFile[];
+          }[];
+          actionAfterSuccess: Action;
         }>(),
         success: props<{
           mode: TPortalModes;
-          taskID: number;
-          operationID: number;
-          roundIndex?: number;
-          file: StoreFile;
+          list: {
+            taskID: number;
+            operationID: number;
+            roundIndex: number;
+            files: StoreFile[];
+          }[];
+          actionAfterSuccess: Action;
         }>(),
         fail: props<{
           error: string;
         }>(),
+      }
+  });
+
+
+  static updateTaskFiles = createActionGroup({
+      source: 'tasks/update files',
+      events: {
+        do: props<{
+          mode: TPortalModes;
+          taskID: number;
+          files: StoreFile[];
+        }>()
       }
   });
 

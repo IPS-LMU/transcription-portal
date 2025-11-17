@@ -7,7 +7,7 @@ import { from, interval, Observable, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../../shared/app.settings';
-import { getHashString } from '../../preprocessing/preprocessing.functions';
+import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
@@ -153,11 +153,16 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                 };
 
                 if (asrResult.blob) {
-                  const { extension, name } = FileInfo.extractFileName(audioFile.attributes.originalFileName ?? audioFile.name);
+                  const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName ?? audioFile.name);
+                  const { extension } = FileInfo.extractFileName(asrResult.attributes.originalFileName ?? asrResult.name);
+                  const content = await readFileContents<string>(asrResult.blob, 'text', 'utf-8');
+                  const hash = await getHashString(asrResult.blob);
+                  const escapedName = getEscapedFileName(hash);
 
                   asrResult.attributes = {
                     originalFileName: `${name}${extension}`,
                   };
+
                   currentRound = {
                     ...currentRound,
                     status: TaskStatus.FINISHED,
@@ -165,7 +170,9 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                       ...currentRound.results,
                       {
                         ...asrResult,
-                        content: await readFileContents<string>(asrResult.blob, 'text', 'utf-8'),
+                        name: `${escapedName}${extension}`,
+                        content,
+                        hash,
                         blob: undefined,
                       },
                     ],
@@ -255,7 +262,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                   const file = FileInfo.fromURL(json.downloadLink, 'text/plain', input.name + extension, Date.now());
                   file
                     .updateContentFromURL(httpClient)
-                    .then((content: string) => {
+                    .then(async (content: string) => {
                       let warnings: string | undefined;
                       // add messages to protocol
                       if (json.warnings !== '') {
@@ -264,8 +271,15 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                         warnings = '<br/>' + json.output.replace('¶', '');
                       }
 
+                      const hash = await getHashString(new File([content], file.fullname, { type: file.type }));
                       resolve({
-                        result: { ...convertFileInfoToStoreFile(file), blob: undefined, content } as unknown as StoreFile,
+                        result: {
+                          ...convertFileInfoToStoreFile(file),
+                          blob: undefined,
+                          content,
+                          hash,
+                          name: getEscapedFileName(hash) + file.extension,
+                        } as unknown as StoreFile,
                         warnings,
                       });
                     })
@@ -343,18 +357,18 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           if (partiturOutpt.file) {
                             const file = new File([partiturOutpt.file.content], partiturOutpt.file.name, { type: partiturOutpt.file.type });
                             await this.deleteLSTASRProject(httpClient, projectName, serviceProvider!, subscrManager);
+                            const hash = await getHashString(file);
 
                             resolve({
                               result: {
-                                name: file.name,
+                                name: `${hash}.par`,
                                 type: partiturOutpt.file.type,
                                 size: file.size,
                                 blob: file,
                                 attributes: {
                                   originalFileName: file.name,
                                 },
-                                hash: await getHashString(file),
-                                available: true,
+                                hash,
                               },
                             });
                           }
@@ -399,7 +413,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     }>((resolve, reject) => {
       new Promise<string>((resolve2, reject2) => {
         subscrManager.add(
-          UploadOperationFactory.upload([asrResult], AppSettings.getServiceInformation('BAS')!.host + 'uploadFileMulti', httpClient).subscribe({
+          UploadOperationFactory.upload([asrResult], httpClient).subscribe({
             next: (event) => {
               if (event.type === 'loadend') {
                 if (event.urls) {
@@ -449,7 +463,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                     setTimeout(() => {
                       file
                         .updateContentFromURL(httpClient)
-                        .then((content) => {
+                        .then(async (content) => {
                           let warnings: string | undefined = undefined;
 
                           if (json.warnings !== '') {
@@ -457,16 +471,17 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           } else if (json.output !== '') {
                             warnings = '<br/>' + json.output.replace('¶', '');
                           }
+                          const hash = await getHashString(new File([content], file.name, { type: file.type }));
+
                           resolve({
                             result: {
-                              name: file.name,
+                              name: `${getEscapedFileName(hash)}${file.extension}`,
                               attributes: { originalFileName: file.name },
                               type: file.type,
                               size: file.size,
                               content,
-                              hash: '',
+                              hash,
                               url: file.url,
-                              available: true,
                               online: true,
                             },
                             warnings,

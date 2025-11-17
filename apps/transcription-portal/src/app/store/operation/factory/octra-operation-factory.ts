@@ -2,13 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { AnnotationLevelType, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
-import { FileInfo, readFileContents } from '@octra/web-media';
+import { FileInfo } from '@octra/web-media';
 import { Observable, Subscription, throwError } from 'rxjs';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
 
@@ -41,59 +40,44 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     return operation;
   }
 
-  override run(storeItemTask: StoreItemTask, operation: OctraOperation, httpClient: HttpClient,
-               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
+  override run(
+    storeItemTask: StoreItemTask,
+    operation: OctraOperation,
+    httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>,
+  ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(task: StoreItemTask, operation: StoreTaskOperation, httpClient: HttpClient): Promise<string> {
-    const clonedOperation = { ...operation };
-    const wavFile = getLastOperationRound(task?.operations[0])?.results.find((a) => a.type.includes('audio'));
-    const currentRound = getLastOperationRound(clonedOperation);
-    const currentOperationLastResult = getLastOperationResultFromLatestRound(clonedOperation);
-    const uploadOperationLastRound = getLastOperationRound(task.operations[0]);
-    const opIndex = task.operations.findIndex((a) => a.name === operation.name);
-    const previousOperation = task.operations[opIndex - 1];
-    const previousOperationLastResult = getLastOperationResultFromLatestRound(previousOperation);
-
-    if (wavFile?.online && wavFile?.url) {
+  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, httpClient: HttpClient): Promise<string> {
+    if (audioFile?.online && audioFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
-      const audio_url = encodeURIComponent(wavFile.url);
-      const audio_name = wavFile.name;
+      const audio_url = encodeURIComponent(audioFile.url);
+      const audio_name = audioFile.name;
       let transcript: string | undefined;
       const embedded = `1`;
       const host = encodeURIComponent(serviceProvider.host);
 
-      let transcriptFile: StoreFile | undefined = undefined;
-
-      if (!currentOperationLastResult && previousOperation) {
-        // no results, but previousOperation exists
-        if (previousOperationLastResult) {
-          transcriptFile = previousOperationLastResult;
-        } else if (uploadOperationLastRound?.results.find((a) => !a.type.includes('audio'))) {
-          transcriptFile = uploadOperationLastRound?.results.find((a) => !a.type.includes('audio'));
+      if (transcriptFile) {
+        if (!transcriptFile.content) {
+          throw new Error('Transcript file content does not exist');
         }
-      } else if (currentRound) {
-        transcriptFile = currentOperationLastResult;
-      }
 
-      if (transcriptFile && transcriptFile?.blob) {
         const { extension } = FileInfo.extractFileName(transcriptFile.name);
         if (extension === '.par') {
-          const audiofile = task?.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
           const oAudio = new OAudiofile();
-          oAudio.name = audiofile.name;
-          oAudio.url = audiofile.url;
-          oAudio.type = audiofile.type;
-          oAudio.size = audiofile.size;
-          oAudio.duration = audiofile.duration;
-          oAudio.sampleRate = audiofile.sampleRate;
-          const content = await readFileContents<string>(transcriptFile.blob, 'text', 'utf-8');
+          oAudio.name = audioFile.name;
+          oAudio.url = audioFile.url;
+          oAudio.type = audioFile.type;
+          oAudio.size = audioFile.size;
+          oAudio.duration = audioFile.duration;
+          oAudio.sampleRate = audioFile.sampleRate;
+
           const importResult = new PartiturConverter().import(
             {
               name: transcriptFile.attributes?.originalFileName ?? transcriptFile.name,
               type: transcriptFile.type,
-              content,
+              content: transcriptFile.content,
               encoding: 'utf-8',
             },
             oAudio,
@@ -161,9 +145,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
 
   private upload(file: StoreFile, httpClient: HttpClient): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-      const serviceProvider = AppSettings.getServiceInformation('BAS')!;
-      const url = `${serviceProvider.host}uploadFileMulti`;
-      const subj = UploadOperationFactory.upload([file], url, httpClient);
+      const subj = UploadOperationFactory.upload([file], httpClient);
       subj.subscribe({
         next: (obj) => {
           if (obj.type === 'loadend') {

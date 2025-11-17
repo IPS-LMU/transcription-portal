@@ -20,7 +20,7 @@
       popover.lastOperationRound.time.start !== undefined &&
       popover.lastOperationRound.time.start > 0
     ) {
-      @if (popover.lastOperationRound.status === 'FINISHED' && !popover.lastOperationRoundResult?.available) {
+      @if (popover.lastOperationRound.status === 'FINISHED' && !(popover.lastOperationRoundResult?.blob || popover.lastOperationRoundResult?.online)) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">

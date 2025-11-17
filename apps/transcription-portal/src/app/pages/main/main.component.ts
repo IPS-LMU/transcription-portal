@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, JsonPipe, NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -31,18 +31,18 @@ import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
-import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import {
   AppStoreService,
   ModeStoreService,
   OperationFactory,
-  PreprocessingStoreService,
+  PreprocessingStoreService, StoreAudioFile,
   StoreItemTask,
   StoreTaskOperation,
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
+import { TimePipe } from '../../shared/time.pipe';
 
 @Component({
   selector: 'tportal-main',
@@ -66,7 +66,7 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
     NgbPopover,
     DatePipe,
     AsyncPipe,
-    JsonPipe,
+    TimePipe,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
@@ -84,7 +84,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected preprocessingStoreService = inject(PreprocessingStoreService);
 
   public sidebarstate = 'hidden';
-  private toolURL?: string;
   isCollapsed = false;
   public test = 'inactive';
   public sidebarExpand = 'opened';
@@ -93,7 +92,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public newToolWidth = 70;
   public settingsCollapsed = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
-  protected toolSelectedOperation?: StoreTaskOperation;
+  protected toolSelectedOperation?:
+    | {
+        operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
+        language: string;
+        audioFile: StoreAudioFile;
+        url: string;
+      }
+    | undefined;
   protected dbBackup: {
     url?: string;
     safeURL?: SafeUrl;
@@ -111,6 +117,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.subscribe(this.modeStoreService.openedToolOperation$, {
       next: (toolOperation) => {
         this.toolSelectedOperation = toolOperation;
+        this.showtool = !!toolOperation;
       },
     });
   }
@@ -189,14 +196,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     input.value = '';
   }
 
-  async onOperationClick({ operation }: { operation: StoreTaskOperation; task: StoreItemTask; opIndex: number; factory: OperationFactory }) {
+  async onOperationClick({ operation, task }: { operation: StoreTaskOperation; task: StoreItemTask; opIndex: number; factory: OperationFactory }) {
     if (
       operation &&
       ['OCTRA', 'Emu WebApp'].includes(operation.name) &&
       getLastOperationRound(operation)?.status !== TaskStatus.PENDING &&
       operation.taskID
     ) {
-      this.modeStoreService.openOperationWithTool(operation);
+      this.modeStoreService.openOperationWithTool(operation, task);
     }
   }
 

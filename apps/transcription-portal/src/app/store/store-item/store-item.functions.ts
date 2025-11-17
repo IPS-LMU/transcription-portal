@@ -87,7 +87,10 @@ export function getTaskWithHashAndName(hash: string, name: string, entries: Stor
             file.attributes.originalFileName === name &&
             (lastUploadRound?.status === TaskStatus.PENDING ||
               lastUploadRound?.status === TaskStatus.ERROR ||
-              !lastUploadRound?.results.find((a) => a.attributes.originalFileName === name)?.available)
+              !(
+                lastUploadRound?.results.find((a) => a.attributes.originalFileName === name)?.online ||
+                lastUploadRound?.results.find((a) => a.attributes.originalFileName === name)?.blob
+              ))
           ) {
             return task;
           }
@@ -160,7 +163,7 @@ export function updateTaskFilesWithSameFile(
       const lastUploadRoundResult = getLastOperationResultFromLatestRound(task.operations[0]);
 
       // TODO check if last result of upload should be checked
-      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || lastUploadRoundResult?.available == false) {
+      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || !(lastUploadRoundResult?.online || lastUploadRoundResult?.blob)) {
         // first try to replace same file in a task
         let somethingFoundInFiles = false;
         for (let i = 0; i < task.files.length; i++) {
@@ -179,7 +182,6 @@ export function updateTaskFilesWithSameFile(
                     {
                       ...task.files[i],
                       blob: addedFile.blob,
-                      available: true,
                       online: false,
                     },
                     ...task.files.slice(i + 1),
@@ -323,7 +325,6 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
     const result: StoreAudioFile = {
       attributes: audio.attributes,
       audioBufferInfo: audio.audioBufferInfo,
-      available: audio.available,
       bitrate: audio.bitrate,
       blob: audio.file,
       channels: audio.channels,
@@ -342,7 +343,6 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
     const f = file as FileInfo;
     const result: StoreFile = {
       attributes: f.attributes,
-      available: f.available,
       blob: f.file,
       content: f.file ? await readFileContents(f.file, 'text') : undefined,
       name: f.fullname,
@@ -676,4 +676,21 @@ export function addRoundToOperation(
     taskAdapter,
     state,
   );
+}
+
+export function isStoreFileAvailable(file?: StoreFile) {
+  return file && (file.online || file.blob);
+}
+
+export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
+  const index = task.operations.findIndex((a) => a.id === operation.id);
+  if (index > 0) {
+    for (let i = index - 1; i >= 0; i--) {
+      const previousOperation = task.operations[i];
+      if (previousOperation.enabled) {
+        return getLastOperationResultFromLatestRound(previousOperation);
+      }
+    }
+  }
+  return undefined;
 }

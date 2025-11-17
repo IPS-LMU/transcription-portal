@@ -52,7 +52,12 @@ export const selectAllTasks = createSelector(selectCurrentModeState, (mode) => {
 export const selectOpenedToolOperation = createSelector(selectCurrentModeState, (mode) => {
   if (mode?.openedTool?.taskID && mode.openedTool.operationID) {
     const task = getOneTaskItemWhereRecursive((item) => item.id === mode.openedTool!.taskID, mode.items, taskAdapter);
-    return task?.operations.find((a) => a.id === mode.openedTool?.operationID);
+    return {
+      operation: task?.operations.find((a) => a.id === mode.openedTool?.operationID),
+      language: mode.openedTool.language,
+      audioFile: mode.openedTool.audioFile,
+      url: mode.openedTool.url,
+    };
   }
   return undefined;
 });
