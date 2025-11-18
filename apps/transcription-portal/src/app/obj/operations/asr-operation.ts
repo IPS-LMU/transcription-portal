@@ -4,9 +4,10 @@ import { PartiturConverter, SRTConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { extractFileNameFromURL, joinURL, stringifyQueryParams, wait } from '@octra/utilities';
 import { downloadFile } from '@octra/web-media';
-import { interval } from 'rxjs';
+import { interval, retry } from 'rxjs';
 import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
+import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
@@ -171,6 +172,7 @@ export class ASROperation extends Operation {
             {},
             {
               headers: {
+                ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
                 'Content-Type': 'multipart/form-data',
               },
               responseType: 'text',
@@ -267,11 +269,12 @@ export class ASROperation extends Operation {
                           reject(new Error("Can't import LST SRT output to AnnotjSON."));
                         }
                       }
+
+                      // only delete project on success
+                      await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
                     } else {
                       reject(result.body.errorMessage);
                     }
-
-                    await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
                   }
                 }
               },
@@ -319,6 +322,7 @@ export class ASROperation extends Operation {
               {},
               {
                 headers: {
+                  ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
                   'Content-Type': 'multipart/form-data',
                 },
                 responseType: 'text',
@@ -415,8 +419,14 @@ export class ASROperation extends Operation {
             {
               projectName,
             },
-            { responseType: 'json' },
+            {
+              responseType: 'json',
+              headers: {
+                ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+              },
+            },
           )
+          .pipe(retry(3))
           .subscribe({
             next: () => {
               resolve(projectName);
@@ -443,10 +453,16 @@ export class ASROperation extends Operation {
       }
       formData.append('projectName', projectName);
       this.subscrManager.add(
-        httpClient.post(joinURL(serviceProvider.host, '/project/upload'), formData).subscribe({
-          next: () => resolve(),
-          error: reject,
-        }),
+        httpClient
+          .post(joinURL(serviceProvider.host, '/project/upload'), formData, {
+            headers: {
+              ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+            },
+          })
+          .subscribe({
+            next: () => resolve(),
+            error: reject,
+          }),
       );
     });
   }
@@ -466,7 +482,12 @@ export class ASROperation extends Operation {
                 minspeakers: this.diarization?.enabled ? this.diarization?.speakers : undefined,
                 maxspeakers: this.diarization?.enabled ? this.diarization?.speakers : undefined,
               },
-              { responseType: 'json' },
+              {
+                responseType: 'json',
+                headers: {
+                  ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+                },
+              },
             )
             .subscribe({
               next: () => resolve(),

@@ -6,6 +6,7 @@ import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
 import { downloadFile, readFileContents } from '@octra/web-media';
 import { interval } from 'rxjs';
 import * as UUID from 'uuid';
+import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
@@ -85,10 +86,6 @@ export class SummarizationOperation extends Operation {
       } catch (err: any) {
         // couldn't upload file or process summarization project
         this.throwError(err);
-
-        if (projectName) {
-          await this.deleteSummarizationProject(httpclient, projectName);
-        }
         return;
       }
 
@@ -111,6 +108,7 @@ export class SummarizationOperation extends Operation {
                   currentRound.results.push(new TPortalFileInfo(file.name, file.type, file.size, file));
                   this.changeState(TaskStatus.FINISHED);
                 }
+                await this.deleteSummarizationProject(httpclient, projectName);
               } else {
                 this.throwError(new Error(result.body.errorMessage));
                 const errorLogFileURL: string = result.body.outputs.find((o: any) => o.filename === 'error.log')?.url;
@@ -122,7 +120,6 @@ export class SummarizationOperation extends Operation {
               }
 
               this.subscrManager.removeByTag('status check');
-              await this.deleteSummarizationProject(httpclient, projectName);
             }
           },
         }),
@@ -198,7 +195,12 @@ export class SummarizationOperation extends Operation {
               {
                 projectName,
               },
-              { responseType: 'json' },
+              {
+                responseType: 'json',
+                headers: {
+                  ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+                },
+              },
             )
             .subscribe({
               next: () => {
@@ -226,7 +228,12 @@ export class SummarizationOperation extends Operation {
                 language: this.mapLanguage(this.language),
                 words: !Number.isNaN(Number(this.maxNumberOfWords)) ? Number(this.maxNumberOfWords) : undefined,
               },
-              { responseType: 'json' },
+              {
+                responseType: 'json',
+                headers: {
+                  ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+                },
+              },
             )
             .subscribe({
               next: () => resolve(),
@@ -291,10 +298,16 @@ export class SummarizationOperation extends Operation {
         formData.append('file', file);
         formData.append('projectName', projectName);
         this.subscrManager.add(
-          httpClient.post(joinURL(this.serviceProvider.host, '/project/upload'), formData).subscribe({
-            next: () => resolve(),
-            error: reject,
-          }),
+          httpClient
+            .post(joinURL(this.serviceProvider.host, '/project/upload'), formData, {
+              headers: {
+                ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
+              },
+            })
+            .subscribe({
+              next: () => resolve(),
+              error: reject,
+            }),
         );
       } else {
         reject(new Error('Missing service provider'));

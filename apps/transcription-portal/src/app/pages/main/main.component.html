@@ -245,7 +245,7 @@
                     }
                   </div>
                   <div class="list-group-item border-0 pointer">
-                    <input type="file" class="d-none" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
+                    <input type="file" class="d-none" accept=".idb" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
                     <div class="w-100" (click)="restoreInput.click()">
                       <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> {{ 'settings.restore database' | transloco }}
                     </div>
