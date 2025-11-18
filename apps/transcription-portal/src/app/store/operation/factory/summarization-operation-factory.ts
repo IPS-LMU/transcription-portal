@@ -6,11 +6,17 @@ import { joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra
 import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
+import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { addProcessingRound, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
+import {
+  addProcessingRound,
+  convertStoreOperationToIDBOperation,
+  getLastOperationResultFromLatestRound,
+  getLastOperationRound,
+} from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 
 export interface SummarizationOperationOptions {
@@ -54,7 +60,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     storeItemTask: StoreItemTask,
     operation: SummarizationOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>
+    subscrManager: SubscriptionManager<Subscription>,
   ): Observable<{ operation: SummarizationOperation }> {
     const subj = new Subject<{ operation: SummarizationOperation }>();
     let clonedOperation = { ...operation };
@@ -117,7 +123,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
             httpClient,
             projectName,
             serviceProvider!,
-            subscrManager
+            subscrManager,
           );
 
           await wait(3);
@@ -191,8 +197,12 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     return subj;
   }
 
-  deleteSummarizationProject(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
-                             subscrManager: SubscriptionManager<Subscription>) {
+  deleteSummarizationProject(
+    httpclient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+    subscrManager: SubscriptionManager<Subscription>,
+  ) {
     return new Promise<void>((resolve, reject) => {
       if (serviceProvider) {
         subscrManager.add(
@@ -219,7 +229,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     projectName: string,
     clonedOperation: StoreTaskOperation,
     serviceProvider: ServiceProvider,
-    subscrManager: SubscriptionManager<Subscription>
+    subscrManager: SubscriptionManager<Subscription>,
   ) {
     return new Promise<void>((resolve, reject) => {
       console.log(`Process project with options ${clonedOperation.options.language} and ${clonedOperation.options.maxNumberOfWords}`);
@@ -246,8 +256,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     });
   }
 
-  async createSummarizationProject(httpClient: HttpClient, serviceProvider: ServiceProvider,
-                                   subscrManager: SubscriptionManager<Subscription>) {
+  async createSummarizationProject(httpClient: HttpClient, serviceProvider: ServiceProvider, subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<string>((resolve, reject) => {
       if (serviceProvider) {
         const projectName = `tportal_session_${UUID.v7().replace(/-/g, '')}`;
@@ -274,8 +283,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     });
   }
 
-  getProjectStatus(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
-                   subscrManager: SubscriptionManager<Subscription>) {
+  getProjectStatus(httpclient: HttpClient, projectName: string, serviceProvider: ServiceProvider, subscrManager: SubscriptionManager<Subscription>) {
     return new Promise<any>((resolve, reject) => {
       if (serviceProvider) {
         subscrManager.add(
@@ -317,8 +325,13 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     return 'auto';
   }
 
-  uploadFile(file: File, httpClient: HttpClient, projectName: string, serviceProvider: ServiceProvider,
-             subscrManager: SubscriptionManager<Subscription>) {
+  uploadFile(
+    file: File,
+    httpClient: HttpClient,
+    projectName: string,
+    serviceProvider: ServiceProvider,
+    subscrManager: SubscriptionManager<Subscription>,
+  ) {
     return new Promise<void>((resolve, reject) => {
       if (serviceProvider) {
         const formData = new FormData();
@@ -334,5 +347,13 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
         reject(new Error('Missing service provider'));
       }
     });
+  }
+
+  override async convertOperationToIDBOperation(operation: SummarizationOperation): Promise<IDBOperation> {
+    const result = await convertStoreOperationToIDBOperation(operation);
+    result.language = operation.options.language;
+    result.maxNumbersOfWords = operation.options.maxNumberOfWords;
+
+    return result;
   }
 }

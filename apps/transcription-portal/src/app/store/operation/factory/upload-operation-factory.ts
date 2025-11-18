@@ -8,8 +8,10 @@ import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { addProcessingRound, getLastOperationRound } from '../operation.functions';
+import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
+import { IDBOperation } from '../../../indexedDB';
+import { ASROperation } from './asr-operation-factory';
 
 export type UploadOperation = StoreTaskOperation<any, UploadOperation>;
 
@@ -259,4 +261,8 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     }
     return round;
   };
+
+  override async convertOperationToIDBOperation(operation:UploadOperation):Promise<IDBOperation> {
+    return await convertStoreOperationToIDBOperation(operation);
+  }
 }

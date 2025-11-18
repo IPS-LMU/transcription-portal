@@ -11,9 +11,10 @@ import { getEscapedFileName, getHashString } from '../../preprocessing/preproces
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { addProcessingRound, getLastOperationRound } from '../operation.functions';
+import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
+import { IDBOperation } from '../../../indexedDB';
 
 export interface ASROperationOptions {
   language?: string;
@@ -652,4 +653,12 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       );
     });
   };
+
+  override async convertOperationToIDBOperation(operation:ASROperation):Promise<IDBOperation> {
+    const result = await convertStoreOperationToIDBOperation(operation);
+    result.diarization = operation.options.diarization;
+    result.language = operation.options.language;
+
+    return result;
+  }
 }

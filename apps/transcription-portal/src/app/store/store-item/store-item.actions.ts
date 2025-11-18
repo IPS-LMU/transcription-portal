@@ -303,9 +303,11 @@ export class StoreItemActions {
     events: {
       do: props<OctraWindowMessageEventData>(),
       prepare: props<{
+        mode: TPortalModes;
         file: StoreFile;
       }>(),
       success: props<{
+        mode: TPortalModes;
         taskID: number;
         file: StoreFile;
       }>(),

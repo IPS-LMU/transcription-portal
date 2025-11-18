@@ -56,6 +56,7 @@ export const getTaskReducers = (
                 },
                 ...item.operations!.slice(i + 1),
               ],
+              status: TaskStatus.READY,
             };
           }
 
@@ -76,6 +77,35 @@ export const getTaskReducers = (
           }
           return file;
         });
+
+        const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
+
+        if (operationStatus.includes(TaskStatus.READY)) {
+          item = {
+            ...item,
+            status: TaskStatus.READY,
+          };
+        } else if (operationStatus.includes(TaskStatus.ERROR)) {
+          item = {
+            ...item,
+            status: TaskStatus.ERROR,
+          };
+        } else if (operationStatus.includes(TaskStatus.PROCESSING)) {
+          item = {
+            ...item,
+            status: TaskStatus.PENDING,
+          };
+        } else if (operationStatus.includes(TaskStatus.PENDING)) {
+          item = {
+            ...item,
+            status: TaskStatus.PENDING,
+          };
+        } else if (operationStatus.filter((a) => ![TaskStatus.FINISHED, TaskStatus.SKIPPED].includes(a)).length === 0) {
+          item = {
+            ...item,
+            status: TaskStatus.FINISHED,
+          };
+        }
 
         return item;
       } else {
@@ -156,8 +186,8 @@ export const getTaskReducers = (
         counters: {
           ...state.counters,
           operation: Math.max(...operationIDs) + 1,
-          storeItem: Math.max(...storeItemIDs) + 1
-        }
+          storeItem: Math.max(...storeItemIDs) + 1,
+        },
       };
     }
 
@@ -666,6 +696,7 @@ export const getTaskReducers = (
             taskAdapter,
             currentMode.items,
           ),
+          openedTool: undefined, // -> close tool loader
         },
       },
       state,

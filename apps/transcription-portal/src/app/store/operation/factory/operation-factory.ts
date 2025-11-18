@@ -3,6 +3,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { SubscriptionManager } from '@octra/utilities';
+import { IDBOperation } from '../../../indexedDB';
 
 export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
   protected abstract readonly _name: string;
@@ -44,7 +45,7 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
     storeItemTask: StoreItemTask,
     operation: T,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>
+    subscrManager: SubscriptionManager<Subscription>,
   ): Observable<{
     operation: StoreTaskOperation;
   }>;
@@ -63,4 +64,6 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
       },
     });
   }
+
+  abstract convertOperationToIDBOperation(operation: T): Promise<IDBOperation>;
 }

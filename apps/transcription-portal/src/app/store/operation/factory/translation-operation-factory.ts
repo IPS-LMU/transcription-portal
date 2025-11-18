@@ -1,16 +1,22 @@
 import { HttpClient } from '@angular/common/http';
 import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
+import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo, readFileContents } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AppInfo } from '../../../app.info';
+import { IDBOperation } from '../../../indexedDB';
 import { convertISO639Language } from '../../../obj/functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { addProcessingRound, getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation.functions';
+import {
+  addProcessingRound,
+  convertStoreOperationToIDBOperation,
+  getLastOperationResultFromLatestRound,
+  getLastOperationRound,
+} from '../operation.functions';
 import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
-import { SubscriptionManager } from '@octra/utilities';
 
 export interface TranslationOperationOptions {
   language?: string;
@@ -46,8 +52,12 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     };
   }
 
-  override run(storeItemTask: StoreItemTask, operation: TranslationOperation, httpClient: HttpClient,
-               subscrManager: SubscriptionManager<Subscription>): Observable<{ operation: StoreTaskOperation }> {
+  override run(
+    storeItemTask: StoreItemTask,
+    operation: TranslationOperation,
+    httpClient: HttpClient,
+    subscrManager: SubscriptionManager<Subscription>,
+  ): Observable<{ operation: StoreTaskOperation }> {
     const subj = new Subject<{ operation: TranslationOperation }>();
     let clonedOperation = { ...operation };
     if (!getLastOperationResultFromLatestRound(clonedOperation)) {
@@ -149,8 +159,13 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return subj;
   }
 
-  private async getTranslation(httpClient: HttpClient, text: string, storeItemTask: StoreItemTask, operation: StoreTaskOperation,
-                               subscrManager: SubscriptionManager<Subscription>) {
+  private async getTranslation(
+    httpClient: HttpClient,
+    text: string,
+    storeItemTask: StoreItemTask,
+    operation: StoreTaskOperation,
+    subscrManager: SubscriptionManager<Subscription>,
+  ) {
     return new Promise<any>((resolve, reject) => {
       let source: string | undefined = 'en';
       if (storeItemTask?.operations && operation.options.language) {
@@ -186,5 +201,12 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
           }),
       );
     });
+  }
+
+  override async convertOperationToIDBOperation(operation: TranslationOperation): Promise<IDBOperation> {
+    const result = await convertStoreOperationToIDBOperation(operation);
+    result.language = operation.options.language;
+
+    return result;
   }
 }

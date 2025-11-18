@@ -10,6 +10,9 @@ import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
+import { ASROperation } from './asr-operation-factory';
+import { IDBOperation } from '../../../indexedDB';
+import { convertStoreOperationToIDBOperation } from '../operation.functions';
 
 export type OctraOperation = StoreTaskOperation<any, OctraOperation>;
 
@@ -161,5 +164,9 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
         },
       });
     });
+  }
+
+  override async convertOperationToIDBOperation(operation:OctraOperation):Promise<IDBOperation> {
+    return await convertStoreOperationToIDBOperation(operation);
   }
 }

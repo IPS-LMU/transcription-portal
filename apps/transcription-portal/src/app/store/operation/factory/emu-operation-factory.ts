@@ -5,6 +5,9 @@ import { Observable, Subscription, throwError } from 'rxjs';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationFactory } from './operation-factory';
+import { IDBOperation } from '../../../indexedDB';
+import { convertStoreOperationToIDBOperation } from '../operation.functions';
+import { G2pMausOperation } from './g2p-maus-operation-factory';
 
 export type EmuOperation = StoreTaskOperation<any, EmuOperation>;
 export class EmuOperationFactory extends OperationFactory<EmuOperation> {
@@ -63,5 +66,11 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     } else {
       throw new Error(`result url is null or undefined`);
     }
+  }
+
+  override async convertOperationToIDBOperation(operation:EmuOperation):Promise<IDBOperation> {
+    const result = await convertStoreOperationToIDBOperation(operation);
+
+    return result;
   }
 }

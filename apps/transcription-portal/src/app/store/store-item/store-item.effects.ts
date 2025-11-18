@@ -710,6 +710,7 @@ export class StoreItemEffects {
             exhaustMap((storeFile) =>
               of(
                 StoreItemActions.receiveToolData.prepare({
+                  mode: state.modes.currentMode,
                   file: storeFile,
                 }),
               ),
@@ -740,6 +741,7 @@ export class StoreItemEffects {
             exhaustMap((storeFile) =>
               of(
                 StoreItemActions.receiveToolData.prepare({
+                  mode: state.modes.currentMode,
                   file: storeFile,
                 }),
               ),
@@ -768,6 +770,7 @@ export class StoreItemEffects {
         ]) =>
           of(
             StoreItemActions.receiveToolData.success({
+              mode: state.modes.currentMode,
               taskID: state.modes.entities[state.modes.currentMode]!.openedTool!.taskID,
               file: action.file,
             }),
@@ -792,6 +795,28 @@ export class StoreItemEffects {
             IDBActions.saveTask.do({
               mode: state.modes.currentMode,
               taskID: action.taskID,
+            }),
+          ),
+      ),
+    ),
+  );
+
+  runNextOperationAfterToolDataReceiveSuccess = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.receiveToolData.success),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ mode, taskID }, state]: [
+          {
+            mode: TPortalModes;
+            taskID: number;
+          },
+          RootState,
+        ]) =>
+          of(
+            StoreItemActions.processNextOperation.do({
+              mode,
+              taskID,
             }),
           ),
       ),

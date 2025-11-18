@@ -254,7 +254,7 @@ export class IDBEffects {
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
         const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
-        return from(convertStoreItemToIDBItem(task)).pipe(
+        return from(convertStoreItemToIDBItem(task, state.modes.entities[mode]!.defaultOperations!)).pipe(
           exhaustMap((idbTask) => {
             return from(table.put(idbTask, task.id)).pipe(
               exhaustMap(() => {
@@ -357,7 +357,7 @@ export class IDBEffects {
               const serialized: (IDBTaskItem | IDBFolderItem)[] = [];
               const items = getStoreItemsWhereRecursive((item) => itemIDs.includes(item.id), state.modes.entities[mode]!.items);
               for (const item of items) {
-                serialized.push(await convertStoreItemToIDBItem(item));
+                serialized.push(await convertStoreItemToIDBItem(item, state.modes.entities[mode]!.defaultOperations));
               }
 
               return serialized;
@@ -385,7 +385,7 @@ export class IDBEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.importItemsFromProcessingQueue.success),
       withLatestFrom(this.store),
-      exhaustMap(([action, state]) => {
+      exhaustMap(([action]) => {
         return of(
           IDBActions.saveStoreItems.do({
             mode: action.mode,
@@ -400,7 +400,7 @@ export class IDBEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.importItemsFromProcessingQueue.success),
       withLatestFrom(this.store),
-      exhaustMap(([action, state]) => {
+      exhaustMap(() => {
         return of(IDBActions.saveCounters.do());
       }),
     ),

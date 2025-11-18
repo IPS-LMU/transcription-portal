@@ -45,7 +45,10 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   };
 }
 
-export async function convertStoreItemToIDBItem(item: StoreItem, taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem | IDBFolderItem> {
+export async function convertStoreItemToIDBItem(item: StoreItem, defaultOperations: {
+  factory: OperationFactory<any>;
+  enabled: boolean;
+}[] ,taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem | IDBFolderItem> {
   if (item.type == 'task') {
     const task = item as StoreItemTask;
     const result: IDBTaskItem = {
@@ -64,7 +67,8 @@ export async function convertStoreItemToIDBItem(item: StoreItem, taskDirectory?:
     // read operation data
     const operationPromises: Promise<IOperation>[] = [];
     for (const operation of task.operations) {
-      operationPromises.push(convertStoreOperationToIDBOperation(operation));
+      const { factory } = defaultOperations.find((a) => a.factory.name === operation.name)!;
+      operationPromises.push(factory.convertOperationToIDBOperation(operation));
     }
 
     if (operationPromises.length > 0) {
@@ -85,14 +89,14 @@ export async function convertStoreItemToIDBItem(item: StoreItem, taskDirectory?:
 
     for (const entryID of dir.entries.ids) {
       const entry = dir.entries.entities[entryID]!;
-      serializedDir.entries.push((await convertStoreItemToIDBItem(entry, dir)) as IDBTaskItem);
+      serializedDir.entries.push((await convertStoreItemToIDBItem(entry, defaultOperations, dir)) as IDBTaskItem);
     }
 
     return serializedDir;
   }
 }
 
-export async function convertStoreOperationToIDBOperation(operation: StoreTaskOperation): Promise<IOperation> {
+export async function convertStoreOperationToIDBOperation(operation: StoreTaskOperation): Promise<IDBOperation> {
   return {
     enabled: operation.enabled,
     id: operation.id,
@@ -101,7 +105,6 @@ export async function convertStoreOperationToIDBOperation(operation: StoreTaskOp
       operation.rounds.map((a) => convertStoreOperationRoundToIDBOperationRound(a)),
     ),
     serviceProvider: operation.serviceProviderName,
-    // TODO MISSING OPTIONS
   };
 }
 
