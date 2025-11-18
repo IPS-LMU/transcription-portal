@@ -276,8 +276,11 @@
     <li [ngbNavItem]="1">
       <button
         ngbNavLink
-        (mousedown)="changeMode('annotation')"
+        (mousedown)="changeMode('annotation', ngbToolTip)"
+        [triggers]="'mouseenter:mouseleave'"
         [ngbTooltip]="'modes.annotation.description' | transloco"
+        [openDelay]="1000"
+        #ngbToolTip="ngbTooltip"
         [placement]="'bottom-end'"
         [container]="'body'"
       >
@@ -305,7 +308,10 @@
     <li [ngbNavItem]="2">
       <button
         ngbNavLink
-        (mousedown)="changeMode('summarization')"
+        (mousedown)="changeMode('summarization', ngbToolTip2)"
+        [openDelay]="1000"
+        [triggers]="'mouseenter:mouseleave'"
+        #ngbToolTip2="ngbTooltip"
         [ngbTooltip]="'modes.summarization and translation.description' | transloco"
         [placement]="'bottom-end'"
         [container]="'body'"

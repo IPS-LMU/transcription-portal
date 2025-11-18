@@ -11,6 +11,7 @@ import { BugReportService, ConsoleType } from './shared/bug-report.service';
 import { NotificationService } from './shared/notification.service';
 import { SettingsService } from './shared/settings.service';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'tportal-root',
@@ -26,9 +27,11 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   bugService = inject(BugReportService);
   settingsService = inject(SettingsService);
   versionChecker = inject(VersionCheckerService);
+  ngbToolTipConfig = inject(NgbTooltipConfig);
 
   constructor() {
     super();
+    this.ngbToolTipConfig.openDelay = 500;
 
     this.versionChecker.init({
       interval: 5 * 60 * 1000, // check every 5 minutes

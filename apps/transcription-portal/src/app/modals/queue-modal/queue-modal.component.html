@@ -1,6 +1,7 @@
 <div class="modal-header">
   <h4 class="modal-title pull-left">{{ 'modals.check options.title' | transloco }}</h4>
-  <button (click)="onSubmit(form)" class="btn btn-outline-primary" style="margin-left: 20px" type="button">{{ 'g.OK' | transloco }}</button>
+  <button type="button" class="btn btn-outline-dark btn-sm ms-2" (click)="activeModal.close()">{{ 'p.back to table' | transloco }}</button>
+  <button (click)="onSubmit(form)" class="btn btn-outline-primary btn-sm ms-1" type="button">{{ 'g.OK' | transloco }}</button>
   <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body d-flex flex-column h-100">
@@ -9,7 +10,11 @@
       style="font-size: 0.9em; text-align: justify; margin-bottom: 0"
       [innerHTML]="'modals.check options.introduction.paragraph1' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
     ></p>
-    <p style="font-size: 0.9em; text-align: justify; margin-top: 5px" [innerHTML]="'modals.check options.introduction.paragraph1' | transloco"></p>
+    <p
+      class="mt-2"
+      style="font-size: 0.9em; text-align: justify; margin-bottom: 0"
+      [innerHTML]="'modals.check options.introduction.paragraph2' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
+    ></p>
 
     <div class="card shadow shadow-md mt-4">
       <div class="card-header">{{ 'g.tasks' | transloco }}</div>
@@ -210,8 +215,7 @@
                 <tbody>
                   <tr>
                     <td class="fit">
-                      <label class="mt-2"
-                        >{{ 'modals.check options.options.asr service provider.name' | transloco }}<span class="text-danger">*</span>:</label
+                      <label class="mt-2 pointer" [ngbTooltip]="'modals.check options.options.asr service provider.description' | transloco">{{ 'modals.check options.options.asr service provider.name' | transloco }}<span class="text-danger">*</span>:</label
                       >
                     </td>
                     <td>
@@ -238,7 +242,7 @@
                   </tr>
                   <tr class="align-middle">
                     <td class="fit">
-                      <label class="me-1"
+                      <label class="me-1 pointer" [ngbTooltip]="'modals.check options.options.content language.description' | transloco"
                         >{{ 'modals.check options.options.content language.name' | transloco }}<span class="text-danger">*</span>:</label
                       >
                     </td>
@@ -267,9 +271,9 @@
                     </td>
                   </tr>
                   @if (taskService.state.currentMode === 'annotation') {
-                    <tr>
+                    <tr class="align-middle">
                       <td class="fit">
-                        <label class="me-1" for="diarizationSwitch">{{ 'modals.check options.options.diarization.name' | transloco }}:</label>
+                        <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.diarization.name' | transloco }}:</label>
                       </td>
                       <td>
                         <div class="form-check form-switch">
@@ -287,9 +291,9 @@
                     </tr>
                   }
                   @if (taskService.state.currentModeState.isDiarizationEnabled) {
-                    <tr>
+                    <tr class="align-middle">
                       <td class="fit">
-                        <label class="me-1" for="diarizationSwitch">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label>
+                        <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label>
                       </td>
                       <td>
                         <input
@@ -305,7 +309,7 @@
                   @if (taskService.state.currentMode === 'summarization') {
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label for="asrProvider"
+                        <label for="asrProvider" class="pointer" [ngbTooltip]="'modals.check options.options.summarization service provider.description' | transloco"
                           >{{ 'modals.check options.options.summarization service provider.name' | transloco
                           }}<span class="text-danger">*</span>:</label
                         >
@@ -328,7 +332,7 @@
                     </tr>
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label for="asrProvider"
+                        <label for="asrProvider" class="pointer" [ngbTooltip]="'modals.check options.options.number of words.description' | transloco"
                           >{{ 'modals.check options.options.number of words.name' | transloco }}<span class="text-danger">*</span>:</label
                         >
                       </td>
@@ -350,7 +354,7 @@
                   @if (taskService.state.currentMode === 'annotation') {
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label>{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label>
+                        <label class="pointer" [ngbTooltip]="'modals.check options.options.word alignment language.description' | transloco">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label>
                       </td>
                       <td>
                         <octra-asr-language-select
@@ -370,7 +374,7 @@
                   } @else {
                     <tr class="align-middle">
                       <td class="fit">
-                        <label>{{ 'modals.check options.options.translation language.name' | transloco }}:</label>
+                        <label class="pointer" [ngbTooltip]="'modals.check options.options.translation language.description' | transloco">{{ 'modals.check options.options.translation language.name' | transloco }}:</label>
                       </td>
                       <td>
                         <div class="row g-1 align-items-center">
@@ -416,7 +420,7 @@
   </div>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'g.cancel' | transloco }}</button>
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.close()">{{ 'p.back to table' | transloco }}</button>
   <button
     (click)="onSubmit(form)"
     class="btn btn-outline-primary"

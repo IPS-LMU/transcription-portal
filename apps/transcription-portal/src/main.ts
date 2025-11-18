@@ -8,7 +8,7 @@ import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideTransloco } from '@jsverse/transloco';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -65,6 +65,7 @@ bootstrapApplication(AppComponent, {
     OHModalService,
     DownloadService,
     NgbActiveModal,
+    NgbTooltipConfig,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),
     provideCharts(withDefaultRegisterables()),

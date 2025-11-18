@@ -12,7 +12,7 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { NgbActiveModal, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { OHConfiguration } from '../../obj/oh-config';
 import { ASROperation } from '../../obj/operations/asr-operation';
@@ -46,6 +46,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     OctraProviderSelectComponent,
     TranslocoPipe,
     LowerCasePipe,
+    NgbTooltip,
   ],
 })
 export class QueueModalComponent implements OnDestroy, OnInit {

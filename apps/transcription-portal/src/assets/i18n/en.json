@@ -61,30 +61,30 @@
         "missing fields": "Please fill in the required fields."
       },
       "introduction": {
-        "paragraph1": "The following tasks are going to be processed one after the other. Please check if all options are set as you wish. While you are selecting the language you can click on the {{iIcon}} on the right of an entry for further information like data storage policy and terms and conditions.",
-        "paragraph2": "When you click \"OK\" you agree with the terms and conditions of the selected (third-party) services and the files are marked for further processing."
+        "paragraph1": "Each audio file was added to a separate task (and optionally one corresponding transcript). These new tasks are going to be processed one after the other. Please check if all options are set as you wish. While you are selecting the ASR provider from the list you can click on the {{iIcon}} on the right of a list entry for further information like data storage policy and terms and conditions.",
+        "paragraph2": "When you click \"OK\" you agree with the terms and conditions of the selected (third-party) services and the files are marked for further processing. As soon as you click on the \"3. START PROCESSING\" button the processing of tasks starts."
       },
       "options": {
         "asr service provider": {
-          "description": " ",
+          "description": "ASR (Automatic Speech Recognition) is done by extern service providers. Select an ASR provider from the list. Each item on the list offers further information about the provider.",
           "name": "ASR Service Provider"
         },
         "content language": {
-          "description": " ",
+          "description": "The spoken language for all added audio files.",
           "help": "The list of supported content languages depends on the selected ASR provider.",
           "name": "Content Language"
         },
         "description": "Set the options for your workflow, e.g. service provider and languages. Click on the {{iIcon}} for further information. The options are going to applied on the listed tasks above.",
         "diarization": {
-          "description": " ",
+          "description": "Select speaker diarization if you wish to separate the transcripts for each speaker",
           "name": "Diarization"
         },
         "number of speakers": {
-          "description": " ",
+          "description": "If you know the number of speakers it is recommended to set a value here.",
           "name": "Number of Speakers"
         },
         "number of words": {
-          "description": " ",
+          "description": "Set a maximum number of words for the resulted summarization.",
           "name": "Max. number of words for summarization",
           "values": {
             "headline": "Headline (10 words)",
@@ -98,12 +98,12 @@
           "name": "Summarization Service Provider"
         },
         "translation language": {
-          "description": " ",
+          "description": "The language for the summarization should be translated to.",
           "name": "Translate to",
           "provided by": "Translation provided by"
         },
         "word alignment language": {
-          "description": " ",
+          "description": "On Word Alignment step MAUS by BAS Webservices is used. For better results set a language for that step.",
           "name": "Word Alignment Language"
         }
       },
@@ -160,11 +160,11 @@
   },
   "modes": {
     "annotation": {
-      "description": " ",
+      "description": "In annotation mode the TranscriptionPortal helps you to annotate audio files using a workflow that includes automatic tools like Automatic Speech Recognition (ASR) and manual tools like OCTRA (Orthographic Transcription).",
       "name": "Annotation"
     },
     "summarization and translation": {
-      "description": " ",
+      "description": "If you want to know more about the content of your audio recordings this mode is the right one. Additionally to ASR it summarizes the transcript using AI and translates the result to a preferred language.",
       "name": "Summarization & Translation"
     }
   },
@@ -190,7 +190,7 @@
       "name": "Speech Recognition"
     },
     "summarization": {
-      "description": "Summarizes a given full text.",
+      "description": "Summarizes a given full text using AI provided by CLST Radboud University.",
       "name": "Summarization"
     },
     "translation": {
@@ -216,7 +216,8 @@
     "please wait": "Please wait",
     "reset options": "Reset options",
     "service provided by": "Service provided by",
-    "service terms": "Service terms"
+    "service terms": "Service terms",
+    "back to table": "Back to table"
   },
   "popovers": {
     "file info": {
@@ -248,7 +249,7 @@
     "introduction": "The TranscriptionPortal offers two modes for processing audio files: Annotation mode and Summarization & Translation mode. You can switch between the modes by clicking on the tabs at the left top corner.",
     "modes": {
       "annotation": "In annotation mode you are able to transcribe audio files automatically using ASR, correct the transcript using {{Octra}}, automatically align the transcript into words and edit the phonetic details in {{EmuWebApp}}.",
-      "summarization": " In summarization mode you automatically transcribe audio files using ASR, check the transcript in {{Octra}}, summarize the transcript using AI and translate it to a selected language automatically. "
+      "summarization": "In summarization mode you automatically transcribe audio files using ASR, check the transcript in {{Octra}}, summarize the transcript using AI and translate it to a selected language automatically. "
     },
     "start processing": {
       "description": "After all files and options are checked, click on \"{{startProcessingButton}}\". The application starts the processing of pending tasks."

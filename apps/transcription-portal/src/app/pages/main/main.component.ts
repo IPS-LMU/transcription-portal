@@ -789,8 +789,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy, OnI
     this.settingsService.shortCutsEnabled = true;
   }
 
-  changeMode(mode: 'annotation' | 'summarization') {
+  changeMode(mode: 'annotation' | 'summarization', ngbToolTip: NgbTooltip) {
     this.taskService.state.currentMode = mode;
+    ngbToolTip.close(false);
   }
 
   openAboutModal() {
