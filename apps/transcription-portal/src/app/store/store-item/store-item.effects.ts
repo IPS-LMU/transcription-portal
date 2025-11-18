@@ -806,19 +806,39 @@ export class StoreItemEffects {
       ofType(StoreItemActions.receiveToolData.success),
       withLatestFrom(this.store),
       exhaustMap(
-        ([{ mode, taskID }, state]: [
+        ([{ mode, taskID, file }, state]: [
           {
             mode: TPortalModes;
             taskID: number;
+            file: StoreFile;
           },
           RootState,
-        ]) =>
-          of(
-            StoreItemActions.processNextOperation.do({
+        ]) => {
+          const currentModeState = state.modes.entities[mode]!;
+          const openedTool = currentModeState.openedTool!;
+          const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentModeState.items)!;
+          let operation = task.operations!.find((a) => a.id === openedTool.operationID)!;
+
+          operation = {
+            ...operation,
+            rounds: [
+              ...operation.rounds.slice(0, operation.rounds.length - 1),
+              {
+                ...operation.rounds[operation.rounds.length - 1],
+                results: [...operation.rounds[operation.rounds.length - 1].results, file],
+                status: TaskStatus.FINISHED,
+              },
+            ],
+          };
+
+          return of(
+            StoreItemActions.processNextOperation.success({
               mode,
               taskID,
+              operation,
             }),
-          ),
+          );
+        },
       ),
     ),
   );

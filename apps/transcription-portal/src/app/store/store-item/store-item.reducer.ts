@@ -78,33 +78,35 @@ export const getTaskReducers = (
           return file;
         });
 
-        const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
+        if (item.status !== TaskStatus.QUEUED) {
+          const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
 
-        if (operationStatus.includes(TaskStatus.READY)) {
-          item = {
-            ...item,
-            status: TaskStatus.READY,
-          };
-        } else if (operationStatus.includes(TaskStatus.ERROR)) {
-          item = {
-            ...item,
-            status: TaskStatus.ERROR,
-          };
-        } else if (operationStatus.includes(TaskStatus.PROCESSING)) {
-          item = {
-            ...item,
-            status: TaskStatus.PENDING,
-          };
-        } else if (operationStatus.includes(TaskStatus.PENDING)) {
-          item = {
-            ...item,
-            status: TaskStatus.PENDING,
-          };
-        } else if (operationStatus.filter((a) => ![TaskStatus.FINISHED, TaskStatus.SKIPPED].includes(a)).length === 0) {
-          item = {
-            ...item,
-            status: TaskStatus.FINISHED,
-          };
+          if (operationStatus.includes(TaskStatus.READY)) {
+            item = {
+              ...item,
+              status: TaskStatus.READY,
+            };
+          } else if (operationStatus.includes(TaskStatus.ERROR)) {
+            item = {
+              ...item,
+              status: TaskStatus.ERROR,
+            };
+          } else if (operationStatus.includes(TaskStatus.PROCESSING)) {
+            item = {
+              ...item,
+              status: TaskStatus.PENDING,
+            };
+          } else if (operationStatus.includes(TaskStatus.PENDING)) {
+            item = {
+              ...item,
+              status: TaskStatus.PENDING,
+            };
+          } else if (operationStatus.filter((a) => ![TaskStatus.FINISHED, TaskStatus.SKIPPED].includes(a)).length === 0) {
+            item = {
+              ...item,
+              status: TaskStatus.FINISHED,
+            };
+          }
         }
 
         return item;
@@ -344,6 +346,44 @@ export const getTaskReducers = (
 
     return state;
   }),
+  on(ModeActions.closeToolLoader.do, (state: ModeState): ModeState => {
+    const currentMode = state.entities[state.currentMode]!;
+    const openedTool = currentMode.openedTool!;
+
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([openedTool.taskID], currentMode.items, taskAdapter, (item, itemsState) => {
+            return changeTaskOperation(
+              item.id,
+              openedTool.operationID,
+              (operation, itemsState) => {
+                return {
+                  ...operation,
+                  rounds: [
+                    ...operation.rounds.slice(0, operation.rounds.length - 1),
+                    ...(operation.rounds.length > 1
+                      ? []
+                      : [
+                          {
+                            status: TaskStatus.READY,
+                            results: [],
+                          } as StoreTaskOperationProcessingRound,
+                        ]), // if rounds > 1 remove current round because not needed
+                  ],
+                };
+              },
+              taskAdapter,
+              currentMode.items,
+            );
+          }),
+          openedTool: undefined,
+        },
+      },
+      state,
+    );
+  }),
   on(ModeActions.setDefaultOperationEnabled.success, (state: ModeState, { defaultOptions }) => ({
     ...modeAdapter.updateOne(
       {
@@ -467,6 +507,7 @@ export const getTaskReducers = (
               itemsState,
             ),
           ),
+          openedTool: undefined,
         },
       },
       state,
@@ -666,41 +707,6 @@ export const getTaskReducers = (
     const openedTool = currentMode.openedTool!;
     const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentMode.items)!;
     const operationIndex = task.operations.findIndex((a) => a.id === openedTool.operationID);
-
-    // add file to results of current tool operation and update duration
-    state = modeAdapter.updateOne(
-      {
-        id: state.currentMode,
-        changes: {
-          items: changeTaskOperation(
-            openedTool.taskID,
-            openedTool.operationID,
-            (operation, itemsState) => ({
-              ...operation,
-              rounds: [
-                ...operation.rounds.slice(0, operation.rounds.length - 1),
-                {
-                  ...operation.rounds[operation.rounds.length - 1],
-                  results: [...operation.rounds[operation.rounds.length - 1].results, file],
-                  time: {
-                    ...operation.rounds[operation.rounds.length - 1].time!,
-                    duration:
-                      (operation.rounds[operation.rounds.length - 1].time?.duration ?? 0) +
-                      Date.now() -
-                      operation.rounds[operation.rounds.length - 1]!.time!.start,
-                  },
-                  status: TaskStatus.FINISHED,
-                },
-              ],
-            }),
-            taskAdapter,
-            currentMode.items,
-          ),
-          openedTool: undefined, // -> close tool loader
-        },
-      },
-      state,
-    );
 
     // reset next operations
     for (let i = operationIndex + 1; i < task.operations.length; i++) {

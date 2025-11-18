@@ -61,4 +61,12 @@ export class ModeActions {
       }>(),
     },
   });
+
+  static closeToolLoader = createActionGroup({
+      source: 'mode/close tool loader',
+      events: {
+        do: emptyProps()
+      }
+  });
+
 }

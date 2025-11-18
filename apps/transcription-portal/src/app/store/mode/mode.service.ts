@@ -120,4 +120,8 @@ export class ModeStoreService {
       StoreItemActions.receiveToolData.do(data),
     );
   }
+
+  closeToolLoader(){
+    this.store.dispatch(ModeActions.closeToolLoader.do());
+  }
 }

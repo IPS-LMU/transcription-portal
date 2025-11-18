@@ -3,6 +3,7 @@ import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
 import * as X2JS from 'x2js';
+import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
@@ -14,8 +15,6 @@ import {
   getLastOperationRound,
 } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
-import { ASROperation } from './asr-operation-factory';
-import { IDBOperation } from '../../../indexedDB';
 
 export interface G2pMausOperationOptions {
   language?: string;
@@ -62,70 +61,61 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     const subj = new Subject<{
       operation: G2pMausOperation;
     }>();
-
-    (async () => {
-      if (operation.serviceProviderName) {
-        const uploadOperationLatestRound = getLastOperationRound(storeItemTask.operations[0]);
-        const asrLastOperationResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
-        const opIndex = storeItemTask.operations.findIndex((a) => a.name === operation.name);
-        const previousOperation = storeItemTask.operations[opIndex - 1];
-        const previousOperationLastResult = getLastOperationResultFromLatestRound(previousOperation);
-        let clonedOperation: G2pMausOperation = { ...operation };
-        let currentRound = getLastOperationRound(clonedOperation);
-        if (!currentRound) {
-          clonedOperation = addProcessingRound(clonedOperation);
-        }
-
-        currentRound = getLastOperationRound(clonedOperation)!;
-        currentRound = {
-          ...currentRound,
-          status: TaskStatus.PROCESSING,
-          time: {
-            start: Date.now(),
-          },
-        };
-        await wait(0);
-        subj.next({
-          operation: clonedOperation,
-        });
-
-        const serviceProvider = AppSettings.getServiceInformation('BAS')!;
-        let url = this.commands[0]
-          .replace('{{host}}', serviceProvider.host)
-          .replace('{{language}}', clonedOperation.options.language ?? '')
-          .replace('{{audioURL}}', uploadOperationLatestRound?.results?.find((a) => a.type.includes('audio'))?.url ?? '');
-
-        // use G2P -> MAUS Pipe
-        if (previousOperation?.enabled && previousOperationLastResult?.url) {
-          url = url.replace('{{transcriptURL}}', previousOperationLastResult?.url);
-        } else {
-          if (asrLastOperationResult?.url) {
-            url = url.replace('{{transcriptURL}}', asrLastOperationResult?.url);
+    wait(0).then(async () => {
+      try {
+        if (operation.serviceProviderName) {
+          const uploadOperationLatestRound = getLastOperationRound(storeItemTask.operations[0]);
+          const asrLastOperationResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
+          const opIndex = storeItemTask.operations.findIndex((a) => a.name === operation.name);
+          const previousOperation = storeItemTask.operations[opIndex - 1];
+          const previousOperationLastResult = getLastOperationResultFromLatestRound(previousOperation);
+          let clonedOperation: G2pMausOperation = { ...operation };
+          let currentRound = getLastOperationRound(clonedOperation);
+          if (!currentRound) {
+            clonedOperation = addProcessingRound(clonedOperation);
           }
+
+          currentRound = getLastOperationRound(clonedOperation)!;
+          currentRound = {
+            ...currentRound,
+            status: TaskStatus.PROCESSING,
+            time: {
+              start: Date.now(),
+            },
+          };
+
+          this.sendOperationWithUpdatedRound(subj, operation, currentRound);
+
+          const serviceProvider = AppSettings.getServiceInformation('BAS')!;
+          let url = this.commands[0]
+            .replace('{{host}}', serviceProvider.host)
+            .replace('{{language}}', clonedOperation.options.language ?? '')
+            .replace('{{audioURL}}', uploadOperationLatestRound?.results?.find((a) => a.type.includes('audio'))?.url ?? '');
+
+          // use G2P -> MAUS Pipe
+          if (previousOperation?.enabled && previousOperationLastResult?.url) {
+            url = url.replace('{{transcriptURL}}', previousOperationLastResult?.url);
+          } else {
+            if (asrLastOperationResult?.url) {
+              url = url.replace('{{transcriptURL}}', asrLastOperationResult?.url);
+            }
+          }
+
+          const { result, warnings } = await this.processWithG2PCHUNKERMAUS(url, storeItemTask, clonedOperation, httpClient);
+          currentRound = {
+            ...currentRound,
+            results: [...currentRound.results, result],
+            status: TaskStatus.FINISHED,
+            protocol: warnings,
+          };
+          this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+        } else {
+          subj.error(new Error('serviceProvider is undefined'));
         }
-
-        const { result, warnings } = await this.processWithG2PCHUNKERMAUS(url, storeItemTask, clonedOperation, httpClient);
-        currentRound = {
-          ...currentRound,
-          results: [...currentRound.results, result],
-          status: TaskStatus.FINISHED,
-          protocol: warnings,
-        };
-
-        return {
-          operation: clonedOperation,
-          currentRound,
-        };
-      } else {
-        throw new Error('serviceProvider is undefined');
+      } catch (e) {
+        subj.error(e);
       }
-    })()
-      .then(({ operation, currentRound }: { operation: G2pMausOperation; currentRound: StoreTaskOperationProcessingRound }) => {
-        this.sendOperationWithUpdatedRound(subj, operation, currentRound);
-      })
-      .catch((err) => {
-        subj.error(err);
-      });
+    });
 
     return subj;
   }
@@ -214,7 +204,7 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     });
   }
 
-  override async convertOperationToIDBOperation(operation:G2pMausOperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: G2pMausOperation): Promise<IDBOperation> {
     const result = await convertStoreOperationToIDBOperation(operation);
     result.language = operation.options.language;
 

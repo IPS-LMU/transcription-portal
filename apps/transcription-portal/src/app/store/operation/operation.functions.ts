@@ -129,6 +129,7 @@ export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
       duration: audio.duration,
       channels: audio.channels,
       sampleRate: audio.sampleRate,
+      bitsPerSecond: audio.bitrate,
       url: audio.url,
       online: audio.online,
     };

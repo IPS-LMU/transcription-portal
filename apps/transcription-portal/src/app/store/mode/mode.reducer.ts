@@ -13,7 +13,6 @@ import {
 } from '../operation';
 import { getPreprocessingReducers } from '../preprocessing/preprocessing.reducer';
 import { getTaskReducers, TaskStatus } from '../store-item';
-import { StoreItemActions } from '../store-item/store-item.actions';
 import { ModeActions } from './mode.actions';
 import { modeAdapter, preprocessingAdapter, taskAdapter } from './mode.adapters';
 import { ModeState } from './mode.state';

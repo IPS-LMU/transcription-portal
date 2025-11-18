@@ -237,41 +237,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onBackButtonClicked() {
-    this.showtool = false;
-    setTimeout(() => {
-      this.sidebarstate = 'hidden';
-      setTimeout(() => {
-        if (this.toolLoader) {
-          this.toolLoader.url = undefined;
-        }
-      }, 1000);
-    }, 200);
-    this.leaveToolOperation();
-  }
-
-  leaveToolOperation() {
-    /* TODO ADD
-    if (this.toolSelectedOperation) {
-      if (this.toolSelectedOperation.lastRound && !this.toolSelectedOperation.lastRound.lastResult && this.toolSelectedOperation.rounds.length > 1) {
-        // remove empty round
-        this.toolSelectedOperation.removeRoundsByIndex(-1, 1);
-      }
-      if (this.toolSelectedOperation.nextOperation && this.toolSelectedOperation.nextOperation.state === TaskStatus.FINISHED) {
-        this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-      } else if (this.toolSelectedOperation.state !== TaskStatus.FINISHED) {
-        if (this.toolSelectedOperation.rounds.length > 0) {
-          this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-        } else {
-          this.toolSelectedOperation.changeState(TaskStatus.READY);
-        }
-      }
-    }
-
-    this.toolSelectedOperation = undefined;
-    this.proceedings?.cd.markForCheck();
-    this.proceedings?.cd.detectChanges();
-
-     */
+    this.modeStoreService.closeToolLoader();
   }
 
   @HostListener('window:beforeunload', ['$event'])
