@@ -12,10 +12,10 @@ import { AppActions } from '../app/app.actions';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
-import { convertStoreTaskToIDBTask } from '../operation/operation.functions';
+import { convertStoreItemToIDBItem } from '../operation/operation.functions';
 import { StoreItem } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
-import { getTaskItemsWhereRecursive } from '../store-item/store-item.functions';
+import { getStoreItemsWhereRecursive } from '../store-item/store-item.functions';
 import { IDBActions } from './idb.actions';
 
 const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
@@ -248,13 +248,13 @@ export class IDBEffects {
 
   saveTask$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.changeOperation.do, StoreItemActions.changeTaskStatus.do),
+      ofType(StoreItemActions.changeOperation.do, StoreItemActions.changeTaskStatus.do, IDBActions.saveTask.do),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
-        const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items, taskAdapter)[0];
-        return from(convertStoreTaskToIDBTask(task)).pipe(
+        const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
+        return from(convertStoreItemToIDBItem(task)).pipe(
           exhaustMap((idbTask) => {
             return from(table.put(idbTask, task.id)).pipe(
               exhaustMap(() => {
@@ -337,6 +337,62 @@ export class IDBEffects {
           );
         },
       ),
+    ),
+  );
+
+  saveStoreItems$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.saveStoreItems.do),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ itemIDs, mode }, state]: [
+          {
+            mode: TPortalModes;
+            itemIDs: number[];
+          },
+          RootState,
+        ]) => {
+          return from(
+            (async () => {
+              const serialized: (IDBTaskItem | IDBFolderItem)[] = [];
+              const items = getStoreItemsWhereRecursive((item) => itemIDs.includes(item.id), state.modes.entities[mode]!.items);
+              for (const item of items) {
+                serialized.push(await convertStoreItemToIDBItem(item));
+              }
+
+              return serialized;
+            })(),
+          ).pipe(
+            exhaustMap((serializedItems) => {
+              return from(this._idbm[`${mode}_tasks`].bulkPut(serializedItems)).pipe(
+                () => of(IDBActions.saveStoreItems.success()),
+                catchError((err) =>
+                  of(
+                    IDBActions.saveStoreItems.fail({
+                      error: typeof err === 'string' ? err : err.message,
+                    }),
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+      ),
+    ),
+  );
+
+  saveEntriesAfterPreprocessing$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.importItemsFromProcessingQueue.success),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) => {
+        return of(
+          IDBActions.saveStoreItems.do({
+            mode: action.mode,
+            itemIDs: action.addedItemIDs,
+          }),
+        );
+      }),
     ),
   );
 

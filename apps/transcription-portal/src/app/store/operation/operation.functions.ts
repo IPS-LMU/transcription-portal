@@ -1,7 +1,7 @@
 import { last } from '@octra/utilities';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
-import { IDBOperation, IDBTaskItem, IOperation } from '../../indexedDB';
-import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../store-item';
+import { IDBFolderItem, IDBOperation, IDBTaskItem, IOperation } from '../../indexedDB';
+import { StoreAudioFile, StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../store-item';
 import { convertIDBFileToStoreFile } from '../store-item/store-item.functions';
 import { OperationFactory } from './factory';
 import { OperationProcessingRoundSerialized, StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
@@ -45,8 +45,9 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   };
 }
 
-export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem> {
-  return new Promise<IDBTaskItem>((resolve, reject) => {
+export async function convertStoreItemToIDBItem(item: StoreItem, taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem | IDBFolderItem> {
+  if (item.type == 'task') {
+    const task = item as StoreItemTask;
     const result: IDBTaskItem = {
       id: task.id,
       type: 'task',
@@ -67,19 +68,28 @@ export async function convertStoreTaskToIDBTask(task: StoreItemTask, taskDirecto
     }
 
     if (operationPromises.length > 0) {
-      Promise.all(operationPromises)
-        .then((serializedOperations) => {
-          result.operations = serializedOperations;
-          resolve(result);
-        })
-        .catch((error) => {
-          console.error('not arrived');
-          reject(error);
-        });
-    } else {
-      resolve(result);
+      const serializedOperations = await Promise.all(operationPromises);
+      result.operations = serializedOperations;
     }
-  });
+
+    return result;
+  } else {
+    // dir
+    const dir = item as StoreItemTaskDirectory;
+    const serializedDir: IDBFolderItem = {
+      entries: [],
+      id: dir.id,
+      path: dir.path,
+      type: 'folder',
+    };
+
+    for (const entryID of dir.entries.ids) {
+      const entry = dir.entries.entities[entryID]!;
+      serializedDir.entries.push((await convertStoreItemToIDBItem(entry, dir)) as IDBTaskItem);
+    }
+
+    return serializedDir;
+  }
 }
 
 export async function convertStoreOperationToIDBOperation(operation: StoreTaskOperation): Promise<IOperation> {

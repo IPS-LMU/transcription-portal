@@ -3,25 +3,30 @@ import { inject, Injectable } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
+import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
+import { OAudiofile } from '@octra/media';
 import { SubscriptionManager } from '@octra/utilities';
 import { exhaustMap, forkJoin, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
-import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
+import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
-import { taskAdapter } from '../mode/mode.adapters';
-import { ASROperation, OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
+import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
+import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { StoreAudioFile, StoreFile, TaskStatus } from './store-item';
+import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
+  convertFileInfoToStoreFile,
   getLatestResultFromPreviousEnabledOperation,
   getOneTaskItemWhereRecursive,
-  getTaskItemsWhereRecursive,
+  getStoreItemsWhereRecursive,
   isStoreFileAvailable,
+  updateTaskFilesWithSameFile,
 } from './store-item.functions';
+import { OctraWindowMessageEventData } from './store-items-state';
 
 @Injectable()
 export class StoreItemEffects {
@@ -105,13 +110,53 @@ export class StoreItemEffects {
   processingQueueImported$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.importItemsFromProcessingQueue.do),
-      exhaustMap((action) =>
-        of(
-          StoreItemActions.importItemsFromProcessingQueue.success({
-            id: action.id,
-            mode: action.mode,
-          }),
-        ),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ mode, id, results }, state]: [
+          {
+            id: number;
+            mode: TPortalModes;
+            results: (StoreFile | StoreAudioFile | StoreFileDirectory)[];
+          },
+          RootState,
+        ]) => {
+          let modesState = state.modes;
+          const addedItemIDs: number[] = [];
+
+          for (const result of results) {
+            const itemChange = updateTaskFilesWithSameFile(
+              result,
+              modesState.entities[mode]!.items,
+              taskAdapter,
+              modesState.counters,
+              modesState.entities[mode]!.defaultOperations,
+              modesState.entities[mode]!.options,
+            );
+            modesState = modeAdapter.updateOne(
+              {
+                id: mode,
+                changes: {
+                  items: itemChange.state,
+                },
+              },
+              {
+                ...modesState,
+                counters: itemChange.counters,
+              },
+            );
+            addedItemIDs.push(...itemChange.addedIDs);
+          }
+
+          return of(
+            StoreItemActions.importItemsFromProcessingQueue.success({
+              id: id,
+              mode: mode,
+              counters: modesState.counters,
+              items: modesState.entities[mode]!.items,
+              addedItemIDs,
+            }),
+          );
+        },
       ),
     ),
   );
@@ -135,7 +180,7 @@ export class StoreItemEffects {
       ofType(StoreItemActions.processNextStoreItem.do),
       withLatestFrom(this.store),
       exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
-        const nextTask = getOneTaskItemWhereRecursive((item) => item.status === TaskStatus.PENDING, state.modes.entities[mode]!.items, taskAdapter);
+        const nextTask = getOneTaskItemWhereRecursive((item) => item.status === TaskStatus.PENDING, state.modes.entities[mode]!.items);
         if (!nextTask || state.modes.entities[mode]!.statistics.waiting === 0) {
           return of(
             StoreItemActions.processNextStoreItem.nothingToDo({
@@ -156,7 +201,7 @@ export class StoreItemEffects {
       exhaustMap(([{ id, mode }, state]: [{ id: number; mode: TPortalModes }, RootState]) => {
         const currentMode = state.modes.entities[mode]!;
         const defaultOperations = currentMode.defaultOperations;
-        const item = getOneTaskItemWhereRecursive((item) => item.id === id, state.modes.entities[mode]!.items, taskAdapter);
+        const item = getOneTaskItemWhereRecursive((item) => item.id === id, state.modes.entities[mode]!.items);
 
         if (!item) {
           return of(
@@ -179,7 +224,7 @@ export class StoreItemEffects {
         tap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
           const currentMode = state.modes.entities[mode]!;
           const defaultOperations = currentMode.defaultOperations;
-          const item = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items, taskAdapter);
+          const item = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items);
 
           if (!item) {
             this.store.dispatch(
@@ -356,7 +401,7 @@ export class StoreItemEffects {
           ]) => {
             // operation is of type tool and ready
             const currentState = state.modes.entities[state.modes.currentMode]!;
-            const task = getOneTaskItemWhereRecursive((item) => item.id === taskID, currentState.items, taskAdapter)!;
+            const task = getOneTaskItemWhereRecursive((item) => item.id === taskID, currentState.items)!;
             const taskOperations = task.operations!;
             const opIndex = taskOperations.findIndex((a) => a.id === operationID)!;
             const { factory } = currentState.defaultOperations[opIndex]!;
@@ -543,7 +588,7 @@ export class StoreItemEffects {
           { operationID: number; taskID: number; operationName: string; language: string; mode: TPortalModes; roundIndex: number },
           RootState,
         ]) => {
-          const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items, taskAdapter)[0];
+          const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0] as StoreItemTask;
           const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
           const operation = task.operations![operationIndex];
           const { factory } = state.modes.entities[mode]!.defaultOperations[operationIndex];
@@ -569,8 +614,8 @@ export class StoreItemEffects {
                     mode,
                     url,
                     audioFile: task.files.find((a) => a.type.includes('audio')) as StoreAudioFile,
-                    language: (task.operations[1] as ASROperation).options.language!,
-                    operationName: operation.name,
+                    language,
+                    operationName,
                   }),
                 );
               }),
@@ -587,14 +632,169 @@ export class StoreItemEffects {
     ),
   );
 
-  public openSplitModal = () => {
-    const ref = this.ngbModalService.open(SplitModalComponent, SplitModalComponent.options);
-    ref.result.then((reason) => {
-      /** TODO add
-       *
-       *       this.taskService.splitPrompt = reason;
-       *       this.taskService.checkFiles(this.taskService.state.currentMode);
-       */
-    });
-  };
+  toolDataReceived$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.receiveToolData.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [OctraWindowMessageEventData, RootState]) => {
+        const currentMode = state.modes.entities[state.modes.currentMode];
+        const openedTool = currentMode!.openedTool!;
+        const toolName = openedTool?.operationName;
+        const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID!, currentMode!.items)!;
+
+        if (toolName === 'OCTRA') {
+          const result: any = action.data?.annotation;
+          let annotation: IFile | undefined;
+
+          try {
+            const converter = new AnnotJSONConverter();
+            const audio = task.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
+            const audiofile = new OAudiofile();
+            audiofile.url = audio.url;
+            audiofile.name = audio.name;
+            audiofile.type = audio.type;
+            audiofile.size = audio.size;
+            audiofile.duration = audio.duration;
+            audiofile.sampleRate = audio.sampleRate;
+            const importResult = converter.import(result, audiofile);
+
+            if (importResult.annotjson && !importResult.error) {
+              const exportConverter = new PartiturConverter();
+              const oAnnotJSON = OAnnotJSON.deserialize(importResult.annotjson);
+              const exportResult = exportConverter.export(oAnnotJSON!, audiofile, 0);
+
+              if (exportResult.file && !exportResult.error) {
+                annotation = exportResult.file;
+              } else {
+                return of(
+                  StoreItemActions.receiveToolData.fail({
+                    error: `Export: ${exportResult.error}`,
+                  }),
+                );
+              }
+            } else {
+              return of(
+                StoreItemActions.receiveToolData.fail({
+                  error: `Import: ${importResult.error}`,
+                }),
+              );
+            }
+          } catch (e) {
+            return of(
+              StoreItemActions.receiveToolData.fail({
+                error: `Converting to TextGrid failed!`,
+              }),
+            );
+          }
+
+          if (!annotation) {
+            return of(
+              StoreItemActions.receiveToolData.fail({
+                error: 'Annotation is undefined.',
+              }),
+            );
+          }
+
+          const blob = new File([annotation.content], annotation.name, {
+            type: annotation?.type,
+          });
+          const file = new TPortalFileInfo(annotation.name, annotation.type, blob.size, blob);
+          const audioFile = task?.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
+          const name = (audioFile.attributes?.originalFileName ?? audioFile.name).replace(/\.[^.]+$/g, '');
+
+          file.attributes = {
+            originalFileName: `${name}${file.extension}`,
+          };
+
+          return from(convertFileInfoToStoreFile(file)).pipe(
+            exhaustMap((storeFile) =>
+              of(
+                StoreItemActions.receiveToolData.prepare({
+                  file: storeFile,
+                }),
+              ),
+            ),
+          );
+        } else if (toolName === 'Emu WebApp') {
+          const inputs = task.files;
+          const audioFile = inputs.find((a) => a.type.includes('audio')) as StoreAudioFile;
+          const fileName = (audioFile.attributes?.originalFileName ?? audioFile.name).replace(/\.[^.]+$/g, '');
+          let jsonText = '';
+
+          if (action.data?.annotation) {
+            const json = JSON.parse(action.data.annotation.content);
+            json.name = fileName;
+            json.annotates = `${fileName}_annot.json`;
+            jsonText = JSON.stringify(json, null, 2);
+          }
+
+          const file: File = TPortalFileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
+          const fileInfo = new TPortalFileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
+
+          fileInfo.attributes = {
+            originalFileName: `${fileName}_annot.json`,
+          };
+
+          fileInfo.online = false;
+          return from(convertFileInfoToStoreFile(fileInfo)).pipe(
+            exhaustMap((storeFile) =>
+              of(
+                StoreItemActions.receiveToolData.prepare({
+                  file: storeFile,
+                }),
+              ),
+            ),
+          );
+        }
+        return of(
+          StoreItemActions.receiveToolData.fail({
+            error: "Can't find proper operation for selected tool.",
+          }),
+        );
+      }),
+    ),
+  );
+
+  prepareToolOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.receiveToolData.prepare),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([action, state]: [
+          {
+            file: StoreFile;
+          },
+          RootState,
+        ]) =>
+          of(
+            StoreItemActions.receiveToolData.success({
+              taskID: state.modes.entities[state.modes.currentMode]!.openedTool!.taskID,
+              file: action.file,
+            }),
+          ),
+      ),
+    ),
+  );
+
+  receiveToolDataSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.receiveToolData.success),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([action, state]: [
+          {
+            file: StoreFile;
+            taskID: number;
+          },
+          RootState,
+        ]) =>
+          of(
+            IDBActions.saveTask.do({
+              mode: state.modes.currentMode,
+              taskID: action.taskID,
+            }),
+          ),
+      ),
+    ),
+  );
 }

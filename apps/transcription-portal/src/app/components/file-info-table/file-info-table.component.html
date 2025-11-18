@@ -48,7 +48,7 @@
         </tr>
         <tr>
           <td>Duration:</td>
-          <td>{{ audioFile.duration | time }}</td>
+          <td>{{ (audioFile.duration / audioFile.sampleRate) * 1000 | time }}</td>
         </tr>
       }
     </tbody>

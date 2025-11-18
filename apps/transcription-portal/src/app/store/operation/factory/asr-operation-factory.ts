@@ -3,7 +3,7 @@ import { PartiturConverter, SRTConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { extractFileNameFromURL, joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
 import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
-import { from, interval, Observable, Subject, Subscription } from 'rxjs';
+import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
 import { AppSettings } from '../../../shared/app.settings';
@@ -520,6 +520,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
             },
             { responseType: 'json' },
           )
+          .pipe(retry({ count: 3, delay: 2000 }))
           .subscribe({
             next: () => {
               resolve(projectName);

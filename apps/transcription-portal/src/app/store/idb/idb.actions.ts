@@ -1,6 +1,7 @@
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
+import { StoreItem } from '../store-item';
 
 export interface IDBLoadSuccessResults{
   annotationTasks: IDBTaskItem[];
@@ -104,11 +105,13 @@ export class IDBActions {
     }
   });
 
-
-
   static saveTask = createActionGroup({
     source: 'idb/save task',
     events: {
+      do: props<{
+        mode: TPortalModes;
+        taskID: number,
+      }>(),
       success: props<{
         mode: TPortalModes;
         taskID: number,
@@ -118,5 +121,20 @@ export class IDBActions {
       }>(),
     }
   });
+
+  static saveStoreItems = createActionGroup({
+      source: 'idb/save items',
+      events: {
+        do: props<{
+          mode: TPortalModes;
+          itemIDs: number[];
+        }>(),
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
+
 
 }

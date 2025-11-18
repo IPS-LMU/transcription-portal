@@ -3,7 +3,6 @@ import { createSelector } from '@ngrx/store';
 import { RootState } from '../app';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { getOneTaskItemWhereRecursive } from '../store-item/store-item.functions';
-import { taskAdapter } from './mode.adapters';
 import { getAllTasks } from './mode.functions';
 import { Mode, ModeStatistics } from './mode.state';
 
@@ -51,7 +50,7 @@ export const selectAllTasks = createSelector(selectCurrentModeState, (mode) => {
 
 export const selectOpenedToolOperation = createSelector(selectCurrentModeState, (mode) => {
   if (mode?.openedTool?.taskID && mode.openedTool.operationID) {
-    const task = getOneTaskItemWhereRecursive((item) => item.id === mode.openedTool!.taskID, mode.items, taskAdapter);
+    const task = getOneTaskItemWhereRecursive((item) => item.id === mode.openedTool!.taskID, mode.items);
     return {
       operation: task?.operations.find((a) => a.id === mode.openedTool?.operationID),
       language: mode.openedTool.language,

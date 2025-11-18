@@ -3,7 +3,7 @@ import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { getLastOperationRound } from '../operation/operation.functions';
+import { addProcessingRound, getLastOperationRound } from '../operation/operation.functions';
 import { StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
@@ -11,9 +11,9 @@ import {
   applyFunctionOnStoreItemsWithIDsRecursive,
   changeTaskOperation,
   convertIDBTaskToStoreTask,
-  getTaskItemsWhereRecursive,
+  getOneTaskItemWhereRecursive,
+  getStoreItemsWhereRecursive,
   updateStatistics,
-  updateTaskFilesWithSameFile,
 } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
 
@@ -101,8 +101,46 @@ export const getTaskReducers = (
       }
     };
 
+    const storeItemIDs: number[] = [];
+    const operationIDs: number[] = [];
+
+    const getIDs = (item: StoreItem) => {
+      if (item.type === 'task') {
+        const task = item as StoreItemTask;
+
+        return {
+          operations: task.operations.map((op) => op.id),
+          items: [item.id],
+        };
+      } else {
+        const result: {
+          operations: number[];
+          items: number[];
+        } = {
+          operations: [],
+          items: [],
+        };
+
+        const dir = item as StoreItemTaskDirectory;
+
+        for (const id of dir.entries.ids) {
+          const entry = dir.entries.entities[id]!;
+          const entryResult = getIDs(entry);
+          result.operations.push(...entryResult.operations);
+          result.items.push(...entryResult.items);
+        }
+
+        return result;
+      }
+    };
+
     for (const id of Object.keys(tasks)) {
       const items: StoreItem[] = (tasks as any)[id].map((item: StoreItem) => prepareItem(item, taskAdapter));
+      for (const item of items) {
+        const ids = getIDs(item);
+        storeItemIDs.push(...ids.items);
+        operationIDs.push(...ids.operations);
+      }
 
       state = modeAdapter.updateOne(
         {
@@ -113,7 +151,14 @@ export const getTaskReducers = (
         },
         state,
       );
-      state = updateStatistics(state, id as TPortalModes);
+      state = {
+        ...updateStatistics(state, id as TPortalModes),
+        counters: {
+          ...state.counters,
+          operation: Math.max(...operationIDs) + 1,
+          storeItem: Math.max(...storeItemIDs) + 1
+        }
+      };
     }
 
     return state;
@@ -234,33 +279,19 @@ export const getTaskReducers = (
       state,
     );
   }),
-  on(StoreItemActions.importItemsFromProcessingQueue.do, (state: ModeState, { results, mode }) => {
-    const currentMode = state.entities![mode]!;
-
-    for (const result of results) {
-      const itemChange = updateTaskFilesWithSameFile(
-        result,
-        state.entities[mode]!.items,
-        taskAdapter,
-        state.counters,
-        currentMode.defaultOperations,
-        currentMode.options,
-      );
-      state = modeAdapter.updateOne(
-        {
-          id: mode,
-          changes: {
-            items: itemChange.state,
-          },
+  on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode, items, counters }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items,
         },
-        {
-          ...state,
-          counters: itemChange.counters,
-        },
-      );
-    }
-
-    return state;
+      },
+      {
+        ...state,
+        counters,
+      },
+    );
   }),
   on(StoreItemActions.toggleTaskDirectoryOpened.do, (state: ModeState, { dirID }) => {
     state = modeAdapter.updateOne(
@@ -502,10 +533,9 @@ export const getTaskReducers = (
     return state;
   }),
   on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, url, audioFile, language, operationName }) => {
-    const task = getTaskItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items, taskAdapter)[0];
+    const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items)[0];
     const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
     let operation = task.operations![operationIndex];
-    const { factory } = state.entities[mode]!.defaultOperations[operationIndex];
 
     if (url !== '') {
       if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
@@ -601,6 +631,95 @@ export const getTaskReducers = (
       state,
     ),
   ),
+  on(StoreItemActions.receiveToolData.success, (state: ModeState, { file }) => {
+    const currentMode = state.entities[state.currentMode]!;
+    const openedTool = currentMode.openedTool!;
+    const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentMode.items)!;
+    const operationIndex = task.operations.findIndex((a) => a.id === openedTool.operationID);
+
+    // add file to results of current tool operation and update duration
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: changeTaskOperation(
+            openedTool.taskID,
+            openedTool.operationID,
+            (operation, itemsState) => ({
+              ...operation,
+              rounds: [
+                ...operation.rounds.slice(0, operation.rounds.length - 1),
+                {
+                  ...operation.rounds[operation.rounds.length - 1],
+                  results: [...operation.rounds[operation.rounds.length - 1].results, file],
+                  time: {
+                    ...operation.rounds[operation.rounds.length - 1].time!,
+                    duration:
+                      (operation.rounds[operation.rounds.length - 1].time?.duration ?? 0) +
+                      Date.now() -
+                      operation.rounds[operation.rounds.length - 1]!.time!.start,
+                  },
+                  status: TaskStatus.FINISHED,
+                },
+              ],
+            }),
+            taskAdapter,
+            currentMode.items,
+          ),
+        },
+      },
+      state,
+    );
+
+    // reset next operations
+    for (let i = operationIndex + 1; i < task.operations.length; i++) {
+      const operation = task.operations[i];
+      if (
+        operation.enabled &&
+        [TaskStatus.ERROR, TaskStatus.FINISHED, TaskStatus.PROCESSING].includes(getLastOperationRound(operation)?.status as TaskStatus)
+      ) {
+        state = modeAdapter.updateOne(
+          {
+            id: state.currentMode,
+            changes: {
+              items: changeTaskOperation(
+                task.id,
+                operation.id,
+                (op, itemsState) => addProcessingRound(op),
+                taskAdapter,
+                state.entities![state.currentMode]!.items,
+              ),
+            },
+          },
+          state,
+        );
+      }
+    }
+
+    /*
+    TODO where to add?
+
+
+    if (
+      this.toolSelectedOperation &&
+      this.toolSelectedOperation.task &&
+      this.toolSelectedOperation.task.status === 'FINISHED' &&
+      this.toolSelectedOperation.task.asrOperation &&
+      this.toolSelectedOperation.task.asrOperation.serviceProvider &&
+      this.toolSelectedOperation.task.asrOperation.language
+    ) {
+      this.toolSelectedOperation.task.restart(this.httpClient, [
+        {
+          name: 'GoogleASR',
+          value: this.taskService.accessCode,
+        },
+      ]);
+    }
+    this.onBackButtonClicked();
+     */
+
+    return state;
+  }),
 ];
 
 function setSelection(

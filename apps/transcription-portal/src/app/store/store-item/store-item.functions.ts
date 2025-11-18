@@ -136,6 +136,7 @@ export function updateTaskFilesWithSameFile(
   },
 ): {
   state: StoreItemsState;
+  addedIDs: number[];
   counters: {
     storeItem: number;
     operation: number;
@@ -144,6 +145,7 @@ export function updateTaskFilesWithSameFile(
 } {
   const result: {
     state: StoreItemsState;
+    addedIDs: number[];
     counters: {
       storeItem: number;
       operation: number;
@@ -151,6 +153,7 @@ export function updateTaskFilesWithSameFile(
     };
   } = {
     state: itemsState,
+    addedIDs: [],
     counters: { ...counters },
   };
 
@@ -239,9 +242,11 @@ export function updateTaskFilesWithSameFile(
 
       result.state = adapter.addOne(newStoreItem, result.state);
       result.counters.storeItem = result.counters.storeItem + 1;
+      result.addedIDs.push(newTaskID);
     } else {
       const addedFolder = addedStoreFileOrDirectory as StoreFileDirectory;
-      let folderIDCounter = result.counters.storeItem;
+      const folderIDCounter = result.counters.storeItem;
+      result.addedIDs.push(folderIDCounter);
       let newStoreItemCounter = folderIDCounter + 1;
       const newStoreItem: StoreItemTaskDirectory = {
         folderName: addedFolder.name,
@@ -256,7 +261,7 @@ export function updateTaskFilesWithSameFile(
               const d: StoreItemTaskDirectory = {
                 entries: taskAdapter.getInitialState(),
                 folderName: di.name,
-                id: folderIDCounter++,
+                id: newStoreItemCounter,
                 path: di.path,
                 size: di.size,
                 type: 'folder',
@@ -283,6 +288,7 @@ export function updateTaskFilesWithSameFile(
       };
       result.state = adapter.addOne(newStoreItem, result.state);
       result.counters.storeItem = newStoreItemCounter;
+      result.addedIDs.push(newStoreItem.id);
     }
   }
 
@@ -329,7 +335,7 @@ export async function convertFileInfoToStoreFile(file: FileInfo | AudioInfo): Pr
       blob: audio.file,
       channels: audio.channels,
       content: undefined,
-      duration: audio.duration,
+      duration: audio.duration?.samples,
       name: audio.fullname,
       hash: audio.hash!,
       online: audio.online,
@@ -582,9 +588,9 @@ export function applyFunctionOnStoreItemsWhereRecursive(
   return itemsState;
 }
 
-export function getTaskItemsWhereRecursive(where: (item: StoreItem) => boolean, itemsState: StoreItemsState, taskAdapter: EntityAdapter<StoreItem>) {
+export function getStoreItemsWhereRecursive(where: (item: StoreItem) => boolean, itemsState: StoreItemsState): StoreItem[] {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
-  const filtered: StoreItemTask[] = [];
+  const filtered: StoreItem[] = [];
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -594,19 +600,21 @@ export function getTaskItemsWhereRecursive(where: (item: StoreItem) => boolean, 
       items.splice(i, 1);
       i--;
     } else if (item.type === 'folder') {
-      const folderFiltered = getTaskItemsWhereRecursive(where, item.entries!, taskAdapter);
-      filtered.push(...folderFiltered);
+      if (where(item)) {
+        filtered.push(item as StoreItemTaskDirectory);
+        items.splice(i, 1);
+        i--;
+      } else {
+        const folderFiltered = getStoreItemsWhereRecursive(where, item.entries!);
+        filtered.push(...folderFiltered);
+      }
     }
   }
 
   return filtered;
 }
 
-export function getOneTaskItemWhereRecursive(
-  where: (item: StoreItem) => boolean,
-  itemsState: StoreItemsState,
-  taskAdapter: EntityAdapter<StoreItem>,
-): StoreItemTask | undefined {
+export function getOneTaskItemWhereRecursive(where: (item: StoreItem) => boolean, itemsState: StoreItemsState): StoreItemTask | undefined {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
 
   for (let i = 0; i < items.length; i++) {
@@ -615,7 +623,7 @@ export function getOneTaskItemWhereRecursive(
     if (where(item)) {
       return item as StoreItemTask;
     } else if (item.type === 'folder') {
-      const folderFiltered = getOneTaskItemWhereRecursive(where, item.entries!, taskAdapter);
+      const folderFiltered = getOneTaskItemWhereRecursive(where, item.entries!);
       if (folderFiltered) {
         return folderFiltered;
       }

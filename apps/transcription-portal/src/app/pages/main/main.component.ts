@@ -14,6 +14,7 @@ import {
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { hasProperty } from '@octra/utilities';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
@@ -31,18 +32,19 @@ import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { SettingsService } from '../../shared/settings.service';
+import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import {
   AppStoreService,
   ModeStoreService,
   OperationFactory,
-  PreprocessingStoreService, StoreAudioFile,
+  PreprocessingStoreService,
+  StoreAudioFile,
   StoreItemTask,
   StoreTaskOperation,
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
-import { TimePipe } from '../../shared/time.pipe';
 
 @Component({
   selector: 'tportal-main',
@@ -214,157 +216,24 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onToolDataReceived(data: any, toolLoader: ToolLoaderComponent) {
-    /* TODO add
     const $event = data.event;
-
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
-      (async () => {
-        if (data.name === 'OCTRA') {
-          if (hasProperty($event.data, 'status') && $event.data.status === 'success' && hasProperty($event.data.data, 'annotation')) {
-            const result: any = $event.data.data.annotation;
-            let annotation: IFile | undefined;
-
-            try {
-              const converter = new AnnotJSONConverter();
-              const audio = this.toolSelectedOperation?.task!.files.find((a) => a.isMediaFile()) as any as TPortalAudioInfo;
-              const audiofile = new OAudiofile();
-              audiofile.url = audio.url;
-              audiofile.name = audio.fullname;
-              audiofile.type = audio.type;
-              audiofile.size = audio.size;
-              audiofile.duration = audio.duration.samples;
-              audiofile.sampleRate = (audio as TPortalAudioInfo).sampleRate;
-              const importResult = converter.import(result, audiofile);
-
-              if (importResult.annotjson && !importResult.error) {
-                const exportConverter = new PartiturConverter();
-                const oAnnotJSON = OAnnotJSON.deserialize(importResult.annotjson);
-                const exportResult = exportConverter.export(oAnnotJSON!, audiofile, 0);
-
-                if (exportResult.file && !exportResult.error) {
-                  annotation = exportResult.file;
-                } else {
-                  throw new Error(`Export: ${exportResult.error}`);
-                }
-              } else {
-                throw new Error(`Import: ${importResult.error}`);
-              }
-            } catch (e) {
-              console.error(e);
-              throw new Error('Converting to TextGrid failed!');
-            }
-
-            if (!annotation) {
-              throw new Error('Annotation is undefined.');
-            }
-
-            const blob = new File([annotation.content], annotation.name, {
-              type: annotation?.type,
-            });
-            const file = new TPortalFileInfo(annotation.name, annotation.type, blob.size, blob);
-            const inputs = this.toolSelectedOperation?.task?.files;
-
-            const url = await this.upload(toolLoader.operation as ToolOperation, file);
-            file.url = url;
-
-            if (!inputs) {
-              return file;
-            }
-
-            const name = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
-
-            file.attributes = {
-              originalFileName: `${name}${file.extension}`,
-            };
-
-            return file;
-          }
-        } else if (data.name === 'Emu WebApp') {
-          if (this.toolSelectedOperation && this.toolSelectedOperation.task) {
-            const inputs = this.toolSelectedOperation?.task?.files;
-            if (!inputs) {
-              throw new Error(`Can't find any inputs for this task.`);
-            }
-
-            const fileName = (inputs[0].attributes?.originalFileName ?? inputs[0].fullname).replace(/\.[^.]+$/g, '');
-
-            this._showtool = false;
-            let jsonText = '';
-            if (hasProperty($event.data.data, 'annotation')) {
-              const json = $event.data.data.annotation;
-              json.name = fileName;
-              json.annotates = `${fileName}_annot.json`;
-              jsonText = JSON.stringify(json, null, 2);
-            }
-
-            const file: File = TPortalFileInfo.getFileFromContent(jsonText, `${fileName}_annot.json`, 'text/plain');
-            const fileInfo = new TPortalFileInfo(`${fileName}_annot.json`, 'text/plain', file.size, file, Date.now());
-
-            fileInfo.attributes = {
-              originalFileName: `${fileName}_annot.json`,
-            };
-
-            fileInfo.online = false;
-            return fileInfo;
-          }
-        }
-        return undefined;
-      })()
-        .then(async (file: TPortalFileInfo | undefined) => {
-          if (file) {
-            if (this.toolSelectedOperation?.lastRound && this.toolSelectedOperation.task) {
-              this.toolSelectedOperation.lastRound.results.push(file);
-
-              const index = this.toolSelectedOperation.task.operations.findIndex((op) => {
-                return this.toolSelectedOperation && op.id === this.toolSelectedOperation.id;
-              });
-
-              // reset next operations
-              if (index > -1) {
-                for (let i = index + 1; i < this.toolSelectedOperation.task.operations.length; i++) {
-                  const operation = this.toolSelectedOperation.task.operations[i];
-                  operation.changeState(TaskStatus.PENDING);
-                }
-              }
-
-              if (
-                (this.toolSelectedOperation instanceof OCTRAOperation || this.toolSelectedOperation instanceof EmuOperation) &&
-                this.toolSelectedOperation.time
-              ) {
-                this.toolSelectedOperation.time.duration =
-                  (this.toolSelectedOperation.time.duration ?? 0) + Date.now() - this.toolSelectedOperation.time.start;
-              }
-
-              this.toolSelectedOperation.changeState(TaskStatus.FINISHED);
-              this.storage.saveTask(this.toolSelectedOperation.task, this.taskService.state.currentMode);
-
-              await wait(1);
-
-              if (
-                this.toolSelectedOperation &&
-                this.toolSelectedOperation.task &&
-                this.toolSelectedOperation.task.status === 'FINISHED' &&
-                this.toolSelectedOperation.task.asrOperation &&
-                this.toolSelectedOperation.task.asrOperation.serviceProvider &&
-                this.toolSelectedOperation.task.asrOperation.language
-              ) {
-                this.toolSelectedOperation.task.restart(this.httpClient, [
-                  {
-                    name: 'GoogleASR',
-                    value: this.taskService.accessCode,
-                  },
-                ]);
-              }
-              this.onBackButtonClicked();
-            }
-          }
-        })
-        .catch((error) => {
-          console.error(error);
+      if (data.name === 'OCTRA') {
+        this.modeStoreService.receiveToolData($event.data);
+      } else if (data.name === 'Emu WebApp') {
+        this.modeStoreService.receiveToolData({
+          status: 'success',
+          data: {
+            annotation: {
+              name: $event.data.data.annotation.name + '_annot.json',
+              content: JSON.stringify($event.data.data.annotation, null, 2),
+              type: 'application/json',
+              encoding: 'utf-8',
+            },
+          },
         });
+      }
     }
-
-     */
   }
 
   onBackButtonClicked() {

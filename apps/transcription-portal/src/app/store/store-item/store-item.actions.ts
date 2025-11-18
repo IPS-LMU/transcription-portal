@@ -3,6 +3,7 @@ import { IDBTaskItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreTaskOperation } from '../operation';
 import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
+import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
 export class StoreItemActions {
   static importTasks = createActionGroup({
@@ -31,7 +32,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         item: StoreItem;
-      }>()
+      }>(),
     },
   });
 
@@ -75,6 +76,13 @@ export class StoreItemActions {
       success: props<{
         mode: TPortalModes;
         id: number;
+        items: StoreItemsState;
+        counters: {
+          storeItem: number;
+          operation: number;
+          processingQueueItem: number;
+        };
+        addedItemIDs: number[];
       }>(),
       fail: props<{
         error: string;
@@ -212,84 +220,98 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         operation: StoreTaskOperation;
-      }>()
+      }>(),
     },
   });
 
   static runOperationWithTool = createActionGroup({
-      source: 'tasks/open operation with tool',
-      events: {
-        do: props<{
-          taskID: number;
-          operationID: number;
-          operationName: string;
-          language: string;
-          audioFile: StoreAudioFile;
-        }>(),
-        prepare: props<{
-          mode: TPortalModes;
-          taskID: number;
-          operationID: number;
-          roundIndex: number;
-          operationName: string;
-          language: string;
-        }>(),
-        success: props<{
-          mode: TPortalModes;
-          taskID: number;
-          operationID: number;
-          operationName: string;
-          language: string;
-          audioFile: StoreAudioFile;
-          transcript?: StoreFile;
-          url?: string;
-        }>(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'tasks/open operation with tool',
+    events: {
+      do: props<{
+        taskID: number;
+        operationID: number;
+        operationName: string;
+        language: string;
+        audioFile: StoreAudioFile;
+      }>(),
+      prepare: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operationID: number;
+        roundIndex: number;
+        operationName: string;
+        language: string;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operationID: number;
+        operationName: string;
+        language: string;
+        audioFile: StoreAudioFile;
+        transcript?: StoreFile;
+        url?: string;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
   static reuploadFilesForOperations = createActionGroup({
-      source: 'tasks/reupload files for operations',
-      events: {
-        do: props<{
-          mode: TPortalModes;
-          list: {
-            taskID: number;
-            operationID: number;
-            roundIndex: number;
-            files: StoreFile[];
-          }[];
-          actionAfterSuccess: Action;
-        }>(),
-        success: props<{
-          mode: TPortalModes;
-          list: {
-            taskID: number;
-            operationID: number;
-            roundIndex: number;
-            files: StoreFile[];
-          }[];
-          actionAfterSuccess: Action;
-        }>(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'tasks/reupload files for operations',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        list: {
+          taskID: number;
+          operationID: number;
+          roundIndex: number;
+          files: StoreFile[];
+        }[];
+        actionAfterSuccess: Action;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        list: {
+          taskID: number;
+          operationID: number;
+          roundIndex: number;
+          files: StoreFile[];
+        }[];
+        actionAfterSuccess: Action;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
-
 
   static updateTaskFiles = createActionGroup({
-      source: 'tasks/update files',
-      events: {
-        do: props<{
-          mode: TPortalModes;
-          taskID: number;
-          files: StoreFile[];
-        }>()
-      }
+    source: 'tasks/update files',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        taskID: number;
+        files: StoreFile[];
+      }>(),
+    },
   });
 
-
+  static receiveToolData = createActionGroup({
+    source: 'tasks/receive tool data',
+    events: {
+      do: props<OctraWindowMessageEventData>(),
+      prepare: props<{
+        file: StoreFile;
+      }>(),
+      success: props<{
+        taskID: number;
+        file: StoreFile;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
 }

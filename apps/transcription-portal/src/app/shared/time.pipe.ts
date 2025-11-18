@@ -6,7 +6,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class TimePipe implements PipeTransform {
   transform(value: any, args?: any): any {
-    // value are miliseconds
+    // value is in miliseconds
     if (!isNaN(Number(value))) {
       const miliseconds = Number(value);
 

@@ -267,7 +267,7 @@ export async function processFileInfo(file: StoreFile, queueItem: PreprocessingQ
       ...clonedFile,
       sampleRate: audioInfo.sampleRate,
       bitrate: audioInfo.bitrate,
-      duration: audioInfo.duration.seconds * 1000,
+      duration: audioInfo.duration.samples,
       channels: audioInfo.channels,
       audioBufferInfo: audioInfo.audioBufferInfo,
     };
