@@ -2,6 +2,7 @@ import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreItem } from '../store-item';
+import { ofType } from '@ngrx/effects';
 
 export interface IDBLoadSuccessResults{
   annotationTasks: IDBTaskItem[];
@@ -136,5 +137,14 @@ export class IDBActions {
       }
   });
 
-
+  static saveCounters = createActionGroup({
+      source: 'idb/save counters',
+      events: {
+        do: emptyProps(),
+        success: emptyProps(),
+        fail: props<{
+          error: string;
+        }>(),
+      }
+  });
 }

@@ -396,6 +396,46 @@ export class IDBEffects {
     ),
   );
 
+  saveCountersAfterPreprocessing$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.importItemsFromProcessingQueue.success),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) => {
+        return of(IDBActions.saveCounters.do());
+      }),
+    ),
+  );
+
+  saveCounters$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.saveCounters.do),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) =>
+        from(
+          this._idbm.intern.bulkPut([
+            {
+              name: 'taskCounter',
+              value: state.modes.counters.storeItem,
+            },
+            {
+              name: 'operationCounter',
+              value: state.modes.counters.operation,
+            },
+          ]),
+        ).pipe(
+          exhaustMap(() => of(IDBActions.saveCounters.success())),
+          catchError((err) =>
+            of(
+              IDBActions.saveCounters.fail({
+                error: typeof err === 'string' ? err : err?.message,
+              }),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   private loadIDB = async () => {
     await this._idbm.intern.put({
       name: 'version',
