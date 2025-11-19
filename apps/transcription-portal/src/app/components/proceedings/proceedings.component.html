@@ -63,39 +63,43 @@
       </div>
     }
     @if (popover.operation.parsedProtocol.length > 0) {
-      <div id="output-area">
-        <div style="width: 100%; text-align: right; padding: 0; margin-bottom: 0">
-          <button
-            (click)="copyProtocolToClipboard(popover.operation.protocol)"
-            class="btn btn-sm btn-outline-info"
-            style="font-size: 11px; cursor: pointer; margin-bottom: 0"
-          >
-            <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboards' | transloco }}
-          </button>
+      <div class="mt-3 border" id="output-area">
+        <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
+          <div class="col-sm text-light" style="font-size: 0.9rem">{{"g.protocol" | transloco}}</div>
+          <div class="col-auto">
+            <button
+              (click)="copyProtocolToClipboard(popover.operation.protocol)"
+              class="btn btn-sm btn-outline-light"
+              style="font-size: 11px; cursor: pointer; margin-bottom: 0"
+            >
+              <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboard' | transloco }}
+            </button>
+          </div>
         </div>
-        <table class="table table-sm table-striped" id="output-table">
-          <tbody>
-            @for (item of popover.operation.parsedProtocol; track item) {
-              <tr>
-                <td>
+        <div class="list-group" id="op-protocol-list">
+          @for (item of popover.operation.parsedProtocol; track item) {
+            <div
+              class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
+              [ngClass]="{
+                'list-group-item-warning': item.type === 'WARNING',
+                'list-group-item-danger': item.type === 'ERROR',
+              }"
+            >
+              <div class="row g-1">
+                <div class="col-auto">
                   @if (item.type === 'ERROR') {
                     <i class="bi bi-exclamation-circle" style="color: red"></i>
                   } @else {
                     <i class="bi bi-exclamation-triangle" style="color: orange"></i>
                   }
-                </td>
-                <td
-                  [ngClass]="{
-                    error: item.type === 'ERROR',
-                    warning: item.type === 'WARNING',
-                  }"
-                >
+                </div>
+                <div class="col text-break">
                   {{ item.message }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     }
   }
@@ -490,7 +494,6 @@
                     }"
                     [operation]="operation"
                     tportalProcColOperation
-                    [title]="'task ' + entry.id + ', ' + operation.lastRound?.lastResult?.online"
                   ></td>
                 }
                 <td class="export-col">

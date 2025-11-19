@@ -130,6 +130,7 @@ export class EmuOperation extends ToolOperation {
     }
 
     result.enabled = operationObj.enabled;
+    result.parseProtocol();
 
     return result;
   }

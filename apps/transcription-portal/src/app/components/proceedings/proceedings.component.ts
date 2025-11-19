@@ -12,6 +12,7 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
@@ -73,6 +74,7 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     NgTemplateOutlet,
     TranslocoPipe,
     UpperCasePipe,
+    ReactiveFormsModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -890,7 +892,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
 
   copyProtocolToClipboard(protocol?: string) {
     if (protocol) {
-      clipboard.writeText(protocol);
+      clipboard.writeText(protocol.replace(/g<br\/?>/g, '\n'));
     }
   }
 

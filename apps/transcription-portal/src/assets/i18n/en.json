@@ -43,7 +43,8 @@
     "version": "Version",
     "web developer": "Web Developer",
     "yes": "Yes",
-    "asr provider": "ASR Provider"
+    "asr provider": "ASR Provider",
+    "protocol": "Protocol"
   },
   "languages": {
     "de": "German",
@@ -218,7 +219,8 @@
     "reset options": "Reset options",
     "service provided by": "Service provided by",
     "service terms": "Service terms",
-    "back to table": "Back to table"
+    "back to table": "Back to table",
+    "no results": "No results found."
   },
   "popovers": {
     "file info": {

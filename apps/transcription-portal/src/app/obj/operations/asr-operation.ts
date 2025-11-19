@@ -126,6 +126,7 @@ export class ASROperation extends Operation {
       result.rounds.push(OperationProcessingRound.fromAny(roundObj));
     }
     result.enabled = operationObj.enabled;
+    result.parseProtocol();
 
     return result;
   }
@@ -201,14 +202,14 @@ export class ASROperation extends Operation {
                     resolve(file);
                   })
                   .catch((error) => {
-                    reject(error);
+                    reject(new Error(error?.error?.message ?? error?.message ?? error));
                   });
               } else {
-                reject(json.output);
+                reject(new Error(json.output));
               }
             },
             error: (error) => {
-              reject(error.message);
+              reject(new Error(error?.error?.message ?? error?.message ?? error));
             },
           });
       } else {
@@ -273,7 +274,15 @@ export class ASROperation extends Operation {
                       // only delete project on success
                       await this.deleteLSTASRProject(httpClient, projectName, this.serviceProvider);
                     } else {
-                      reject(result.body.errorMessage);
+                      const errorLog = result.body.outputs.find((o: any) => o.template === 'errorlog');
+                      try {
+                        const errorText = (await downloadFile(errorLog.url, 'text')) as unknown as string;
+                        console.error(new Error(`CLST RADBOUD ASR ERROR:\n${errorText}`));
+                      } catch (e) {
+                        console.error(new Error(`Can't download error.log from ${errorLog?.url}`));
+                        console.error(e);
+                      }
+                      reject(new Error(`Error from CLST Radboud ASR: ${result.body.errorMessage}\nERROR: CLST ASRService Projectname: ${projectName}`));
                     }
                   }
                 }
@@ -351,20 +360,20 @@ export class ASROperation extends Operation {
                         resolve(file as TPortalFileInfo);
                       })
                       .catch((error) => {
-                        reject(error);
+                        reject(new Error(error?.error?.message ?? error?.message ?? error));
                       });
                   }, 5000);
                 } else {
-                  reject(json.output);
+                  reject(new Error(json.output));
                 }
               },
               (error) => {
-                reject(error.message);
+                reject(new Error(error?.error?.message ?? error?.message ?? error));
               },
             );
         })
         .catch((error) => {
-          reject(error);
+          reject(new Error(error?.error?.message ?? error?.message ?? error));
         });
     });
   }

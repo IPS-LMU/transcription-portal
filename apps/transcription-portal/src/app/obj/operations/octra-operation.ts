@@ -119,6 +119,7 @@ export class OCTRAOperation extends ToolOperation {
       result.rounds.push(OperationProcessingRound.fromAny(round));
     }
     result.enabled = operationObj.enabled;
+    result.parseProtocol();
 
     if (result.state === TaskStatus.PROCESSING) {
       if (result.rounds.length > 0) {

@@ -251,19 +251,8 @@ table thead tr th:hover {
   width: 200px !important;
 }
 
-#output-table tr td {
-  vertical-align: top;
+#op-protocol-list .list-group-item {
   font-size: 0.7em;
-}
-
-#output-table .error {
-  color: red;
-}
-
-#output-area {
-  margin-top: 10px;
-  border: 1px solid aliceblue;
-  padding: 5px;
 }
 
 .export-col {

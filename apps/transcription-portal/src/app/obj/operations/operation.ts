@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { last, SubscriptionManager } from '@octra/utilities';
-import { FileInfo, FileInfoSerialized } from '@octra/web-media';
-import { Observable, Subject } from 'rxjs';
+import { FileInfoSerialized } from '@octra/web-media';
+import { Subject } from 'rxjs';
 import { IDBTaskItem } from '../../indexedDB';
 import { Task, TaskStatus } from '../tasks';
 import { TPortalAudioInfo, TPortalFileInfo } from '../TPortalFileInfoAttributes';
@@ -67,15 +67,26 @@ export class OperationProcessingRound implements IOperationProcessingRoundWithou
   }
 
   static fromAny(obj: OperationProcessingRoundSerialized): OperationProcessingRound {
+    let protocol = obj.protocol?.replace('¶', '');
+
+    if(protocol && protocol !== "") {
+      const foundError = /^ERROR/g.exec(protocol) !== null;
+      if (obj.status === "ERROR" && foundError) {
+        protocol = `ERROR: ${protocol}`;
+      } else if(!foundError) {
+        protocol = `WARNING: ${protocol}`;
+      }
+    }
+
     return new OperationProcessingRound({
       results: obj.results.map((a) => TPortalFileInfo.fromAny(a) as TPortalFileInfo),
       time: obj.time,
-      protocol: obj.protocol?.replace('¶', ''),
+      protocol,
       status: obj.status,
     });
   }
 
-  clone(){
+  clone() {
     return new OperationProcessingRound(this);
   }
 }
@@ -134,7 +145,12 @@ export abstract class Operation {
     this._serviceProvider = serviceProvider;
   }
 
-  public abstract start: (inputs: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], httpclient: HttpClient, accessCode?: string) => Promise<void>;
+  public abstract start: (
+    inputs: (TPortalFileInfo | TPortalAudioInfo)[],
+    operations: Operation[],
+    httpclient: HttpClient,
+    accessCode?: string,
+  ) => Promise<void>;
 
   get shortTitle(): string | undefined {
     return this._shortTitle;
@@ -387,7 +403,7 @@ export abstract class Operation {
     this.parseProtocol();
   }
 
-  private parseProtocol() {
+  protected parseProtocol() {
     if (!this.protocol) {
       this._parsedProtocol = [];
     } else {
@@ -421,8 +437,9 @@ export abstract class Operation {
         : undefined;
     }
     console.error(error);
-    this.changeState(TaskStatus.ERROR);
-    this.updateProtocol(error?.message?.replace(/\n/g, '<br/>'));
+    this.changeState(TaskStatus.ERROR)
+    console.log(error);
+    this.updateProtocol(`ERROR: ${error?.message?.replace(/\n/g, '<br/>')}`);
   }
 
   public destroy() {

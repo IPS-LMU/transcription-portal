@@ -133,6 +133,7 @@ export class TranslationOperation extends Operation {
       result.rounds.push(OperationProcessingRound.fromAny(round));
     }
     result.enabled = operationObj.enabled;
+    result.parseProtocol();
 
     return result;
   }

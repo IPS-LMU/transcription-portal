@@ -82,6 +82,7 @@ export class G2pMausOperation extends Operation {
       result.rounds.push(OperationProcessingRound.fromAny(round));
     }
     result.enabled = operationObj.enabled;
+    result.parseProtocol();
 
     return result;
   }
@@ -149,7 +150,8 @@ export class G2pMausOperation extends Operation {
 
                   resolve(file as TPortalFileInfo);
                 })
-                .catch((error: any) => reject(error));
+                .catch((error: any) =>
+                  reject(new Error(error?.error?.message ?? error?.message ?? error)));
             } else {
               reject(new Error(json.output));
             }
