@@ -8,6 +8,9 @@ import { ASROperation } from '../operations/asr-operation';
 import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
 import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../TPortalFileInfoAttributes';
 import { TaskEntry } from './task-entry';
+import { G2pMausOperation } from '../operations/g2p-maus-operation';
+import { SummarizationOperation } from '../operations/summarization-operation';
+import { TranslationOperation } from '../operations/translation-operation';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -39,6 +42,18 @@ export class Task {
 
   get asrOperation(): ASROperation {
     return this._operations[1] as ASROperation;
+  }
+
+  get mausOperation(): G2pMausOperation {
+    return this._operations[3] as G2pMausOperation;
+  }
+
+  get summarizationOperation(): SummarizationOperation {
+    return this._operations[3] as SummarizationOperation;
+  }
+
+  get translationOperation(): TranslationOperation {
+    return this._operations[3] as TranslationOperation;
   }
 
   constructor(files: (TPortalFileInfo | TPortalAudioInfo)[], operations: Operation[], directory?: TaskDirectory, id?: number) {

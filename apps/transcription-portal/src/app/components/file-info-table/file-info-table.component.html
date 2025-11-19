@@ -1,33 +1,33 @@
 @if (fileinfo) {
-  <table class="table table-responsive-md table-striped">
+  <table class="table table-responsive-md table-striped p-3 m-0">
     <tbody>
       <tr>
-        <td>{{ 'popovers.file info.original filename' | transloco }}:</td>
+        <td class="ps-3">{{ 'popovers.file info.original filename' | transloco }}:</td>
         <td>{{ fileinfo.attributes.originalFileName }}</td>
       </tr>
       <tr>
-        <td>{{ 'popovers.file info.escaped filename' | transloco }}:</td>
+        <td class="ps-3">{{ 'popovers.file info.escaped filename' | transloco }}:</td>
         <td>{{ fileinfo.fullname }}</td>
       </tr>
       <tr>
-        <td>{{ 'popovers.file info.type' | transloco }}:</td>
+        <td class="ps-3">{{ 'popovers.file info.type' | transloco }}:</td>
         <td>{{ fileinfo.type }}</td>
       </tr>
       <tr>
-        <td>{{ 'popovers.file info.size' | transloco }}:</td>
+        <td class="ps-3">{{ 'popovers.file info.size' | transloco }}:</td>
         <td>{{ fileinfo.size | filesize }}</td>
       </tr>
       @if (isWavFile()) {
         <tr>
-          <td>{{ 'popovers.file info.sampling rate' | transloco }}:</td>
+          <td class="ps-3">{{ 'popovers.file info.sampling rate' | transloco }}:</td>
           <td>{{ fileinfo.sampleRate }}</td>
         </tr>
         <tr>
-          <td>{{ 'popovers.file info.bits per seconds' | transloco }}:</td>
+          <td class="ps-3">{{ 'popovers.file info.bits per seconds' | transloco }}:</td>
           <td>{{ fileinfo.bitrate }}</td>
         </tr>
         <tr>
-          <td
+          <td class="ps-3"
             [ngClass]="{
               red: fileinfo.channels > 1,
             }"
@@ -38,12 +38,10 @@
             [ngClass]="{
               red: fileinfo.channels > 1,
             }"
-          >
-            {{ fileinfo.channels }}
-          </td>
+          >{{ fileinfo.channels }}</td>
         </tr>
         <tr>
-          <td>{{ 'popovers.file info.duration' | transloco }}:</td>
+          <td class="ps-3">{{ 'popovers.file info.duration' | transloco }}:</td>
           <td>{{ fileinfo.duration.unix | time }}</td>
         </tr>
       }

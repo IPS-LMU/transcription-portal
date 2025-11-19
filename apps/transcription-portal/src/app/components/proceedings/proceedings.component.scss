@@ -277,3 +277,13 @@ table thead tr th:hover {
 .fixed-table-layout {
   table-layout: fixed;
 }
+
+.options-info-table tbody tr td {
+  font-size: 11px;
+  padding: 3px;
+}
+
+.info-table-header {
+  font-weight: bold;
+  font-size: 13px;
+}

@@ -13,8 +13,10 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { wait } from '@octra/utilities';
 import { Shortcut, ShortcutGroup } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
 import { HotkeysEvent } from 'hotkeys-js';
@@ -47,7 +49,6 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -599,6 +600,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     if (!task) {
       return;
     }
+    this.popover.mouseIn = true;
     // show Popover for normal operations only
     if (this.popoverRef) {
       const y = $event.clientY + 10;
@@ -618,14 +620,19 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     if (!task) {
       return;
     }
-    this.togglePopover(false);
-    task.mouseover = false;
+    this.popover.mouseIn = false;
+    wait(0.2).then(() => {
+      if (!this.popover.mouseIn) {
+        this.togglePopover(false);
+      }
+    });
   }
 
   onInfoMouseOver($event: MouseEvent, task?: Task) {
     if (!task) {
       return;
     }
+    this.popover.mouseIn = true;
     task.mouseover = true;
   }
 

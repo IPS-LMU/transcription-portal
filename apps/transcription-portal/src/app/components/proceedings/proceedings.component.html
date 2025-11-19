@@ -100,13 +100,55 @@
     }
   }
   @if (popover.operation === undefined && popover.task) {
-    <span>{{ 'g.language' | transloco }}: {{ popover.task.asrOperation.language }}</span>
-    @if (popover.task && popover.task.asrOperation.serviceProvider) {
-      <span> , {{ 'g.asr' | transloco }}: {{ popover.task.asrOperation.serviceProvider }} </span>
-    }
-    <br /><br />
-    <span>File information:</span>
-    <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
+    <div class="card mb-3">
+      <div class="card-header">Task Options</div>
+      <div class="card-body p-0">
+        <table class="table table-striped table-sm options-info-table p-3 m-0">
+          <tbody class="">
+            <tr>
+              <td class="ps-3">{{ 'g.language' | transloco }}:</td>
+              <td>{{ popover.task.asrOperation.language }}</td>
+            </tr>
+            <tr>
+              <td class="ps-3">{{ 'g.asr provider' | transloco }}:</td>
+              <td>{{ popover.task.asrOperation.serviceProvider?.provider }}</td>
+            </tr>
+            @if (taskService.state.currentMode === 'annotation') {
+              @if (popover.task.asrOperation.diarization?.enabled) {
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.diarization.name' | transloco }}:</td>
+                  <td>Enabled</td>
+                </tr>
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</td>
+                  <td>{{ popover.task.asrOperation.diarization?.speakers }}</td>
+                </tr>
+              }
+              <tr>
+                <td class="ps-3">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</td>
+                <td>{{ popover.task.mausOperation.language }}</td>
+              </tr>
+            } @else if (taskService.state.currentMode === 'summarization') {
+              <tr>
+                <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
+                <td>{{ popover.task.summarizationOperation.maxNumberOfWords }}</td>
+              </tr>
+              <tr>
+                <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
+                <td>{{ popover.task.translationOperation.language }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Audio information</div>
+      <div class="card-body p-0">
+        <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
+      </div>
+    </div>
   }
 </tportal-popover>
 

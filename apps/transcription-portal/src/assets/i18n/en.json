@@ -42,7 +42,8 @@
     "valid": "Valid",
     "version": "Version",
     "web developer": "Web Developer",
-    "yes": "Yes"
+    "yes": "Yes",
+    "asr provider": "ASR Provider"
   },
   "languages": {
     "de": "German",
