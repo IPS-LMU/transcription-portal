@@ -340,10 +340,10 @@
   </ul>
   <!-- SUB-HEADER OVERVIEW -->
   @if (!showtool) {
-    <div class="row proceedings-header" style="padding-top: 0">
-      <div class="col-4" style="text-align: left; padding-top: 5px">
+    <div class="row proceedings-header d-flex" style="padding-top: 0">
+      <div class="col-auto" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
-          <i class="bi bi-plus"></i><span class="d-none d-lg-inline d-xl-inline"> 1. {{ 'buttons.add files' | transloco | uppercase }}</span>
+          <i class="bi bi-plus"></i> 1.<span class="d-none d-lg-inline d-xl-inline"> {{ 'buttons.add files' | transloco | uppercase }}</span>
         </button>
         <!-- webkitdirectory directory multiple -->
         <input #fileinput (change)="onFileChange(fileinput)" class="fileinput" multiple style="display: none" type="file" value="Select audio file" />
@@ -353,19 +353,19 @@
           class="btn btn-primary"
           style="margin-left: 10px"
         >
-          <i class="bi bi-clipboard-check-fill"></i>
-          <span class="d-none d-lg-inline d-xl-inline"> 2. {{ 'buttons.check options' | transloco | uppercase }}</span>
+          <i class="bi bi-clipboard-check-fill"></i> 2.
+          <span class="d-none d-lg-inline d-xl-inline"> {{ 'buttons.check options' | transloco | uppercase }}</span>
           @if (taskService.currentModeStatistics.queued > 0) {
             ({{ taskService.currentModeStatistics.queued }})
           }
         </button>
       </div>
-      <div class="col-4">
+      <div class="col">
         <div id="overall-state">
           {{ taskService.stateLabel }}
         </div>
       </div>
-      <div class="col-4" style="text-align: right; padding-top: 5px">
+      <div class="col-auto" style="text-align: right; padding-top: 5px">
         <button (click)="onStartClick()" [disabled]="!taskService.state.currentModeState.newfiles" class="btn btn-primary">
           <i
             [ngClass]="{
@@ -375,12 +375,13 @@
             aria-hidden="true"
             class="bi"
           ></i
-          ><span class="d-none d-lg-inline d-xl-inline">
+          >3.
+          <span class="d-none d-lg-inline d-xl-inline">
             @if (!taskService.isProcessing) {
-              3. {{ 'buttons.start processing' | transloco | uppercase }}
+              {{ 'buttons.start processing' | transloco | uppercase }}
             }
             @if (taskService.isProcessing) {
-              3. {{ 'buttons.stop processing' | transloco | uppercase }}
+              {{ 'buttons.stop processing' | transloco | uppercase }}
             }
           </span>
         </button>

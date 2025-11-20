@@ -3,7 +3,6 @@ import {
   Directive,
   ElementRef,
   EventEmitter,
-  HostListener,
   inject,
   Input,
   OnChanges,
@@ -52,6 +51,7 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   private unlistenRepeatClick?: () => void;
+  private wrapper?: HTMLElement;
 
   ngOnChanges(changes: SimpleChanges) {
     if (hasProperty(changes, 'shortStyle') && changes['shortStyle'].currentValue !== undefined) {
@@ -94,12 +94,25 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   private updateView() {
     if (this.elementRef.nativeElement) {
+      if (this.wrapper) {
+        this.wrapper.removeEventListener('mouseenter', this.onMouseEnter);
+        this.wrapper.removeEventListener('mouseleave', this.onMouseLeave);
+        this.wrapper.removeEventListener('mouseover', this.onMouseOver);
+      }
       this.clearContents();
 
       if (this._entry) {
         this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
+        this.wrapper = this.renderer.createElement('div');
+        this.renderer.addClass(this.wrapper!, 'text-center');
+        this.renderer.addClass(this.wrapper!, 'd-inline');
+        this.renderer.appendChild(this.elementRef.nativeElement, this.wrapper);
 
-        if (this._operation) {
+        if (this._operation && this.wrapper) {
+          this.wrapper.addEventListener('mouseenter', this.onMouseEnter);
+          this.wrapper.addEventListener('mouseleave', this.onMouseLeave);
+          this.wrapper.addEventListener('mouseover', this.onMouseOver);
+
           const anyResultNotAvailable = this._operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
 
           if (this._operation.state === 'FINISHED' && anyResultNotAvailable) {
@@ -109,26 +122,22 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
             this.renderer.addClass(icon, 'bi');
             this.renderer.addClass(icon, 'bi-wifi-off');
             this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-            this.renderer.appendChild(this.elementRef.nativeElement, icon);
+            this.renderer.appendChild(this.wrapper, icon);
           } else {
             // result is available
             if (this._operation.enabled) {
-              const wrapper = this.renderer.createElement('div');
-              this.renderer.setStyle(wrapper, 'display', 'inline');
-              wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
-              this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
-
-              this.renderer.removeClass(this.elementRef.nativeElement, 'op-deactivated');
+              this.wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
+              this.renderer.removeClass(this.wrapper, 'op-deactivated');
             } else {
               // operation disabled
-              this.renderer.addClass(this.elementRef.nativeElement, 'op-deactivated');
+              this.renderer.addClass(this.wrapper, 'op-deactivated');
 
               const icon = this.renderer.createElement('i');
               this.renderer.addClass(icon, 'bi');
               this.renderer.addClass(icon, 'bi-arrow-right-circle');
               this.renderer.setStyle(icon, 'color', 'gray');
               this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-              this.renderer.appendChild(this.elementRef.nativeElement, icon);
+              this.renderer.appendChild(this.wrapper, icon);
             }
           }
         }
@@ -165,24 +174,22 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     }
   };
 
-  @HostListener('mouseleave', ['$event'])
-  onMouseLeave(event: MouseEvent) {
+  onMouseLeave = (event: MouseEvent) => {
     if (this._operation?.state === 'ERROR') {
       this.updateView();
     }
     this.operationMouseLeave.next(event);
-  }
+  };
 
-  @HostListener('mouseenter', ['$event'])
-  onMouseEnter(event: MouseEvent) {
+  onMouseEnter = (event: MouseEvent) => {
     if (this._operation?.state === 'ERROR') {
       console.log(`ERROR REPEAT OVER ${this._operation?.id}`);
       const icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'bi');
       this.renderer.addClass(icon, 'bi-arrow-clockwise');
       this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-      this.renderer.setProperty(this.elementRef.nativeElement, 'innerHTML', '');
-      this.renderer.appendChild(this.elementRef.nativeElement, icon);
+      this.renderer.setProperty(this.wrapper!, 'innerHTML', '');
+      this.renderer.appendChild(this.wrapper!, icon);
 
       if (this.unlistenRepeatClick) {
         this.unlistenRepeatClick();
@@ -191,10 +198,9 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
       this.unlistenRepeatClick = this.renderer.listen(icon, 'click', this.onRepeatIconClick);
     }
     this.operationMouseEnter.next(event);
-  }
+  };
 
-  @HostListener('mouseover', ['$event'])
-  onMouseOver(event: MouseEvent) {
+  onMouseOver = (event: MouseEvent) => {
     this.operationMouseOver.next(event);
-  }
+  };
 }
