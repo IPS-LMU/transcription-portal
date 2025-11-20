@@ -5,12 +5,12 @@ import { Observable, ReplaySubject, Subject, Subscription } from 'rxjs';
 import { AudioFileInfoSerialized, IDBTaskItem } from '../../indexedDB';
 import { OHCommand } from '../oh-config';
 import { ASROperation } from '../operations/asr-operation';
-import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
-import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../TPortalFileInfoAttributes';
-import { TaskEntry } from './task-entry';
 import { G2pMausOperation } from '../operations/g2p-maus-operation';
+import { IAccessCode, IOperation, Operation, OperationOptions } from '../operations/operation';
 import { SummarizationOperation } from '../operations/summarization-operation';
 import { TranslationOperation } from '../operations/translation-operation';
+import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../TPortalFileInfoAttributes';
+import { TaskEntry } from './task-entry';
 
 export enum TaskStatus {
   INACTIVE = 'INACTIVE',
@@ -211,9 +211,11 @@ export class Task {
     for (const operation of this.operations) {
       if (operation.state === TaskStatus.ERROR) {
         // restart failed operation
-        operation.changeState(TaskStatus.READY);
+        operation.changeState(TaskStatus.PENDING);
+        operation.lastRound!.protocol = "";
+        operation.lastRound!.time = undefined;
         this.changeState(TaskStatus.PENDING);
-        this.restart(httpclient, accessCodes);
+        // this.restart(httpclient, accessCodes);
         break;
       }
     }
@@ -322,6 +324,15 @@ export class Task {
 
   public resumeTask() {
     this.stopRequested = false;
+    if (this.status === TaskStatus.ERROR) {
+      this.changeState(TaskStatus.PENDING);
+      for (const operation of this.operations) {
+        if (operation.state === TaskStatus.ERROR) {
+          // reset from ERROR to pending
+          operation.changeState(TaskStatus.PENDING);
+        }
+      }
+    }
   }
 
   protected listenToOperationChanges() {

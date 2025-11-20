@@ -111,7 +111,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-info-circle" style="color: purple"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.about' | transloco }}</span></a
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.about.name' | transloco }}</span></a
             >
           </li>
           <li class="nav-item active">
@@ -123,7 +123,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-book" style="color: cornflowerblue"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide' | transloco }}</span></a
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
             >
           </li>
           @if (settingsService.feedbackEnabled) {
@@ -137,7 +137,7 @@
                   }"
                 ></i
                 ><span style="cursor: pointer">
-                  <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.feedback' | transloco }}</span></span
+                  <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.feedback.name' | transloco }}</span></span
                 >
               </a>
             </li>
@@ -150,14 +150,14 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-bar-chart-line" style="color: #ff6a00"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.statistics' | transloco }}</span></span
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.statistics.name' | transloco }}</span></span
             >
           </li>
           <li class="nav-item active">
             <a
               class="pointer"
               (click)="notification.permissionGranted = !notification.permissionGranted"
-              ngbPopover="Notifications"
+              [ngbPopover]="'navigation.notifications.description' | transloco"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               style="color: black; text-decoration: none"
@@ -171,7 +171,7 @@
                 class="bi"
                 style="cursor: pointer"
               ></i
-              ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.notifications' | transloco }}</span>
+              ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.notifications.name' | transloco }}</span>
             </a>
           </li>
           <li class="nav-item active">
@@ -185,7 +185,7 @@
                 triggers="mouseenter:mouseleave"
               >
                 <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
-                ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.settings' | transloco }}</span>
+                ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.settings.name' | transloco }}</span>
               </div>
               <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
                 <div class="list-group">

@@ -33,7 +33,7 @@ export class DownloadService {
       const foundTranscriptResult = round.results.find((a) => !a.isMediaFile());
 
       if (!foundTranscriptResult) {
-        reject('operationResult is undefined!');
+        resolve([]);
         return;
       }
       const promises: Promise<{

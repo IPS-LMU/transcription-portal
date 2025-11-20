@@ -140,10 +140,15 @@ tbody .bi.bi-arrow-up {
   align-items: center;
 }
 
-.divider-text::before, .divider-text::after {
+.divider-text::before,
+.divider-text::after {
   flex: 1;
   content: '';
   padding: 1px;
   background-color: whitesmoke;
   margin: 5px;
+}
+
+octra-version-notification .bi.bi-x-lg {
+  color: black !important;
 }

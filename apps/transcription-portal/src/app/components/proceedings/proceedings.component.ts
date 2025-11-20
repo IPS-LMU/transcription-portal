@@ -534,11 +534,10 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
 
         const top =
           icon.offsetTop +
-          parentNode.offsetTop +
           this.inner.nativeElement.parentElement.parentElement.parentElement.parentElement.parentElement.offsetTop -
           this.inner.nativeElement.scrollTop +
-          icon.offsetHeight;
-        this.popover.y = top + this.popoverRef.height + 20 > window.innerHeight ? top - this.popover.height - icon.offsetHeight + 10 : top;
+          icon.offsetHeight * (2 / 3);
+        this.popover.y = top + this.popoverRef.height + 20 > window.innerHeight ? top - this.popover.height - icon.offsetHeight / 3 : top;
       }
 
       this.togglePopover(true);

@@ -1,9 +1,9 @@
 import {
   AfterViewInit,
   Directive,
-  DoCheck,
   ElementRef,
   EventEmitter,
+  HostListener,
   inject,
   Input,
   OnChanges,
@@ -13,7 +13,6 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { hasProperty, SubscriptionManager } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
 import { Subscription } from 'rxjs';
 import { Operation } from '../../../obj/operations/operation';
 import { Task } from '../../../obj/tasks';
@@ -51,6 +50,8 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager = new SubscriptionManager<Subscription>();
+
+  private unlistenRepeatClick?: () => void;
 
   ngOnChanges(changes: SimpleChanges) {
     if (hasProperty(changes, 'shortStyle') && changes['shortStyle'].currentValue !== undefined) {
@@ -112,25 +113,10 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
           } else {
             // result is available
             if (this._operation.enabled) {
-              let icon = null;
-              if (!(this._operation.mouseover && this._operation.state === 'ERROR')) {
-                const wrapper = this.renderer.createElement('div');
-                this.renderer.setStyle(wrapper, 'display', 'inline');
-                wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
-
-                this.renderer.listen(wrapper, 'mouseover', this.onMouseOver);
-                this.renderer.listen(wrapper, 'mouseenter', this.onMouseEnter);
-                this.renderer.listen(wrapper, 'mouseleave', this.onMouseLeave);
-                this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
-              } else {
-                icon = this.renderer.createElement('i');
-                this.renderer.addClass(icon, 'bi');
-                this.renderer.addClass(icon, 'bi-arrow-clockwise');
-                this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-                this.renderer.appendChild(this.elementRef.nativeElement, icon);
-
-                this.renderer.listen(icon, 'click', this.onRepeatIconClick);
-              }
+              const wrapper = this.renderer.createElement('div');
+              this.renderer.setStyle(wrapper, 'display', 'inline');
+              wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
+              this.renderer.appendChild(this.elementRef.nativeElement, wrapper);
 
               this.renderer.removeClass(this.elementRef.nativeElement, 'op-deactivated');
             } else {
@@ -168,18 +154,6 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
     }
   }
 
-  private onMouseOver = (event: MouseEvent) => {
-    this.operationMouseOver.next(event);
-  };
-
-  private onMouseEnter = (event: MouseEvent) => {
-    this.operationMouseEnter.next(event);
-  };
-
-  private onMouseLeave = (event: MouseEvent) => {
-    this.operationMouseLeave.next(event);
-  };
-
   private onRepeatIconClick = () => {
     if (this._entry?.operations && this._entry.operations[1].serviceProvider) {
       this._entry.restartFailedOperation(this.taskService.httpclient, [
@@ -190,4 +164,37 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
       ]);
     }
   };
+
+  @HostListener('mouseleave', ['$event'])
+  onMouseLeave(event: MouseEvent) {
+    if (this._operation?.state === 'ERROR') {
+      this.updateView();
+    }
+    this.operationMouseLeave.next(event);
+  }
+
+  @HostListener('mouseenter', ['$event'])
+  onMouseEnter(event: MouseEvent) {
+    if (this._operation?.state === 'ERROR') {
+      console.log(`ERROR REPEAT OVER ${this._operation?.id}`);
+      const icon = this.renderer.createElement('i');
+      this.renderer.addClass(icon, 'bi');
+      this.renderer.addClass(icon, 'bi-arrow-clockwise');
+      this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+      this.renderer.setProperty(this.elementRef.nativeElement, 'innerHTML', '');
+      this.renderer.appendChild(this.elementRef.nativeElement, icon);
+
+      if (this.unlistenRepeatClick) {
+        this.unlistenRepeatClick();
+        this.unlistenRepeatClick = undefined;
+      }
+      this.unlistenRepeatClick = this.renderer.listen(icon, 'click', this.onRepeatIconClick);
+    }
+    this.operationMouseEnter.next(event);
+  }
+
+  @HostListener('mouseover', ['$event'])
+  onMouseOver(event: MouseEvent) {
+    this.operationMouseOver.next(event);
+  }
 }
