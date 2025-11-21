@@ -367,7 +367,11 @@ export class TaskService {
           // TODO check this
         }
       } else if (event.state === 'changed') {
-        // not implemented yet
+        if (event.saveToDB) {
+          this.storage.saveTask(event.entry, mode).catch((error) => {
+            console.error(error);
+          });
+        }
       }
     };
   };

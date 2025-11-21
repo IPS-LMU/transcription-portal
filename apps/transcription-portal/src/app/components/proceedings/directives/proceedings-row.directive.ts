@@ -1,7 +1,7 @@
 import { AfterViewInit, Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges, inject } from '@angular/core';
 import { hasProperty } from '@octra/utilities';
 import { Operation } from '../../../obj/operations/operation';
-import { Task, TaskDirectory } from '../../../obj/tasks';
+import { Task, TaskDirectory, TaskStatus } from '../../../obj/tasks';
 
 @Directive({
   selector: '[tportalProceedingsRow]',
@@ -46,6 +46,8 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
         this.renderer.removeClass(this.elementRef.nativeElement, 'row-selected');
       }
     }
+
+    this.updateGUI();
   }
 
   ngAfterViewInit() {
@@ -53,6 +55,18 @@ export class ProceedingsRowDirective implements OnChanges, AfterViewInit {
       // entry set
     } else {
       throw new Error('ProceedingsRowDirective error: no entry set');
+    }
+  }
+
+  updateGUI() {
+    if (this.entry) {
+      if (this.entry instanceof Task) {
+        if (this.entry.status === TaskStatus.DISABLED) {
+          this.renderer.addClass(this.elementRef.nativeElement, 'task-stopped');
+        } else {
+          this.renderer.removeClass(this.elementRef.nativeElement, 'task-stopped');
+        }
+      }
     }
   }
 }

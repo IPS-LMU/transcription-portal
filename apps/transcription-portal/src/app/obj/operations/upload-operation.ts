@@ -185,44 +185,6 @@ export class UploadOperation extends Operation {
     }
   };
 
-  public override getStateIcon = (sanitizer: DomSanitizer): SafeHtml => {
-    let result = '';
-    switch (this.state) {
-      case TaskStatus.PENDING:
-        result = '';
-        break;
-      case TaskStatus.UPLOADING:
-        if (this.progress > 0) {
-          this.updateEstimatedEnd();
-          const time = this.estimatedEnd ? this.estimatedEnd - Date.now() : 0;
-          result =
-            '<i class="bi bi-cloud-upload" aria-hidden="true" style="color: cornflowerblue"></i> ' +
-            '<span>' +
-            new TimePipe().transform(time) +
-            '</span>';
-        } else {
-          result = `<div class="spinner-border spinner-border-small" style="height:15px;" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        }
-        break;
-      case TaskStatus.PROCESSING:
-        result = '<i class="bi bi-gear spin"></i>\n' + '<span class="sr-only">Loading...</span>';
-        break;
-      case TaskStatus.FINISHED:
-        result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
-        break;
-      case TaskStatus.READY:
-        result = '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
-        break;
-      case TaskStatus.ERROR:
-        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
-        break;
-    }
-
-    return sanitizer.bypassSecurityTrustHtml(result);
-  };
-
   public override getStateIcon2 = (state: TaskStatus): string => {
     let result = '';
 

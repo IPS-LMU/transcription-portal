@@ -276,3 +276,7 @@ table thead tr th:hover {
   font-weight: bold;
   font-size: 13px;
 }
+
+tr.task-stopped{
+  opacity: 0.5;
+}

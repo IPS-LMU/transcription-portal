@@ -41,35 +41,6 @@ export class OCTRAOperation extends ToolOperation {
     throw new Error('Octra will not be started automatically.');
   };
 
-  public override getStateIcon = (sanitizer: DomSanitizer) => {
-    let result = '';
-
-    switch (this.state) {
-      case TaskStatus.PENDING:
-        result = ``;
-        break;
-      case TaskStatus.UPLOADING:
-        result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        break;
-      case TaskStatus.PROCESSING:
-        result = '<i class="bi bi-gear-fill spin link" aria-hidden="true"></i>';
-        break;
-      case TaskStatus.FINISHED:
-        result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
-        break;
-      case TaskStatus.READY:
-        result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
-        break;
-      case TaskStatus.ERROR:
-        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
-        break;
-    }
-
-    return sanitizer.bypassSecurityTrustHtml(result);
-  };
-
   public override getStateIcon2 = () => {
     let result = '';
 

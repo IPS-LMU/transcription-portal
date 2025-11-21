@@ -1,17 +1,5 @@
 import { NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  EventEmitter,
-  inject,
-  Input,
-  OnDestroy,
-  OnInit,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -76,7 +64,6 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     UpperCasePipe,
     ReactiveFormsModule,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProceedingsComponent extends SubscriberComponent implements OnInit, OnDestroy {
   sanitizer = inject(DomSanitizer);
@@ -236,13 +223,13 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
   }
 
   onDragOver($event: DragEvent) {
-    $event.stopPropagation();
-    $event.preventDefault();
     if ($event.dataTransfer) {
       $event.dataTransfer.dropEffect = 'copy';
     }
     this.isDragging = true;
 
+    $event.stopPropagation();
+    $event.preventDefault();
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
@@ -266,13 +253,7 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     $event.preventDefault();
   }
 
-  public getStateIcon(operation: Operation) {
-    return operation.getStateIcon(this.sanitizer, operation.state);
-  }
-
   onDrop($event: DragEvent) {
-    $event.stopPropagation();
-    $event.preventDefault();
     this.isDragging = false;
 
     const promises: Promise<void>[] = [];
@@ -331,6 +312,8 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     } else {
       this.afterdrop.error(`file api not supported`);
     }
+    $event.stopPropagation();
+    $event.preventDefault();
   }
 
   onContextBlur() {
@@ -339,29 +322,30 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
   }
 
   cancelContextMenu($event: MouseEvent) {
-    if (!this.contextmenu.hidden) {
-      $event.preventDefault();
-    }
+    this.contextmenu.hidden = true;
+    $event.preventDefault();
   }
 
-  onContextMenu($event: MouseEvent, row: HTMLTableRowElement) {
+  onContextMenu($event: MouseEvent, row: HTMLTableRowElement, entry: Task | TaskDirectory) {
+    setTimeout(() => {
+      const taskList = this.taskService.state.currentModeState.taskList;
+
+      if (entry && entry instanceof Task && taskList && this.taskService.currentModeState) {
+        if (this.taskService.currentModeState.selectedRows.length <= 1) {
+          this.taskService.currentModeState.selectedRows = [];
+          const index = taskList.getIndexByEntry(entry);
+          this.taskService.currentModeState.selectedRows.push(index);
+        }
+        this.contextmenu.x = $event.x - 20;
+        this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
+        this.contextmenu.hidden = false;
+        console.log('SHOW CONTEXT MENU!');
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      }
+    }, 0);
     $event.preventDefault();
     $event.stopPropagation();
-    const task = this.popover.task ?? this.popover.directory;
-    const taskList = this.taskService.state.currentModeState.taskList;
-
-    if (task && taskList && this.taskService.currentModeState) {
-      if (this.taskService.currentModeState.selectedRows.length <= 1) {
-        this.taskService.currentModeState.selectedRows = [];
-        const index = taskList.getIndexByEntry(task);
-        this.taskService.currentModeState.selectedRows.push(index);
-      }
-      this.contextmenu.x = $event.x - 20;
-      this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
-      this.contextmenu.hidden = false;
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-    }
   }
 
   onRowSelected(entry: Task | TaskDirectory, operation?: Operation) {
@@ -439,6 +423,10 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
         this.removeAppendings();
       } else if (option === 'download') {
         this.openArchiveDownload('line', this.selectedOperation, this.taskService.currentModeState.selectedRows);
+      } else if (option === 'disable-tasks') {
+        this.stopSelectedTasks(true);
+      } else if (option === 'enable-tasks') {
+        this.stopSelectedTasks(false);
       }
     }
     this.contextmenu.hidden = true;
@@ -507,6 +495,10 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
 
     this.cd.markForCheck();
     this.cd.detectChanges();
+  }
+
+  onOperationRepeatClick($event: MouseEvent, operation: Operation) {
+    this.popover.state = 'closed';
   }
 
   onOperationMouseEnter($event: MouseEvent, operation: Operation, td: HTMLTableCellElement) {
@@ -772,16 +764,18 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
   }
 
   public onOperationClick($event: MouseEvent, operation: Operation) {
-    if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
-      this.popover.state = 'closed';
-      console.log('operation click selected close');
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-      this.selectedOperation = undefined;
-    } else {
-      this.selectedOperation = operation;
+    if ($event.buttons === 1) {
+      if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
+        this.popover.state = 'closed';
+        console.log('operation click selected close');
+        this.selectedOperation = undefined;
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      } else {
+        this.selectedOperation = operation;
+      }
+      this.operationclick.emit(operation);
     }
-    this.operationclick.emit(operation);
   }
 
   openArchiveDownload(type: 'column' | 'line', operation: Operation | undefined, selectedLines: number[]) {
@@ -937,6 +931,50 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
       this.taskService.state.currentModeState.taskList?.removeEntry(entry, true).catch((error) => {
         console.error(error);
       });
+    }
+
+    this.taskService.currentModeState!.selectedRows = [];
+    this.shiftStart = -1;
+    this.cd.markForCheck();
+  }
+
+  private stopSelectedTasks(stop: boolean) {
+    const removeQueue: (Task | TaskDirectory)[] = [];
+    const taskList = this.taskService.state.currentModeState.taskList;
+    if (taskList && this.taskService.currentModeState) {
+      for (const index of this.taskService.currentModeState.selectedRows) {
+        const entry = taskList.getEntryByIndex(index);
+
+        let dirFound = false;
+        if (entry instanceof Task && !(entry.directory === null || entry.directory === undefined)) {
+          const dirIndex = taskList.getIndexByEntry(entry.directory);
+
+          // found folder?
+          dirFound =
+            this.taskService.currentModeState.selectedRows.findIndex((a) => {
+              return a === dirIndex;
+            }) > -1;
+        }
+
+        if (entry === null) {
+          console.error(`can't remove! entry is null!`);
+        }
+
+        if (!dirFound && entry !== null) {
+          removeQueue.push(entry);
+        }
+      }
+    }
+
+    for (const entry of removeQueue) {
+      if (entry instanceof Task) {
+        entry.disableTask(stop);
+      } else {
+        for (const dirEntry of entry.entries) {
+          (dirEntry as Task).disableTask(stop);
+        }
+      }
+      this.taskService.state.currentModeState.taskList?.changeEntry(entry.id, entry, true);
     }
 
     this.taskService.currentModeState!.selectedRows = [];

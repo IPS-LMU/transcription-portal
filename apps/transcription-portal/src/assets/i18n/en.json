@@ -9,6 +9,8 @@
     "stop processing": "Stop processing"
   },
   "context menu": {
+    "enable tasks": "Enable tasks",
+    "disable tasks": "Disable tasks",
     "remove attachments": "Remove attachments",
     "delete selected lines": "Delete selected lines",
     "download selected lines": "Download selected lines"

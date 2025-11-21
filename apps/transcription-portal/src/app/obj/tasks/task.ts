@@ -22,6 +22,7 @@ export enum TaskStatus {
   SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
   ERROR = 'ERROR',
+  DISABLED = 'DISABLED',
 }
 
 export class Task {
@@ -182,7 +183,7 @@ export class Task {
     const isSomethingPending = task.operations.findIndex((a) => a.state === TaskStatus.PENDING) > -1;
     const isSomethingReady = task.operations.findIndex((a) => a.state === TaskStatus.READY) > -1;
 
-    if (task.status !== TaskStatus.QUEUED) {
+    if (task.status !== TaskStatus.QUEUED && task.status !== TaskStatus.DISABLED) {
       if (isSomethingPending) {
         task.changeState(TaskStatus.PENDING);
       } else if (isSomethingReady) {
@@ -212,12 +213,35 @@ export class Task {
       if (operation.state === TaskStatus.ERROR) {
         // restart failed operation
         operation.changeState(TaskStatus.PENDING);
-        operation.lastRound!.protocol = "";
+        operation.lastRound!.protocol = '';
         operation.lastRound!.time = undefined;
         this.changeState(TaskStatus.PENDING);
         // this.restart(httpclient, accessCodes);
         break;
       }
+    }
+  }
+
+  public disableTask(stop: boolean) {
+    for (const operation of this.operations) {
+      if (stop) {
+        if (operation.state === TaskStatus.PROCESSING) {
+          operation.stop();
+          break;
+        }
+      } else {
+        if (operation.state === TaskStatus.DISABLED) {
+          operation.destroy();
+          operation.addProcessingRound();
+          break;
+        }
+      }
+    }
+
+    if (stop) {
+      this.changeState(TaskStatus.DISABLED);
+    } else {
+      this.changeState(TaskStatus.PENDING);
     }
   }
 
@@ -320,6 +344,13 @@ export class Task {
 
   public stopTask() {
     this.stopRequested = true;
+    this.changeState(TaskStatus.PENDING);
+
+    for (const operation of this.operations) {
+      if (operation.state === TaskStatus.PROCESSING && !["OCTRA", "Emu WebApp"].includes(operation.name)) {
+        operation.stop();
+      }
+    }
   }
 
   public resumeTask() {

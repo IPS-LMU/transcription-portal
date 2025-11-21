@@ -6,41 +6,9 @@
   box-shadow:
     0 4px 8px 0 rgba(0, 0, 0, 0.2),
     0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  text-align: center;
-  padding: 5px;
   border-radius: 3%;
   cursor: pointer;
-  z-index: 100;
-}
-
-tr {
-  border-bottom: 1px solid #c0c0c0;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  text-align: left;
-}
-
-tr td:first-of-type {
-  width: 30px;
-  text-align: center;
-}
-
-td {
-  padding: 2px;
-  border-bottom: 1px solid #e3e3e3;
-  border-top: none;
+  z-index: 9900;
   font-size: 0.9em;
-  text-align: left;
-}
-
-tr:first-of-type {
-  text-align: center;
-}
-
-.table-hover {
-  width: 100%;
-}
-
-tbody tr:nth-of-type(odd) {
-  background-color: initial;
+  padding: 0;
 }

@@ -110,7 +110,7 @@ export class G2pMausOperation extends Operation {
     httpClient: HttpClient,
   ): Promise<TPortalFileInfo> {
     return new Promise<TPortalFileInfo>((resolve, reject) => {
-      httpClient
+      this.subscrManager.add(httpClient
         .post(
           url,
           {},
@@ -159,7 +159,7 @@ export class G2pMausOperation extends Operation {
           error: (error) => {
             reject(new Error(error.message));
           },
-        });
+        }));
     });
   }
 

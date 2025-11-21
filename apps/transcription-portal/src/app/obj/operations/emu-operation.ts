@@ -39,39 +39,6 @@ export class EmuOperation extends ToolOperation {
     throw new Error('Octra will not be started automatically.');
   };
 
-  public override getStateIcon = (sanitizer: DomSanitizer) => {
-    let result = '';
-
-    switch (this.state) {
-      case TaskStatus.PENDING:
-        result = ``;
-        break;
-      case TaskStatus.UPLOADING:
-        result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        break;
-      case TaskStatus.PROCESSING:
-        result = '<i class="bi bi-gear-fill spin"></i>\n' + '<span class="sr-only">Loading...</span>';
-        break;
-      case TaskStatus.FINISHED:
-        if (this.previousOperation && this.previousOperation.rounds.length > 0 && this.previousOperation.lastRound?.lastResult?.available) {
-          result = '<i class="bi bi-pencil-square link" aria-hidden="true"></i>';
-        } else {
-          result = '<i class="bi bi-chain-broken" style="color:red;opacity:0.5;" aria-hidden="true"></i>';
-        }
-        break;
-      case TaskStatus.READY:
-        result = '<a href="#"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>';
-        break;
-      case TaskStatus.ERROR:
-        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
-        break;
-    }
-
-    return sanitizer.bypassSecurityTrustHtml(result);
-  };
-
   public override getStateIcon2 = () => {
     let result = '';
 

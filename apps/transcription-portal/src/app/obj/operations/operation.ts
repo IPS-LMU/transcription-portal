@@ -1,5 +1,4 @@
 import { HttpClient } from '@angular/common/http';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { last, SubscriptionManager } from '@octra/utilities';
 import { FileInfoSerialized } from '@octra/web-media';
@@ -69,11 +68,11 @@ export class OperationProcessingRound implements IOperationProcessingRoundWithou
   static fromAny(obj: OperationProcessingRoundSerialized): OperationProcessingRound {
     let protocol = obj.protocol?.replace('¶', '');
 
-    if(protocol && protocol !== "") {
+    if (protocol && protocol !== '') {
       const foundError = /^ERROR/g.exec(protocol) !== null;
-      if (obj.status === "ERROR" && foundError) {
+      if (obj.status === 'ERROR' && foundError) {
         protocol = `ERROR: ${protocol}`;
-      } else if(!foundError) {
+      } else if (!foundError) {
         protocol = `WARNING: ${protocol}`;
       }
     }
@@ -302,39 +301,6 @@ export abstract class Operation {
     this.changes$.next(this);
   }
 
-  public getStateIcon = (sanitizer: DomSanitizer, state: TaskStatus): SafeHtml => {
-    let result = '';
-
-    switch (state) {
-      case TaskStatus.PENDING:
-        result = '';
-        break;
-      case TaskStatus.UPLOADING:
-        result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        break;
-      case TaskStatus.PROCESSING:
-        result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        break;
-      case TaskStatus.FINISHED:
-        result = '<i class="bi bi-check-lg" aria-hidden="true"></i>';
-        break;
-      case TaskStatus.READY:
-        result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>`;
-        break;
-      case TaskStatus.ERROR:
-        result = '<i class="bi bi-x-lg" aria-hidden="true"></i>';
-        break;
-    }
-
-    return sanitizer.bypassSecurityTrustHtml(result);
-  };
-
   public getStateIcon2 = (state: TaskStatus): string => {
     let result = '';
 
@@ -388,6 +354,10 @@ export abstract class Operation {
     if (state === TaskStatus.FINISHED && nextOP === null) {
       this.task?.changeState(TaskStatus.FINISHED);
     }
+
+    if (state === TaskStatus.DISABLED) {
+      this.subscrManager.destroy();
+    }
   }
 
   public abstract clone(task?: Task, id?: number): Operation;
@@ -437,7 +407,7 @@ export abstract class Operation {
         : undefined;
     }
     console.error(error);
-    this.changeState(TaskStatus.ERROR)
+    this.changeState(TaskStatus.ERROR);
     console.log(error);
     this.updateProtocol(`ERROR: ${error?.message?.replace(/\n/g, '<br/>')}`);
   }
@@ -487,6 +457,12 @@ export abstract class Operation {
 
   removeResultsByIndex(roundIndex: number, start: number, length: number) {
     this._rounds[roundIndex].results.splice(start, length);
+    this.changes$.next(this);
+  }
+
+  stop() {
+    this.subscrManager.destroy();
+    this._rounds = this._rounds.slice(0, this._rounds.length - 1); // remove current round
     this.changes$.next(this);
   }
 }

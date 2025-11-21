@@ -45,12 +45,14 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   @Output() operationMouseEnter: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output() operationMouseLeave: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output() operationMouseOver: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
-
+  @Output() operationRepeatIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
   @Output() deleteIconClick: EventEmitter<MouseEvent> = new EventEmitter<MouseEvent>();
 
   private subscrmanager = new SubscriptionManager<Subscription>();
+  private listeners: Record<string, (() => void)[]> = {
+    wrapper: [],
+  };
 
-  private unlistenRepeatClick?: () => void;
   private wrapper?: HTMLElement;
 
   ngOnChanges(changes: SimpleChanges) {
@@ -62,6 +64,8 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   ngOnDestroy() {
     this.subscrmanager.destroy();
+    this.unlisten('wrapper');
+    this.unlisten('icon');
   }
 
   ngAfterViewInit() {
@@ -93,70 +97,73 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   }
 
   private updateView() {
-    if (this.elementRef.nativeElement) {
-      if (this.wrapper) {
-        this.wrapper.removeEventListener('mouseenter', this.onMouseEnter);
-        this.wrapper.removeEventListener('mouseleave', this.onMouseLeave);
-        this.wrapper.removeEventListener('mouseover', this.onMouseOver);
-      }
-      this.clearContents();
+    this.unlisten('wrapper');
+    setTimeout(() => {
+      if (this.elementRef.nativeElement) {
+        this.clearContents(this.elementRef.nativeElement);
 
-      if (this._entry) {
-        this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
-        this.wrapper = this.renderer.createElement('div');
-        this.renderer.addClass(this.wrapper!, 'text-center');
-        this.renderer.addClass(this.wrapper!, 'd-inline');
-        this.renderer.appendChild(this.elementRef.nativeElement, this.wrapper);
+        if (this._entry) {
+          this.renderer.setStyle(this.elementRef.nativeElement, 'text-align', 'center');
 
-        if (this._operation && this.wrapper) {
-          this.wrapper.addEventListener('mouseenter', this.onMouseEnter);
-          this.wrapper.addEventListener('mouseleave', this.onMouseLeave);
-          this.wrapper.addEventListener('mouseover', this.onMouseOver);
+          this.wrapper = this.renderer.createElement('div');
+          this.renderer.addClass(this.wrapper!, 'text-center');
+          this.renderer.addClass(this.wrapper!, 'd-inline-block');
 
-          const anyResultNotAvailable = this._operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
+          if (this._operation && this.wrapper) {
+            this.listeners['wrapper'] = [
+              this.renderer.listen(this.wrapper, 'mouseleave', this.onMouseLeave),
+              this.renderer.listen(this.wrapper, 'mouseenter', this.onMouseEnter),
+              this.renderer.listen(this.wrapper, 'mouseover', this.onMouseOver),
+              this.renderer.listen(this.wrapper, 'click', this.onClick),
+            ];
 
-          if (this._operation.state === 'FINISHED' && anyResultNotAvailable) {
-            // result is not available
-            const icon = this.renderer.createElement('i');
+            const anyResultNotAvailable = this._operation.lastRound?.results.map((a) => a.available).includes(false) ?? false;
 
-            this.renderer.addClass(icon, 'bi');
-            this.renderer.addClass(icon, 'bi-wifi-off');
-            this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-            this.renderer.appendChild(this.wrapper, icon);
-          } else {
-            // result is available
-            if (this._operation.enabled) {
-              this.wrapper.innerHTML = this._operation.getStateIcon2(this._operation.state);
-              this.renderer.removeClass(this.wrapper, 'op-deactivated');
-            } else {
-              // operation disabled
-              this.renderer.addClass(this.wrapper, 'op-deactivated');
-
+            if (this._operation.state === 'FINISHED' && anyResultNotAvailable) {
+              // result is not available
               const icon = this.renderer.createElement('i');
+
               this.renderer.addClass(icon, 'bi');
-              this.renderer.addClass(icon, 'bi-arrow-right-circle');
-              this.renderer.setStyle(icon, 'color', 'gray');
+              this.renderer.addClass(icon, 'bi-wifi-off');
               this.renderer.setAttribute(icon, 'aria-hidden', 'true');
               this.renderer.appendChild(this.wrapper, icon);
+            } else {
+              // result is available
+              if (this._operation.enabled) {
+                this.renderer.setProperty(this.wrapper, 'innerHTML', this._operation.getStateIcon2(this._operation.state));
+                this.renderer.removeClass(this.wrapper, 'op-deactivated');
+              } else {
+                // operation disabled
+                this.renderer.addClass(this.wrapper, 'op-deactivated');
+
+                const icon = this.renderer.createElement('i');
+                this.renderer.addClass(icon, 'bi');
+                this.renderer.addClass(icon, 'bi-arrow-right-circle');
+                this.renderer.setStyle(icon, 'color', 'gray');
+                this.renderer.setAttribute(icon, 'aria-hidden', 'true');
+                this.renderer.appendChild(this.wrapper, icon);
+              }
             }
           }
+
+          this.renderer.appendChild(this.elementRef.nativeElement, this.wrapper);
+        } else {
+          throw new Error('ProcOperationDirective error: entry is not of type Task');
         }
       } else {
-        throw new Error('ProcOperationDirective error: entry is not of type Task');
+        throw new Error('ProcOperationDirective error: updateView: nativeElement is undefined');
       }
-    } else {
-      throw new Error('ProcOperationDirective error: updateView: nativeElement is undefined');
-    }
+    }, 0);
   }
 
-  private clearContents() {
-    for (let i = 0; i < (this.elementRef.nativeElement as HTMLElement).children.length; i++) {
-      const child = this.elementRef.nativeElement.children[i];
+  private clearContents(root: HTMLElement) {
+    for (let i = 0; i < root.children.length; i++) {
+      const child = root.children[i];
 
       if (!(child === null || child === undefined)) {
-        const oldLength = this.elementRef.nativeElement.children.length;
-        this.renderer.removeChild(this.elementRef.nativeElement, child);
-        if (oldLength > this.elementRef.nativeElement.children.length) {
+        const oldLength = root.children.length;
+        this.renderer.removeChild(root, child);
+        if (oldLength > root.children.length) {
           i--;
         }
       }
@@ -183,19 +190,14 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
 
   onMouseEnter = (event: MouseEvent) => {
     if (this._operation?.state === 'ERROR') {
-      console.log(`ERROR REPEAT OVER ${this._operation?.id}`);
+      this.unlisten('icon');
       const icon = this.renderer.createElement('i');
       this.renderer.addClass(icon, 'bi');
       this.renderer.addClass(icon, 'bi-arrow-clockwise');
+      this.renderer.addClass(icon, 'bi-inline-block');
       this.renderer.setAttribute(icon, 'aria-hidden', 'true');
-      this.renderer.setProperty(this.wrapper!, 'innerHTML', '');
+      this.clearContents(this.wrapper!);
       this.renderer.appendChild(this.wrapper!, icon);
-
-      if (this.unlistenRepeatClick) {
-        this.unlistenRepeatClick();
-        this.unlistenRepeatClick = undefined;
-      }
-      this.unlistenRepeatClick = this.renderer.listen(icon, 'click', this.onRepeatIconClick);
     }
     this.operationMouseEnter.next(event);
   };
@@ -203,4 +205,19 @@ export class ProcColOperationDirective implements AfterViewInit, OnChanges, OnDe
   onMouseOver = (event: MouseEvent) => {
     this.operationMouseOver.next(event);
   };
+
+  onClick = (event: MouseEvent) => {
+    if (this._operation?.state === 'ERROR') {
+      this.onRepeatIconClick();
+    }
+  };
+
+  unlisten(name: string) {
+    if (this.listeners[name]) {
+      for (const func of this.listeners[name]) {
+        func();
+      }
+      delete this.listeners[name];
+    }
+  }
 }

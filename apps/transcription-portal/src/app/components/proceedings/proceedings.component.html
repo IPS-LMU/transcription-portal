@@ -161,6 +161,7 @@
   (dragover)="onDragOver($event)"
   (drop)="onDrop($event)"
   (contextmenu)="cancelContextMenu($event)"
+  (click)="contextmenu.hidden = true;"
   (mouseleave)="isDragging = false"
   (scroll)="onTableScroll()"
   (mousedown)="onTableMouseDown($event)"
@@ -454,7 +455,6 @@
               [entry]="entry"
               [rowSelected]="isEntrySelected(entry)"
               [toolSelectedOperation]="toolSelectedOperation"
-              (contextmenu)="onContextMenu($event, row)"
               (click)="onContextBlur()"
               (scroll)="cancelScroll($event)"
               tportalProceedingsRow
@@ -472,6 +472,7 @@
                 (mouseleave)="onNameMouseLeave($event, getTask(entry))"
                 (mouseover)="onNameMouseOver($event, getTask(entry))"
                 (tagClicked)="onTagClicked()"
+                (contextmenu)="onContextMenu($event, row, entry)"
                 [dirOpened]="allDirOpened"
                 [entry]="entry"
                 [mouseOver]="getTask(entry) ? getTask(entry)!.mouseover : false"
@@ -484,6 +485,7 @@
                   <td
                     (click)="onRowSelected(entry, operation)"
                     (mousedown)="onOperationClick($event, operation)"
+                    (contextmenu)="onContextMenu($event, row, entry)"
                     #td
                     (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
                     (operationMouseLeave)="onOperationMouseLeave($event, operation)"
@@ -552,6 +554,7 @@
                     (mouseenter)="onNameMouseEnter($event, dirEntry)"
                     (mouseleave)="onNameMouseLeave($event, dirEntry)"
                     (mouseover)="onNameMouseOver($event, dirEntry)"
+                    (contextmenu)="onContextMenu($event, row, dirEntry)"
                     [entry]="dirEntry"
                     [mouseOver]="dirEntry.mouseover"
                     [shortStyle]="shortstyle"
@@ -565,6 +568,7 @@
                       (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
                       (operationMouseLeave)="onOperationMouseLeave($event, operation)"
                       (operationMouseOver)="onOperationMouseOver($event, operation)"
+                      (operationRepeatIconClick)="onOperationRepeatClick($event, operation)"
                       [entry]="dirEntry"
                       [operation]="operation"
                       tportalProcColOperation

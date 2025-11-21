@@ -167,7 +167,7 @@ export class ASROperation extends Operation {
           url += `&ACCESSCODE=${accessCode}`;
         }
 
-        httpClient
+        this.subscrManager.add(httpClient
           .post(
             url,
             {},
@@ -211,7 +211,7 @@ export class ASROperation extends Operation {
             error: (error) => {
               reject(new Error(error?.error?.message ?? error?.message ?? error));
             },
-          });
+          }));
       } else {
         reject(new Error('Missing ASR Provider.'));
       }
@@ -325,7 +325,7 @@ export class ASROperation extends Operation {
             .replace('{{asrType}}', `${asrService.provider}`)
             .replace('{{language}}', this.language!);
 
-          httpClient
+          this.subscrManager.add(httpClient
             .post(
               url,
               {},
@@ -370,7 +370,7 @@ export class ASROperation extends Operation {
               (error) => {
                 reject(new Error(error?.error?.message ?? error?.message ?? error));
               },
-            );
+            ));
         })
         .catch((error) => {
           reject(new Error(error?.error?.message ?? error?.message ?? error));
