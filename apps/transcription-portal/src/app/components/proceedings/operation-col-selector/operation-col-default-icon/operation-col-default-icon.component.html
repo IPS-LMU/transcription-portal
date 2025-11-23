@@ -1,4 +1,4 @@
-@if (operation?.enabled) {
+@if (operation?.enabled && operation?.state !== "SKIPPED") {
   @switch (operation?.state) {
     @case ('PENDING') {
       <!-- show nothing -->

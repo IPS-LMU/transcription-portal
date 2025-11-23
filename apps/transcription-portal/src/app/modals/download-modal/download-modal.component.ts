@@ -1,7 +1,8 @@
 import { NgStyle, UpperCasePipe } from '@angular/common';
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
@@ -13,14 +14,12 @@ import { UploadOperation } from '../../obj/operations/upload-operation';
 import { Task, TaskDirectory, TaskStatus } from '../../obj/tasks';
 import { TaskService } from '../../obj/tasks/task.service';
 import { DownloadService } from '../../shared/download.service';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-download-modal',
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
   imports: [FormsModule, NgStyle, TranslocoPipe, UpperCasePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
   private taskService = inject(TaskService);

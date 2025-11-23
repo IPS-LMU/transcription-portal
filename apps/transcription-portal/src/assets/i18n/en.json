@@ -46,7 +46,8 @@
     "web developer": "Web Developer",
     "yes": "Yes",
     "asr provider": "ASR Provider",
-    "protocol": "Protocol"
+    "protocol": "Protocol",
+    "close": "Close"
   },
   "languages": {
     "de": "German",
@@ -124,7 +125,7 @@
       "get package": "Get package",
       "introduction": "This creates a zip-archive of all the selected results and optionally conversions to other formats. If you do not select any additional conversions only the original results are added to the zip-archive.",
       "latest result": "Please notice, that only the latest results are inserted to the package.",
-      "remove selected line": "Remove selected lines from transcription portal (permanently)",
+      "remove selected lines": "Remove selected lines from transcription portal (permanently)",
       "title": "Download results by {{type}}"
     },
     "first modal": {
