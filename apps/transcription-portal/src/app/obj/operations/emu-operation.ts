@@ -121,19 +121,16 @@ export class EmuOperation extends ToolOperation {
         saveToWindowParent: true,
       };
       let result: TPortalFileInfo | undefined = undefined;
-      const lastResultMaus = this.previousOperation?.lastRound;
-      const lastResultEMU = this.lastRound;
+      const lastResultMaus = this.previousOperation?.lastRound?.lastResult;
+      const lastResultEMU = this.lastRound?.lastResult;
 
       if (
         lastResultEMU &&
-        lastResultMaus &&
-        lastResultEMU.lastResult?.createdAt &&
-        lastResultMaus.lastResult?.createdAt &&
-        lastResultEMU.lastResult?.createdAt >= lastResultMaus.lastResult.createdAt
+        lastResultMaus
       ) {
-        result = lastResultEMU.lastResult;
+        result = lastResultEMU;
       } else {
-        result = lastResultMaus?.lastResult;
+        result = lastResultMaus;
       }
 
       const labelType = result?.extension === '_annot.json' ? 'annotJSON' : 'TEXTGRID';
