@@ -1,5 +1,4 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ServiceProvider } from '@octra/ngx-components';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject } from 'rxjs';
@@ -14,6 +13,9 @@ import { IOperation, Operation, OperationOptions, OperationProcessingRound } fro
 export type IUploadOperation = IOperation;
 
 export class UploadOperation extends Operation {
+  get progress(): number {
+    return this._progress;
+  }
   public constructor(
     name: string,
     commands: string[],
@@ -38,7 +40,7 @@ export class UploadOperation extends Operation {
 
   public resultType = '.wav';
 
-  private progress = 0;
+  private _progress = 0;
 
   public static upload(
     files: FileInfo[],
@@ -139,7 +141,7 @@ export class UploadOperation extends Operation {
         UploadOperation.upload(files, url, httpclient).subscribe({
           next: async (obj) => {
             if (obj.type === 'progress') {
-              this.progress = obj.progress!;
+              this._progress = obj.progress!;
               this.updateEstimatedEnd();
               this.changes$.next(this);
             } else if (obj.type === 'loadend') {
@@ -193,7 +195,7 @@ export class UploadOperation extends Operation {
         result = '';
         break;
       case TaskStatus.UPLOADING:
-        if (this.progress > 0) {
+        if (this._progress > 0) {
           this.updateEstimatedEnd();
           const time = this.estimatedEnd ? this.estimatedEnd - Date.now() : 0;
           result =
@@ -203,7 +205,7 @@ export class UploadOperation extends Operation {
             '</span>';
         } else {
           result = `<div class="spinner-border spinner-border-small" role="status">
-  <span class="visually-hidden">Loading... ${this.progress}</span>
+  <span class="visually-hidden">Loading... ${this._progress}</span>
 </div>`;
         }
         break;
@@ -254,10 +256,10 @@ export class UploadOperation extends Operation {
   }
 
   public updateEstimatedEnd = () => {
-    if (this.progress > 0 && this.lastRound?.time) {
+    if (this._progress > 0 && this.lastRound?.time) {
       const timeTillNow = Date.now() - this.lastRound.time.start;
-      const timeOnePercent = timeTillNow / this.progress;
-      const time = Math.round((1 - this.progress) * timeOnePercent);
+      const timeOnePercent = timeTillNow / this._progress;
+      const time = Math.round((1 - this._progress) * timeOnePercent);
       this.estimatedEnd = Date.now() + time;
     } else {
       this.estimatedEnd = 0;

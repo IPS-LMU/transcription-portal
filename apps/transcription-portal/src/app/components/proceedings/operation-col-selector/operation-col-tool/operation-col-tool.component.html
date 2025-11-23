@@ -1,0 +1,26 @@
+@if (toolOperation !== undefined && task !== undefined) {
+  @switch (toolOperation.state) {
+    @case ('PENDING') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('UPLOADING') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('PROCESSING') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('FINISHED') {
+      @if (mouseIn) {
+        <i class="bi bi-pencil-square link" aria-hidden="true"></i>
+      } @else {
+        <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+      }
+    }
+    @case ('READY') {
+      <i class="bi bi-pencil-square link" aria-hidden="true"></i>
+    }
+    @case ('ERROR') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+  }
+}

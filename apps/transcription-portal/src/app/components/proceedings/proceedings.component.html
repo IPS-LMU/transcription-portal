@@ -64,7 +64,7 @@
       @if (popover.operation.parsedProtocol.length > 0) {
         <div class="mt-3 border" id="output-area">
           <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
-            <div class="col-sm text-light" style="font-size: 0.9rem">{{"g.protocol" | transloco}}</div>
+            <div class="col-sm text-light" style="font-size: 0.9rem">{{ 'g.protocol' | transloco }}</div>
             <div class="col-auto">
               <button
                 (click)="copyProtocolToClipboard(popover.operation.protocol)"
@@ -80,9 +80,9 @@
               <div
                 class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
                 [ngClass]="{
-                'list-group-item-warning': item.type === 'WARNING',
-                'list-group-item-danger': item.type === 'ERROR',
-              }"
+                  'list-group-item-warning': item.type === 'WARNING',
+                  'list-group-item-danger': item.type === 'ERROR',
+                }"
               >
                 <div class="row g-1">
                   <div class="col-auto">
@@ -161,7 +161,7 @@
   (dragover)="onDragOver($event)"
   (drop)="onDrop($event)"
   (contextmenu)="cancelContextMenu($event)"
-  (click)="contextmenu.hidden = true;"
+  (click)="contextmenu.hidden = true"
   (mouseleave)="isDragging = false"
   (scroll)="onTableScroll()"
   (mousedown)="onTableMouseDown($event)"
@@ -479,24 +479,27 @@
                 [shortStyle]="isClosed"
                 tportalProcColIcon
               ></td>
-              <!-- Task operations-->
+              <!-- Task operations -->
               @if (entry.type === 'task') {
                 @for (operation of getTask(entry)!.operations; track operation.id; let opIndex = $index) {
                   <td
                     (click)="onRowSelected(entry, operation)"
-                    (mousedown)="onOperationClick($event, operation)"
                     (contextmenu)="onContextMenu($event, row, entry)"
                     #td
-                    (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
-                    (operationMouseLeave)="onOperationMouseLeave($event, operation)"
-                    (operationMouseOver)="onOperationMouseOver($event, operation)"
-                    [entry]="getTask(entry)"
+                    class="text-center"
                     [ngStyle]="{
                       width: !isClosed ? maxColumnWidths[opIndex] + '%' : 'auto',
                     }"
-                    [operation]="operation"
-                    tportalProcColOperation
-                  ></td>
+                  >
+                    <tportal-operation-col-selector
+                      [operation]="operation"
+                      (mousedown)="onOperationClick($event, operation)"
+                      (mouseenter)="onOperationMouseEnter($event, operation, td)"
+                      (mouseleave)="onOperationMouseLeave($event, operation)"
+                      (mouseover)="onOperationMouseOver($event, operation)"
+                      [task]="getTask(entry)"
+                    ></tportal-operation-col-selector>
+                  </td>
                 }
                 <td class="export-col">
                   @if (isOneOperationFinished(entry) && getTask(entry) !== undefined) {
@@ -563,16 +566,18 @@
                   @for (operation of dirEntry.operations; track operation.id) {
                     <td
                       (click)="onRowSelected(dirEntry, operation)"
-                      (mousedown)="onOperationClick($event, operation)"
+                      class="text-center"
                       #td
-                      (operationMouseEnter)="onOperationMouseEnter($event, operation, td)"
-                      (operationMouseLeave)="onOperationMouseLeave($event, operation)"
-                      (operationMouseOver)="onOperationMouseOver($event, operation)"
-                      (operationRepeatIconClick)="onOperationRepeatClick($event, operation)"
-                      [entry]="dirEntry"
-                      [operation]="operation"
-                      tportalProcColOperation
-                    ></td>
+                    >
+                      <tportal-operation-col-selector
+                        [operation]="operation"
+                        (mousedown)="onOperationClick($event, operation)"
+                        (mouseenter)="onOperationMouseEnter($event, operation, td)"
+                        (mouseleave)="onOperationMouseLeave($event, operation)"
+                        (mouseover)="onOperationMouseOver($event, operation)"
+                        [task]="getTask(dirEntry)"
+                      ></tportal-operation-col-selector>
+                    </td>
                   }
                   <td class="export-col">
                     @if (isOneOperationFinished(dirEntry)) {

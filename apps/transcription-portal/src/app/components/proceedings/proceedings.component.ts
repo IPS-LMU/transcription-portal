@@ -1,5 +1,17 @@
 import { NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, inject, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -36,8 +48,8 @@ import { ResultsTableComponent } from '../results-table/results-table.component'
 import { ContextMenuComponent } from './context-menu/context-menu.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
-import { ProcColOperationDirective } from './directives/proc-col-operation.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
+import { OperationColSelectorComponent } from './operation-col-selector/operation-col-selector.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -52,7 +64,6 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     ContextMenuComponent,
     ProceedingsRowDirective,
     ProcColIconDirective,
-    ProcColOperationDirective,
     DirProgressDirective,
     TimePipe,
     LuxonFormatPipe,
@@ -63,7 +74,9 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
     TranslocoPipe,
     UpperCasePipe,
     ReactiveFormsModule,
+    OperationColSelectorComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProceedingsComponent extends SubscriberComponent implements OnInit, OnDestroy {
   sanitizer = inject(DomSanitizer);
@@ -339,7 +352,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
         this.contextmenu.x = $event.x - 20;
         this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
         this.contextmenu.hidden = false;
-        console.log('SHOW CONTEXT MENU!');
         this.cd.markForCheck();
         this.cd.detectChanges();
       }
@@ -406,7 +418,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
 
       if (operation?.previousOperation?.lastRound?.lastResult?.online || operation?.lastRound?.lastResult?.online) {
         this.operationclick.emit(operation);
-        console.log('row selected close');
         this.popover.state = 'closed';
       }
 
@@ -767,7 +778,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
     if ($event.buttons === 1) {
       if (operation instanceof OCTRAOperation || operation instanceof EmuOperation) {
         this.popover.state = 'closed';
-        console.log('operation click selected close');
         this.selectedOperation = undefined;
         this.cd.markForCheck();
         this.cd.detectChanges();
@@ -847,7 +857,6 @@ export class ProceedingsComponent extends SubscriberComponent implements OnInit,
   }
 
   public onPreviewClick(file: TPortalFileInfo) {
-    console.log('preview click close');
     this.popover.state = 'closed';
     this.cd.markForCheck();
     const ref = this.ngbModalService.open(FilePreviewModalComponent, FilePreviewModalComponent.options);
