@@ -533,7 +533,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
   }
 
   onOperationMouseLeave($event: MouseEvent, operation: StoreTaskOperation) {
-   /* TODO ADD
+    /* TODO ADD
     operation.mouseover = false;
     this.popover.mouseIn = false;
     setTimeout(() => {
@@ -636,7 +636,8 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
       const lastRound = getLastOperationRound(operation);
       if (
         lastRound?.status === TaskStatus.ERROR ||
-        (lastRound?.status === TaskStatus.FINISHED && !(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.blob))
+        (lastRound?.status === TaskStatus.FINISHED &&
+          !(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.blob))
       ) {
         return 'red';
       } else if (lastRound?.status === TaskStatus.FINISHED && operation.protocol) {
@@ -656,12 +657,14 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     } else {
       this.selectedOperation = this.operations![index].factory;
     }
-    this.operationclick.emit({
-      operation,
-      opIndex: index,
-      factory: this.operations![index].factory,
-      task,
-    });
+    if (operation.enabled && getLastOperationRound(operation)?.status !== TaskStatus.SKIPPED) {
+      this.operationclick.emit({
+        operation,
+        opIndex: index,
+        factory: this.operations![index].factory,
+        task,
+      });
+    }
   }
 
   openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined, selectedLines: number[]) {

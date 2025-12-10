@@ -307,6 +307,9 @@
       </ng-template>
     </li>
   </ul>
+  <div class="alert alert-warning m-0">
+    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here may be get lost, features may change and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
+  </div>
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
     <div class="row proceedings-header" style="padding-top: 0">
@@ -337,10 +340,6 @@
       <div class="col-4" style="text-align: right; padding-top: 5px">
         <button
           (click)="onStartClick()"
-          [disabled]="
-            ((modeStoreService.currentModeStatistics$ | async)?.waiting ?? 0) === 0 &&
-            ((modeStoreService.currentModeStatistics$ | async)?.running ?? 0) === 0
-          "
           class="btn btn-primary"
         >
           <i

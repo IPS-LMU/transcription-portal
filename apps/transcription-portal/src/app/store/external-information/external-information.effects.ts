@@ -342,6 +342,9 @@ export class ExternalInformationEffects {
         headers: {
           ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
         },
+        withCredentials: true,
+        referrer: "",
+        credentials: 'include',
       })
       .pipe(
         map((result) => {
