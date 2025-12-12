@@ -490,7 +490,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     this.cd.detectChanges();
   }
 
-  onOperationMouseEnter($event: MouseEvent, operation: StoreTaskOperation, td: HTMLTableCellElement) {
+  onOperationMouseEnter($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, td: HTMLTableCellElement) {
     // show Popover for normal operations only
     const lastRound = getLastOperationRound(operation);
     if (!(lastRound?.status === TaskStatus.PENDING || lastRound?.status === TaskStatus.SKIPPED || lastRound?.status === TaskStatus.READY)) {
@@ -526,34 +526,31 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
         this.popover.y = top + this.popoverRef.height + 20 > window.innerHeight ? top - this.popover.height - icon.offsetHeight + 10 : top;
       }
 
+      this.popover.task = task;
+      this.updateChanges();
       this.togglePopover(true);
+    } else {
+      this.popover.task = undefined;
     }
-    this.popover.task = undefined;
-    // TODO check operation.onMouseEnter();
   }
 
   onOperationMouseLeave($event: MouseEvent, operation: StoreTaskOperation) {
-    /* TODO ADD
-    operation.mouseover = false;
     this.popover.mouseIn = false;
     setTimeout(() => {
       if (!this.popover.mouseIn) {
         this.togglePopover(false);
       }
     }, 250);
-    operation.onMouseLeave();
-    */
   }
 
-  /*
-  onOperationMouseOver($event: MouseEvent, operation: Operation) {
-    operation.mouseover = true;
+
+  onOperationMouseOver($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, operationIndex: number) {
     this.popover.mouseIn = true;
-    this.selectedOperation = operation;
-    operation.onMouseOver();
+    this.popover.task = task;
+    this.popover.operation = operation;
+    this.selectedOperation = this.operations![operationIndex].factory;
     this.operationhover.emit();
   }
-*/
 
   onNameMouseEnter($event: MouseEvent, entry?: StoreItem) {
     if (!entry) {

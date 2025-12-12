@@ -5,6 +5,7 @@ import { StoreAudioFile, StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirec
 import { convertIDBFileToStoreFile } from '../store-item/store-item.functions';
 import { OperationFactory } from './factory';
 import { OperationProcessingRoundSerialized, StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
+import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 
 export function convertIDBOperationToStoreOperation(
   operation: IDBOperation,
@@ -148,6 +149,15 @@ export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
       content: file.content,
     };
   }
+}
+
+export function convertStoreFileToFileInfo(file: StoreFile) : TPortalFileInfo {
+  const info = new TPortalFileInfo(file.name, file.type, file.size);
+  info.attributes = {...file.attributes};
+  info.url = file.url;
+  info.online = file.online ?? false;
+  info.hash = file.hash;
+  return info;
 }
 
 export function getLastOperationRound(operation: StoreTaskOperation) {

@@ -1,9 +1,7 @@
 import { Component, ElementRef, HostListener, inject, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { StoreTaskOperation } from '../../../../store';
-import {
-  ProceedingsTableOpIconComponent
-} from './proceeding-table-op-icon/proceedings-table-op-icon.component';
+import { ProceedingsTableOpIconComponent } from './proceeding-table-op-icon/proceedings-table-op-icon.component';
 
 @Component({
   selector: 'tportal-proceedings-table-operation',
@@ -21,9 +19,7 @@ export class ProceedingsTableOperationComponent extends SubscriberComponent impl
   }
 
   @HostListener('mouseover', ['$event'])
-  protected onMouseOver($event: MouseEvent) {
-    console.log(`hovered over ${this.storeTaskOperation?.name}`);
-  }
+  protected onMouseOver($event: MouseEvent) {}
 
   ngOnChanges(changes: SimpleChanges) {}
 }

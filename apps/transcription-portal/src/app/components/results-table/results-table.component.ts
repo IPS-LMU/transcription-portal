@@ -3,18 +3,20 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Converter } from '@octra/annotation';
-import { hasProperty } from '@octra/utilities';
+import { OAudiofile } from '@octra/media';
+import { hasProperty, last } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
 import { timer } from 'rxjs';
-import { AppInfo } from '../../app.info';
-import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { AppInfo, ConverterData } from '../../app.info';
+import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { DownloadService } from '../../shared/download.service';
 import { OperationFactory, StoreItemTask, StoreTaskOperation } from '../../store';
+import { convertStoreFileToFileInfo } from '../../store/operation/operation.functions';
 
 @Component({
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, FormsModule],
 })
 export class ResultsTableComponent implements OnChanges {
@@ -24,7 +26,12 @@ export class ResultsTableComponent implements OnChanges {
 
   @Input() operation?: StoreTaskOperation;
   @Input() task?: StoreItemTask;
-  @Input() defaultOperations?: OperationFactory[] | undefined;
+  @Input() defaultOperations?:
+    | {
+        factory: OperationFactory<any>;
+        enabled: boolean;
+      }[]
+    | null = [];
   @Input() visible = false;
 
   somethingClicked = false;
@@ -66,6 +73,7 @@ export class ResultsTableComponent implements OnChanges {
         if (!this.generationRunning) {
           this.generationRunning = true;
           this.generateTable();
+          console.log(`Generate results for task ${this.task.id} and op ${this.operation.id}`);
         }
       }
     } else if (hasProperty(changes, 'visible') && changes['visible'].currentValue && !changes['visible'].previousValue) {
@@ -107,9 +115,8 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private generateTable() {
-    /*
     this.clearConvertedArray();
-    const opFactory = (this.defaultOperations ?? []).find((a) => a.name === this.operation?.name);
+    const opFactory = (this.defaultOperations ?? []).find((a) => a.factory.name === this.operation?.name)?.factory;
 
     if (this.task && this.operation && opFactory?.resultType) {
       this.conversionExtension = opFactory.resultType.replace('/json', '');
@@ -126,32 +133,38 @@ export class ResultsTableComponent implements OnChanges {
           .then((promiseResults: TPortalFileInfo[][]) => {
             if (this.operation && this.task) {
               for (let j = 0; j < promiseResults.length; j++) {
-                const result = this.operation.rounds[j].lastResult;
+                const result = last(this.operation.rounds[j].results);
                 const conversions = promiseResults[j];
+                const { extension } = FileInfo.extractFileName(result!.name);
 
                 const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) => a.obj.extensions.findIndex((b) => b.indexOf(result!.extension) > -1) > -1,
+                  (a) =>
+                    a.obj.extensions.findIndex((b) => {
+                      return b.indexOf(extension) > -1;
+                    }) > -1,
                 );
 
                 if (from) {
                   const importConverter = from.obj;
                   this.originalLabel = importConverter.extensions[0];
 
-                  if (!result?.file) {
-                    throw new Error(`result file is undefined`);
+                  if (!result?.content) {
+                    throw new Error(`result content is undefined`);
                   }
 
-                  let originalFileName: any = this.task.files[0].attributes?.originalFileName ?? this.task.files[0].fullname;
+                  let originalFileName: any = this.task.files[0].attributes?.originalFileName ?? this.task.files[0].name;
                   originalFileName = TPortalFileInfo.extractFileName(originalFileName);
 
-                  const fileInfo = result.clone();
-                  fileInfo.url = result.file ? URL.createObjectURL(result.file) : '';
+                  const fileInfo = convertStoreFileToFileInfo(result);
+                  fileInfo.file = new File([result.content!], result.name, { type: result.type })
+                  fileInfo.url = URL.createObjectURL(fileInfo.file);
                   fileInfo.attributes = {
-                    originalFileName: `${originalFileName.name}${result.extension}`,
+                    ...result.attributes,
+                    originalFileName: `${originalFileName.name}${extension}`,
                   };
 
                   const resultObj = {
-                    url: result.file ? this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(result.file)) : '',
+                    url: fileInfo.url,
                     info: fileInfo,
                   };
 
@@ -159,7 +172,7 @@ export class ResultsTableComponent implements OnChanges {
                   if (this.task) {
                     audio.sampleRate = (this.task.files[0] as TPortalAudioInfo).sampleRate;
                     audio.duration = (this.task.files[0] as TPortalAudioInfo).duration.samples;
-                    audio.name = resultObj.info.fullname;
+                    audio.name = (this.task.files[0] as TPortalAudioInfo).fullname;
                     audio.size = (this.task.files[0] as TPortalAudioInfo).size;
                   }
 
@@ -227,7 +240,7 @@ export class ResultsTableComponent implements OnChanges {
           this.convertedArray.push({
             originalResults: round.results.map((a) => ({
               url: a.url ?? '',
-              info: a,
+              info: convertStoreFileToFileInfo(a),
             })),
             conversions: [],
             number: i,
@@ -237,7 +250,6 @@ export class ResultsTableComponent implements OnChanges {
         this.updateGUI();
       }
     }
-     */
   }
 
   private updateGUI() {

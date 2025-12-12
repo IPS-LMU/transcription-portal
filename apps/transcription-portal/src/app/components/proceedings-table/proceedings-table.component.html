@@ -73,6 +73,7 @@
           [visible]="popover.state === 'opened'"
           (previewClick)="onPreviewClick($event)"
           [operation]="popover.operation"
+          [defaultOperations]="operations"
           [task]="popover.task"
         ></tportal-results-table>
       </div>
@@ -500,9 +501,12 @@
     ></td>
     @if (getTask(entry) !== undefined && entry.type === 'task') {
       @for (operation of entry.operations; track operation.id; let i = $index) {
-        <td tportalProceedingsTableTd [storeTaskOperation]="operation">
+        <td tportalProceedingsTableTd [storeTaskOperation]="operation" #td style="text-align: center;">
           <tportal-proceedings-table-operation-selector
             (mousedown)="onOperationClick($event, operation, i, entry)"
+            (mouseenter)="onOperationMouseEnter($event, entry, operation, td)"
+            (mouseleave)="onOperationMouseLeave($event, operation)"
+            (mouseover)="onOperationMouseOver($event, entry, operation, i)"
             [storeTaskOperation]="operation"
             [factory]="operations![i].factory"
           ></tportal-proceedings-table-operation-selector>

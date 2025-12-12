@@ -43,7 +43,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
   }
 
   private loadFileContent() {
-    if (!(this.selectedFile === null || this.selectedFile === undefined)) {
+    if (this.selectedFile) {
       TPortalFileInfo.getFileContent(this.selectedFile.file!)
         .then((text) => {
           this.fileContent = text;
