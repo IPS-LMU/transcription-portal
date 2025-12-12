@@ -75,6 +75,8 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
 
           UploadOperationFactory.upload(task.files, httpClient).subscribe({
             next: async (obj) => {
+              console.log("upload event");
+              console.log(obj);
               if (obj.type === 'progress') {
                 currentRound = { ...currentRound, progress: obj.progress };
                 currentRound = this.updateEstimatedEnd(currentRound);

@@ -301,6 +301,7 @@ export class ExternalInformationEffects {
           ExternalInformationActions.getASRLanguages.success,
           ExternalInformationActions.updateASRInfo.success,
           ExternalInformationActions.updateASRQuotaInfo.success,
+          ExternalInformationActions.updateASRQuotaInfo.fail,
         ),
         withLatestFrom(this.store),
         tap(([, state]: [any, RootState]) => {

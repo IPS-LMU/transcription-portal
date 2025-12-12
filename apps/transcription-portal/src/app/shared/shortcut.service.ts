@@ -146,7 +146,7 @@ export class ShortcutService {
   public overwriteCallback(
     groupName: string,
     itemName: string,
-    callback?: (keyboardEvent: KeyboardEvent, shortcut: Shortcut, hotkeyEvent: HotkeysEvent) => void,
+    callback?: (keyboardEvent?: KeyboardEvent, shortcut?: Shortcut, hotkeyEvent?: HotkeysEvent) => void,
   ) {
     const groupIndex = this._groups.findIndex((a) => a.name == groupName);
 

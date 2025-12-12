@@ -14,7 +14,6 @@ export function convertIDBOperationToStoreOperation(
     enabled: boolean;
   }[],
 ): StoreTaskOperation {
-  console.log(`look for ${operation.name} in ${defaultOperations.map((a) => a.factory.name).join(', ')}`);
   const { factory, enabled } = defaultOperations.find((a) => a.factory.name === operation.name)!;
   let result = factory.create(
     operation.id,
@@ -45,10 +44,14 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
   };
 }
 
-export async function convertStoreItemToIDBItem(item: StoreItem, defaultOperations: {
-  factory: OperationFactory<any>;
-  enabled: boolean;
-}[] ,taskDirectory?: StoreItemTaskDirectory): Promise<IDBTaskItem | IDBFolderItem> {
+export async function convertStoreItemToIDBItem(
+  item: StoreItem,
+  defaultOperations: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[],
+  taskDirectory?: StoreItemTaskDirectory,
+): Promise<IDBTaskItem | IDBFolderItem> {
   if (item.type == 'task') {
     const task = item as StoreItemTask;
     const result: IDBTaskItem = {
@@ -152,13 +155,18 @@ export function getLastOperationRound(operation: StoreTaskOperation) {
 }
 
 export function addProcessingRound(operation: StoreTaskOperation, round?: StoreTaskOperationProcessingRound) {
-  operation.rounds.push(
-    round ?? {
-      status: TaskStatus.PENDING,
-      results: [],
-    },
-  );
-  return operation;
+  return {
+    ...operation,
+    rounds: [
+      ...operation.rounds,
+      {
+        ...(round ?? {
+          status: TaskStatus.PENDING,
+          results: [],
+        }),
+      },
+    ],
+  };
 }
 
 export function getLastOperationResultFromLatestRound(operation: StoreTaskOperation) {

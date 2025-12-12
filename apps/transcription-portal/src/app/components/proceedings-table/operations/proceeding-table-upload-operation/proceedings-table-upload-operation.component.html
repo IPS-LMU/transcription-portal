@@ -1,7 +1,7 @@
 @if (lastOperationRound?.status !== TaskStatus.UPLOADING) {
   <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-op-icon>
 } @else {
-  @if (this.progress > 0) {
+  @if (this.currentRound?.progress && this.currentRound!.progress! > 0) {
     <i class="bi bi-cloud-upload" aria-hidden="true" style="color: cornflowerblue"></i>
     <span> {{ time | time }} </span>
   } @else {

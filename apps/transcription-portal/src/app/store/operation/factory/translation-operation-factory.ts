@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { SubscriptionManager } from '@octra/utilities';
+import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo, readFileContents } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AppInfo } from '../../../app.info';
@@ -59,102 +59,112 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     subscrManager: SubscriptionManager<Subscription>,
   ): Observable<{ operation: StoreTaskOperation }> {
     const subj = new Subject<{ operation: TranslationOperation }>();
-    let clonedOperation = { ...operation };
-    if (!getLastOperationResultFromLatestRound(clonedOperation)) {
-      clonedOperation = addProcessingRound(clonedOperation);
-    }
-    const currentRound = getLastOperationRound(clonedOperation)!;
-    currentRound.status = TaskStatus.PROCESSING;
-    currentRound.time = {
-      start: Date.now(),
-    };
 
-    let lastResult: StoreFile | undefined;
-    const audioinfo = storeItemTask?.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
-
-    if (storeItemTask.operations[3].enabled) {
-      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[3]);
-    } else if (storeItemTask.operations[2].enabled) {
-      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[2]);
-    } else if (storeItemTask.operations[1].enabled) {
-      lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
-    } else {
-      const transcriptFromInputs = storeItemTask?.files.find((a) => !a.type.includes('audio'));
-      if (transcriptFromInputs) {
-        lastResult = transcriptFromInputs;
+    wait(0).then(() => {
+      let clonedOperation = { ...operation };
+      if (!getLastOperationRound(clonedOperation)) {
+        clonedOperation = addProcessingRound(clonedOperation);
       }
-    }
+      let currentRound = getLastOperationRound(clonedOperation)!;
+      currentRound = {
+        ...currentRound,
+        status: TaskStatus.PROCESSING,
+        time: {
+          start: Date.now(),
+        },
+      };
+      this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
-    try {
-      if (lastResult?.blob && audioinfo) {
-        readFileContents<string>(lastResult.blob, 'text', 'utf-8')
-          .then((content: string) => {
-            const audiofile = new OAudiofile();
-            audiofile.duration = audioinfo.duration;
-            audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
-            audiofile.sampleRate = audioinfo.sampleRate;
-            audiofile.size = audioinfo.size;
+      let lastResult: StoreFile | undefined;
+      const audioinfo = storeItemTask?.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
 
-            const { extension } = FileInfo.extractFileName(lastResult.name);
-            if (extension !== '.txt') {
-              const importResult: ImportResult | undefined = convertFromSupportedConverters(
-                AppInfo.converters.map((a) => a.obj),
-                {
-                  name: lastResult.name,
-                  content,
-                  type: lastResult.type,
-                  encoding: 'utf-8',
-                },
-                audiofile,
-              );
+      if (storeItemTask.operations[3].enabled) {
+        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[3]);
+      } else if (storeItemTask.operations[2].enabled) {
+        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[2]);
+      } else if (storeItemTask.operations[1].enabled) {
+        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
+      } else {
+        const transcriptFromInputs = storeItemTask?.files.find((a) => !a.type.includes('audio'));
+        if (transcriptFromInputs) {
+          lastResult = transcriptFromInputs;
+        }
+      }
 
-              if (!importResult || !importResult.annotjson) {
-                subj.error(new Error("Can't convert last result from a previous operation."));
-                return;
+      try {
+        if (lastResult?.content && audioinfo) {
+          let content = lastResult.content;
+          const audiofile = new OAudiofile();
+          audiofile.duration = audioinfo.duration;
+          audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
+          audiofile.sampleRate = audioinfo.sampleRate;
+          audiofile.size = audioinfo.size;
+
+          const { extension } = FileInfo.extractFileName(lastResult.name);
+          if (extension !== '.txt') {
+            const importResult: ImportResult | undefined = convertFromSupportedConverters(
+              AppInfo.converters.map((a) => a.obj),
+              {
+                name: lastResult.name,
+                content,
+                type: lastResult.type,
+                encoding: 'utf-8',
+              },
+              audiofile,
+            );
+
+            if (!importResult || !importResult.annotjson) {
+              subj.error(new Error("Can't convert last result from a previous operation."));
+              return;
+            } else {
+              const textExport = new TextConverter().export(importResult.annotjson, audiofile, 0);
+
+              if (textExport?.file && !textExport.error) {
+                content = textExport.file.content;
               } else {
-                const textExport = new TextConverter().export(importResult.annotjson, audiofile, 0);
-
-                if (textExport?.file && !textExport.error) {
-                  content = textExport.file.content;
-                } else {
-                  subj.error(new Error("Can't convert last result from a previous operation to a text file."));
-                  return;
-                }
+                subj.error(new Error("Can't convert last result from a previous operation to a text file."));
+                return;
               }
             }
+          }
 
-            this.getTranslation(httpClient, content, storeItemTask, clonedOperation, subscrManager)
-              .then((result) => {
-                currentRound.time!.duration = Date.now() - currentRound.time!.start;
-                const { name } = FileInfo.extractFileName(lastResult.name);
-                currentRound.results.push({
-                  name: name + '.txt',
-                  type: 'text/plain',
-                  size: lastResult.size,
-                  blob: undefined,
-                  content: result.translatedText,
-                  attributes: {
-                    originalFileName: name + '.txt',
+          this.getTranslation(httpClient, content, storeItemTask, clonedOperation, subscrManager)
+            .then((result) => {
+              const { name } = FileInfo.extractFileName(lastResult.name);
+              currentRound = {
+                ...currentRound,
+                results: [
+                  {
+                    name: name + '.txt',
+                    type: 'text/plain',
+                    size: lastResult.size,
+                    blob: undefined,
+                    content: result.translatedText,
+                    attributes: {
+                      originalFileName: name + '.txt',
+                    },
+                    hash: '',
                   },
-                  hash: '',
-                });
-                currentRound.status = TaskStatus.FINISHED;
-                subj.next({ operation: clonedOperation });
-                subj.complete();
-              })
-              .catch((err) => {
-                subj.error(err);
-              });
-          })
-          .catch((err) => {
-            subj.error(err);
-          });
-      } else {
-        subj.error(new Error('Can#t find transcript for translation'));
+                ],
+                time: {
+                  start: currentRound.time!.start,
+                  duration: Date.now() - currentRound.time!.start,
+                },
+                status: TaskStatus.FINISHED,
+              };
+              this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+              subj.complete();
+            })
+            .catch((err) => {
+              subj.error(err);
+            });
+        } else {
+          subj.error(new Error('Can#t find transcript for translation'));
+        }
+      } catch (e: any) {
+        subj.error(new Error(e?.error?.message ?? e?.message));
       }
-    } catch (e: any) {
-      subj.error(new Error(e?.error?.message ?? e?.message));
-    }
+    });
 
     return subj;
   }

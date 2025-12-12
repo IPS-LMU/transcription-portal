@@ -7,7 +7,6 @@ export interface StoreTaskOperation<T extends object = any, O extends StoreTaskO
   name: string;
   enabled: boolean;
   serviceProviderName?: string;
-  estimatedEnd?: number;
   rounds: StoreTaskOperationProcessingRound[];
   options: T;
   protocol?: string;

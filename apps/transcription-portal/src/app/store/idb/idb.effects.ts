@@ -248,7 +248,13 @@ export class IDBEffects {
 
   saveTask$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.changeOperation.do, StoreItemActions.changeTaskStatus.do, IDBActions.saveTask.do),
+      ofType(
+        StoreItemActions.changeOperation.do,
+        StoreItemActions.changeTaskStatus.do,
+        IDBActions.saveTask.do,
+        StoreItemActions.processNextOperation.success,
+        StoreItemActions.processNextOperation.fail
+      ),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =

@@ -330,7 +330,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onStartClick() {
-    this.modeStoreService.startProcessing();
+    this.modeStoreService.toggleProcessing();
   }
 
   onFeedbackRequest(operation: StoreTaskOperation) {

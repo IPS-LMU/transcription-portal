@@ -187,8 +187,8 @@ export const getTaskReducers = (
         ...updateStatistics(state, id as TPortalModes),
         counters: {
           ...state.counters,
-          operation: Math.max(...operationIDs) + 1,
-          storeItem: Math.max(...storeItemIDs) + 1,
+          operation: Math.max(0, ...operationIDs) + 1,
+          storeItem: Math.max(0, ...storeItemIDs) + 1,
         },
       };
     }
@@ -198,7 +198,7 @@ export const getTaskReducers = (
   on(StoreItemActions.removeTaskOrFolder.do, (state: ModeState, { item }) => {
     const removedItemsState = taskAdapter.removeOne(item.id, state.entities[state.currentMode]!.items);
 
-    return modeAdapter.updateOne(
+    state = modeAdapter.updateOne(
       {
         id: state.currentMode,
         changes: {
@@ -217,6 +217,9 @@ export const getTaskReducers = (
       },
       state,
     );
+
+    state = updateStatistics(state, state.currentMode!);
+    return state;
   }),
   on(StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, (state: ModeState, { options }): ModeState => {
     const currentMode = state.entities[state.currentMode]!;
@@ -301,7 +304,7 @@ export const getTaskReducers = (
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
   }),
   on(StoreItemActions.removeStoreItems.do, (state: ModeState, { ids }): ModeState => {
-    return modeAdapter.updateOne(
+    state = modeAdapter.updateOne(
       {
         id: state.currentMode,
         changes: {
@@ -310,6 +313,8 @@ export const getTaskReducers = (
       },
       state,
     );
+    state = updateStatistics(state, state.currentMode);
+    return state;
   }),
   on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode, items, counters }) => {
     return modeAdapter.updateOne(
@@ -463,6 +468,30 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
+  on(StoreItemActions.processStoreItem.success, (state, { id, mode }) => {
+    state = modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([id], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+            return taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  status: TaskStatus.FINISHED,
+                },
+              },
+              itemsState,
+            );
+          }),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, mode);
+    return state;
+  }),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = state.entities[mode]!.items.entities[taskID]!;
     let taskStatus = taskItem!.status;
@@ -477,14 +506,17 @@ export const getTaskReducers = (
         // reuploading needed for upload
         taskStatus = TaskStatus.PENDING;
       } else {
-        const allOperationsFinished = taskItem
+        const allOperationsFinished = !taskItem
           .operations!.filter((op) => op.enabled)
-          .map((op) => getLastOperationRound(op)?.status === TaskStatus.FINISHED);
+          .map((op) => getLastOperationRound(op)?.status === TaskStatus.FINISHED)
+          .includes(false);
         if (allOperationsFinished) {
           taskStatus = TaskStatus.FINISHED;
         }
       }
     }
+
+    console.log(`Change task ${taskID} from ${taskItem.status} to ${taskStatus}`);
 
     state = modeAdapter.updateOne(
       {
@@ -516,7 +548,7 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operationID }) => {
+  on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operation }) => {
     state = modeAdapter.updateOne(
       {
         id: mode,
@@ -527,11 +559,22 @@ export const getTaskReducers = (
                 id: item.id,
                 changes: {
                   operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
-                    if (op.id === operationID) {
-                      return { ...op, status: TaskStatus.ERROR, protocol: op.protocol + error + '<br/>' };
+                    if (op.id === operation.id) {
+                      return {
+                        ...op,
+                        rounds: [
+                          ...op.rounds.slice(0, op.rounds.length - 1),
+                          {
+                            ...op.rounds[op.rounds.length - 1],
+                            status: TaskStatus.ERROR,
+                            protocol: (op.protocol ?? '') + error + '<br/>',
+                          },
+                        ],
+                      };
                     }
                     return op;
                   }),
+                  status: TaskStatus.ERROR,
                 },
               },
               itemsState,

@@ -474,7 +474,10 @@ export function updateStatistics(modeState: ModeState, mode: TPortalModes): Mode
       case TaskStatus.QUEUED:
         statistics.queued++;
         break;
-      case TaskStatus.UPLOADING || TaskStatus.PROCESSING:
+      case TaskStatus.UPLOADING:
+        statistics.running++;
+        break;
+      case TaskStatus.PROCESSING:
         statistics.running++;
         break;
       case TaskStatus.ERROR:

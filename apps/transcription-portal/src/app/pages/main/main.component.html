@@ -308,7 +308,7 @@
     </li>
   </ul>
   <div class="alert alert-warning m-0">
-    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here may be get lost, features may change and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
+    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
   </div>
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
@@ -344,8 +344,8 @@
         >
           <i
             [ngClass]="{
-              'bi-play-fill': (modeStoreService.overallState$ | async) === 'not started',
-              'bi-stop-fill': (modeStoreService.overallState$ | async) !== 'not started',
+              'bi-play-fill': (modeStoreService.overallState$ | async) !== 'processing',
+              'bi-stop-fill': (modeStoreService.overallState$ | async) === 'processing',
             }"
             aria-hidden="true"
             class="bi"

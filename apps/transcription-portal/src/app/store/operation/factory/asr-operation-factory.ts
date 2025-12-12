@@ -337,7 +337,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                       const outputFile = result.body.outputs.find((o: any) => o.template === 'SRT');
 
                       if (outputFile) {
-                        const outputFileText = (await downloadFile(outputFile.url, 'text')) as any as string;
+                        const outputFileText = (await downloadFile<string>(outputFile.url, 'text'));
 
                         const srtConverter = new SRTConverter();
                         const originalName = FileInfo.extractFileName(audioFile.attributes.originalFileName).name;

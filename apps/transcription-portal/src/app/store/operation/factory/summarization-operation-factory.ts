@@ -63,136 +63,156 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     subscrManager: SubscriptionManager<Subscription>,
   ): Observable<{ operation: SummarizationOperation }> {
     const subj = new Subject<{ operation: SummarizationOperation }>();
-    let clonedOperation = { ...operation };
+    wait(0).then(() => {
+      let clonedOperation = { ...operation };
 
-    if (!getLastOperationResultFromLatestRound(clonedOperation)) {
-      clonedOperation = addProcessingRound(clonedOperation);
-    }
-    const currentRound = getLastOperationRound(clonedOperation)!;
-    currentRound.status = TaskStatus.PROCESSING;
-    currentRound.time = {
-      start: Date.now(),
-    };
-    subj.next({ operation: clonedOperation });
-
-    const transcriptFile = storeItemTask.operations[2].enabled
-      ? getLastOperationResultFromLatestRound(storeItemTask.operations[2])
-      : getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
-    const audioinfo = storeItemTask.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
-
-    (async (): Promise<{
-      projectName: string;
-      serviceProvider: ServiceProvider;
-    }> => {
-      if (transcriptFile?.blob && audioinfo) {
-        let transcript = '';
-        const content = await readFileContents<string>(transcriptFile.blob!, 'text', 'utf-8');
-
-        const audiofile = new OAudiofile();
-        audiofile.duration = audioinfo.duration;
-        audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
-        audiofile.sampleRate = audioinfo.sampleRate;
-        audiofile.size = audioinfo.size;
-        const { extension } = FileInfo.extractFileName(audiofile.name);
-
-        if (extension === '.txt') {
-          transcript = content;
-        } else {
-          const converter = new PartiturConverter();
-          const imported = converter.import(
-            {
-              name: transcriptFile.name,
-              type: transcriptFile.type,
-              content,
-              encoding: 'utf-8',
-            },
-            audiofile,
-          );
-          transcript = new TextConverter().export(imported.annotjson!, audiofile, 0).file!.content;
-        }
-
-        const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
-        let projectName: string | undefined = undefined;
-        try {
-          projectName = await this.createSummarizationProject(httpClient, serviceProvider!, subscrManager);
-
-          await this.uploadFile(
-            new File([transcript], `${projectName}.txt`, {
-              type: 'text/plain',
-            }),
-            httpClient,
-            projectName,
-            serviceProvider!,
-            subscrManager,
-          );
-
-          await wait(3);
-          await this.processSummarizationProject(httpClient, projectName, clonedOperation, serviceProvider!, subscrManager);
-          return { projectName, serviceProvider: serviceProvider! };
-        } catch (err: any) {
-          // couldn't upload file or process summarization project
-
-          if (projectName) {
-            await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
-          }
-          throw new Error(err);
-        }
-      } else {
-        throw new Error('Missing transcript file or audio file.');
+      if (!getLastOperationRound(clonedOperation)) {
+        clonedOperation = addProcessingRound(clonedOperation);
       }
-    })()
-      .then(({ serviceProvider, projectName }) => {
-        subscrManager.add(
-          interval(5000).subscribe({
-            next: async () => {
-              const result = await this.getProjectStatus(httpClient, projectName, serviceProvider!, subscrManager);
+      let currentRound = getLastOperationRound(clonedOperation)!;
+      currentRound = {
+        ...currentRound,
+        status: TaskStatus.PROCESSING,
+        time: {
+          start: Date.now(),
+        },
+      };
+      this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
-              if (result.status === 'success' && result.body.status === 'finished') {
-                subscrManager.removeByTag(`status check (${clonedOperation.id}`);
+      const transcriptFile = storeItemTask.operations[2].enabled
+        ? getLastOperationResultFromLatestRound(storeItemTask.operations[2])
+        : getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
+      const audioinfo = storeItemTask.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
 
-                if (!result.body.errors) {
-                  currentRound.time!.duration = Date.now() - currentRound.time!.start;
+      (async (): Promise<{
+        projectName: string;
+        serviceProvider: ServiceProvider;
+      }> => {
+        if (transcriptFile?.blob && audioinfo) {
+          let transcript = '';
+          const content = await readFileContents<string>(transcriptFile.blob!, 'text', 'utf-8');
 
-                  const summary = result.body.outputs.find((o: any) => o.filename.includes('summary.txt'));
+          const audiofile = new OAudiofile();
+          audiofile.duration = audioinfo.duration;
+          audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
+          audiofile.sampleRate = audioinfo.sampleRate;
+          audiofile.size = audioinfo.size;
+          const { extension } = FileInfo.extractFileName(audiofile.name);
 
-                  if (summary) {
-                    const summaryText = await downloadFile(summary.url, 'text');
-                    const file = new File([summaryText], `${projectName}.txt`, {
-                      type: 'text/plain',
-                    });
-                    currentRound.results.push({
-                      name: file.name,
-                      type: file.type,
-                      size: file.size,
-                      blob: undefined,
-                      hash: await getHashString(file),
-                      attributes: {
-                        originalFileName: file.name,
+          if (extension === '.txt') {
+            transcript = content;
+          } else {
+            const converter = new PartiturConverter();
+            const imported = converter.import(
+              {
+                name: transcriptFile.name,
+                type: transcriptFile.type,
+                content,
+                encoding: 'utf-8',
+              },
+              audiofile,
+            );
+            transcript = new TextConverter().export(imported.annotjson!, audiofile, 0).file!.content;
+          }
+
+          const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
+          let projectName: string | undefined = undefined;
+          try {
+            projectName = await this.createSummarizationProject(httpClient, serviceProvider!, subscrManager);
+
+            await this.uploadFile(
+              new File([transcript], `${projectName}.txt`, {
+                type: 'text/plain',
+              }),
+              httpClient,
+              projectName,
+              serviceProvider!,
+              subscrManager,
+            );
+
+            await wait(3);
+            await this.processSummarizationProject(httpClient, projectName, clonedOperation, serviceProvider!, subscrManager);
+            return { projectName, serviceProvider: serviceProvider! };
+          } catch (err: any) {
+            // couldn't upload file or process summarization project
+
+            if (projectName) {
+              await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
+            }
+            throw new Error(err);
+          }
+        } else {
+          throw new Error('Missing transcript file or audio file.');
+        }
+      })()
+        .then(({ serviceProvider, projectName }) => {
+          subscrManager.add(
+            interval(5000).subscribe({
+              next: async () => {
+                const result = await this.getProjectStatus(httpClient, projectName, serviceProvider!, subscrManager);
+
+                if (result.status === 'success' && result.body.status === 'finished') {
+                  subscrManager.removeByTag(`status check (${clonedOperation.id}`);
+
+                  if (!result.body.errors) {
+                    currentRound = {
+                      ...currentRound,
+                      time: {
+                        start: currentRound.time!.start!,
+                        duration: Date.now() - currentRound.time!.start,
                       },
-                    });
-                    currentRound.status = TaskStatus.FINISHED;
-                  }
-                } else {
-                  const errorLogFileURL: string = result.body.outputs.find((o: any) => o.filename === 'error.log')?.url;
+                    };
 
-                  if (errorLogFileURL) {
-                    const errorLog = await downloadFile(errorLogFileURL, 'text');
-                    console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
+                    const summary = result.body.outputs.find((o: any) => o.filename.includes('summary.txt'));
+
+                    if (summary) {
+                      const summaryText = await downloadFile<string>(summary.url, 'text');
+                      const { name } = FileInfo.extractFileName(audioinfo.name);
+                      const file = new File([summaryText], `${name}.txt`, {
+                        type: 'text/plain',
+                      });
+                      currentRound = {
+                        ...currentRound,
+                        results: [
+                          {
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            blob: undefined,
+                            hash: await getHashString(file),
+                            content: summaryText,
+                            attributes: {
+                              originalFileName: file.name,
+                            },
+                          },
+                        ],
+                        status: TaskStatus.FINISHED,
+                      };
+                      this.sendOperationWithUpdatedRound(subj, operation, currentRound);
+                      subj.complete();
+                    }
+                  } else {
+                    const errorLogFileURL: string = result.body.outputs.find((o: any) => o.filename === 'error.log')?.url;
+
+                    if (errorLogFileURL) {
+                      const errorLog = await downloadFile<string>(errorLogFileURL, 'text');
+                      console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
+                    }
                   }
+
+                  subscrManager.removeByTag(`status check (${clonedOperation.id}`);
+                  await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
+                  subj.error(new Error(result.body.errorMessage));
                 }
-
-                subscrManager.removeByTag(`status check (${clonedOperation.id}`);
-                await this.deleteSummarizationProject(httpClient, projectName, serviceProvider!, subscrManager);
-                throw new Error(result.body.errorMessage);
-              }
-            },
-          }),
-          `status check (${clonedOperation.id})`,
-        );
-      })
-      .catch((err) => {
-        subj.error(err);
-      });
+              },
+            }),
+            `status check (${clonedOperation.id})`,
+          );
+        })
+        .catch((err) => {
+          subj.error(err);
+        });
+    });
 
     return subj;
   }

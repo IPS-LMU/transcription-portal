@@ -93,6 +93,10 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.startProcessing.do());
   }
 
+  toggleProcessing() {
+    this.store.dispatch(StoreItemActions.toggleProcessing.do());
+  }
+
   changeOperation(mode: TPortalModes, taskID: number, operation: StoreTaskOperation) {
     this.store.dispatch(
       StoreItemActions.changeOperation.do({

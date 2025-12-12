@@ -11,7 +11,7 @@ export interface ExternalInformationState {
   mausLanguagesInitialized: boolean;
   asrLanguagesInitialized: boolean;
   asrInfoRetrieved: boolean;
-  asrQuotaRetrieved: boolean;
+  asrQuotaRetrieved?: boolean;
 
   languages: {
     asr: ASRLanguage[];
@@ -41,7 +41,7 @@ export const externalInformationReducer = createReducer<ExternalInformationState
     }),
   ),
   on(
-    ExternalInformationActions.updateASRQuotaInfo.success,
+    ExternalInformationActions.updateASRQuotaInfo.success, ExternalInformationActions.updateASRQuotaInfo.fail,
     (state: ExternalInformationState): ExternalInformationState => ({
       ...state,
       asrQuotaRetrieved: true,

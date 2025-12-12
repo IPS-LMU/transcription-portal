@@ -683,13 +683,13 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     ref.componentInstance.selectedTasks = selectedLines;
   }
 
-  onShortcutRowRemove = (keyboardEvent: KeyboardEvent, shortcut: Shortcut, hotkeyEvent: HotkeysEvent, shortcutGroup: ShortcutGroup) => {
+  onShortcutRowRemove = () => {
     this.popover.state = 'closed';
     this.deleteSelectedTasks();
     this.cd.markForCheck();
   };
 
-  onShortcutRowsSelectAll = (keyboardEvent: KeyboardEvent, shortcut: Shortcut, hotkeyEvent: HotkeysEvent, shortcutGroup: ShortcutGroup) => {
+  onShortcutRowsSelectAll = () => {
     /* TODO add
     this.taskService.currentModeState!.selectedRows = [];
     if (!this.taskService.currentModeState!.allSelected) {

@@ -6,7 +6,7 @@ import { Action, Store } from '@ngrx/store';
 import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { SubscriptionManager } from '@octra/utilities';
-import { exhaustMap, forkJoin, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
+import { exhaustMap, filter, forkJoin, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
@@ -163,8 +163,22 @@ export class StoreItemEffects {
 
   startProcessing$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.startProcessing.do),
+      ofType(
+        StoreItemActions.startProcessing.do,
+        StoreItemActions.processStoreItem.success,
+        StoreItemActions.processStoreItem.fail,
+        StoreItemActions.reuploadFilesForOperations.success,
+        StoreItemActions.reuploadFilesForOperations.fail,
+        StoreItemActions.processNextOperation.do,
+        StoreItemActions.processNextOperation.success,
+        StoreItemActions.processNextOperation.fail,
+        StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, // add from queue
+      ),
       withLatestFrom(this.store),
+      filter(([action, state]: [any, RootState]) => {
+        const currentMode = state.modes.entities![state.modes.currentMode]!;
+        return currentMode.overallState === 'processing';
+      }),
       exhaustMap(([action, state]: [any, RootState]) =>
         of(
           StoreItemActions.processNextStoreItem.do({
@@ -180,16 +194,25 @@ export class StoreItemEffects {
       ofType(StoreItemActions.processNextStoreItem.do),
       withLatestFrom(this.store),
       exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
-        const nextTask = getOneTaskItemWhereRecursive((item) => item.status === TaskStatus.PENDING, state.modes.entities[mode]!.items);
-        if (!nextTask || state.modes.entities[mode]!.statistics.waiting === 0) {
-          return of(
-            StoreItemActions.processNextStoreItem.nothingToDo({
-              mode,
-            }),
-          );
+        if (state.modes.entities[mode]!.statistics.running < 3) {
+          const nextTask = getOneTaskItemWhereRecursive((item) => item.status === TaskStatus.PENDING, state.modes.entities[mode]!.items);
+          if (!nextTask) {
+            return of(
+              StoreItemActions.processNextStoreItem.nothingToDo({
+                mode,
+              }),
+            );
+          }
+          return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
+        } else {
+          console.warn('More than 3 processes running');
         }
 
-        return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
+        return of(
+          StoreItemActions.processNextStoreItem.nothingToDo({
+            mode,
+          }),
+        );
       }),
     ),
   );
@@ -279,7 +302,7 @@ export class StoreItemEffects {
                           StoreItemActions.processNextOperation.fail({
                             mode,
                             taskID,
-                            operationID: operation.id,
+                            operation: operation,
                             error: typeof err === 'string' ? err : err.message,
                           }),
                         );
@@ -381,7 +404,7 @@ export class StoreItemEffects {
       withLatestFrom(this.store),
       exhaustMap(([action, state]: [any, RootState]) => {
         const currentMode = state.modes.entities[state.modes.currentMode]!;
-        if (currentMode.overallState !== 'not started') {
+        if (currentMode.overallState !== 'processing') {
           return of(StoreItemActions.startProcessing.do());
         }
         return of(StoreItemActions.stopProcessing.do());
@@ -781,20 +804,20 @@ export class StoreItemEffects {
 
   receiveToolDataSuccess$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.receiveToolData.success),
+      ofType(StoreItemActions.processStoreItem.success),
       withLatestFrom(this.store),
       exhaustMap(
         ([action, state]: [
           {
-            file: StoreFile;
-            taskID: number;
+            id: number;
+            mode: TPortalModes;
           },
           RootState,
         ]) =>
           of(
             IDBActions.saveTask.do({
               mode: state.modes.currentMode,
-              taskID: action.taskID,
+              taskID: action.id,
             }),
           ),
       ),

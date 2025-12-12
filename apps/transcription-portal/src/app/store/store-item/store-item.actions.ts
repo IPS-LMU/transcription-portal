@@ -208,7 +208,7 @@ export class StoreItemActions {
         error: string;
         taskID: number;
         mode: TPortalModes;
-        operationID: number;
+        operation: StoreTaskOperation;
       }>(),
     },
   });
