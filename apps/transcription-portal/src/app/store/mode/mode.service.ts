@@ -36,16 +36,28 @@ export class ModeStoreService {
   openedToolOperation$ = this.store.select(selectOpenedToolOperation);
   currentOverallStateLabel$ = this.store.select(selectOverallStateLabel);
 
-  selectRows(rowIndexes: number[], deselectOthers = false) {
-    this.store.dispatch(StoreItemActions.selectItems.do({ ids: rowIndexes, deselectOthers }));
+  toggleSelectionForAllRows() {
+    this.store.dispatch(StoreItemActions.toggleAllSelected.do());
   }
 
-  deselectRows(rowIndexes: number[]) {
-    this.store.dispatch(StoreItemActions.deselectItems.do({ ids: rowIndexes }));
+  selectAllRows() {
+    this.store.dispatch(StoreItemActions.selectAllItems.do());
   }
 
-  setSelectedRows(rowIndexes: number[]) {
-    this.store.dispatch(StoreItemActions.setSelectedItems.do({ ids: rowIndexes }));
+  deselectAllRows() {
+    this.store.dispatch(StoreItemActions.deselectAllItems.do());
+  }
+
+  selectRows(ids: number[], deselectOthers = false) {
+    this.store.dispatch(StoreItemActions.selectItems.do({ ids, deselectOthers }));
+  }
+
+  deselectRows(ids: number[]) {
+    this.store.dispatch(StoreItemActions.deselectItems.do({ ids }));
+  }
+
+  setSelectedRows(ids: number[]) {
+    this.store.dispatch(StoreItemActions.setSelectedItems.do({ ids }));
   }
 
   removeTaskOrFolder(item: StoreItem) {
@@ -120,12 +132,10 @@ export class ModeStoreService {
   }
 
   receiveToolData(data: OctraWindowMessageEventData) {
-    this.store.dispatch(
-      StoreItemActions.receiveToolData.do(data),
-    );
+    this.store.dispatch(StoreItemActions.receiveToolData.do(data));
   }
 
-  closeToolLoader(){
+  closeToolLoader() {
     this.store.dispatch(ModeActions.closeToolLoader.do());
   }
 }

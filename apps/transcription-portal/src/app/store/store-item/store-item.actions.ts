@@ -46,6 +46,27 @@ export class StoreItemActions {
     },
   });
 
+  static toggleAllSelected = createActionGroup({
+    source: 'modes/current mode/toggle all selected',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static selectAllItems = createActionGroup({
+    source: 'modes/current mode/select all items',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static deselectAllItems = createActionGroup({
+    source: 'modes/current mode/deselect all items',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
   static deselectItems = createActionGroup({
     source: 'modes/current mode/deselect items',
     events: {

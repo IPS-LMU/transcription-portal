@@ -73,7 +73,6 @@ export class ResultsTableComponent implements OnChanges {
         if (!this.generationRunning) {
           this.generationRunning = true;
           this.generateTable();
-          console.log(`Generate results for task ${this.task.id} and op ${this.operation.id}`);
         }
       }
     } else if (hasProperty(changes, 'visible') && changes['visible'].currentValue && !changes['visible'].previousValue) {

@@ -566,11 +566,21 @@ export function applyFunctionOnStoreItemsWhereRecursive(
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
 
-    if (where(item)) {
-      itemsState = applyFunction(item, itemsState);
-      items.splice(i, 1);
-      i--;
-    } else if (item.type === 'folder') {
+    if (item.type === 'task') {
+      if (where(item)) {
+        itemsState = applyFunction(item, itemsState);
+        items.splice(i, 1);
+        i--;
+      }
+    } else {
+      if (where(item)) {
+        // apply on folder item itself
+        itemsState = applyFunction(item, itemsState);
+        items.splice(i, 1);
+        i--;
+      }
+
+      // apply on folder children
       const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction);
       itemsState = taskAdapter.updateOne(
         {

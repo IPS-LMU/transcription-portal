@@ -1,4 +1,3 @@
-import { ServiceProvider } from '@octra/ngx-components';
 import { TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { StoreTaskOperation } from '../operation';
 import { StoreItemsState } from './store-items-state';

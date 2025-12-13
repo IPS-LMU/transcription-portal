@@ -9,7 +9,6 @@ import {
   Input,
   OnChanges,
   OnDestroy,
-  OnInit,
   Output,
   SimpleChanges,
   ViewChild,
@@ -18,9 +17,8 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { Shortcut, ShortcutGroup } from '@octra/web-media';
+import { Shortcut } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
-import { HotkeysEvent } from 'hotkeys-js';
 import { DownloadModalComponent } from '../../modals/download-modal/download-modal.component';
 import { FilePreviewModalComponent } from '../../modals/file-preview-modal/file-preview-modal.component';
 import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
@@ -81,7 +79,7 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-class ProceedingsTableComponent extends SubscriberComponent implements OnInit, OnDestroy, OnChanges {
+class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
   storage = inject(StorageService);
@@ -231,8 +229,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     }
   }
 
-  ngOnInit() {}
-
   override ngOnDestroy() {
     super.ngOnDestroy();
     this.cd.detach();
@@ -277,7 +273,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     const promises: Promise<void>[] = [];
 
     if (this.fileAPIsupported) {
-      // TODO check browser support
       if ($event.dataTransfer) {
         const droppedfiles = $event.dataTransfer.items;
         const files: (TPortalFileInfo | TPortalDirectoryInfo)[] = [];
@@ -347,24 +342,15 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     $event.preventDefault();
     $event.stopPropagation();
 
-    /* TODO ADD
     const task = this.popover.task ?? this.popover.directory;
-    const taskList = this.taskService.state.currentModeState.taskList;
-
-    if (task && taskList && this.taskService.currentModeState) {
-      if (this.taskService.currentModeState.selectedRows.length <= 1) {
-        this.taskService.currentModeState.selectedRows = [];
-        const index = getIndexByEntry(task, this.entries ?? []);
-        this.taskService.currentModeState.selectedRows.push(index);
-      }
-      this.contextmenu.x = $event.x - 20;
-      this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
-      this.contextmenu.hidden = false;
-      this.cd.markForCheck();
-      this.cd.detectChanges();
-
+    if (task) {
+      this.modeStoreService.selectRows([task.id], !task.selected);
     }
-     */
+    this.contextmenu.x = $event.x - 20;
+    this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
+    this.contextmenu.hidden = false;
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onRowSelected(entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
@@ -543,7 +529,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
     }, 250);
   }
 
-
   onOperationMouseOver($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, operationIndex: number) {
     this.popover.mouseIn = true;
     this.popover.task = task;
@@ -647,7 +632,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
   public onOperationClick($event: MouseEvent, operation: StoreTaskOperation, index: number, task: StoreItemTask) {
     if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
       this.popover.state = 'closed';
-      console.log('operation click selected close');
       this.cd.markForCheck();
       this.cd.detectChanges();
       this.selectedOperation = undefined;
@@ -687,21 +671,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
   };
 
   onShortcutRowsSelectAll = () => {
-    /* TODO add
-    this.taskService.currentModeState!.selectedRows = [];
-    if (!this.taskService.currentModeState!.allSelected) {
-      // select all
-      const length = this.taskService.state.currentModeState.taskList?.length ?? 0;
-
-      for (let i = 0; i < length; i++) {
-        this.taskService.currentModeState!.selectedRows.push(i);
-      }
-      this.taskService.currentModeState!.allSelected = true;
-    } else {
-      this.taskService.currentModeState!.allSelected = false;
-    }
-
-     */
+    this.modeStoreService.toggleSelectionForAllRows();
   };
 
   public removeEntry(event: MouseEvent, entry: StoreItem) {
@@ -711,7 +681,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
   }
 
   public onPreviewClick(file: TPortalFileInfo) {
-    console.log('preview click close');
     this.popover.state = 'closed';
     this.cd.markForCheck();
     const ref = this.ngbModalService.open(FilePreviewModalComponent, FilePreviewModalComponent.options);
@@ -879,6 +848,16 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnInit, O
 
   getServerProvider(basName?: string): ServiceProvider | undefined {
     return AppSettings.getServiceInformation(basName);
+  }
+
+  onOperationTDMouseEnter(entry: StoreItem) {
+    if (entry.type === 'task') {
+      this.popover.directory = undefined;
+      this.popover.task = entry as StoreItemTask;
+    } else {
+      this.popover.task = undefined;
+      this.popover.directory = entry as StoreItemTaskDirectory;
+    }
   }
 
   protected readonly name = name;

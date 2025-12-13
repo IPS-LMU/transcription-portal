@@ -254,6 +254,42 @@ export const getTaskReducers = (
     state = updateStatistics(state, state.currentMode);
     return state;
   }),
+  on(StoreItemActions.toggleAllSelected.do, (state: ModeState): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: selectAllRows(state, taskAdapter, !state.entities[state.currentMode]!.allSelected),
+          allSelected: !state.entities[state.currentMode]!.allSelected,
+        },
+      },
+      state,
+    );
+  }),
+  on(StoreItemActions.selectAllItems.do, (state: ModeState): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: selectAllRows(state, taskAdapter, true),
+          allSelected: true,
+        },
+      },
+      state,
+    );
+  }),
+  on(StoreItemActions.deselectAllItems.do, (state: ModeState): ModeState => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: selectAllRows(state, taskAdapter, false),
+          allSelected: false,
+        },
+      },
+      state,
+    );
+  }),
   on(StoreItemActions.selectItems.do, (state: ModeState, { ids, deselectOthers }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, deselectOthers);
   }),
@@ -802,6 +838,20 @@ export const getTaskReducers = (
   }),
 ];
 
+function selectAllRows(state: ModeState, taskAdapter: EntityAdapter<StoreItem>, selected: boolean) {
+  return applyFunctionOnStoreItemsWhereRecursive(()=> true, state.entities[state.currentMode]!.items, taskAdapter, (item, itemsState) => {
+    return taskAdapter.updateOne(
+      {
+        id: item.id,
+        changes: {
+          selected,
+        },
+      },
+      itemsState,
+    );
+  });
+}
+
 function setSelection(
   ids: number[],
   selected: boolean,
@@ -810,31 +860,23 @@ function setSelection(
   taskAdapter: EntityAdapter<StoreItem>,
   deselectOthers?: boolean,
 ) {
-  const itemsState = !deselectOthers
-    ? state.entities[state.currentMode]!.items
-    : taskAdapter.updateMany(
-        state.entities[state.currentMode]!.items.ids.map((id) => ({
-          id: id as number,
-          changes: {
-            selected: false,
-          },
-        })),
-        state.entities[state.currentMode]!.items,
-      );
+  const itemsState = !deselectOthers ? state.entities[state.currentMode]!.items : selectAllRows(state, taskAdapter, false);
 
   return modeAdapter.updateOne(
     {
       id: state.currentMode,
       changes: {
-        items: taskAdapter.updateMany(
-          ids.map((id) => ({
-            id: id as number,
-            changes: {
-              selected,
+        items: applyFunctionOnStoreItemsWithIDsRecursive(ids, itemsState, taskAdapter, (item, itemsState) => {
+          return taskAdapter.updateOne(
+            {
+              id: item.id,
+              changes: {
+                selected,
+              },
             },
-          })),
-          itemsState,
-        ),
+            itemsState,
+          );
+        }),
       },
     },
     state,
