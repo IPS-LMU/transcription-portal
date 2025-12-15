@@ -20,7 +20,9 @@
       popover.lastOperationRound.time.start !== undefined &&
       popover.lastOperationRound.time.start > 0
     ) {
-      @if (popover.lastOperationRound.status === 'FINISHED' && !(popover.lastOperationRoundResult?.blob || popover.lastOperationRoundResult?.online)) {
+      @if (
+        popover.lastOperationRound.status === 'FINISHED' && !(popover.lastOperationRoundResult?.blob || popover.lastOperationRoundResult?.online)
+      ) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
       <div class="row g-0">
@@ -131,6 +133,7 @@
   (mousedown)="onTableMouseDown($event)"
   (mouseup)="onTableMouseUp()"
   class="inner"
+  style="border: 1px solid lightgray"
 >
   @if (
     entries !== undefined &&
@@ -400,6 +403,19 @@
         </tr>
       </thead>
       <!-- TABLE BODY -->
+      <tportal-context-menu
+        #contextmenuRef
+        (optionselected)="onContextMenuOptionSelected($event)"
+        [hid]="contextmenu.hidden"
+        [ngStyle]="{
+          'margin-top': contextmenu.y + 'px',
+          'margin-left': contextmenu.x + 'px',
+          visibility: contextmenu.hidden || ((modeStoreService.selectedModeEntries$ | async) ?? []).length === 0 ? 'hidden' : 'initial',
+        }"
+        [selectedOperationType]="selectedOperation"
+        [selectedTasks]="modeStoreService.selectedModeEntries$ | async"
+      >
+      </tportal-context-menu>
       <tbody>
         <!-- ready tasks and directories -->
         @for (entry of entries; track entry.id; let entryIndex = $index) {
@@ -410,6 +426,7 @@
               entryIndex,
               dirID: entry.type === 'folder' ? entry.id : undefined,
               fade: 'opened',
+              contextmenuRef,
             }"
           ></ng-container>
 
@@ -423,6 +440,7 @@
                   entry: dirEntry,
                   entryIndex,
                   fade: entry.opened === true ? 'opened' : 'closed',
+                  contextmenuRef,
                 }"
               ></ng-container>
             }
@@ -468,13 +486,21 @@
   }
 </div>
 
-<ng-template #taskOrDirRow let-dirOpened="dirOpened" let-dirID="dirID" let-entry="entry" let-entryIndex="entryIndex" let-fade="fade">
+<ng-template
+  #taskOrDirRow
+  let-dirOpened="dirOpened"
+  let-dirID="dirID"
+  let-entry="entry"
+  let-entryIndex="entryIndex"
+  let-fade="fade"
+  let-contextmenuRef="contextmenuRef"
+>
   <tr
     [@fadeToggleRow]="fade"
     [entry]="entry"
     [rowSelected]="entry.selected"
     [toolSelectedOperation]="modeStoreService.openedToolOperation$ | async"
-    (contextmenu)="onContextMenu($event, row)"
+    (contextmenu)="onContextMenu($event, row, contextmenuRef)"
     (click)="onContextBlur()"
     (scroll)="cancelScroll($event)"
     (mouseenter)="nameCol.mouseOver = true"
@@ -501,8 +527,7 @@
     ></td>
     @if (getTask(entry) !== undefined && entry.type === 'task') {
       @for (operation of entry.operations; track operation.id; let i = $index) {
-        <td tportalProceedingsTableTd [storeTaskOperation]="operation" #td style="text-align: center;"
-        (mouseenter)="onOperationTDMouseEnter(entry)">
+        <td tportalProceedingsTableTd [storeTaskOperation]="operation" #td style="text-align: center" (mouseenter)="onOperationTDMouseEnter(entry)">
           <tportal-proceedings-table-operation-selector
             (mousedown)="onOperationClick($event, operation, i, entry)"
             (mouseenter)="onOperationMouseEnter($event, entry, operation, td)"

@@ -86,6 +86,23 @@ export class StoreItemActions {
     },
   });
 
+  static setSelectedItemsByIndex = createActionGroup({
+    source: 'modes/current mode/set selected items by index',
+    events: {
+      do: props<{
+        indices: number[];
+      }>(),
+    },
+  });
+
+  static removeAppendingForSelectedItems = createActionGroup({
+      source: 'modes/current mode/items/selected/remove appending',
+      events: {
+        do: emptyProps()
+      }
+  });
+
+
   static importItemsFromProcessingQueue = createActionGroup({
     source: 'tasks/import items from queue',
     events: {

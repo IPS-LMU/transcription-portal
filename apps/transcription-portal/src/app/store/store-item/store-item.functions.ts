@@ -1,5 +1,6 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
+import { last } from '@octra/utilities';
 import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { ModeState, ModeStatistics, TPortalModes } from '../mode';
@@ -211,6 +212,17 @@ export function updateTaskFilesWithSameFile(
                   id: task.id,
                   changes: {
                     files,
+                    operations: [
+                      task.operations![0],
+                      {
+                        ...task.operations![1],
+                        enabled: false,
+                        rounds: changeLastRound(task.operations![1].rounds, {
+                          status: TaskStatus.SKIPPED,
+                        }),
+                      },
+                      ...task.operations!.slice(2),
+                    ],
                   },
                 },
                 result.state,
@@ -558,8 +570,9 @@ export function applyFunctionOnStoreItemsWhereRecursive(
   where: (item: StoreItem) => boolean,
   itemsState: StoreItemsState,
   taskAdapter: EntityAdapter<StoreItem>,
-  applyFunction: (item: StoreItem, itemsState: StoreItemsState) => StoreItemsState,
+  applyFunction: (item: StoreItem, itemsState: StoreItemsState, i: number) => StoreItemsState,
   afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
+  k = 0,
 ) {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
 
@@ -568,20 +581,20 @@ export function applyFunctionOnStoreItemsWhereRecursive(
 
     if (item.type === 'task') {
       if (where(item)) {
-        itemsState = applyFunction(item, itemsState);
+        itemsState = applyFunction(item, itemsState, k);
         items.splice(i, 1);
         i--;
       }
     } else {
       if (where(item)) {
         // apply on folder item itself
-        itemsState = applyFunction(item, itemsState);
+        itemsState = applyFunction(item, itemsState, k);
         items.splice(i, 1);
         i--;
       }
 
       // apply on folder children
-      const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction);
+      const folderState = applyFunctionOnStoreItemsWhereRecursive(where, item.entries!, taskAdapter, applyFunction, afterAppliedOnFolder, k);
       itemsState = taskAdapter.updateOne(
         {
           id: item.id,
@@ -596,6 +609,7 @@ export function applyFunctionOnStoreItemsWhereRecursive(
         itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
       }
     }
+    k++;
   }
 
   return itemsState;
@@ -714,4 +728,14 @@ export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask,
     }
   }
   return undefined;
+}
+
+export function changeLastRound(rounds: StoreTaskOperationProcessingRound[], partial: Partial<StoreTaskOperationProcessingRound>) {
+  return [
+    ...(rounds.length > 0 ? rounds.slice(0, rounds.length - 1) : []),
+    {
+      ...last(rounds)!,
+      ...partial,
+    },
+  ];
 }

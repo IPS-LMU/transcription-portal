@@ -1,5 +1,6 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
+import { last } from '@octra/utilities';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
@@ -836,20 +837,74 @@ export const getTaskReducers = (
 
     return state;
   }),
+  on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
+    return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);
+  }),
+  on(StoreItemActions.removeAppendingForSelectedItems.do, (state: ModeState) =>
+    modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.selected === true,
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              if (item.type === 'task' && item.files?.find((a) => a.type.includes('audio'))) {
+                const lastRound = last(item.operations![1].rounds)!;
+                return taskAdapter.updateOne(
+                  {
+                    id: item.id,
+                    changes: {
+                      files: item.files?.filter((a) => a.type.includes('audio')),
+                      operations: [
+                        item.operations![0],
+                        {
+                          ...item.operations![1],
+                          enabled: true,
+                          rounds: [
+                            ...item.operations![1].rounds.slice(0, item.operations![1].rounds.length - 1),
+                            {
+                              ...lastRound,
+                              status: lastRound.status === TaskStatus.SKIPPED ? TaskStatus.PENDING : lastRound.status,
+                            },
+                          ],
+                        },
+                        ...item.operations!.slice(2),
+                      ],
+                    },
+                  },
+                  itemsState,
+                );
+              }
+
+              return itemsState;
+            },
+          ),
+        },
+      },
+      state,
+    ),
+  ),
 ];
 
 function selectAllRows(state: ModeState, taskAdapter: EntityAdapter<StoreItem>, selected: boolean) {
-  return applyFunctionOnStoreItemsWhereRecursive(()=> true, state.entities[state.currentMode]!.items, taskAdapter, (item, itemsState) => {
-    return taskAdapter.updateOne(
-      {
-        id: item.id,
-        changes: {
-          selected,
+  return applyFunctionOnStoreItemsWhereRecursive(
+    () => true,
+    state.entities[state.currentMode]!.items,
+    taskAdapter,
+    (item, itemsState) => {
+      return taskAdapter.updateOne(
+        {
+          id: item.id,
+          changes: {
+            selected,
+          },
         },
-      },
-      itemsState,
-    );
-  });
+        itemsState,
+      );
+    },
+  );
 }
 
 function setSelection(
@@ -877,6 +932,40 @@ function setSelection(
             itemsState,
           );
         }),
+      },
+    },
+    state,
+  );
+}
+
+function setSelectionByIndex(
+  indices: number[],
+  selected: boolean,
+  state: ModeState,
+  modeAdapter: EntityAdapter<Mode<any>>,
+  taskAdapter: EntityAdapter<StoreItem>,
+  deselectOthers?: boolean,
+) {
+  return modeAdapter.updateOne(
+    {
+      id: state.currentMode,
+      changes: {
+        items: applyFunctionOnStoreItemsWhereRecursive(
+          () => true,
+          state.entities[state.currentMode]!.items,
+          taskAdapter,
+          (item, itemsState, i) => {
+            return taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  selected: indices.includes(i),
+                },
+              },
+              itemsState,
+            );
+          },
+        ),
       },
     },
     state,

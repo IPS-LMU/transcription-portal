@@ -53,6 +53,7 @@ import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import { ContextMenuComponent } from './context-menu/context-menu.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -76,16 +77,18 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     ProcColIconDirective,
     ProceedingsRowDirective,
     AsyncPipe,
+    ContextMenuComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
+export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
   storage = inject(StorageService);
   private ngbModalService = inject(NgbModal);
   private shortcutService = inject(ShortcutService);
   protected modeStoreService = inject(ModeStoreService);
+  private elementRef = inject(ElementRef);
 
   public contextmenu = {
     x: 0,
@@ -338,7 +341,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
     }
   }
 
-  onContextMenu($event: MouseEvent, row: HTMLTableRowElement) {
+  onContextMenu($event: MouseEvent, row: HTMLTableRowElement, container: HTMLDivElement) {
     $event.preventDefault();
     $event.stopPropagation();
 
@@ -348,16 +351,18 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
     }
     this.contextmenu.x = $event.x - 20;
     this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
+    const elem = this.elementRef.nativeElement as HTMLElement;
+    if (this.contextmenu.y + container.offsetHeight + 100 >= elem.offsetHeight) {
+      this.contextmenu.y -= container.offsetHeight;
+    }
     this.contextmenu.hidden = false;
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
 
   onRowSelected(entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
-    /* TODO ADD
     if (!this.selectionBlocked) {
-      const taskList = this.taskService.state.currentModeState.taskList;
-      if (!operation || (!['OCTRA', 'Emu WebApp'].includes(operation.name) && taskList && this.taskService.currentModeState)) {
+      if (!operation || !['OCTRA', 'Emu WebApp'].includes(operation.name)) {
         const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreItem) => a.id === entry.id);
         const pressedKeys = this.shortcutService.pressedKeys;
 
@@ -369,7 +374,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
             this.modeStoreService.deselectRows([entry.id]);
           } else {
             // select
-            this.modeStoreService.deselectRows([entry.id]);
+            this.modeStoreService.selectRows([entry.id]);
           }
         } else {
           if (pressedKeys.has('shift')) {
@@ -384,11 +389,11 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
                 end = temp;
               }
 
-              const selectedRows: number[] = [];
+              const selectedRowsIndices: number[] = [];
               for (let i = this.shiftStart; i <= end; i++) {
-                selectedRows.push(i);
+                selectedRowsIndices.push(i);
               }
-              this.modeStoreService.setSelectedRows(selectedRows);
+              this.modeStoreService.setSelectedRowsByIndex(selectedRowsIndices);
               // select all between
               // const start =x
               this.shiftStart = -1;
@@ -419,14 +424,13 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
       this.cd.markForCheck();
       this.cd.detectChanges();
     }
-     */
   }
 
   onContextMenuOptionSelected(option: string) {
     if (option === 'delete') {
       this.deleteSelectedTasks();
     } else if (option === 'appendings-remove') {
-      this.removeAppendings();
+      this.removeAppending();
     } else if (option === 'download') {
       // TODO ADD this.openArchiveDownload('line', this.selectedOperation, this.taskService.currentModeState.selectedRows);
     }
@@ -435,34 +439,8 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
     this.cd.detectChanges();
   }
 
-  removeAppendings() {
-    /*
-    const taskList = this.taskService.state.currentModeState.taskList;
-    if (taskList && this.taskService.currentModeState) {
-      for (const index of this.taskService.currentModeState.selectedRows) {
-        const entry = taskList.getEntryByIndex(index);
-        if (entry instanceof Task) {
-          if (entry && entry.files.length > 1) {
-            entry.files.splice(1);
-            entry.operations[1].enabled = this.taskService.state.currentModeState.operations[1].enabled;
-            entry.operations[1].changeState(entry.status);
-          }
-        } else {
-          if (entry) {
-            for (const entryElem of entry.entries) {
-              const task = entryElem as Task;
-              if (task.files.length > 1) {
-                task.files.splice(1);
-                task.operations[1].enabled = this.taskService.state.currentModeState.operations[1].enabled;
-                task.operations[1].changeState(task.status);
-              }
-            }
-          }
-        }
-      }
-    }
-
-     */
+  removeAppending() {
+    this.modeStoreService.removeAppendingForSelectedItems();
   }
 
   togglePopover(show: boolean) {
@@ -729,45 +707,7 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
   }
 
   private deleteSelectedTasks() {
-    /* TOOD ADD
-    const removeQueue = [];
-    const taskList = this.taskService.state.currentModeState.taskList;
-    if (taskList && this.taskService.currentModeState) {
-      for (const index of this.taskService.currentModeState.selectedRows) {
-        const entry = taskList.getEntryByIndex(index);
-
-        let dirFound = false;
-        if (entry instanceof Task && !(entry.directory === null || entry.directory === undefined)) {
-          const dirIndex = taskList.getIndexByEntry(entry.directory);
-
-          // found folder?
-          dirFound =
-            this.taskService.currentModeState.selectedRows.findIndex((a) => {
-              return a === dirIndex;
-            }) > -1;
-        }
-
-        if (entry === null) {
-          console.error(`can't remove! entry is null!`);
-        }
-
-        if (!dirFound && entry !== null) {
-          removeQueue.push(entry);
-        }
-      }
-    }
-
-    for (const entry of removeQueue) {
-      this.taskService.state.currentModeState.taskList?.removeEntry(entry, true).catch((error) => {
-        console.error(error);
-      });
-    }
-
-    this.taskService.currentModeState!.selectedRows = [];
-    this.shiftStart = -1;
-    this.cd.markForCheck();
-
-     */
+    this.modeStoreService.removeStoreItems((this.entries ?? []).filter((a) => a.selected).map((a) => a.id));
   }
 
   onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
@@ -839,13 +779,6 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
     return undefined;
   }
 
-  getAudioFileOfTask(task: StoreItemTask): TPortalAudioInfo | undefined {
-    if (task.files.length > 0 && task.files[0].type.includes('audio')) {
-      return task.files[0] as TPortalAudioInfo;
-    }
-    return undefined;
-  }
-
   getServerProvider(basName?: string): ServiceProvider | undefined {
     return AppSettings.getServiceInformation(basName);
   }
@@ -859,8 +792,4 @@ class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy
       this.popover.directory = entry as StoreItemTaskDirectory;
     }
   }
-
-  protected readonly name = name;
 }
-
-export default ProceedingsTableComponent;

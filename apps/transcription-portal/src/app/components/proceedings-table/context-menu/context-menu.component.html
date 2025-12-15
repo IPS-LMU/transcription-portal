@@ -14,7 +14,7 @@
         <td>Download selected lines</td>
       </tr>
     }
-    @if (selectedTasks.length > 0) {
+    @if ((selectedTasks ?? []).length > 0) {
       <tr class="pointer" (click)="onRemoveAttachments()">
         <td></td>
         <td>Remove attachments</td>

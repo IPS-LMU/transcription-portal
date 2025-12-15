@@ -60,6 +60,14 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.setSelectedItems.do({ ids }));
   }
 
+  setSelectedRowsByIndex(indices: number[]) {
+    this.store.dispatch(StoreItemActions.setSelectedItemsByIndex.do({ indices }));
+  }
+
+  removeAppendingForSelectedItems(){
+    this.store.dispatch(StoreItemActions.removeAppendingForSelectedItems.do());
+  }
+
   removeTaskOrFolder(item: StoreItem) {
     this.store.dispatch(StoreItemActions.removeTaskOrFolder.do({ item }));
   }

@@ -253,7 +253,7 @@ export class IDBEffects {
         StoreItemActions.changeTaskStatus.do,
         IDBActions.saveTask.do,
         StoreItemActions.processNextOperation.success,
-        StoreItemActions.processNextOperation.fail
+        StoreItemActions.processNextOperation.fail,
       ),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
@@ -343,6 +343,21 @@ export class IDBEffects {
           );
         },
       ),
+    ),
+  );
+
+  saveSelectedStoreItems$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.removeAppendingForSelectedItems.do),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) => {
+        return of(
+          IDBActions.saveStoreItems.do({
+            mode: state.modes.currentMode,
+            itemIDs: getStoreItemsWhereRecursive((item) => item.selected === true, state.modes.entities[state.modes.currentMode]!.items).map((a) => a.id),
+          }),
+        );
+      }),
     ),
   );
 

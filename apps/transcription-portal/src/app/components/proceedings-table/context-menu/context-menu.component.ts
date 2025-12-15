@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { Operation } from '../../../obj/operations/operation';
+import { Component, ElementRef, EventEmitter, inject, Input, Output } from '@angular/core';
+import { OperationFactory, StoreItem } from '../../../store';
 
 @Component({
   selector: 'tportal-context-menu',
@@ -8,16 +8,21 @@ import { Operation } from '../../../obj/operations/operation';
   standalone: true,
 })
 export class ContextMenuComponent {
-  @Input() selectedTasks: number[] = [];
-  @Input() selectedOperationType?: Operation;
+  private elRef = inject(ElementRef);
+
+  @Input() selectedTasks?: StoreItem[] | null = [];
+  @Input() selectedOperationType?: OperationFactory;
   @Output() optionselected: EventEmitter<string> = new EventEmitter<string>();
 
   @Input() hid = true;
 
-  public get entriesCount(): number {
-    return this.selectedTasks.length;
+  get offsetHeight() {
+    return this.elRef.nativeElement.offsetHeight;
   }
 
+  public get entriesCount(): number {
+    return (this.selectedTasks ?? []).length;
+  }
 
   onAction(action: string) {
     this.optionselected.emit(action);

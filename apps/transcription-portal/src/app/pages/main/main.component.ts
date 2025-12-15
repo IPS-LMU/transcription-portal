@@ -18,7 +18,7 @@ import { hasProperty } from '@octra/utilities';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
-import ProceedingsTableComponent from '../../components/proceedings-table/proceedings-table.component';
+import { ProceedingsTableComponent } from '../../components/proceedings-table/proceedings-table.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
@@ -57,7 +57,6 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
     NgClass,
     FormsModule,
     NgStyle,
-    ProceedingsTableComponent,
     ToolLoaderComponent,
     NgbCollapse,
     NgbTooltip,
@@ -69,6 +68,7 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
     DatePipe,
     AsyncPipe,
     TimePipe,
+    ProceedingsTableComponent,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
