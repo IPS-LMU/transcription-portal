@@ -2,10 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { PartiturConverter, SRTConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
 import { extractFileNameFromURL, joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
-import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
+import { downloadFile, FileInfo } from '@octra/web-media';
 import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import * as X2JS from 'x2js';
+import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
@@ -14,7 +15,6 @@ import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operat
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
-import { IDBOperation } from '../../../indexedDB';
 
 export interface ASROperationOptions {
   language?: string;
@@ -153,11 +153,11 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                   protocol: warnings ? currentRound.protocol + warnings + '<br/>' : currentRound.protocol,
                 };
 
-                if (asrResult.blob) {
+                if (asrResult.content) {
                   const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName ?? audioFile.name);
                   const { extension } = FileInfo.extractFileName(asrResult.attributes.originalFileName ?? asrResult.name);
-                  const content = await readFileContents<string>(asrResult.blob, 'text', 'utf-8');
-                  const hash = await getHashString(asrResult.blob);
+                  const content = asrResult.content;
+                  const hash = await getHashString(new File([asrResult.content], asrResult.attributes.originalFileName, { type: asrResult.type }));
                   const escapedName = getEscapedFileName(hash);
 
                   asrResult.attributes = {
@@ -275,11 +275,14 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                       const hash = await getHashString(new File([content], file.fullname, { type: file.type }));
                       resolve({
                         result: {
-                          ...convertFileInfoToStoreFile(file),
+                          ...(await convertFileInfoToStoreFile(file)),
                           blob: undefined,
                           content,
                           hash,
                           name: getEscapedFileName(hash) + file.extension,
+                          attributes: {
+                            originalFileName: file.fullname,
+                          }
                         } as unknown as StoreFile,
                         warnings,
                       });
@@ -337,7 +340,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                       const outputFile = result.body.outputs.find((o: any) => o.template === 'SRT');
 
                       if (outputFile) {
-                        const outputFileText = (await downloadFile<string>(outputFile.url, 'text'));
+                        const outputFileText = await downloadFile<string>(outputFile.url, 'text');
 
                         const srtConverter = new SRTConverter();
                         const originalName = FileInfo.extractFileName(audioFile.attributes.originalFileName).name;
@@ -365,7 +368,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                                 name: `${hash}.par`,
                                 type: partiturOutpt.file.type,
                                 size: file.size,
-                                blob: file,
+                                content: partiturOutpt.file.content,
                                 attributes: {
                                   originalFileName: file.name,
                                 },
@@ -654,7 +657,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     });
   };
 
-  override async convertOperationToIDBOperation(operation:ASROperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: ASROperation): Promise<IDBOperation> {
     const result = await convertStoreOperationToIDBOperation(operation);
     result.diarization = operation.options.diarization;
     result.language = operation.options.language;

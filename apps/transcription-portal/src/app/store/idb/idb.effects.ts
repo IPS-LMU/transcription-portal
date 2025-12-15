@@ -272,6 +272,7 @@ export class IDBEffects {
                 );
               }),
               catchError((err) => {
+                console.error(err);
                 return of(
                   IDBActions.saveTask.fail({
                     error: typeof err === 'string' ? err : err?.message,
@@ -281,6 +282,7 @@ export class IDBEffects {
             );
           }),
           catchError((err) => {
+            console.error(err);
             return of(
               IDBActions.saveTask.fail({
                 error: typeof err === 'string' ? err : err?.message,

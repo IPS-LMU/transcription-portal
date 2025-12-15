@@ -74,6 +74,7 @@ export const getTaskReducers = (
               ...file,
               url: found.url,
               online: found.online,
+              content: found?.content ?? file.content
             };
           }
           return file;
@@ -553,29 +554,49 @@ export const getTaskReducers = (
       }
     }
 
-    console.log(`Change task ${taskID} from ${taskItem.status} to ${taskStatus}`);
-
     state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
-          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) =>
-            taskAdapter.updateOne(
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+            const operations = state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+              if (op.id === operation.id) {
+                return operation;
+              }
+              return op;
+            });
+            let files = item.files;
+
+            if (operation.name === 'Upload') {
+              // replace URL after (re)upload in task files
+              // and remove blob file
+              files = files?.map((a) => {
+                const found = getLastOperationRound(operation)?.results?.find((b) => a.name === b.name);
+                if (found) {
+                  return {
+                    ...a,
+                    url: found.url,
+                    online: true,
+                    blob: undefined,
+                    content: found?.content ?? a.content
+                  };
+                }
+                return a;
+              });
+            }
+
+            return taskAdapter.updateOne(
               {
                 id: item.id,
                 changes: {
                   status: taskStatus,
-                  operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
-                    if (op.id === operation.id) {
-                      return operation;
-                    }
-                    return op;
-                  }),
+                  operations,
+                  files,
                 },
               },
               itemsState,
-            ),
-          ),
+            );
+          }),
           openedTool: undefined,
         },
       },
@@ -768,8 +789,8 @@ export const getTaskReducers = (
                     return {
                       ...a,
                       url: found?.url ?? a.url,
-                      online: found?.url ?? a.online,
-                      blob: found ? undefined : a.blob,
+                      online: found?.url ? true : a.online,
+                      blob: found ? undefined : a.blob
                     } as StoreFile;
                   }),
                 },

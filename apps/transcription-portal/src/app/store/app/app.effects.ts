@@ -59,63 +59,64 @@ export class AppEffects {
         console.log('INIT CONSOLE LOGGING');
         // overwrite console.log
         if (environment.debugging.enabled && environment.debugging.logging.console) {
-          const oldLog = console.log;
+          console.log('REDIRECT CONSOLE LOGGING ENABLED');
+          const oldLog = window.console.log;
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
           const serv = this.bugService;
-          (() => {
-            // tslint:disable-next-line:only-arrow-functions
-            console.log = function (message, ...args) {
-              serv.addEntry(ConsoleType.LOG, message);
-              oldLog.apply(console, args);
-            };
-          })();
+
+          // tslint:disable-next-line:only-arrow-functions
+          window.console.log = (...args) => {
+            serv.addEntry(ConsoleType.LOG, args[0]);
+            oldLog.apply(console, args);
+          };
 
           // overwrite console.err
-          const oldError = console.error;
-          (() => {
-            // tslint:disable-next-line:only-arrow-functions
-            console.error = function (error, context, ...args) {
-              let debug = '';
-              let stack: string | undefined = '';
+          const oldError = window.console.error;
+          // tslint:disable-next-line:only-arrow-functions
+          window.console.error = (...args) => {
+            const error = args[0];
+            const context = args[1];
 
-              if (typeof error === 'string') {
-                debug = error;
+            let debug = '';
+            let stack: string | undefined = '';
 
-                if (error === 'ERROR' && context && hasProperty(context, 'stack') && hasProperty(context, 'message')) {
-                  debug = context.message;
-                  stack = context.stack;
-                }
+            if (typeof error === 'string') {
+              debug = error;
+
+              if (error === 'ERROR' && context !== undefined && context.stack && context.message) {
+                debug = context.message;
+                stack = context.stack;
+              }
+            } else {
+              if (error instanceof Error) {
+                debug = error.message;
+                stack = error.stack;
               } else {
-                if (error instanceof Error) {
-                  debug = error.message;
-                  stack = error.stack;
+                if (typeof error === 'object') {
+                  // some other type of object
+                  debug = 'OBJECT';
+                  stack = JSON.stringify(error);
                 } else {
-                  if (typeof error === 'object') {
-                    // some other type of object
-                    debug = 'OBJECT';
-                    stack = JSON.stringify(error);
-                  } else {
-                    debug = error;
-                  }
+                  debug = error;
                 }
               }
+            }
 
-              if (debug !== '') {
-                serv.addEntry(ConsoleType.ERROR, `${debug}${stack !== '' ? ' ' + stack : ''}`);
-              }
+            if (debug !== '') {
+              serv.addEntry(ConsoleType.ERROR, `${debug}${stack !== '' ? ' ' + stack : ''}`);
+            }
 
-              oldError.apply(console, args);
-            };
-          })();
+            oldError.apply(console, args);
+          };
 
           // overwrite console.warn
-          const oldWarn = console.warn;
-          (() => {
-            // tslint:disable-next-line:only-arrow-functions
-            console.warn = function (message, ...args) {
-              serv.addEntry(ConsoleType.WARN, message);
-              oldWarn.apply(console, args);
-            };
-          })();
+          const oldWarn = window.console.warn;
+
+          // tslint:disable-next-line:only-arrow-functions
+          console.warn = (...args) => {
+            serv.addEntry(ConsoleType.WARN, args[0]);
+            oldWarn.apply(console, args);
+          };
         }
 
         return AppActions.initConsoleLogger.success();

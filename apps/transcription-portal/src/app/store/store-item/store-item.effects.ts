@@ -377,6 +377,9 @@ export class StoreItemEffects {
     ),
   );
 
+  /*
+  TODO do we need this?
+
   updateTaskFilesAfterUpload$ = createEffect(
     () =>
       this.actions$.pipe(
@@ -397,6 +400,7 @@ export class StoreItemEffects {
       ),
     { dispatch: false },
   );
+   */
 
   toggleProcessing$ = createEffect(() =>
     this.actions$.pipe(
