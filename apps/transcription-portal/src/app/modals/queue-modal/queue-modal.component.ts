@@ -145,7 +145,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
       },
     });
 
-    this.subscribe(this.modeStoreService.selectedModeDefaultOperations$, {
+    this.subscribe(this.modeStoreService.defaultModeOperations$, {
       next: (operations) => {
         this.operations = operations ?? [];
       },

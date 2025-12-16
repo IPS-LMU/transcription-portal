@@ -275,11 +275,10 @@
                 }"
               >
                 <div style="position: relative">
-                  <div style="display: block; position: relative; height: 25px; cursor: pointer">
+                  <div style="display: block; position: relative; height: 25px; cursor: pointer" (click)="openArchiveDownload('column', operation.factory)">
                     <tportal-operation-arrow [first]="i === 0" [type]="'arrow'"></tportal-operation-arrow>
                     <div style="z-index: 10; width: 100%; text-align: center">
                       <ng-template #tipContent>{{ operation.factory.description }}</ng-template>
-                      <!-- TODO (click)="openArchiveDownload('column', operation, taskService.currentModeState!.selectedRows)" -->
                       <div
                         [ngbTooltip]="tipContent"
                         [container]="'body'"
@@ -410,10 +409,10 @@
         [ngStyle]="{
           'margin-top': contextmenu.y + 'px',
           'margin-left': contextmenu.x + 'px',
-          visibility: contextmenu.hidden || ((modeStoreService.selectedModeEntries$ | async) ?? []).length === 0 ? 'hidden' : 'initial',
+          visibility: contextmenu.hidden || ((modeStoreService.currentModeEntries$ | async) ?? []).length === 0 ? 'hidden' : 'initial',
         }"
         [selectedOperationType]="selectedOperation"
-        [selectedTasks]="modeStoreService.selectedModeEntries$ | async"
+        [selectedTasks]="modeStoreService.currentModeEntries$ | async"
       >
       </tportal-context-menu>
       <tbody>

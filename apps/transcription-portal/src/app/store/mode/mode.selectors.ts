@@ -31,6 +31,7 @@ export const selectDefaultOperations = createSelector(selectCurrentModeState, (m
 export const selectCurrentModeEntries = createSelector(selectCurrentModeState, (mode): StoreItem[] =>
   Object.keys(mode?.items?.entities ?? []).map((a) => mode!.items!.entities[a]!),
 );
+export const selectCurrentModeSelectedEntries = createSelector(selectCurrentModeEntries, (items): StoreItem[] => items.filter(a => a.selected));
 export const selectAllCurrentTasks = createSelector(selectCurrentModeState, (mode): StoreItemTask[] => (mode?.items ? getAllTasks(mode.items) : []));
 export const selectAllTasks = createSelector(selectCurrentModeState, (mode) => {
   const mapItems = (itemID: string | number, entities: Dictionary<StoreItem>): StoreItemTask[] => {

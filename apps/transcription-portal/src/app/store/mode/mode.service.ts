@@ -10,7 +10,7 @@ import {
   selectAllCurrentTasks,
   selectAllTasks,
   selectCurrentMode,
-  selectCurrentModeEntries,
+  selectCurrentModeEntries, selectCurrentModeSelectedEntries,
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
@@ -24,8 +24,9 @@ import { DefaultUserSettings, TPortalModes } from './mode.state';
 @Injectable({ providedIn: 'root' })
 export class ModeStoreService {
   store: Store<RootState> = inject(Store);
-  selectedModeDefaultOperations$ = this.store.select(selectDefaultOperations);
-  selectedModeEntries$ = this.store.select(selectCurrentModeEntries);
+  defaultModeOperations$ = this.store.select(selectDefaultOperations);
+  currentModeEntries$ = this.store.select(selectCurrentModeEntries);
+  currentModeSelectedEntries$ = this.store.select(selectCurrentModeSelectedEntries);
   allTasks$: Observable<StoreItemTask[] | undefined> = this.store.select(selectAllTasks);
   defaultUserSettings$ = this.store.select(selectDefaultOptions);
   currentModeStatistics$ = this.store.select(selectCurrentModeStatistics);
@@ -64,7 +65,7 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.setSelectedItemsByIndex.do({ indices }));
   }
 
-  removeAppendingForSelectedItems(){
+  removeAppendingForSelectedItems() {
     this.store.dispatch(StoreItemActions.removeAppendingForSelectedItems.do());
   }
 

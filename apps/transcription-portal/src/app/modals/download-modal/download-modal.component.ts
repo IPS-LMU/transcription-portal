@@ -7,8 +7,9 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
 import { AppInfo } from '../../app.info';
 import { DownloadService } from '../../shared/download.service';
-import { ModeStoreService, StoreItemTask, StoreTaskOperation, TaskStatus } from '../../store';
+import { ModeStoreService, OperationFactory, StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreTaskOperation, TaskStatus } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
+import { DateTime } from 'luxon';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -23,10 +24,14 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   private modeStoreService = inject(ModeStoreService);
 
   type: 'line' | 'column' = 'column';
-  private selectedTasks?: number[];
-  taskList?: Task[];
-  column?: StoreTaskOperation;
+  private selectedTasks?: StoreItem[];
+  taskList?: StoreItemTask[];
+  column?: OperationFactory;
   private allTasks?: StoreItemTask[] | null;
+  private operations?: {
+    factory: OperationFactory;
+    enabled: boolean;
+  }[];
 
   public static options: NgbModalOptions = {
     size: 'md',
@@ -51,6 +56,16 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         this.allTasks = allTasks;
       },
     });
+    this.subscribe(this.modeStoreService.currentModeSelectedEntries$, {
+      next: (selectedModeEntries) => {
+        this.selectedTasks = selectedModeEntries;
+      },
+    });
+    this.subscribe(this.modeStoreService.defaultModeOperations$, {
+      next: (operations) => {
+        this.operations = operations;
+      },
+    });
     this.checkboxes = [];
 
     AppInfo.converters.forEach(() => {
@@ -65,21 +80,17 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   process() {
-    /* TODO ADD
-
     this.state = 'processing';
-    if (this.type === 'column' && !(this.column instanceof UploadOperation || this.column instanceof EmuOperation)) {
+    if (this.type === 'column' && !(this.column?.name === "Upload" || this.column?.name === "Emu WebApp")) {
       this.doColumnZipping();
     } else if (this.type === 'line') {
-      // TODO ADD this.doLineZipping();
+      this.doLineZipping();
     }
-     */
   }
 
   doColumnZipping() {
-    /* TODO ADD
-    if (!this.taskService.state.currentModeState.taskList) {
-      throw new Error('taskList is undefined');
+    if (!this.allTasks || !this.operations) {
+      throw new Error('All tasks or operations are undefined.');
     }
     // get url for resulty by column
     // prepare package
@@ -93,14 +104,13 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       entries: [],
     };
     const tasks = this.allTasks;
-
     const promises: Promise<void>[] = [];
 
-    const opIndex = this.taskService.state.currentModeState.operations.findIndex((a) => {
+    const opIndex = this.operations.findIndex((a) => {
       if (!this.column) {
         throw new Error('column is undefined');
       }
-      return a.name === this.column.name;
+      return a.factory.name === this.column.name;
     });
 
     if (opIndex > -1 && tasks) {
@@ -183,7 +193,6 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   }
 
   doLineZipping() {
-    /*
     // get results url by lines
     if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
       // prepare package
@@ -201,23 +210,22 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
       const promises = [];
 
-      for (const index of this.selectedTasks) {
-        const entry = this.taskService.state.currentModeState.taskList?.getEntryByIndex(index);
-
-        if (entry instanceof TaskDirectory) {
+      for (const entry of this.selectedTasks) {
+        if (entry.type === "folder") {
           promises.push(
             new Promise<void>((resolve, reject) => {
               const dirPromises = [];
+              const dirEntries = (entry as StoreItemTaskDirectory).entries.ids.map(id => entry.entries!.entities[id]);
 
-              for (const dirEntry of entry.entries) {
-                dirPromises.push(this.processTask(dirEntry as StoreTask));
+              for (const dirEntry of dirEntries) {
+                dirPromises.push(this.processTask(dirEntry as StoreItemTask));
               }
 
               Promise.all(dirPromises)
                 .then((values) => {
                   for (const value of values) {
                     for (const val of value) {
-                      val.path = `${entry.foldername}/${val.path}` as never;
+                      val.path = `${entry.folderName}/${val.path}` as never;
                       requestPackage.entries.push(val);
                     }
                   }
@@ -233,7 +241,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
           if (entry) {
             promises.push(
               new Promise<void>((resolve, reject) => {
-                this.processTask(entry)
+                this.processTask(entry as StoreItemTask)
                   .then((entries) => {
                     for (const entry2 of entries) {
                       requestPackage.entries.push(entry2);
@@ -259,8 +267,6 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
           console.error(error);
         });
     }
-
-     */
   }
 
   processTask(task: StoreItemTask): Promise<
@@ -359,18 +365,8 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   removeSelected() {
     if (this.selectedTasks) {
-      /* TODO ADD
-      for (const index of this.selectedTasks) {
-        const entry = this.taskService.state.currentModeState.taskList.getEntryByIndex(index);
-        if (entry) {
-          this.taskService.state.currentModeState.taskList.removeEntry(entry, true);
-        } else {
-          throw new Error("Can't find entry");
-        }
-      }
+      this.modeStoreService.removeStoreItems(this.selectedTasks.map(a => a.id));
       this.activeModal.close();
-
-       */
     }
   }
 

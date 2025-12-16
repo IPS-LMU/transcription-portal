@@ -432,7 +432,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     } else if (option === 'appendings-remove') {
       this.removeAppending();
     } else if (option === 'download') {
-      // TODO ADD this.openArchiveDownload('line', this.selectedOperation, this.taskService.currentModeState.selectedRows);
+      this.openArchiveDownload('line', this.selectedOperation);
     }
     this.contextmenu.hidden = true;
     this.cd.markForCheck();
@@ -626,20 +626,19 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined, selectedLines: number[]) {
-    if (operation !== null && operation !== undefined && operation.name !== 'Upload') {
+  openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined) {
+    if (operation && operation.name !== 'Upload') {
       this.selectedOperation = operation;
-      this.openDownloadModal(type, selectedLines);
+      this.openDownloadModal(type);
     } else if (type === 'line') {
-      this.openDownloadModal(type, selectedLines);
+      this.openDownloadModal(type);
     }
   }
 
-  openDownloadModal(type: 'column' | 'line', selectedLines: number[]) {
+  openDownloadModal(type: 'column' | 'line') {
     const ref = this.ngbModalService.open(DownloadModalComponent, DownloadModalComponent.options);
     ref.componentInstance.type = type;
     ref.componentInstance.column = this.selectedOperation;
-    ref.componentInstance.selectedTasks = selectedLines;
   }
 
   onShortcutRowRemove = () => {
@@ -713,7 +712,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
     const selectedRows = [rowIndex];
     // this.selectedOperation = operation;
-    this.openArchiveDownload('line', operation, selectedRows);
+    this.openArchiveDownload('line', operation);
   }
 
   isOneOperationFinished(entry: StoreItem): boolean {
