@@ -382,7 +382,6 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                         }
                       }
                     } else {
-                      await this.deleteLSTASRProject(httpClient, projectName, serviceProvider!, subscrManager);
                       reject(result.body.errorMessage);
                     }
                   }
@@ -544,13 +543,14 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   ) => {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
+      const {name} = FileInfo.extractFileName(file.name);
       if (file.blob) {
         // upload with file
         formData.append('file', file.blob, file.name);
       } else if (file.url) {
         // upload with URL
         formData.append('url', file.url);
-        formData.append('basename', file.name);
+        formData.append('basename', name);
       } else {
         reject(new Error('Missing file or URL for upload.'));
         return;

@@ -1,5 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { NgbActiveModal, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
@@ -12,13 +12,13 @@ import {
   DefaultUserSettings,
   ModeStoreService,
   OperationFactory,
-  StoreAudioFile,
   StoreFile,
   StoreItemTask,
   TaskStatus,
   TPortalModes,
 } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
+import { wait } from '@octra/utilities';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -27,7 +27,7 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
   encapsulation: ViewEncapsulation.None,
   imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent],
 })
-export class QueueModalComponent extends SubscriberComponent implements OnInit {
+export class QueueModalComponent extends SubscriberComponent implements OnInit, AfterViewInit {
   protected activeModal = inject(NgbActiveModal);
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
@@ -63,12 +63,6 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
   asrProviders: ServiceProvider[] = [];
   summarizationProviders: ServiceProvider[] = [];
 
-  public compatibleTable: {
-    id: number;
-    fileName: string;
-    checks: CompatibleResult[];
-  }[] = [];
-
   public get selectedASRInfo(): ServiceProvider | undefined {
     return this.defaultUserSettings?.selectedASRProvider;
   }
@@ -95,18 +89,6 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
     this.renderer.addClass(this.elementRef.nativeElement, 'h-100');
 
     this.appStoreService.updateASRInfo();
-
-    this.compatibleTable = [];
-    for (const task of this.queuedTasks) {
-      if (task.status === TaskStatus.QUEUED) {
-        this.compatibleTable.push({
-          id: task.id,
-          fileName: task.files[0].name,
-          checks: this.checkAudioFileCompatibility(task.files[0] as StoreAudioFile, task.operations[1].serviceProviderName),
-        });
-      }
-    }
-
     this.subscribe(this.modeStoreService.currentMode$, {
       next: (currentMode) => {
         this.currentMode = currentMode;
@@ -150,6 +132,8 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
         this.operations = operations ?? [];
       },
     });
+
+    this.modeStoreService.validateQueuedTasks();
   }
 
   afterDefaultSettingsUpdated() {
@@ -174,21 +158,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
 
   onSubmit(form: NgForm) {
     if (form.valid) {
-      this.changeProcessingOptionsForEachQueuedTask();
-      /* TODO check
-
-      let j = 0;
-
-      for (const task of this.queuedTasks) {
-        if (task.status === TaskStatus.QUEUED) {
-          if (task.files[0].type.includes('audio') && task.files[0].blob !== undefined && !this.isSomethingInvalid(task.id)) {
-            // TODO check task.changeState(TaskStatus.PENDING);
-          }
-
-          j++;
-        }
-      }
-       */
+      this.modeStoreService.markValidQueuedTasksAsPending();
       this.activeModal?.close();
     } else {
       for (const key of Object.keys(form.controls)) {
@@ -199,24 +169,11 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
   }
 
   onASRProviderChange(provider?: ServiceProvider) {
-    if (provider) {
-      this.compatibleTable = [];
-      for (const task of this.queuedTasks) {
-        if (task.status === TaskStatus.QUEUED) {
-          this.compatibleTable.push({
-            id: task.id,
-            fileName: task.files[0].name,
-            checks: this.checkAudioFileCompatibility(task.files[0] as StoreAudioFile, provider.provider),
-          });
-        }
-      }
-    }
     this.onOptionChange();
   }
 
   changeProcessingOptionsForEachQueuedTask() {
     this.defaultUserSettings.selectedSummarizationNumberOfWords = this.selectedSummarizationNumberOfWords;
-    this.compatibleTable = [];
 
     this.modeStoreService.applyTaskOptionsOnQueuedTasks({
       asr: {
@@ -239,22 +196,11 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
       },
     });
 
-    /* TODO add
-    this.storage.saveDefaultUserSettings({
-      asrLanguage: this.defaultUserSettings.selectedASRLanguage,
-      mausLanguage: this.defaultUserSettings.selectedMausLanguage,
-      asrProvider: this.defaultUserSettings.selectedASRProvider?.provider,
-      summarizationProvider: this.defaultUserSettings.selectedSummarizationProvider?.provider,
-      translationLanguage: this.defaultUserSettings.selectedTranslationLanguage,
-      summarizationWordLimit: this.defaultUserSettings.selectedSummarizationNumberOfWords,
-      diarization: this.defaultUserSettings.isDiarizationEnabled,
-      diarizationSpeakers: this.defaultUserSettings.diarizationSpeakers,
-    });
-     */
+    this.modeStoreService.setDefaultUserSettings(this.defaultUserSettings);
   }
 
   onOptionChange() {
-    this.modeStoreService.setDefaultUserSettings(this.defaultUserSettings);
+    this.changeProcessingOptionsForEachQueuedTask();
   }
 
   deactivateOperation(name: string, enabled: boolean) {
@@ -290,103 +236,28 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit {
     this.mouseInDropdown = false;
   }
 
-  checkAudioFileCompatibility(audioInfo: StoreAudioFile, asrName?: string) {
-    if (!asrName) {
-      return [];
-    }
-
-    const result: {
-      name: string;
-      isValid: boolean;
-      value: string;
-    }[] = [];
-
-    const serviceInfo = this.appSettings?.api?.services.find((a) => a.provider === asrName);
-    if (serviceInfo && audioInfo && audioInfo.type.includes('audio')) {
-      if (serviceInfo.maxSignalDuration) {
-        if (audioInfo.duration / audioInfo.sampleRate > serviceInfo.maxSignalDuration) {
-          result.push({
-            name: 'Signal duration',
-            isValid: false,
-            value: `max ${serviceInfo.maxSignalDuration} seconds`,
-          });
-        } else {
-          result.push({
-            name: 'Signal duration',
-            isValid: true,
-            value: `max ${serviceInfo.maxSignalDuration} seconds`,
-          });
-        }
-      }
-
-      if (serviceInfo.maxSignalSize) {
-        if (audioInfo.size / 1000 / 1000 > serviceInfo.maxSignalSize) {
-          result.push({
-            name: 'Signal length',
-            isValid: false,
-            value: `${serviceInfo.maxSignalSize} MB`,
-          });
-        } else {
-          result.push({
-            name: 'Signal length',
-            isValid: true,
-            value: `${serviceInfo.maxSignalSize} MB`,
-          });
-        }
-      }
-    }
-
-    return result;
+  isOneAudiofileInvalid() {
+    return this.queuedTasks?.find((a) => a.invalid) !== undefined;
   }
 
-  isSomethingInvalid(taskID: number) {
-    if (this.selectedASRInfo?.provider) {
-      const compatibleItem = this.compatibleTable.find((a) => a.id === taskID);
-      if (compatibleItem && this.isASRSelected()) {
-        return compatibleItem.checks.findIndex((a) => !a.isValid) > -1;
-      }
-    }
-
-    return false;
-  }
-
-  onValidationResultMouseEnter(popoverResult: NgbPopover, id: number) {
-    if (this.isSomethingInvalid(id)) {
+  onValidationResultMouseEnter(popoverResult: NgbPopover, task: StoreItemTask) {
+    if (task.invalid) {
       popoverResult.open();
     }
   }
-
-  isOneAudiofileInvalid(): boolean {
-    return (
-      this.compatibleTable.findIndex((a, i) => {
-        return this.isSomethingInvalid(a.id);
-      }) > -1
-    );
-  }
-
   isASRSelected() {
     return this.operations.find((a) => a.factory.name === 'ASR')?.enabled ?? false;
-  }
-
-  getChecksByID(id: number): CompatibleResult[] {
-    const compatibleItem = this.compatibleTable.find((a) => a.id === id);
-    if (compatibleItem) {
-      return compatibleItem.checks;
-    }
-
-    return [];
   }
 
   getExtension(file: StoreFile) {
     return FileInfo.extractFileName(file.name).extension;
   }
 
+  async ngAfterViewInit() {
+    await wait(0);
+    this.changeProcessingOptionsForEachQueuedTask();
+  }
+
   protected readonly getLastOperationRound = getLastOperationRound;
   protected readonly getLastOperationResultFromLatestRound = getLastOperationResultFromLatestRound;
-}
-
-interface CompatibleResult {
-  name: string;
-  isValid: boolean;
-  value: string;
 }

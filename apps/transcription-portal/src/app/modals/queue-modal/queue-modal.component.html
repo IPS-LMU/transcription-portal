@@ -313,7 +313,7 @@
               <ng-template #validationResult>
                 <table class="table table-sm table-striped">
                   <tbody>
-                    @for (check of getChecksByID(task.id); track check.name) {
+                    @for (check of task.checks; track check.name) {
                       <tr>
                         <td>
                           <i
@@ -336,7 +336,7 @@
               </ng-template>
               <span
                 #popoverResult="ngbPopover"
-                (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                (mouseenter)="onValidationResultMouseEnter(popoverResult, task)"
                 (mouseleave)="popoverResult.close()"
                 triggers=""
                 [ngbPopover]="validationResult"
@@ -345,11 +345,11 @@
                 <i
                   class="bi"
                   [ngClass]="{
-                    'bi-check-lg': !isSomethingInvalid(task.id),
-                    'bi-x': isSomethingInvalid(task.id),
+                    'bi-check-lg': !task.invalid,
+                    'bi-x': task.invalid,
                   }"
                   [ngStyle]="{
-                    color: isSomethingInvalid(task.id) ? 'red' : 'green',
+                    color: task.invalid ? 'red' : 'green',
                   }"
                 ></i>
               </span>
@@ -363,7 +363,7 @@
                   yellow:
                     ((getExtension(task.files[0]) === '.wav' && task.files[0].blob === undefined) || getExtension(task.files[0]) !== '.wav') &&
                     getLastOperationRound(task.operations[0])?.status !== 'FINISHED',
-                  red: isSomethingInvalid(task.id),
+                  red: task.invalid,
                 }"
                 title="{{ task.files[0].attributes.originalFileName }}"
               >

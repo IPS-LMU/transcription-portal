@@ -3,7 +3,7 @@ import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { last } from '@octra/utilities';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, getLastOperationRound } from '../operation/operation.functions';
 import { StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
@@ -14,7 +14,7 @@ import {
   convertIDBTaskToStoreTask,
   getOneTaskItemWhereRecursive,
   getStoreItemsWhereRecursive,
-  updateStatistics,
+  updateStatistics
 } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
 
@@ -74,7 +74,7 @@ export const getTaskReducers = (
               ...file,
               url: found.url,
               online: found.online,
-              content: found?.content ?? file.content
+              content: found?.content ?? file.content,
             };
           }
           return file;
@@ -236,16 +236,18 @@ export const getTaskReducers = (
             state.entities[state.currentMode]!.items,
             taskAdapter,
             (item, itemsState) => {
-              return taskAdapter.updateOne(
-                {
-                  id: item.id,
-                  changes: {
-                    operations: defaultOperations.map((op, i) => op.factory.applyTaskOptions(options, item.operations![i])),
-                    status: TaskStatus.PENDING,
+              if (item.type === 'task') {
+                return taskAdapter.updateOne(
+                  {
+                    id: item.id,
+                    changes: {
+                      operations: defaultOperations.map((op, i) => op.factory.applyTaskOptions(options, item.operations![i])),
+                    },
                   },
-                },
-                itemsState,
-              );
+                  itemsState,
+                );
+              }
+              return itemsState;
             },
           ),
         },
@@ -256,6 +258,70 @@ export const getTaskReducers = (
     state = updateStatistics(state, state.currentMode);
     return state;
   }),
+  on(StoreItemActions.markValidQueuedTasksAsPending.success, (state: ModeState) => {
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.status === TaskStatus.QUEUED && !item.invalid,
+            state.entities![state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              if (item.type === 'task') {
+                return taskAdapter.updateOne(
+                  {
+                    id: item.id,
+                    changes: {
+                      status: TaskStatus.PENDING,
+                    },
+                  },
+                  itemsState,
+                );
+              }
+              return itemsState;
+            },
+          ),
+        },
+      },
+      state,
+    );
+    state = updateStatistics(state,  state.currentMode);
+    return state;
+  }),
+  on(
+    StoreItemActions.validateQueuedTasks.success,
+    (state: ModeState, { compatibleTable }): ModeState =>
+      modeAdapter.updateOne(
+        {
+          id: state.currentMode,
+          changes: {
+            items: applyFunctionOnStoreItemsWhereRecursive(
+              (item) => item.status === TaskStatus.QUEUED,
+              state.entities![state.currentMode]!.items,
+              taskAdapter,
+              (item: StoreItem, itemState: StoreItemsState) => {
+                if (item.type === 'task') {
+                  const checks = compatibleTable.find((a) => a.id === item.id)?.checks;
+                  return taskAdapter.updateOne(
+                    {
+                      id: item.id,
+                      changes: {
+                        invalid: (checks?.map((a) => a.isValid) ?? []).includes(false),
+                        checks,
+                      },
+                    },
+                    itemState,
+                  );
+                }
+                return itemState;
+              },
+            ),
+          },
+        },
+        state,
+      ),
+  ),
   on(StoreItemActions.toggleAllSelected.do, (state: ModeState): ModeState => {
     return modeAdapter.updateOne(
       {
@@ -530,6 +596,22 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
+  on(StoreItemActions.processNextOperation.do, (state: ModeState, {taskID, mode}) => modeAdapter.updateOne({
+    id: mode,
+    changes: {
+      items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![state.currentMode]!.items, taskAdapter, (item, itemsState)=> {
+        if(item.type === "task") {
+          itemsState = taskAdapter.updateOne({
+            id: item.id,
+            changes: {
+              status: TaskStatus.PROCESSING
+            }
+          }, itemsState)
+        }
+        return itemsState;
+      })
+    }
+  }, state)),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = state.entities[mode]!.items.entities[taskID]!;
     let taskStatus = taskItem!.status;
@@ -554,6 +636,7 @@ export const getTaskReducers = (
       }
     }
 
+    console.log(`Change task ${taskItem!.id} from ${taskItem!.status} to ${taskStatus}`);
     state = modeAdapter.updateOne(
       {
         id: mode,
@@ -578,7 +661,7 @@ export const getTaskReducers = (
                     url: found.url,
                     online: true,
                     blob: undefined,
-                    content: found?.content ?? a.content
+                    content: found?.content ?? a.content,
                   };
                 }
                 return a;
@@ -790,7 +873,7 @@ export const getTaskReducers = (
                       ...a,
                       url: found?.url ?? a.url,
                       online: found?.url ? true : a.online,
-                      blob: found ? undefined : a.blob
+                      blob: found ? undefined : a.blob,
                     } as StoreFile;
                   }),
                 },
@@ -1019,4 +1102,18 @@ function removeStoreItemsWithIDs(ids: number[], itemsState: StoreItemsState, tas
       return itemsState;
     },
   );
+}
+
+function isSomethingInvalid(
+  task: StoreItemTask,
+  defaultOperations: {
+    enabled: boolean;
+    factory: OperationFactory;
+  }[],
+) {
+  if (defaultOperations[1].enabled && task.checks) {
+    return task.checks.findIndex((a) => !a.isValid) > -1;
+  }
+
+  return false;
 }

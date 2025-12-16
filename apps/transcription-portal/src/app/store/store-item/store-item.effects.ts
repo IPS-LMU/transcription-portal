@@ -5,18 +5,20 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Action, Store } from '@ngrx/store';
 import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
+import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { exhaustMap, filter, forkJoin, from, of, Subscription, tap, withLatestFrom } from 'rxjs';
+import { exhaustMap, filter, forkJoin, from, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
 import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
+import { getAllTasks } from '../mode/mode.functions';
 import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
+import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   convertFileInfoToStoreFile,
@@ -161,6 +163,62 @@ export class StoreItemEffects {
     ),
   );
 
+  validateQueuedTasksAfterOptionsChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.changeProcessingOptionsForEachQueuedTask.do),
+      exhaustMap(() => of(StoreItemActions.validateQueuedTasks.do())),
+    ),
+  );
+
+  requestSavingTaskAfterMarkedAsPending$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.markValidQueuedTasksAsPending.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [any, RootState]) => {
+        const itemIDs = getAllTasks(state.modes.entities![state.modes.currentMode]!.items)
+          .filter((a) => a.status === TaskStatus.QUEUED && !a.invalid)
+          .map((a) => a.id);
+        return of(
+          StoreItemActions.markValidQueuedTasksAsPending.success({
+            itemIDs,
+          }),
+        );
+      }),
+    ),
+  );
+
+  validateQueuedTasks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.validateQueuedTasks.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) => {
+        const currentMode = state.modes.entities![state.modes.currentMode]!;
+        const compatibleTable: {
+          id: number;
+          fileName: string;
+          checks: CompatibleResult[];
+        }[] = [];
+        const queuedTasks: StoreItemTask[] = getAllTasks(currentMode.items).filter((a) => a.status === TaskStatus.QUEUED);
+
+        for (const task of queuedTasks) {
+          if (task.status === TaskStatus.QUEUED) {
+            compatibleTable.push({
+              id: task.id,
+              fileName: task.files[0].name,
+              checks: this.checkAudioFileCompatibility(
+                task.files[0] as StoreAudioFile,
+                task.operations[1].serviceProviderName,
+                state.app.settings?.api.services,
+              ),
+            });
+          }
+        }
+
+        return of(StoreItemActions.validateQueuedTasks.success({ compatibleTable }));
+      }),
+    ),
+  );
+
   startProcessing$ = createEffect(() =>
     this.actions$.pipe(
       ofType(
@@ -170,9 +228,8 @@ export class StoreItemEffects {
         StoreItemActions.reuploadFilesForOperations.success,
         StoreItemActions.reuploadFilesForOperations.fail,
         StoreItemActions.processNextOperation.do,
-        StoreItemActions.processNextOperation.success,
         StoreItemActions.processNextOperation.fail,
-        StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, // add from queue
+        StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
       ),
       withLatestFrom(this.store),
       filter(([action, state]: [any, RootState]) => {
@@ -203,6 +260,7 @@ export class StoreItemEffects {
               }),
             );
           }
+          console.log(`Next task is ${nextTask.id} with status ${nextTask.status}`);
           return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
         } else {
           console.warn('More than 3 processes running');
@@ -277,17 +335,23 @@ export class StoreItemEffects {
                   this.subscrManager.add(
                     defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager).subscribe({
                       next: (event) => {
-                        this.store.dispatch(
-                          StoreItemActions.changeOperation.do({
-                            mode,
-                            taskID,
-                            operation: event.operation,
-                          }),
-                        );
-
                         if (getLastOperationRound(event.operation)?.status === 'FINISHED') {
+                          this.subscrManager.add(
+                            timer(1000).subscribe({
+                              next: () => {
+                                this.store.dispatch(
+                                  StoreItemActions.processNextOperation.success({
+                                    mode,
+                                    taskID,
+                                    operation: event.operation,
+                                  }),
+                                );
+                              },
+                            }),
+                          );
+                        } else {
                           this.store.dispatch(
-                            StoreItemActions.processNextOperation.success({
+                            StoreItemActions.changeOperation.do({
                               mode,
                               taskID,
                               operation: event.operation,
@@ -869,4 +933,49 @@ export class StoreItemEffects {
       ),
     ),
   );
+
+  checkAudioFileCompatibility(audioInfo: StoreAudioFile, asrName?: string, services?: ServiceProvider[]) {
+    if (!asrName || !services) {
+      return [];
+    }
+
+    const result: CompatibleResult[] = [];
+    const serviceInfo = services.find((a) => a.provider === asrName);
+
+    if (serviceInfo && audioInfo && audioInfo.type.includes('audio')) {
+      if (serviceInfo.maxSignalDuration) {
+        if (audioInfo.duration / audioInfo.sampleRate > serviceInfo.maxSignalDuration) {
+          result.push({
+            name: 'Signal duration',
+            isValid: false,
+            value: `max ${serviceInfo.maxSignalDuration} seconds`,
+          });
+        } else {
+          result.push({
+            name: 'Signal duration',
+            isValid: true,
+            value: `max ${serviceInfo.maxSignalDuration} seconds`,
+          });
+        }
+      }
+
+      if (serviceInfo.maxSignalSize) {
+        if (audioInfo.size / 1000 / 1000 > serviceInfo.maxSignalSize) {
+          result.push({
+            name: 'Signal length',
+            isValid: false,
+            value: `${serviceInfo.maxSignalSize} MB`,
+          });
+        } else {
+          result.push({
+            name: 'Signal length',
+            isValid: true,
+            value: `${serviceInfo.maxSignalSize} MB`,
+          });
+        }
+      }
+    }
+
+    return result;
+  }
 }

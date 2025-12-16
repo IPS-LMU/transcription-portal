@@ -21,7 +21,7 @@
       popover.lastOperationRound.time.start > 0
     ) {
       @if (
-        popover.lastOperationRound.status === 'FINISHED' && !(popover.lastOperationRoundResult?.blob || popover.lastOperationRoundResult?.online)
+        popover.lastOperationRound.status === 'FINISHED' && !(popover.lastOperationRoundResult?.content || popover.lastOperationRoundResult?.online)
       ) {
         <p style="color: red">The latest result does not exist anymore.</p>
       }
@@ -275,7 +275,10 @@
                 }"
               >
                 <div style="position: relative">
-                  <div style="display: block; position: relative; height: 25px; cursor: pointer" (click)="openArchiveDownload('column', operation.factory)">
+                  <div
+                    style="display: block; position: relative; height: 25px; cursor: pointer"
+                    (click)="openArchiveDownload('column', operation.factory)"
+                  >
                     <tportal-operation-arrow [first]="i === 0" [type]="'arrow'"></tportal-operation-arrow>
                     <div style="z-index: 10; width: 100%; text-align: center">
                       <ng-template #tipContent>{{ operation.factory.description }}</ng-template>

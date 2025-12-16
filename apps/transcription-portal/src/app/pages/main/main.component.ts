@@ -112,7 +112,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsTableComponent;
-  @ViewChild('toolLoader', { static: true }) toolLoader?: ToolLoaderComponent;
 
   constructor() {
     super();
@@ -215,24 +214,28 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     return code.substring(code.length - 2);
   }
 
-  onToolDataReceived(data: any, toolLoader: ToolLoaderComponent) {
+  onToolDataReceived(data: any) {
     const $event = data.event;
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
-      if (data.name === 'OCTRA') {
-        this.modeStoreService.receiveToolData($event.data);
-      } else if (data.name === 'Emu WebApp') {
-        this.modeStoreService.receiveToolData({
-          status: 'success',
-          data: {
-            annotation: {
-              name: $event.data.data.annotation.name + '_annot.json',
-              content: JSON.stringify($event.data.data.annotation, null, 2),
-              type: 'application/json',
-              encoding: 'utf-8',
+      (async () => {
+        if (data.name === 'OCTRA') {
+          if (hasProperty($event.data, 'status') && $event.data.status === 'success' && hasProperty($event.data.data, 'annotation')) {
+            this.modeStoreService.receiveToolData($event.data);
+          }
+        } else if (data.name === 'Emu WebApp') {
+          this.modeStoreService.receiveToolData({
+            status: 'success',
+            data: {
+              annotation: {
+                name: $event.data.data.annotation.name + '_annot.json',
+                content: JSON.stringify($event.data.data.annotation, null, 2),
+                type: 'application/json',
+                encoding: 'utf-8',
+              },
             },
-          },
-        });
-      }
+          });
+        }
+      })();
     }
   }
 

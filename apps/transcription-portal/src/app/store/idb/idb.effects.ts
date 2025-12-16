@@ -356,10 +356,42 @@ export class IDBEffects {
         return of(
           IDBActions.saveStoreItems.do({
             mode: state.modes.currentMode,
-            itemIDs: getStoreItemsWhereRecursive((item) => item.selected === true, state.modes.entities[state.modes.currentMode]!.items).map((a) => a.id),
+            itemIDs: getStoreItemsWhereRecursive((item) => item.selected === true, state.modes.entities[state.modes.currentMode]!.items).map(
+              (a) => a.id,
+            ),
           }),
         );
       }),
+    ),
+  );
+
+  saveTasksAfterOptionsOnQueuedChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.markValidQueuedTasksAsPending.success),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [any, RootState]) =>
+        of(
+          IDBActions.saveStoreItems.do({
+            mode: state.modes.currentMode,
+            itemIDs: action.itemIDs,
+          }),
+        ),
+      ),
+    ),
+  );
+
+  saveTasksAfterMarkedAsPending$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.markValidQueuedTasksAsPending.success),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) =>
+        of(
+          IDBActions.saveStoreItems.do({
+            mode: state.modes.currentMode,
+            itemIDs: action.itemIDs,
+          }),
+        ),
+      ),
     ),
   );
 

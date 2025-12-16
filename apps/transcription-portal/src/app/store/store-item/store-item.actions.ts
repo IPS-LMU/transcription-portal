@@ -2,7 +2,7 @@ import { Action, createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreTaskOperation } from '../operation';
-import { StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
+import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
 export class StoreItemActions {
@@ -96,12 +96,11 @@ export class StoreItemActions {
   });
 
   static removeAppendingForSelectedItems = createActionGroup({
-      source: 'modes/current mode/items/selected/remove appending',
-      events: {
-        do: emptyProps()
-      }
+    source: 'modes/current mode/items/selected/remove appending',
+    events: {
+      do: emptyProps(),
+    },
   });
-
 
   static importItemsFromProcessingQueue = createActionGroup({
     source: 'tasks/import items from queue',
@@ -156,11 +155,38 @@ export class StoreItemActions {
     },
   });
 
+  static validateQueuedTasks = createActionGroup({
+    source: 'tasks/queued/validate',
+    events: {
+      do: emptyProps(),
+      success: props<{
+        compatibleTable: {
+          id: number;
+          fileName: string;
+          checks: CompatibleResult[];
+        }[];
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
   static changeProcessingOptionsForEachQueuedTask = createActionGroup({
     source: 'tasks/change options for each task',
     events: {
       do: props<{
         options: StoreItemTaskOptions;
+      }>(),
+    },
+  });
+
+  static markValidQueuedTasksAsPending = createActionGroup({
+    source: 'tasks/queued/marked queued tasks as pending',
+    events: {
+      do: emptyProps(),
+      success: props<{
+        itemIDs: number[];
       }>(),
     },
   });

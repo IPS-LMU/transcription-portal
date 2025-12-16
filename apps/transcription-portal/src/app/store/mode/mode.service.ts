@@ -98,6 +98,10 @@ export class ModeStoreService {
     );
   }
 
+  validateQueuedTasks() {
+    this.store.dispatch(StoreItemActions.validateQueuedTasks.do());
+  }
+
   applyTaskOptionsOnQueuedTasks(options: StoreItemTaskOptions) {
     this.store.dispatch(
       StoreItemActions.changeProcessingOptionsForEachQueuedTask.do({
@@ -108,6 +112,10 @@ export class ModeStoreService {
 
   setDefaultUserSettings(defaultUserSettings: DefaultUserSettings) {
     this.store.dispatch(ModeActions.setDefaultSettings.do({ defaultUserSettings }));
+  }
+
+  markValidQueuedTasksAsPending(){
+    this.store.dispatch(StoreItemActions.markValidQueuedTasksAsPending.do());
   }
 
   startProcessing() {

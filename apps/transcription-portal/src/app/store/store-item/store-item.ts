@@ -47,6 +47,8 @@ export interface StoreItem {
   operations?: StoreTaskOperation[];
   directoryID?: number;
   status?: TaskStatus;
+  invalid?: boolean;
+  checks?: CompatibleResult[];
 
   // folder
   path?: string;
@@ -70,6 +72,8 @@ export interface StoreItemTask extends Omit<StoreItem, 'path' | 'size' | 'folder
   operations: StoreTaskOperation<any, StoreTaskOperation>[];
   directoryID?: number;
   status: TaskStatus;
+  invalid?: boolean;
+  checks?: CompatibleResult[];
 }
 
 export interface StoreFile {
@@ -100,4 +104,10 @@ export interface StoreAudioFile extends StoreFile {
   channels: number;
   duration: number;
   audioBufferInfo?: { samples: number; sampleRate: number };
+}
+
+export interface CompatibleResult {
+  name: string;
+  isValid: boolean;
+  value: string;
 }

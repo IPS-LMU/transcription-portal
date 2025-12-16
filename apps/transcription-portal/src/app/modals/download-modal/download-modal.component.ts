@@ -25,7 +25,6 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   type: 'line' | 'column' = 'column';
   private selectedTasks?: StoreItem[];
-  taskList?: StoreItemTask[];
   column?: OperationFactory;
   private allTasks?: StoreItemTask[] | null;
   private operations?: {
@@ -92,7 +91,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     if (!this.allTasks || !this.operations) {
       throw new Error('All tasks or operations are undefined.');
     }
-    // get url for resulty by column
+    // get url for results by column
     // prepare package
     const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
     const requestPackage: {

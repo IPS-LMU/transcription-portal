@@ -569,14 +569,12 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       return;
     }
     this.togglePopover(false);
-    // TODO check task.mouseover = false;
   }
 
   onInfoMouseOver($event: MouseEvent, task?: StoreItemTask) {
     if (!task) {
       return;
     }
-    // TODO check task.mouseover = true;
   }
 
   calculateDuration(time: { start: number; duration?: number } | undefined, operation: StoreTaskOperation) {
@@ -597,7 +595,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       if (
         lastRound?.status === TaskStatus.ERROR ||
         (lastRound?.status === TaskStatus.FINISHED &&
-          !(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.blob))
+          !(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.content))
       ) {
         return 'red';
       } else if (lastRound?.status === TaskStatus.FINISHED && operation.protocol) {
