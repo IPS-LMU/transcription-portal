@@ -18,7 +18,7 @@ export class OHModalService implements OnDestroy {
 
   private subscrManager = new SubscriptionManager();
 
-  public openFeedbackModal() {
+  public async openFeedbackModal() {
     const pkgText = JSON.stringify(
       {
         type: 'bug',

@@ -223,9 +223,12 @@
                   </div>
                   <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
                     <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> Backup Database
-                    @if (dbBackup.safeURL) {
+                    @if ((appStoreService.idbBackup$ | async)?.safeURL) {
                       <p>
-                        <a class="btn btn-outline-info btn-sm w-100" [href]="dbBackup.safeURL" [download]="dbBackup.filename"
+                        <a
+                          class="btn btn-outline-info btn-sm w-100"
+                          [href]="(appStoreService.idbBackup$ | async)!.safeURL"
+                          [download]="(appStoreService.idbBackup$ | async)!.filename"
                           ><i class="bi bi-cloud-download-fill"></i> Download</a
                         >
                       </p>
@@ -308,7 +311,8 @@
     </li>
   </ul>
   <div class="alert alert-warning m-0">
-    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
+    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change
+    and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
   </div>
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
@@ -338,10 +342,7 @@
         </div>
       </div>
       <div class="col-4" style="text-align: right; padding-top: 5px">
-        <button
-          (click)="onStartClick()"
-          class="btn btn-primary"
-        >
+        <button (click)="onStartClick()" class="btn btn-primary">
           <i
             [ngClass]="{
               'bi-play-fill': (modeStoreService.overallState$ | async) !== 'processing',

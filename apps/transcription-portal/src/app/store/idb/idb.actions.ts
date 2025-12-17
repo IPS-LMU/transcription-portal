@@ -1,10 +1,9 @@
+import { SafeUrl } from '@angular/platform-browser';
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBInternItem, IDBTaskItem, IDBUserSettingsItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
-import { StoreItem } from '../store-item';
-import { ofType } from '@ngrx/effects';
 
-export interface IDBLoadSuccessResults{
+export interface IDBLoadSuccessResults {
   annotationTasks: IDBTaskItem[];
   summarizationTasks: IDBTaskItem[];
   userSettings: IDBUserSettingsItem<any>[];
@@ -12,9 +11,9 @@ export interface IDBLoadSuccessResults{
 
 export interface IDBLoadedResults {
   intern: IDBInternItem[];
-  annotationTasks: IDBTaskItem[],
-  summarizationTasks: IDBTaskItem[],
-  userSettings: IDBUserSettingsItem<any>[]
+  annotationTasks: IDBTaskItem[];
+  summarizationTasks: IDBTaskItem[];
+  userSettings: IDBUserSettingsItem<any>[];
 }
 
 export class IDBActions {
@@ -31,49 +30,48 @@ export class IDBActions {
   });
 
   static saveInternValues = createActionGroup({
-      source: 'idb/save intern values',
-      events: {
-        do: props<{
-          items: IDBInternItem[]
-        }>(),
-        success: props<{
-          items: IDBInternItem[]
-        }>(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'idb/save intern values',
+    events: {
+      do: props<{
+        items: IDBInternItem[];
+      }>(),
+      success: props<{
+        items: IDBInternItem[];
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
-
   static saveDefaultUserSettings = createActionGroup({
-      source: 'idb/save default user settings',
-      events: {
-        success: emptyProps(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'idb/save default user settings',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
   static saveNotificationEnabled = createActionGroup({
-      source: 'idb/save notification enabled',
-      events: {
-        success: emptyProps(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'idb/save notification enabled',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
   static saveSidebarWidth = createActionGroup({
-      source: 'idb/save sidebar width',
-      events: {
-        success: emptyProps(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
+    source: 'idb/save sidebar width',
+    events: {
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
   });
 
   static saveAccessCode = createActionGroup({
@@ -83,7 +81,7 @@ export class IDBActions {
       fail: props<{
         error: string;
       }>(),
-    }
+    },
   });
 
   static saveRemovedTasksOrFolder = createActionGroup({
@@ -93,7 +91,7 @@ export class IDBActions {
       fail: props<{
         error: string;
       }>(),
-    }
+    },
   });
 
   static saveRemovedStoreItems = createActionGroup({
@@ -103,7 +101,7 @@ export class IDBActions {
       fail: props<{
         error: string;
       }>(),
-    }
+    },
   });
 
   static saveTask = createActionGroup({
@@ -111,24 +109,71 @@ export class IDBActions {
     events: {
       do: props<{
         mode: TPortalModes;
-        taskID: number,
+        taskID: number;
       }>(),
       success: props<{
         mode: TPortalModes;
-        taskID: number,
+        taskID: number;
       }>(),
       fail: props<{
         error: string;
       }>(),
-    }
+    },
   });
 
   static saveStoreItems = createActionGroup({
-      source: 'idb/save items',
+    source: 'idb/save items',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        itemIDs: number[];
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static saveCounters = createActionGroup({
+    source: 'idb/save counters',
+    events: {
+      do: emptyProps(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static clearDatabase = createActionGroup({
+    source: 'idb/clear database',
+    events: {
+      do: emptyProps(),
+    },
+  });
+
+  static backupDatabase = createActionGroup({
+    source: 'idb/backup database',
+    events: {
+      do: emptyProps(),
+      success: props<{
+        url: string;
+        safeURL: SafeUrl;
+        filename: string;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+      revoke: emptyProps(),
+    },
+  });
+
+  static restoreDatabase = createActionGroup({
+      source: 'idb/restore database',
       events: {
         do: props<{
-          mode: TPortalModes;
-          itemIDs: number[];
+          blob: Blob;
         }>(),
         success: emptyProps(),
         fail: props<{
@@ -137,14 +182,4 @@ export class IDBActions {
       }
   });
 
-  static saveCounters = createActionGroup({
-      source: 'idb/save counters',
-      events: {
-        do: emptyProps(),
-        success: emptyProps(),
-        fail: props<{
-          error: string;
-        }>(),
-      }
-  });
 }

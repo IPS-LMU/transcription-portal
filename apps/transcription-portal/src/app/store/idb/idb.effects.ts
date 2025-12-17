@@ -1,8 +1,10 @@
 import { inject, Injectable } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { Store } from '@ngrx/store';
 import { Table } from 'dexie';
+import { DateTime } from 'luxon';
 import { catchError, exhaustMap, from, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
@@ -26,6 +28,7 @@ const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
 export class IDBEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
+  private sanitizer = inject(DomSanitizer);
   private _idbm!: IndexedDBManager;
 
   // TODO move to other class
@@ -489,6 +492,55 @@ export class IDBEffects {
         ),
       ),
     ),
+  );
+
+  clearDatabase$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(IDBActions.clearDatabase.do),
+        tap(async () => {
+          await this._idbm.delete({
+            disableAutoOpen: true,
+          });
+          window.location.reload();
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  backupDatabase = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.backupDatabase.do),
+      exhaustMap(() =>
+        from(this._idbm.backup()).pipe(
+          exhaustMap((url) => {
+            return of(
+              IDBActions.backupDatabase.success({
+                url,
+                safeURL: this.sanitizer.bypassSecurityTrustResourceUrl(url),
+                filename: `tportal_backup_${DateTime.now().toISO()}.idb`,
+              }),
+            );
+          }),
+          catchError((error) => {
+            return of(
+              IDBActions.backupDatabase.fail({
+                error: error?.message,
+              }),
+            );
+          }),
+        ),
+      ),
+    ),
+  );
+
+  restoreDatabase$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.restoreDatabase.do),
+      tap(async (action) => {
+        await this._idbm.importBackup(action.blob);
+      }),
+    ), {dispatch: false},
   );
 
   private loadIDB = async () => {

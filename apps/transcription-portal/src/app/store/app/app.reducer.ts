@@ -1,3 +1,4 @@
+import { SafeUrl } from '@angular/platform-browser';
 import { createReducer, on } from '@ngrx/store';
 import { OHConfiguration, ProviderLanguage } from '../../obj/oh-config';
 import { ExternalInformationState } from '../external-information';
@@ -23,6 +24,12 @@ export interface AppState {
   availableLanguages?: {
     asr?: ProviderLanguage[];
     maus?: ProviderLanguage[];
+  };
+
+  idbBackup?: {
+    url: string;
+    safeURL: SafeUrl;
+    filename: string;
   };
 }
 
@@ -202,6 +209,34 @@ export const appReducer = createReducer(
       },
     }),
   ),
+  on(
+    IDBActions.backupDatabase.do,
+    (state: AppState): AppState => ({
+      ...state,
+      idbBackup: undefined,
+    }),
+  ),
+  on(
+    IDBActions.backupDatabase.success,
+    (state: AppState, { url, safeURL, filename }): AppState => ({
+      ...state,
+      idbBackup: {
+        url,
+        safeURL,
+        filename,
+      },
+    }),
+  ),
+  on(IDBActions.backupDatabase.revoke, (state: AppState): AppState => {
+    if (state.idbBackup?.url) {
+      URL.revokeObjectURL(state.idbBackup.url);
+    }
+
+    return {
+      ...state,
+      idbBackup: undefined,
+    };
+  }),
   on(
     AppActions.changeNotificationEnabled.do,
     (state: AppState, { enabled }): AppState => ({

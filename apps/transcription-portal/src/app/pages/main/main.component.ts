@@ -2,7 +2,6 @@ import { AsyncPipe, DatePipe, NgClass, NgStyle } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
   NgbCollapse,
   NgbDropdown,
@@ -13,6 +12,7 @@ import {
   NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
+import { ConsoleType } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { environment } from '../../../environments/environment';
@@ -36,6 +36,7 @@ import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import {
   AppStoreService,
+  IDBStoreService,
   ModeStoreService,
   OperationFactory,
   PreprocessingStoreService,
@@ -79,7 +80,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected bugService = inject(BugReportService);
   protected alertService = inject(AlertService);
   protected settingsService = inject(SettingsService);
-  protected sanitizer = inject(DomSanitizer);
+  protected idbStoreService = inject(IDBStoreService);
   protected modalService = inject(OHModalService);
   protected appStoreService = inject(AppStoreService);
   protected modeStoreService = inject(ModeStoreService);
@@ -102,11 +103,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         url: string;
       }
     | undefined;
-  protected dbBackup: {
-    url?: string;
-    safeURL?: SafeUrl;
-    filename?: string;
-  } = {};
 
   activeMode = 1;
 
@@ -251,21 +247,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     return '';
   }
 
-  public getTime(): number {
-    /* TODO ADD
-    if (this.toolSelectedOperation?.task) {
-      const elem: TPortalAudioInfo = this.toolSelectedOperation.task.files[0] as any as TPortalAudioInfo;
-
-      if (!(elem.duration === null || elem.duration === undefined)) {
-        return elem.duration.unix;
-      }
-    }
-
-     */
-
-    return 0;
-  }
-
   public dragBorder($event: any, part: string) {
     if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
       if (this.dragborder !== 'dragging') {
@@ -325,10 +306,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     const result = await ref.result;
 
     if (result === 'yes') {
-      /* TODO add
-      this.storage.clearAll();
-
-       */
+      this.idbStoreService.clearDatabase();
     }
   }
 
@@ -337,12 +315,13 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onFeedbackRequest(operation: StoreTaskOperation) {
-    /*  TODO implement
     this.bugService.addEntry(
       ConsoleType.INFO,
-      `user clicked on report issue:\n` + `operation: ${operation.name}, ${operation.state}\n` + `protocol: ${operation.protocol}\n`,
+      `user clicked on report issue:\n` +
+        `operation: ${operation.name}, ${getLastOperationRound(operation)?.status}\n` +
+        `protocol: ${operation.protocol}\n`,
     );
-    this.modalService.openFeedbackModal(); */
+    this.modalService.openFeedbackModal();
   }
 
   private readNewFiles(entries: (TPortalFileInfo | TPortalDirectoryInfo)[]) {
@@ -382,19 +361,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   async backupDatabase() {
-    /* TODO ADD
-    this.dbBackup.url = await this.storage.backup();
-    this.dbBackup.safeURL = this.sanitizer.bypassSecurityTrustResourceUrl(this.dbBackup.url);
-    this.dbBackup.filename = `tportal_backup_${DateTime.now().toISO()}.idb`;
-     */
+    this.idbStoreService.backupDatabase();
   }
 
   onSettingsDropdownChange(opened: boolean) {
     if (!opened) {
-      if (this.dbBackup?.url) {
-        URL.revokeObjectURL(this.dbBackup.url);
-        this.dbBackup = {};
-      }
+      this.idbStoreService.revokeDatabaseBackupURL();
     }
   }
 
@@ -402,7 +374,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     if (restoreInput.files && restoreInput.files.length === 1) {
       const blob = restoreInput.files.item(0);
       if (blob) {
-        // TODO add await this.storage.importBackup(blob);
+        this.idbStoreService.restoreDatabase(blob);
       }
     }
 
