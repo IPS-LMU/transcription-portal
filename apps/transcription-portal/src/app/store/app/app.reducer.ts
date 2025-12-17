@@ -18,7 +18,6 @@ export interface AppState {
   sidebarWidth?: number;
   accessCode?: string;
   notificationEnabled?: boolean;
-  protocolURL?: string;
 
   settings?: OHConfiguration;
   availableLanguages?: {

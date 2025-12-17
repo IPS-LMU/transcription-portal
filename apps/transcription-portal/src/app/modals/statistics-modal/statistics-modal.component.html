@@ -4,10 +4,11 @@
 </div>
 <div class="modal-body">
   <div style="text-align: right">
-    <!-- TODO ADD
-    @if (taskService.currentModeState?.protocolURL && taskService.currentModeState?.protocolFileName) {
-      <a [download]="taskService.currentModeState!.protocolFileName" [href]="taskService.currentModeState!.protocolURL">Download JSON</a>
-    } -->
+    @if (modeStoreService.currentModeProtocol$ | async) {
+      <a [download]="(modeStoreService.currentModeProtocol$ | async)?.fileName" [href]="(modeStoreService.currentModeProtocol$ | async)?.url"
+        >Download JSON</a
+      >
+    }
   </div>
   <div class="row">
     <div class="col-6 col-md-3" style="margin-left: -20px">

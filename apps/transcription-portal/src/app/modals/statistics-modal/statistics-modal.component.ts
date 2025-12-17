@@ -48,6 +48,7 @@ export class StatisticsModalComponent extends SubscriberComponent implements OnD
   }
 
   ngAfterViewInit() {
+    this.modeStoreService.updateProtocol();
     this.subscribe(timer(1000), {
       next: () => {
         this.showCharts = true;

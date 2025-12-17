@@ -1,3 +1,4 @@
+import { SafeUrl } from '@angular/platform-browser';
 import { createActionGroup, emptyProps, props } from '@ngrx/store';
 import { OHConfiguration } from '../../obj/oh-config';
 import { OperationFactory } from '../operation';
@@ -21,7 +22,10 @@ export class ModeActions {
     source: 'modes/update protocol URL',
     events: {
       do: emptyProps(),
-      success: emptyProps(),
+      success: props<{
+        fileName: string;
+        url: string;
+      }>(),
       fail: props<{
         error: string;
       }>(),
@@ -63,10 +67,9 @@ export class ModeActions {
   });
 
   static closeToolLoader = createActionGroup({
-      source: 'mode/close tool loader',
-      events: {
-        do: emptyProps()
-      }
+    source: 'mode/close tool loader',
+    events: {
+      do: emptyProps(),
+    },
   });
-
 }

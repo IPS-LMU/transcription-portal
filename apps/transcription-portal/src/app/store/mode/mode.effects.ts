@@ -2,10 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
-import { exhaustMap, map, of, withLatestFrom } from 'rxjs';
+import { DateTime } from 'luxon';
+import { catchError, exhaustMap, forkJoin, map, of, withLatestFrom } from 'rxjs';
 import { RootState } from '../app';
 import { ModeActions } from '../mode/mode.actions';
-import { TPortalModes } from './mode.state';
+import { convertStoreItemToIDBItem } from '../operation/operation.functions';
+import { StoreItem } from '../store-item';
+import { getAllTasks } from './mode.functions';
 
 @Injectable()
 export class ModeEffects {
@@ -22,65 +25,45 @@ export class ModeEffects {
     ),
   );
 
-  updateProtocolURL$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(ModeActions.initModes.do),
-      map(() => {
-        return ModeActions.updateProtocolURL.do();
-      }),
-    ),
-  );
-
   updateProtocolURLSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ModeActions.updateProtocolURL.do),
       withLatestFrom(this.store),
-      exhaustMap(([, state]: [any, RootState]) => {
-        const protocol = {
-          version: '2.0.0',
-          modes: [],
-        };
-        for (const mode of ['annotation', 'summarization'] as TPortalModes[]) {
-          const protocolMode = {
-            name: mode,
-            tasks: [],
-          };
-          const affectedMode = state.modes.entities[mode];
-          if (state.app.protocolURL) {
-            URL.revokeObjectURL(state.app.protocolURL);
-          } /*
+      exhaustMap(([action, state]: [any, RootState]) => {
+        const affectedMode = state.modes.entities[state.modes.currentMode]!;
+        return forkJoin(
+          getAllTasks(affectedMode?.items ?? []).map((item: StoreItem) => convertStoreItemToIDBItem(item, affectedMode.defaultOperations)),
+        ).pipe(
+          exhaustMap((values) => {
+            const json = {
+              version: '2.0.0',
+              encoding: 'UTF-8',
+              created: DateTime.now().toISO(),
+              mode: state.modes.currentMode,
+              entries: values,
+            };
 
-          const test = forkJoin(affectedMode?.tasks.entities ?? [])
-          const promises: Promise<any>[] = [];
-          for (const entry of affectedMode.taskList.entries) {
-            promises.push(entry.toAny());
-          }
-
-          Promise.all(promises)
-            .then((values) => {
-              const json = {
-                version: '1.0.0',
-                encoding: 'UTF-8',
-                created: DateTime.now().toISO(),
-                entries: values,
-              };
-
-              affectedMode.protocolFileName = `oh_portal_${mode}_${DateTime.now().toISO()}.json`;
-              const file = new File([JSON.stringify(json, null, 2)], affectedMode.protocolFileName, {
-                type: 'text/plain',
-              });
-
-              const url = URL.createObjectURL(file);
-              affectedMode.protocolURL = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-              resolve(affectedMode.protocolURL);
-            })
-            .catch((error) => {
-              reject(error);
+            const fileName = `transcription_portal_${action.mode}_${DateTime.now().toISO()}.json`;
+            const file = new File([JSON.stringify(json, null, 2)], fileName, {
+              type: 'text/plain',
             });
-            */
-        }
 
-        return of(ModeActions.updateProtocolURL.success());
+            const url = URL.createObjectURL(file);
+            return of(
+              ModeActions.updateProtocolURL.success({
+                url,
+                fileName,
+              }),
+            );
+          }),
+          catchError((err) =>
+            of(
+              ModeActions.updateProtocolURL.fail({
+                error: err.message,
+              }),
+            ),
+          ),
+        );
       }),
     ),
   );

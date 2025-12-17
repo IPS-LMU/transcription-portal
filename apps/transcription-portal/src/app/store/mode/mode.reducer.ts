@@ -207,6 +207,37 @@ export const modeReducer = createReducer(
       currentMode: mode,
     }),
   ),
+  on(ModeActions.updateProtocolURL.do, (state: ModeState): ModeState => {
+    const currentMode = state.entities![state.currentMode];
+    if (currentMode?.protocol?.url) {
+      URL.revokeObjectURL(currentMode.protocol.url);
+    }
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          protocol: undefined,
+        },
+      },
+      state,
+    );
+  }),
+  on(
+    ModeActions.updateProtocolURL.success,
+    (state: ModeState, { url, fileName }): ModeState =>
+      modeAdapter.updateOne(
+        {
+          id: state.currentMode,
+          changes: {
+            protocol: {
+              url,
+              fileName,
+            },
+          },
+        },
+        state,
+      ),
+  ),
   on(
     ModeActions.setDefaultSettings.do,
     (state: ModeState, { defaultUserSettings }): ModeState => ({

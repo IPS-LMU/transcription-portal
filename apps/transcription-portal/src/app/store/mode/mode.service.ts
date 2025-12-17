@@ -10,7 +10,9 @@ import {
   selectAllCurrentTasks,
   selectAllTasks,
   selectCurrentMode,
-  selectCurrentModeEntries, selectCurrentModeSelectedEntries,
+  selectCurrentModeEntries,
+  selectCurrentModeProtocol,
+  selectCurrentModeSelectedEntries,
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
@@ -36,6 +38,7 @@ export class ModeStoreService {
   overallState$ = this.store.select(selectOverallState);
   openedToolOperation$ = this.store.select(selectOpenedToolOperation);
   currentOverallStateLabel$ = this.store.select(selectOverallStateLabel);
+  currentModeProtocol$ = this.store.select(selectCurrentModeProtocol);
 
   toggleSelectionForAllRows() {
     this.store.dispatch(StoreItemActions.toggleAllSelected.do());
@@ -81,6 +84,10 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
   }
 
+  updateProtocol() {
+    this.store.dispatch(ModeActions.updateProtocolURL.do());
+  }
+
   setDefaultOperationEnabled(name: string, enabled: boolean) {
     this.store.dispatch(
       ModeActions.setDefaultOperationEnabled.do({
@@ -114,7 +121,7 @@ export class ModeStoreService {
     this.store.dispatch(ModeActions.setDefaultSettings.do({ defaultUserSettings }));
   }
 
-  markValidQueuedTasksAsPending(){
+  markValidQueuedTasksAsPending() {
     this.store.dispatch(StoreItemActions.markValidQueuedTasksAsPending.do());
   }
 

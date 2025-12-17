@@ -26,6 +26,7 @@ export const selectOverallStatistics = (state: RootState) => {
   return statistics;
 };
 export const selectCurrentModeStatistics = createSelector(selectCurrentModeState, (mode) => mode!.statistics);
+export const selectCurrentModeProtocol = createSelector(selectCurrentModeState, (mode) => mode!.protocol);
 export const selectOverallState = createSelector(selectCurrentModeState, (mode) => mode!.overallState);
 export const selectDefaultOperations = createSelector(selectCurrentModeState, (mode) => mode?.defaultOperations);
 export const selectCurrentModeEntries = createSelector(selectCurrentModeState, (mode): StoreItem[] =>
