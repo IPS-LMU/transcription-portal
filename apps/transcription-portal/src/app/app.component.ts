@@ -4,7 +4,7 @@ import { VersionCheckerService, VersionNotificationComponent } from '@octra/ngx-
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { ANIMATIONS } from './shared/Animations';
 import { NotificationService } from './shared/notification.service';
-import { AppStoreService } from './store';
+import { AppStoreService, ModeStoreService } from './store';
 
 @Component({
   selector: 'tportal-root',
@@ -17,6 +17,7 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
   notification = inject(NotificationService);
   appStoreService = inject(AppStoreService);
   versionChecker = inject(VersionCheckerService);
+  modeStoreService = inject(ModeStoreService);
 
   constructor() {
     super();
@@ -25,6 +26,6 @@ export class AppComponent extends SubscriberComponent implements OnDestroy {
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    alert("DESTROY?")
+    this.modeStoreService.destroy();
   }
 }

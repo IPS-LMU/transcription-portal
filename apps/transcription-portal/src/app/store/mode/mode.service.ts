@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { SubscriptionManager } from '@octra/utilities';
 import { Observable } from 'rxjs';
 import { RootState } from '../app';
 import { ASROperation, StoreTaskOperation } from '../operation';
@@ -35,10 +36,13 @@ export class ModeStoreService {
   overallStatistics$ = this.store.select(selectOverallStatistics);
   allCurrentTasks$ = this.store.select(selectAllCurrentTasks);
   currentMode$ = this.store.select(selectCurrentMode);
+  currentMode?: TPortalModes;
   overallState$ = this.store.select(selectOverallState);
   openedToolOperation$ = this.store.select(selectOpenedToolOperation);
   currentOverallStateLabel$ = this.store.select(selectOverallStateLabel);
   currentModeProtocol$ = this.store.select(selectCurrentModeProtocol);
+
+  private subscrManager = new SubscriptionManager();
 
   toggleSelectionForAllRows() {
     this.store.dispatch(StoreItemActions.toggleAllSelected.do());
@@ -161,5 +165,19 @@ export class ModeStoreService {
 
   closeToolLoader() {
     this.store.dispatch(ModeActions.closeToolLoader.do());
+  }
+
+  constructor() {
+    this.subscrManager.add(
+      this.currentMode$.subscribe({
+        next: (mode) => {
+          this.currentMode = mode;
+        },
+      }),
+    );
+  }
+
+  destroy(): void {
+    this.subscrManager.destroy();
   }
 }

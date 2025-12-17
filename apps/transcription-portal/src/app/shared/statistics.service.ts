@@ -1,10 +1,14 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { sum } from '@octra/api-types';
 import { SubscriptionManager } from '@octra/utilities';
 import { ChartData } from 'chart.js';
 import { Subscription } from 'rxjs';
+import { ModeStoreService, StoreItem, StoreItemTask } from '../store';
+import { getLastOperationRound } from '../store/operation/operation.functions';
 
 @Injectable()
 export class StatisticsService {
+  private modeStoreService = inject(ModeStoreService);
   public overAllProgress = {
     waiting: 0,
     processing: 0,
@@ -17,68 +21,77 @@ export class StatisticsService {
   private subscrmanager = new SubscriptionManager<Subscription>();
 
   constructor() {
-    /* TODO ADD
     this.subscrmanager.add(
-      interval(1000).subscribe(() => {
-        const modeState = this.taskService.state.modes[this.taskService.state.currentMode];
-        const allTasks = [...(modeState.taskList?.getAllTasks() ?? [])];
-        const allTasksCount = allTasks.length;
-        this.overAllProgress.waiting = ((modeState.statistics.waiting + modeState.statistics.queued) / allTasksCount) * 100;
-        this.overAllProgress.failed = (modeState.statistics.errors / allTasksCount) * 100;
-        this.overAllProgress.processing = (modeState.statistics.running / allTasksCount) * 100;
-        this.overAllProgress.finished = (modeState.statistics.finished / allTasksCount) * 100;
-        this.updateAverageDurations(this.taskService.state.currentMode);
+      this.modeStoreService.currentModeStatistics$.subscribe({
+        next: (statistics) => {
+          const allTasksCount = sum(Object.keys(statistics).map((a) => (statistics as any)[a]!));
+          this.overAllProgress.waiting = ((statistics.waiting + statistics.queued) / allTasksCount) * 100;
+          this.overAllProgress.failed = (statistics.errors / allTasksCount) * 100;
+          this.overAllProgress.processing = (statistics.running / allTasksCount) * 100;
+          this.overAllProgress.finished = (statistics.finished / allTasksCount) * 100;
+
+          // this.updateAverageDurations(this.taskService.state.currentMode);
+        },
       }),
     );
 
-     */
+    this.subscrmanager.add(
+      this.modeStoreService.currentModeEntries$.subscribe({
+        next: (items) => {
+          const flat = (item: StoreItem): StoreItemTask[] => {
+            if (item.type === 'task') {
+              return [item as StoreItemTask];
+            }
+            return item
+              .entries!.ids.map((id) => item.entries!.entities[id]!)
+              .map(flat)
+              .flat();
+          };
+
+          const tasks = items.map(flat).flat();
+          this.updateAverageDurations(tasks);
+        },
+      }),
+    );
   }
 
   public destroy() {
     this.subscrmanager.destroy();
   }
 
-  public updateAverageDurations(mode: 'annotation' | 'summarization') {
-    /* TODO ADD
+  public updateAverageDurations(tasks: StoreItemTask[]) {
+    const durations = [0, 0, 0, 0, 0];
 
-    if (this.taskService.statistics && this.taskService.state?.modes && Object.keys(this.taskService.state.modes).includes(mode)) {
-      const modeState = this.taskService.state.modes[mode];
-      const tasks = modeState.taskList?.getAllTasks() ?? [];
+    for (const task of tasks) {
+      for (let j = 0; j < task.operations.length; j++) {
+        const operation = task.operations[j];
 
-      const durations = [0, 0, 0, 0, 0];
-
-      for (const task of tasks) {
-        for (let j = 0; j < task.operations.length; j++) {
-          const operation = task.operations[j];
-
-          durations[j] += (operation.time?.duration ?? 0);
-        }
-      }
-
-      if (mode === 'annotation') {
-        this.averageDurations = {
-          labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Word alignment'], ['Phonetic Detail']],
-          datasets: [
-            {
-              data: [0, 0, 0, 0, 0],
-            },
-          ],
-        };
-      } else {
-        this.averageDurations = {
-          labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Summarization'], ['Translation']],
-          datasets: [
-            {
-              data: [0, 0, 0, 0, 0],
-            },
-          ],
-        };
-      }
-
-      for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
-        this.averageDurations.datasets[0].data[i] = Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
+        durations[j] += getLastOperationRound(operation)?.time?.duration ?? 0;
       }
     }
-     */
+
+    if (this.modeStoreService.currentMode === 'annotation') {
+      this.averageDurations = {
+        labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Word alignment'], ['Phonetic Detail']],
+        datasets: [
+          {
+            data: [0, 0, 0, 0, 0],
+          },
+        ],
+      };
+    } else {
+      this.averageDurations = {
+        labels: [['Upload'], ['Speech Recognition'], ['Manual Transcription'], ['Summarization'], ['Translation']],
+        datasets: [
+          {
+            data: [0, 0, 0, 0, 0],
+          },
+        ],
+      };
+    }
+
+    for (let i = 0; i < this.averageDurations.datasets[0].data.length; i++) {
+      this.averageDurations.datasets[0].data[i] = Math.ceil((durations[i] / 1000 / 60) * 100) / 100;
+    }
   }
 }
