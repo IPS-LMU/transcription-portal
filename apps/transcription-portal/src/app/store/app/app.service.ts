@@ -10,6 +10,7 @@ import {
   selectAvailableLanguages,
   selectFeedbackEnabled,
   selectIDBBackup,
+  selectShortcutsEnabled,
   selectUserProfile,
 } from './app.selectors';
 
@@ -23,6 +24,7 @@ export class AppStoreService {
   idbBackup$ = this.store.select(selectIDBBackup);
   feedbackEnabled$ = this.store.select(selectFeedbackEnabled);
   userProfile$ = this.store.select(selectUserProfile);
+  shortcutsEnabled$ = this.store.select(selectShortcutsEnabled);
 
   initApplication() {
     this.store.dispatch(AppActions.initApplication.do());
@@ -46,5 +48,13 @@ export class AppStoreService {
 
   changeUserProfile(name: string, email: string) {
     this.store.dispatch(AppActions.saveUserProfile.do({ name, email }));
+  }
+
+  setShortcutsEnabled(shortcutsEnabled: boolean) {
+    this.store.dispatch(
+      AppActions.setShortcutsEnabled.do({
+        shortcutsEnabled,
+      }),
+    );
   }
 }

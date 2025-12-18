@@ -270,7 +270,7 @@
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
-            [shortcutsEnabled]="settingsService.shortCutsEnabled"
+            [shortcutsEnabled]="(appStoreService.shortcutsEnabled$ | async)!"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
@@ -293,7 +293,7 @@
           <tportal-proceedings
             #proceedings
             (afterdrop)="onAfterDrop($event)"
-            [shortcutsEnabled]="settingsService.shortCutsEnabled"
+            [shortcutsEnabled]="(appStoreService.shortcutsEnabled$ | async)!"
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"

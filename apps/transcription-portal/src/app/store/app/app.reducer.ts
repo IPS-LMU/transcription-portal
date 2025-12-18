@@ -19,6 +19,7 @@ export interface AppState {
   sidebarWidth?: number;
   accessCode?: string;
   notificationEnabled?: boolean;
+  shortcutsEnabled?: boolean;
 
   settings?: OHConfiguration;
   availableLanguages?: {
@@ -288,6 +289,13 @@ export const appReducer = createReducer(
         name,
         email,
       },
+    }),
+  ),
+  on(
+    AppActions.setShortcutsEnabled.do,
+    (state: AppState, { shortcutsEnabled }): AppState => ({
+      ...state,
+      shortcutsEnabled,
     }),
   ),
 );

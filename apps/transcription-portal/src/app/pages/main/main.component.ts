@@ -26,12 +26,10 @@ import { StatisticsModalComponent } from '../../modals/statistics-modal/statisti
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
 import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { AlertService } from '../../shared/alert.service';
 import { ANIMATIONS } from '../../shared/Animations';
 import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
-import { SettingsService } from '../../shared/settings.service';
 import { TimePipe } from '../../shared/time.pipe';
 import { StorageService } from '../../storage.service';
 import {
@@ -78,8 +76,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected notification = inject(NotificationService);
   protected storage = inject(StorageService);
   protected bugService = inject(BugReportService);
-  protected alertService = inject(AlertService);
-  protected settingsService = inject(SettingsService);
   protected idbStoreService = inject(IDBStoreService);
   protected modalService = inject(OHModalService);
   protected appStoreService = inject(AppStoreService);
@@ -162,10 +158,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   async openQueueModal() {
-    this.settingsService.shortCutsEnabled = false;
+    this.appStoreService.setShortcutsEnabled(false);
     const ref = openModal<QueueModalComponent>(this.ngbModalService, QueueModalComponent, QueueModalComponent.options);
     await ref.result;
-    this.settingsService.shortCutsEnabled = true;
+    this.appStoreService.setShortcutsEnabled(true);
   }
 
   onMissedDrop(event: DragEvent) {
@@ -337,18 +333,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   async openStatisticsModal() {
-    this.settingsService.shortCutsEnabled = false;
+    this.appStoreService.setShortcutsEnabled(false);
     const ref = this.ngbModalService.open(StatisticsModalComponent, StatisticsModalComponent.options);
-    this.settingsService.shortCutsEnabled = false;
-    ref.result
-      .then(() => {
-        this.settingsService.shortCutsEnabled = true;
-      })
-      .catch((err) => {
-        this.settingsService.shortCutsEnabled = true;
-      });
-    await ref.result;
-    this.settingsService.shortCutsEnabled = true;
+    try {
+      await ref.result;
+      this.appStoreService.setShortcutsEnabled(true);
+    } catch (error) {
+      this.appStoreService.setShortcutsEnabled(true);
+    }
   }
 
   changeMode(mode: 'annotation' | 'summarization') {
