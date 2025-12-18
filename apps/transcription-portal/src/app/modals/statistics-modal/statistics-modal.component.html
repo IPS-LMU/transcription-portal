@@ -1,11 +1,11 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.statistics.title' | transloco: { currentMode: taskService.state.currentMode } }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.statistics.title' | transloco: { currentMode: modeStoreService.currentMode } }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close()"></button>
 </div>
 <div class="modal-body">
   <div style="text-align: right">
-    @if (taskService.currentModeState?.protocolURL && taskService.currentModeState?.protocolFileName) {
-      <a [download]="taskService.currentModeState!.protocolFileName" [href]="taskService.currentModeState!.protocolURL"
+    @if ((modeStoreService.currentModeProtocol$ | async)?.url && (modeStoreService.currentModeProtocol$ | async)?.fileName) {
+      <a [download]="(modeStoreService.currentModeProtocol$ | async)?.fileName" [href]="(modeStoreService.currentModeProtocol$ | async)?.url"
         >{{ 'g.download' | transloco }} JSON</a
       >
     }

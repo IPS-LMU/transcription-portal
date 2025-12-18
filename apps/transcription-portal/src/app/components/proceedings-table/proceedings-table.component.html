@@ -55,7 +55,8 @@
           <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
             ><i class="bi bi-journal-text"></i> {{ 'p.service terms' | transloco }}</a
           ><br />
-          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank"><i class="bi bi-globe"></i> {{ 'g.homepage' | transloco }}</a
+          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank"
+            ><i class="bi bi-globe"></i> {{ 'g.homepage' | transloco }}</a
           ><br />
         </div>
         <i (click)="onReportIconClick(popover.operation)" class="bi bi-exclamation-circle report-issue"></i>
@@ -91,65 +92,47 @@
             <i class="bi bi-clipboard"></i> Copy to clipboard
           </button>
         </div>
-        <table class="table table-sm table-striped" id="output-table">
-          <tbody>
-            @for (item of popover.lastOperationRound.parsedProtocol ?? []; track item) {
-              <tr>
-                <td>
-                  @if (item.type === 'ERROR') {
-                    <i class="bi bi-exclamation-circle" style="color: red"></i>
-                  } @else {
-                    <i class="bi bi-exclamation-triangle" style="color: orange"></i>
-                  }
-                </td>
-                <td
+        @if (getLastOperationRound(popover.operation!)?.parsedProtocol && getLastOperationRound(popover.operation)!.parsedProtocol!.length > 0) {
+          <div class="mt-3 border" id="output-area">
+            <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
+              <div class="col-sm text-light" style="font-size: 0.9rem">{{ 'g.protocol' | transloco }}</div>
+              <div class="col-auto">
+                <button
+                  (click)="copyProtocolToClipboard(popover.operation.protocol)"
+                  class="btn btn-sm btn-outline-light"
+                  style="font-size: 11px; cursor: pointer; margin-bottom: 0"
+                >
+                  <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboard' | transloco }}
+                </button>
+              </div>
+            </div>
+            <div class="list-group" id="op-protocol-list">
+              @for (item of getLastOperationRound(popover.operation)!.parsedProtocol!; track item) {
+                <div
+                  class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
                   [ngClass]="{
-                    error: item.type === 'ERROR',
-                    warning: item.type === 'WARNING',
+                    'list-group-item-warning': item.type === 'WARNING',
+                    'list-group-item-danger': item.type === 'ERROR',
                   }"
                 >
-                  {{ item.message }}
-                </td>
-      @if (popover.operation.parsedProtocol.length > 0) {
-        <div class="mt-3 border" id="output-area">
-          <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
-            <div class="col-sm text-light" style="font-size: 0.9rem">{{ 'g.protocol' | transloco }}</div>
-            <div class="col-auto">
-              <button
-                (click)="copyProtocolToClipboard(popover.operation.protocol)"
-                class="btn btn-sm btn-outline-light"
-                style="font-size: 11px; cursor: pointer; margin-bottom: 0"
-              >
-                <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboard' | transloco }}
-              </button>
-            </div>
-          </div>
-          <div class="list-group" id="op-protocol-list">
-            @for (item of popover.operation.parsedProtocol; track item) {
-              <div
-                class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
-                [ngClass]="{
-                  'list-group-item-warning': item.type === 'WARNING',
-                  'list-group-item-danger': item.type === 'ERROR',
-                }"
-              >
-                <div class="row g-1">
-                  <div class="col-auto">
-                    @if (item.type === 'ERROR') {
-                      <i class="bi bi-exclamation-circle" style="color: red"></i>
-                    } @else {
-                      <i class="bi bi-exclamation-triangle" style="color: orange"></i>
-                    }
-                  </div>
-                  <div class="col text-break">
-                    {{ item.message }}
+                  <div class="row g-1">
+                    <div class="col-auto">
+                      @if (item.type === 'ERROR') {
+                        <i class="bi bi-exclamation-circle" style="color: red"></i>
+                      } @else {
+                        <i class="bi bi-exclamation-triangle" style="color: orange"></i>
+                      }
+                    </div>
+                    <div class="col text-break">
+                      {{ item.message }}
+                    </div>
                   </div>
                 </div>
-              </div>
-            }
+              }
+            </div>
           </div>
-        </div>
-      }
+        }
+      </div>
     }
   }
   @if (popover.operation === undefined && popover.task) {
@@ -160,51 +143,50 @@
           <tbody class="">
             <tr>
               <td class="ps-3">{{ 'g.language' | transloco }}:</td>
-              <td>{{ popover.task.asrOperation.language }}</td>
+              <td>{{ popover.task.operations[1].options.language }}</td>
             </tr>
             <tr>
               <td class="ps-3">{{ 'g.asr provider' | transloco }}:</td>
-              <td>{{ popover.task.asrOperation.serviceProvider?.provider }}</td>
+              <td>{{ popover.task.operations[1].options.serviceProvider?.provider }}</td>
             </tr>
-            @if (taskService.state.currentMode === 'annotation') {
-              @if (popover.task.asrOperation.diarization?.enabled) {
+            @if (modeStoreService.currentMode === 'annotation') {
+              @if (popover.task.operations[1].options.diarization?.enabled) {
                 <tr>
                   <td class="ps-3">{{ 'modals.check options.options.diarization.name' | transloco }}:</td>
                   <td>Enabled</td>
                 </tr>
                 <tr>
                   <td class="ps-3">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</td>
-                  <td>{{ popover.task.asrOperation.diarization?.speakers }}</td>
+                  <td>{{ popover.task.operations[1].options.diarization?.speakers }}</td>
                 </tr>
               }
               <tr>
                 <td class="ps-3">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</td>
-                <td>{{ popover.task.mausOperation.language }}</td>
+                <td><!-- TODO add {{ popover.task.mausOperation.language }}--></td>
               </tr>
-            } @else if (taskService.state.currentMode === 'summarization') {
+            } @else if (modeStoreService.currentMode === 'summarization') {
               <tr>
                 <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
-                <td>{{ popover.task.summarizationOperation.maxNumberOfWords }}</td>
+                <td><!-- TODO add {{ popover.task.summarizationOperation.maxNumberOfWords }}--></td>
               </tr>
               <tr>
                 <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
-                <td>{{ popover.task.translationOperation.language }}</td>
+                <td><!-- TODO add {{ popover.task.translationOperation.language }}--></td>
               </tr>
             }
           </tbody>
         </table>
       </div>
-    }
+    </div>
   }
   @if (popover.lastOperationRound === undefined && popover.task) {
     <div class="mb-3">File information:</div>
     <tportal-file-info-table [fileinfo]="popover.task.files[0]" class="d-flex"></tportal-file-info-table>
-    </div>
 
     <div class="card">
       <div class="card-header">Audio information</div>
       <div class="card-body p-0">
-        <tportal-file-info-table [fileinfo]="getAudioFileOfTask(popover.task)"></tportal-file-info-table>
+        <tportal-file-info-table [fileinfo]="popover.task.files[0]"></tportal-file-info-table>
       </div>
     </div>
   }
@@ -239,7 +221,7 @@
         }
       </h1>
       <p class="px-5" [innerHTML]="'quick start.introduction' | transloco"></p>
-      @if (taskService.state.currentMode === 'annotation') {
+      @if (modeStoreService.currentMode === 'annotation') {
         <p
           class="px-5"
           [innerHTML]="
@@ -252,7 +234,7 @@
                   }
           "
         ></p>
-      } @else if (taskService.state.currentMode === 'summarization') {
+      } @else if (modeStoreService.currentMode === 'summarization') {
         <p
           class="px-5"
           [innerHTML]="

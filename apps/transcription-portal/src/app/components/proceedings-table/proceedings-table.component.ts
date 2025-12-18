@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -53,6 +53,7 @@ import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -77,6 +78,8 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     ProceedingsRowDirective,
     AsyncPipe,
     ContextMenuComponent,
+    TranslocoPipe,
+    UpperCasePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -792,4 +795,10 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.directory = entry as StoreItemTaskDirectory;
     }
   }
+
+  protected getAudioFileOfTask(task: StoreItemTask) {
+    return undefined;
+  }
+
+  protected readonly getLastOperationRound = getLastOperationRound;
 }

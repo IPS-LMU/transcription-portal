@@ -68,7 +68,6 @@ bootstrapApplication(AppComponent, {
       },
       loader: TranslocoHttpLoader,
     }),
-    TaskService,
     NotificationService,
     BugReportService,
     AlertService,

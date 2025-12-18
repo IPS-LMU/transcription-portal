@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Converter } from '@octra/annotation';
@@ -12,12 +12,13 @@ import { TPortalAudioInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttr
 import { DownloadService } from '../../shared/download.service';
 import { OperationFactory, StoreItemTask, StoreTaskOperation } from '../../store';
 import { convertStoreFileToFileInfo } from '../../store/operation/operation.functions';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  imports: [NgStyle, FormsModule],
+  imports: [NgStyle, FormsModule, TranslocoPipe],
 })
 export class ResultsTableComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);
@@ -155,7 +156,7 @@ export class ResultsTableComponent implements OnChanges {
                   originalFileName = TPortalFileInfo.extractFileName(originalFileName);
 
                   const fileInfo = convertStoreFileToFileInfo(result);
-                  fileInfo.file = new File([result.content!], result.name, { type: result.type })
+                  fileInfo.file = new File([result.content!], result.name, { type: result.type });
                   fileInfo.url = URL.createObjectURL(fileInfo.file);
                   fileInfo.attributes = {
                     ...result.attributes,

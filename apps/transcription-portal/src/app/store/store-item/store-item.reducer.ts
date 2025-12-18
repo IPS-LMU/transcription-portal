@@ -701,6 +701,7 @@ export const getTaskReducers = (
     return state;
   }),
   on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operation }) => {
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
     state = modeAdapter.updateOne(
       {
         id: mode,
@@ -710,7 +711,7 @@ export const getTaskReducers = (
               {
                 id: item.id,
                 changes: {
-                  operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+                  operations: taskItem.operations!.map((op) => {
                     if (op.id === operation.id) {
                       return {
                         ...op,

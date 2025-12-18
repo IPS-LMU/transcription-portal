@@ -1,7 +1,7 @@
-import { NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, LowerCasePipe, NgClass, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { NgbActiveModal, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
@@ -19,13 +19,26 @@ import {
 } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 import { wait } from '@octra/utilities';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-queue-modal',
   templateUrl: './queue-modal.component.html',
   styleUrls: ['./queue-modal.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, NgStyle, TimePipe, NgbPopover, FormsModule, OctraASRLanguageSelectComponent, OctraProviderSelectComponent],
+  imports: [
+    NgClass,
+    NgStyle,
+    TimePipe,
+    NgbPopover,
+    FormsModule,
+    OctraASRLanguageSelectComponent,
+    OctraProviderSelectComponent,
+    TranslocoPipe,
+    LowerCasePipe,
+    NgbTooltip,
+    AsyncPipe,
+  ],
 })
 export class QueueModalComponent extends SubscriberComponent implements OnInit, AfterViewInit {
   protected activeModal = inject(NgbActiveModal);
@@ -40,6 +53,8 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   protected appSettings?: OHConfiguration;
 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
+
+  // TODO rewrite all task selects by ID
 
   get selectedSummarizationNumberOfWords(): number | undefined {
     return this.defaultUserSettings?.selectedSummarizationNumberOfWords || isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
@@ -256,6 +271,10 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   async ngAfterViewInit() {
     await wait(0);
     this.changeProcessingOptionsForEachQueuedTask();
+  }
+
+  resetOptions() {
+    // TODO implement
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;

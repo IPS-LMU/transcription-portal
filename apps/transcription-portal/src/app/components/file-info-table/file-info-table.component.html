@@ -7,8 +7,6 @@
       </tr>
       <tr>
         <td class="ps-3">{{ 'popovers.file info.escaped filename' | transloco }}:</td>
-        <td>{{ fileinfo.fullname }}</td>
-        <td>Escaped filename:</td>
         <td>{{ fileinfo.name }}</td>
       </tr>
       <tr>
@@ -48,7 +46,7 @@
         </tr>
         <tr>
           <td class="ps-3">{{ 'popovers.file info.duration' | transloco }}:</td>
-          <td>{{ audioFile.duration.unix | time }}</td>
+          <td>{{ (audioFile.duration * 1000 / audioFile.sampleRate) | time }}</td>
         </tr>
       }
     </tbody>

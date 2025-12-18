@@ -8,13 +8,14 @@ import { timer } from 'rxjs';
 import { StatisticsService } from '../../shared/statistics.service';
 import { ModeStoreService } from '../../store';
 import { AsyncPipe } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-statistics',
   templateUrl: './statistics-modal.component.html',
   styleUrls: ['./statistics-modal.component.scss'],
   providers: [StatisticsService],
-  imports: [NgCircleProgressModule, BaseChartDirective, AsyncPipe],
+  imports: [NgCircleProgressModule, BaseChartDirective, AsyncPipe, TranslocoPipe],
 })
 export class StatisticsModalComponent extends SubscriberComponent implements OnDestroy, AfterViewInit {
   statisticsService = inject(StatisticsService);

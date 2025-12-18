@@ -62,7 +62,7 @@
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp>
-                <div [innerHTML]="'status bar.waiting' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.wait }"></div>
+                <div [innerHTML]="'status bar.waiting' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.waiting }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -271,13 +271,13 @@
     id="mode-tabs"
     [ngClass]="{
       'with-feedback': (appStoreService.feedbackEnabled$ | async),
-      'no-feedback': !(appStoreService.feedbackEnabled$ | async),
+      'no-feedback': (appStoreService.feedbackEnabled$ | async) === false,
     }"
   >
     <li [ngbNavItem]="1">
       <button
         ngbNavLink
-        (mousedown)="changeMode('annotation', ngbToolTip)"
+        (mousedown)="changeMode('annotation')"
         [triggers]="'mouseenter:mouseleave'"
         [ngbTooltip]="'modes.annotation.description' | transloco"
         [openDelay]="1000"
@@ -311,7 +311,7 @@
     <li [ngbNavItem]="2">
       <button
         ngbNavLink
-        (mousedown)="changeMode('summarization', ngbToolTip2)"
+        (mousedown)="changeMode('summarization')"
         [openDelay]="1000"
         [triggers]="'mouseenter:mouseleave'"
         #ngbToolTip2="ngbTooltip"
@@ -388,9 +388,6 @@
           <span class="d-none d-lg-inline d-xl-inline">
             @if ((modeStoreService.overallState$ | async) !== 'processing') {
               {{ 'buttons.start processing' | transloco | uppercase }}
-            }
-            @if (taskService.isProcessing) {
-              {{ 'buttons.stop processing' | transloco | uppercase }}
             }
           </span>
         </button>
