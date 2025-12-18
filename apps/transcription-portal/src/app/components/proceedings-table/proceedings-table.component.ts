@@ -15,14 +15,14 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { ServiceProvider } from '@octra/ngx-components';
+import { openModal, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Shortcut } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
 import { DownloadModalComponent } from '../../modals/download-modal/download-modal.component';
 import { FilePreviewModalComponent } from '../../modals/file-preview-modal/file-preview-modal.component';
 import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
-import { TPortalAudioInfo, TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
+import { TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
 import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
 import { ShortcutService } from '../../shared/shortcut.service';
@@ -48,12 +48,12 @@ import { FileInfoTableComponent } from '../file-info-table/file-info-table.compo
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
+import { ContextMenuComponent } from './context-menu/context-menu.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
-import { ContextMenuComponent } from './context-menu/context-menu.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -658,12 +658,17 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   public onPreviewClick(file: TPortalFileInfo) {
     this.popover.state = 'closed';
     this.cd.markForCheck();
-    const ref = this.ngbModalService.open(FilePreviewModalComponent, FilePreviewModalComponent.options);
+    const ref = openModal<FilePreviewModalComponent>(this.ngbModalService, FilePreviewModalComponent, FilePreviewModalComponent.options);
     ref.componentInstance.selectedFile = file;
-    ref.componentInstance.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(URL.createObjectURL(file.file!));
-    ref.result.then(() => {
-      URL.revokeObjectURL((ref.componentInstance.downloadURL as any).changingThisBreaksApplicationSecurity);
-    });
+    if (file.file) {
+      const url = URL.createObjectURL(file.file!);
+      ref.componentInstance.downloadURL = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      ref.result.then(() => {
+        URL.revokeObjectURL(url);
+      });
+    } else if (file.url) {
+      ref.componentInstance.downloadURL = file.url;
+    }
   }
 
   onTagClicked(dirID: number) {

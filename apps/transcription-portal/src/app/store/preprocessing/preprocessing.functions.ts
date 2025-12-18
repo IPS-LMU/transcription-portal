@@ -252,7 +252,7 @@ async function processDirectoryInfo(
     entries: processedValues.flat(),
     hash: dir.hash,
     name: dir.name,
-    path: path + '/' + dir.name,
+    path: path + dir.name + '/',
     size: dir.size,
     type: 'folder',
   };

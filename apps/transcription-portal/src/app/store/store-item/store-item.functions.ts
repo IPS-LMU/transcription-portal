@@ -159,82 +159,90 @@ export function updateTaskFilesWithSameFile(
   };
 
   let someThingFound = false;
+  const tasks =
+    addedStoreFileOrDirectory.type !== 'folder' ? [addedStoreFileOrDirectory] : (addedStoreFileOrDirectory as StoreFileDirectory).entries!;
 
-  for (const itemID of itemsState.ids) {
-    if (addedStoreFileOrDirectory.type !== 'folder' && itemsState.entities[itemID]?.type === 'task') {
-      const addedFile = addedStoreFileOrDirectory as StoreFile;
-      const task = itemsState.entities[itemID] as StoreItemTask;
-      const lastUploadRoundResult = getLastOperationResultFromLatestRound(task.operations[0]);
+  for (const storeFile of tasks) {
+    result.state = applyFunctionOnStoreItemsWhereRecursive(
+      (item) => item.type === "task",
+      result.state,
+      adapter,
+      (item, iState) => {
+        if (item.type === 'task') {
+          // replace task
+          const addedFile = storeFile as StoreFile;
+          const task = item as StoreItemTask;
+          const lastUploadRoundResult = getLastOperationResultFromLatestRound(task.operations[0]);
 
-      // TODO check if last result of upload should be checked
-      if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || !(lastUploadRoundResult?.online || lastUploadRoundResult?.blob)) {
-        // first try to replace same file in a task
-        let somethingFoundInFiles = false;
-        for (let i = 0; i < task.files.length; i++) {
-          const file = task.files[i];
+          if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || !(lastUploadRoundResult?.online || lastUploadRoundResult?.blob)) {
+            // first try to replace same file in a task
+            let somethingFoundInFiles = false;
+            for (let i = 0; i < task.files.length; i++) {
+              const file = task.files[i];
 
-          if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
-            somethingFoundInFiles = true;
-            someThingFound = true;
-            // replace blob file
-            result.state = adapter.updateOne(
-              {
-                id: task.id,
-                changes: {
-                  files: [
-                    ...task.files.slice(0, i),
-                    {
-                      ...task.files[i],
-                      blob: addedFile.blob,
-                      online: false,
+              if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
+                console.log(`Replace old file ${file.attributes.originalFileName} with added file ${addedFile.attributes.originalFileName}`);
+                somethingFoundInFiles = true;
+                someThingFound = true;
+                // replace blob file
+                iState = adapter.updateOne(
+                  {
+                    id: task.id,
+                    changes: {
+                      files: [
+                        ...task.files.slice(0, i),
+                        {
+                          ...task.files[i],
+                          blob: addedFile.blob,
+                          online: false,
+                        },
+                        ...task.files.slice(i + 1),
+                      ],
                     },
-                    ...task.files.slice(i + 1),
-                  ],
-                },
-              },
-              result.state,
-            );
-          }
-        }
-
-        // check if there is an audio or file with a matching name
-        if (!somethingFoundInFiles && task.files.length === 1) {
-          const firstFile = task.files[0];
-          const firstFileName = FileInfo.extractFileName(firstFile.attributes.originalFileName);
-          const storeFileName = FileInfo.extractFileName(addedStoreFileOrDirectory.attributes.originalFileName);
-
-          if (firstFile.type !== addedStoreFileOrDirectory.type && firstFileName.name === storeFileName.name) {
-            if (firstFile.type.includes('audio') || addedStoreFileOrDirectory.type.includes('audio')) {
-              someThingFound = true;
-              const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
-              result.state = adapter.updateOne(
-                {
-                  id: task.id,
-                  changes: {
-                    files,
-                    operations: [
-                      task.operations![0],
-                      {
-                        ...task.operations![1],
-                        enabled: false,
-                        rounds: changeLastRound(task.operations![1].rounds, {
-                          status: TaskStatus.SKIPPED,
-                        }),
-                      },
-                      ...task.operations!.slice(2),
-                    ],
                   },
-                },
-                result.state,
-              );
+                  iState,
+                );
+              }
+            }
+
+            // check if there is an audio or file with a matching name
+            if (!somethingFoundInFiles && task.files.length === 1) {
+              const firstFile = task.files[0];
+              const firstFileName = FileInfo.extractFileName(firstFile.attributes.originalFileName);
+              const storeFileName = FileInfo.extractFileName(addedFile.attributes.originalFileName);
+
+              if (firstFile.type !== addedFile.type && firstFileName.name === storeFileName.name) {
+                if (firstFile.type.includes('audio') || addedFile.type.includes('audio')) {
+                  someThingFound = true;
+                  const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
+                  iState = adapter.updateOne(
+                    {
+                      id: task.id,
+                      changes: {
+                        files,
+                        operations: [
+                          task.operations![0],
+                          {
+                            ...task.operations![1],
+                            enabled: false,
+                            rounds: changeLastRound(task.operations![1].rounds, {
+                              status: TaskStatus.SKIPPED,
+                            }),
+                          },
+                          ...task.operations!.slice(2),
+                        ],
+                      },
+                    },
+                    iState,
+                  );
+                }
+              }
             }
           }
         }
-      }
-    } else {
-      const dir = itemsState.entities[itemID] as StoreItemTaskDirectory;
-      // TODO implement
-    }
+        return iState;
+      },
+    );
   }
 
   if (!someThingFound) {

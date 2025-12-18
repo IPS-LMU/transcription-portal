@@ -621,7 +621,7 @@ export const getTaskReducers = (
     ),
   ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
-    const taskItem = state.entities[mode]!.items.entities[taskID]!;
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
     let taskStatus = taskItem!.status;
     const lastRound = getLastOperationRound(operation);
 
@@ -650,7 +650,7 @@ export const getTaskReducers = (
         id: mode,
         changes: {
           items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
-            const operations = state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+            const operations = taskItem.operations!.map((op) => {
               if (op.id === operation.id) {
                 return {
                   ...operation,
@@ -719,8 +719,8 @@ export const getTaskReducers = (
                           {
                             ...op.rounds[op.rounds.length - 1],
                             status: TaskStatus.ERROR,
-                            protocol: (op.protocol ?? '') + "ERROR: " + error + '<br/>',
-                            parsedProtocol: parseProtocol((op.protocol ?? '') + "ERROR: " + error + '<br/>'),
+                            protocol: (op.protocol ?? '') + 'ERROR: ' + error + '<br/>',
+                            parsedProtocol: parseProtocol((op.protocol ?? '') + 'ERROR: ' + error + '<br/>'),
                           },
                         ],
                       };
