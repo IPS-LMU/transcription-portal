@@ -23,7 +23,6 @@ import { DownloadService } from './app/shared/download.service';
 import { NotificationService } from './app/shared/notification.service';
 import { OHModalService } from './app/shared/ohmodal.service';
 import { SettingsService } from './app/shared/settings.service';
-import { StorageService } from './app/storage.service';
 import {
   AppEffects,
   appReducer,
@@ -59,7 +58,6 @@ bootstrapApplication(AppComponent, {
       ReactiveFormsModule,
     ),
     NotificationService,
-    StorageService,
     BugReportService,
     AlertService,
     SettingsService,

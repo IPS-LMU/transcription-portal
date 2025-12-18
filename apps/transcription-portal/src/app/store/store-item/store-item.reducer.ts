@@ -929,28 +929,6 @@ export const getTaskReducers = (
       }
     }
 
-    /*
-    TODO where to add?
-
-
-    if (
-      this.toolSelectedOperation &&
-      this.toolSelectedOperation.task &&
-      this.toolSelectedOperation.task.status === 'FINISHED' &&
-      this.toolSelectedOperation.task.asrOperation &&
-      this.toolSelectedOperation.task.asrOperation.serviceProvider &&
-      this.toolSelectedOperation.task.asrOperation.language
-    ) {
-      this.toolSelectedOperation.task.restart(this.httpClient, [
-        {
-          name: 'GoogleASR',
-          value: this.taskService.accessCode,
-        },
-      ]);
-    }
-    this.onBackButtonClicked();
-     */
-
     return state;
   }),
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {

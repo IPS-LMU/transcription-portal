@@ -5,11 +5,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
+import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
 import { DownloadService } from '../../shared/download.service';
 import { ModeStoreService, OperationFactory, StoreItem, StoreItemTask, StoreItemTaskDirectory, StoreTaskOperation, TaskStatus } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
-import { DateTime } from 'luxon';
 
 @Component({
   selector: 'tportal-download-modal',
@@ -80,7 +80,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   process() {
     this.state = 'processing';
-    if (this.type === 'column' && !(this.column?.name === "Upload" || this.column?.name === "Emu WebApp")) {
+    if (this.type === 'column' && !(this.column?.name === 'Upload' || this.column?.name === 'Emu WebApp')) {
       this.doColumnZipping();
     } else if (this.type === 'line') {
       this.doLineZipping();
@@ -162,21 +162,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       console.error('opIndex is less than 0!');
     }
 
-    // TODO check if this is required
-    new Promise<void>((resolve, reject) => {
-      if (promises.length === 0) {
-        resolve();
-      } else {
-        Promise.all(promises).then(
-          () => {
-            resolve();
-          },
-          (error) => {
-            reject(error);
-          },
-        );
-      }
-    })
+    Promise.all(promises)
       .then(() => {
         if (requestPackage.entries.length > 0) {
           this.archiveName = `${this.column?.name}Results_${dateStr}.zip`;
@@ -210,11 +196,11 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       const promises = [];
 
       for (const entry of this.selectedTasks) {
-        if (entry.type === "folder") {
+        if (entry.type === 'folder') {
           promises.push(
             new Promise<void>((resolve, reject) => {
               const dirPromises = [];
-              const dirEntries = (entry as StoreItemTaskDirectory).entries.ids.map(id => entry.entries!.entities[id]);
+              const dirEntries = (entry as StoreItemTaskDirectory).entries.ids.map((id) => entry.entries!.entities[id]);
 
               for (const dirEntry of dirEntries) {
                 dirPromises.push(this.processTask(dirEntry as StoreItemTask));
@@ -364,7 +350,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   removeSelected() {
     if (this.selectedTasks) {
-      this.modeStoreService.removeStoreItems(this.selectedTasks.map(a => a.id));
+      this.modeStoreService.removeStoreItems(this.selectedTasks.map((a) => a.id));
       this.activeModal.close();
     }
   }

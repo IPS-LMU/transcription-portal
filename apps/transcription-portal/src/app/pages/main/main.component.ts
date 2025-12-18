@@ -31,7 +31,6 @@ import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { TimePipe } from '../../shared/time.pipe';
-import { StorageService } from '../../storage.service';
 import {
   AppStoreService,
   IDBStoreService,
@@ -74,7 +73,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected ngbModalService = inject(NgbModal);
   protected httpClient = inject(HttpClient);
   protected notification = inject(NotificationService);
-  protected storage = inject(StorageService);
   protected bugService = inject(BugReportService);
   protected idbStoreService = inject(IDBStoreService);
   protected modalService = inject(OHModalService);

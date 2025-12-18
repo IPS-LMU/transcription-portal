@@ -27,7 +27,6 @@ import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
 import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
-import { StorageService } from '../../storage.service';
 import {
   ModeStoreService,
   OperationFactory,
@@ -84,7 +83,6 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
 export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
-  storage = inject(StorageService);
   private ngbModalService = inject(NgbModal);
   private shortcutService = inject(ShortcutService);
   protected modeStoreService = inject(ModeStoreService);
