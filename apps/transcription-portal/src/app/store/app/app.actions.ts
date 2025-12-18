@@ -105,4 +105,18 @@ export class AppActions {
       }>(),
     },
   });
+
+  static saveUserProfile = createActionGroup({
+    source: 'app/change user profile',
+    events: {
+      do: props<{
+        name: string;
+        email: string;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
 }

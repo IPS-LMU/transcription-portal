@@ -31,12 +31,6 @@ export class IDBEffects {
   private sanitizer = inject(DomSanitizer);
   private _idbm!: IndexedDBManager;
 
-  // TODO move to other class
-  private userProfile = {
-    name: '',
-    email: '',
-  };
-
   idbInit$ = createEffect(
     () =>
       this.actions$.pipe(
@@ -69,16 +63,6 @@ export class IDBEffects {
         console.log('IDB ready.');
         return from(this.loadIDB()).pipe(
           exhaustMap(([intern, annotationTasks, summarizationTasks, userSettings]) => {
-            if (userSettings) {
-              const userProfile = userSettings.find((a: any) => {
-                return a.name === 'userProfile';
-              });
-
-              if (userProfile && userProfile.value) {
-                this.userProfile = userProfile.value;
-              }
-            }
-
             return of(
               IDBActions.initIDB.loaded({
                 intern,
@@ -142,7 +126,7 @@ export class IDBEffects {
     ),
   );
 
-  saveUserSettings$ = createEffect(() =>
+  saveDefaultUserSettings$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ModeActions.setDefaultSettings.do),
       withLatestFrom(this.store),
@@ -172,6 +156,34 @@ export class IDBEffects {
           ),
         );
       }),
+    ),
+  );
+
+  saveUserProfile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(AppActions.saveUserProfile.do),
+      exhaustMap((action) =>
+        from(
+          this._idbm.userSettings.put({
+            name: 'userProfile',
+            value: {
+              name: action.name,
+              email: action.email,
+            },
+          }),
+        ).pipe(
+          exhaustMap(() => {
+            return of(AppActions.saveUserProfile.success());
+          }),
+          catchError((err) =>
+            of(
+              IDBActions.saveDefaultUserSettings.fail({
+                error: typeof err === 'string' ? err : err.message,
+              }),
+            ),
+          ),
+        ),
+      ),
     ),
   );
 
@@ -534,13 +546,15 @@ export class IDBEffects {
     ),
   );
 
-  restoreDatabase$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(IDBActions.restoreDatabase.do),
-      tap(async (action) => {
-        await this._idbm.importBackup(action.blob);
-      }),
-    ), {dispatch: false},
+  restoreDatabase$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(IDBActions.restoreDatabase.do),
+        tap(async (action) => {
+          await this._idbm.importBackup(action.blob);
+        }),
+      ),
+    { dispatch: false },
   );
 
   private loadIDB = async () => {

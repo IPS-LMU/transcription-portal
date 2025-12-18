@@ -121,7 +121,7 @@
               <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">Help</span></a
             >
           </li>
-          @if (settingsService.feedbackEnabled) {
+          @if (appStoreService.feedbackEnabled$ | async) {
             <li (click)="modalService.openFeedbackModal()" class="nav-item active">
               <a ngbPopover="Feedback" placement="bottom-right" triggers="mouseenter:mouseleave" class="text-decoration-none">
                 <i
@@ -259,8 +259,8 @@
     class="nav-tabs"
     id="mode-tabs"
     [ngClass]="{
-      'with-feedback': settingsService.feedbackEnabled,
-      'no-feedback': !settingsService.feedbackEnabled,
+      'with-feedback': (appStoreService.feedbackEnabled$ | async),
+      'no-feedback': !(appStoreService.feedbackEnabled$ | async),
     }"
   >
     <li [ngbNavItem]="1">

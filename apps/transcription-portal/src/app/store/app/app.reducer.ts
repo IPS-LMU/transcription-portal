@@ -31,6 +31,11 @@ export interface AppState {
     safeURL: SafeUrl;
     filename: string;
   };
+
+  userProfile: {
+    name: string;
+    email: string;
+  };
 }
 
 export const InitialAppState: AppState = {
@@ -40,6 +45,10 @@ export const InitialAppState: AppState = {
   feedbackEnabled: false,
   idbInitialized: false,
   initialized: false,
+  userProfile: {
+    name: '',
+    email: '',
+  },
 };
 
 export interface RootState {
@@ -65,6 +74,12 @@ export const appReducer = createReducer(
       sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
       accessCode: userSettings.find((a) => a.name === 'accessCode')?.value,
       notificationEnabled: userSettings.find((a) => a.name === 'notification')?.value ?? false,
+      userProfile: userSettings.find((a) => {
+        return a.name === 'userProfile';
+      })?.value ?? {
+        name: '',
+        email: '',
+      },
     }),
   ),
   on(
@@ -217,6 +232,13 @@ export const appReducer = createReducer(
     }),
   ),
   on(
+    AppActions.initOctraAPI.success,
+    (state: AppState, { serverProperties }): AppState => ({
+      ...state,
+      feedbackEnabled: serverProperties.send_feedback,
+    }),
+  ),
+  on(
     IDBActions.backupDatabase.success,
     (state: AppState, { url, safeURL, filename }): AppState => ({
       ...state,
@@ -256,6 +278,16 @@ export const appReducer = createReducer(
     (state: AppState, { accessCode }): AppState => ({
       ...state,
       accessCode,
+    }),
+  ),
+  on(
+    AppActions.saveUserProfile.do,
+    (state: AppState, { name, email }): AppState => ({
+      ...state,
+      userProfile: {
+        name,
+        email,
+      },
     }),
   ),
 );

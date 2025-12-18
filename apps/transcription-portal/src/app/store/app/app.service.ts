@@ -3,7 +3,15 @@ import { Store } from '@ngrx/store';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { AppActions } from './app.actions';
 import { RootState } from './app.reducer';
-import { selectAccessCode, selectAppInitialized, selectAppSettings, selectAvailableLanguages, selectIDBBackup } from './app.selectors';
+import {
+  selectAccessCode,
+  selectAppInitialized,
+  selectAppSettings,
+  selectAvailableLanguages,
+  selectFeedbackEnabled,
+  selectIDBBackup,
+  selectUserProfile,
+} from './app.selectors';
 
 @Injectable({ providedIn: 'root' })
 export class AppStoreService {
@@ -13,6 +21,8 @@ export class AppStoreService {
   availableLanguages$ = this.store.select(selectAvailableLanguages);
   accessCode$ = this.store.select(selectAccessCode);
   idbBackup$ = this.store.select(selectIDBBackup);
+  feedbackEnabled$ = this.store.select(selectFeedbackEnabled);
+  userProfile$ = this.store.select(selectUserProfile);
 
   initApplication() {
     this.store.dispatch(AppActions.initApplication.do());
@@ -32,5 +42,9 @@ export class AppStoreService {
 
   changeAccessCode(accessCode: string) {
     this.store.dispatch(AppActions.changeAccessCode.do({ accessCode }));
+  }
+
+  changeUserProfile(name: string, email: string) {
+    this.store.dispatch(AppActions.saveUserProfile.do({ name, email }));
   }
 }
