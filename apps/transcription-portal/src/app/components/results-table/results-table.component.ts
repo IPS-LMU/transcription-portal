@@ -1,7 +1,8 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Converter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { hasProperty, last } from '@octra/utilities';
@@ -17,7 +18,7 @@ import { convertStoreFileToFileInfo } from '../../store/operation/operation.func
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
-  imports: [NgStyle, FormsModule],
+  imports: [NgStyle, FormsModule, TranslocoPipe],
 })
 export class ResultsTableComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);
@@ -132,90 +133,100 @@ export class ResultsTableComponent implements OnChanges {
           .then((promiseResults: TPortalFileInfo[][]) => {
             if (this.operation && this.task) {
               for (let j = 0; j < promiseResults.length; j++) {
-                const result = last(this.operation.rounds[j].results);
-                const conversions = promiseResults[j];
-                const { extension } = FileInfo.extractFileName(result!.name);
+                const results = this.operation.rounds[j].results;
 
-                const from: ConverterData | undefined = AppInfo.converters.find(
-                  (a) =>
-                    a.obj.extensions.findIndex((b) => {
-                      return b.indexOf(extension) > -1;
-                    }) > -1,
-                );
+                if (results.length > 0) {
+                  const result = last(results);
+                  const conversions = promiseResults[j];
+                  const { extension } = FileInfo.extractFileName(result!.name);
 
-                if (from) {
-                  const importConverter = from.obj;
-                  this.originalLabel = importConverter.extensions[0];
+                  const from: ConverterData | undefined = AppInfo.converters.find(
+                    (a) =>
+                      a.obj.extensions.findIndex((b) => {
+                        return b.indexOf(extension) > -1;
+                      }) > -1,
+                  );
 
-                  if (!result?.content) {
-                    throw new Error(`result content is undefined`);
-                  }
+                  if (from) {
+                    const importConverter = from.obj;
+                    this.originalLabel = importConverter.extensions[0];
 
-                  let originalFileName: any = this.task.files[0].attributes?.originalFileName ?? this.task.files[0].name;
-                  originalFileName = TPortalFileInfo.extractFileName(originalFileName);
+                    if (!result?.content) {
+                      throw new Error(`result content is undefined`);
+                    }
 
-                  const fileInfo = convertStoreFileToFileInfo(result);
-                  fileInfo.file = new File([result.content!], result.name, { type: result.type })
-                  fileInfo.url = URL.createObjectURL(fileInfo.file);
-                  fileInfo.attributes = {
-                    ...result.attributes,
-                    originalFileName: `${originalFileName.name}${extension}`,
-                  };
+                    let originalFileName: any = this.task.files[0].attributes?.originalFileName ?? this.task.files[0].name;
+                    originalFileName = TPortalFileInfo.extractFileName(originalFileName);
 
-                  const resultObj = {
-                    url: fileInfo.url,
-                    info: fileInfo,
-                  };
-
-                  const audio: OAudiofile = new OAudiofile();
-                  if (this.task) {
-                    audio.sampleRate = (this.task.files[0] as TPortalAudioInfo).sampleRate;
-                    audio.duration = (this.task.files[0] as TPortalAudioInfo).duration.samples;
-                    audio.name = (this.task.files[0] as TPortalAudioInfo).fullname;
-                    audio.size = (this.task.files[0] as TPortalAudioInfo).size;
-                  }
-
-                  const convElem = {
-                    originalResults: [resultObj],
-                    conversions: [] as any[],
-                    number: j,
-                  };
-                  this.convertedArray.push(convElem);
-                  this.convertedArray.sort(this.sortAlgorithm);
-
-                  const convertersWithoutFrom = this.converters.filter((a) => a.obj.name !== importConverter.name);
-
-                  for (let k = 0; k < conversions.length; k++) {
-                    const conversion = conversions[k];
-                    const converter = convertersWithoutFrom[k];
-
-                    const res: {
-                      converter: {
-                        obj: Converter;
-                        color: string;
-                      };
-                      state: string;
-                      result?: TPortalFileInfo;
-                    } = {
-                      converter: {
-                        obj: converter.obj,
-                        color: converter.color,
-                      },
-                      state: 'PENDING',
+                    const fileInfo = convertStoreFileToFileInfo(result);
+                    fileInfo.file = new File([result.content!], result.name, { type: result.type });
+                    fileInfo.url = URL.createObjectURL(fileInfo.file);
+                    fileInfo.attributes = {
+                      ...result.attributes,
+                      originalFileName: `${originalFileName.name}${extension}`,
                     };
 
-                    if (conversion) {
-                      res.result = conversion;
-                      const url = conversion.file ? URL.createObjectURL(conversion.file) : '';
-                      res.result.url = this.sanitizer.bypassSecurityTrustUrl(url) as any;
-                      res.state = 'FINISHED';
-                      convElem.conversions.push(res);
-                    } else {
-                      res.state = 'FAILED';
+                    const resultObj = {
+                      url: fileInfo.url,
+                      info: fileInfo,
+                    };
+
+                    const audio: OAudiofile = new OAudiofile();
+                    if (this.task) {
+                      audio.sampleRate = (this.task.files[0] as TPortalAudioInfo).sampleRate;
+                      audio.duration = (this.task.files[0] as TPortalAudioInfo).duration.samples;
+                      audio.name = (this.task.files[0] as TPortalAudioInfo).fullname;
+                      audio.size = (this.task.files[0] as TPortalAudioInfo).size;
                     }
+
+                    const convElem = {
+                      originalResults: [resultObj],
+                      conversions: [] as any[],
+                      number: j,
+                    };
+                    this.convertedArray.push(convElem);
+                    this.convertedArray.sort(this.sortAlgorithm);
+
+                    const convertersWithoutFrom = this.converters.filter((a) => a.obj.name !== importConverter.name);
+
+                    for (let k = 0; k < conversions.length; k++) {
+                      const conversion = conversions[k];
+                      const converter = convertersWithoutFrom[k];
+
+                      const res: {
+                        converter: {
+                          obj: Converter;
+                          color: string;
+                        };
+                        state: string;
+                        result?: TPortalFileInfo;
+                      } = {
+                        converter: {
+                          obj: converter.obj,
+                          color: converter.color,
+                        },
+                        state: 'PENDING',
+                      };
+
+                      if (conversion) {
+                        res.result = conversion;
+                        const url = conversion.file ? URL.createObjectURL(conversion.file) : '';
+                        res.result.url = this.sanitizer.bypassSecurityTrustUrl(url) as any;
+                        res.state = 'FINISHED';
+                        convElem.conversions.push(res);
+                      } else {
+                        res.state = 'FAILED';
+                      }
+                    }
+                  } else {
+                    console.error(`could not find import converter`);
                   }
                 } else {
-                  console.error(`could not find import converter`);
+                  this.convertedArray.push({
+                    originalResults: [],
+                    number: j,
+                    conversions: [],
+                  });
                 }
               }
 

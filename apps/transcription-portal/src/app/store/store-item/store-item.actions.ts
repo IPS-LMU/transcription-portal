@@ -2,7 +2,16 @@ import { Action, createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreTaskOperation } from '../operation';
-import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
+import {
+  CompatibleResult,
+  StoreAudioFile,
+  StoreFile,
+  StoreFileDirectory,
+  StoreItem,
+  StoreItemTask,
+  StoreItemTaskOptions,
+  TaskStatus,
+} from './store-item';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
 export class StoreItemActions {
@@ -136,6 +145,15 @@ export class StoreItemActions {
     },
   });
 
+  static setDirectoryOpenState = createActionGroup({
+    source: 'tasks/set directory open state',
+    events: {
+      do: props<{
+        opened: boolean;
+      }>(),
+    },
+  });
+
   static setItemMouseOver = createActionGroup({
     source: 'tasks/set mouseover',
     events: {
@@ -151,6 +169,20 @@ export class StoreItemActions {
     events: {
       do: props<{
         ids: number[];
+      }>(),
+    },
+  });
+
+  static setDisableStateForSelectedTasks = createActionGroup({
+    source: 'tasks/set disabled state',
+    events: {
+      do: props<{
+        disabled: boolean;
+        ids: number[];
+      }>(),
+      success: props<{
+        itemIDs: number[];
+        mode: TPortalModes;
       }>(),
     },
   });
@@ -229,6 +261,8 @@ export class StoreItemActions {
         id: number;
       }>(),
       fail: props<{
+        id: number;
+        mode: TPortalModes;
         error: string;
       }>(),
     },
@@ -241,10 +275,6 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         status: TaskStatus;
-      }>(),
-      success: emptyProps(),
-      fail: props<{
-        error: string;
       }>(),
     },
   });
@@ -262,6 +292,16 @@ export class StoreItemActions {
       do: props<{
         taskID: number;
         mode: TPortalModes;
+      }>(),
+      check: props<{
+        taskID: number;
+        mode: TPortalModes;
+      }>(),
+      run: props<{
+        taskID: number;
+        operationID: number;
+        mode: TPortalModes;
+        item?: StoreItemTask;
       }>(),
       success: props<{
         taskID: number;
@@ -297,6 +337,11 @@ export class StoreItemActions {
         operationName: string;
         language: string;
         audioFile: StoreAudioFile;
+      }>(),
+      closeOtherTool: props<{
+        taskID: number;
+        mode: TPortalModes;
+        operationID: number;
       }>(),
       prepare: props<{
         mode: TPortalModes;
@@ -346,6 +391,7 @@ export class StoreItemActions {
         actionAfterSuccess: Action;
       }>(),
       fail: props<{
+        mode: TPortalModes;
         error: string;
       }>(),
     },
@@ -374,6 +420,42 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         file: StoreFile;
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static checkAllUploadOperationsForOnlineFiles = createActionGroup({
+    source: 'tasks/check online files',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+      }>(),
+      success: props<{
+        itemsState: StoreItemsState;
+        mode: TPortalModes;
+        itemIDs: number[];
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static updateURLsForFilesAfterUpload = createActionGroup({
+    source: 'tasks/update url files',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operation: StoreTaskOperation;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        itemsState: StoreItemsState;
+        itemIDs: number[];
       }>(),
       fail: props<{
         error: string;

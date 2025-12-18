@@ -48,6 +48,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     operation: OctraOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
@@ -96,7 +97,12 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
                   if (nextItem) {
                     const gapSamples = nextItem.sampleDur;
 
-                    if (item.getFirstLabelWithoutName('Speaker')?.value !== '' && nextItem.getFirstLabelWithoutName('Speaker')?.value !== '') {
+                    if (
+                      item.getFirstLabelWithoutName('Speaker')?.value !== '' &&
+                      item.getFirstLabelWithoutName('Speaker')?.value !== '<P>' &&
+                      nextItem.getFirstLabelWithoutName('Speaker')?.value !== '' &&
+                      nextItem.getFirstLabelWithoutName('Speaker')?.value !== '<P>'
+                    ) {
                       // concat
                       item.replaceFirstLabelWithoutName('Speaker', (value) => {
                         return [value, nextItem.getFirstLabelWithoutName('Speaker')?.value].filter((a) => a !== undefined && a !== '').join(' ');
@@ -166,7 +172,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     });
   }
 
-  override async convertOperationToIDBOperation(operation:OctraOperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: OctraOperation): Promise<IDBOperation> {
     return await convertStoreOperationToIDBOperation(operation);
   }
 }

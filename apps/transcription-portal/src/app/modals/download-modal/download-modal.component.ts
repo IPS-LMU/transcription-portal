@@ -1,11 +1,11 @@
 import { NgStyle, UpperCasePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import { DateTime } from 'luxon';
 import { AppInfo } from '../../app.info';
 import { DownloadService } from '../../shared/download.service';
@@ -16,6 +16,7 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
   selector: 'tportal-download-modal',
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, NgStyle, TranslocoPipe, UpperCasePipe],
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
@@ -23,9 +24,10 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
   private sanitizer = inject(DomSanitizer);
   private downloadService = inject(DownloadService);
   private modeStoreService = inject(ModeStoreService);
+  private cd = inject(ChangeDetectorRef);
 
   type: 'line' | 'column' = 'column';
-  private selectedTasks?: StoreItem[];
+  selectedTasks?: StoreItem[];
   column?: OperationFactory;
   private allTasks?: StoreItemTask[] | null;
   private operations?: {
@@ -56,11 +58,6 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         this.allTasks = allTasks;
       },
     });
-    this.subscribe(this.modeStoreService.currentModeSelectedEntries$, {
-      next: (selectedModeEntries) => {
-        this.selectedTasks = selectedModeEntries;
-      },
-    });
     this.subscribe(this.modeStoreService.defaultModeOperations$, {
       next: (operations) => {
         this.operations = operations;
@@ -71,6 +68,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     AppInfo.converters.forEach(() => {
       this.checkboxes.push(false);
     });
+    this.cd.markForCheck();
   }
 
   uncheckAll() {
@@ -86,6 +84,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     } else if (this.type === 'line') {
       this.doLineZipping();
     }
+    this.cd.markForCheck();
   }
 
   doColumnZipping() {
@@ -148,6 +147,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
                       });
                     }
                   }
+                  this.cd.markForCheck();
                   resolve();
                 })
                 .catch((error) => {
@@ -168,19 +168,22 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
         if (requestPackage.entries.length > 0) {
           this.archiveName = `${this.column?.name}Results_${dateStr}.zip`;
           this.doZipping(requestPackage.entries);
+          this.cd.markForCheck();
         } else {
           this.state = 'inactive';
           this.archiveURL = '';
+          this.cd.markForCheck();
         }
       })
       .catch((error) => {
         console.error(error);
+        this.cd.markForCheck();
       });
   }
 
   doLineZipping() {
     // get results url by lines
-    if (!(this.selectedTasks === null || this.selectedTasks === undefined)) {
+    if (this.selectedTasks && this.selectedTasks.length > 0) {
       // prepare package
       const dateStr = DateTime.now().toFormat('yyyy-MM-dd_HH-mm-ss');
       const requestPackage: {
@@ -252,6 +255,9 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
           this.state = 'error';
           console.error(error);
         });
+    } else {
+      this.state = "error";
+      console.error('No tasks selected.');
     }
   }
 
@@ -346,6 +352,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
     zip.generateAsync({ type: 'base64' }).then((base64) => {
       this.archiveURL = this.sanitizer.bypassSecurityTrustResourceUrl('data:application/zip;base64,' + base64);
       this.state = 'finished';
+      this.cd.markForCheck();
     });
   }
 

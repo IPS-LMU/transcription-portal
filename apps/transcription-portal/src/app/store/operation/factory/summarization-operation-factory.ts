@@ -3,20 +3,16 @@ import { PartiturConverter, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
-import { downloadFile, FileInfo, readFileContents } from '@octra/web-media';
+import { downloadFile, FileInfo } from '@octra/web-media';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
+import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import {
-  addProcessingRound,
-  convertStoreOperationToIDBOperation,
-  getLastOperationResultFromLatestRound,
-  getLastOperationRound,
-} from '../operation.functions';
+import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 
 export interface SummarizationOperationOptions {
@@ -61,8 +57,20 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     operation: SummarizationOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: SummarizationOperation }> {
     const subj = new Subject<{ operation: SummarizationOperation }>();
+
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
+
     wait(0).then(() => {
       let clonedOperation = { ...operation };
 
@@ -79,25 +87,30 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
       };
       this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
-      const transcriptFile = storeItemTask.operations[2].enabled
-        ? getLastOperationResultFromLatestRound(storeItemTask.operations[2])
-        : getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
+      let transcriptFile = getLatestResultFromPreviousEnabledOperation(storeItemTask, operation);
       const audioinfo = storeItemTask.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
+
+      if (!transcriptFile) {
+        const transcriptFromInputs = storeItemTask?.files.find((a) => !a.type.includes('audio'));
+        if (transcriptFromInputs) {
+          transcriptFile = transcriptFromInputs;
+        }
+      }
 
       (async (): Promise<{
         projectName: string;
         serviceProvider: ServiceProvider;
       }> => {
-        if (transcriptFile?.blob && audioinfo) {
+        if (transcriptFile?.content && audioinfo) {
           let transcript = '';
-          const content = await readFileContents<string>(transcriptFile.blob!, 'text', 'utf-8');
+          const content = transcriptFile?.content;
 
           const audiofile = new OAudiofile();
           audiofile.duration = audioinfo.duration;
           audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
           audiofile.sampleRate = audioinfo.sampleRate;
           audiofile.size = audioinfo.size;
-          const { extension } = FileInfo.extractFileName(audiofile.name);
+          const { extension } = FileInfo.extractFileName(transcriptFile.name);
 
           if (extension === '.txt') {
             transcript = content;

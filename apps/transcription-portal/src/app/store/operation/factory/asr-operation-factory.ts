@@ -5,7 +5,7 @@ import { extractFileNameFromURL, joinURL, stringifyQueryParams, SubscriptionMana
 import { downloadFile, FileInfo } from '@octra/web-media';
 import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
@@ -64,147 +64,167 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     operation: ASROperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> => {
     const subj = new Subject<{
       operation: ASROperation;
     }>();
 
-    wait(0).then(() => {
-      const audioFile: StoreAudioFile | undefined = (task.files?.find((a) => a.type.includes('audio')) ??
-        task.files.find((a) => a.type.includes('audio'))) as StoreAudioFile | undefined;
-      let clonedOperation = { ...operation };
-      if (!getLastOperationRound(clonedOperation)) {
-        clonedOperation = addProcessingRound(clonedOperation);
-      }
-      let currentRound = getLastOperationRound(clonedOperation)!;
-      currentRound = {
-        ...currentRound,
-        protocol: '',
-        status: TaskStatus.PROCESSING,
-        time: {
-          start: Date.now(),
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            console.log(`GOT STOP ${item?.id}`);
+            subscrManager.destroy();
+          }
         },
-      };
+      }),
+    );
 
-      if (!audioFile) {
-        subj.error(new Error('Missing audio file'));
-        return;
-      }
+    subscrManager.add(
+      from(wait(1)).subscribe({
+        next: () => {
+          const audioFile: StoreAudioFile | undefined = (task.files?.find((a) => a.type.includes('audio')) ??
+            task.files.find((a) => a.type.includes('audio'))) as StoreAudioFile | undefined;
+          let clonedOperation = { ...operation };
+          if (!getLastOperationRound(clonedOperation)) {
+            clonedOperation = addProcessingRound(clonedOperation);
+          }
+          let currentRound = getLastOperationRound(clonedOperation)!;
+          currentRound = {
+            ...currentRound,
+            protocol: '',
+            status: TaskStatus.PROCESSING,
+            time: {
+              start: Date.now(),
+            },
+          };
 
-      this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+          if (!audioFile) {
+            subj.error(new Error('Missing audio file'));
+            return;
+          }
 
-      if (clonedOperation.serviceProviderName) {
-        let callASRSubj:
-          | Observable<{
-              result: StoreFile;
-              warnings?: string;
-            }>
-          | undefined;
+          this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
-        if (clonedOperation.serviceProviderName === 'LSTWhisperX') {
-          callASRSubj = from(this.callASRFromRadboud(httpClient, audioFile, clonedOperation, subscrManager));
-        } else {
-          callASRSubj = from(this.callASRFromBASWebservices(httpClient, audioFile, clonedOperation, subscrManager));
-        }
+          if (clonedOperation.serviceProviderName) {
+            let callASRSubj:
+              | Observable<{
+                  result: StoreFile;
+                  warnings?: string;
+                }>
+              | undefined;
 
-        callASRSubj.subscribe({
-          next: async ({ result, warnings }) => {
-            let asrResult = result;
-
-            if (asrResult && clonedOperation.serviceProviderName) {
-              const g2pChunkerNeeded =
-                (task.operations[2]?.name === 'OCTRA' &&
-                  task.operations[2]?.enabled === false &&
-                  task.operations[3]?.name === 'MAUS' &&
-                  task.operations[3]?.enabled === false) ||
-                task.operations[3]?.name === 'SUMMARIZATION' ||
-                (!clonedOperation.options.diarization?.enabled && clonedOperation.serviceProviderName === 'Google');
-              // use G2P_CHUNKER only if Octra and Word alignment is disabled or summarization mode or if service provider is Google and diarization disabled
-
-              currentRound = {
-                ...currentRound,
-                time: {
-                  ...currentRound.time!,
-                  duration: Date.now() - currentRound.time!.start,
-                },
-                protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
-              };
-
-              try {
-                if (g2pChunkerNeeded) {
-                  const g2pResult = await this.callG2PChunker(
-                    AppSettings.getServiceInformation('BAS')!,
-                    httpClient,
-                    asrResult,
-                    audioFile,
-                    clonedOperation,
-                    subscrManager,
-                  );
-                  asrResult = g2pResult.result;
-                  warnings = g2pResult.warnings;
-                }
-
-                currentRound = {
-                  ...currentRound,
-                  time: {
-                    ...currentRound.time!,
-                    duration: Date.now() - currentRound.time!.start,
-                  },
-                  protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
-                };
-
-                if (asrResult.content) {
-                  const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName ?? audioFile.name);
-                  const { extension } = FileInfo.extractFileName(asrResult.attributes.originalFileName ?? asrResult.name);
-                  const content = asrResult.content;
-                  const hash = await getHashString(new File([asrResult.content], asrResult.attributes.originalFileName, { type: asrResult.type }));
-                  const escapedName = getEscapedFileName(hash);
-
-                  asrResult.attributes = {
-                    originalFileName: `${name}${extension}`,
-                  };
-
-                  currentRound = {
-                    ...currentRound,
-                    status: TaskStatus.FINISHED,
-                    results: [
-                      ...currentRound.results,
-                      {
-                        ...asrResult,
-                        name: `${escapedName}${extension}`,
-                        content,
-                        hash,
-                        blob: undefined,
-                      },
-                    ],
-                  };
-                  this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
-                  subj.complete();
-                } else {
-                  subj.error(new Error('Missing result for ASR.'));
-                }
-              } catch (e: any) {
-                subj.error(e);
-              }
+            if (clonedOperation.serviceProviderName === 'LSTWhisperX') {
+              callASRSubj = from(this.callASRFromRadboud(httpClient, audioFile, clonedOperation, subscrManager));
+            } else {
+              callASRSubj = from(this.callASRFromBASWebservices(httpClient, audioFile, clonedOperation, subscrManager));
             }
-          },
-          error: (err) => {
-            subj.error(err);
-          },
-        });
-      } else {
-        currentRound = {
-          ...currentRound,
-          protocol: '<br/>' + 'serviceProvider is undefined',
-          time: {
-            ...currentRound.time!,
-            duration: Date.now() - currentRound.time!.start,
-          },
-        };
-        this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
-        subj.error('serviceProvider is undefined');
-      }
-    });
+
+            subscrManager.add(
+              callASRSubj.subscribe({
+                next: async ({ result, warnings }) => {
+                  let asrResult = result;
+
+                  if (asrResult && clonedOperation.serviceProviderName) {
+                    const g2pChunkerNeeded =
+                      (task.operations[2]?.name === 'OCTRA' &&
+                        task.operations[2]?.enabled === false &&
+                        task.operations[3]?.name === 'MAUS' &&
+                        task.operations[3]?.enabled === false) ||
+                      task.operations[3]?.name === 'SUMMARIZATION' ||
+                      (!clonedOperation.options.diarization?.enabled && clonedOperation.serviceProviderName === 'Google');
+                    // use G2P_CHUNKER only if Octra and Word alignment is disabled or summarization mode or if service provider is Google and diarization disabled
+
+                    currentRound = {
+                      ...currentRound,
+                      time: {
+                        ...currentRound.time!,
+                        duration: Date.now() - currentRound.time!.start,
+                      },
+                      protocol: warnings ? currentRound.protocol + 'WARNING: ' + warnings + '<br/>' : currentRound.protocol,
+                    };
+
+                    try {
+                      if (g2pChunkerNeeded) {
+                        const g2pResult = await this.callG2PChunker(
+                          AppSettings.getServiceInformation('BAS')!,
+                          httpClient,
+                          asrResult,
+                          audioFile,
+                          clonedOperation,
+                          subscrManager,
+                        );
+                        asrResult = g2pResult.result;
+                        warnings = g2pResult.warnings;
+                      }
+
+                      currentRound = {
+                        ...currentRound,
+                        time: {
+                          ...currentRound.time!,
+                          duration: Date.now() - currentRound.time!.start,
+                        },
+                        protocol: warnings ? currentRound.protocol + 'WARNING: ' + warnings + '<br/>' : currentRound.protocol,
+                      };
+
+                      if (asrResult.content) {
+                        const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName ?? audioFile.name);
+                        const { extension } = FileInfo.extractFileName(asrResult.attributes.originalFileName ?? asrResult.name);
+                        const content = asrResult.content;
+                        const hash = await getHashString(
+                          new File([asrResult.content], asrResult.attributes.originalFileName, { type: asrResult.type }),
+                        );
+                        const escapedName = getEscapedFileName(hash);
+
+                        asrResult.attributes = {
+                          originalFileName: `${name}${extension}`,
+                        };
+
+                        currentRound = {
+                          ...currentRound,
+                          status: TaskStatus.FINISHED,
+                          results: [
+                            ...currentRound.results,
+                            {
+                              ...asrResult,
+                              name: `${escapedName}${extension}`,
+                              content,
+                              hash,
+                              blob: undefined,
+                            },
+                          ],
+                        };
+                        this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+                        subj.complete();
+                      } else {
+                        subj.error(new Error('Missing result for ASR.'));
+                      }
+                    } catch (e: any) {
+                      subj.error(e);
+                    }
+                  }
+                },
+                error: (err) => {
+                  subj.error(err);
+                },
+              }),
+            );
+          } else {
+            currentRound = {
+              ...currentRound,
+              protocol: '<br/>' + 'serviceProvider is undefined',
+              time: {
+                ...currentRound.time!,
+                duration: Date.now() - currentRound.time!.start,
+              },
+            };
+            this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
+            subj.error('serviceProvider is undefined');
+          }
+        },
+      }),
+    );
 
     return subj;
   };
@@ -282,7 +302,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           name: getEscapedFileName(hash) + file.extension,
                           attributes: {
                             originalFileName: file.fullname,
-                          }
+                          },
                         } as unknown as StoreFile,
                         warnings,
                       });
@@ -461,8 +481,8 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
 
                   if (json.success === 'true') {
                     const { extension } = extractFileNameFromURL(json.downloadLink);
-                    const originalName = FileInfo.extractFileName(audioFile.attributes.originalFileName);
-                    const file = FileInfo.fromURL(json.downloadLink, 'text/plain', originalName + extension, Date.now());
+                    const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName);
+                    const file = FileInfo.fromURL(json.downloadLink, 'text/plain', name + extension, Date.now());
                     setTimeout(() => {
                       file
                         .updateContentFromURL(httpClient)
@@ -479,7 +499,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           resolve({
                             result: {
                               name: `${getEscapedFileName(hash)}${file.extension}`,
-                              attributes: { originalFileName: file.name },
+                              attributes: { originalFileName: file.fullname },
                               type: file.type,
                               size: file.size,
                               content,
@@ -543,7 +563,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   ) => {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
-      const {name} = FileInfo.extractFileName(file.name);
+      const { name } = FileInfo.extractFileName(file.name);
       if (file.blob) {
         // upload with file
         formData.append('file', file.blob, file.name);

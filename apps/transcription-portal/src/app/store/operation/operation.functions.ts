@@ -33,7 +33,17 @@ export function convertIDBOperationToStoreOperation(
       asr: {
         language: operation.name === 'ASR' ? operation.language : undefined,
         diarization: operation.diarization,
-        provider: operation.serviceProvider,
+        provider: operation.name === 'ASR' ? operation.serviceProvider: undefined,
+      },
+      maus: {
+        language: operation.name === 'MAUS' ? operation.language : undefined,
+      },
+      summarization: {
+        provider: operation.name === 'Summarization' ? operation.serviceProvider : undefined,
+        numberOfWords: operation.name === 'Summarization' ? operation.maxNumbersOfWords : undefined,
+      },
+      translation: {
+        language: operation.name === 'Translation' ? operation.language : undefined,
       },
     },
     result,
@@ -163,6 +173,7 @@ export function convertStoreFileToFileInfo(file: StoreFile): TPortalFileInfo {
   info.url = file.url;
   info.online = file.online ?? false;
   info.hash = file.hash;
+  info.file = file.blob ?? (file.content ? new File([file.content], file.attributes.originalFileName, { type: file.type }) : undefined);
   return info;
 }
 

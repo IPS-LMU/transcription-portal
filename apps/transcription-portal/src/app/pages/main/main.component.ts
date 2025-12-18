@@ -1,7 +1,8 @@
 import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   NgbCollapse,
   NgbDropdown,
@@ -26,7 +27,6 @@ import { StatisticsModalComponent } from '../../modals/statistics-modal/statisti
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
 import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { ANIMATIONS } from '../../shared/Animations';
 import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
@@ -43,14 +43,12 @@ import {
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-main',
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.scss'],
   providers: [],
-  animations: [ANIMATIONS],
   imports: [
     AlertComponent,
     NgClass,
@@ -82,11 +80,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected appStoreService = inject(AppStoreService);
   protected modeStoreService = inject(ModeStoreService);
   protected preprocessingStoreService = inject(PreprocessingStoreService);
+  protected renderer = inject(Renderer2);
 
-  public sidebarstate = 'hidden';
   isCollapsed = false;
   public test = 'inactive';
-  public sidebarExpand = 'opened';
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
@@ -111,37 +108,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.subscribe(this.modeStoreService.openedToolOperation$, {
       next: (toolOperation) => {
         this.toolSelectedOperation = toolOperation;
-        this.showtool = !!toolOperation;
       },
     });
   }
 
-  private _showtool = false;
-
-  get showtool(): boolean {
-    return this._showtool;
-  }
-
-  set showtool(value: boolean) {
-    this.sidebarExpand = value ? 'closed' : 'opened';
-    this._showtool = value;
-  }
-
   public get isdevelopment(): boolean {
     return environment.development;
-  }
-
-  public get animationObject(): any {
-    const width = 100 - this.newProceedingsWidth;
-    return {
-      value: this.sidebarExpand,
-      params: { toolWidth: width, procWidth: this.newProceedingsWidth },
-    };
-  }
-
-  public get animationObject2(): any {
-    const width = this.newProceedingsWidth;
-    return { value: this.sidebarExpand, params: { width } };
   }
 
   public get AppInfo() {
@@ -245,24 +217,28 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   public dragBorder($event: any, part: string) {
-    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
-      if (this.dragborder !== 'dragging') {
-        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
-          this.dragborder = 'active';
-        } else if (part === 'right' && $event.pageX <= 10) {
-          this.dragborder = 'active';
-        } else {
-          this.dragborder = 'inactive';
-        }
-      } else if ($event.type === 'mousemove') {
-        // dragging
-        const procWidth = Math.floor((($event.pageX + 10) / window.innerWidth) * 100);
-        const toolWidth = 100 - procWidth;
+    console.log(
+      `drag ${this.dragborder} ${$event.type}, part: ${part}, ${this.dragborder}, pageX: ${$event.pageX}, pageY: ${$event.pageY}, clientWIdth: ${$event.target.clientWidth}`,
+    );
 
-        this.newToolWidth = toolWidth;
-        this.newProceedingsWidth = procWidth;
-        this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
-      }
+    if ($event.type === 'mouseleave') {
+      this.dragborder = 'inactive';
+      this.renderer.setStyle($event.target, 'width', '10px');
+      this.renderer.setStyle($event.target, 'margin-left', '');
+    } else if (this.dragborder !== 'dragging') {
+      this.renderer.setStyle($event.target, 'width', '120px');
+      this.renderer.setStyle($event.target, 'margin-left', 'calc(var(--proceedings-width) - 60px)');
+      this.dragborder = 'active';
+    }
+
+    if (this.dragborder === 'dragging' && $event.type === 'mousemove') {
+      // dragging
+      const procWidth = Math.floor((($event.pageX + 10) / window.innerWidth) * 100);
+      const toolWidth = 100 - procWidth;
+
+      this.newToolWidth = toolWidth;
+      this.newProceedingsWidth = procWidth;
+      this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
     }
 
     if (this.dragborder === 'dragging' && $event.type === 'mouseleave') {
@@ -277,6 +253,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         break;
       case 'mouseup':
         this.dragborder = 'inactive';
+        console.log(`stop dragging ${$event.type}, part: ${part}`);
         break;
     }
   }
@@ -350,7 +327,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   openAboutModal() {
     const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
-    return ref.result;
+    this.appStoreService.setShortcutsEnabled(false);
+    ref.result.then(() => {
+      this.appStoreService.setShortcutsEnabled(true);
+    });
   }
 
   async backupDatabase() {

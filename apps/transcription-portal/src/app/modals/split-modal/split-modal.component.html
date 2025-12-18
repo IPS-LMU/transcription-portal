@@ -7,21 +7,21 @@
   <div class="row g-2">
     <div class="col-4">
       <button
-        (click)="splitModalDismissedProperly = true; dismiss('FIRST')"
+        (click)="dismiss('FIRST')"
         class="btn btn-primary h-100 w-100"
         [innerHTML]="'modals.split audio.options.use first channel' | transloco"
       ></button>
     </div>
     <div class="col-4">
       <button
-        (click)="splitModalDismissedProperly = true; dismiss('SECOND')"
+        (click)="dismiss('SECOND')"
         class="btn btn-primary h-100 w-100"
         [innerHTML]="'modals.split audio.options.use second channel' | transloco"
       ></button>
     </div>
     <div class="col-4">
       <button
-        (click)="splitModalDismissedProperly = true; dismiss('BOTH')"
+        (click)="dismiss('BOTH')"
         class="btn btn-primary h-100 w-100"
         [innerHTML]="'modals.split audio.options.use both channels' | transloco"
       ></button>

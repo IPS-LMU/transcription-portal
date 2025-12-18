@@ -104,6 +104,9 @@ export const modeReducer = createReducer(
             finished: 0,
             errors: 0,
           },
+          gui: {
+            toolOpenStatus: 'init',
+          },
         },
         {
           name: 'summarization',
@@ -140,6 +143,9 @@ export const modeReducer = createReducer(
             running: 0,
             finished: 0,
             errors: 0,
+          },
+          gui: {
+            toolOpenStatus: 'init',
           },
         },
       ],
@@ -202,10 +208,22 @@ export const modeReducer = createReducer(
   }),
   on(
     ModeActions.changeMode.do,
-    (state: ModeState, { mode }): ModeState => ({
-      ...state,
-      currentMode: mode,
-    }),
+    (state: ModeState, { mode }): ModeState =>
+      modeAdapter.updateOne(
+        {
+          id: state.currentMode,
+          changes: {
+            gui: {
+              ...state.entities[state.currentMode]!.gui,
+              toolOpenStatus: state.entities[state.currentMode]!.gui.toolOpenStatus === 'closed' ? 'init' : state.entities[state.currentMode]!.gui.toolOpenStatus,
+            },
+          },
+        },
+        {
+          ...state,
+          currentMode: mode,
+        },
+      ),
   ),
   on(ModeActions.updateProtocolURL.do, (state: ModeState): ModeState => {
     const currentMode = state.entities![state.currentMode];

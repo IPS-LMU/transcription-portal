@@ -2,19 +2,15 @@ import { HttpClient } from '@angular/common/http';
 import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { SubscriptionManager, wait } from '@octra/utilities';
-import { FileInfo, readFileContents } from '@octra/web-media';
+import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { AppInfo } from '../../../app.info';
 import { IDBOperation } from '../../../indexedDB';
 import { convertISO639Language } from '../../../obj/functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
+import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import {
-  addProcessingRound,
-  convertStoreOperationToIDBOperation,
-  getLastOperationResultFromLatestRound,
-  getLastOperationRound,
-} from '../operation.functions';
+import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
 
@@ -57,8 +53,19 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     operation: TranslationOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     const subj = new Subject<{ operation: TranslationOperation }>();
+
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
 
     wait(0).then(() => {
       let clonedOperation = { ...operation };
@@ -75,16 +82,10 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       };
       this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
-      let lastResult: StoreFile | undefined;
+      let lastResult: StoreFile | undefined = getLatestResultFromPreviousEnabledOperation(storeItemTask, operation);
       const audioinfo = storeItemTask?.files?.find((a) => a.type.includes('audio')) as StoreAudioFile;
 
-      if (storeItemTask.operations[3].enabled) {
-        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[3]);
-      } else if (storeItemTask.operations[2].enabled) {
-        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[2]);
-      } else if (storeItemTask.operations[1].enabled) {
-        lastResult = getLastOperationResultFromLatestRound(storeItemTask.operations[1]);
-      } else {
+      if (!lastResult) {
         const transcriptFromInputs = storeItemTask?.files.find((a) => !a.type.includes('audio'));
         if (transcriptFromInputs) {
           lastResult = transcriptFromInputs;

@@ -1,11 +1,10 @@
 import { NgStyle } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
-import { AlertService } from '../../shared/alert.service';
-import { ANIMATIONS } from '../../shared/Animations';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { NotificationService } from '../../shared/notification.service';
 
 export interface AlertEntry {
   type: 'danger' | 'warning' | 'info' | 'success';
@@ -16,14 +15,13 @@ export interface AlertEntry {
 }
 
 @Component({
-  selector: 'tportal-alert',
+  selector: 'tportal-alerts',
   templateUrl: './alert.component.html',
   styleUrls: ['./alert.component.scss'],
-  animations: ANIMATIONS,
   imports: [NgStyle, NgbAlert, TranslocoPipe],
 })
 export class AlertComponent extends SubscriberComponent {
-  private alert = inject(AlertService);
+  private notificationService = inject(NotificationService);
 
   private static counter = 0;
   public duration = 20;
@@ -32,7 +30,7 @@ export class AlertComponent extends SubscriberComponent {
 
   constructor() {
     super();
-    this.subscribe(this.alert.alertsend, {
+    this.subscribe(this.notificationService.alertsend, {
       next: (obj) => this.onAlertSend(obj),
       error: (err) => {
         console.error(err);

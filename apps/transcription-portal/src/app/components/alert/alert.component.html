@@ -14,7 +14,7 @@
   }
 
   @if (queue.length > 1) {
-    <button (click)="clear()" [@fadeToggle]="animation" class="btn btn-secondary" style="width: 100%; background-color: lightgray; border: none">
+    <button (click)="clear()" animate.enter="fade-toggle-show" animate.leave="fade-toggle-hide" class="btn btn-secondary" style="width: 100%; background-color: lightgray; border: none">
       <i class="bi bi-trash"></i> {{ 'p.clear all' | transloco }}
     </button>
   }

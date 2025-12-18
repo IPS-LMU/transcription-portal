@@ -17,6 +17,7 @@ import {
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
+  selectGuiState,
   selectOpenedToolOperation,
   selectOverallState,
   selectOverallStateLabel,
@@ -39,6 +40,7 @@ export class ModeStoreService {
   currentMode?: TPortalModes;
   overallState$ = this.store.select(selectOverallState);
   openedToolOperation$ = this.store.select(selectOpenedToolOperation);
+  currentModeGuiState$ = this.store.select(selectGuiState);
   currentOverallStateLabel$ = this.store.select(selectOverallStateLabel);
   currentModeProtocol$ = this.store.select(selectCurrentModeProtocol);
 
@@ -84,8 +86,16 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.toggleTaskDirectoryOpened.do({ dirID }));
   }
 
+  setDirectoryOpenState(opened: boolean) {
+    this.store.dispatch(StoreItemActions.setDirectoryOpenState.do({ opened }));
+  }
+
   removeStoreItems(ids: number[]) {
     this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
+  }
+
+  setDisabledState(disabled: boolean, ids: number[]) {
+    this.store.dispatch(StoreItemActions.setDisableStateForSelectedTasks.do({ disabled, ids }));
   }
 
   updateProtocol() {

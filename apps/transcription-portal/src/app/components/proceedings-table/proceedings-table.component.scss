@@ -25,11 +25,23 @@
 :host {
   display: flex;
   position: relative;
+  animation: proceedings-animation 0.5s ease-out;
+}
+
+@keyframes proceedings-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .bi.bi-file-text {
   font-size: 32px;
 }
+
+/*
 
 .shorten {
   text-overflow: ellipsis;
@@ -37,6 +49,7 @@
   text-wrap: none;
   white-space: nowrap;
 }
+ */
 
 .bi.bi-arrow-up {
   color: cornflowerblue;
@@ -283,11 +296,15 @@ table thead tr th:hover {
   font-size: 13px;
 }
 
-tr.task-stopped{
+tr.task-stopped {
   opacity: 0.5;
 }
 
 table tbody tr td .bi.bi-chevron-up,
 table tbody tr td .bi.bi-chevron-down {
   margin-right: 5px;
+}
+
+.tr-disabled {
+  opacity: 0.5 !important;
 }

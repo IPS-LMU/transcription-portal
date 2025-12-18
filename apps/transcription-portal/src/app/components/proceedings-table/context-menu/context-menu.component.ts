@@ -1,5 +1,6 @@
-import { Component, ElementRef, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Input, Output, SimpleChanges } from '@angular/core';
 import { OperationFactory, StoreItem } from '../../../store';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-context-menu',

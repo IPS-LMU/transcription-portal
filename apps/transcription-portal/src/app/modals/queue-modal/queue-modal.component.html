@@ -57,17 +57,17 @@
               <th>{{ 'g.valid' | transloco }}?</th>
               <th class="text-start">{{ 'g.file' | transloco }}</th>
               <th>{{ 'g.language' | transloco }}</th>
-              @for (operation of operations; track operation.id; let i = $index) {
+              @for (operation of operations; track operation.factory.name; let i = $index) {
                 <th>
                   <div>
-                    @if (operation.title === '') {
+                    @if (operation.factory.title === '') {
                       <span style="display: block">
                         <ng-container>
-                          {{ 'operations.' + (operation.name | lowercase) + '.name' | transloco }}
+                          {{ 'operations.' + (operation.factory.name | lowercase) + '.name' | transloco }}
                         </ng-container>
                       </span>
                     } @else {
-                      <div [innerHTML]="'operations.' + (operation.title | lowercase) + '.name' | transloco"></div>
+                      <div [innerHTML]="'operations.' + (operation.factory.title | lowercase) + '.name' | transloco"></div>
                     }
                   </div>
                 </th>
@@ -78,17 +78,17 @@
               <th></th>
               <th></th>
               <th></th>
-              @for (operation of operations; track operation.id; let i = $index) {
+              @for (operation of operations; track operation.factory.name; let i = $index) {
                 @if (
-                  operation.name === 'OCTRA' || operation.name === 'ASR' || operation.name === 'Summarization' || operation.name === 'Translation'
+                  operation.factory.name === 'OCTRA' || operation.factory.name === 'ASR' || operation.factory.name === 'Summarization' || operation.factory.name === 'Translation'
                 ) {
                   <th>
-                    <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                    <input (click)="deactivateOperation(operation.factory.name, operation.enabled)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
                   </th>
-                } @else if (operation.name === 'MAUS') {
+                } @else if (operation.factory.name === 'MAUS') {
                   <th colspan="2" style="position: relative">
                     <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                    <input (click)="deactivateOperation(operation, i)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                    <input (click)="deactivateOperation(operation.factory.name, operation.enabled)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
                     <img
                       src="assets/directory.png"
                       style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
@@ -99,14 +99,14 @@
             </tr>
           </thead>
           <tbody>
-            @for (task of tasks; track task.id) {
+            @for (task of queuedTasks; track task.id) {
               @if (task.status === 'QUEUED') {
                 <tr>
                   <td class="compatible-col">
                     <ng-template #validationResult>
                       <table class="table table-sm table-striped">
                         <tbody>
-                          @for (check of getChecksByID(task.id); track check.name) {
+                          @for (check of task.checks; track check.name) {
                             <tr>
                               <td>
                                 <i
@@ -129,7 +129,7 @@
                     </ng-template>
                     <span
                       #popoverResult="ngbPopover"
-                      (mouseenter)="onValidationResultMouseEnter(popoverResult, task.id)"
+                      (mouseenter)="onValidationResultMouseEnter(popoverResult, task)"
                       (mouseleave)="popoverResult.close()"
                       triggers=""
                       [ngbPopover]="validationResult"
@@ -138,11 +138,11 @@
                       <i
                         class="bi"
                         [ngClass]="{
-                          'bi-check-lg': !isSomethingInvalid(task.id),
-                          'fbi-x': isSomethingInvalid(task.id),
+                          'bi-check-lg': !task.invalid,
+                          'bi-x': task.invalid,
                         }"
                         [ngStyle]="{
-                          color: isSomethingInvalid(task.id) ? 'red' : 'green',
+                          color: task.invalid ? 'red' : 'green',
                         }"
                       ></i>
                     </span>
@@ -151,18 +151,18 @@
                     <span
                       [ngClass]="{
                         green:
-                          (task.files[0].extension === '.wav' && task.files[0].file !== undefined) ||
-                          (task.operations[0].rounds.length > 0 && task.operations[0].lastRound?.lastResult?.online),
+                          (getExtension(task.files[0]) === '.wav' && task.files[0].blob !== undefined) ||
+                          (task.operations[0].rounds.length > 0 && getLastOperationResultFromLatestRound(task.operations[0])?.online),
                         yellow:
-                          ((task.files[0].extension === '.wav' && task.files[0].file === undefined) || task.files[0].extension !== '.wav') &&
-                          task.operations[0].state !== 'FINISHED',
-                        red: isSomethingInvalid(task.id),
+                          ((getExtension(task.files[0]) === '.wav' && task.files[0].blob === undefined) || getExtension(task.files[0]) !== '.wav') &&
+                          getLastOperationRound(task.operations[0])?.status !== 'FINISHED',
+                        red: task.invalid,
                       }"
                       title="{{ task.files[0].attributes.originalFileName }}"
                     >
                       {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
                     </span>
-                    @if (task.files.length > 1 || task.files[0].extension !== '.wav') {
+                    @if (task.files.length > 1 || getExtension(task.files[0]) !== '.wav') {
                       <span
                         [ngClass]="{
                           'bg-info': getBadge(task).type === 'info',
@@ -174,7 +174,7 @@
                       </span>
                     }
                   </td>
-                  <td>{{ task.asrOperation.language }}</td>
+                  <td>{{ task.operations[1].options.language }}</td>
                   @for (operation of task.operations; track operation.id) {
                     <td>
                       @if (operation.enabled) {
@@ -270,7 +270,7 @@
                       }}</span>
                     </td>
                   </tr>
-                  @if (taskService.state.currentMode === 'annotation') {
+                  @if (modeStoreService.currentMode === 'annotation') {
                     <tr class="align-middle">
                       <td class="fit">
                         <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.diarization.name' | transloco }}:</label>
@@ -290,7 +290,7 @@
                       </td>
                     </tr>
                   }
-                  @if (taskService.state.currentModeState.isDiarizationEnabled) {
+                  @if ((modeStoreService.defaultUserSettings$ | async)?.isDiarizationEnabled) {
                     <tr class="align-middle">
                       <td class="fit">
                         <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label>
@@ -306,7 +306,7 @@
                       </td>
                     </tr>
                   }
-                  @if (taskService.state.currentMode === 'summarization') {
+                  @if (modeStoreService.currentMode === 'summarization') {
                     <tr class="align-middle fit">
                       <td class="fit">
                         <label for="asrProvider" class="pointer" [ngbTooltip]="'modals.check options.options.summarization service provider.description' | transloco"
@@ -351,7 +351,7 @@
                       </td>
                     </tr>
                   }
-                  @if (taskService.state.currentMode === 'annotation') {
+                  @if (modeStoreService.currentMode === 'annotation') {
                     <tr class="align-middle fit">
                       <td class="fit">
                         <label class="pointer" [ngbTooltip]="'modals.check options.options.word alignment language.description' | transloco">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label>
@@ -385,7 +385,6 @@
                               (ngModelChange)="onOptionChange()"
                               name="translationLanguage"
                               [required]="true"
-                              (ngModelChange)="changeProcessingOptionsForEachQueuedTask()"
                             >
                               <option value=""></option>
                               <option value="en">{{ 'languages.en' | transloco }}</option>
@@ -398,8 +397,8 @@
                                 <span class="d-block text-center"
                                   >{{ 'modals.check options.options.translation language.provided by' | transloco }}:</span
                                 >
-                                <a [href]="translationProvider.homepageURL" target="_blank"
-                                  ><img [src]="translationProvider.logoURL" class="img-fluid"
+                                <a [href]="translationProvider?.homepageURL" target="_blank"
+                                  ><img [src]="translationProvider?.logoURL" class="img-fluid"
                                 /></a>
                               </div>
                             </ng-template>

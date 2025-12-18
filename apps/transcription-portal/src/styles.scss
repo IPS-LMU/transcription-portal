@@ -3,6 +3,12 @@
 @use 'jodit/es2021/jodit.css';
 @use 'highlight.js/styles/github.css';
 @use 'codejar-linenumbers/es/codejar-linenumbers.css';
+@use './animations.style';
+
+:root {
+  --proceedings-width: 30%;
+  --tool-width: 70%;
+}
 
 body {
   padding: 0;
@@ -151,4 +157,8 @@ tbody .bi.bi-arrow-up {
 
 octra-version-notification .bi.bi-x-lg {
   color: black !important;
+}
+
+.modal-full-height .modal-content{
+  height: 100% !important;
 }

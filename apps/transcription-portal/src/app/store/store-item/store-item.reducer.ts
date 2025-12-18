@@ -79,10 +79,8 @@ export const getTaskReducers = (
           }
           return file;
         });
-
-        if (item.status !== TaskStatus.QUEUED) {
+        if (item.status !== TaskStatus.QUEUED && item.status !== TaskStatus.DISABLED) {
           const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
-
           if (operationStatus.includes(TaskStatus.READY)) {
             item = {
               ...item,
@@ -365,7 +363,7 @@ export const getTaskReducers = (
     return setSelection(ids, false, state, modeAdapter, taskAdapter, deselectOthers);
   }),
   on(StoreItemActions.startProcessing.do, (state: ModeState): ModeState => {
-    return modeAdapter.updateOne(
+    state = modeAdapter.updateOne(
       {
         id: state.currentMode,
         changes: {
@@ -390,6 +388,9 @@ export const getTaskReducers = (
       },
       state,
     );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
   }),
   on(
     StoreItemActions.stopProcessing.do,
@@ -484,10 +485,14 @@ export const getTaskReducers = (
                 };
               },
               taskAdapter,
-              currentMode.items,
+              itemsState,
             );
           }),
           openedTool: undefined,
+          gui: {
+            ...currentMode.gui,
+            toolOpenStatus: 'closed',
+          },
         },
       },
       state,
@@ -548,6 +553,52 @@ export const getTaskReducers = (
   })),
   // update statistics if task changes
   on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
+  on(StoreItemActions.setDisableStateForSelectedTasks.do, (state: ModeState, { disabled, ids }) => {
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive(ids, state.entities[state.currentMode]!.items, taskAdapter, (item, itemsState) => {
+            if (item.type === 'task') {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    status: disabled ? TaskStatus.DISABLED : TaskStatus.PENDING,
+                    operations: item.operations?.map((operation) => {
+                      const lastRound = getLastOperationRound(operation);
+                      if (lastRound && lastRound.status === TaskStatus.PROCESSING) {
+                        return {
+                          ...operation,
+                          rounds:
+                            operation.rounds.length > 1
+                              ? operation.rounds.slice(0, -1)
+                              : [
+                                  {
+                                    status: TaskStatus.PENDING,
+                                    results: [],
+                                  },
+                                ],
+                        };
+                      }
+                      return operation;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            }
+
+            return itemsState;
+          }),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
+  }),
   on(StoreItemActions.processStoreItem.do, (state, { id, mode }) => {
     state = modeAdapter.updateOne(
       {
@@ -596,8 +647,14 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) =>
-    modeAdapter.updateOne(
+  on(
+    StoreItemActions.processStoreItem.fail,
+    StoreItemActions.reuploadFilesForOperations.fail,
+    StoreItemActions.changeTaskStatus.do,
+    (state: ModeState, { mode }) => updateStatistics(state, mode),
+  ),
+  on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) => {
+    state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
@@ -618,10 +675,46 @@ export const getTaskReducers = (
         },
       },
       state,
-    ),
+    );
+    state = updateStatistics(state, mode);
+    return state;
+  }),
+  on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) =>
+    item
+      ? modeAdapter.updateOne(
+          {
+            id: mode,
+            changes: {
+              items: applyFunctionOnStoreItemsWithIDsRecursive(
+                [taskID],
+                state.entities![state.currentMode]!.items,
+                taskAdapter,
+                (item, itemsState) => {
+                  if (item.type === 'task') {
+                    itemsState = taskAdapter.updateOne(
+                      {
+                        id: item.id,
+                        changes: item,
+                      },
+                      itemsState,
+                    );
+                  }
+                  return itemsState;
+                },
+              ),
+            },
+          },
+          state,
+        )
+      : state,
   ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
-    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items);
+
+    if (!taskItem) {
+      return state;
+    }
+
     let taskStatus = taskItem!.status;
     const lastRound = getLastOperationRound(operation);
 
@@ -679,6 +772,7 @@ export const getTaskReducers = (
               });
             }
 
+            console.log(`SET ${item.id} to ${taskStatus} SUCCESS`);
             return taskAdapter.updateOne(
               {
                 id: item.id,
@@ -700,7 +794,19 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
+  on(StoreItemActions.updateURLsForFilesAfterUpload.success, (state: ModeState, { mode, itemsState, itemIDs }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: itemsState,
+        },
+      },
+      state,
+    );
+  }),
   on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operation }) => {
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
     state = modeAdapter.updateOne(
       {
         id: mode,
@@ -710,7 +816,7 @@ export const getTaskReducers = (
               {
                 id: item.id,
                 changes: {
-                  operations: state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
+                  operations: taskItem.operations!.map((op) => {
                     if (op.id === operation.id) {
                       return {
                         ...op,
@@ -797,6 +903,46 @@ export const getTaskReducers = (
       }
     }
 
+    state = updateStatistics(state, mode);
+
+    return state;
+  }),
+  on(StoreItemActions.runOperationWithTool.closeOtherTool, (state: ModeState, { mode, taskID, operationID }) => {
+    const currentMode = state.entities[mode]!;
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.type === 'task' && item.id === taskID,
+            currentMode.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return changeTaskOperation(
+                taskID,
+                operationID,
+                (operation) => {
+                  return {
+                    ...operation,
+                    rounds: [
+                      ...(operation.rounds.length > 1 ? operation.rounds.slice(0, operation.rounds.length - 2) : []),
+                      {
+                        ...last(operation.rounds)!,
+                        status: operation.rounds.length > 0 ? TaskStatus.READY : TaskStatus.FINISHED,
+                      },
+                    ],
+                  };
+                },
+                taskAdapter,
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+
     return state;
   }),
   on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, url, audioFile, language, operationName }) => {
@@ -857,6 +1003,10 @@ export const getTaskReducers = (
               audioFile,
               language,
             },
+            gui: {
+              ...state.entities[mode]!.gui,
+              toolOpenStatus: 'opened',
+            },
           },
         },
         {
@@ -898,8 +1048,8 @@ export const getTaskReducers = (
       state,
     ),
   ),
-  on(StoreItemActions.receiveToolData.success, (state: ModeState, { file }) => {
-    const currentMode = state.entities[state.currentMode]!;
+  on(StoreItemActions.receiveToolData.success, (state: ModeState, { mode }) => {
+    const currentMode = state.entities[mode]!;
     const openedTool = currentMode.openedTool!;
     const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentMode.items)!;
     const operationIndex = task.operations.findIndex((a) => a.id === openedTool.operationID);
@@ -913,14 +1063,14 @@ export const getTaskReducers = (
       ) {
         state = modeAdapter.updateOne(
           {
-            id: state.currentMode,
+            id: mode,
             changes: {
               items: changeTaskOperation(
                 task.id,
                 operation.id,
                 (op, itemsState) => addProcessingRound(op),
                 taskAdapter,
-                state.entities![state.currentMode]!.items,
+                state.entities![mode]!.items,
               ),
             },
           },
@@ -929,10 +1079,55 @@ export const getTaskReducers = (
       }
     }
 
-    return state;
+    return modeAdapter.updateOne({
+      id: mode,
+      changes: {
+        gui: {
+          ...currentMode.gui,
+          toolOpenStatus: 'closed',
+        },
+      },
+    }, state);
   }),
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
     return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);
+  }),
+  on(StoreItemActions.setDirectoryOpenState.do, (state: ModeState, { opened }) => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.type === 'folder',
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    opened,
+                  },
+                },
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+  }),
+  on(StoreItemActions.checkAllUploadOperationsForOnlineFiles.success, (state: ModeState, { mode, itemsState }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: itemsState,
+        },
+      },
+      state,
+    );
   }),
   on(StoreItemActions.removeAppendingForSelectedItems.do, (state: ModeState) =>
     modeAdapter.updateOne(

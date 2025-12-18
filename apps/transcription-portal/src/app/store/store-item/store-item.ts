@@ -12,6 +12,7 @@ export enum TaskStatus {
   SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
   ERROR = 'ERROR',
+  DISABLED = 'DISABLED',
 }
 
 export interface StoreItemTaskOptions {

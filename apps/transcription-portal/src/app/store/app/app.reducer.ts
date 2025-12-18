@@ -46,6 +46,7 @@ export const InitialAppState: AppState = {
   feedbackEnabled: false,
   idbInitialized: false,
   initialized: false,
+  shortcutsEnabled: true,
   userProfile: {
     name: '',
     email: '',

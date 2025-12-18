@@ -1,10 +1,6 @@
-import { Injectable } from '@angular/core';
 import { Shortcut, ShortcutGroup } from '@octra/web-media';
 import hotkeys, { HotkeysEvent } from 'hotkeys-js';
 
-@Injectable({
-  providedIn: 'root',
-})
 export class ShortcutService {
   get pressedKeys(): Set<string> {
     return this._pressedKeys;
@@ -73,7 +69,8 @@ export class ShortcutService {
     }
 
     this._pressedKeys = new Set<string>();
-    hotkeys('*', { keyup: true }, (event, hotkeyEvent) => {
+
+    hotkeys('*', { keydown: true, keyup: true }, (event, hotkeyEvent) => {
       const pressedKeys = new Set<string>();
       if (hotkeys.ctrl) {
         pressedKeys.add('ctrl');

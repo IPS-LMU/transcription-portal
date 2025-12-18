@@ -136,6 +136,7 @@ export class IDBEffects {
           asrProvider: defaultUserSettings.selectedASRProvider?.provider,
           mausLanguage: defaultUserSettings.selectedMausLanguage,
           summarizationProvider: defaultUserSettings.selectedSummarizationProvider?.provider,
+          summarizationWordLimit: defaultUserSettings.selectedSummarizationNumberOfWords,
           diarization: defaultUserSettings.isDiarizationEnabled,
           diarizationSpeakers: defaultUserSettings.diarizationSpeakers,
           translationLanguage: defaultUserSettings.selectedTranslationLanguage,
@@ -269,15 +270,30 @@ export class IDBEffects {
         IDBActions.saveTask.do,
         StoreItemActions.processNextOperation.success,
         StoreItemActions.processNextOperation.fail,
+        StoreItemActions.runOperationWithTool.closeOtherTool,
       ),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
+      exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number; type: any }, RootState]) => {
+        console.log(`SAVE after ${type}`);
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
-        const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
-        return from(convertStoreItemToIDBItem(task, state.modes.entities[mode]!.defaultOperations!)).pipe(
+        let entry = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
+
+        if (entry?.directoryID) {
+          entry = getStoreItemsWhereRecursive((item) => item.id === entry.directoryID, state.modes.entities[mode]!.items)[0];
+        }
+
+        if (!entry) {
+          return of(
+            IDBActions.saveTask.fail({
+              error: `Can't find entry with id ${taskID}`,
+            }),
+          );
+        }
+
+        return from(convertStoreItemToIDBItem(entry, state.modes.entities[mode]!.defaultOperations!)).pipe(
           exhaustMap((idbTask) => {
-            return from(table.put(idbTask, task.id)).pipe(
+            return from(table.put(idbTask, entry.id)).pipe(
               exhaustMap(() => {
                 return of(
                   IDBActions.saveTask.success({
@@ -412,7 +428,12 @@ export class IDBEffects {
 
   saveStoreItems$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(IDBActions.saveStoreItems.do),
+      ofType(
+        IDBActions.saveStoreItems.do,
+        StoreItemActions.updateURLsForFilesAfterUpload.success,
+        StoreItemActions.checkAllUploadOperationsForOnlineFiles.success,
+        StoreItemActions.setDisableStateForSelectedTasks.success
+      ),
       withLatestFrom(this.store),
       exhaustMap(
         ([{ itemIDs, mode }, state]: [
@@ -426,8 +447,16 @@ export class IDBEffects {
             (async () => {
               const serialized: (IDBTaskItem | IDBFolderItem)[] = [];
               const items = getStoreItemsWhereRecursive((item) => itemIDs.includes(item.id), state.modes.entities[mode]!.items);
-              for (const item of items) {
-                serialized.push(await convertStoreItemToIDBItem(item, state.modes.entities[mode]!.defaultOperations));
+              for (const entry of items) {
+                let item: StoreItem | undefined = entry;
+                if (item.directoryID) {
+                  const founds = getStoreItemsWhereRecursive((i) => i.id === item!.directoryID, state.modes.entities[mode]!.items);
+                  item = founds.length === 1 ? founds[0] : undefined;
+                }
+
+                if (item) {
+                  serialized.push(await convertStoreItemToIDBItem(item, state.modes.entities[mode]!.defaultOperations));
+                }
               }
 
               return serialized;

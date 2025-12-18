@@ -41,6 +41,7 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     operation: EmuOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>
   ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
@@ -68,7 +69,7 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
     }
   }
 
-  override async convertOperationToIDBOperation(operation:EmuOperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: EmuOperation): Promise<IDBOperation> {
     const result = await convertStoreOperationToIDBOperation(operation);
 
     return result;

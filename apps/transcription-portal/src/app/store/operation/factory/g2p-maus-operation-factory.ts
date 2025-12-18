@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
@@ -57,10 +57,22 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     operation: G2pMausOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: G2pMausOperation }> {
     const subj = new Subject<{
       operation: G2pMausOperation;
     }>();
+
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
+
     wait(0).then(async () => {
       try {
         if (operation.serviceProviderName) {

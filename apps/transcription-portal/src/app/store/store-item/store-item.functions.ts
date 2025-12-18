@@ -39,7 +39,7 @@ export function convertIDBTaskToStoreTask(
       entries: taskAdapter.getInitialState(),
     };
     result.entries = taskAdapter.addMany(
-      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, defaultOperations)),
+      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, defaultOperations, entry.id)),
       result.entries,
     );
 
@@ -159,12 +159,13 @@ export function updateTaskFilesWithSameFile(
   };
 
   let someThingFound = false;
-  const tasks =
+  const addedStoreFiles =
     addedStoreFileOrDirectory.type !== 'folder' ? [addedStoreFileOrDirectory] : (addedStoreFileOrDirectory as StoreFileDirectory).entries!;
 
-  for (const storeFile of tasks) {
+  for (const storeFile of addedStoreFiles) {
+    let addedFileFound = false;
     result.state = applyFunctionOnStoreItemsWhereRecursive(
-      (item) => item.type === "task",
+      (item) => item.type === 'task',
       result.state,
       adapter,
       (item, iState) => {
@@ -181,14 +182,15 @@ export function updateTaskFilesWithSameFile(
               const file = task.files[i];
 
               if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
-                console.log(`Replace old file ${file.attributes.originalFileName} with added file ${addedFile.attributes.originalFileName}`);
                 somethingFoundInFiles = true;
                 someThingFound = true;
+                addedFileFound = true;
                 // replace blob file
                 iState = adapter.updateOne(
                   {
                     id: task.id,
                     changes: {
+                      status: TaskStatus.PENDING,
                       files: [
                         ...task.files.slice(0, i),
                         {
@@ -197,6 +199,19 @@ export function updateTaskFilesWithSameFile(
                           online: false,
                         },
                         ...task.files.slice(i + 1),
+                      ],
+                      operations: [
+                        // clear round of upload operation to make sure the new file is reuploaded
+                        {
+                          ...task.operations[0],
+                          rounds: [
+                            {
+                              status: TaskStatus.PENDING,
+                              results: [],
+                            },
+                          ],
+                        },
+                        ...task.operations.slice(1),
                       ],
                     },
                   },
@@ -225,9 +240,10 @@ export function updateTaskFilesWithSameFile(
                           {
                             ...task.operations![1],
                             enabled: false,
-                            rounds: changeLastRound(task.operations![1].rounds, {
+                            rounds: changeLastRound(task.operations![1].rounds, lastRound => ({
+                              ...lastRound,
                               status: TaskStatus.SKIPPED,
-                            }),
+                            })),
                           },
                           ...task.operations!.slice(2),
                         ],
@@ -242,10 +258,14 @@ export function updateTaskFilesWithSameFile(
         }
         return iState;
       },
+      undefined,
+      0,
+      () => addedFileFound,
     );
   }
 
   if (!someThingFound) {
+    // there exists no file with matching hash => add to table
     if (addedStoreFileOrDirectory.type !== 'folder') {
       // add file to a new task
       const addedFile = addedStoreFileOrDirectory as StoreFile;
@@ -581,6 +601,7 @@ export function applyFunctionOnStoreItemsWhereRecursive(
   applyFunction: (item: StoreItem, itemsState: StoreItemsState, i: number) => StoreItemsState,
   afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
   k = 0,
+  stopOnValidCondition: () => boolean = () => false,
 ) {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
 
@@ -617,6 +638,11 @@ export function applyFunctionOnStoreItemsWhereRecursive(
         itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
       }
     }
+
+    if (stopOnValidCondition()) {
+      break;
+    }
+
     k++;
   }
 
@@ -725,25 +751,42 @@ export function isStoreFileAvailable(file?: StoreFile) {
   return file && (file.online || file.blob);
 }
 
-export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
+export function areAllResultsOnline(round: StoreTaskOperationProcessingRound) {
+  for (const result of round.results) {
+    if (result.online === false || !result.url) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function getPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
   const index = task.operations.findIndex((a) => a.id === operation.id);
   if (index > 0) {
     for (let i = index - 1; i >= 0; i--) {
       const previousOperation = task.operations[i];
       if (previousOperation.enabled) {
-        return getLastOperationResultFromLatestRound(previousOperation);
+        return previousOperation;
       }
     }
   }
   return undefined;
 }
 
-export function changeLastRound(rounds: StoreTaskOperationProcessingRound[], partial: Partial<StoreTaskOperationProcessingRound>) {
+export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
+  const previousOperation = getPreviousEnabledOperation(task, operation);
+  return previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
+}
+
+export function changeLastRound(
+  rounds: StoreTaskOperationProcessingRound[],
+  change: (round: StoreTaskOperationProcessingRound) => StoreTaskOperationProcessingRound,
+) {
   return [
     ...(rounds.length > 0 ? rounds.slice(0, rounds.length - 1) : []),
     {
       ...last(rounds)!,
-      ...partial,
+      ...change(last(rounds)!),
     },
   ];
 }
