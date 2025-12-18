@@ -1,14 +1,11 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Download results by {{ type }}</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.downloads.title' | transloco: { type } }}</h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body">
-  <p style="text-align: justify">
-    This creates a zip-archive of all the selected results and optionally conversions to other formats. If you do not select any additional
-    conversions only the original results are added to the zip-archive.
-  </p>
-  <p>Please notice, that only the latest results are inserted to the package.</p>
-  <p>Add conversions (optional):</p>
+  <p style="text-align: justify" [innerHTML]="'modals.downloads.introduction' | transloco"></p>
+  <p [innerHTML]="'modals.downloads.latest result' | transloco"></p>
+  <p>{{ 'modals.downloads.add conversions' | transloco }}:</p>
   <div>
     @for (conversion of converters; track conversion.obj.name; let i = $index) {
       <div class="conversion">
@@ -30,28 +27,28 @@
   </div>
   <br />
   @if (state === 'inactive') {
-    <button (click)="process()" class="btn btn-outline-primary" style="width: 100%">Get package</button>
+    <button (click)="process()" class="btn btn-outline-primary" style="width: 100%">{{ 'modals.downloads.get package' | transloco }}</button>
   }
   @if (state === 'processing') {
-    <a [attr.disabled]="true" class="btn btn-outline-info" style="width: 100%">
-      <div class="spinner-border m-5" role="status">
+    <button [disabled]="true" class="btn btn-outline-info p-3 align-items-center" style="width: 100%">
+      <div class="spinner-border me-2" role="status" style="height: 20px; width: 20px; border-width: 1px;">
         <span class="visually-hidden">Loading...</span>
       </div>
-      PLEASE WAIT...
-    </a>
+      <span>{{ 'p.please wait' | transloco }}...</span>
+    </button>
   }
   @if (state === 'finished') {
     <a [attr.download]="archiveName" [attr.href]="archiveURL" class="btn btn-outline-success" (click)="showRemoveLine = true" style="width: 100%">
-      DOWNLOAD
+      {{ 'g.download' | transloco | uppercase }}
     </a>
   }
   @if (type === 'line' && state === 'finished' && showRemoveLine) {
-    <p class="mt-3 text-center">Optional:</p>
+    <p class="mt-3 text-center">{{ 'g.optional' | transloco }}:</p>
     <button (click)="removeSelected()" class="btn btn-outline-danger" id="remove-check" style="width: 100%">
-      Remove selected lines from transcription portal (permanently)
+      {{ 'modals.downloads.remove selected lines' | transloco }}
     </button>
   }
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">Close</button>
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.close()">{{ 'g.close' | transloco }}</button>
 </div>

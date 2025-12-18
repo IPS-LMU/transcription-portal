@@ -5,12 +5,14 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { UpperCasePipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
-  imports: [NgxCodeJarComponent],
+  imports: [NgxCodeJarComponent, TranslocoPipe, UpperCasePipe],
 })
 export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);

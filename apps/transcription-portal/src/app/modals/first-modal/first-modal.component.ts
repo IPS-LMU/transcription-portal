@@ -2,12 +2,14 @@ import { Component, Output, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Subject } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-first-modal',
   templateUrl: './first-modal.component.html',
   styleUrls: ['./first-modal.component.scss'],
   standalone: true,
+  imports: [TranslocoPipe],
 })
 export class FirstModalComponent extends SubscriberComponent {
   protected activeModal = inject(NgbActiveModal);
@@ -15,7 +17,7 @@ export class FirstModalComponent extends SubscriberComponent {
   @Output() understandClick: Subject<void> = new Subject<void>();
 
   public static options: NgbModalOptions = {
-    size: 'md',
+    size: 'lg',
     backdrop: 'static',
     keyboard: false,
   };

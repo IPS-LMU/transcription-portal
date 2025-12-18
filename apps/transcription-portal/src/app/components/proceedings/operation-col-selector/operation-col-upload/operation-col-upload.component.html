@@ -1,0 +1,29 @@
+@if (uploadOperation !== undefined && task !== undefined) {
+  @switch (uploadOperation.state) {
+    @case ('PENDING') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('UPLOADING') {
+      @if (uploadOperation.progress) {
+        <i class="bi bi-cloud-upload" aria-hidden="true" style="color: cornflowerblue"></i>
+        <span>{{ eta | time }}</span>
+      } @else {
+        <div class="spinner-border spinner-border-small" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      }
+    }
+    @case ('PROCESSING') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('FINISHED') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('READY') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+    @case ('ERROR') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task"></tportal-operation-col-default-icon>
+    }
+  }
+}

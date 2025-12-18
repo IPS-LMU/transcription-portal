@@ -6,6 +6,7 @@ import { OperationFactory, StoreItem } from '../../../store';
   templateUrl: './context-menu.component.html',
   styleUrls: ['./context-menu.component.scss'],
   standalone: true,
+  imports: [TranslocoPipe],
 })
 export class ContextMenuComponent {
   private elRef = inject(ElementRef);
@@ -36,5 +37,16 @@ export class ContextMenuComponent {
 
   public onRemoveAttachments() {
     this.optionselected.emit('appendings-remove');
+  }
+
+  disableTasks(disable: boolean) {
+    if (disable) {
+      this.optionselected.emit('disable-tasks');
+    } else {
+      this.optionselected.emit('enable-tasks');
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
   }
 }

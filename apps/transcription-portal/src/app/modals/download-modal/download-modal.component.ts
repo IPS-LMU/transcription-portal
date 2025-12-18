@@ -1,7 +1,8 @@
-import { NgStyle } from '@angular/common';
+import { NgStyle, UpperCasePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import * as JSZip from 'jszip';
@@ -15,7 +16,7 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
   selector: 'tportal-download-modal',
   templateUrl: './download-modal.component.html',
   styleUrls: ['./download-modal.component.scss'],
-  imports: [FormsModule, NgStyle],
+  imports: [FormsModule, NgStyle, TranslocoPipe, UpperCasePipe],
 })
 export class DownloadModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);

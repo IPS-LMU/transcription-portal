@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { RoutingService } from '../../routing.service';
 import { AppStoreService } from '../../store';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-loading',
-  imports: [],
+  imports: [TranslocoPipe],
   templateUrl: './loading.component.html',
   styleUrl: './loading.component.scss',
 })

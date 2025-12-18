@@ -7,11 +7,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideServiceWorker } from '@angular/service-worker';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { VersionCheckerService } from '@octra/ngx-components';
+import { provideTransloco } from '@jsverse/transloco';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -35,6 +36,7 @@ import {
   StoreItemEffects,
 } from './app/store';
 import { environment } from './environments/environment';
+import { TranslocoHttpLoader } from './transloco-http-loader';
 
 if (environment.production) {
   enableProdMode();
@@ -57,6 +59,16 @@ bootstrapApplication(AppComponent, {
       FormsModule,
       ReactiveFormsModule,
     ),
+    provideTransloco({
+      config: {
+        availableLangs: ['en'],
+        defaultLang: 'en',
+        reRenderOnLangChange: false,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
+    TaskService,
     NotificationService,
     BugReportService,
     AlertService,
@@ -65,6 +77,7 @@ bootstrapApplication(AppComponent, {
     OHModalService,
     DownloadService,
     NgbActiveModal,
+    NgbTooltipConfig,
     VersionCheckerService,
     provideHttpClient(withInterceptorsFromDi()),
     provideAnimations(),

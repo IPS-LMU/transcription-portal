@@ -45,7 +45,7 @@ export class DownloadService {
       const foundTranscriptResult = round.results.find((a) => !a.type.includes('audio'));
 
       if (!foundTranscriptResult) {
-        reject('operationResult is undefined!');
+        resolve([]);
         return;
       }
       const promises: Promise<{

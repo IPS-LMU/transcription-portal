@@ -85,6 +85,8 @@ node.on('exit', async function (code) {
   } else {
     execSync(`rm "./${buildDir}assets/.htaccess"`);
   }
+
+  execSync(`cp -r "../transcription-portal-manual/_book" "./${buildDir}/contents/v2.0.0"`);
 });
 
 function getDateTimeString() {

@@ -107,11 +107,6 @@
   margin-bottom: 20px;
 }
 
-.bi.bi-wifi-off {
-  color: red;
-  opacity: 0.5;
-}
-
 .timer {
   width: 100%;
   margin-bottom: 5px;
@@ -276,6 +271,20 @@ table thead tr th:hover {
 
 .fixed-table-layout {
   table-layout: fixed;
+}
+
+.options-info-table tbody tr td {
+  font-size: 11px;
+  padding: 3px;
+}
+
+.info-table-header {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+tr.task-stopped{
+  opacity: 0.5;
 }
 
 table tbody tr td .bi.bi-chevron-up,

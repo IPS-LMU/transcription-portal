@@ -1,25 +1,42 @@
-<table class="table mb-0">
-  <tbody>
-    @if (entriesCount > 0) {
-      <tr class="pointer" (click)="onAction('delete')">
-        <td><i class="bi bi-x"></i></td>
-        <td>
-          @if (entriesCount > 0) {
-            Delete selected lines
-          }
-        </td>
-      </tr>
-      <tr (click)="onAction('download')">
-        <td><i class="bi bi-download"></i></td>
-        <td>Download selected lines</td>
-      </tr>
-    }
-    @if ((selectedTasks ?? []).length > 0) {
-      <tr class="pointer" (click)="onRemoveAttachments()">
-        <td></td>
-        <td>Remove attachments</td>
-      </tr>
-    }
-    <ng-content></ng-content>
-  </tbody>
-</table>
+@if (entriesCount > 0) {
+  <div class="list-group p-0 m-0">
+    <div class="list-group-item list-group-item-sm px-1" (click)="disableTasks(false)">
+      <div class="row g-2">
+        <div class="col-auto"><i class="bi bi-play-fill"></i></div>
+        <div class="col">{{ 'context menu.enable tasks' | transloco }}</div>
+      </div>
+    </div>
+    <div class="list-group-item px-1" (click)="disableTasks(true)">
+      <div class="row g-2">
+        <div class="col-auto"><i class="bi bi-slash-circle"></i></div>
+        <div class="col">{{ 'context menu.disable tasks' | transloco }}</div>
+      </div>
+    </div>
+    <div class="list-group-item px-1" (click)="onAction('delete')">
+      <div class="row g-2">
+        <div class="col-auto"><i class="bi bi-x-lg"></i></div>
+        <div class="col">
+          {{ 'context menu.delete selected lines' | transloco }}
+        </div>
+      </div>
+    </div>
+
+    <div class="list-group-item px-1" (click)="onAction('download')">
+      <div class="row g-2">
+        <div class="col-auto"><i class="bi bi-download"></i></div>
+        <div class="col">
+          {{ 'context menu.download selected lines' | transloco }}
+        </div>
+      </div>
+    </div>
+
+    <div class="list-group-item px-1" (click)="onRemoveAttachments()">
+      <div class="row g-2">
+        <div class="col-auto"><i class="bi bi-tag-fill red"></i></div>
+        <div class="col">
+          {{ 'context menu.remove attachments' | transloco }}
+        </div>
+      </div>
+    </div>
+  </div>
+}

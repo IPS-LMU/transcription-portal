@@ -1,21 +1,30 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">Audio files with two channels detected</h4>
+  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.split audio.title' | transloco }}</h4>
 </div>
 <div class="modal-body">
-  <p>
-    You have added audio files with two channels. In order to continue the channels will be split in separate files and each could be processed
-    separately.
-  </p>
-  <p>What would you like to do?</p>
+  <p [innerHTML]="'modals.split audio.description' | transloco"></p>
+  <p>{{ 'modals.split audio.question' | transloco }}</p>
   <div class="row g-2">
     <div class="col-4">
-      <button (click)="dismiss('FIRST')" class="btn btn-primary h-100 w-100">Always<br />use 1. channel</button>
+      <button
+        (click)="splitModalDismissedProperly = true; dismiss('FIRST')"
+        class="btn btn-primary h-100 w-100"
+        [innerHTML]="'modals.split audio.options.use first channel' | transloco"
+      ></button>
     </div>
     <div class="col-4">
-      <button (click)="dismiss('SECOND')" class="btn btn-primary h-100 w-100">Always<br />use 2. channel</button>
+      <button
+        (click)="splitModalDismissedProperly = true; dismiss('SECOND')"
+        class="btn btn-primary h-100 w-100"
+        [innerHTML]="'modals.split audio.options.use second channel' | transloco"
+      ></button>
     </div>
     <div class="col-4">
-      <button (click)="dismiss('BOTH')" class="btn btn-primary h-100 w-100">Always<br />use both channels</button>
+      <button
+        (click)="splitModalDismissedProperly = true; dismiss('BOTH')"
+        class="btn btn-primary h-100 w-100"
+        [innerHTML]="'modals.split audio.options.use both channels' | transloco"
+      ></button>
     </div>
   </div>
 </div>

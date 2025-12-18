@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-split-modal',
   templateUrl: './split-modal.component.html',
   styleUrls: ['./split-modal.component.scss'],
-  imports: [],
+  imports: [TranslocoPipe],
 })
 export class SplitModalComponent extends SubscriberComponent {
   protected activeModal = inject(NgbActiveModal);

@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgClass, NgStyle } from '@angular/common';
+import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -43,6 +43,7 @@ import {
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-main',
@@ -64,6 +65,8 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
     NgbNavModule,
     NgbPopover,
     DatePipe,
+    TranslocoPipe,
+    UpperCasePipe,
     AsyncPipe,
     TimePipe,
     ProceedingsTableComponent,

@@ -1,0 +1,25 @@
+@if (operation !== undefined && task !== undefined) {
+  @switch (operation.name) {
+    @case ('Upload') {
+      <tportal-operation-col-upload [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-upload>
+    }
+    @case ('ASR') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-default-icon>
+    }
+    @case ('OCTRA') {
+      <tportal-operation-col-tool [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-tool>
+    }
+    @case ('MAUS') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-default-icon>
+    }
+    @case ('Emu WebApp') {
+      <tportal-operation-col-tool [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-tool>
+    }
+    @case ('Summarization') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-default-icon>
+    }
+    @case ('Translation') {
+      <tportal-operation-col-default-icon [operation]="operation" [task]="task" [mouseIn]="mouseIn"></tportal-operation-col-default-icon>
+    }
+  }
+}

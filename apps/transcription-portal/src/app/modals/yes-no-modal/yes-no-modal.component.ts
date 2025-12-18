@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { NgClass } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-yes-no-modal',
   templateUrl: './yes-no-modal.component.html',
   styleUrls: ['./yes-no-modal.component.scss'],
-  imports: [NgClass],
+  imports: [NgClass, TranslocoPipe],
 })
 export class YesNoModalComponent {
   protected activeModal = inject(NgbActiveModal);
