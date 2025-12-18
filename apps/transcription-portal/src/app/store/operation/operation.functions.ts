@@ -1,11 +1,16 @@
 import { last } from '@octra/utilities';
 import { AudioFileInfoSerialized, FileInfoSerialized } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem, IOperation } from '../../indexedDB';
+import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { StoreAudioFile, StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../store-item';
 import { convertIDBFileToStoreFile } from '../store-item/store-item.functions';
 import { OperationFactory } from './factory';
-import { OperationProcessingRoundSerialized, StoreTaskOperation, StoreTaskOperationProcessingRound } from './operation';
-import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import {
+  OperationProcessingRoundSerialized,
+  StoreTaskOperation,
+  StoreTaskOperationProcessingRound,
+  StoreTaskOperationProtocolItem,
+} from './operation';
 
 export function convertIDBOperationToStoreOperation(
   operation: IDBOperation,
@@ -40,6 +45,7 @@ export function convertIDBOperationToStoreOperation(
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {
   return {
     protocol: round.protocol,
+    parsedProtocol: parseProtocol(round.protocol),
     results: round.results.map((a) => convertIDBFileToStoreFile(a)),
     status: round.status,
   };
@@ -151,9 +157,9 @@ export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
   }
 }
 
-export function convertStoreFileToFileInfo(file: StoreFile) : TPortalFileInfo {
+export function convertStoreFileToFileInfo(file: StoreFile): TPortalFileInfo {
   const info = new TPortalFileInfo(file.name, file.type, file.size);
-  info.attributes = {...file.attributes};
+  info.attributes = { ...file.attributes };
   info.url = file.url;
   info.online = file.online ?? false;
   info.hash = file.hash;
@@ -181,4 +187,25 @@ export function addProcessingRound(operation: StoreTaskOperation, round?: StoreT
 
 export function getLastOperationResultFromLatestRound(operation: StoreTaskOperation) {
   return last(getLastOperationRound(operation)?.results ?? []);
+}
+
+export function parseProtocol(protocol?: string): StoreTaskOperationProtocolItem[] {
+  if (!protocol) {
+    return [];
+  } else {
+    const result: StoreTaskOperationProtocolItem[] = [];
+    const text = protocol.replace(/<br\/>/g, '\n');
+    const regex = /((?:ERROR)|(?:WARNING)): (.+)$/gm;
+    let match = regex.exec(text);
+
+    while (match !== null) {
+      result.push({
+        type: match[1] as 'WARNING' | 'ERROR',
+        message: match.length < 3 || !match[2] ? '' : match[2].replace(/(ACCESSCODE=)([^&\n]+)/g, '$1****'),
+      });
+      match = regex.exec(text);
+    }
+
+    return result;
+  }
 }

@@ -167,5 +167,3 @@ export const getPreprocessingReducers = (
     ),
   ),
 ];
-
-// TODO 2.2. check for queued tasks if split needed

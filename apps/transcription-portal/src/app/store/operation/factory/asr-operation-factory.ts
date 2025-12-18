@@ -127,7 +127,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                   ...currentRound.time!,
                   duration: Date.now() - currentRound.time!.start,
                 },
-                protocol: warnings ? currentRound.protocol + warnings + '<br/>' : currentRound.protocol,
+                protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
               };
 
               try {
@@ -150,7 +150,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                     ...currentRound.time!,
                     duration: Date.now() - currentRound.time!.start,
                   },
-                  protocol: warnings ? currentRound.protocol + warnings + '<br/>' : currentRound.protocol,
+                  protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
                 };
 
                 if (asrResult.content) {

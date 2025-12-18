@@ -93,7 +93,6 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
                 if (obj.urls && obj.urls.length === task.files.length) {
                   for (let i = 0; i < task.files.length; i++) {
                     const file = { ...task.files[i] };
-                    // TODO change file url in task
                     file.url = obj.urls[i];
                     const { extension } = FileInfo.extractFileName(file.name);
                     const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';

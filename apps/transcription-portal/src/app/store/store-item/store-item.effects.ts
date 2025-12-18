@@ -7,7 +7,7 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { exhaustMap, filter, forkJoin, from, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, filter, forkJoin, from, map, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
@@ -441,31 +441,6 @@ export class StoreItemEffects {
     ),
   );
 
-  /*
-  TODO do we need this?
-
-  updateTaskFilesAfterUpload$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(StoreItemActions.processNextOperation.success),
-        withLatestFrom(this.store),
-        tap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
-          if (operation.name === 'Upload') {
-            // something uploaded
-            this.store.dispatch(
-              StoreItemActions.updateTaskFiles.do({
-                mode,
-                taskID,
-                files: getLastOperationRound(operation)?.results ?? [],
-              }),
-            );
-          }
-        }),
-      ),
-    { dispatch: false },
-  );
-   */
-
   toggleProcessing$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.toggleProcessing.do),
@@ -604,7 +579,7 @@ export class StoreItemEffects {
       this.actions$.pipe(
         ofType(StoreItemActions.reuploadFilesForOperations.do),
         withLatestFrom(this.store),
-        tap(
+        exhaustMap(
           ([{ mode, list, actionAfterSuccess }, state]: [
             {
               mode: TPortalModes;
@@ -617,39 +592,33 @@ export class StoreItemEffects {
               actionAfterSuccess: Action;
             },
             RootState,
-          ]) => {
-            // TODO this can be changed to exhaustMap
-            this.subscrManager.add(
-              forkJoin(list.map((listItem) => UploadOperationFactory.upload(listItem.files, this.httpClient))).subscribe({
-                next: (httpEvents) => {
-                  this.store.dispatch(
-                    StoreItemActions.reuploadFilesForOperations.success({
-                      mode,
-                      list: httpEvents.map((httpEvent, i) => ({
-                        taskID: list[i].taskID,
-                        operationID: list[i].operationID,
-                        roundIndex: list[i].roundIndex,
-                        files: httpEvent.urls!.map((url, j) => ({
-                          ...list[i].files[j],
-                          online: true,
-                          url: httpEvent.urls![j],
-                          blob: undefined,
-                        })),
-                      })),
-                      actionAfterSuccess,
-                    }),
-                  );
-                },
-                error: (err: any) => {
-                  this.store.dispatch(
-                    StoreItemActions.reuploadFilesForOperations.fail({
-                      error: typeof err === 'string' ? err : err?.message,
-                    }),
-                  );
-                },
-              }),
-            );
-          },
+          ]) =>
+            forkJoin(list.map((listItem) => UploadOperationFactory.upload(listItem.files, this.httpClient))).pipe(
+              map((httpEvents) =>
+                StoreItemActions.reuploadFilesForOperations.success({
+                  mode,
+                  list: httpEvents.map((httpEvent, i) => ({
+                    taskID: list[i].taskID,
+                    operationID: list[i].operationID,
+                    roundIndex: list[i].roundIndex,
+                    files: httpEvent.urls!.map((url, j) => ({
+                      ...list[i].files[j],
+                      online: true,
+                      url: httpEvent.urls![j],
+                      blob: undefined,
+                    })),
+                  })),
+                  actionAfterSuccess,
+                }),
+              ),
+              catchError((err) =>
+                of(
+                  StoreItemActions.reuploadFilesForOperations.fail({
+                    error: typeof err === 'string' ? err : err?.message,
+                  }),
+                ),
+              ),
+            ),
         ),
       ),
     { dispatch: false },

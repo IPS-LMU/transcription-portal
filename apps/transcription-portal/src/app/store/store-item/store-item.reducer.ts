@@ -4,7 +4,7 @@ import { last } from '@octra/utilities';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
-import { addProcessingRound, getLastOperationRound } from '../operation/operation.functions';
+import { addProcessingRound, getLastOperationRound, parseProtocol } from '../operation/operation.functions';
 import { StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
@@ -14,7 +14,7 @@ import {
   convertIDBTaskToStoreTask,
   getOneTaskItemWhereRecursive,
   getStoreItemsWhereRecursive,
-  updateStatistics
+  updateStatistics,
 } from './store-item.functions';
 import { StoreItemsState } from './store-items-state';
 
@@ -286,7 +286,7 @@ export const getTaskReducers = (
       },
       state,
     );
-    state = updateStatistics(state,  state.currentMode);
+    state = updateStatistics(state, state.currentMode);
     return state;
   }),
   on(
@@ -596,22 +596,30 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.do, (state: ModeState, {taskID, mode}) => modeAdapter.updateOne({
-    id: mode,
-    changes: {
-      items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![state.currentMode]!.items, taskAdapter, (item, itemsState)=> {
-        if(item.type === "task") {
-          itemsState = taskAdapter.updateOne({
-            id: item.id,
-            changes: {
-              status: TaskStatus.PROCESSING
+  on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) =>
+    modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![state.currentMode]!.items, taskAdapter, (item, itemsState) => {
+            if (item.type === 'task') {
+              itemsState = taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    status: TaskStatus.PROCESSING,
+                  },
+                },
+                itemsState,
+              );
             }
-          }, itemsState)
-        }
-        return itemsState;
-      })
-    }
-  }, state)),
+            return itemsState;
+          }),
+        },
+      },
+      state,
+    ),
+  ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = state.entities[mode]!.items.entities[taskID]!;
     let taskStatus = taskItem!.status;
@@ -644,7 +652,10 @@ export const getTaskReducers = (
           items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
             const operations = state.entities![mode]!.items.entities![taskID]!.operations!.map((op) => {
               if (op.id === operation.id) {
-                return operation;
+                return {
+                  ...operation,
+                  parseProtocol: parseProtocol(operation.protocol),
+                };
               }
               return op;
             });
@@ -708,7 +719,8 @@ export const getTaskReducers = (
                           {
                             ...op.rounds[op.rounds.length - 1],
                             status: TaskStatus.ERROR,
-                            protocol: (op.protocol ?? '') + error + '<br/>',
+                            protocol: (op.protocol ?? '') + "ERROR: " + error + '<br/>',
+                            parsedProtocol: parseProtocol((op.protocol ?? '') + "ERROR: " + error + '<br/>'),
                           },
                         ],
                       };

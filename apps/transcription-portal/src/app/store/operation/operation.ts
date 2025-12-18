@@ -30,8 +30,12 @@ export interface StoreTaskOperationProcessingRound extends IOperationProcessingR
   status: TaskStatus;
   time?: { start: number; duration?: number };
   protocol?: string;
-  // TODO implement
-  parsedProtocol?: any[];
+  parsedProtocol?: StoreTaskOperationProtocolItem[];
   progress?: number;
   estimatedEnd?: number | undefined;
+}
+
+export interface StoreTaskOperationProtocolItem{
+  type: "ERROR" | "WARNING",
+  message: string;
 }

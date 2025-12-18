@@ -78,61 +78,6 @@ export async function splitAudioFile(
   throw new Error('Missing blob for audio file to split.');
 }
 
-/*
-add task from queued preprocessing
-
-    let task: StoreItemTask | undefined;
-    if (clonedFile) {
-      // new file
-      task = {
-        directoryID: 0,
-        files: [clonedFile],
-        id: 0, // TODO check,
-        operations: [],
-        status: TaskStatus.QUEUED,
-        type: 'task',
-      };
-
-      // TODO operation enabled missing
-
-      for (const operationFactory of modeState.defaultOperations) {
-        let op = operationFactory.create(0, 0, [
-          new StoreTaskOperationProcessingRound({
-            status: TaskStatus.PENDING,
-          }),
-        ]); // TODO CHECK
-        op = operationFactory.applyTaskOptions(
-          {
-            asr: {
-              provider: modeState.options.selectedASRProvider,
-              language: modeState.options.selectedASRLanguage,
-              diarization: {
-                enabled: modeState.options.isDiarizationEnabled,
-                speakers: modeState.options.diarizationSpeakers,
-              },
-            },
-            maus: {
-              language: modeState.options.selectedMausLanguage,
-            },
-            translation: {
-              language: modeState.options.selectedTranslationLanguage,
-            },
-            summarization: {
-              provider: modeState.options.selectedSummarizationProvider,
-              numberOfWords: modeState.options.selectedSummarizationNumberOfWords,
-            },
-          },
-          op,
-        );
-        task.operations.push(op);
-      }
-
-      return [task];
-    } else {
-      throw new Error('fileinfo is undefined');
-    }
- */
-
 export function cleanUpInputArray(entries: (FileInfo | DirectoryInfo<any>)[]): {
   unsupportedFiles: IFile[];
   filteredItems: (FileInfo | DirectoryInfo<any>)[];

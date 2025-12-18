@@ -118,8 +118,6 @@ export class PreprocessingEffects {
                     queueItemID: nextItemToSplit.id,
                   }),
                 );
-                // 1. TODO split file
-                // 2. TODO chhange infoItem to folder and add split files
               }
             }
           }
