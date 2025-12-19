@@ -54,8 +54,6 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
-  // TODO rewrite all task selects by ID
-
   get selectedSummarizationNumberOfWords(): number | undefined {
     return this.defaultUserSettings?.selectedSummarizationNumberOfWords || isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
       ? undefined
@@ -274,7 +272,8 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   }
 
   resetOptions() {
-    // TODO implement
+    this.defaultUserSettings = {};
+    this.changeProcessingOptionsForEachQueuedTask();
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;
