@@ -7,7 +7,19 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import {
+  catchError,
+  exhaustMap,
+  filter,
+  forkJoin,
+  from,
+  map,
+  of,
+  Subscription,
+  tap,
+  timer,
+  withLatestFrom
+} from 'rxjs';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
@@ -18,7 +30,14 @@ import { getAllTasks } from '../mode/mode.functions';
 import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
+import {
+  CompatibleResult,
+  StoreAudioFile,
+  StoreFile,
+  StoreFileDirectory,
+  StoreItemTask,
+  TaskStatus
+} from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   convertFileInfoToStoreFile,
@@ -26,7 +45,7 @@ import {
   getOneTaskItemWhereRecursive,
   getStoreItemsWhereRecursive,
   isStoreFileAvailable,
-  updateTaskFilesWithSameFile,
+  updateTaskFilesWithSameFile
 } from './store-item.functions';
 import { OctraWindowMessageEventData } from './store-items-state';
 
@@ -252,7 +271,12 @@ export class StoreItemEffects {
       withLatestFrom(this.store),
       exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
         if (state.modes.entities[mode]!.statistics.running < 3) {
-          const nextTask = getOneTaskItemWhereRecursive((item) => item.status === TaskStatus.PENDING, state.modes.entities[mode]!.items);
+          const nextTask = getOneTaskItemWhereRecursive(
+            (item) =>
+              item.status === TaskStatus.PENDING ||
+              ((item.status !== TaskStatus.UPLOADING && item.status !== TaskStatus.PROCESSING) && item.files?.find((a) => a.blob !== undefined) !== undefined),
+            state.modes.entities[mode]!.items,
+          );
           if (!nextTask) {
             return of(
               StoreItemActions.processNextStoreItem.nothingToDo({
@@ -281,8 +305,7 @@ export class StoreItemEffects {
       withLatestFrom(this.store),
       exhaustMap(([{ id, mode }, state]: [{ id: number; mode: TPortalModes }, RootState]) => {
         const currentMode = state.modes.entities[mode]!;
-        const defaultOperations = currentMode.defaultOperations;
-        const item = getOneTaskItemWhereRecursive((item) => item.id === id, state.modes.entities[mode]!.items);
+        const item = getOneTaskItemWhereRecursive((item) => item.id === id, currentMode.items);
 
         if (!item) {
           return of(
@@ -291,6 +314,8 @@ export class StoreItemEffects {
             }),
           );
         }
+
+        // add if audio blob exists, do upload
 
         return of(StoreItemActions.processNextOperation.do({ mode, taskID: item.id }));
       }),
@@ -305,7 +330,7 @@ export class StoreItemEffects {
         tap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
           const currentMode = state.modes.entities[mode]!;
           const defaultOperations = currentMode.defaultOperations;
-          const item = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items);
+          let item = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items);
 
           if (!item) {
             this.store.dispatch(
@@ -321,17 +346,43 @@ export class StoreItemEffects {
 
           for (let i = 0; i < defaultOperations.length; i++) {
             const defaultOperation = defaultOperations[i];
-            const operation = item.operations[i];
+            let operation: StoreTaskOperation = item!.operations[i];
             const lastRound = getLastOperationRound(operation);
 
             if (operation.enabled) {
-              if (
+              let runOperation =
                 lastRound?.status === 'PENDING' &&
-                (!lastNonSkippableOperation || getLastOperationRound(lastNonSkippableOperation)?.status === TaskStatus.FINISHED)
-              ) {
+                (!lastNonSkippableOperation || getLastOperationRound(lastNonSkippableOperation)?.status === TaskStatus.FINISHED);
+
+              if (item!.files.find((a) => a.blob !== undefined) !== undefined) {
+                // reupload blob if needed
+                operation = {
+                  ...operation,
+                  rounds: [
+                    {
+                      status: TaskStatus.PENDING,
+                      results: [],
+                    },
+                  ],
+                };
+                item = {
+                  ...item,
+                  status: TaskStatus.UPLOADING,
+                  operations: [
+                    {
+                      ...operation,
+                    },
+                    ...item!.operations!.slice(1),
+                  ],
+                };
+                runOperation = true;
+              }
+
+              if (runOperation) {
                 if (!['OCTRA', 'Emu WebApp'].includes(defaultOperation.factory.name)) {
                   const opTicket = `task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
                   const opSubscrManager = new SubscriptionManager();
+                  // TODO on re-do operation rounds are removed?
                   this.subscrManager.add(
                     defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager).subscribe({
                       next: (event) => {
@@ -375,7 +426,7 @@ export class StoreItemEffects {
                     }),
                     opTicket,
                   );
-                } else {
+                } else if (lastRound) {
                   // is tool
                   if (lastRound.status === TaskStatus.PENDING) {
                     this.store.dispatch(
@@ -517,7 +568,7 @@ export class StoreItemEffects {
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
               if (getLastOperationRound(operation)?.status === 'FINISHED') {
-                if (!(getLastOperationResultFromLatestRound(operation)?.online || getLastOperationResultFromLatestRound(operation)?.url)) {
+                if (!(getLastOperationResultFromLatestRound(operation)?.online || !getLastOperationResultFromLatestRound(operation)?.url)) {
                   // file for last result of current tool exists, but isn't available via URL
                   // reupload result from tool operation
                   file = getLastOperationResultFromLatestRound(operation);
@@ -525,7 +576,7 @@ export class StoreItemEffects {
               } else if (
                 previousOperation &&
                 getLastOperationRound(previousOperation) &&
-                !(getLastOperationResultFromLatestRound(previousOperation)?.online || getLastOperationResultFromLatestRound(previousOperation)?.url)
+                !(getLastOperationResultFromLatestRound(previousOperation)?.online || !getLastOperationResultFromLatestRound(previousOperation)?.url)
               ) {
                 // reupload result from previous operation
                 // local available, reupload
@@ -574,53 +625,52 @@ export class StoreItemEffects {
     { dispatch: false },
   );
 
-  reuploadFile$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(StoreItemActions.reuploadFilesForOperations.do),
-        withLatestFrom(this.store),
-        exhaustMap(
-          ([{ mode, list, actionAfterSuccess }, state]: [
-            {
-              mode: TPortalModes;
-              list: {
-                taskID: number;
-                operationID: number;
-                roundIndex: number;
-                files: StoreFile[];
-              }[];
-              actionAfterSuccess: Action;
-            },
-            RootState,
-          ]) =>
-            forkJoin(list.map((listItem) => UploadOperationFactory.upload(listItem.files, this.httpClient))).pipe(
-              map((httpEvents) =>
-                StoreItemActions.reuploadFilesForOperations.success({
-                  mode,
-                  list: httpEvents.map((httpEvent, i) => ({
-                    taskID: list[i].taskID,
-                    operationID: list[i].operationID,
-                    roundIndex: list[i].roundIndex,
-                    files: httpEvent.urls!.map((url, j) => ({
-                      ...list[i].files[j],
-                      online: true,
-                      url: httpEvent.urls![j],
-                      blob: undefined,
-                    })),
+  reuploadFile$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.reuploadFilesForOperations.do),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([{ mode, list, actionAfterSuccess }, state]: [
+          {
+            mode: TPortalModes;
+            list: {
+              taskID: number;
+              operationID: number;
+              roundIndex: number;
+              files: StoreFile[];
+            }[];
+            actionAfterSuccess: Action;
+          },
+          RootState,
+        ]) =>
+          forkJoin(list.map((listItem) => UploadOperationFactory.upload(listItem.files, this.httpClient))).pipe(
+            map((httpEvents) =>
+              StoreItemActions.reuploadFilesForOperations.success({
+                mode,
+                list: httpEvents.map((httpEvent, i) => ({
+                  taskID: list[i].taskID,
+                  operationID: list[i].operationID,
+                  roundIndex: list[i].roundIndex,
+                  files: httpEvent.urls!.map((url, j) => ({
+                    ...list[i].files[j],
+                    online: true,
+                    url: httpEvent.urls![j],
+                    blob: undefined,
                   })),
-                  actionAfterSuccess,
+                })),
+                actionAfterSuccess,
+              }),
+            ),
+            catchError((err) =>
+              of(
+                StoreItemActions.reuploadFilesForOperations.fail({
+                  error: typeof err === 'string' ? err : err?.message,
                 }),
               ),
-              catchError((err) =>
-                of(
-                  StoreItemActions.reuploadFilesForOperations.fail({
-                    error: typeof err === 'string' ? err : err?.message,
-                  }),
-                ),
-              ),
             ),
-        ),
-      )
+          ),
+      ),
+    ),
   );
 
   reuploadFileSuccess$ = createEffect(() =>
@@ -696,6 +746,7 @@ export class StoreItemEffects {
       ofType(StoreItemActions.receiveToolData.do),
       withLatestFrom(this.store),
       exhaustMap(([action, state]: [OctraWindowMessageEventData, RootState]) => {
+        // TODO upload does not work after tool data received
         const currentMode = state.modes.entities[state.modes.currentMode];
         const openedTool = currentMode!.openedTool!;
         const toolName = openedTool?.operationName;

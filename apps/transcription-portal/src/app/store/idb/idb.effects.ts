@@ -275,6 +275,15 @@ export class IDBEffects {
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
         const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
+
+        if (!task) {
+          return of(
+            IDBActions.saveTask.fail({
+              error: `Can't find task with id ${taskID}`,
+            }),
+          );
+        }
+
         return from(convertStoreItemToIDBItem(task, state.modes.entities[mode]!.defaultOperations!)).pipe(
           exhaustMap((idbTask) => {
             return from(table.put(idbTask, task.id)).pipe(

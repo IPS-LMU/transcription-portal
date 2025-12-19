@@ -622,6 +622,11 @@ export const getTaskReducers = (
   ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
+
+    if (!taskItem) {
+      return state;
+    }
+
     let taskStatus = taskItem!.status;
     const lastRound = getLastOperationRound(operation);
 
