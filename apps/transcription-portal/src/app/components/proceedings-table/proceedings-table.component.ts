@@ -557,22 +557,26 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.height = 320;
       this.popover.pointer = y + this.popoverRef.height > window.innerHeight ? 'bottom-left' : 'left';
       this.popover.y = y + this.popoverRef.height > window.innerHeight ? y - this.popoverRef.height - 10 : y;
-      this.togglePopover(true);
 
+      this.popover.operation = undefined;
       this.popover.lastOperationRound = undefined;
       this.popover.lastOperationRound = undefined;
       this.popover.lastOperationRoundResult = undefined;
+      this.togglePopover(true);
     }
   }
 
   onInfoMouseLeave($event: MouseEvent, task?: StoreItemTask) {
-    if (!task) {
-      return;
-    }
-    this.togglePopover(false);
+    this.popover.mouseIn = false;
+    setTimeout(() => {
+      if (!this.popover.mouseIn) {
+        this.togglePopover(false);
+      }
+    }, 250);
   }
 
   onInfoMouseOver($event: MouseEvent, task?: StoreItemTask) {
+    this.popover.mouseIn = true;
     if (!task) {
       return;
     }

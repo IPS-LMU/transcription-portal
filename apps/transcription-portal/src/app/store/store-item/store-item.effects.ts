@@ -7,7 +7,7 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { catchError, exhaustMap, filter, forkJoin, from, map, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
@@ -620,8 +620,7 @@ export class StoreItemEffects {
               ),
             ),
         ),
-      ),
-    { dispatch: false },
+      )
   );
 
   reuploadFileSuccess$ = createEffect(() =>

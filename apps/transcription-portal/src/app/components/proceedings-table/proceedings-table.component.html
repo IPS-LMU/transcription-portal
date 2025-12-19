@@ -1,6 +1,7 @@
 <tportal-popover
   #popoverRef
   (mouseenter)="popover.mouseIn = true"
+  (mousemove)="popover.mouseIn = true"
   (mouseleave)="togglePopover(false)"
   [@fadeToggleRow]="popover.state"
   [borderColor]="getPopoverColor(popover.operation!)"
@@ -180,9 +181,6 @@
     </div>
   }
   @if (popover.lastOperationRound === undefined && popover.task) {
-    <div class="mb-3">File information:</div>
-    <tportal-file-info-table [fileinfo]="popover.task.files[0]" class="d-flex"></tportal-file-info-table>
-
     <div class="card">
       <div class="card-header">Audio information</div>
       <div class="card-body p-0">
@@ -578,6 +576,7 @@
   }
 </div>
 
+
 <ng-template
   #taskOrDirRow
   let-dirOpened="dirOpened"
@@ -608,9 +607,6 @@
       (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
       (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
       (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-      (mouseenter)="onNameMouseEnter($event, getTask(entry))"
-      (mouseleave)="onNameMouseLeave($event, getTask(entry))"
-      (mouseover)="onNameMouseOver($event, getTask(entry))"
       (tagClicked)="onTagClicked(dirID)"
       [entry]="entry"
       [shortStyle]="isClosed"

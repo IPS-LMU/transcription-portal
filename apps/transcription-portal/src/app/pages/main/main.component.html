@@ -388,6 +388,8 @@
           <span class="d-none d-lg-inline d-xl-inline">
             @if ((modeStoreService.overallState$ | async) !== 'processing') {
               {{ 'buttons.start processing' | transloco | uppercase }}
+            } @else {
+              {{ 'buttons.stop processing' | transloco | uppercase }}
             }
           </span>
         </button>
