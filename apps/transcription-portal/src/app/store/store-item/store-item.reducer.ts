@@ -620,6 +620,35 @@ export const getTaskReducers = (
       state,
     ),
   ),
+  on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) =>
+    item
+      ? modeAdapter.updateOne(
+          {
+            id: mode,
+            changes: {
+              items: applyFunctionOnStoreItemsWithIDsRecursive(
+                [taskID],
+                state.entities![state.currentMode]!.items,
+                taskAdapter,
+                (item, itemsState) => {
+                  if (item.type === 'task') {
+                    itemsState = taskAdapter.updateOne(
+                      {
+                        id: item.id,
+                        changes: item,
+                      },
+                      itemsState,
+                    );
+                  }
+                  return itemsState;
+                },
+              ),
+            },
+          },
+          state,
+        )
+      : state,
+  ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
 

@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { NgbModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AppInfo } from '../app.info';
 
@@ -58,4 +59,21 @@ export function validTranscript(extension: string): boolean {
   }
 
   return result;
+}
+
+export function existsFile(url: string | undefined, httpClient: HttpClient): Promise<boolean> {
+  return new Promise<boolean>((resolve, reject) => {
+    if (url) {
+      httpClient.head(url).subscribe({
+        next: () => {
+          resolve(true);
+        },
+        error: () => {
+          reject(false);
+        },
+      });
+    } else {
+      resolve(false);
+    }
+  });
 }

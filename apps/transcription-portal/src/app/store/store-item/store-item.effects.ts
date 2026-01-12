@@ -7,19 +7,8 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import {
-  catchError,
-  exhaustMap,
-  filter,
-  forkJoin,
-  from,
-  map,
-  of,
-  Subscription,
-  tap,
-  timer,
-  withLatestFrom
-} from 'rxjs';
+import { catchError, exhaustMap, filter, forkJoin, from, map, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
 import { RootState } from '../app';
@@ -30,14 +19,7 @@ import { getAllTasks } from '../mode/mode.functions';
 import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import {
-  CompatibleResult,
-  StoreAudioFile,
-  StoreFile,
-  StoreFileDirectory,
-  StoreItemTask,
-  TaskStatus
-} from './store-item';
+import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   convertFileInfoToStoreFile,
@@ -45,7 +27,7 @@ import {
   getOneTaskItemWhereRecursive,
   getStoreItemsWhereRecursive,
   isStoreFileAvailable,
-  updateTaskFilesWithSameFile
+  updateTaskFilesWithSameFile,
 } from './store-item.functions';
 import { OctraWindowMessageEventData } from './store-items-state';
 
@@ -87,18 +69,6 @@ export class StoreItemEffects {
         return of(StoreItemActions.prepareTasks.success());
       }),
     ),
-  );
-
-  prepateTasksSuccess$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(StoreItemActions.prepareTasks.success),
-        withLatestFrom(this.store),
-        tap(([, state]: [any, RootState]) => {}),
-      ),
-    {
-      dispatch: false,
-    },
   );
 
   prepareTasksSuccess$ = createEffect(() =>
@@ -274,7 +244,9 @@ export class StoreItemEffects {
           const nextTask = getOneTaskItemWhereRecursive(
             (item) =>
               item.status === TaskStatus.PENDING ||
-              ((item.status !== TaskStatus.UPLOADING && item.status !== TaskStatus.PROCESSING) && item.files?.find((a) => a.blob !== undefined) !== undefined),
+              (item.status !== TaskStatus.UPLOADING &&
+                item.status !== TaskStatus.PROCESSING &&
+                item.files?.find((a) => a.blob !== undefined) !== undefined),
             state.modes.entities[mode]!.items,
           );
           if (!nextTask) {
@@ -316,16 +288,18 @@ export class StoreItemEffects {
         }
 
         // add if audio blob exists, do upload
-
         return of(StoreItemActions.processNextOperation.do({ mode, taskID: item.id }));
       }),
     ),
   );
 
+  /**
+   * This event iterates through the next operations and checks an operation for reuploading its results before running. If an ready operation was found, it's going to run.
+   */
   processNextOperation$ = createEffect(
     () =>
       this.actions$.pipe(
-        ofType(StoreItemActions.processNextOperation.do),
+        ofType(StoreItemActions.processNextOperation.check),
         withLatestFrom(this.store),
         tap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
           const currentMode = state.modes.entities[mode]!;
@@ -335,127 +309,138 @@ export class StoreItemEffects {
           if (!item) {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
-                error: `Can't process next operation. task ${taskID}: Not found.`,
+                error: `Can't check next operation. task ${taskID}: Not found.`,
               }),
             );
             return;
           }
 
           let lastNonSkippableOperation: StoreTaskOperation | undefined;
-          let somethingFound = false;
+          let foundOperation: StoreTaskOperation | undefined = undefined;
 
           for (let i = 0; i < defaultOperations.length; i++) {
-            const defaultOperation = defaultOperations[i];
-            let operation: StoreTaskOperation = item!.operations[i];
+            const operation: StoreTaskOperation = item!.operations[i];
             const lastRound = getLastOperationRound(operation);
 
             if (operation.enabled) {
-              let runOperation =
+              if (
                 lastRound?.status === 'PENDING' &&
-                (!lastNonSkippableOperation || getLastOperationRound(lastNonSkippableOperation)?.status === TaskStatus.FINISHED);
-
-              if (item!.files.find((a) => a.blob !== undefined) !== undefined) {
-                // reupload blob if needed
-                operation = {
-                  ...operation,
-                  rounds: [
-                    {
-                      status: TaskStatus.PENDING,
-                      results: [],
-                    },
-                  ],
-                };
-                item = {
-                  ...item,
-                  status: TaskStatus.UPLOADING,
-                  operations: [
-                    {
-                      ...operation,
-                    },
-                    ...item!.operations!.slice(1),
-                  ],
-                };
-                runOperation = true;
-              }
-
-              if (runOperation) {
-                if (!['OCTRA', 'Emu WebApp'].includes(defaultOperation.factory.name)) {
-                  const opTicket = `task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
-                  const opSubscrManager = new SubscriptionManager();
-                  // TODO on re-do operation rounds are removed?
-                  this.subscrManager.add(
-                    defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager).subscribe({
-                      next: (event) => {
-                        if (getLastOperationRound(event.operation)?.status === 'FINISHED') {
-                          this.subscrManager.add(
-                            timer(1000).subscribe({
-                              next: () => {
-                                this.store.dispatch(
-                                  StoreItemActions.processNextOperation.success({
-                                    mode,
-                                    taskID,
-                                    operation: event.operation,
-                                  }),
-                                );
-                              },
-                            }),
-                          );
-                        } else {
-                          this.store.dispatch(
-                            StoreItemActions.changeOperation.do({
-                              mode,
-                              taskID,
-                              operation: event.operation,
-                            }),
-                          );
-                        }
-                        opSubscrManager.destroy();
-                      },
-                      error: (err) => {
-                        console.error(err);
-                        this.store.dispatch(
-                          StoreItemActions.processNextOperation.fail({
-                            mode,
-                            taskID,
-                            operation: operation,
-                            error: typeof err === 'string' ? err : err.message,
-                          }),
-                        );
-                        opSubscrManager.destroy();
-                      },
-                    }),
-                    opTicket,
-                  );
-                } else if (lastRound) {
-                  // is tool
-                  if (lastRound.status === TaskStatus.PENDING) {
-                    this.store.dispatch(
-                      StoreItemActions.changeOperation.do({
-                        mode,
-                        operation: {
-                          ...operation,
-                          rounds: [
-                            ...operation.rounds.slice(0, operation.rounds.length - 1),
-                            {
-                              ...lastRound,
-                              status: TaskStatus.READY,
-                            },
-                          ],
-                        },
-                        taskID,
-                      }),
-                    );
-                  }
-                }
-                somethingFound = true;
+                (!lastNonSkippableOperation || getLastOperationRound(lastNonSkippableOperation)?.status === TaskStatus.FINISHED)
+              ) {
+                foundOperation = operation;
                 break;
               }
               lastNonSkippableOperation = operation;
+            } else {
+              // operation is disabled, skip
             }
           }
 
-          if (!somethingFound) {
+          if (foundOperation) {
+            // there is an operation to run
+            // check if audio blob in task.files is available
+            if (foundOperation.name === 'Upload' && item!.files.find((a) => a.blob !== undefined) !== undefined) {
+              // (re)upload blob if needed
+              // set upload operation to pending and remove results
+              foundOperation = {
+                ...foundOperation,
+                rounds: [
+                  {
+                    status: TaskStatus.PENDING,
+                    results: [],
+                  },
+                ],
+              };
+              item = {
+                ...item,
+                status: TaskStatus.UPLOADING,
+                operations: [
+                  {
+                    ...foundOperation,
+                  },
+                  ...item!.operations!.slice(1),
+                ],
+              };
+              this.store.dispatch(
+                StoreItemActions.processNextOperation.run({
+                  taskID,
+                  operationID: foundOperation.id,
+                  mode,
+                  item,
+                }),
+              );
+            } else if (lastNonSkippableOperation && lastNonSkippableOperation.name !== 'Upload') {
+              // check if files of previous operation need to be reuploaded.
+              const lastRoundOfPreviousOperation = getLastOperationRound(lastNonSkippableOperation);
+              if (
+                lastRoundOfPreviousOperation &&
+                lastRoundOfPreviousOperation.status === TaskStatus.FINISHED &&
+                lastRoundOfPreviousOperation.results.length > 0
+              ) {
+                const promises = lastRoundOfPreviousOperation.results
+                  .map((a) => existsFile(a.url, this.httpClient));
+                Promise.all(promises)
+                  .then((onlineChecks) => {
+                    const offlineIndices = onlineChecks.map((online, index) => ({ index, online })).filter((a) => !a.online);
+                    if (offlineIndices.length > 0) {
+                      this.store.dispatch(
+                        StoreItemActions.reuploadFilesForOperations.do({
+                          mode,
+                          list: [
+                            {
+                              taskID,
+                              operationID: lastNonSkippableOperation.id,
+                              roundIndex: lastNonSkippableOperation.rounds.length - 1,
+                              files: lastRoundOfPreviousOperation.results,
+                            },
+                          ],
+                          actionAfterSuccess: StoreItemActions.processNextOperation.run({
+                            taskID,
+                            operationID: foundOperation!.id,
+                            mode,
+                          }),
+                        }),
+                      );
+                    } else {
+                      this.store.dispatch(
+                        StoreItemActions.processNextOperation.run({
+                          taskID,
+                          operationID: foundOperation!.id,
+                          mode,
+                        }),
+                      );
+                    }
+                  })
+                  .catch(() => {
+                    this.store.dispatch(
+                      StoreItemActions.processNextOperation.run({
+                        taskID,
+                        operationID: foundOperation!.id,
+                        mode,
+                      }),
+                    );
+                  });
+              } else {
+                this.store.dispatch(
+                  StoreItemActions.processNextOperation.run({
+                    taskID,
+                    operationID: foundOperation.id,
+                    mode,
+                  }),
+                );
+              }
+            } else {
+              this.store.dispatch(
+                StoreItemActions.processNextOperation.run({
+                  taskID,
+                  operationID: foundOperation.id,
+                  mode,
+                }),
+              );
+            }
+          } else {
             if (lastNonSkippableOperation && getLastOperationRound(lastNonSkippableOperation)?.status === 'FINISHED') {
+              // end of the chain reached => task finished
               this.store.dispatch(
                 StoreItemActions.processStoreItem.success({
                   mode,
@@ -463,6 +448,7 @@ export class StoreItemEffects {
                 }),
               );
             } else {
+              // beginning of the chain, set status to ready.
               this.store.dispatch(
                 StoreItemActions.changeTaskStatus.do({
                   mode,
@@ -477,6 +463,118 @@ export class StoreItemEffects {
     { dispatch: false },
   );
 
+  /**
+   * this event is triggered after an operation was checked successfully.
+   */
+  runNextOperation$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(StoreItemActions.processNextOperation.run),
+        withLatestFrom(this.store),
+        tap(([{ mode, taskID, operationID }, state]: [{ mode: TPortalModes; taskID: number; operationID: number }, RootState]) => {
+          const currentMode = state.modes.entities[mode]!;
+          const defaultOperations = currentMode.defaultOperations;
+          const item = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items);
+          const operationIndex = item?.operations?.findIndex((a) => a.id === operationID);
+          const operation = operationIndex !== undefined && operationIndex > -1 ? item?.operations[operationIndex] : undefined;
+
+          if (!item) {
+            this.store.dispatch(
+              StoreItemActions.processStoreItem.fail({
+                error: `Can't process next operation. task ${taskID}: Not found.`,
+              }),
+            );
+            return;
+          }
+
+          if (operationIndex === undefined || !operation) {
+            this.store.dispatch(
+              StoreItemActions.processStoreItem.fail({
+                error: `Can't process next operation. Operation with id ${operationID} in task ${taskID}: Not found.`,
+              }),
+            );
+            return;
+          }
+
+          const defaultOperation = defaultOperations[operationIndex];
+          const lastRound = getLastOperationRound(operation);
+          const runOperation = lastRound?.status === 'PENDING';
+
+          if (runOperation) {
+            if (!['OCTRA', 'Emu WebApp'].includes(defaultOperation.factory.name)) {
+              // operation is not of type OCTRA or EMU webApp
+              const opTicket = `task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
+              const opSubscrManager = new SubscriptionManager();
+              this.subscrManager.add(
+                defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager).subscribe({
+                  next: (event) => {
+                    if (getLastOperationRound(event.operation)?.status === 'FINISHED') {
+                      this.subscrManager.add(
+                        timer(1000).subscribe({
+                          next: () => {
+                            this.store.dispatch(
+                              StoreItemActions.processNextOperation.success({
+                                mode,
+                                taskID,
+                                operation: event.operation,
+                              }),
+                            );
+                          },
+                        }),
+                      );
+                    } else {
+                      this.store.dispatch(
+                        StoreItemActions.changeOperation.do({
+                          mode,
+                          taskID,
+                          operation: event.operation,
+                        }),
+                      );
+                    }
+                    opSubscrManager.destroy();
+                  },
+                  error: (err) => {
+                    console.error(err);
+                    this.store.dispatch(
+                      StoreItemActions.processNextOperation.fail({
+                        mode,
+                        taskID,
+                        operation: operation,
+                        error: typeof err === 'string' ? err : err.message,
+                      }),
+                    );
+                    opSubscrManager.destroy();
+                  },
+                }),
+                opTicket,
+              );
+            } else if (lastRound) {
+              // is tool
+              if (lastRound.status === TaskStatus.PENDING) {
+                this.store.dispatch(
+                  StoreItemActions.changeOperation.do({
+                    mode,
+                    operation: {
+                      ...operation,
+                      rounds: [
+                        ...operation.rounds.slice(0, operation.rounds.length - 1),
+                        {
+                          ...lastRound,
+                          status: TaskStatus.READY,
+                        },
+                      ],
+                    },
+                    taskID,
+                  }),
+                );
+              }
+            }
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
   operationProcessingSuccess$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.success),
@@ -484,6 +582,21 @@ export class StoreItemEffects {
       exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
         return of(
           StoreItemActions.processNextOperation.do({
+            mode,
+            taskID,
+          }),
+        );
+      }),
+    ),
+  );
+
+  doNextOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.processNextOperation.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
+        return of(
+          StoreItemActions.processNextOperation.check({
             mode,
             taskID,
           }),

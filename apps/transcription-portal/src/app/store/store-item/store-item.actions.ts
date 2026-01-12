@@ -2,7 +2,16 @@ import { Action, createActionGroup, emptyProps, props } from '@ngrx/store';
 import { IDBTaskItem } from '../../indexedDB';
 import { TPortalModes } from '../mode';
 import { StoreTaskOperation } from '../operation';
-import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItem, StoreItemTaskOptions, TaskStatus } from './store-item';
+import {
+  CompatibleResult,
+  StoreAudioFile,
+  StoreFile,
+  StoreFileDirectory,
+  StoreItem,
+  StoreItemTask,
+  StoreItemTaskOptions,
+  TaskStatus,
+} from './store-item';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
 export class StoreItemActions {
@@ -262,6 +271,16 @@ export class StoreItemActions {
       do: props<{
         taskID: number;
         mode: TPortalModes;
+      }>(),
+      check: props<{
+        taskID: number;
+        mode: TPortalModes;
+      }>(),
+      run: props<{
+        taskID: number;
+        operationID: number;
+        mode: TPortalModes;
+        item?: StoreItemTask;
       }>(),
       success: props<{
         taskID: number;
