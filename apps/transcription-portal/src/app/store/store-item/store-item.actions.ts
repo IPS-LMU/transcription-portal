@@ -399,4 +399,34 @@ export class StoreItemActions {
       }>(),
     },
   });
+
+  static checkAllUploadOperationsForOnlineFiles = createActionGroup({
+    source: 'tasks/check online files',
+    events: {
+      do: emptyProps(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
+
+  static updateURLsForFilesAfterUpload = createActionGroup({
+    source: 'tasks/update url files',
+    events: {
+      do: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operation: StoreTaskOperation;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        itemsState: StoreItemsState;
+        itemIDs: number[];
+      }>(),
+      fail: props<{
+        error: string;
+      }>(),
+    },
+  });
 }

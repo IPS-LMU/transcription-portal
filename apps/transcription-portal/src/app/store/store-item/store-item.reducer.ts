@@ -5,7 +5,7 @@ import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, getLastOperationRound, parseProtocol } from '../operation/operation.functions';
-import { StoreAudioFile, StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
+import { StoreFile, StoreItem, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   applyFunctionOnStoreItemsWhereRecursive,
@@ -734,96 +734,16 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, mode, operation }) => {
-    if (operation.name === 'Upload') {
-      const currentMode = state.entities[mode]!;
-      const lastOperationRound = getLastOperationRound(operation)!;
-
-      // something uploaded, check if their other tasks with the same file
-      state = modeAdapter.updateOne(
-        {
-          id: mode,
-          changes: {
-            items: applyFunctionOnStoreItemsWhereRecursive(
-              () => true,
-              currentMode.items,
-              taskAdapter,
-              (item, itemsState, i) => {
-                if (item.type === 'task') {
-                  let task = item as StoreItemTask;
-                  const files = [...task.files];
-                  let somethingFound = false;
-                  for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    let foundIndex: number | undefined = lastOperationRound.results.findIndex((a) => a.hash === file.hash);
-                    let foundFile: (StoreFile | StoreAudioFile) | undefined;
-
-                    if (foundIndex !== undefined && foundIndex > -1) {
-                      files[i] = {
-                        ...files[i],
-                        url: lastOperationRound.results[foundIndex].url,
-                        online: true,
-                      };
-                      foundFile = files[i];
-                      somethingFound = true;
-                    }
-
-                    const otherItemUploadOperationRound = getLastOperationRound(task.operations[0]);
-                    foundIndex = otherItemUploadOperationRound?.results.findIndex((a) => {
-                      if (a.hash === file.hash) {
-                        return true;
-                      } else {
-                        // fallback to name
-                        return a.attributes.originalFileName === file.attributes.originalFileName;
-                      }
-                    });
-
-                    if (foundIndex !== undefined && foundIndex > -1 && foundFile) {
-                      // replace URL in Upload result
-                      task = {
-                        ...task,
-                        operations: [
-                          {
-                            ...task.operations[0],
-                            rounds: [
-                              {
-                                status: TaskStatus.FINISHED,
-                                results: [
-                                  ...otherItemUploadOperationRound!.results!.slice(0, foundIndex),
-                                  foundFile,
-                                  ...otherItemUploadOperationRound!.results!.slice(foundIndex + 1),
-                                ],
-                              },
-                            ],
-                          },
-                          ...task.operations.slice(1),
-                        ],
-                      };
-                    }
-                  }
-
-                  if (somethingFound) {
-                    return taskAdapter.updateOne(
-                      {
-                        id: item.id,
-                        changes: {
-                          ...task,
-                          files,
-                        },
-                      },
-                      itemsState,
-                    );
-                  }
-                }
-                return itemsState;
-              },
-            ),
-          },
+  on(StoreItemActions.updateURLsForFilesAfterUpload.success, (state: ModeState, { mode, itemsState, itemIDs }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: itemsState,
         },
-        state,
-      );
-    }
-    return state;
+      },
+      state,
+    );
   }),
   on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operation }) => {
     const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;

@@ -22,6 +22,7 @@ import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
 import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
+  applyFunctionOnStoreItemsWhereRecursive,
   convertFileInfoToStoreFile,
   getLatestResultFromPreviousEnabledOperation,
   getOneTaskItemWhereRecursive,
@@ -585,6 +586,124 @@ export class StoreItemEffects {
             taskID,
           }),
         );
+      }),
+    ),
+  );
+
+  updateFileURLsAfterUploadSuccess = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.processNextOperation.success),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
+        if (operation.name === 'Upload') {
+          return of(
+            StoreItemActions.updateURLsForFilesAfterUpload.do({
+              mode,
+              taskID,
+              operation,
+            }),
+          );
+        }
+        return of();
+      }),
+    ),
+  );
+
+  updateFileURLs$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.updateURLsForFilesAfterUpload.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
+        if (operation.name === 'Upload') {
+          // something uploaded, check if their other tasks with the same file
+          const currentMode = state.modes.entities[mode]!;
+          const lastOperationRound = getLastOperationRound(operation)!;
+          const itemIDs: number[] = [];
+          const iState = applyFunctionOnStoreItemsWhereRecursive(
+            () => true,
+            currentMode.items,
+            taskAdapter,
+            (item, itemsState, i) => {
+              if (item.type === 'task') {
+                let task = item as StoreItemTask;
+                const files = [...task.files];
+                let somethingFound = false;
+                for (let i = 0; i < files.length; i++) {
+                  const file = files[i];
+                  let foundIndex: number | undefined = lastOperationRound.results.findIndex((a) => a.hash === file.hash);
+                  let foundFile: (StoreFile | StoreAudioFile) | undefined;
+
+                  if (foundIndex !== undefined && foundIndex > -1) {
+                    files[i] = {
+                      ...files[i],
+                      url: lastOperationRound.results[foundIndex].url,
+                      online: true,
+                    };
+                    foundFile = files[i];
+                    somethingFound = true;
+                    itemIDs.push(task.id);
+                  }
+
+                  const otherItemUploadOperationRound = getLastOperationRound(task.operations[0]);
+                  foundIndex = otherItemUploadOperationRound?.results.findIndex((a) => {
+                    if (a.hash === file.hash) {
+                      return true;
+                    } else {
+                      // fallback to name
+                      return a.attributes.originalFileName === file.attributes.originalFileName;
+                    }
+                  });
+
+                  if (foundIndex !== undefined && foundIndex > -1 && foundFile) {
+                    // replace URL in Upload result
+                    task = {
+                      ...task,
+                      operations: [
+                        {
+                          ...task.operations[0],
+                          rounds: [
+                            {
+                              status: TaskStatus.FINISHED,
+                              results: [
+                                ...otherItemUploadOperationRound!.results!.slice(0, foundIndex),
+                                foundFile,
+                                ...otherItemUploadOperationRound!.results!.slice(foundIndex + 1),
+                              ],
+                            },
+                          ],
+                        },
+                        ...task.operations.slice(1),
+                      ],
+                    };
+                  }
+                }
+
+                if (somethingFound) {
+                  return taskAdapter.updateOne(
+                    {
+                      id: item.id,
+                      changes: {
+                        ...task,
+                        files,
+                      },
+                    },
+                    itemsState,
+                  );
+                }
+              }
+              return itemsState;
+            },
+          );
+
+          return of(
+            StoreItemActions.updateURLsForFilesAfterUpload.success({
+              mode,
+              itemsState: iState,
+              itemIDs,
+            }),
+          );
+        }
+        return of();
       }),
     ),
   );
