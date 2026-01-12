@@ -164,7 +164,7 @@ export function updateTaskFilesWithSameFile(
 
   for (const storeFile of tasks) {
     result.state = applyFunctionOnStoreItemsWhereRecursive(
-      (item) => item.type === "task",
+      (item) => item.type === 'task',
       result.state,
       adapter,
       (item, iState) => {
@@ -197,6 +197,19 @@ export function updateTaskFilesWithSameFile(
                           online: false,
                         },
                         ...task.files.slice(i + 1),
+                      ],
+                      operations: [
+                        // clear round of upload operation to make sure the new file is reuploaded
+                        {
+                          ...task.operations[0],
+                          rounds: [
+                            {
+                              status: TaskStatus.PENDING,
+                              results: [],
+                            },
+                          ],
+                        },
+                        ...task.operations.slice(1),
                       ],
                     },
                   },
@@ -242,10 +255,14 @@ export function updateTaskFilesWithSameFile(
         }
         return iState;
       },
+      undefined,
+      0,
+      () => someThingFound,
     );
   }
 
   if (!someThingFound) {
+    // there exists no file with matching hash => add to table
     if (addedStoreFileOrDirectory.type !== 'folder') {
       // add file to a new task
       const addedFile = addedStoreFileOrDirectory as StoreFile;
@@ -581,6 +598,7 @@ export function applyFunctionOnStoreItemsWhereRecursive(
   applyFunction: (item: StoreItem, itemsState: StoreItemsState, i: number) => StoreItemsState,
   afterAppliedOnFolder?: (item: StoreItemTaskDirectory, itemsState: StoreItemsState, folderItemsState: StoreItemsState) => StoreItemsState,
   k = 0,
+  stopOnValidCondition: () => boolean = () => false,
 ) {
   const items = itemsState.ids.map((id) => itemsState.entities[id]).filter((a) => a !== undefined);
 
@@ -617,6 +635,11 @@ export function applyFunctionOnStoreItemsWhereRecursive(
         itemsState = afterAppliedOnFolder(item as StoreItemTaskDirectory, itemsState, folderState);
       }
     }
+
+    if (stopOnValidCondition()) {
+      break;
+    }
+
     k++;
   }
 

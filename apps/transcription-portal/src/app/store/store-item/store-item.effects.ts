@@ -377,8 +377,7 @@ export class StoreItemEffects {
                 lastRoundOfPreviousOperation.status === TaskStatus.FINISHED &&
                 lastRoundOfPreviousOperation.results.length > 0
               ) {
-                const promises = lastRoundOfPreviousOperation.results
-                  .map((a) => existsFile(a.url, this.httpClient));
+                const promises = lastRoundOfPreviousOperation.results.map((a) => existsFile(a.url, this.httpClient));
                 Promise.all(promises)
                   .then((onlineChecks) => {
                     const offlineIndices = onlineChecks.map((online, index) => ({ index, online })).filter((a) => !a.online);
@@ -656,13 +655,12 @@ export class StoreItemEffects {
                   mode: state.modes.currentMode,
                   taskID,
                   operation: {
-                    ...operation,
+                    ...uploadOperation,
                     rounds: [
                       {
-                        ...operation.rounds[0],
                         status: TaskStatus.PENDING,
+                        results: [],
                       },
-                      ...operation.rounds.slice(1),
                     ],
                   },
                 }),
