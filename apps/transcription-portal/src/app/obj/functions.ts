@@ -69,7 +69,7 @@ export function existsFile(url: string | undefined, httpClient: HttpClient): Pro
           resolve(true);
         },
         error: () => {
-          reject(false);
+          resolve(false);
         },
       });
     } else {

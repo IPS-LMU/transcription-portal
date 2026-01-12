@@ -422,7 +422,7 @@ export class IDBEffects {
 
   saveStoreItems$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(IDBActions.saveStoreItems.do, StoreItemActions.updateURLsForFilesAfterUpload.success),
+      ofType(IDBActions.saveStoreItems.do, StoreItemActions.updateURLsForFilesAfterUpload.success, StoreItemActions.checkAllUploadOperationsForOnlineFiles.success),
       withLatestFrom(this.store),
       exhaustMap(
         ([{ itemIDs, mode }, state]: [

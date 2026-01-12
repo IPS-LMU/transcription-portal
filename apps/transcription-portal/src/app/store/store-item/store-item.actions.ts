@@ -403,8 +403,14 @@ export class StoreItemActions {
   static checkAllUploadOperationsForOnlineFiles = createActionGroup({
     source: 'tasks/check online files',
     events: {
-      do: emptyProps(),
-      success: emptyProps(),
+      do: props<{
+        mode: TPortalModes;
+      }>(),
+      success: props<{
+        itemsState: StoreItemsState;
+        mode: TPortalModes;
+        itemIDs: number[];
+      }>(),
       fail: props<{
         error: string;
       }>(),

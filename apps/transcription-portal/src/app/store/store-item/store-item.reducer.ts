@@ -980,6 +980,17 @@ export const getTaskReducers = (
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
     return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);
   }),
+  on(StoreItemActions.checkAllUploadOperationsForOnlineFiles.success, (state: ModeState, { mode, itemsState }) => {
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: itemsState,
+        },
+      },
+      state,
+    );
+  }),
   on(StoreItemActions.removeAppendingForSelectedItems.do, (state: ModeState) =>
     modeAdapter.updateOne(
       {

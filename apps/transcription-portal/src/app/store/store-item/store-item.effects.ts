@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { EntityAdapter } from '@ngrx/entity';
 import { Action, Store } from '@ngrx/store';
 import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
@@ -19,7 +20,16 @@ import { getAllTasks } from '../mode/mode.functions';
 import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
-import { CompatibleResult, StoreAudioFile, StoreFile, StoreFileDirectory, StoreItemTask, TaskStatus } from './store-item';
+import {
+  CompatibleResult,
+  StoreAudioFile,
+  StoreFile,
+  StoreFileDirectory,
+  StoreItem,
+  StoreItemTask,
+  StoreItemTaskDirectory,
+  TaskStatus,
+} from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
   applyFunctionOnStoreItemsWhereRecursive,
@@ -30,7 +40,7 @@ import {
   isStoreFileAvailable,
   updateTaskFilesWithSameFile,
 } from './store-item.functions';
-import { OctraWindowMessageEventData } from './store-items-state';
+import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
 @Injectable()
 export class StoreItemEffects {
@@ -60,6 +70,20 @@ export class StoreItemEffects {
           }),
         );
       }),
+    ),
+  );
+
+  checkFilesOnlineAfterIDBLoaded$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.initIDB.success),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) =>
+        of(
+          StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
+            mode: state.modes.currentMode,
+          }),
+        ),
+      ),
     ),
   );
 
@@ -708,6 +732,36 @@ export class StoreItemEffects {
     ),
   );
 
+  checkAllFilesIfOnline$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.checkAllUploadOperationsForOnlineFiles.do),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+        const currentMode = state.modes.entities[mode]!;
+        return from(checkAllFilesIfOnline(currentMode.items, taskAdapter, this.httpClient, [])).pipe(
+          exhaustMap(({ itemsState, itemIDs }) =>
+            of(
+              StoreItemActions.checkAllUploadOperationsForOnlineFiles.success({
+                itemsState,
+                itemIDs,
+                mode,
+              }),
+            ),
+          ),
+          catchError((err: Error) => {
+            console.error(err);
+
+            return of(
+              StoreItemActions.checkAllUploadOperationsForOnlineFiles.fail({
+                error: err?.message,
+              }),
+            );
+          }),
+        );
+      }),
+    ),
+  );
+
   doNextOperation$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.do),
@@ -1227,4 +1281,92 @@ export class StoreItemEffects {
 
     return result;
   }
+}
+
+export async function checkAllFilesIfOnline(
+  itemsState: StoreItemsState,
+  taskAdapter: EntityAdapter<StoreItem>,
+  httpClient: HttpClient,
+  itemIDs: number[],
+) {
+  for (const id of itemsState.ids) {
+    const item = itemsState.entities[id]!;
+
+    if (item.type === 'task') {
+      const task = item as StoreItemTask;
+      const uploadOperation = task.operations[0]!;
+      const lastRound = getLastOperationRound(uploadOperation)!;
+      const results = [...lastRound.results];
+      let affectedTask = false;
+
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if ((result.online || result.online === undefined) && !(await existsFile(result.url, httpClient))) {
+          results[i] = {
+            ...results[i],
+            online: false,
+            url: undefined,
+          };
+          affectedTask = true;
+        }
+      }
+
+      if (affectedTask) {
+        itemIDs.push(task.id);
+      }
+
+      itemsState = taskAdapter.updateOne(
+        {
+          id: task.id,
+          changes: {
+            files: task.files.map((a) => {
+              const found = results.find((b) => b.name === a.name);
+              if (found) {
+                return {
+                  ...a,
+                  online: found.online,
+                  url: found.url,
+                };
+              }
+
+              return a;
+            }),
+            operations: [
+              {
+                ...uploadOperation,
+                rounds: [
+                  ...(uploadOperation.rounds.length > 1 ? uploadOperation.rounds.slice(0, uploadOperation.rounds.length - 1) : []),
+                  {
+                    ...lastRound,
+                    results,
+                  },
+                ],
+              },
+              ...task.operations.slice(1),
+            ],
+          },
+        },
+        itemsState,
+      );
+    } else {
+      const folder = item as StoreItemTaskDirectory;
+      const result = await checkAllFilesIfOnline(folder.entries, taskAdapter, httpClient, itemIDs);
+      itemIDs = result.itemIDs;
+
+      itemsState = taskAdapter.updateOne(
+        {
+          id: folder.id,
+          changes: {
+            entries: result.itemsState,
+          },
+        },
+        itemsState,
+      );
+    }
+  }
+
+  return {
+    itemsState,
+    itemIDs,
+  };
 }

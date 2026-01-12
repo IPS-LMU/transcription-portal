@@ -163,6 +163,7 @@ export function convertStoreFileToFileInfo(file: StoreFile): TPortalFileInfo {
   info.url = file.url;
   info.online = file.online ?? false;
   info.hash = file.hash;
+  info.file = file.blob ?? (file.content ? new File([file.content], file.attributes.originalFileName, { type: file.type }) : undefined);
   return info;
 }
 
