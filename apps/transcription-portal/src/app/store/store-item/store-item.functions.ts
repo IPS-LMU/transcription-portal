@@ -748,17 +748,31 @@ export function isStoreFileAvailable(file?: StoreFile) {
   return file && (file.online || file.blob);
 }
 
-export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
+export function areAllResultsOnline(round: StoreTaskOperationProcessingRound) {
+  for (const result of round.results) {
+    if (result.online === false || !result.url) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function getPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
   const index = task.operations.findIndex((a) => a.id === operation.id);
   if (index > 0) {
     for (let i = index - 1; i >= 0; i--) {
       const previousOperation = task.operations[i];
       if (previousOperation.enabled) {
-        return getLastOperationResultFromLatestRound(previousOperation);
+        return previousOperation;
       }
     }
   }
   return undefined;
+}
+
+export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask, operation: StoreTaskOperation) {
+  const previousOperation = getPreviousEnabledOperation(task, operation);
+  return previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
 }
 
 export function changeLastRound(rounds: StoreTaskOperationProcessingRound[], partial: Partial<StoreTaskOperationProcessingRound>) {

@@ -33,9 +33,11 @@ import {
 import { StoreItemActions } from './store-item.actions';
 import {
   applyFunctionOnStoreItemsWhereRecursive,
+  areAllResultsOnline,
   convertFileInfoToStoreFile,
   getLatestResultFromPreviousEnabledOperation,
   getOneTaskItemWhereRecursive,
+  getPreviousEnabledOperation,
   getStoreItemsWhereRecursive,
   isStoreFileAvailable,
   updateTaskFilesWithSameFile,
@@ -809,13 +811,12 @@ export class StoreItemEffects {
             const { factory } = currentState.defaultOperations[opIndex]!;
             let operation = taskOperations[opIndex];
             const uploadOperation = taskOperations[0];
-            const previousOperation = opIndex > 0 ? taskOperations[opIndex - 1] : undefined;
+            const previousOperation = getPreviousEnabledOperation(task, operation);
             const availableUploadedAudioFile = getLastOperationRound(uploadOperation)?.results.find((a) => a.type.includes('audio'));
             const droppedAudioFile = task.files!.find((a) => a.type.includes('audio'))?.blob;
             const isPreviousTaskDefinedAndLastResultNotAvailable = previousOperation
               ? !isStoreFileAvailable(getLastOperationResultFromLatestRound(previousOperation))
               : false;
-
             // reset other opened tool
             if (currentState.openedTool?.taskID && currentState.openedTool?.taskID) {
               this.store.dispatch(
@@ -871,7 +872,7 @@ export class StoreItemEffects {
               } else if (
                 previousOperation &&
                 getLastOperationRound(previousOperation) &&
-                !(getLastOperationResultFromLatestRound(previousOperation)?.online || !getLastOperationResultFromLatestRound(previousOperation)?.url)
+                !areAllResultsOnline(getLastOperationRound(previousOperation)!)
               ) {
                 // reupload result from previous operation
                 // local available, reupload
