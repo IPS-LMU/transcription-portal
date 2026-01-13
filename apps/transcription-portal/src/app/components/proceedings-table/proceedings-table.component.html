@@ -576,7 +576,6 @@
   }
 </div>
 
-
 <ng-template
   #taskOrDirRow
   let-dirOpened="dirOpened"
@@ -600,19 +599,19 @@
     tportalProceedingsRow
     #row
   >
-    <td
-      (appendingClick)="onPreviewClick($event)"
-      (click)="onRowSelected(entry)"
-      (deleteIconClick)="removeEntry($event, entry)"
-      (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
-      (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
-      (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
-      (tagClicked)="onTagClicked(dirID)"
-      [entry]="entry"
-      [shortStyle]="isClosed"
-      tportalProcColIcon
-      #nameCol="colIcon"
-    ></td>
+    <td (click)="onRowSelected(entry)" colspan="2">
+      <tportal-proceeding-table-name-col
+        (deleteIconClick)="removeEntry($event, entry)"
+        (infoMouseEnter)="onInfoMouseEnter($event, getTask(entry))"
+        (infoMouseLeave)="onInfoMouseLeave($event, getTask(entry))"
+        (infoMouseOver)="onInfoMouseOver($event, getTask(entry))"
+        (tagClicked)="onTagClicked(dirID)"
+        (appendingClick)="onPreviewClick($event)"
+        [entry]="entry"
+        [shortStyle]="isClosed"
+        #nameCol
+      ></tportal-proceeding-table-name-col>
+    </td>
     @if (getTask(entry) !== undefined && entry.type === 'task') {
       @for (operation of entry.operations; track operation.id; let i = $index) {
         <td tportalProceedingsTableTd [storeTaskOperation]="operation" #td style="text-align: center" (mouseenter)="onOperationTDMouseEnter(entry)">

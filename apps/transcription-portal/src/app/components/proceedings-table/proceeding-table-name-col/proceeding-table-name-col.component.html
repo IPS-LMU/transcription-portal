@@ -1,0 +1,82 @@
+@if (entry !== undefined) {
+  @if (entry.type === 'task') {
+    @if (!entry.directoryID) {
+      <!-- normal line -->
+      <ng-container
+        [ngTemplateOutlet]="entryIcon"
+        [ngTemplateOutletContext]="{
+          entry,
+        }"
+      ></ng-container>
+    } @else {
+      <!-- part of folder -->
+      <img src="assets/directory.png" style="width: 20px; margin-right: 3px" />
+      <ng-container [ngTemplateOutlet]="entryIcon"></ng-container>
+    }
+    <!-- file name -->
+    <span
+      class="d-inline-block text-truncate"
+      [ngClass]="{
+        shorten: shortStyle,
+        green: entry.files && entry.files.length > 0 && entry.files[0].type.includes('audio') && entry.files[0].blob !== undefined,
+        yellow:
+          ((entry.files![0].type.includes('audio') && entry.files && entry.files.length > 0 && entry.files[0].blob === undefined) ||
+            !entry.files![0].type.includes('audio')) &&
+          getLastOperationRound(entry.operations![0])!.status !== 'FINISHED',
+      }"
+      [title]="entry.files![0].attributes?.originalFileName"
+      >{{ entry.files![0].attributes?.originalFileName?.replace('_annot.json', '.wav') }}</span
+    >
+
+    @if (mouseOver) {
+      <i
+        class="bi bi-info-circle ms-1"
+        aria-hidden="true"
+        (mouseenter)="infoMouseEnter.emit($event)"
+        (mouseleave)="infoMouseLeave.emit($event)"
+        (mouseover)="infoMouseOver.emit()"
+      ></i>
+
+      <i class="bi bi-dash-circle ms-1" aria-hidden="true" (click)="deleteIconClick.emit($event)"></i>
+    }
+  } @else {
+    <!-- folder -->
+    <i
+      class="bi"
+      [ngClass]="{
+        'bi-chevron-up': dirOpened === 'opened',
+        'bi-chevron-down': dirOpened === 'closed',
+      }"
+      (click)="afterTagClicked()"
+    ></i>
+
+    <i
+      class="bi blue ms-1"
+      [ngClass]="{
+        'bi-folder2-open': dirOpened === 'opened',
+        'bi-folder-fill': dirOpened === 'closed',
+      }"
+    ></i>
+
+    <!-- folder name -->
+    <span class="text-truncate ms-1" [title]="entry.folderName"
+      >{{ entry.folderName }}
+      @if (entry.entries?.ids && entry.entries!.ids.length > 0) {
+        <span class="ms-1">({{ entry.entries!.ids.length }})</span>
+      }
+    </span>
+  }
+}
+
+<ng-template #entryIcon let-entry="entry">
+  <i
+    class="bi bi-file-earmark-music me-1"
+    aria-hidden="true"
+    [ngClass]="{
+      green: entry.status === TaskStatus.FINISHED,
+      red: entry.status === TaskStatus.ERROR,
+      blue: entry.status === TaskStatus.PENDING || entry.status === TaskStatus.READY,
+      yellow: entry.status === TaskStatus.PROCESSING,
+    }"
+  ></i>
+</ng-template>

@@ -24,14 +24,6 @@ import { getLastOperationRound } from '../../../store/operation/operation.functi
   standalone: true,
 })
 export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy {
-  get mouseOver(): boolean {
-    return this._mouseOver;
-  }
-
-  set mouseOver(value: boolean) {
-    this._mouseOver = value;
-    this.updateView();
-  }
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
 
@@ -108,12 +100,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
           this.renderer.addClass(infoIcon, 'bi-info-circle');
           this.renderer.setAttribute(infoIcon, 'aria-hidden', 'true');
 
-          if (this.mouseOver) {
-            this.renderer.setStyle(infoIcon, 'visibility', 'visible');
-          } else {
-            this.renderer.setStyle(infoIcon, 'visibility', 'hidden');
-          }
-
           this.renderer.listen(infoIcon, 'mouseenter', (event) => {
             this.infoMouseEnter.emit(event);
           });
@@ -131,12 +117,6 @@ export class ProcColIconDirective implements AfterViewInit, OnChanges, OnDestroy
         this.renderer.addClass(deleteIcon, 'bi');
         this.renderer.addClass(deleteIcon, 'bi-dash-circle');
         this.renderer.setAttribute(deleteIcon, 'aria-hidden', 'true');
-
-        if (this.mouseOver) {
-          this.renderer.setStyle(deleteIcon, 'visibility', 'visible');
-        } else {
-          this.renderer.setStyle(deleteIcon, 'visibility', 'hidden');
-        }
 
         this.renderer.listen(deleteIcon, 'click', (event) => {
           this.deleteIconClick.emit(event);

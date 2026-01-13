@@ -54,6 +54,7 @@ import { ProceedingsRowDirective } from './directives/proceedings-row.directive'
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { ProceedingTableNameColComponent } from './proceeding-table-name-col/proceeding-table-name-col.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -80,6 +81,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
     ContextMenuComponent,
     TranslocoPipe,
     UpperCasePipe,
+    ProceedingTableNameColComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
