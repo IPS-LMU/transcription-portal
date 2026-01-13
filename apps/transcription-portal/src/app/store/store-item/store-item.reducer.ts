@@ -845,6 +845,44 @@ export const getTaskReducers = (
 
     return state;
   }),
+  on(StoreItemActions.runOperationWithTool.closeOtherTool, (state: ModeState, {mode, taskID, operationID}) => {
+    const currentMode = state.entities[mode]!;
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.type === 'task' && item.id === taskID,
+            currentMode.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return changeTaskOperation(
+                taskID,
+                operationID,
+                (operation) => {
+                  return {
+                    ...operation,
+                    rounds: [
+                      ...(operation.rounds.length > 1 ? operation.rounds.slice(0, operation.rounds.length - 2) : []),
+                      {
+                        ...last(operation.rounds)!,
+                        status: operation.rounds.length > 0 ? TaskStatus.READY : TaskStatus.FINISHED,
+                      },
+                    ],
+                  };
+                },
+                taskAdapter,
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+
+    return state;
+  }),
   on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, url, audioFile, language, operationName }) => {
     const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items)[0];
     const operationIndex = task.operations!.findIndex((a) => a.id === operationID);

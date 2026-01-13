@@ -317,6 +317,11 @@ export class StoreItemActions {
         language: string;
         audioFile: StoreAudioFile;
       }>(),
+      closeOtherTool: props<{
+        taskID: number;
+        mode: TPortalModes;
+        operationID: number;
+      }>(),
       prepare: props<{
         mode: TPortalModes;
         taskID: number;

@@ -268,10 +268,11 @@ export class IDBEffects {
         StoreItemActions.changeTaskStatus.do,
         IDBActions.saveTask.do,
         StoreItemActions.processNextOperation.success,
-        StoreItemActions.processNextOperation.fail
+        StoreItemActions.processNextOperation.fail,
+        StoreItemActions.runOperationWithTool.closeOtherTool,
       ),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number, type: any }, RootState]) => {
+      exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number; type: any }, RootState]) => {
         console.log(`SAVE after ${type}`);
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
@@ -422,7 +423,11 @@ export class IDBEffects {
 
   saveStoreItems$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(IDBActions.saveStoreItems.do, StoreItemActions.updateURLsForFilesAfterUpload.success, StoreItemActions.checkAllUploadOperationsForOnlineFiles.success),
+      ofType(
+        IDBActions.saveStoreItems.do,
+        StoreItemActions.updateURLsForFilesAfterUpload.success,
+        StoreItemActions.checkAllUploadOperationsForOnlineFiles.success,
+      ),
       withLatestFrom(this.store),
       exhaustMap(
         ([{ itemIDs, mode }, state]: [

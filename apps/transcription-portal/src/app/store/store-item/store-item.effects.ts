@@ -816,6 +816,17 @@ export class StoreItemEffects {
               ? !isStoreFileAvailable(getLastOperationResultFromLatestRound(previousOperation))
               : false;
 
+            // reset other opened tool
+            if (currentState.openedTool?.taskID && currentState.openedTool?.taskID) {
+              this.store.dispatch(
+                StoreItemActions.runOperationWithTool.closeOtherTool({
+                  taskID: currentState.openedTool.taskID,
+                  operationID: currentState.openedTool.operationID,
+                  mode: state.modes.currentMode,
+                }),
+              );
+            }
+
             if (!availableUploadedAudioFile?.online && !droppedAudioFile) {
               // audio file is not available
               this.alertService.showAlert(

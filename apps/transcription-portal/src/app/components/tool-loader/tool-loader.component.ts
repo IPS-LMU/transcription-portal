@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, HostListener, inject, Input, Output, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { wait } from '@octra/utilities';
 import { StoreTaskOperation } from '../../store';
 
 @Component({
@@ -29,10 +30,19 @@ export class ToolLoaderComponent {
       | undefined
       | null,
   ) {
-    this.selectedtool = {
-      name: operation?.operation?.name ?? '',
-      url: operation?.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.url) : undefined,
-    };
+    if (operation) {
+      this.selectedtool = {
+        name: operation.operation?.name ?? '',
+        url: operation.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.url) : undefined,
+      };
+    } else {
+      wait(1).then(() => {
+        this.selectedtool = {
+          name: '',
+          url: undefined,
+        };
+      });
+    }
   }
 
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
