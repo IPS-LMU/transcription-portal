@@ -148,7 +148,7 @@
             </tr>
             <tr>
               <td class="ps-3">{{ 'g.asr provider' | transloco }}:</td>
-              <td>{{ popover.task.operations[1].options.serviceProvider?.provider }}</td>
+              <td>{{ popover.task.operations[1].serviceProviderName}}</td>
             </tr>
             @if (modeStoreService.currentMode === 'annotation') {
               @if (popover.task.operations[1].options.diarization?.enabled) {
@@ -161,19 +161,26 @@
                   <td>{{ popover.task.operations[1].options.diarization?.speakers }}</td>
                 </tr>
               }
-              <tr>
-                <td class="ps-3">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</td>
-                <td><!-- TODO add {{ popover.task.mausOperation.language }}--></td>
-              </tr>
+
+              @if (popover.task.operations[3].enabled) {
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</td>
+                  <td>{{ popover.task.operations[3].options.language }}</td>
+                </tr>
+              }
             } @else if (modeStoreService.currentMode === 'summarization') {
-              <tr>
-                <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
-                <td><!-- TODO add {{ popover.task.summarizationOperation.maxNumberOfWords }}--></td>
-              </tr>
-              <tr>
-                <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
-                <td><!-- TODO add {{ popover.task.translationOperation.language }}--></td>
-              </tr>
+              @if (popover.task.operations[4].enabled) {
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
+                  <td>{{ popover.task.operations[4].options.maxNumberOfWords }}</td>
+                </tr>
+              }
+              @if (popover.task.operations[5].enabled) {
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
+                  <td>{{ popover.task.operations[5].options.language }}</td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -515,7 +522,7 @@
               entry,
               entryIndex,
               dirID: entry.type === 'folder' ? entry.id : undefined,
-              dirOpened: entry.opened ? 'opened': 'closed',
+              dirOpened: entry.opened ? 'opened' : 'closed',
               fade: 'opened',
               contextmenuRef,
             }"
@@ -528,7 +535,7 @@
                 [ngTemplateOutlet]="taskOrDirRow"
                 [ngTemplateOutletContext]="{
                   dirID: entry.id,
-                  dirOpened: entry.opened ? 'opened': 'closed',
+                  dirOpened: entry.opened ? 'opened' : 'closed',
                   entry: dirEntry,
                   entryIndex,
                   fade: entry.opened === true ? 'opened' : 'closed',

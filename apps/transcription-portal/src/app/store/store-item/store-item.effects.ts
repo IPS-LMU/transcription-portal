@@ -35,7 +35,6 @@ import {
   applyFunctionOnStoreItemsWhereRecursive,
   areAllResultsOnline,
   convertFileInfoToStoreFile,
-  getLatestResultFromPreviousEnabledOperation,
   getOneTaskItemWhereRecursive,
   getPreviousEnabledOperation,
   getStoreItemsWhereRecursive,
@@ -1003,8 +1002,11 @@ export class StoreItemEffects {
           if (audioFile) {
             if (!transcriptFile) {
               // get from previous enabled operation
-              transcriptFile = getLatestResultFromPreviousEnabledOperation(task, operation);
+              const lastEnebaledOperation = getPreviousEnabledOperation(task, operation);
+              const lastRound = getLastOperationRound(lastEnebaledOperation!);
+              transcriptFile = lastRound!.results.find((a) => !a.type.includes('audio'));
             }
+
             if (!transcriptFile) {
               // get task files
               transcriptFile = task.files.find((a) => !a.type.includes('audio'));

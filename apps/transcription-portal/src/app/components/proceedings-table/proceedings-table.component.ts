@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, JsonPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -80,6 +80,7 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     TranslocoPipe,
     UpperCasePipe,
     ProceedingTableNameColComponent,
+    JsonPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

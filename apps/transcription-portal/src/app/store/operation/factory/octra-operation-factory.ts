@@ -96,7 +96,12 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
                   if (nextItem) {
                     const gapSamples = nextItem.sampleDur;
 
-                    if (item.getFirstLabelWithoutName('Speaker')?.value !== '' && nextItem.getFirstLabelWithoutName('Speaker')?.value !== '') {
+                    if (
+                      item.getFirstLabelWithoutName('Speaker')?.value !== '' &&
+                      item.getFirstLabelWithoutName('Speaker')?.value !== '<P>' &&
+                      nextItem.getFirstLabelWithoutName('Speaker')?.value !== '' &&
+                      nextItem.getFirstLabelWithoutName('Speaker')?.value !== '<P>'
+                    ) {
                       // concat
                       item.replaceFirstLabelWithoutName('Speaker', (value) => {
                         return [value, nextItem.getFirstLabelWithoutName('Speaker')?.value].filter((a) => a !== undefined && a !== '').join(' ');
