@@ -34,9 +34,11 @@ export class ProceedingsTableUploadOperationComponent extends ProceedingsTableOp
   get currentRound(): StoreTaskOperationProcessingRound | undefined {
     return this.storeTaskOperation ? getLastOperationRound(this.storeTaskOperation) : undefined;
   }
+
   get time() {
     const round = this.currentRound;
-    return round?.estimatedEnd ? round.estimatedEnd - Date.now() : 0;
+    const diff = (round?.estimatedEnd ?? 0) - Date.now();
+    return diff > 0 ? diff : 0;
   }
 
   get lastOperationRound() {
