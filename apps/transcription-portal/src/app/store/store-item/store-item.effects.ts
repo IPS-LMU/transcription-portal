@@ -864,7 +864,7 @@ export class StoreItemEffects {
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
               if (getLastOperationRound(operation)?.status === 'FINISHED') {
-                if (!(getLastOperationResultFromLatestRound(operation)?.online || !getLastOperationResultFromLatestRound(operation)?.url)) {
+                if (!getLastOperationResultFromLatestRound(operation)?.online || !getLastOperationResultFromLatestRound(operation)?.url) {
                   // file for last result of current tool exists, but isn't available via URL
                   // reupload result from tool operation
                   file = getLastOperationResultFromLatestRound(operation);
