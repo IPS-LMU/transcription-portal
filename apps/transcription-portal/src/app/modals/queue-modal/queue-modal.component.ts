@@ -217,7 +217,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   }
 
   deactivateOperation(name: string, enabled: boolean) {
-    this.modeStoreService.setDefaultOperationEnabled(name, enabled);
+    this.modeStoreService.setDefaultOperationEnabled(name, !enabled);
   }
 
   public getBadge(task: StoreItemTask): {

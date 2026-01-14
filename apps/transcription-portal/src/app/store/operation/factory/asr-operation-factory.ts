@@ -127,7 +127,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                   ...currentRound.time!,
                   duration: Date.now() - currentRound.time!.start,
                 },
-                protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
+                protocol: warnings ? currentRound.protocol + 'WARNING: ' + warnings + '<br/>' : currentRound.protocol,
               };
 
               try {
@@ -150,7 +150,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                     ...currentRound.time!,
                     duration: Date.now() - currentRound.time!.start,
                   },
-                  protocol: warnings ? currentRound.protocol + "WARNING: " + warnings + '<br/>' : currentRound.protocol,
+                  protocol: warnings ? currentRound.protocol + 'WARNING: ' + warnings + '<br/>' : currentRound.protocol,
                 };
 
                 if (asrResult.content) {
@@ -282,7 +282,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           name: getEscapedFileName(hash) + file.extension,
                           attributes: {
                             originalFileName: file.fullname,
-                          }
+                          },
                         } as unknown as StoreFile,
                         warnings,
                       });
@@ -461,8 +461,8 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
 
                   if (json.success === 'true') {
                     const { extension } = extractFileNameFromURL(json.downloadLink);
-                    const originalName = FileInfo.extractFileName(audioFile.attributes.originalFileName);
-                    const file = FileInfo.fromURL(json.downloadLink, 'text/plain', originalName + extension, Date.now());
+                    const { name } = FileInfo.extractFileName(audioFile.attributes.originalFileName);
+                    const file = FileInfo.fromURL(json.downloadLink, 'text/plain', name + extension, Date.now());
                     setTimeout(() => {
                       file
                         .updateContentFromURL(httpClient)
@@ -479,7 +479,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                           resolve({
                             result: {
                               name: `${getEscapedFileName(hash)}${file.extension}`,
-                              attributes: { originalFileName: file.name },
+                              attributes: { originalFileName: file.fullname },
                               type: file.type,
                               size: file.size,
                               content,
@@ -543,7 +543,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   ) => {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
-      const {name} = FileInfo.extractFileName(file.name);
+      const { name } = FileInfo.extractFileName(file.name);
       if (file.blob) {
         // upload with file
         formData.append('file', file.blob, file.name);
