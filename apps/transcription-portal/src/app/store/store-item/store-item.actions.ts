@@ -145,6 +145,15 @@ export class StoreItemActions {
     },
   });
 
+  static setDirectoryOpenState = createActionGroup({
+    source: 'tasks/set directory open state',
+    events: {
+      do: props<{
+        opened: boolean;
+      }>()
+    },
+  });
+
   static setItemMouseOver = createActionGroup({
     source: 'tasks/set mouseover',
     events: {

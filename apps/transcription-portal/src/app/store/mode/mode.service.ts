@@ -84,6 +84,10 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.toggleTaskDirectoryOpened.do({ dirID }));
   }
 
+  setDirectoryOpenState(opened: boolean) {
+    this.store.dispatch(StoreItemActions.setDirectoryOpenState.do({ opened }));
+  }
+
   removeStoreItems(ids: number[]) {
     this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
   }

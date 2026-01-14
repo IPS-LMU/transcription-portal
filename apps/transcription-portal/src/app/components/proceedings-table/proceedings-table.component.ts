@@ -14,6 +14,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { openModal, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -49,12 +50,10 @@ import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
 import { ContextMenuComponent } from './context-menu/context-menu.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
-import { ProcColIconDirective } from './directives/proc-col-icon.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
-import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
-import { TranslocoPipe } from '@jsverse/transloco';
 import { ProceedingTableNameColComponent } from './proceeding-table-name-col/proceeding-table-name-col.component';
+import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -75,7 +74,6 @@ import { ProceedingTableNameColComponent } from './proceeding-table-name-col/pro
     ProceedingsTableTDDirective,
     ProceedingsTableOperationSelectorComponent,
     DirProgressDirective,
-    ProcColIconDirective,
     ProceedingsRowDirective,
     AsyncPipe,
     ContextMenuComponent,
@@ -142,7 +140,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       }[]
     | null = [];
   public isDragging = false;
-  public allDirOpened: 'opened' | 'closed' = 'opened';
+  public allDirOpened: 'opened' | 'closed' = 'closed';
   @Input() shortstyle = false;
   @Input() isClosed = false;
 
@@ -688,6 +686,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     } else {
       this.allDirOpened = 'opened';
     }
+    this.modeStoreService.setDirectoryOpenState(this.allDirOpened === 'opened');
   }
 
   toolTipAction(action: string, tooltip: any) {

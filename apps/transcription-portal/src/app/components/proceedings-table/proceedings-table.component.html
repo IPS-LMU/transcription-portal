@@ -515,6 +515,7 @@
               entry,
               entryIndex,
               dirID: entry.type === 'folder' ? entry.id : undefined,
+              dirOpened: entry.opened ? 'opened': 'closed',
               fade: 'opened',
               contextmenuRef,
             }"
@@ -527,6 +528,7 @@
                 [ngTemplateOutlet]="taskOrDirRow"
                 [ngTemplateOutletContext]="{
                   dirID: entry.id,
+                  dirOpened: entry.opened ? 'opened': 'closed',
                   entry: dirEntry,
                   entryIndex,
                   fade: entry.opened === true ? 'opened' : 'closed',
@@ -609,6 +611,7 @@
         (appendingClick)="onPreviewClick($event)"
         [entry]="entry"
         [shortStyle]="isClosed"
+        [dirOpened]="dirOpened"
         #nameCol
       ></tportal-proceeding-table-name-col>
     </td>

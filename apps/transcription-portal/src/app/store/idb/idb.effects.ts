@@ -276,19 +276,23 @@ export class IDBEffects {
         console.log(`SAVE after ${type}`);
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
-        const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
+        let entry = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];
 
-        if (!task) {
+        if (entry?.directoryID) {
+          entry = getStoreItemsWhereRecursive((item) => item.id === entry.directoryID, state.modes.entities[mode]!.items)[0];
+        }
+
+        if (!entry) {
           return of(
             IDBActions.saveTask.fail({
-              error: `Can't find task with id ${taskID}`,
+              error: `Can't find entry with id ${taskID}`,
             }),
           );
         }
 
-        return from(convertStoreItemToIDBItem(task, state.modes.entities[mode]!.defaultOperations!)).pipe(
+        return from(convertStoreItemToIDBItem(entry, state.modes.entities[mode]!.defaultOperations!)).pipe(
           exhaustMap((idbTask) => {
-            return from(table.put(idbTask, task.id)).pipe(
+            return from(table.put(idbTask, entry.id)).pipe(
               exhaustMap(() => {
                 return of(
                   IDBActions.saveTask.success({
@@ -441,8 +445,16 @@ export class IDBEffects {
             (async () => {
               const serialized: (IDBTaskItem | IDBFolderItem)[] = [];
               const items = getStoreItemsWhereRecursive((item) => itemIDs.includes(item.id), state.modes.entities[mode]!.items);
-              for (const item of items) {
-                serialized.push(await convertStoreItemToIDBItem(item, state.modes.entities[mode]!.defaultOperations));
+              for (const entry of items) {
+                let item: StoreItem | undefined = entry;
+                if (item.directoryID) {
+                  const founds = getStoreItemsWhereRecursive((i) => i.id === item!.directoryID, state.modes.entities[mode]!.items);
+                  item = founds.length === 1 ? founds[0] : undefined;
+                }
+
+                if (item) {
+                  serialized.push(await convertStoreItemToIDBItem(item, state.modes.entities[mode]!.defaultOperations));
+                }
               }
 
               return serialized;

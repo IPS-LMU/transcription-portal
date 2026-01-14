@@ -11,7 +11,10 @@
     } @else {
       <!-- part of folder -->
       <img src="assets/directory.png" style="width: 20px; margin-right: 3px" />
-      <ng-container [ngTemplateOutlet]="entryIcon"></ng-container>
+      <ng-container [ngTemplateOutlet]="entryIcon"
+                    [ngTemplateOutletContext]="{
+          entry,
+        }"></ng-container>
     }
     <!-- file name -->
     <span
@@ -24,21 +27,16 @@
             !entry.files![0].type.includes('audio')) &&
           getLastOperationRound(entry.operations![0])!.status !== 'FINISHED',
       }"
-      [title]="entry.files![0].attributes?.originalFileName"
-      >{{ entry.files![0].attributes?.originalFileName?.replace('_annot.json', '.wav') }}</span
+      [title]="entry.files![0].attributes.originalFileName"
+      >{{ entry.files![0].attributes.originalFileName.replace('_annot.json', '.wav') }}</span
     >
 
-    @if (mouseOver) {
-      <i
-        class="bi bi-info-circle ms-1"
-        aria-hidden="true"
-        (mouseenter)="infoMouseEnter.emit($event)"
-        (mouseleave)="infoMouseLeave.emit($event)"
-        (mouseover)="infoMouseOver.emit()"
-      ></i>
-
-      <i class="bi bi-dash-circle ms-1" aria-hidden="true" (click)="deleteIconClick.emit($event)"></i>
-    }
+    <ng-container
+      [ngTemplateOutlet]="actionIcons"
+      [ngTemplateOutletContext]="{
+        entry,
+      }"
+    ></ng-container>
   } @else {
     <!-- folder -->
     <i
@@ -65,6 +63,13 @@
         <span class="ms-1">({{ entry.entries!.ids.length }})</span>
       }
     </span>
+
+    <ng-container
+      [ngTemplateOutlet]="actionIcons"
+      [ngTemplateOutletContext]="{
+        entry,
+      }"
+    ></ng-container>
   }
 }
 
@@ -79,4 +84,20 @@
       yellow: entry.status === TaskStatus.PROCESSING,
     }"
   ></i>
+</ng-template>
+
+<ng-template #actionIcons let-entry="entry">
+  @if (mouseOver) {
+    @if (entry.type === 'task') {
+      <i
+        class="bi bi-info-circle ms-1 pointer"
+        aria-hidden="true"
+        (mouseenter)="infoMouseEnter.emit($event)"
+        (mouseleave)="infoMouseLeave.emit($event)"
+        (mouseover)="infoMouseOver.emit()"
+      ></i>
+    }
+
+    <i class="bi bi-dash-circle ms-1 pointer" aria-hidden="true" (click)="deleteIconClick.emit($event)"></i>
+  }
 </ng-template>

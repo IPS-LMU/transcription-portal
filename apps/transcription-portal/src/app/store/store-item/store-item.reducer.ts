@@ -484,7 +484,7 @@ export const getTaskReducers = (
                 };
               },
               taskAdapter,
-              currentMode.items,
+              itemsState,
             );
           }),
           openedTool: undefined,
@@ -845,7 +845,7 @@ export const getTaskReducers = (
 
     return state;
   }),
-  on(StoreItemActions.runOperationWithTool.closeOtherTool, (state: ModeState, {mode, taskID, operationID}) => {
+  on(StoreItemActions.runOperationWithTool.closeOtherTool, (state: ModeState, { mode, taskID, operationID }) => {
     const currentMode = state.entities[mode]!;
     return modeAdapter.updateOne(
       {
@@ -1017,6 +1017,32 @@ export const getTaskReducers = (
   }),
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
     return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);
+  }),
+  on(StoreItemActions.setDirectoryOpenState.do, (state: ModeState, { opened }) => {
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.type === 'folder',
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    opened,
+                  },
+                },
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
   }),
   on(StoreItemActions.checkAllUploadOperationsForOnlineFiles.success, (state: ModeState, { mode, itemsState }) => {
     return modeAdapter.updateOne(

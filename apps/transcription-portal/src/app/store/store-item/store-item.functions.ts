@@ -39,7 +39,7 @@ export function convertIDBTaskToStoreTask(
       entries: taskAdapter.getInitialState(),
     };
     result.entries = taskAdapter.addMany(
-      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, defaultOperations)),
+      entry.entries?.map((a) => convertIDBTaskToStoreTask(a, taskAdapter, defaultOperations, entry.id)),
       result.entries,
     );
 
@@ -159,10 +159,11 @@ export function updateTaskFilesWithSameFile(
   };
 
   let someThingFound = false;
-  const tasks =
+  const addedStoreFiles =
     addedStoreFileOrDirectory.type !== 'folder' ? [addedStoreFileOrDirectory] : (addedStoreFileOrDirectory as StoreFileDirectory).entries!;
 
-  for (const storeFile of tasks) {
+  for (const storeFile of addedStoreFiles) {
+    let addedFileFound = false;
     result.state = applyFunctionOnStoreItemsWhereRecursive(
       (item) => item.type === 'task',
       result.state,
@@ -181,9 +182,9 @@ export function updateTaskFilesWithSameFile(
               const file = task.files[i];
 
               if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
-                console.log(`Replace old file ${file.attributes.originalFileName} with added file ${addedFile.attributes.originalFileName}`);
                 somethingFoundInFiles = true;
                 someThingFound = true;
+                addedFileFound = true;
                 // replace blob file
                 iState = adapter.updateOne(
                   {
@@ -257,7 +258,7 @@ export function updateTaskFilesWithSameFile(
       },
       undefined,
       0,
-      () => someThingFound,
+      () => addedFileFound
     );
   }
 
