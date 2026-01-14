@@ -286,7 +286,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
           const item = droppedfiles[i].webkitGetAsEntry();
           if (item !== null) {
             if (item.isDirectory) {
-              // TODO fix order!
               promises.push(
                 new Promise<void>((resolve, reject) => {
                   TPortalDirectoryInfo.fromFolderObject<any, TPortalFileInfoAttributes>(item)

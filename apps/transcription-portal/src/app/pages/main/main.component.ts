@@ -2,6 +2,7 @@ import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/c
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import {
   NgbCollapse,
   NgbDropdown,
@@ -43,7 +44,6 @@ import {
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-main',
@@ -350,7 +350,10 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   openAboutModal() {
     const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
-    return ref.result;
+    this.appStoreService.setShortcutsEnabled(false);
+    ref.result.then(() => {
+      this.appStoreService.setShortcutsEnabled(true);
+    });
   }
 
   async backupDatabase() {
