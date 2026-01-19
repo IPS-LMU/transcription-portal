@@ -239,9 +239,10 @@ export function updateTaskFilesWithSameFile(
                           {
                             ...task.operations![1],
                             enabled: false,
-                            rounds: changeLastRound(task.operations![1].rounds, {
+                            rounds: changeLastRound(task.operations![1].rounds, lastRound => ({
+                              ...lastRound,
                               status: TaskStatus.SKIPPED,
-                            }),
+                            })),
                           },
                           ...task.operations!.slice(2),
                         ],
@@ -258,7 +259,7 @@ export function updateTaskFilesWithSameFile(
       },
       undefined,
       0,
-      () => addedFileFound
+      () => addedFileFound,
     );
   }
 
@@ -776,12 +777,15 @@ export function getLatestResultFromPreviousEnabledOperation(task: StoreItemTask,
   return previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
 }
 
-export function changeLastRound(rounds: StoreTaskOperationProcessingRound[], partial: Partial<StoreTaskOperationProcessingRound>) {
+export function changeLastRound(
+  rounds: StoreTaskOperationProcessingRound[],
+  change: (round: StoreTaskOperationProcessingRound) => StoreTaskOperationProcessingRound,
+) {
   return [
     ...(rounds.length > 0 ? rounds.slice(0, rounds.length - 1) : []),
     {
       ...last(rounds)!,
-      ...partial,
+      ...change(last(rounds)!),
     },
   ];
 }

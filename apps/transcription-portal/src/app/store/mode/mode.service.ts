@@ -92,6 +92,10 @@ export class ModeStoreService {
     this.store.dispatch(StoreItemActions.removeStoreItems.do({ ids }));
   }
 
+  setDisabledState(disabled: boolean, ids: number[]) {
+    this.store.dispatch(StoreItemActions.setDisableStateForSelectedTasks.do({ disabled, ids }));
+  }
+
   updateProtocol() {
     this.store.dispatch(ModeActions.updateProtocolURL.do());
   }

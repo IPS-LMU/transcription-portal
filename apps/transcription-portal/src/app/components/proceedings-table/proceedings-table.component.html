@@ -606,6 +606,9 @@
     (mouseleave)="nameCol.mouseOver = false"
     (blur)="nameCol.mouseOver = false"
     tportalProceedingsRow
+    [ngClass]="{
+      'tr-disabled': entry.status === TaskStatus.DISABLED
+    }"
     #row
   >
     <td (click)="onRowSelected(entry)" colspan="2">

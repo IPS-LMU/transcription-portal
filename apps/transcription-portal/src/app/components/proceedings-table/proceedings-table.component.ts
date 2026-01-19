@@ -1,4 +1,4 @@
-import { AsyncPipe, JsonPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -80,7 +80,6 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     TranslocoPipe,
     UpperCasePipe,
     ProceedingTableNameColComponent,
-    JsonPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -400,7 +399,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
               this.shiftStart = -1;
             }
           } else {
-            // TODO check this
             this.shiftStart = indexFromTaskList;
             this.modeStoreService.selectRows([entry.id], true);
           }
@@ -434,11 +432,17 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.removeAppending();
     } else if (option === 'download') {
       this.openArchiveDownload('line', this.selectedOperation);
+    } else if (option === 'disable-tasks') {
+      this.setDisabledStateForSelectedTasks(true);
+    } else if (option === 'enable-tasks') {
+      this.setDisabledStateForSelectedTasks(false);
     }
     this.contextmenu.hidden = true;
     this.cd.markForCheck();
     this.cd.detectChanges();
   }
+
+  // TODO implement retrying operation after failed and change icon on hover
 
   removeAppending() {
     this.modeStoreService.removeAppendingForSelectedItems();
@@ -718,6 +722,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.modeStoreService.removeStoreItems((this.entries ?? []).filter((a) => a.selected).map((a) => a.id));
   }
 
+  private setDisabledStateForSelectedTasks(disabled: boolean) {
+    this.modeStoreService.setDisabledState(
+      disabled,
+      (this.entries ?? []).filter((a) => a.selected).map((a) => a.id),
+    );
+  }
+
   onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
     const selectedRows = [rowIndex];
     // this.selectedOperation = operation;
@@ -806,4 +817,5 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;
+  protected readonly TaskStatus = TaskStatus;
 }

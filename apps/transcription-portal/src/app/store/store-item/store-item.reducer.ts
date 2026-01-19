@@ -548,6 +548,52 @@ export const getTaskReducers = (
   })),
   // update statistics if task changes
   on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
+  on(StoreItemActions.setDisableStateForSelectedTasks.do, (state: ModeState, { disabled, ids }) => {
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive(ids, state.entities[state.currentMode]!.items, taskAdapter, (item, itemsState) => {
+            if (item.type === 'task') {
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    status: disabled ? TaskStatus.DISABLED : TaskStatus.PENDING,
+                    operations: item.operations?.map((operation) => {
+                      const lastRound = getLastOperationRound(operation);
+                      if (lastRound && lastRound.status === TaskStatus.PROCESSING) {
+                        return {
+                          ...operation,
+                          rounds:
+                            operation.rounds.length > 1
+                              ? operation.rounds.slice(0, -1)
+                              : [
+                                  {
+                                    status: TaskStatus.PENDING,
+                                    results: [],
+                                  },
+                                ],
+                        };
+                      }
+                      return operation;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            }
+
+            return itemsState;
+          }),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
+  }),
   on(StoreItemActions.processStoreItem.do, (state, { id, mode }) => {
     state = modeAdapter.updateOne(
       {

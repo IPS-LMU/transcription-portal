@@ -150,7 +150,7 @@ export class StoreItemActions {
     events: {
       do: props<{
         opened: boolean;
-      }>()
+      }>(),
     },
   });
 
@@ -168,6 +168,16 @@ export class StoreItemActions {
     source: 'tasks/remove store items',
     events: {
       do: props<{
+        ids: number[];
+      }>(),
+    },
+  });
+
+  static setDisableStateForSelectedTasks = createActionGroup({
+    source: 'tasks/set disabled state',
+    events: {
+      do: props<{
+        disabled: boolean;
         ids: number[];
       }>(),
     },

@@ -242,6 +242,7 @@ export class StoreItemEffects {
         StoreItemActions.processStoreItem.fail,
         StoreItemActions.reuploadFilesForOperations.success,
         StoreItemActions.reuploadFilesForOperations.fail,
+        StoreItemActions.setDisableStateForSelectedTasks.do,
         StoreItemActions.processNextOperation.do,
         StoreItemActions.processNextOperation.fail,
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
@@ -271,6 +272,7 @@ export class StoreItemEffects {
             (item) =>
               item.status === TaskStatus.PENDING ||
               (item.status !== TaskStatus.UPLOADING &&
+                item.status !== TaskStatus.DISABLED &&
                 item.status !== TaskStatus.PROCESSING &&
                 item.files?.find((a) => a.blob !== undefined) !== undefined),
             state.modes.entities[mode]!.items,
@@ -594,6 +596,19 @@ export class StoreItemEffects {
                 );
               }
             }
+          }
+        }),
+      ),
+    { dispatch: false },
+  );
+
+  setDisabledState$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(StoreItemActions.setDisableStateForSelectedTasks.do),
+        tap((action) => {
+          for (const id of action.ids) {
+            this.subscrManager.removeByIncludedTag(`task[${id}];`);
           }
         }),
       ),
@@ -1044,7 +1059,6 @@ export class StoreItemEffects {
       ofType(StoreItemActions.receiveToolData.do),
       withLatestFrom(this.store),
       exhaustMap(([action, state]: [OctraWindowMessageEventData, RootState]) => {
-        // TODO upload does not work after tool data received
         const currentMode = state.modes.entities[state.modes.currentMode];
         const openedTool = currentMode!.openedTool!;
         const toolName = openedTool?.operationName;
