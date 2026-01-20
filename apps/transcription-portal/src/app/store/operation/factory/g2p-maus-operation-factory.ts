@@ -57,10 +57,22 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     operation: G2pMausOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: G2pMausOperation }> {
     const subj = new Subject<{
       operation: G2pMausOperation;
     }>();
+
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
+
     wait(0).then(async () => {
       try {
         if (operation.serviceProviderName) {

@@ -8,7 +8,7 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { catchError, exhaustMap, filter, forkJoin, from, map, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, filter, forkJoin, from, map, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
@@ -56,6 +56,10 @@ export class StoreItemEffects {
   constructor() {
     this.subscrManager = new SubscriptionManager();
     console.log('init subscr manager');
+  }
+
+  listenForItemChanges(itemID: number, mode: TPortalModes): Observable<StoreItemTask | undefined> {
+    return this.store.select(selectItem(itemID, mode));
   }
 
   initTasks$ = createEffect(() =>
@@ -532,33 +536,51 @@ export class StoreItemEffects {
               // operation is not of type OCTRA or EMU webApp
               const opTicket = `task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
               const opSubscrManager = new SubscriptionManager();
+              const itemObservable = this.listenForItemChanges(taskID, mode);
               this.subscrManager.add(
-                defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager).subscribe({
+                defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager, itemObservable).subscribe({
                   next: (event) => {
-                    if (getLastOperationRound(event.operation)?.status === 'FINISHED') {
-                      this.subscrManager.add(
-                        timer(1000).subscribe({
-                          next: () => {
-                            this.store.dispatch(
-                              StoreItemActions.processNextOperation.success({
-                                mode,
-                                taskID,
-                                operation: event.operation,
-                              }),
-                            );
-                          },
-                        }),
-                      );
+                    const lastRound = getLastOperationRound(event.operation);
+
+                    if (lastRound) {
+                      if (lastRound.status === 'FINISHED') {
+                        this.subscrManager.add(
+                          timer(0).subscribe({
+                            next: () => {
+                              this.store.dispatch(
+                                StoreItemActions.processNextOperation.success({
+                                  mode,
+                                  taskID,
+                                  operation: event.operation,
+                                }),
+                              );
+                            },
+                          }),
+                        );
+                      } else {
+                        this.store.dispatch(
+                          StoreItemActions.changeOperation.do({
+                            mode,
+                            taskID,
+                            operation: event.operation,
+                          }),
+                        );
+                      }
+
+                      if ([TaskStatus.ERROR, TaskStatus.FINISHED].includes(lastRound.status)) {
+                        opSubscrManager.destroy();
+                      }
                     } else {
                       this.store.dispatch(
-                        StoreItemActions.changeOperation.do({
+                        StoreItemActions.processNextOperation.fail({
                           mode,
                           taskID,
-                          operation: event.operation,
+                          operation,
+                          error: 'Operation does return an empty list of rounds.',
                         }),
                       );
+                      opSubscrManager.destroy();
                     }
-                    opSubscrManager.destroy();
                   },
                   error: (err) => {
                     console.error(err);
@@ -602,17 +624,18 @@ export class StoreItemEffects {
     { dispatch: false },
   );
 
-  setDisabledState$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(StoreItemActions.setDisableStateForSelectedTasks.do),
-        tap((action) => {
-          for (const id of action.ids) {
-            this.subscrManager.removeByIncludedTag(`task[${id}];`);
-          }
-        }),
-      ),
-    { dispatch: false },
+  setDisabledState$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.setDisableStateForSelectedTasks.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]: [{ disabled: boolean; ids: number[] }, RootState]) => {
+        const mode = state.modes.currentMode;
+        return of(StoreItemActions.setDisableStateForSelectedTasks.success({
+          itemIDs: action.ids,
+          mode,
+        }));
+      }),
+    ),
   );
 
   operationProcessingSuccess$ = createEffect(() =>
@@ -1398,3 +1421,7 @@ export async function checkAllFilesIfOnline(
     itemIDs,
   };
 }
+
+export const selectItem = (itemID: number, mode: TPortalModes) => (root: RootState) => {
+  return getOneTaskItemWhereRecursive((item) => item.id === itemID, root.modes.entities[mode]!.items);
+};

@@ -41,11 +41,20 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
 
   abstract applyTaskOptions(options: StoreItemTaskOptions, operation: T): T;
 
+  /**
+   * runs a given operation using this method for a given factory.
+   * @param storeItemTask The task of the given operation
+   * @param operation The operation that should be run
+   * @param httpClient The HttpClient
+   * @param subscrManager The manager that administrates all subscriptions
+   * @param item$ The item observable makes it possible to react on item changes.
+   */
   abstract run(
     storeItemTask: StoreItemTask,
     operation: T,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>
   ): Observable<{
     operation: StoreTaskOperation;
   }>;

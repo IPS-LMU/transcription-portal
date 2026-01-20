@@ -169,16 +169,16 @@
                 </tr>
               }
             } @else if (modeStoreService.currentMode === 'summarization') {
-              @if (popover.task.operations[4].enabled) {
+              @if (popover.task.operations[3].enabled) {
                 <tr>
                   <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
-                  <td>{{ popover.task.operations[4].options.maxNumberOfWords }}</td>
+                  <td>{{ popover.task.operations[3].options.maxNumberOfWords }}</td>
                 </tr>
               }
-              @if (popover.task.operations[5].enabled) {
+              @if (popover.task.operations[4].enabled) {
                 <tr>
                   <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
-                  <td>{{ popover.task.operations[5].options.language }}</td>
+                  <td>{{ popover.task.operations[4].options.language }}</td>
                 </tr>
               }
             }

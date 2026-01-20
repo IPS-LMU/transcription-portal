@@ -180,6 +180,10 @@ export class StoreItemActions {
         disabled: boolean;
         ids: number[];
       }>(),
+      success: props<{
+        itemIDs: number[];
+        mode: TPortalModes;
+      }>()
     },
   });
 

@@ -48,6 +48,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     operation: OctraOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));
   }
@@ -171,7 +172,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     });
   }
 
-  override async convertOperationToIDBOperation(operation:OctraOperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: OctraOperation): Promise<IDBOperation> {
     return await convertStoreOperationToIDBOperation(operation);
   }
 }

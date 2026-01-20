@@ -61,8 +61,20 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     operation: SummarizationOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: SummarizationOperation }> {
     const subj = new Subject<{ operation: SummarizationOperation }>();
+
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
+
     wait(0).then(() => {
       let clonedOperation = { ...operation };
 

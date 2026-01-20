@@ -79,10 +79,8 @@ export const getTaskReducers = (
           }
           return file;
         });
-
-        if (item.status !== TaskStatus.QUEUED) {
+        if (item.status !== TaskStatus.QUEUED && item.status !== TaskStatus.DISABLED) {
           const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
-
           if (operationStatus.includes(TaskStatus.READY)) {
             item = {
               ...item,

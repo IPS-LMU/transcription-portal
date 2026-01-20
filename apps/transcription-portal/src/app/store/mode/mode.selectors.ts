@@ -4,7 +4,7 @@ import { RootState } from '../app';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { getOneTaskItemWhereRecursive } from '../store-item/store-item.functions';
 import { getAllTasks } from './mode.functions';
-import { Mode, ModeStatistics } from './mode.state';
+import { Mode, ModeStatistics, TPortalModes } from './mode.state';
 
 export const selectCurrentModeState = (state: RootState): Mode<any> | undefined => {
   return state.modes.entities[state.modes.currentMode];

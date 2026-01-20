@@ -4,14 +4,13 @@ import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription, throwError } from 'rxjs';
 import * as X2JS from 'x2js';
 import { environment } from '../../../../environments/environment';
+import { IDBOperation } from '../../../indexedDB';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
-import { IDBOperation } from '../../../indexedDB';
-import { ASROperation } from './asr-operation-factory';
 
 export type UploadOperation = StoreTaskOperation<any, UploadOperation>;
 
@@ -47,7 +46,18 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     operation: UploadOperation,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
+    subscrManager.add(
+      item$.subscribe({
+        next: (item: StoreItemTask | undefined) => {
+          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            subscrManager.destroy();
+          }
+        },
+      }),
+    );
+
     let clonedOperation = { ...operation };
 
     if (clonedOperation.serviceProviderName) {
@@ -261,7 +271,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     return round;
   };
 
-  override async convertOperationToIDBOperation(operation:UploadOperation):Promise<IDBOperation> {
+  override async convertOperationToIDBOperation(operation: UploadOperation): Promise<IDBOperation> {
     return await convertStoreOperationToIDBOperation(operation);
   }
 }

@@ -431,6 +431,7 @@ export class IDBEffects {
         IDBActions.saveStoreItems.do,
         StoreItemActions.updateURLsForFilesAfterUpload.success,
         StoreItemActions.checkAllUploadOperationsForOnlineFiles.success,
+        StoreItemActions.setDisableStateForSelectedTasks.success
       ),
       withLatestFrom(this.store),
       exhaustMap(
