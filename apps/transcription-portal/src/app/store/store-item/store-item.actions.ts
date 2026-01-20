@@ -261,6 +261,7 @@ export class StoreItemActions {
         id: number;
       }>(),
       fail: props<{
+        mode: TPortalModes;
         error: string;
       }>(),
     },
@@ -273,11 +274,7 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         status: TaskStatus;
-      }>(),
-      success: emptyProps(),
-      fail: props<{
-        error: string;
-      }>(),
+      }>()
     },
   });
 
@@ -393,6 +390,7 @@ export class StoreItemActions {
         actionAfterSuccess: Action;
       }>(),
       fail: props<{
+        mode: TPortalModes;
         error: string;
       }>(),
     },

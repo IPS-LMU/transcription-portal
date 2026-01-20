@@ -249,6 +249,8 @@ export class StoreItemEffects {
         StoreItemActions.setDisableStateForSelectedTasks.do,
         StoreItemActions.processNextOperation.do,
         StoreItemActions.processNextOperation.fail,
+        StoreItemActions.processNextOperation.success,
+        StoreItemActions.changeOperation.do,
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
       ),
       withLatestFrom(this.store),
@@ -271,6 +273,12 @@ export class StoreItemEffects {
       ofType(StoreItemActions.processNextStoreItem.do),
       withLatestFrom(this.store),
       exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+        console.log(
+          `Running: ${state.modes.entities[mode]!.statistics.running}, tasks ${getAllTasks(state.modes.entities[mode]!.items)
+            .filter((a) => a.status === TaskStatus.PROCESSING)
+            .map((a) => a.id)
+            .join(',')}`,
+        );
         if (state.modes.entities[mode]!.statistics.running < 3) {
           const nextTask = getOneTaskItemWhereRecursive(
             (item) =>
@@ -314,6 +322,7 @@ export class StoreItemEffects {
         if (!item) {
           return of(
             StoreItemActions.processStoreItem.fail({
+              mode,
               error: `Can't start task ${id}: Not found.`,
             }),
           );
@@ -341,6 +350,7 @@ export class StoreItemEffects {
           if (!item) {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
+                mode,
                 error: `Can't check next operation. task ${taskID}: Not found.`,
               }),
             );
@@ -512,6 +522,7 @@ export class StoreItemEffects {
           if (!item) {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
+                mode,
                 error: `Can't process next operation. task ${taskID}: Not found.`,
               }),
             );
@@ -521,6 +532,7 @@ export class StoreItemEffects {
           if (operationIndex === undefined || !operation) {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
+                mode,
                 error: `Can't process next operation. Operation with id ${operationID} in task ${taskID}: Not found.`,
               }),
             );
@@ -540,17 +552,21 @@ export class StoreItemEffects {
               this.subscrManager.add(
                 defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager, itemObservable).subscribe({
                   next: (event) => {
-                    const lastRound = getLastOperationRound(event.operation);
+                    const lastRoundEvent = getLastOperationRound(event.operation);
 
-                    if (lastRound) {
-                      if (lastRound.status === 'FINISHED') {
+                    if (lastRoundEvent) {
+                      if ([TaskStatus.ERROR, TaskStatus.FINISHED].includes(lastRoundEvent.status)) {
+                        opSubscrManager.destroy();
+                      }
+                      if (lastRoundEvent.status === 'FINISHED') {
                         this.subscrManager.add(
                           timer(0).subscribe({
                             next: () => {
+                              console.log(`task ${event.operation.taskID} op ${event.operation.name} FINISHED! op status ${lastRoundEvent?.status}`);
                               this.store.dispatch(
                                 StoreItemActions.processNextOperation.success({
                                   mode,
-                                  taskID,
+                                  taskID: event.operation.taskID,
                                   operation: event.operation,
                                 }),
                               );
@@ -558,6 +574,8 @@ export class StoreItemEffects {
                           }),
                         );
                       } else {
+                        console.log(`change task ${taskID} op ${event.operation.name}! op status ${lastRoundEvent?.status}`);
+
                         this.store.dispatch(
                           StoreItemActions.changeOperation.do({
                             mode,
@@ -565,10 +583,6 @@ export class StoreItemEffects {
                             operation: event.operation,
                           }),
                         );
-                      }
-
-                      if ([TaskStatus.ERROR, TaskStatus.FINISHED].includes(lastRound.status)) {
-                        opSubscrManager.destroy();
                       }
                     } else {
                       this.store.dispatch(
@@ -598,6 +612,7 @@ export class StoreItemEffects {
                 opTicket,
               );
             } else if (lastRound) {
+              console.log(`RUN TOOL FOR OP ${operation.name}, task ${operation.taskID}`);
               // is tool
               if (lastRound.status === TaskStatus.PENDING) {
                 this.store.dispatch(
@@ -606,7 +621,7 @@ export class StoreItemEffects {
                     operation: {
                       ...operation,
                       rounds: [
-                        ...operation.rounds.slice(0, operation.rounds.length - 1),
+                        ...operation.rounds.slice(-1),
                         {
                           ...lastRound,
                           status: TaskStatus.READY,
@@ -616,7 +631,11 @@ export class StoreItemEffects {
                     taskID,
                   }),
                 );
+              } else {
+                console.error(`Can't set tool round to READY because task is not pending! of op ${operation.name} and task ${taskID}`);
               }
+            } else {
+              console.error(`lastround of op ${operation.name} and task ${taskID} is undefined and it's a tool.`);
             }
           }
         }),
@@ -630,10 +649,12 @@ export class StoreItemEffects {
       withLatestFrom(this.store),
       exhaustMap(([action, state]: [{ disabled: boolean; ids: number[] }, RootState]) => {
         const mode = state.modes.currentMode;
-        return of(StoreItemActions.setDisableStateForSelectedTasks.success({
-          itemIDs: action.ids,
-          mode,
-        }));
+        return of(
+          StoreItemActions.setDisableStateForSelectedTasks.success({
+            itemIDs: action.ids,
+            mode,
+          }),
+        );
       }),
     ),
   );
@@ -997,6 +1018,7 @@ export class StoreItemEffects {
             catchError((err) =>
               of(
                 StoreItemActions.reuploadFilesForOperations.fail({
+                  mode,
                   error: typeof err === 'string' ? err : err?.message,
                 }),
               ),
@@ -1259,6 +1281,7 @@ export class StoreItemEffects {
           },
           RootState,
         ]) => {
+          console.log('RECCEIVE TOOL DATA SUCCESS');
           const currentModeState = state.modes.entities[mode]!;
           const openedTool = currentModeState.openedTool!;
           const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentModeState.items)!;

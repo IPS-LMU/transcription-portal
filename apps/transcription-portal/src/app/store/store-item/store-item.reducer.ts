@@ -363,7 +363,7 @@ export const getTaskReducers = (
     return setSelection(ids, false, state, modeAdapter, taskAdapter, deselectOthers);
   }),
   on(StoreItemActions.startProcessing.do, (state: ModeState): ModeState => {
-    return modeAdapter.updateOne(
+    state = modeAdapter.updateOne(
       {
         id: state.currentMode,
         changes: {
@@ -388,6 +388,9 @@ export const getTaskReducers = (
       },
       state,
     );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
   }),
   on(
     StoreItemActions.stopProcessing.do,
@@ -640,8 +643,9 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) =>
-    modeAdapter.updateOne(
+  on(StoreItemActions.processStoreItem.fail, StoreItemActions.reuploadFilesForOperations.fail,StoreItemActions.changeTaskStatus.do, (state: ModeState, { mode }) => updateStatistics(state, mode)),
+  on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) => {
+    state = modeAdapter.updateOne(
       {
         id: mode,
         changes: {
@@ -662,8 +666,10 @@ export const getTaskReducers = (
         },
       },
       state,
-    ),
-  ),
+    );
+    state = updateStatistics(state, mode);
+    return state;
+  }),
   on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) =>
     item
       ? modeAdapter.updateOne(
@@ -694,7 +700,7 @@ export const getTaskReducers = (
       : state,
   ),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
-    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items);
 
     if (!taskItem) {
       return state;
@@ -757,6 +763,7 @@ export const getTaskReducers = (
               });
             }
 
+            console.log(`SET ${item.id} to ${taskStatus} SUCCESS`);
             return taskAdapter.updateOne(
               {
                 id: item.id,
@@ -886,6 +893,8 @@ export const getTaskReducers = (
         );
       }
     }
+
+    state = updateStatistics(state, mode);
 
     return state;
   }),

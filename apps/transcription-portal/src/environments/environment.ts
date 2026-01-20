@@ -7,10 +7,10 @@ export const environment = {
   production: false,
   development: true,
   debugging: {
-    enabled: false,
+    enabled: true,
     logging: {
       console: true,
-      actions: false,
+      actions: true,
       routes: false,
     },
   },

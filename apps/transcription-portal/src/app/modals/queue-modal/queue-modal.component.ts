@@ -55,7 +55,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
   get selectedSummarizationNumberOfWords(): number | undefined {
-    return this.defaultUserSettings?.selectedSummarizationNumberOfWords || isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
+    return !this.defaultUserSettings?.selectedSummarizationNumberOfWords || isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
       ? undefined
       : Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords);
   }

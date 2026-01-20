@@ -92,7 +92,7 @@ bootstrapApplication(AppComponent, {
     }),
     provideEffects(AppEffects, ModeEffects, ExternalInformationEffects, IDBEffects, StoreItemEffects, PreprocessingEffects),
     provideStoreDevtools({
-      maxAge: 100, // Retains last 25 states
+      maxAge: 300,
       logOnly: !isDevMode(), // Restrict extension to log-only mode
       autoPause: true, // Pauses recording actions and state changes when the extension window is not open
       trace: false, //  If set to true, will include stack trace for every dispatched action, so you can see it in trace tab jumping directly to that part of code

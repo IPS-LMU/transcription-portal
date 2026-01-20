@@ -74,6 +74,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
           if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+            console.log(`GOT STOP ${item?.id}`);
             subscrManager.destroy();
           }
         },
@@ -81,7 +82,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     );
 
     subscrManager.add(
-      from(wait(0)).subscribe({
+      from(wait(1)).subscribe({
         next: () => {
           const audioFile: StoreAudioFile | undefined = (task.files?.find((a) => a.type.includes('audio')) ??
             task.files.find((a) => a.type.includes('audio'))) as StoreAudioFile | undefined;

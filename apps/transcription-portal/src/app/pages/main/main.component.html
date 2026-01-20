@@ -350,7 +350,7 @@
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
     <div class="row proceedings-header d-flex" style="padding-top: 0">
-      <div class="col-4" style="text-align: left; padding-top: 5px">
+      <div class="col-auto" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
           <i class="bi bi-plus"></i> 1.<span class="d-none d-lg-inline d-xl-inline"> {{ 'buttons.add files' | transloco | uppercase }}</span>
         </button>

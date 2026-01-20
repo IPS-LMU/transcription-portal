@@ -136,6 +136,7 @@ export class IDBEffects {
           asrProvider: defaultUserSettings.selectedASRProvider?.provider,
           mausLanguage: defaultUserSettings.selectedMausLanguage,
           summarizationProvider: defaultUserSettings.selectedSummarizationProvider?.provider,
+          summarizationWordLimit: defaultUserSettings.selectedSummarizationNumberOfWords,
           diarization: defaultUserSettings.isDiarizationEnabled,
           diarizationSpeakers: defaultUserSettings.diarizationSpeakers,
           translationLanguage: defaultUserSettings.selectedTranslationLanguage,
