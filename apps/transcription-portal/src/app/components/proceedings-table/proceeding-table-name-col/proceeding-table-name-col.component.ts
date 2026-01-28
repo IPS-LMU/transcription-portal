@@ -32,18 +32,18 @@ export class ProceedingTableNameColComponent extends SubscriberComponent impleme
     super();
   }
 
-  @HostListener('mouseover', ['$event'])
-  protected onMouseOver($event: MouseEvent) {
+  @HostListener('mouseover')
+  protected onMouseOver() {
     this.mouseOver = true;
   }
 
-  @HostListener('mouseleave', ['$event'])
-  protected onMouseLeave($event: MouseEvent) {
+  @HostListener('mouseleave')
+  protected onMouseLeave() {
     this.mouseOver = false;
   }
 
-  @HostListener('blur', ['$event'])
-  protected onBlur($event: MouseEvent) {
+  @HostListener('blur')
+  protected onBlur() {
     this.mouseOver = false;
   }
 
