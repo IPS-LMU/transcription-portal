@@ -81,6 +81,7 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     UpperCasePipe,
     ProceedingTableNameColComponent,
   ],
+  providers: [ShortcutService],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
