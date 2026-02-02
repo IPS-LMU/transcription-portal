@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription } from 'rxjs';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';

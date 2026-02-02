@@ -337,7 +337,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
       file: File;
     }[],
   ) {
-    const zip = new JSZip();
+    const zip = JSZip;
 
     for (const entry of entries) {
       zip.file(entry.path, entry.file);

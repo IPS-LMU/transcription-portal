@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angula
 import { SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription, throwError } from 'rxjs';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { environment } from '../../../../environments/environment';
 import { IDBOperation } from '../../../indexedDB';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';

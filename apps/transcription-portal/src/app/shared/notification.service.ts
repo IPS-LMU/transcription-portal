@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import * as Notify from 'notifyjs';
+import Notify from 'notifyjs';
 import { Subject } from 'rxjs';
 import { AlertService } from './alert.service';
 

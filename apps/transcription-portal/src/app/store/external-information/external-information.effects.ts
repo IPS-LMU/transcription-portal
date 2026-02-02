@@ -3,13 +3,12 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { isNumber } from '@octra/utilities';
-import * as jQuery from 'jquery';
+import jQuery from 'jquery';
 import { catchError, exhaustMap, forkJoin, map, Observable, of, retry, tap, withLatestFrom } from 'rxjs';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
-import { RootState } from '../app';
-import { AppActions } from '../app/app.actions';
+import { AppActions, RootState } from '../app';
 import { ASRInfo, ExternalInformationActions } from './external-information.actions';
 
 @Injectable()
@@ -343,7 +342,7 @@ export class ExternalInformationEffects {
         headers: {
           ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
         },
-        referrer: "",
+        referrer: '',
         credentials: 'include',
       })
       .pipe(

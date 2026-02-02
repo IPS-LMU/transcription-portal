@@ -5,7 +5,7 @@ export interface TPortalFileInfoAttributes {
 }
 
 export class TPortalFileInfo extends FileInfo<TPortalFileInfoAttributes> {
-  protected override _attributes!: TPortalFileInfoAttributes;
+  declare protected _attributes: TPortalFileInfoAttributes;
 
   override get attributes(): TPortalFileInfoAttributes {
     return this._attributes;
@@ -40,7 +40,7 @@ export class TPortalFileInfo extends FileInfo<TPortalFileInfoAttributes> {
 }
 
 export class TPortalDirectoryInfo extends DirectoryInfo<TPortalFileInfo | TPortalAudioInfo, TPortalFileInfoAttributes, TPortalFileInfoAttributes> {
-  protected override _attributes!: TPortalFileInfoAttributes;
+  declare protected _attributes: TPortalFileInfoAttributes;
 
   override get attributes(): TPortalFileInfoAttributes {
     return this._attributes;
@@ -62,7 +62,7 @@ export class TPortalDirectoryInfo extends DirectoryInfo<TPortalFileInfo | TPorta
 }
 
 export class TPortalAudioInfo extends AudioInfo<TPortalFileInfoAttributes> {
-  protected override _attributes!: TPortalFileInfoAttributes;
+  declare protected _attributes: TPortalFileInfoAttributes;
 
   override get attributes(): TPortalFileInfoAttributes {
     return this._attributes;

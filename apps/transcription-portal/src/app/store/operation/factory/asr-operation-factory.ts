@@ -5,7 +5,7 @@ import { extractFileNameFromURL, joinURL, stringifyQueryParams, SubscriptionMana
 import { downloadFile, FileInfo } from '@octra/web-media';
 import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
-import * as X2JS from 'x2js';
+import X2JS from 'x2js';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
