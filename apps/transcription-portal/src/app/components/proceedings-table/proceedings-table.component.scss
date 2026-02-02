@@ -25,6 +25,16 @@
 :host {
   display: flex;
   position: relative;
+  animation: proceedings-animation 0.5s ease-out;
+}
+
+@keyframes proceedings-animation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .bi.bi-file-text {
@@ -283,7 +293,7 @@ table thead tr th:hover {
   font-size: 13px;
 }
 
-tr.task-stopped{
+tr.task-stopped {
   opacity: 0.5;
 }
 
