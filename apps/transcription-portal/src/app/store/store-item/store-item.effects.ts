@@ -8,7 +8,7 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
-import { catchError, exhaustMap, filter, forkJoin, from, map, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { AlertService } from '../../shared/alert.service';
@@ -78,25 +78,32 @@ export class StoreItemEffects {
     ),
   );
 
-  checkFilesOnlineAfterIDBLoaded$ = createEffect(
-    () =>
-      this.actions$.pipe(
-        ofType(IDBActions.initIDB.success),
-        withLatestFrom(this.store),
-        tap(([, state]: [any, RootState]) => {
-          this.store.dispatch(
-            StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
-              mode: 'annotation',
-            }),
-          );
-          this.store.dispatch(
-            StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
-              mode: 'summarization',
-            }),
-          );
-        }),
+  checkFilesOnlineAfterIDBLoadedForAnnotation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.initIDB.success),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) =>
+        of(
+          StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
+            mode: 'annotation',
+          }),
+        ),
       ),
-    { dispatch: false },
+    ),
+  );
+
+  checkFilesOnlineAfterIDBLoadedForSummarization$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(IDBActions.initIDB.success),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) =>
+        of(
+          StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
+            mode: 'summarization',
+          }),
+        ),
+      ),
+    ),
   );
 
   prepareTasks$ = createEffect(() =>
@@ -803,7 +810,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.checkAllUploadOperationsForOnlineFiles.do),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+      mergeMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
         const currentMode = state.modes.entities[mode]!;
         return from(checkAllFilesIfOnline(currentMode.items, taskAdapter, this.httpClient, [])).pipe(
           exhaustMap(({ itemsState, itemIDs }) =>

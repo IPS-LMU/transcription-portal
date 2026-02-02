@@ -213,6 +213,10 @@ export const modeReducer = createReducer(
         {
           id: state.currentMode,
           changes: {
+            gui: {
+              ...state.entities[state.currentMode]!.gui,
+              toolOpenStatus: state.entities[state.currentMode]!.gui.toolOpenStatus === 'closed' ? 'init' : state.entities[state.currentMode]!.gui.toolOpenStatus,
+            },
           },
         },
         {

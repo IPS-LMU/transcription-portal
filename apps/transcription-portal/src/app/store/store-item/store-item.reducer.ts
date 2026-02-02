@@ -786,10 +786,6 @@ export const getTaskReducers = (
             );
           }),
           openedTool: undefined,
-          gui: {
-            ...state.entities[state.currentMode]!.gui,
-            toolOpenStatus: 'closed',
-          },
         },
       },
       state,
@@ -1076,6 +1072,9 @@ export const getTaskReducers = (
                 taskAdapter,
                 state.entities![state.currentMode]!.items,
               ),
+              gui: {
+                toolOpenStatus: 'closed',
+              },
             },
           },
           state,
