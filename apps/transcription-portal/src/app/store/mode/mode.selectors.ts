@@ -63,4 +63,8 @@ export const selectOpenedToolOperation = createSelector(selectCurrentModeState, 
   return undefined;
 });
 
+export const selectGuiState = createSelector(selectCurrentModeState, (mode) => {
+  return mode?.gui;
+});
+
 export const selectOverallStateLabel = createSelector(selectCurrentModeState, (mode) => mode?.overallStateLabel);

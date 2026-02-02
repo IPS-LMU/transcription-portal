@@ -27,7 +27,6 @@ import { StatisticsModalComponent } from '../../modals/statistics-modal/statisti
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
 import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { ANIMATIONS } from '../../shared/Animations';
 import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
@@ -50,7 +49,6 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.scss'],
   providers: [],
-  animations: [ANIMATIONS],
   imports: [
     AlertComponent,
     NgClass,
@@ -83,10 +81,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected modeStoreService = inject(ModeStoreService);
   protected preprocessingStoreService = inject(PreprocessingStoreService);
 
-  public sidebarstate = 'hidden';
   isCollapsed = false;
   public test = 'inactive';
-  public sidebarExpand = 'opened';
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
@@ -111,37 +107,12 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.subscribe(this.modeStoreService.openedToolOperation$, {
       next: (toolOperation) => {
         this.toolSelectedOperation = toolOperation;
-        this.showtool = !!toolOperation;
       },
     });
   }
 
-  private _showtool = false;
-
-  get showtool(): boolean {
-    return this._showtool;
-  }
-
-  set showtool(value: boolean) {
-    this.sidebarExpand = value ? 'closed' : 'opened';
-    this._showtool = value;
-  }
-
   public get isdevelopment(): boolean {
     return environment.development;
-  }
-
-  public get animationObject(): any {
-    const width = 100 - this.newProceedingsWidth;
-    return {
-      value: this.sidebarExpand,
-      params: { toolWidth: width, procWidth: this.newProceedingsWidth },
-    };
-  }
-
-  public get animationObject2(): any {
-    const width = this.newProceedingsWidth;
-    return { value: this.sidebarExpand, params: { width } };
   }
 
   public get AppInfo() {

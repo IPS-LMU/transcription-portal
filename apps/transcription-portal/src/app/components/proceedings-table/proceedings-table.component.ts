@@ -24,7 +24,6 @@ import { DownloadModalComponent } from '../../modals/download-modal/download-mod
 import { FilePreviewModalComponent } from '../../modals/file-preview-modal/file-preview-modal.component';
 import { LuxonFormatPipe } from '../../obj/luxon-format.pipe';
 import { TPortalDirectoryInfo, TPortalFileInfo, TPortalFileInfoAttributes } from '../../obj/TPortalFileInfoAttributes';
-import { ANIMATIONS } from '../../shared/Animations';
 import { AppSettings } from '../../shared/app.settings';
 import { ShortcutService } from '../../shared/shortcut.service';
 import { TimePipe } from '../../shared/time.pipe';
@@ -59,7 +58,6 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
   selector: 'tportal-proceedings',
   templateUrl: './proceedings-table.component.html',
   styleUrls: ['./proceedings-table.component.scss'],
-  animations: ANIMATIONS,
   imports: [
     PopoverComponent,
     ResultsTableComponent,

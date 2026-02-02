@@ -78,18 +78,25 @@ export class StoreItemEffects {
     ),
   );
 
-  checkFilesOnlineAfterIDBLoaded$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(IDBActions.initIDB.success),
-      withLatestFrom(this.store),
-      exhaustMap(([, state]: [any, RootState]) =>
-        of(
-          StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
-            mode: state.modes.currentMode,
-          }),
-        ),
+  checkFilesOnlineAfterIDBLoaded$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(IDBActions.initIDB.success),
+        withLatestFrom(this.store),
+        tap(([, state]: [any, RootState]) => {
+          this.store.dispatch(
+            StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
+              mode: 'annotation',
+            }),
+          );
+          this.store.dispatch(
+            StoreItemActions.checkAllUploadOperationsForOnlineFiles.do({
+              mode: 'summarization',
+            }),
+          );
+        }),
       ),
-    ),
+    { dispatch: false },
   );
 
   prepareTasks$ = createEffect(() =>

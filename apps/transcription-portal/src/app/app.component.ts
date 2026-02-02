@@ -2,7 +2,6 @@ import { Component, inject, OnDestroy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { VersionCheckerService, VersionNotificationComponent } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { ANIMATIONS } from './shared/Animations';
 import { NotificationService } from './shared/notification.service';
 import { AppStoreService, ModeStoreService } from './store';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -11,7 +10,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'tportal-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  animations: [ANIMATIONS],
   imports: [RouterOutlet, VersionNotificationComponent, TranslocoPipe],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {

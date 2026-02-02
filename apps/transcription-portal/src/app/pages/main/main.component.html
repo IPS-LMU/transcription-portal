@@ -5,7 +5,7 @@
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
           <a class="nav-link" href="#" [ngbPopover]="versionPopover" popoverClass="version-popover"
-            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" /> TranscriptionPortal</span>
+            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" /> TranscriptionPortal {{newProceedingsWidth}}</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -266,7 +266,8 @@
   <ul
     ngbNav
     #nav="ngbNav"
-    [(activeId)]="activeMode"
+    [activeId]="modeStoreService.currentMode"
+    (activeIdChange)="changeMode($event)"
     class="nav-tabs"
     id="mode-tabs"
     [ngClass]="{
@@ -274,10 +275,9 @@
       'no-feedback': (appStoreService.feedbackEnabled$ | async) === false,
     }"
   >
-    <li [ngbNavItem]="1">
+    <li [ngbNavItem]="'annotation'">
       <button
         ngbNavLink
-        (mousedown)="changeMode('annotation')"
         [triggers]="'mouseenter:mouseleave'"
         [ngbTooltip]="'modes.annotation.description' | transloco"
         [openDelay]="1000"
@@ -296,22 +296,21 @@
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
-            [isClosed]="sidebarExpand === 'closed'"
+            [isClosed]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
             [entries]="modeStoreService.currentModeEntries$ | async"
             currentMode="annotation"
             [operations]="modeStoreService.defaultModeOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
-            [shortstyle]="sidebarstate === 'opened'"
+            [shortstyle]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
             style="height: 100%"
           >
           </tportal-proceedings>
         }
       </ng-template>
     </li>
-    <li [ngbNavItem]="2">
+    <li [ngbNavItem]="'summarization'">
       <button
         ngbNavLink
-        (mousedown)="changeMode('summarization')"
         [openDelay]="1000"
         [triggers]="'mouseenter:mouseleave'"
         #ngbToolTip2="ngbTooltip"
@@ -330,12 +329,12 @@
             (feedbackRequested)="onFeedbackRequest($event)"
             (operationclick)="onOperationClick($event)"
             (operationhover)="onOperationHover($event)"
-            [isClosed]="sidebarExpand === 'closed'"
+            [isClosed]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
             [entries]="modeStoreService.currentModeEntries$ | async"
             currentMode="summarization"
             [operations]="modeStoreService.defaultModeOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
-            [shortstyle]="sidebarstate === 'opened'"
+            [shortstyle]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
             style="height: 100%"
           >
           </tportal-proceedings>
@@ -417,48 +416,48 @@
     </div>
   }
   <!-- WORKING AREA -->
-  <div id="main" style="position: relative" class="d-flex">
+  <div id="main" style="position: relative" class="d-flex"
+       [ngStyle]="{
+        '--proceedings-width': newProceedingsWidth + '%',
+        '--tool-width': newToolWidth + '%'
+      }">
     <div
+      id="main-inner"
       (blur)="onBlur($event)"
       (mousedown)="dragBorder($event, 'left')"
       (mouseenter)="dragBorder($event, 'left')"
       (mouseleave)="dragBorder($event, 'left')"
       (mousemove)="dragBorder($event, 'left')"
       (mouseup)="dragBorder($event, 'left')"
-      [@expandLeft]="animationObject2"
       [ngClass]="{
         dragborder: dragborder === 'active' || dragborder === 'dragging',
+        'proceedings-expand-left-expanded': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed',
+        'proceedings-expand-left-collapsed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened'
       }"
       [ngStyle]="{
-        width: newProceedingsWidth + '%',
-        'border-right': sidebarExpand === 'closed' ? '2px solid lightgray' : 'none',
+        'border-right': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened' ? '2px solid lightgray' : 'none',
       }"
-      style="float: right"
     >
       <div [ngbNavOutlet]="nav" class="d-flex flex-column flex-auto w-100 h-100 position-relative"></div>
     </div>
     <div
+      id="sidebar-drag-border"
       (mousedown)="dragBorder($event, 'right')"
       (mouseenter)="dragBorder($event, 'right')"
       (mouseleave)="dragBorder($event, 'right')"
       (mousemove)="dragBorder($event, 'right')"
       (mouseup)="dragBorder($event, 'right')"
-      [@comeIn]="animationObject"
-      [hidden]="dragborder === 'inactive'"
       [ngClass]="{
         dragborder: dragborder === 'active' || dragborder === 'dragging',
-      }"
-      [ngStyle]="{
-        'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%',
+        'd-none': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  !== 'opened',
       }"
       style="position: absolute; height: 100%; z-index: 800"
     ></div>
     <div
-      [@comeIn]="animationObject"
-      [ngStyle]="{
-        'margin-left': newProceedingsWidth + '%',
-        width: newToolWidth + '%',
+      id="tool-container"
+      [ngClass]="{
+        'proceedings-tool-opened': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened',
+        'proceedings-tool-closed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed'
       }"
       style="position: absolute; height: 100%; border-top: 1px solid gray"
     >

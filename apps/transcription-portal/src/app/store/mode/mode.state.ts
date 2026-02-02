@@ -3,7 +3,6 @@ import { ServiceProvider } from '@octra/ngx-components';
 import { OperationFactory } from '../operation';
 import { PreprocessingState } from '../preprocessing/preprocessing.state';
 import { StoreAudioFile, StoreItemsState, TaskStatus } from '../store-item';
-import { SafeUrl } from '@angular/platform-browser';
 
 export type TPortalModes = 'annotation' | 'summarization';
 
@@ -54,6 +53,9 @@ export interface Mode<O extends object> {
     fileName: string;
   };
   statistics: ModeStatistics;
+  gui: {
+    toolOpenStatus: 'init' | 'opened' | 'closed';
+  };
 }
 
 export interface ModeState extends EntityState<Mode<any>> {

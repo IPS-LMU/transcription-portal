@@ -17,6 +17,7 @@ import {
   selectCurrentModeStatistics,
   selectDefaultOperations,
   selectDefaultOptions,
+  selectGuiState,
   selectOpenedToolOperation,
   selectOverallState,
   selectOverallStateLabel,
@@ -39,6 +40,7 @@ export class ModeStoreService {
   currentMode?: TPortalModes;
   overallState$ = this.store.select(selectOverallState);
   openedToolOperation$ = this.store.select(selectOpenedToolOperation);
+  currentModeGuiState$ = this.store.select(selectGuiState);
   currentOverallStateLabel$ = this.store.select(selectOverallStateLabel);
   currentModeProtocol$ = this.store.select(selectCurrentModeProtocol);
 

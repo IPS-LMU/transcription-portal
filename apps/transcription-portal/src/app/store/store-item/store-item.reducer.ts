@@ -489,6 +489,10 @@ export const getTaskReducers = (
             );
           }),
           openedTool: undefined,
+          gui: {
+            ...currentMode.gui,
+            toolOpenStatus: 'init',
+          },
         },
       },
       state,
@@ -643,7 +647,12 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processStoreItem.fail, StoreItemActions.reuploadFilesForOperations.fail,StoreItemActions.changeTaskStatus.do, (state: ModeState, { mode }) => updateStatistics(state, mode)),
+  on(
+    StoreItemActions.processStoreItem.fail,
+    StoreItemActions.reuploadFilesForOperations.fail,
+    StoreItemActions.changeTaskStatus.do,
+    (state: ModeState, { mode }) => updateStatistics(state, mode),
+  ),
   on(StoreItemActions.processNextOperation.do, (state: ModeState, { taskID, mode }) => {
     state = modeAdapter.updateOne(
       {
@@ -777,6 +786,10 @@ export const getTaskReducers = (
             );
           }),
           openedTool: undefined,
+          gui: {
+            ...state.entities[state.currentMode]!.gui,
+            toolOpenStatus: 'closed',
+          },
         },
       },
       state,
@@ -993,6 +1006,10 @@ export const getTaskReducers = (
               operationName,
               audioFile,
               language,
+            },
+            gui: {
+              ...state.entities[mode]!.gui,
+              toolOpenStatus: 'opened',
             },
           },
         },

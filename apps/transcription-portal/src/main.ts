@@ -2,17 +2,16 @@
 
 import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideTransloco } from '@jsverse/transloco';
 import { NgbActiveModal, NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { VersionCheckerService } from '@octra/ngx-components';
-import { provideTransloco } from '@jsverse/transloco';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -78,8 +77,7 @@ bootstrapApplication(AppComponent, {
     NgbActiveModal,
     NgbTooltipConfig,
     VersionCheckerService,
-    provideHttpClient(withInterceptorsFromDi()),
-    provideAnimations(),
+    provideHttpClient(withInterceptorsFromDi(), withFetch()),
     provideCharts(withDefaultRegisterables()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
