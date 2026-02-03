@@ -1,21 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { UpperCasePipe } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { SafeResourceUrl } from '@angular/platform-browser';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { TranslocoPipe } from '@jsverse/transloco';
-import { UpperCasePipe } from '@angular/common';
 
 @Component({
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
   imports: [NgxCodeJarComponent, TranslocoPipe, UpperCasePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {
   protected activeModal = inject(NgbActiveModal);
+  protected cd = inject(ChangeDetectorRef);
 
   public selectedFile?: TPortalFileInfo;
   public fileContent = '';
@@ -26,6 +28,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
     fullscreen: 'md',
     scrollable: true,
     backdrop: true,
+    modalDialogClass: 'modal-full-height',
   };
 
   get fileName(): string {
@@ -48,6 +51,7 @@ export class FilePreviewModalComponent extends SubscriberComponent implements On
       TPortalFileInfo.getFileContent(this.selectedFile.file)
         .then((text) => {
           this.fileContent = text;
+          this.cd.markForCheck();
         })
         .catch((error: any) => {
           console.error(error);

@@ -491,7 +491,7 @@ export const getTaskReducers = (
           openedTool: undefined,
           gui: {
             ...currentMode.gui,
-            toolOpenStatus: 'init',
+            toolOpenStatus: 'closed',
           },
         },
       },
@@ -1048,8 +1048,8 @@ export const getTaskReducers = (
       state,
     ),
   ),
-  on(StoreItemActions.receiveToolData.success, (state: ModeState, { file }) => {
-    const currentMode = state.entities[state.currentMode]!;
+  on(StoreItemActions.receiveToolData.success, (state: ModeState, { mode }) => {
+    const currentMode = state.entities[mode]!;
     const openedTool = currentMode.openedTool!;
     const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentMode.items)!;
     const operationIndex = task.operations.findIndex((a) => a.id === openedTool.operationID);
@@ -1063,18 +1063,15 @@ export const getTaskReducers = (
       ) {
         state = modeAdapter.updateOne(
           {
-            id: state.currentMode,
+            id: mode,
             changes: {
               items: changeTaskOperation(
                 task.id,
                 operation.id,
                 (op, itemsState) => addProcessingRound(op),
                 taskAdapter,
-                state.entities![state.currentMode]!.items,
+                state.entities![mode]!.items,
               ),
-              gui: {
-                toolOpenStatus: 'closed',
-              },
             },
           },
           state,
@@ -1082,7 +1079,15 @@ export const getTaskReducers = (
       }
     }
 
-    return state;
+    return modeAdapter.updateOne({
+      id: mode,
+      changes: {
+        gui: {
+          ...currentMode.gui,
+          toolOpenStatus: 'closed',
+        },
+      },
+    }, state);
   }),
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
     return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);

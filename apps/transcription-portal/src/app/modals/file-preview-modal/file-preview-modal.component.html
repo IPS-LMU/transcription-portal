@@ -1,20 +1,29 @@
 <div class="modal-header">
-  <h4 class="modal-title" id="modal-basic-title">{{ 'modals.preview.title' | transloco: { fileName: fileName } }}</h4>
-  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
+  <div class="row g-1 w-100 align-items-center">
+    <div class="col">
+      <h4 class="modal-title d-block" id="modal-basic-title">{{ 'modals.preview.title' | transloco: { fileName: fileName } }}</h4>
+    </div>
+    <div class="col-auto">
+      <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_blank"> {{ 'g.download' | transloco | uppercase }} </a>
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')" autofocus></button>
+    </div>
+  </div>
 </div>
 <div class="modal-body">
   @if (!selectedFile?.isMediaFile()) {
-    @if (selectedFile?.type === 'text/plain') {
+    @if (selectedFile?.extension === '.txt' || selectedFile?.extension === '.srt' || selectedFile?.extension === '.vtt') {
       <textarea readonly class="w-100 h-100" [innerHTML]="fileContent"></textarea>
     } @else {
       <ngx-codejar [code]="fileContent" [highlightMethod]="highlightMethod" [readonly]="true" [showLineNumbers]="true"></ngx-codejar>
     }
   } @else if (selectedFile) {
-    <audio controls class="w-100">
+    <audio controls>
       <source [src]="selectedFile.url" />
     </audio>
   }
 </div>
 <div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
-  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_self"> {{ 'g.download' | transloco | uppercase }} </a>
+  <a [download]="fileName" [href]="downloadURL" class="btn btn-outline-primary" target="_blank"> {{ 'g.download' | transloco | uppercase }} </a>
 </div>
