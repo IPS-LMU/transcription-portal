@@ -128,10 +128,6 @@ h1 {
   color: gray;
 }
 
-.dragborder {
-  cursor: col-resize;
-}
-
 .dropdown-toggle::after {
   display: none;
 }
@@ -252,10 +248,13 @@ nav li {
 }
 
 #sidebar-drag-border {
-  width: var(--proceedings-width);
-  display: none;
+  margin-left: calc(var(--proceedings-width) - 5px);
+  width: 10px;
+  cursor: col-resize;
 }
 
 #tool-container {
-  display: none;
+  flex-direction: column;
+  flex: auto;
+  height: 100%;
 }

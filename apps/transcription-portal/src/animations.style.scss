@@ -100,45 +100,17 @@
   }
 }
 
-.proceedings-tool-closed {
-  display: none;
-  margin-left: 100%;
-  width: 0;
-  animation: proceedings-tool-closed 500ms;
-  animation-timing-function: ease-out;
-}
-
-@keyframes proceedings-tool-closed {
-  from {
-    margin-left: var(--proceedings-width);
-    width: var(--tool-width);
-    display: inherit !important;
-  }
-  to {
-    margin-left: 100%;
-    width: 0;
-    display: none !important;
-  }
-}
-
 .proceedings-tool-opened {
-  margin-left: var(--proceedings-width);
-  width: var(--tool-width);
-  display: inherit !important;
+  display: flex !important;
   animation: proceedings-tool-opened 500ms;
-  animation-timing-function: ease-in;
 }
 
 @keyframes proceedings-tool-opened {
   from {
-    margin-left: 100%;
-    width: 0;
     display: none !important;
   }
 
   to {
-    margin-left: var(--proceedings-width);
-    width: var(--tool-width);
-    display: inherit !important;
+    display: flex !important;
   }
 }

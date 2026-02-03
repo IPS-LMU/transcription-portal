@@ -417,7 +417,7 @@
     </div>
   }
   <!-- WORKING AREA -->
-  <div id="main" style="position: relative" class="d-flex"
+  <div id="main" class="d-flex flex-row flex-auto position-relative"
        [ngStyle]="{
         '--proceedings-width': newProceedingsWidth + '%',
         '--tool-width': newToolWidth + '%'
@@ -425,13 +425,7 @@
     <div
       id="main-inner"
       (blur)="onBlur($event)"
-      (mousedown)="dragBorder($event, 'left')"
-      (mouseenter)="dragBorder($event, 'left')"
-      (mouseleave)="dragBorder($event, 'left')"
-      (mousemove)="dragBorder($event, 'left')"
-      (mouseup)="dragBorder($event, 'left')"
       [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging',
         'proceedings-expand-left-expanded': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed',
         'proceedings-expand-left-collapsed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened'
       }"
@@ -449,10 +443,9 @@
       (mousemove)="dragBorder($event, 'right')"
       (mouseup)="dragBorder($event, 'right')"
       [ngClass]="{
-        dragborder: dragborder === 'active' || dragborder === 'dragging',
         'd-none': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  !== 'opened',
       }"
-      style="position: absolute; height: 100%; z-index: 800"
+      style="position: absolute; height: 100%; z-index: 800;"
     ></div>
     <div
       id="tool-container"
@@ -460,7 +453,6 @@
         'proceedings-tool-opened': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened',
         'proceedings-tool-closed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed'
       }"
-      style="position: absolute; height: 100%; border-top: 1px solid gray"
     >
       <tportal-tool-loader
         #toolLoader
@@ -469,6 +461,5 @@
         style="height: 100%"
       ></tportal-tool-loader>
     </div>
-    <div class="clearfix"></div>
   </div>
 </div>

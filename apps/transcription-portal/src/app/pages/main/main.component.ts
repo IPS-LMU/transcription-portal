@@ -1,6 +1,6 @@
 import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
@@ -80,6 +80,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected appStoreService = inject(AppStoreService);
   protected modeStoreService = inject(ModeStoreService);
   protected preprocessingStoreService = inject(PreprocessingStoreService);
+  protected renderer = inject(Renderer2);
 
   isCollapsed = false;
   public test = 'inactive';
@@ -216,24 +217,28 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   public dragBorder($event: any, part: string) {
-    if ($event.type === 'mousemove' || $event.type === 'mouseenter' || $event.type === 'mouseleave') {
-      if (this.dragborder !== 'dragging') {
-        if (part === 'left' && $event.pageX >= $event.target.clientWidth - 3 && $event.pageX <= $event.target.clientWidth + 3) {
-          this.dragborder = 'active';
-        } else if (part === 'right' && $event.pageX <= 10) {
-          this.dragborder = 'active';
-        } else {
-          this.dragborder = 'inactive';
-        }
-      } else if ($event.type === 'mousemove') {
-        // dragging
-        const procWidth = Math.floor((($event.pageX + 10) / window.innerWidth) * 100);
-        const toolWidth = 100 - procWidth;
+    console.log(
+      `drag ${this.dragborder} ${$event.type}, part: ${part}, ${this.dragborder}, pageX: ${$event.pageX}, pageY: ${$event.pageY}, clientWIdth: ${$event.target.clientWidth}`,
+    );
 
-        this.newToolWidth = toolWidth;
-        this.newProceedingsWidth = procWidth;
-        this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
-      }
+    if ($event.type === 'mouseleave') {
+      this.dragborder = 'inactive';
+      this.renderer.setStyle($event.target, "width", "10px");
+      this.renderer.setStyle($event.target, "margin-left", "");
+    } else if(this.dragborder !== 'dragging') {
+      this.renderer.setStyle($event.target, 'width', '120px');
+      this.renderer.setStyle($event.target, 'margin-left', 'calc(var(--proceedings-width) - 60px)');
+      this.dragborder = 'active';
+    }
+
+    if (this.dragborder === 'dragging' && $event.type === 'mousemove') {
+      // dragging
+      const procWidth = Math.floor((($event.pageX + 10) / window.innerWidth) * 100);
+      const toolWidth = 100 - procWidth;
+
+      this.newToolWidth = toolWidth;
+      this.newProceedingsWidth = procWidth;
+      this.appStoreService.changeSidebarWidth(this.newProceedingsWidth);
     }
 
     if (this.dragborder === 'dragging' && $event.type === 'mouseleave') {
@@ -248,6 +253,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         break;
       case 'mouseup':
         this.dragborder = 'inactive';
+        console.log(`stop dragging ${$event.type}, part: ${part}`);
         break;
     }
   }

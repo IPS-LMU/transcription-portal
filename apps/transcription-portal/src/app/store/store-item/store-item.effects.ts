@@ -635,7 +635,7 @@ export class StoreItemEffects {
                     operation: {
                       ...operation,
                       rounds: [
-                        ...operation.rounds.slice(-1),
+                        ...operation.rounds.slice(0, -1),
                         {
                           ...lastRound,
                           status: TaskStatus.READY,
