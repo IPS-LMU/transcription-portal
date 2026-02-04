@@ -69,7 +69,8 @@ export class ShortcutService {
     }
 
     this._pressedKeys = new Set<string>();
-    hotkeys('*', { keyup: true }, (event, hotkeyEvent) => {
+
+    hotkeys('*', { keydown: true, keyup: true }, (event, hotkeyEvent) => {
       const pressedKeys = new Set<string>();
       if (hotkeys.ctrl) {
         pressedKeys.add('ctrl');

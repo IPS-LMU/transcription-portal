@@ -178,6 +178,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   maxColumnWidths = [10, 15, 15, 15, 15, 10];
 
   private shortcuts: Shortcut[] = [];
+  protected selectedRows: StoreItem[] = [];
 
   constructor() {
     super();
@@ -185,6 +186,12 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     if (window.File && window.FileReader && window.FileList && window.Blob) {
       this.fileAPIsupported = true;
     }
+
+    this.subscribe(this.modeStoreService.currentModeSelectedEntries$, {
+      next: (selectedRows) => {
+        this.selectedRows = selectedRows;
+      },
+    });
 
     this.initShortcuts();
   }
@@ -344,10 +351,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     $event.preventDefault();
     $event.stopPropagation();
 
-    const task = this.popover.task ?? this.popover.directory;
-    if (task) {
-      this.modeStoreService.selectRows([task.id], !task.selected);
+    if (this.selectedRows.length < 2) {
+      const task = this.popover.task ?? this.popover.directory;
+      if (task) {
+        this.modeStoreService.selectRows([task.id], !task.selected);
+      }
     }
+
     this.contextmenu.x = $event.x - 20;
     this.contextmenu.y = row.offsetTop - row.offsetHeight - this.inner?.nativeElement.scrollTop;
     const elem = this.elementRef.nativeElement as HTMLElement;
@@ -359,64 +369,67 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.cd.detectChanges();
   }
 
-  onRowSelected(entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
+  onRowSelected(event: MouseEvent, entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
     if (!this.selectionBlocked) {
-      if (!operation || !['OCTRA', 'Emu WebApp'].includes(operation.name)) {
-        const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreItem) => a.id === entry.id);
-        const pressedKeys = this.shortcutService.pressedKeys;
+      const pressedKeys = this.shortcutService.pressedKeys;
+      const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreItem) => a.id === entry.id);
 
-        if (pressedKeys.has('ctrl') || pressedKeys.has('cmd')) {
-          // de-/selection
-
-          if (entry.selected) {
-            // deselect
-            this.modeStoreService.deselectRows([entry.id]);
-          } else {
-            // select
-            this.modeStoreService.selectRows([entry.id]);
-          }
+      if (pressedKeys.has('ctrl') || pressedKeys.has('cmd')) {
+        // de-/selection
+        if (entry.selected) {
+          // deselect
+          this.modeStoreService.deselectRows([entry.id]);
         } else {
-          if (pressedKeys.has('shift')) {
-            // shift selection
-            // shift pressed
-            if (this.shiftStart > -1) {
-              let end = indexFromTaskList;
+          // select
+          this.modeStoreService.selectRows([entry.id]);
+        }
+        event.stopPropagation();
+        return;
+      } else {
+        if (pressedKeys.has('shift')) {
+          // shift selection
+          // shift pressed
+          if (this.shiftStart > -1) {
+            let end = indexFromTaskList;
 
-              if (this.shiftStart > end) {
-                const temp = this.shiftStart;
-                this.shiftStart = end;
-                end = temp;
-              }
-
-              const selectedRowsIndices: number[] = [];
-              for (let i = this.shiftStart; i <= end; i++) {
-                selectedRowsIndices.push(i);
-              }
-              this.modeStoreService.setSelectedRowsByIndex(selectedRowsIndices);
-              // select all between
-              // const start =x
-              this.shiftStart = -1;
+            if (this.shiftStart > end) {
+              const temp = this.shiftStart;
+              this.shiftStart = end;
+              end = temp;
             }
-          } else {
-            this.shiftStart = indexFromTaskList;
-            this.modeStoreService.selectRows([entry.id], true);
+
+            const selectedRowsIndices: number[] = [];
+            for (let i = this.shiftStart; i <= end; i++) {
+              selectedRowsIndices.push(i);
+            }
+            this.modeStoreService.setSelectedRowsByIndex(selectedRowsIndices);
+            // select all between
+            // const start =x
+            this.shiftStart = -1;
+            event.stopPropagation();
+            return;
           }
         }
       }
 
-      const previousOperation =
-        operationIndex && operation && operationIndex > 0 ? (entry as StoreItemTask).operations[operationIndex - 1] : undefined;
-      const previousOperationLastResult = previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
+      if (!operation || !['OCTRA', 'Emu WebApp'].includes(operation.name)) {
+        this.shiftStart = indexFromTaskList;
+        this.modeStoreService.selectRows([entry.id], true);
+      } else {
+        const previousOperation =
+          operationIndex && operation && operationIndex > 0 ? (entry as StoreItemTask).operations[operationIndex - 1] : undefined;
+        const previousOperationLastResult = previousOperation ? getLastOperationResultFromLatestRound(previousOperation) : undefined;
 
-      if ((previousOperation && previousOperationLastResult?.online) || (operation && previousOperationLastResult?.online)) {
-        this.operationclick.emit({
-          operation: operation as any,
-          task: entry as any,
-          opIndex: operationIndex!,
-          factory: this.operations![operationIndex!].factory,
-        });
-        console.log('row selected close');
-        this.popover.state = 'closed';
+        if ((previousOperation && previousOperationLastResult?.online) || (operation && previousOperationLastResult?.online)) {
+          this.operationclick.emit({
+            operation: operation as any,
+            task: entry as any,
+            opIndex: operationIndex!,
+            factory: this.operations![operationIndex!].factory,
+          });
+          console.log('row selected close');
+          this.popover.state = 'closed';
+        }
       }
 
       this.cd.markForCheck();
@@ -430,7 +443,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     } else if (option === 'appendings-remove') {
       this.removeAppending();
     } else if (option === 'download') {
-      this.openArchiveDownload('line', this.selectedOperation);
+      this.openArchiveDownload('line', this.selectedOperation, this.selectedRows);
     } else if (option === 'disable-tasks') {
       this.setDisabledStateForSelectedTasks(true);
     } else if (option === 'enable-tasks') {
@@ -614,6 +627,12 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   public onOperationClick($event: MouseEvent, operation: StoreTaskOperation, index: number, task: StoreItemTask) {
+    const pressedKeys = this.shortcutService.pressedKeys;
+
+    if (pressedKeys.has('ctrl') || pressedKeys.has('cmd') || this.rightMouseButtonPressed) {
+      return;
+    }
+
     if (operation.name === 'OCTRA' || operation.name === 'Emu WebApp') {
       this.popover.state = 'closed';
       this.cd.markForCheck();
@@ -632,19 +651,20 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
   }
 
-  openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined) {
+  openArchiveDownload(type: 'column' | 'line', operation: OperationFactory | undefined, selectedTasks: StoreItem[]) {
     if (operation && operation.name !== 'Upload') {
       this.selectedOperation = operation;
-      this.openDownloadModal(type);
+      this.openDownloadModal(type, selectedTasks);
     } else if (type === 'line') {
-      this.openDownloadModal(type);
+      this.openDownloadModal(type, selectedTasks);
     }
   }
 
-  openDownloadModal(type: 'column' | 'line') {
-    const ref = this.ngbModalService.open(DownloadModalComponent, DownloadModalComponent.options);
+  openDownloadModal(type: 'column' | 'line', selectedTasks: StoreItem[]) {
+    const ref = openModal<DownloadModalComponent>(this.ngbModalService, DownloadModalComponent, DownloadModalComponent.options);
     ref.componentInstance.type = type;
     ref.componentInstance.column = this.selectedOperation;
+    ref.componentInstance.selectedTasks = selectedTasks;
   }
 
   onShortcutRowRemove = () => {
@@ -728,10 +748,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     );
   }
 
-  onExportButtonClick(task: StoreItem, rowIndex: number, operation?: OperationFactory) {
-    const selectedRows = [rowIndex];
-    // this.selectedOperation = operation;
-    this.openArchiveDownload('line', operation);
+  onExportButtonClick(task: StoreItemTask) {
+    this.openArchiveDownload('line', undefined, [task]);
   }
 
   isOneOperationFinished(entry: StoreItem): boolean {

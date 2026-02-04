@@ -1076,8 +1076,8 @@ export class StoreItemEffects {
           if (audioFile) {
             if (!transcriptFile) {
               // get from previous enabled operation
-              const lastEnebaledOperation = getPreviousEnabledOperation(task, operation);
-              const lastRound = getLastOperationRound(lastEnebaledOperation!);
+              const lastEnabledOperation = getPreviousEnabledOperation(task, operation);
+              const lastRound = getLastOperationRound(lastEnabledOperation!);
               transcriptFile = lastRound!.results.find((a) => !a.type.includes('audio'));
             }
 
