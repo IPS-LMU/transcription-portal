@@ -7,20 +7,20 @@ import { openModal } from '@octra/ngx-components';
 import { DirectoryInfo, FileInfo } from '@octra/web-media';
 import { catchError, exhaustMap, from, map, mergeMap, of, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
-import { AlertService } from '../../shared/alert.service';
+import { NotificationService } from '../../shared/notification.service';
 import { RootState } from '../app';
 import { TPortalModes } from '../mode';
 import { StoreAudioFile, StoreFile, StoreFileDirectory } from '../store-item';
+import { convertInfoFileItemToStoreFileItem } from '../store-item/store-item.functions';
 import { PreprocessingActions } from './preprocessing.actions';
 import { cleanUpInputArray, processFileOrDirectoryInfo, splitAudioFile } from './preprocessing.functions';
 import { ProcessingQueueStatus } from './preprocessing.state';
-import { convertInfoFileItemToStoreFileItem } from '../store-item/store-item.functions';
 
 @Injectable()
 export class PreprocessingEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
-  private alertService = inject(AlertService);
+  private notificationService = inject(NotificationService);
   private ngbModal = inject(NgbModal);
 
   itemsAdded$ = createEffect(() =>
@@ -78,9 +78,13 @@ export class PreprocessingEffects {
         withLatestFrom(this.store),
         tap(([{ unsupportedFiles }]: [{ unsupportedFiles: IFile[] }, RootState]) => {
           if (unsupportedFiles.length > 0) {
-            this.alertService.showAlert(
-              'warning',
+            this.notificationService.showNotification(
+              'Unsupported files added',
               `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only WAVE audio files and transcript formats are supported.`,
+              {
+                type: 'desktop',
+                messageType: 'warning',
+              },
             );
           }
         }),

@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { EntityAdapter } from '@ngrx/entity';
 import { Action, Store } from '@ngrx/store';
@@ -11,7 +10,7 @@ import { SubscriptionManager } from '@octra/utilities';
 import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
-import { AlertService } from '../../shared/alert.service';
+import { NotificationService } from '../../shared/notification.service';
 import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
@@ -47,9 +46,8 @@ import { OctraWindowMessageEventData, StoreItemsState } from './store-items-stat
 export class StoreItemEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
-  protected ngbModalService = inject(NgbModal);
   protected httpClient = inject(HttpClient);
-  protected alertService = inject(AlertService);
+  protected notificationService = inject(NotificationService);
 
   private subscrManager!: SubscriptionManager<Subscription>;
 
@@ -337,6 +335,7 @@ export class StoreItemEffects {
           return of(
             StoreItemActions.processStoreItem.fail({
               mode,
+              id,
               error: `Can't start task ${id}: Not found.`,
             }),
           );
@@ -365,6 +364,7 @@ export class StoreItemEffects {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
                 mode,
+                id: taskID,
                 error: `Can't check next operation. task ${taskID}: Not found.`,
               }),
             );
@@ -537,6 +537,7 @@ export class StoreItemEffects {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
                 mode,
+                id: taskID,
                 error: `Can't process next operation. task ${taskID}: Not found.`,
               }),
             );
@@ -547,6 +548,7 @@ export class StoreItemEffects {
             this.store.dispatch(
               StoreItemActions.processStoreItem.fail({
                 mode,
+                id: taskID,
                 error: `Can't process next operation. Operation with id ${operationID} in task ${taskID}: Not found.`,
               }),
             );
@@ -688,6 +690,22 @@ export class StoreItemEffects {
     ),
   );
 
+  operationFailed$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.processNextOperation.fail),
+      withLatestFrom(this.store),
+      exhaustMap(([{ mode, taskID, error }, state]: [{ mode: TPortalModes; taskID: number; error: string }, RootState]) => {
+        return of(
+          StoreItemActions.processStoreItem.fail({
+            mode,
+            id: taskID,
+            error,
+          }),
+        );
+      }),
+    ),
+  );
+
   updateFileURLsAfterUploadSuccess = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.success),
@@ -705,6 +723,37 @@ export class StoreItemEffects {
         return of();
       }),
     ),
+  );
+
+  showNotificationAfterSuccess$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(StoreItemActions.processNextOperation.success),
+        withLatestFrom(this.store),
+        tap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
+          const task = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items);
+          if (task) {
+            const audioFile = task.files.find((a) => a.type.includes('audio'));
+            let operationIndex = task.operations.findIndex((a) => a.id === operation.id);
+            while (operationIndex >= 0 && operationIndex < task.operations.length) {
+              if (operationIndex + 1 < task.operations.length) {
+                const nextOperation = task.operations[operationIndex + 1];
+                if (nextOperation.enabled) {
+                  if (['OCTRA', 'Emu WebApp'].includes(nextOperation.name)) {
+                    this.notificationService.showNotification(
+                      `${nextOperation.name} ready for editing`,
+                      `You can now edit <b>${audioFile?.attributes?.originalFileName}</b> with ${nextOperation.name}.`,
+                    );
+                  }
+                  return;
+                }
+              }
+              operationIndex++;
+            }
+          }
+        }),
+      ),
+    { dispatch: false },
   );
 
   updateFileURLs$ = createEffect(() =>
@@ -902,10 +951,14 @@ export class StoreItemEffects {
 
             if (!availableUploadedAudioFile?.online && !droppedAudioFile) {
               // audio file is not available
-              this.alertService.showAlert(
-                'warning',
+              this.notificationService.showNotification(
+                'Add file again',
                 `Please add the audio file "${task.files![0].attributes.originalFileName}" and run "${factory.title}" again.`,
-                10,
+                {
+                  type: 'alert',
+                  messageType: 'warning',
+                  duration: 10,
+                },
               );
               this.store.dispatch(
                 StoreItemActions.changeOperation.do({
@@ -924,14 +977,26 @@ export class StoreItemEffects {
               );
             } else if (!availableUploadedAudioFile?.online && droppedAudioFile) {
               // start upload process
-              this.alertService.showAlert(
-                'info',
+              this.notificationService.showNotification(
+                'Wait for upload',
                 `Please wait until file ${task.files![0].attributes.originalFileName}` + ` being uploaded and do '${factory.title}' again.`,
+                {
+                  type: 'alert',
+                  messageType: 'info',
+                },
               );
               this.store.dispatch(StoreItemActions.startProcessing.do());
             } else if (previousOperation?.enabled && getLastOperationRound(previousOperation)?.status !== 'FINISHED') {
               // audio file available but no result of previous operation
-              this.alertService.showAlert('info', `Please run ${previousOperation?.name} for this task again.`, 12);
+              this.notificationService.showNotification(
+                `Rerun ${previousOperation?.name}`,
+                `Please run ${previousOperation?.name} for this task again.`,
+                {
+                  type: 'alert',
+                  messageType: 'info',
+                  duration: 12,
+                },
+              );
             } else {
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
@@ -1260,9 +1325,9 @@ export class StoreItemEffects {
     ),
   );
 
-  receiveToolDataSuccess$ = createEffect(() =>
+  saveTaskAfterProcessed$ = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.processStoreItem.success),
+      ofType(StoreItemActions.processStoreItem.success, StoreItemActions.processStoreItem.fail),
       withLatestFrom(this.store),
       exhaustMap(
         ([action, state]: [
@@ -1280,6 +1345,42 @@ export class StoreItemEffects {
           ),
       ),
     ),
+  );
+
+  showNotificationAfterTaskResults$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(StoreItemActions.processStoreItem.success, StoreItemActions.processStoreItem.fail),
+        withLatestFrom(this.store),
+        tap(([action, state]: [any, RootState]) => {
+          const task = getOneTaskItemWhereRecursive((item) => item.id === action.id, state.modes.entities[action.mode]!.items);
+          if (task) {
+            const audioFile = task.files.find((a) => a.type.includes('audio'));
+            if (action.type === StoreItemActions.processStoreItem.success.type) {
+              this.notificationService.showNotification(
+                `Task ${action.id} finished 🎉`,
+                `Task ${action.id} with audio file ${audioFile?.attributes?.originalFileName} has been finished  🎉`,
+                {
+                  type: 'auto',
+                  messageType: 'success',
+                  duration: 5,
+                },
+              );
+            } else {
+              this.notificationService.showNotification(
+                `Task ${audioFile?.attributes?.originalFileName} failed ❌`,
+                `Task with audio file ${audioFile?.attributes?.originalFileName} failed. Please hover over the red cross for more information.`,
+                {
+                  type: 'auto',
+                  messageType: 'danger',
+                  duration: 5,
+                },
+              );
+            }
+          }
+        }),
+      ),
+    { dispatch: false },
   );
 
   runNextOperationAfterToolDataReceiveSuccess = createEffect(() =>

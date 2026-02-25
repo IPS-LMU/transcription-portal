@@ -223,9 +223,9 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
     if ($event.type === 'mouseleave') {
       this.dragborder = 'inactive';
-      this.renderer.setStyle($event.target, "width", "10px");
-      this.renderer.setStyle($event.target, "margin-left", "");
-    } else if(this.dragborder !== 'dragging') {
+      this.renderer.setStyle($event.target, 'width', '10px');
+      this.renderer.setStyle($event.target, 'margin-left', '');
+    } else if (this.dragborder !== 'dragging') {
       this.renderer.setStyle($event.target, 'width', '120px');
       this.renderer.setStyle($event.target, 'margin-left', 'calc(var(--proceedings-width) - 60px)');
       this.dragborder = 'active';
