@@ -190,6 +190,7 @@ export function updateTaskFilesWithSameFile(
                   {
                     id: task.id,
                     changes: {
+                      status: TaskStatus.PENDING,
                       files: [
                         ...task.files.slice(0, i),
                         {

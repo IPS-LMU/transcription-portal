@@ -295,7 +295,7 @@ export class StoreItemEffects {
           const nextTask = getOneTaskItemWhereRecursive(
             (item) =>
               item.status === TaskStatus.PENDING ||
-              (item.status !== TaskStatus.UPLOADING &&
+              (item.status !== TaskStatus.FINISHED && item.status !== TaskStatus.UPLOADING &&
                 item.status !== TaskStatus.DISABLED &&
                 item.status !== TaskStatus.PROCESSING &&
                 item.files?.find((a) => a.blob !== undefined) !== undefined),

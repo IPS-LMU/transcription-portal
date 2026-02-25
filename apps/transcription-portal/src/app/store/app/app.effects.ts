@@ -5,7 +5,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { VersionCheckerService } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
-import { hasProperty, SubscriptionManager } from '@octra/utilities';
+import { SubscriptionManager } from '@octra/utilities';
 import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
 import { catchError, exhaustMap, map, of, tap, withLatestFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -122,6 +122,26 @@ export class AppEffects {
         return AppActions.initConsoleLogger.success();
       }),
     ),
+  );
+
+  logActionsToConsole$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        tap((action) => {
+          if (
+            environment.debugging.enabled &&
+            environment.debugging.logging.actions &&
+            action.type.indexOf('Set Console Entries') < 0
+          ) {
+            console.groupCollapsed(`ACTION ${action.type} ---`);
+            console.log(action);
+            console.groupEnd();
+          }
+        }),
+      ),
+    {
+      dispatch: false,
+    },
   );
 
   ApplicationInitSuccess$ = createEffect(
