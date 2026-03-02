@@ -378,6 +378,26 @@ export const getTaskReducers = (
                   id: item.id,
                   changes: {
                     status: TaskStatus.PENDING,
+                    operations: item.operations?.map((op) => {
+                      const lastRound = getLastOperationRound(op);
+                      if (lastRound && lastRound.status === TaskStatus.ERROR) {
+                        return {
+                          ...op,
+                          rounds: [
+                            ...op.rounds.slice(0, -1),
+                            {
+                              status: TaskStatus.PENDING,
+                              progress: 0,
+                              protocol: '',
+                              parsedProtocol: [],
+                              results: [],
+                            },
+                          ],
+                        };
+                      }
+
+                      return op;
+                    }),
                   },
                 },
                 itemsState,
@@ -552,7 +572,11 @@ export const getTaskReducers = (
     ),
   })),
   // update statistics if task changes
-  on(StoreItemActions.importItemsFromProcessingQueue.success, (state: ModeState, { mode }): ModeState => updateStatistics(state, mode)),
+  on(
+    StoreItemActions.importItemsFromProcessingQueue.success,
+    StoreItemActions.resetOperation.fail,
+    (state: ModeState, { mode }): ModeState => updateStatistics(state, mode),
+  ),
   on(StoreItemActions.setDisableStateForSelectedTasks.do, (state: ModeState, { disabled, ids }) => {
     state = modeAdapter.updateOne(
       {
@@ -792,6 +816,47 @@ export const getTaskReducers = (
     );
 
     state = updateStatistics(state, mode);
+    return state;
+  }),
+  on(StoreItemActions.resetOperation.success, (state: ModeState, { mode, taskID, operationIndex }) => {
+    state = modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) =>
+            taskAdapter.updateOne(
+              {
+                id: item.id,
+                changes: {
+                  operations: [
+                    ...item.operations!.slice(0, operationIndex),
+                    {
+                      ...item.operations![operationIndex],
+                      rounds: [
+                        ...item.operations![operationIndex].rounds.slice(0, -1),
+                        {
+                          status: TaskStatus.PENDING,
+                          results: [],
+                          progress: 0,
+                          parsedProtocol: [],
+                        },
+                      ],
+                    },
+                    ...item.operations!.slice(operationIndex + 1),
+                  ],
+                  status: TaskStatus.PENDING,
+                },
+              },
+              itemsState,
+            ),
+          ),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, mode);
+
     return state;
   }),
   on(StoreItemActions.updateURLsForFilesAfterUpload.success, (state: ModeState, { mode, itemsState, itemIDs }) => {
@@ -1079,15 +1144,18 @@ export const getTaskReducers = (
       }
     }
 
-    return modeAdapter.updateOne({
-      id: mode,
-      changes: {
-        gui: {
-          ...currentMode.gui,
-          toolOpenStatus: 'closed',
+    return modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          gui: {
+            ...currentMode.gui,
+            toolOpenStatus: 'closed',
+          },
         },
       },
-    }, state);
+      state,
+    );
   }),
   on(StoreItemActions.setSelectedItemsByIndex.do, (state: ModeState, { indices }) => {
     return setSelectionByIndex(indices, true, state, modeAdapter, taskAdapter, true);

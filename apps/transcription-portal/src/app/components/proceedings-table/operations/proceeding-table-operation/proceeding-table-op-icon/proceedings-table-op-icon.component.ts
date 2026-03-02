@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { StoreTaskOperation, TaskStatus } from '../../../../../store';
 import { getLastOperationRound } from '../../../../../store/operation/operation.functions';
@@ -10,8 +10,11 @@ import { getLastOperationRound } from '../../../../../store/operation/operation.
 })
 export class ProceedingsTableOpIconComponent extends SubscriberComponent implements OnChanges {
   @Input() storeTaskOperation?: StoreTaskOperation;
+  @Output() retryOperation = new EventEmitter<StoreTaskOperation>();
 
-  get lastOperationRound(){
+  protected mouseEnter = false;
+
+  get lastOperationRound() {
     return this.storeTaskOperation ? getLastOperationRound(this.storeTaskOperation) : undefined;
   }
 
@@ -22,4 +25,14 @@ export class ProceedingsTableOpIconComponent extends SubscriberComponent impleme
   ngOnChanges(changes: SimpleChanges) {}
 
   protected readonly TaskStatus = TaskStatus;
+
+  @HostListener('mouseenter')
+  onMouseEnter() {
+    this.mouseEnter = true;
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave() {
+    this.mouseEnter = false;
+  }
 }

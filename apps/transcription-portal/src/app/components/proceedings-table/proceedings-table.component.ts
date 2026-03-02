@@ -119,14 +119,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     mouseIn: false,
   };
 
-  scrolling = {
-    position: {
-      x: 0,
-      y: 0,
-    },
-    lastscroll: 0,
-  };
-
   rightMouseButtonPressed = false;
 
   @Input() queue?: PreprocessingQueueItem[] | null;
@@ -532,32 +524,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.operationhover.emit();
   }
 
-  onNameMouseEnter($event: MouseEvent, entry?: StoreItem) {
-    if (!entry) {
-      return;
-    }
-    if (entry.type === 'task') {
-      this.popover.directory = undefined;
-      this.popover.task = entry as StoreItemTask;
-    } else {
-      this.popover.task = undefined;
-      this.popover.directory = entry as StoreItemTaskDirectory;
-    }
-    this.popover.operation = undefined;
-    this.popover.lastOperationRound = undefined;
-    this.popover.lastOperationRoundResult = undefined;
-  }
-
-  onNameMouseLeave($event: MouseEvent, entry?: StoreItem) {
-    if (!entry) {
-      return;
-    }
-  }
-
-  onNameMouseOver($event: MouseEvent, entry?: StoreItem) {
-    if (!entry) {
-      return;
-    }
+  onOperationRetry(operation: StoreTaskOperation){
+    this.modeStoreService.resetOperation(operation);
   }
 
   onInfoMouseEnter($event: MouseEvent, task?: StoreItemTask) {
@@ -701,6 +669,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   onTagClicked(dirID: number) {
     this.modeStoreService.toggleDirectoryOpened(dirID);
+    this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   onOpenAllRows() {
@@ -710,16 +680,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.allDirOpened = 'opened';
     }
     this.modeStoreService.setDirectoryOpenState(this.allDirOpened === 'opened');
-  }
-
-  toolTipAction(action: string, tooltip: any) {
-    if (action === 'open') {
-      tooltip.open();
-    } else {
-      tooltip.close();
-    }
-
-    this.updateChanges();
   }
 
   copyProtocolToClipboard(protocol?: string) {
@@ -797,10 +757,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     return [];
   }
 
-  public getFileInfo(entry: PreprocessingQueueItem) {
-    return entry.infoItem?.type !== 'folder' ? (entry.infoItem as TPortalFileInfo) : undefined;
-  }
-
   public getTaskDirectory(entry: StoreItem): StoreItemTaskDirectory | undefined {
     if (entry.type === 'folder') {
       return entry as StoreItemTaskDirectory;
@@ -827,10 +783,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.task = undefined;
       this.popover.directory = entry as StoreItemTaskDirectory;
     }
-  }
-
-  protected getAudioFileOfTask(task: StoreItemTask) {
-    return undefined;
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;

@@ -177,6 +177,12 @@ export class ModeStoreService {
     this.store.dispatch(ModeActions.closeToolLoader.do());
   }
 
+  resetOperation(operation: StoreTaskOperation) {
+    this.store.dispatch(StoreItemActions.resetOperation.do({
+      operation
+    }));
+  }
+
   constructor() {
     this.subscrManager.add(
       this.currentMode$.subscribe({

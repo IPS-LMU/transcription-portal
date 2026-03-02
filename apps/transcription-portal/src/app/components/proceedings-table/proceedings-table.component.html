@@ -632,6 +632,7 @@
             (mouseenter)="onOperationMouseEnter($event, entry, operation, td)"
             (mouseleave)="onOperationMouseLeave($event, operation)"
             (mouseover)="onOperationMouseOver($event, entry, operation, i)"
+            (retryOperation)="onOperationRetry($event)"
             [storeTaskOperation]="operation"
             [factory]="operations![i].factory"
           ></tportal-proceedings-table-operation-selector>

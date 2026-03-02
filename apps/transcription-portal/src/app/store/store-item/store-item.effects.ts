@@ -41,6 +41,7 @@ import {
   updateTaskFilesWithSameFile,
 } from './store-item.functions';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
+import { FileInfo } from '@octra/web-media';
 
 @Injectable()
 export class StoreItemEffects {
@@ -264,6 +265,7 @@ export class StoreItemEffects {
         StoreItemActions.processNextOperation.success,
         StoreItemActions.changeOperation.do,
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
+        StoreItemActions.resetOperation.success,
       ),
       withLatestFrom(this.store),
       filter(([action, state]: [any, RootState]) => {
@@ -291,11 +293,12 @@ export class StoreItemEffects {
             .map((a) => a.id)
             .join(',')}`,
         );
-        if (state.modes.entities[mode]!.statistics.running < 3) {
+        if (state.modes.entities[mode]!.statistics.running < 3 && state.modes.entities[mode]!.overallState === 'processing') {
           const nextTask = getOneTaskItemWhereRecursive(
             (item) =>
               item.status === TaskStatus.PENDING ||
-              (item.status !== TaskStatus.FINISHED && item.status !== TaskStatus.UPLOADING &&
+              (item.status !== TaskStatus.FINISHED &&
+                item.status !== TaskStatus.UPLOADING &&
                 item.status !== TaskStatus.DISABLED &&
                 item.status !== TaskStatus.PROCESSING &&
                 item.files?.find((a) => a.blob !== undefined) !== undefined),
@@ -1240,13 +1243,15 @@ export class StoreItemEffects {
               }),
             );
           }
-
-          const blob = new File([annotation.content], annotation.name, {
-            type: annotation?.type,
-          });
-          const file = new TPortalFileInfo(annotation.name, annotation.type, blob.size, blob);
           const audioFile = task?.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
           const name = (audioFile.attributes?.originalFileName ?? audioFile.name).replace(/\.[^.]+$/g, '');
+          const escapedName = audioFile.name.replace(/\.[^.]+$/g, '');
+          const extractedName = FileInfo.extractFileName(annotation.name);
+
+          const blob = new File([annotation.content], `${escapedName}${extractedName.extension}`, {
+            type: annotation?.type,
+          });
+          const file = new TPortalFileInfo(`${escapedName}${extractedName.extension}`, annotation.type, blob.size, blob);
 
           file.attributes = {
             originalFileName: `${name}${file.extension}`,
@@ -1321,6 +1326,66 @@ export class StoreItemEffects {
               file: action.file,
             }),
           ),
+      ),
+    ),
+  );
+
+  doResetOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.resetOperation.do),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([action, state]: [
+          {
+            operation: StoreTaskOperation;
+          },
+          RootState,
+        ]) => {
+          return of(
+            StoreItemActions.resetOperation.reset({
+              mode: state.modes.currentMode,
+              operation: action.operation,
+            }),
+          );
+        },
+      ),
+    ),
+  );
+
+  resetOperation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.resetOperation.reset),
+      withLatestFrom(this.store),
+      exhaustMap(
+        ([action, state]: [
+          {
+            mode: TPortalModes;
+            operation: StoreTaskOperation;
+          },
+          RootState,
+        ]) => {
+          const currentModeState = state.modes.entities[action.mode]!;
+          const defaultOperations = currentModeState.defaultOperations;
+          const operationIndex = defaultOperations.findIndex((a) => a.factory.name === action.operation.name);
+          this.subscrManager.removeByIncludedTag(`task[${action.operation.taskID}];op[${action.operation.id}]`);
+
+          if (operationIndex > -1) {
+            return of(
+              StoreItemActions.resetOperation.success({
+                mode: action.mode,
+                taskID: action.operation.taskID,
+                operationIndex,
+              }),
+            );
+          }
+
+          return of(
+            StoreItemActions.resetOperation.fail({
+              mode: action.mode,
+              error: `Can't find operation with id ${action.operation.id} for task ${action.operation.taskID}`,
+            }),
+          );
+        },
       ),
     ),
   );

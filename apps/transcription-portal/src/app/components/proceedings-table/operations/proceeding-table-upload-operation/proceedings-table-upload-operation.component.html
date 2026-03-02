@@ -1,6 +1,6 @@
 @if (lastOperationRound?.status !== TaskStatus.UPLOADING) {
   @if(!offlineResultsFound){
-    <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation"></tportal-proceedings-table-op-icon>
+    <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation" (retryOperation)="retryOperation.emit($event)"></tportal-proceedings-table-op-icon>
   } @else {
     <i class="bi bi-wifi-off" aria-hidden="true" style="color: red;"></i>
   }

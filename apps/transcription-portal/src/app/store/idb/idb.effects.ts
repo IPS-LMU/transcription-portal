@@ -15,7 +15,7 @@ import { ExternalInformationActions } from '../external-information/external-inf
 import { TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { convertStoreItemToIDBItem } from '../operation/operation.functions';
-import { StoreItem } from '../store-item';
+import { StoreItem, StoreItemEffects } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { getStoreItemsWhereRecursive } from '../store-item/store-item.functions';
 import { IDBActions } from './idb.actions';
@@ -271,6 +271,7 @@ export class IDBEffects {
         StoreItemActions.processNextOperation.success,
         StoreItemActions.processNextOperation.fail,
         StoreItemActions.runOperationWithTool.closeOtherTool,
+        StoreItemActions.resetOperation.success
       ),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number; type: any }, RootState]) => {

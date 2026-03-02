@@ -317,6 +317,28 @@ export class StoreItemActions {
     },
   });
 
+  static resetOperation = createActionGroup({
+    source: 'tasks/reset operation',
+    events: {
+      do: props<{
+        operation: StoreTaskOperation;
+      }>(),
+      reset: props<{
+        mode: TPortalModes;
+        operation: StoreTaskOperation;
+      }>(),
+      success: props<{
+        mode: TPortalModes;
+        taskID: number;
+        operationIndex: number;
+      }>(),
+      fail: props<{
+        mode: TPortalModes;
+        error: string;
+      }>(),
+    },
+  });
+
   static changeOperation = createActionGroup({
     source: 'tasks/change operation',
     events: {
