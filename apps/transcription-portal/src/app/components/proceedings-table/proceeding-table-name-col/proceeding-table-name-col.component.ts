@@ -58,6 +58,29 @@ export class ProceedingTableNameColComponent extends SubscriberComponent impleme
     this.tagClicked.emit(this.dirOpened);
   };
 
+  get cleanedUpFirstFileName() {
+    return this.entry?.files && this.entry.files.length > 0
+      ? this.entry.files[0].attributes.originalFileName.replace(/(?:_annot)?\.[^.]+$/g, '')
+      : '<NO NAME>';
+  }
+
+  get cleanedUpFirstFileExtension() {
+    if (this.entry?.files && this.entry.files.length > 0) {
+      const appending = this.entry.files.length > 1 ? this.entry.files[1] : this.entry.files[0];
+      const ext = /((?:_annot)?\.[^.]+)$/g.exec(appending.attributes.originalFileName);
+      return ext ? ext[1] : '';
+    }
+    return '';
+  }
+
+  get appending() {
+    if (this.entry?.files && this.entry.files.length > 0) {
+      const appending = this.entry.files.length > 1 ? this.entry.files[1] : this.entry.files[0];
+      return appending;
+    }
+    return undefined;
+  }
+
   protected readonly TaskStatus = TaskStatus;
   protected readonly getLastOperationRound = getLastOperationRound;
 }

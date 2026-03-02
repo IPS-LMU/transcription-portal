@@ -11,10 +11,12 @@
     } @else {
       <!-- part of folder -->
       <img src="assets/directory.png" style="width: 20px; margin-right: 3px" />
-      <ng-container [ngTemplateOutlet]="entryIcon"
-                    [ngTemplateOutletContext]="{
+      <ng-container
+        [ngTemplateOutlet]="entryIcon"
+        [ngTemplateOutletContext]="{
           entry,
-        }"></ng-container>
+        }"
+      ></ng-container>
     }
     <!-- file name -->
     <span
@@ -28,8 +30,20 @@
           getLastOperationRound(entry.operations![0])!.status !== 'FINISHED',
       }"
       [title]="entry.files![0].attributes.originalFileName"
-      >{{ entry.files![0].attributes.originalFileName.replace('_annot.json', '.wav') }}</span
     >
+      {{ cleanedUpFirstFileName }}.wav
+
+      @if (cleanedUpFirstFileExtension !== '.wav' && appending) {
+        <span
+          class="badge"
+          [ngClass]="{
+            'bg-info': appending.online || appending.blob || appending.content,
+            'bg-warning': !(appending.online || appending.blob || appending.content),
+          }"
+          >{{ cleanedUpFirstFileExtension }}</span
+        >
+      }
+    </span>
 
     <ng-container
       [ngTemplateOutlet]="actionIcons"

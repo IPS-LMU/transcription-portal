@@ -1197,7 +1197,7 @@ export class StoreItemEffects {
             const audio = task.files.find((a) => a.type.includes('audio')) as StoreAudioFile;
             const audiofile = new OAudiofile();
             audiofile.url = audio.url;
-            audiofile.name = audio.name;
+            audiofile.name = audio.attributes.originalFileName ?? audio.name;
             audiofile.type = audio.type;
             audiofile.size = audio.size;
             audiofile.duration = audio.duration;

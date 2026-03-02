@@ -57,7 +57,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
     if (audioFile?.online && audioFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
       const audio_url = encodeURIComponent(audioFile.url);
-      const audio_name = audioFile.name;
+      const audio_name = audioFile.attributes.originalFileName;
       let transcript: string | undefined;
       const embedded = `1`;
       const host = encodeURIComponent(serviceProvider.host);
@@ -70,7 +70,7 @@ export class OctraOperationFactory extends OperationFactory<OctraOperation> {
         const { extension } = FileInfo.extractFileName(transcriptFile.name);
         if (extension === '.par') {
           const oAudio = new OAudiofile();
-          oAudio.name = audioFile.name;
+          oAudio.name = audioFile.attributes.originalFileName;
           oAudio.url = audioFile.url;
           oAudio.type = audioFile.type;
           oAudio.size = audioFile.size;
