@@ -362,7 +362,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   }
 
   onRowSelected(event: MouseEvent, entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
-    if (!this.selectionBlocked) {
+    if (!this.selectionBlocked && (event.button === 1 || event.buttons === 1)) {
       const pressedKeys = this.shortcutService.pressedKeys;
       const indexFromTaskList = (this.entries ?? []).findIndex((a: StoreItem) => a.id === entry.id);
 

@@ -75,6 +75,7 @@ export async function convertStoreItemToIDBItem(
       id: task.id,
       type: 'task',
       state: task.status,
+      disabled: task.disabled,
       folderPath: '',
       files: [],
       operations: [],
@@ -104,6 +105,7 @@ export async function convertStoreItemToIDBItem(
       entries: [],
       id: dir.id,
       path: dir.path,
+      disabled: dir.disabled,
       type: 'folder',
     };
 

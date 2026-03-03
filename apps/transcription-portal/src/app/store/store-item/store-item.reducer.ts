@@ -106,7 +106,7 @@ export const getTaskReducers = (
         });
 
         // fix task status according to operation status
-        if (item.status !== TaskStatus.QUEUED && item.status !== TaskStatus.DISABLED) {
+        if (item.status !== TaskStatus.QUEUED && !item.disabled) {
           const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
           if (operationStatus.includes(TaskStatus.READY)) {
             item = {
@@ -609,16 +609,19 @@ export const getTaskReducers = (
       {
         id: state.currentMode,
         changes: {
-          items: applyFunctionOnStoreItemsWithIDsRecursive(ids, state.entities[state.currentMode]!.items, taskAdapter, (item, itemsState) => {
-            if (item.type === 'task') {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => ids.includes(item.id) || (item.directoryID !== undefined && ids.includes(item.directoryID)),
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState) => {
               return taskAdapter.updateOne(
                 {
                   id: item.id,
                   changes: {
-                    status: disabled ? TaskStatus.DISABLED : TaskStatus.PENDING,
+                    disabled,
                     operations: item.operations?.map((operation) => {
                       const lastRound = getLastOperationRound(operation);
-                      if (lastRound && lastRound.status === TaskStatus.PROCESSING) {
+                      if (lastRound && (lastRound.status === TaskStatus.PROCESSING || lastRound.status === TaskStatus.UPLOADING)) {
                         return {
                           ...operation,
                           rounds:
@@ -638,10 +641,8 @@ export const getTaskReducers = (
                 },
                 itemsState,
               );
-            }
-
-            return itemsState;
-          }),
+            },
+          ),
         },
       },
       state,

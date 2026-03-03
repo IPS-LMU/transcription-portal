@@ -139,7 +139,7 @@
       </div>
     }
   }
-  @if (popover.operation === undefined && popover.task) {
+  @if (popover.operation === undefined && popover.task && popover.task.type === "task") {
     <div class="card mb-3">
       <div class="card-header">Task Options</div>
       <div class="card-body p-0">
@@ -190,7 +190,7 @@
       </div>
     </div>
   }
-  @if (popover.lastOperationRound === undefined && popover.task) {
+  @if (popover.lastOperationRound === undefined && popover.task && popover.task.type === "task") {
     <div class="card">
       <div class="card-header">Audio information</div>
       <div class="card-body p-0">
@@ -606,7 +606,7 @@
     [ngClass]="{
       'fade-toggle-row-show': fade === 'opened',
       'fade-toggle-row-hide': fade === 'closed',
-      'tr-disabled': entry.status === TaskStatus.DISABLED,
+      'tr-disabled': entry.disabled,
     }"
     #row
   >

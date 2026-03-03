@@ -11,8 +11,7 @@ export enum TaskStatus {
   READY = 'READY',
   SKIPPED = 'SKIPPED',
   FINISHED = 'FINISHED',
-  ERROR = 'ERROR',
-  DISABLED = 'DISABLED',
+  ERROR = 'ERROR'
 }
 
 export interface StoreItemTaskOptions {
@@ -40,6 +39,7 @@ export interface StoreItem {
   id: number;
   type: 'task' | 'folder';
   selected?: boolean;
+  disabled?: boolean;
   mouseOver?: boolean;
 
   // task

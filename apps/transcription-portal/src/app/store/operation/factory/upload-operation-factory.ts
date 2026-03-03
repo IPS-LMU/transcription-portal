@@ -51,7 +51,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     subscrManager.add(
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
-          if (item?.status === TaskStatus.DISABLED || item?.stopRequested) {
+          if (item?.disabled || item?.stopRequested) {
             subscrManager.destroy();
           }
         },

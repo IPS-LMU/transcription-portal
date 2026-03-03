@@ -266,6 +266,7 @@ export class StoreItemEffects {
         StoreItemActions.changeOperation.do,
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
         StoreItemActions.resetOperation.success,
+        StoreItemActions.importItemsFromProcessingQueue.success
       ),
       withLatestFrom(this.store),
       filter(([action, state]: [any, RootState]) => {
@@ -300,7 +301,7 @@ export class StoreItemEffects {
               (item.status !== TaskStatus.FINISHED &&
                 item.status !== TaskStatus.QUEUED &&
                 item.status !== TaskStatus.UPLOADING &&
-                item.status !== TaskStatus.DISABLED &&
+                !item.disabled &&
                 item.status !== TaskStatus.PROCESSING &&
                 item.files?.find((a) => a.blob !== undefined) !== undefined),
             state.modes.entities[mode]!.items,

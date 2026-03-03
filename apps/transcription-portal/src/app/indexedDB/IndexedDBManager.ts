@@ -2,7 +2,7 @@ import Dexie, { Table, Transaction } from 'dexie';
 import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
 import { IASROperation, IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
-import { OperationProcessingRoundSerialized } from '../store';
+import { OperationProcessingRoundSerialized, TaskStatus } from '../store';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -170,6 +170,29 @@ export class IndexedDBManager extends Dexie {
                 delete (operation as any)['state'];
                 delete (operation as any)['time'];
               }
+            };
+
+            if (entry.type === 'task') {
+              changeTask(entry);
+            } else {
+              for (const task of (entry as any).entries) {
+                changeTask(task);
+              }
+            }
+          });
+      }
+    });
+    // in 8 we are using "diabled" attribute instead of DISABLED status
+    this.version(8).upgrade(async (transaction: Transaction) => {
+      const affectedTableNames = ['annotation_tasks', 'summarization_tasks'];
+      for (const affectedTableName of affectedTableNames) {
+        await transaction
+          .table<IDBTaskItem, number>(affectedTableName)
+          .toCollection()
+          .modify((entry: IDBTaskItem | IDBFolderItem) => {
+            const changeTask = (task: any) => {
+              task.disabled = task.state === "DISABLED";
+              task.status = TaskStatus.PENDING;
             };
 
             if (entry.type === 'task') {

@@ -27,6 +27,7 @@ export interface IDBTaskItem {
   id: number;
   type: 'task';
   state: TaskStatus;
+  disabled?: boolean;
   folderPath: string;
   files: (FileInfoSerialized | AudioFileInfoSerialized)[];
   operations: IDBOperation[];
@@ -35,6 +36,7 @@ export interface IDBTaskItem {
 export interface IDBFolderItem {
   id: number;
   type: 'folder';
+  disabled?: boolean;
   path: string;
   entries: IDBTaskItem[];
 }

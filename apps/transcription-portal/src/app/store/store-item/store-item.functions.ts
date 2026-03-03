@@ -29,12 +29,14 @@ export function convertIDBTaskToStoreTask(
       operations: entry.operations.map((a: IDBOperation, i: number) => convertIDBOperationToStoreOperation(a, entry, defaultOperations)),
       directoryID: directoryID,
       status: entry.state,
+      disabled: entry.disabled,
     } as StoreItemTask;
   } else {
     const result = {
       id: entry.id,
       type: 'folder',
       path: entry.path,
+      disabled: entry.disabled,
       folderName: extractFolderName(entry.path) ?? `Folder ${entry.id}`,
       entries: taskAdapter.getInitialState(),
     };
