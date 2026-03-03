@@ -33,19 +33,35 @@ export const getTaskReducers = (
       taskAdapter: EntityAdapter<StoreItem>,
     ) => {
       if (item.type === 'task') {
+        let task = item as StoreItemTask;
         let lastEnabledOP: StoreTaskOperationProcessingRound | undefined = undefined;
 
         // apply fixes on operations
-        for (let i = 0; i < item.operations!.length; i++) {
-          const operation = item.operations![i];
-          const opLastRound = getLastOperationRound(operation);
+        for (let i = 0; i < task.operations.length; i++) {
+          let operation = task.operations[i];
+          let opLastRound = getLastOperationRound(operation);
+
+          if (!opLastRound) {
+            // there exists no operation round -> add an empty one
+            task.operations[i] = {
+              ...operation,
+              rounds: [
+                {
+                  status: TaskStatus.PENDING,
+                  results: [],
+                },
+              ],
+            };
+            operation = task.operations[i];
+            opLastRound = getLastOperationRound(operation);
+          }
 
           if (opLastRound && [TaskStatus.PROCESSING, TaskStatus.UPLOADING].includes(opLastRound.status)) {
             // Processing or Uploading -> Pending
-            item = {
-              ...item,
+            task = {
+              ...task,
               operations: [
-                ...item.operations!.slice(0, i),
+                ...task.operations.slice(0, i),
                 {
                   ...operation,
                   rounds: [
@@ -58,7 +74,7 @@ export const getTaskReducers = (
                     },
                   ],
                 },
-                ...item.operations!.slice(i + 1),
+                ...task.operations.slice(i + 1),
               ],
               status: TaskStatus.READY,
             };
@@ -66,10 +82,10 @@ export const getTaskReducers = (
 
           if (lastEnabledOP?.status === 'FINISHED' && opLastRound?.status === 'PENDING' && ['Emu WebApp', 'OCTRA'].includes(operation.name)) {
             // FIX PENDING to READY for tool operations
-            item = {
-              ...item,
+            task = {
+              ...task,
               operations: [
-                ...item.operations!.slice(0, i),
+                ...task.operations.slice(0, i),
                 {
                   ...operation,
                   rounds: [
@@ -80,7 +96,7 @@ export const getTaskReducers = (
                     },
                   ],
                 },
-                ...item.operations!.slice(i + 1),
+                ...task.operations.slice(i + 1),
               ],
               status: TaskStatus.READY,
             };
@@ -92,8 +108,8 @@ export const getTaskReducers = (
         }
 
         // replace task files with uploaded files
-        item.files = item.files?.map((file) => {
-          const found = getLastOperationRound(item.operations![0])?.results.find((a) => a.name === file.name);
+        task.files = task.files?.map((file) => {
+          const found = getLastOperationRound(task.operations![0])?.results.find((a) => a.name === file.name);
           if (found) {
             return {
               ...file,
@@ -106,45 +122,46 @@ export const getTaskReducers = (
         });
 
         // fix task status according to operation status
-        if (item.status !== TaskStatus.QUEUED && !item.disabled) {
-          const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
+        if (task.status !== TaskStatus.QUEUED && !task.disabled) {
+          const operationStatus: TaskStatus[] = task.operations!.map((op) => getLastOperationRound(op)!.status);
           if (operationStatus.includes(TaskStatus.READY)) {
-            item = {
-              ...item,
+            task = {
+              ...task,
               status: TaskStatus.READY,
             };
           } else if (operationStatus.includes(TaskStatus.ERROR)) {
-            item = {
-              ...item,
+            task = {
+              ...task,
               status: TaskStatus.ERROR,
             };
           } else if (operationStatus.filter((a) => [TaskStatus.PROCESSING, TaskStatus.UPLOADING].includes(a)).length > 0) {
-            item = {
-              ...item,
+            task = {
+              ...task,
               status: TaskStatus.PENDING,
             };
           } else if (operationStatus.includes(TaskStatus.PENDING)) {
-            item = {
-              ...item,
+            task = {
+              ...task,
               status: TaskStatus.PENDING,
             };
           } else if (operationStatus.filter((a) => ![TaskStatus.FINISHED, TaskStatus.SKIPPED].includes(a)).length === 0) {
-            item = {
-              ...item,
+            task = {
+              ...task,
               status: TaskStatus.FINISHED,
             };
           }
         }
 
-        return item;
+        return task;
       } else {
+        const folder = item as StoreItemTaskDirectory;
         return {
-          ...(item as StoreItem),
+          ...folder,
           entries: applyFunctionOnStoreItemsWhereRecursive(
             () => {
               return true;
             },
-            (item as StoreItemTaskDirectory).entries,
+            folder.entries,
             taskAdapter,
             (item, itemsState) => {
               return taskAdapter.updateOne(
