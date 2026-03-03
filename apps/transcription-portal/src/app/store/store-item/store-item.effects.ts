@@ -298,6 +298,7 @@ export class StoreItemEffects {
             (item) =>
               item.status === TaskStatus.PENDING ||
               (item.status !== TaskStatus.FINISHED &&
+                item.status !== TaskStatus.QUEUED &&
                 item.status !== TaskStatus.UPLOADING &&
                 item.status !== TaskStatus.DISABLED &&
                 item.status !== TaskStatus.PROCESSING &&

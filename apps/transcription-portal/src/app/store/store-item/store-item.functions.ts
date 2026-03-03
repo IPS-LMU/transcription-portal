@@ -190,7 +190,7 @@ export function updateTaskFilesWithSameFile(
                   {
                     id: task.id,
                     changes: {
-                      status: TaskStatus.PENDING,
+                      status: task.status !== TaskStatus.QUEUED ? TaskStatus.PENDING : TaskStatus.QUEUED,
                       files: [
                         ...task.files.slice(0, i),
                         {
@@ -240,7 +240,7 @@ export function updateTaskFilesWithSameFile(
                           {
                             ...task.operations![1],
                             enabled: false,
-                            rounds: changeLastRound(task.operations![1].rounds, lastRound => ({
+                            rounds: changeLastRound(task.operations![1].rounds, (lastRound) => ({
                               ...lastRound,
                               status: TaskStatus.SKIPPED,
                             })),
