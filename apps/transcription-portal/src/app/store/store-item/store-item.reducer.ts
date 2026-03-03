@@ -35,12 +35,37 @@ export const getTaskReducers = (
       if (item.type === 'task') {
         let lastEnabledOP: StoreTaskOperationProcessingRound | undefined = undefined;
 
+        // apply fixes on operations
         for (let i = 0; i < item.operations!.length; i++) {
           const operation = item.operations![i];
           const opLastRound = getLastOperationRound(operation);
 
-          // FIX PENDING to READY for tool operations
+          if (opLastRound && [TaskStatus.PROCESSING, TaskStatus.UPLOADING].includes(opLastRound.status)) {
+            // Processing or Uploading -> Pending
+            item = {
+              ...item,
+              operations: [
+                ...item.operations!.slice(0, i),
+                {
+                  ...operation,
+                  rounds: [
+                    ...operation.rounds.slice(0, -1),
+                    {
+                      results: [],
+                      protocol: '',
+                      progress: 0,
+                      status: TaskStatus.PENDING,
+                    },
+                  ],
+                },
+                ...item.operations!.slice(i + 1),
+              ],
+              status: TaskStatus.READY,
+            };
+          }
+
           if (lastEnabledOP?.status === 'FINISHED' && opLastRound?.status === 'PENDING' && ['Emu WebApp', 'OCTRA'].includes(operation.name)) {
+            // FIX PENDING to READY for tool operations
             item = {
               ...item,
               operations: [
@@ -79,6 +104,8 @@ export const getTaskReducers = (
           }
           return file;
         });
+
+        // fix task status according to operation status
         if (item.status !== TaskStatus.QUEUED && item.status !== TaskStatus.DISABLED) {
           const operationStatus: TaskStatus[] = item.operations!.map((op) => getLastOperationRound(op)!.status);
           if (operationStatus.includes(TaskStatus.READY)) {
@@ -91,7 +118,7 @@ export const getTaskReducers = (
               ...item,
               status: TaskStatus.ERROR,
             };
-          } else if (operationStatus.includes(TaskStatus.PROCESSING)) {
+          } else if (operationStatus.filter((a) => [TaskStatus.PROCESSING, TaskStatus.UPLOADING].includes(a)).length > 0) {
             item = {
               ...item,
               status: TaskStatus.PENDING,

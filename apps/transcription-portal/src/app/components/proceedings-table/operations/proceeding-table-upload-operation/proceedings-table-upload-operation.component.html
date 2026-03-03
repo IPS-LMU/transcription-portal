@@ -1,8 +1,11 @@
 @if (lastOperationRound?.status !== TaskStatus.UPLOADING) {
-  @if(!offlineResultsFound){
-    <tportal-proceedings-table-op-icon [storeTaskOperation]="storeTaskOperation" (retryOperation)="retryOperation.emit($event)"></tportal-proceedings-table-op-icon>
+  @if (!offlineResultsFound) {
+    <tportal-proceedings-table-op-icon
+      [storeTaskOperation]="storeTaskOperation"
+      (retryOperation)="retryOperation.emit($event)"
+    ></tportal-proceedings-table-op-icon>
   } @else {
-    <i class="bi bi-wifi-off" aria-hidden="true" style="color: red;"></i>
+    <i class="bi bi-wifi-off" aria-hidden="true" style="color: red"></i>
   }
 } @else {
   @if (lastOperationRound?.progress && lastOperationRound!.progress! > 0) {
