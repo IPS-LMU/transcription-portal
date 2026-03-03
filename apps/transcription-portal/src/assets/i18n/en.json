@@ -282,11 +282,11 @@
     "restore database": "Restore Database"
   },
   "status bar": {
-    "errors": "{{errors}} tasks failed. For further details please hover over the red \"X\" icon in a column.",
-    "finished": "{{finished}} tasks are finished.",
-    "queued": "{{queued}} audio files are waiting for options check.",
-    "running": "{{running}} tasks are running.",
-    "waiting": "{{waiting}} tasks are waiting for processing."
+    "errors": "{{number}} tasks failed. For further details please hover over the red \"X\" icon in a column.",
+    "finished": "{{number}} tasks are finished.",
+    "queued": "{{number}} audio files are waiting for options check.",
+    "running": "{{number}} tasks are running.",
+    "waiting": "{{number}} tasks are waiting for processing."
   },
   "updater": {
     "later": "Later",

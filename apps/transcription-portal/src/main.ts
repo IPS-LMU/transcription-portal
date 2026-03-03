@@ -75,7 +75,7 @@ bootstrapApplication(AppComponent, {
     NgbActiveModal,
     NgbTooltipConfig,
     VersionCheckerService,
-    provideHttpClient(withInterceptorsFromDi(), withFetch()),
+    provideHttpClient(withInterceptorsFromDi()),
     provideCharts(withDefaultRegisterables()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

@@ -211,12 +211,14 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     (
       httpClient.post(url, form, {
         reportProgress: true,
-        observe: 'events' as any,
+        observe: 'events',
         headers,
         responseType: 'text',
       }) as any as Observable<HttpEvent<ArrayBuffer>>
     ).subscribe({
       next: (event: HttpEvent<any>) => {
+        console.log("HTTP EVENT");
+        console.log(event);
         if (event.type === HttpEventType.UploadProgress) {
           let progress = -1;
           if (event.total) {
@@ -226,6 +228,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
             type: 'progress',
             progress,
           });
+          console.log(`progress e ${progress}`);
         } else if (event.type === HttpEventType.Response) {
           const result = event.body as string;
           const x2js = new X2JS();

@@ -31,12 +31,8 @@ export class ProceedingsTableUploadOperationComponent extends ProceedingsTableOp
 
   protected readonly TaskStatus = TaskStatus;
 
-  get currentRound(): StoreTaskOperationProcessingRound | undefined {
-    return this.storeTaskOperation ? getLastOperationRound(this.storeTaskOperation) : undefined;
-  }
-
   get time() {
-    const round = this.currentRound;
+    const round = this.lastOperationRound;
     const diff = (round?.estimatedEnd ?? 0) - Date.now();
     return diff > 0 ? diff : 0;
   }

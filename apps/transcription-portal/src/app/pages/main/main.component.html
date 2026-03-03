@@ -53,7 +53,7 @@
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
               <ng-template #queuedTipp>
-                <div [innerHTML]="'status bar.queued' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.queued }"></div>
+                <div [innerHTML]="'status bar.queued' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.queued }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -62,7 +62,7 @@
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp>
-                <div [innerHTML]="'status bar.waiting' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.waiting }"></div>
+                <div [innerHTML]="'status bar.waiting' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.waiting }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -77,7 +77,7 @@
                 style="color: orange"
               ></i>
               <ng-template #runningTipp>
-                <div [innerHTML]="'status bar.running' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.running }"></div>
+                <div [innerHTML]="'status bar.running' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.running }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -86,7 +86,7 @@
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
               <ng-template #finishedTipp>
-                <div [innerHTML]="'status bar.finished' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.finished }"></div>
+                <div [innerHTML]="'status bar.finished' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.finished }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">

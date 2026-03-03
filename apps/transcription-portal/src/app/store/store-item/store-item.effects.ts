@@ -593,8 +593,6 @@ export class StoreItemEffects {
                           }),
                         );
                       } else {
-                        console.log(`change task ${taskID} op ${event.operation.name}! op status ${lastRoundEvent?.status}`);
-
                         this.store.dispatch(
                           StoreItemActions.changeOperation.do({
                             mode,
