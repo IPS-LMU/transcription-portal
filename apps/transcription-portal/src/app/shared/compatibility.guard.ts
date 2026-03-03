@@ -13,14 +13,16 @@ export class CompatibilityGuard implements CanActivate {
   private routingService = inject(RoutingService);
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
-    this.routingService.addStaticParams(route.queryParams);
-
     return new Promise<boolean>((resolve, reject) => {
       new Promise<void>((resolve2, reject2) => {
         if (AppSettings.configuration) {
           resolve2();
         } else {
-          this.routingService.navigate('config not loaded', ['/loading']);
+          this.routingService.navigate('config not loaded', [`/loading`], {
+            queryParams: {
+              mode: route.url.map((a) => a.path).join('/'),
+            },
+          });
         }
       }).then(() => {
         this.compatibility.testCompatibility().then((result) => {

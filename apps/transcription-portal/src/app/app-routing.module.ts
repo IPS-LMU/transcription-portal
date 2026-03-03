@@ -17,6 +17,16 @@ const routes: Routes = [
     component: BrowserTestComponent,
     canActivate: [],
   },
+  {
+    path: 'annotation',
+    component: MainComponent,
+    canActivate: [CompatibilityGuard],
+  },
+  {
+    path: 'summarization',
+    component: MainComponent,
+    canActivate: [CompatibilityGuard],
+  },
   { path: '**', redirectTo: '/', pathMatch: 'full' },
 ];
 

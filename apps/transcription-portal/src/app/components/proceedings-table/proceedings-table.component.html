@@ -140,6 +140,8 @@
     }
   }
   @if (popover.operation === undefined && popover.task && popover.task.type === "task") {
+    <h4 class="mb-2">Task #{{popover.task.id}}</h4>
+
     <div class="card mb-3">
       <div class="card-header">Task Options</div>
       <div class="card-body p-0">

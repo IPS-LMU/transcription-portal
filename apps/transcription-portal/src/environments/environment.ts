@@ -11,7 +11,7 @@ export const environment = {
     logging: {
       console: true,
       actions: true,
-      routes: false,
+      routes: true,
     },
   },
 };

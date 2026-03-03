@@ -2,6 +2,7 @@ import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/c
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
   NgbCollapse,
@@ -27,6 +28,7 @@ import { StatisticsModalComponent } from '../../modals/statistics-modal/statisti
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
 import { openModal } from '../../obj/functions';
 import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { RoutingService } from '../../routing.service';
 import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
@@ -81,6 +83,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected modeStoreService = inject(ModeStoreService);
   protected preprocessingStoreService = inject(PreprocessingStoreService);
   protected renderer = inject(Renderer2);
+  protected route = inject(ActivatedRoute);
+  protected routingService = inject(RoutingService);
 
   isCollapsed = false;
   public test = 'inactive';
@@ -108,6 +112,15 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     this.subscribe(this.modeStoreService.openedToolOperation$, {
       next: (toolOperation) => {
         this.toolSelectedOperation = toolOperation;
+      },
+    });
+    this.subscribe(this.route.url, {
+      next: (url) => {
+        if (url[0].path === 'annotation') {
+          this.modeStoreService.changeMode('annotation');
+        } else if (url[0].path.includes('summarization')) {
+          this.modeStoreService.changeMode('summarization');
+        }
       },
     });
   }
@@ -322,7 +335,16 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   changeMode(mode: 'annotation' | 'summarization') {
-    this.modeStoreService.changeMode(mode);
+    this.routingService.navigate(
+      'change mode',
+      [mode],
+      {
+        queryParams: {
+          mode: null,
+        },
+      },
+      'replace',
+    );
   }
 
   openAboutModal() {
