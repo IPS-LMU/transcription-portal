@@ -4,6 +4,7 @@
 @use 'highlight.js/styles/github.css';
 @use 'codejar-linenumbers/es/codejar-linenumbers.css';
 @use './animations.style';
+@use "animate.css";
 
 :root {
   --proceedings-width: 30%;
