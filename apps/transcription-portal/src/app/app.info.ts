@@ -9,7 +9,7 @@ import {
   TextConverter,
   WebVTTConverter,
 } from '@octra/annotation';
-import { AudioFormat, WavFormat } from '@octra/web-media';
+import { AudioFormat, MusicMetadataFormat, WavFormat } from '@octra/web-media';
 
 export class AppInfo {
   public static BUILD: {
@@ -30,7 +30,7 @@ export class AppInfo {
     return this._audioFormats;
   }
 
-  private static _audioFormats: AudioFormat[] = [new WavFormat()];
+  private static _audioFormats: AudioFormat[] = [new WavFormat(), new MusicMetadataFormat()];
 
   private static _converters: ConverterData[] = [
     {

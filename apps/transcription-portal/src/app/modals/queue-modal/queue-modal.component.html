@@ -80,15 +80,28 @@
               <th></th>
               @for (operation of operations; track operation.factory.name; let i = $index) {
                 @if (
-                  operation.factory.name === 'OCTRA' || operation.factory.name === 'ASR' || operation.factory.name === 'Summarization' || operation.factory.name === 'Translation'
+                  operation.factory.name === 'OCTRA' ||
+                  operation.factory.name === 'ASR' ||
+                  operation.factory.name === 'Summarization' ||
+                  operation.factory.name === 'Translation'
                 ) {
                   <th>
-                    <input (click)="deactivateOperation(operation.factory.name, operation.enabled)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                    <input
+                      (click)="deactivateOperation(operation.factory.name, operation.enabled)"
+                      [checked]="operation.enabled"
+                      class="header-checkbox"
+                      type="checkbox"
+                    />
                   </th>
                 } @else if (operation.factory.name === 'MAUS') {
                   <th colspan="2" style="position: relative">
                     <img src="assets/directory.png" style="height: 25px; left: 0; position: absolute" />
-                    <input (click)="deactivateOperation(operation.factory.name, operation.enabled)" [checked]="operation.enabled" class="header-checkbox" type="checkbox" />
+                    <input
+                      (click)="deactivateOperation(operation.factory.name, operation.enabled)"
+                      [checked]="operation.enabled"
+                      class="header-checkbox"
+                      type="checkbox"
+                    />
                     <img
                       src="assets/directory.png"
                       style="height: 25px; -webkit-transform: scaleX(-1); transform: scaleX(-1); right: 0; position: absolute"
@@ -151,18 +164,18 @@
                     <span
                       [ngClass]="{
                         green:
-                          (getExtension(task.files[0]) === '.wav' && task.files[0].blob !== undefined) ||
+                          (task.files[0].type.includes('audio') && task.files[0].blob !== undefined) ||
                           (task.operations[0].rounds.length > 0 && getLastOperationResultFromLatestRound(task.operations[0])?.online),
                         yellow:
-                          ((getExtension(task.files[0]) === '.wav' && task.files[0].blob === undefined) || getExtension(task.files[0]) !== '.wav') &&
-                          getLastOperationRound(task.operations[0])?.status !== 'FINISHED',
+                          (task.files[0].type.includes('audio') && task.files[0].blob === undefined) ||
+                          (task.files[0].type.includes('audio') && getLastOperationRound(task.operations[0])?.status !== 'FINISHED'),
                         red: task.invalid,
                       }"
                       title="{{ task.files[0].attributes.originalFileName }}"
                     >
-                      {{ task.files[0].attributes.originalFileName.replace('_annot.json', '.wav') }}
+                      {{ task.files[0].attributes.originalFileName.replace('_annot.json', '') }}
                     </span>
-                    @if (task.files.length > 1 || getExtension(task.files[0]) !== '.wav') {
+                    @if (task.files.length > 1 || !task.files[0].type.includes('audio')) {
                       <span
                         [ngClass]="{
                           'bg-info': getBadge(task).type === 'info',
@@ -215,7 +228,8 @@
                 <tbody>
                   <tr>
                     <td class="fit">
-                      <label class="mt-2 pointer" [ngbTooltip]="'modals.check options.options.asr service provider.description' | transloco">{{ 'modals.check options.options.asr service provider.name' | transloco }}<span class="text-danger">*</span>:</label
+                      <label class="mt-2 pointer" [ngbTooltip]="'modals.check options.options.asr service provider.description' | transloco"
+                        >{{ 'modals.check options.options.asr service provider.name' | transloco }}<span class="text-danger">*</span>:</label
                       >
                     </td>
                     <td>
@@ -273,7 +287,12 @@
                   @if (modeStoreService.currentMode === 'annotation') {
                     <tr class="align-middle">
                       <td class="fit">
-                        <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.diarization.name' | transloco }}:</label>
+                        <label
+                          class="me-1 pointer"
+                          for="diarizationSwitch"
+                          [ngbTooltip]="'modals.check options.options.diarization.description' | transloco"
+                          >{{ 'modals.check options.options.diarization.name' | transloco }}:</label
+                        >
                       </td>
                       <td>
                         <div class="form-check form-switch">
@@ -293,7 +312,12 @@
                   @if ((modeStoreService.defaultUserSettings$ | async)?.isDiarizationEnabled) {
                     <tr class="align-middle">
                       <td class="fit">
-                        <label class="me-1 pointer" for="diarizationSwitch" [ngbTooltip]="'modals.check options.options.diarization.description' | transloco">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label>
+                        <label
+                          class="me-1 pointer"
+                          for="diarizationSwitch"
+                          [ngbTooltip]="'modals.check options.options.diarization.description' | transloco"
+                          >{{ 'modals.check options.options.number of speakers.name' | transloco }}:</label
+                        >
                       </td>
                       <td>
                         <input
@@ -309,7 +333,10 @@
                   @if (modeStoreService.currentMode === 'summarization') {
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label for="asrProvider" class="pointer" [ngbTooltip]="'modals.check options.options.summarization service provider.description' | transloco"
+                        <label
+                          for="asrProvider"
+                          class="pointer"
+                          [ngbTooltip]="'modals.check options.options.summarization service provider.description' | transloco"
                           >{{ 'modals.check options.options.summarization service provider.name' | transloco
                           }}<span class="text-danger">*</span>:</label
                         >
@@ -354,7 +381,9 @@
                   @if (modeStoreService.currentMode === 'annotation') {
                     <tr class="align-middle fit">
                       <td class="fit">
-                        <label class="pointer" [ngbTooltip]="'modals.check options.options.word alignment language.description' | transloco">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label>
+                        <label class="pointer" [ngbTooltip]="'modals.check options.options.word alignment language.description' | transloco"
+                          >{{ 'modals.check options.options.word alignment language.name' | transloco }}:</label
+                        >
                       </td>
                       <td>
                         <octra-asr-language-select
@@ -374,7 +403,9 @@
                   } @else {
                     <tr class="align-middle">
                       <td class="fit">
-                        <label class="pointer" [ngbTooltip]="'modals.check options.options.translation language.description' | transloco">{{ 'modals.check options.options.translation language.name' | transloco }}:</label>
+                        <label class="pointer" [ngbTooltip]="'modals.check options.options.translation language.description' | transloco"
+                          >{{ 'modals.check options.options.translation language.name' | transloco }}:</label
+                        >
                       </td>
                       <td>
                         <div class="row g-1 align-items-center">

@@ -31,9 +31,9 @@
       }"
       [title]="entry.files![0].attributes.originalFileName"
     >
-      {{ cleanedUpFirstFileName }}.wav
+      {{ cleanedUpFirstFileName }}{{cleanedUpFirstFileExtension}}
 
-      @if (cleanedUpFirstFileExtension !== '.wav' && appending) {
+      @if (appending !== undefined && !appending.type?.includes("audio")) {
         <span
           class="badge"
           [ngClass]="{

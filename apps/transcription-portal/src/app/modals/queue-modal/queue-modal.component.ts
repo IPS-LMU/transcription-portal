@@ -1,9 +1,11 @@
 import { AsyncPipe, LowerCasePipe, NgClass, NgStyle } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
 import { OHConfiguration } from '../../obj/oh-config';
 import { TimePipe } from '../../shared/time.pipe';
@@ -18,8 +20,6 @@ import {
   TPortalModes,
 } from '../../store';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
-import { wait } from '@octra/utilities';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-queue-modal',
@@ -55,7 +55,8 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
   get selectedSummarizationNumberOfWords(): number | undefined {
-    return !this.defaultUserSettings?.selectedSummarizationNumberOfWords || isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
+    return !this.defaultUserSettings?.selectedSummarizationNumberOfWords ||
+      isNaN(Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords))
       ? undefined
       : Number(this.defaultUserSettings?.selectedSummarizationNumberOfWords);
   }
@@ -161,7 +162,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
         const { extension } = FileInfo.extractFileName(a.files[0].name);
         return (
           a.status === TaskStatus.QUEUED &&
-          (a.files[0].blob === undefined || extension !== '.wav' || (a.files.length > 1 && a.files[1].blob === undefined))
+          (a.files[0].blob === undefined || !a.files[0].type.includes('audio') || (a.files.length > 1 && a.files[1].blob === undefined))
         );
       }).length;
     }
@@ -227,16 +228,16 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
     if (
       (task.files.length > 1 && task.files[1].blob !== undefined) ||
       task.operations[0].rounds.length > 1 ||
-      this.getExtension(task.files[0]) !== '.wav'
+      !task.files[0].type.includes('audio')
     ) {
       return {
         type: 'info',
-        label: this.getExtension(task.files[0]) !== '.wav' ? this.getExtension(task.files[0]) : this.getExtension(task.files[1]),
+        label: !task.files[0].type.includes('audio') ? this.getExtension(task.files[0]) : this.getExtension(task.files[1]),
       };
     } else {
       return {
         type: 'warning',
-        label: this.getExtension(task.files[0]) !== '.wav' ? this.getExtension(task.files[0]) : this.getExtension(task.files[1]),
+        label: !task.files[0].type.includes('audio') ? this.getExtension(task.files[0]) : this.getExtension(task.files[1]),
       };
     }
   }

@@ -80,7 +80,7 @@ export class PreprocessingEffects {
           if (unsupportedFiles.length > 0) {
             this.notificationService.showNotification(
               'Unsupported files added',
-              `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only WAVE audio files and transcript formats are supported.`,
+              `<b>${unsupportedFiles.length}</b> unsupported file(s) were ignored. Only audio files (WAVE, MP3, OGG, FLAC, M4A) and transcript formats are supported.`,
               {
                 type: 'desktop',
                 messageType: 'warning',

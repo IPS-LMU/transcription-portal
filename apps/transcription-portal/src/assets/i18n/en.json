@@ -260,7 +260,7 @@
   },
   "quick start": {
     "add files": {
-      "description": "Drag & drop files (.wav & transcripts) to this whole area (inside the dashed rectangle) or use the \"{{addFilesButton}}\" button. Later, you can add files via drag & drop to the table rows, too."
+      "description": "Drag & drop your audio files (WAVE, MP3, FLAC, OGG) and transcript files (optional) to this whole area (inside the dashed rectangle) or use the \"{{addFilesButton}}\" button. Later, you can add files via drag & drop to the table rows, too."
     },
     "check options": {
       "description": "Now set the options for the added files: Click on the \"{{checkOptionsButton}}\" button and apply the changed options."

@@ -20,7 +20,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     'for processing. Prior to upload, the format of the audio files will be checked; stereo files will be split into ' +
     'their left and right channel.';
   protected readonly _name = 'Upload';
-  protected readonly _resultType = '.wav';
+  protected readonly _resultType = 'files';
   protected readonly _shortTitle = 'UL';
   protected readonly _title = 'Upload';
 
@@ -104,8 +104,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
                   for (let i = 0; i < task.files.length; i++) {
                     const file = { ...task.files[i] };
                     file.url = obj.urls[i];
-                    const { extension } = FileInfo.extractFileName(file.name);
-                    const type = extension.indexOf('wav') > 0 ? 'audio/wav' : 'text/plain';
+                    const type = file.type;
                     const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
                     let content: string | undefined;
 

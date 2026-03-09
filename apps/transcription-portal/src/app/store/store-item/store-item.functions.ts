@@ -1,7 +1,15 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
 import { last } from '@octra/utilities';
-import { AudioFileInfoSerialized, AudioInfo, DirectoryInfo, FileInfo, FileInfoSerialized, readFileContents } from '@octra/web-media';
+import {
+  AudioFileInfoSerialized,
+  AudioInfo,
+  DirectoryInfo,
+  FileInfo,
+  FileInfoSerialized,
+  MusicMetadataFormat,
+  readFileContents
+} from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { ModeState, ModeStatistics, TPortalModes } from '../mode';
 import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
@@ -114,7 +122,7 @@ export function getTaskWithHashAndName(hash: string, name: string, entries: Stor
   return undefined;
 }
 
-export function updateTaskFilesWithSameFile(
+export function addOrChangeItemsToState(
   addedStoreFileOrDirectory: StoreFile | StoreAudioFile | StoreFileDirectory,
   itemsState: StoreItemsState,
   adapter: EntityAdapter<StoreItem>,
@@ -230,25 +238,42 @@ export function updateTaskFilesWithSameFile(
 
               if (firstFile.type !== addedFile.type && firstFileName.name === storeFileName.name) {
                 if (firstFile.type.includes('audio') || addedFile.type.includes('audio')) {
+                  const { extension } = FileInfo.extractFileName(firstFile.attributes.originalFileName);
+
                   someThingFound = true;
                   const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
+                  let operations = [
+                    task.operations![0],
+                    {
+                      ...task.operations![1],
+                      enabled: false,
+                      rounds: changeLastRound(task.operations![1].rounds, (lastRound) => ({
+                        ...lastRound,
+                        status: TaskStatus.SKIPPED,
+                      })),
+                    },
+                    ...task.operations!.slice(2),
+                  ];
+
+                  if (new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension)) {
+                    // not wav
+                    operations = operations.map((a) => {
+                      if (a.name === 'Emu WebApp') {
+                        return {
+                          ...a,
+                          rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+                        };
+                      }
+                      return a;
+                    });
+                  }
+
                   iState = adapter.updateOne(
                     {
                       id: task.id,
                       changes: {
                         files,
-                        operations: [
-                          task.operations![0],
-                          {
-                            ...task.operations![1],
-                            enabled: false,
-                            rounds: changeLastRound(task.operations![1].rounds, (lastRound) => ({
-                              ...lastRound,
-                              status: TaskStatus.SKIPPED,
-                            })),
-                          },
-                          ...task.operations!.slice(2),
-                        ],
+                        operations: operations,
                       },
                     },
                     iState,
@@ -272,7 +297,21 @@ export function updateTaskFilesWithSameFile(
       // add file to a new task
       const addedFile = addedStoreFileOrDirectory as StoreFile;
       const newTaskID = result.counters.storeItem;
-      const operations = createOperationsByDefaultOperations(defaultOperations, newTaskID, result.counters, currentModeOptions);
+      let operations = createOperationsByDefaultOperations(defaultOperations, newTaskID, result.counters, currentModeOptions);
+      const { extension } = FileInfo.extractFileName(addedFile.attributes.originalFileName);
+
+      if (new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension)) {
+        // not wav
+        operations = operations.map((a) => {
+          if (a.name === 'Emu WebApp') {
+            return {
+              ...a,
+              rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+            };
+          }
+          return a;
+        });
+      }
 
       const newStoreItem: StoreItemTask = {
         files: [addedFile],
@@ -313,7 +352,7 @@ export function updateTaskFilesWithSameFile(
             } else {
               // file
               const fi = storeFileOrDir as StoreFile;
-              const f: StoreItemTask = {
+              let f: StoreItemTask = {
                 directoryID: folderIDCounter,
                 files: [fi],
                 id: newStoreItemCounter,
@@ -321,6 +360,21 @@ export function updateTaskFilesWithSameFile(
                 status: TaskStatus.QUEUED,
                 type: 'task',
               };
+              const { extension } = FileInfo.extractFileName(fi.attributes.originalFileName);
+
+              if (new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension)) {
+                // not wav
+                f.operations = f.operations.map((a) => {
+                  if (a.name === 'Emu WebApp') {
+                    return {
+                      ...a,
+                      rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+                    };
+                  }
+                  return a;
+                });
+              }
+
               newStoreItemCounter++;
               return f;
             }

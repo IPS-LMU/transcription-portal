@@ -38,7 +38,7 @@ import {
   getPreviousEnabledOperation,
   getStoreItemsWhereRecursive,
   isStoreFileAvailable,
-  updateTaskFilesWithSameFile,
+  addOrChangeItemsToState,
 } from './store-item.functions';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 import { FileInfo } from '@octra/web-media';
@@ -158,7 +158,7 @@ export class StoreItemEffects {
           const addedItemIDs: number[] = [];
 
           for (const result of results) {
-            const itemChange = updateTaskFilesWithSameFile(
+            const itemChange = addOrChangeItemsToState(
               result,
               modesState.entities[mode]!.items,
               taskAdapter,

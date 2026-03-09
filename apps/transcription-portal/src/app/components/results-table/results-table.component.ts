@@ -121,7 +121,7 @@ export class ResultsTableComponent implements OnChanges {
     if (this.task && this.operation && opFactory?.resultType) {
       this.conversionExtension = opFactory.resultType.replace('/json', '');
 
-      if (opFactory.resultType !== '.wav') {
+      if (opFactory.name !== 'Upload') {
         const promises: Promise<TPortalFileInfo[]>[] = [];
 
         for (const round of this.operation.rounds) {

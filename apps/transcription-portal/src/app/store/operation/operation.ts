@@ -1,10 +1,11 @@
 import { StoreFile, TaskStatus } from '../store-item';
 import { FileInfoSerialized } from '@octra/web-media';
+import { OperationName } from './factory/factory.types';
 
 export interface StoreTaskOperation<T extends object = any, O extends StoreTaskOperation = any> {
   id: number;
   taskID: number;
-  name: string;
+  name: OperationName;
   enabled: boolean;
   serviceProviderName?: string;
   rounds: StoreTaskOperationProcessingRound[];

@@ -4,9 +4,10 @@ import { StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { SubscriptionManager } from '@octra/utilities';
 import { IDBOperation } from '../../../indexedDB';
+import { OperationName } from './factory.types';
 
 export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
-  protected abstract readonly _name: string;
+  protected abstract readonly _name: OperationName;
   protected abstract readonly _title: string;
   protected abstract readonly _description: string;
   protected abstract readonly _shortTitle: string;
@@ -17,7 +18,7 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
     this.commands = commands;
   }
 
-  get name(): string {
+  get name(): OperationName {
     return this._name;
   }
 
@@ -54,7 +55,7 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
     operation: T,
     httpClient: HttpClient,
     subscrManager: SubscriptionManager<Subscription>,
-    item$: Observable<StoreItemTask | undefined>
+    item$: Observable<StoreItemTask | undefined>,
   ): Observable<{
     operation: StoreTaskOperation;
   }>;

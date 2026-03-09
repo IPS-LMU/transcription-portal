@@ -1,6 +1,7 @@
 import { EntityAdapter } from '@ngrx/entity';
 import { ActionCreator, on, ReducerTypes } from '@ngrx/store';
 import { last } from '@octra/utilities';
+import { FileInfo, MusicMetadataFormat } from '@octra/web-media';
 import { Mode, ModeState, TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { OperationFactory, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
@@ -574,12 +575,17 @@ export const getTaskReducers = (
             (item, itemsState) => {
               if (item.type === 'task') {
                 const task = item as StoreItemTask;
+                const audioFile = task.files.find((a) => a.type.includes('audio'));
+                const { extension } = audioFile?.attributes.originalFileName
+                  ? FileInfo.extractFileName(audioFile.attributes.originalFileName)
+                  : { extension: undefined };
+
                 for (let i = 0; i < state.entities[state.currentMode]!.defaultOperations.length; i++) {
                   const defaultOperation = state.entities[state.currentMode]!.defaultOperations[i];
                   const lastRoundIndex = itemsState.entities[item.id]!.operations![i].rounds.length - 1;
 
                   if (lastRoundIndex > -1) {
-                    const changedItem = {
+                    let changedItem = {
                       ...(itemsState.entities[item.id]!.operations as StoreTaskOperation<any, any>[])[i],
                       rounds: [
                         ...itemsState.entities[item.id]!.operations![i].rounds.slice(0, lastRoundIndex),
@@ -590,6 +596,18 @@ export const getTaskReducers = (
                       ],
                       enabled: defaultOperation.enabled,
                     };
+
+                    if (extension && new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension)) {
+                      // not wav
+                      if (defaultOperation.factory.name === 'Emu WebApp') {
+                        changedItem.rounds = [
+                          {
+                            status: TaskStatus.SKIPPED,
+                            results: [],
+                          },
+                        ];
+                      }
+                    }
 
                     itemsState = taskAdapter.updateOne(
                       {

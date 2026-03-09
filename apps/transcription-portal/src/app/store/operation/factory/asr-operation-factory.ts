@@ -132,7 +132,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                         task.operations[2]?.enabled === false &&
                         task.operations[3]?.name === 'MAUS' &&
                         task.operations[3]?.enabled === false) ||
-                      task.operations[3]?.name === 'SUMMARIZATION' ||
+                      task.operations[3]?.name === 'Summarization' ||
                       (!clonedOperation.options.diarization?.enabled && clonedOperation.serviceProviderName === 'Google');
                     // use G2P_CHUNKER only if Octra and Word alignment is disabled or summarization mode or if service provider is Google and diarization disabled
 

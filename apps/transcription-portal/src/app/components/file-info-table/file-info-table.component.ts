@@ -22,9 +22,5 @@ export class FileInfoTableComponent implements OnInit {
   }
   constructor() {}
 
-  isWavFile() {
-    return this.fileinfo?.type?.includes('wav') ?? false;
-  }
-
   ngOnInit() {}
 }
