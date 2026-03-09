@@ -4,7 +4,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { IFile } from '@octra/annotation';
 import { openModal } from '@octra/ngx-components';
-import { DirectoryInfo, FileInfo } from '@octra/web-media';
+import { DirectoryInfo, FileInfo, MusicMetadataFormat } from '@octra/web-media';
 import { catchError, exhaustMap, from, map, mergeMap, of, tap, withLatestFrom } from 'rxjs';
 import { SplitModalComponent } from '../../modals/split-modal/split-modal.component';
 import { NotificationService } from '../../shared/notification.service';
@@ -219,6 +219,66 @@ export class PreprocessingEffects {
         return of(PreprocessingActions.processQueueItem.next({ mode }));
       }),
     ),
+  );
+
+  checkForNonWaveFiles$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(PreprocessingActions.processQueueItem.success),
+        withLatestFrom(this.store),
+        tap(([{ mode, results }, state]: [{ mode: TPortalModes; results: (StoreFile | StoreAudioFile | StoreFileDirectory)[] }, RootState]) => {
+          let nonWavAudioFiles = 0;
+          let noneWaveAndMultiChannel = 0;
+
+          const getNumberOfNonWavAudioFiles = (item: StoreFile | StoreAudioFile | StoreFileDirectory) => {
+            if (item.type !== 'folder') {
+              const entry = item as StoreFile;
+              const { extension } = FileInfo.extractFileName(entry.blob!.name);
+              if (extension && new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension!)) {
+                // not wav
+                nonWavAudioFiles++;
+                if ((entry as StoreAudioFile).channels > 1) {
+                  noneWaveAndMultiChannel++;
+                }
+              }
+            } else {
+              // folder
+              const folder = item as StoreFileDirectory;
+              for (const entry of folder.entries ?? []) {
+                getNumberOfNonWavAudioFiles(entry);
+              }
+            }
+          };
+
+          for (const result of results) {
+            getNumberOfNonWavAudioFiles(result);
+          }
+
+          if (nonWavAudioFiles > 0 && mode === 'annotation') {
+            this.notificationService.showNotification(
+              'Non-Wave files detected',
+              `Phonetic Detail (Emu-webApp) is going to be skipped for ${nonWavAudioFiles} non-wave audio file(s).`,
+              {
+                type: 'alert',
+                messageType: 'warning',
+                duration: 30,
+              },
+            );
+          }
+          if (noneWaveAndMultiChannel > 0) {
+            this.notificationService.showNotification(
+              'Non-Wave files detected',
+              `You added ${noneWaveAndMultiChannel} non-wave audio file(s) with more than one channel. On Manual-Transcription only the first channel is going to be used.`,
+              {
+                type: 'alert',
+                messageType: 'warning',
+                duration: 30,
+              },
+            );
+          }
+        }),
+      ),
+    { dispatch: false },
   );
 
   checkForSplit$ = createEffect(() =>

@@ -821,7 +821,7 @@ export function getPreviousEnabledOperation(task: StoreItemTask, operation: Stor
   if (index > 0) {
     for (let i = index - 1; i >= 0; i--) {
       const previousOperation = task.operations[i];
-      if (previousOperation.enabled) {
+      if (getLastOperationRound(previousOperation)?.status !== "SKIPPED") {
         return previousOperation;
       }
     }

@@ -18,7 +18,7 @@ export class EmuOperationFactory extends OperationFactory<EmuOperation> {
   protected readonly _name = 'Emu WebApp';
   protected readonly _resultType = 'AnnotJSON';
   protected readonly _shortTitle = 'PD';
-  protected readonly _title = 'Phonetic detail';
+  protected readonly _title = 'Phonetic Detail';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): EmuOperation {
     return {

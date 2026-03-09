@@ -87,7 +87,7 @@ export class NotificationService {
     this.alertsend.emit({
       type,
       message,
-      duration: duration ? duration : 5,
+      duration: duration !== undefined ? duration : 5,
     });
   }
 }

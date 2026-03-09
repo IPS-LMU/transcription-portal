@@ -29,7 +29,7 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
   protected readonly _name = 'MAUS';
   protected readonly _resultType = 'BAS Partitur Format';
   protected readonly _shortTitle = 'WA';
-  protected readonly _title = 'Word alignment';
+  protected readonly _title = 'Word Alignment';
 
   create(id: number, taskID: number, rounds: StoreTaskOperationProcessingRound[]): G2pMausOperation {
     return {

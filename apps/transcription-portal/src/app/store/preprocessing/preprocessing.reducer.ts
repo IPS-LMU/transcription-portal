@@ -58,7 +58,7 @@ export const getPreprocessingReducers = (
             {
               id,
               changes: {
-                status: results.find((a) => a.type.includes('audio') && (a as StoreAudioFile).channels > 1)
+                status: results.find((a) => a.type.includes('audio') && (a as StoreAudioFile).channels > 1 && a.type.includes("wav"))
                   ? state.entities[mode]!.preprocessor.splitType
                     ? ProcessingQueueStatus.NEEDS_SPLIT
                     : ProcessingQueueStatus.WAIT_FOR_SPLIT

@@ -103,7 +103,7 @@ export const getTaskReducers = (
             };
           }
 
-          if (operation.enabled) {
+          if (operation.enabled && opLastRound?.status !== 'SKIPPED') {
             lastEnabledOP = getLastOperationRound(operation);
           }
         }
@@ -1186,7 +1186,7 @@ export const getTaskReducers = (
     for (let i = operationIndex + 1; i < task.operations.length; i++) {
       const operation = task.operations[i];
       if (
-        operation.enabled &&
+        operation.enabled && getLastOperationRound(operation)?.status !== TaskStatus.SKIPPED &&
         [TaskStatus.ERROR, TaskStatus.FINISHED, TaskStatus.PROCESSING].includes(getLastOperationRound(operation)?.status as TaskStatus)
       ) {
         state = modeAdapter.updateOne(

@@ -7,6 +7,7 @@ import { AnnotJSONConverter, IFile, OAnnotJSON, PartiturConverter } from '@octra
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
+import { FileInfo } from '@octra/web-media';
 import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
 import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
@@ -31,6 +32,7 @@ import {
 } from './store-item';
 import { StoreItemActions } from './store-item.actions';
 import {
+  addOrChangeItemsToState,
   applyFunctionOnStoreItemsWhereRecursive,
   areAllResultsOnline,
   convertFileInfoToStoreFile,
@@ -38,10 +40,8 @@ import {
   getPreviousEnabledOperation,
   getStoreItemsWhereRecursive,
   isStoreFileAvailable,
-  addOrChangeItemsToState,
 } from './store-item.functions';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
-import { FileInfo } from '@octra/web-media';
 
 @Injectable()
 export class StoreItemEffects {
@@ -266,7 +266,7 @@ export class StoreItemEffects {
         StoreItemActions.changeOperation.do,
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
         StoreItemActions.resetOperation.success,
-        StoreItemActions.importItemsFromProcessingQueue.success
+        StoreItemActions.importItemsFromProcessingQueue.success,
       ),
       withLatestFrom(this.store),
       filter(([action, state]: [any, RootState]) => {
@@ -383,7 +383,7 @@ export class StoreItemEffects {
             const operation: StoreTaskOperation = item!.operations[i];
             const lastRound = getLastOperationRound(operation);
 
-            if (operation.enabled) {
+            if (lastRound?.status !== 'SKIPPED') {
               if (
                 lastRound?.status === 'PENDING' &&
                 (!lastNonSkippableOperation || getLastOperationRound(lastNonSkippableOperation)?.status === TaskStatus.FINISHED)
@@ -741,7 +741,7 @@ export class StoreItemEffects {
             while (operationIndex >= 0 && operationIndex < task.operations.length) {
               if (operationIndex + 1 < task.operations.length) {
                 const nextOperation = task.operations[operationIndex + 1];
-                if (nextOperation.enabled) {
+                if (getLastOperationRound(nextOperation)?.status !== 'SKIPPED') {
                   if (['OCTRA', 'Emu WebApp'].includes(nextOperation.name)) {
                     this.notificationService.showNotification(
                       `${nextOperation.name} ready for editing`,
