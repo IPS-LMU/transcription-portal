@@ -132,8 +132,8 @@
                 <i
                   class="bi bi-exclamation-circle pointer"
                   [ngClass]="{
-                    yellow: !bugService.hasErrors,
-                    red: bugService.hasErrors,
+                    yellow: !errorsFound,
+                    red: errorsFound,
                   }"
                 ></i
                 ><span style="cursor: pointer">

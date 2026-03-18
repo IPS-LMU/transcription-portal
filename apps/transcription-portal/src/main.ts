@@ -2,7 +2,7 @@
 
 import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 
-import { provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -11,12 +11,11 @@ import { NgbActiveModal, NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
-import { VersionCheckerService } from '@octra/ngx-components';
+import { BugReportService, VersionCheckerService } from '@octra/ngx-components';
 import { NgCircleProgressModule } from 'ng-circle-progress';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { AppRoutingModule } from './app/app-routing.module';
 import { AppComponent } from './app/app.component';
-import { BugReportService } from './app/shared/bug-report.service';
 import { CompatibilityService } from './app/shared/compatibility.service';
 import { DownloadService } from './app/shared/download.service';
 import { NotificationService } from './app/shared/notification.service';

@@ -1,12 +1,10 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { BugreportModalComponent } from '@octra/ngx-components';
-import { SubscriptionManager } from '@octra/utilities';
-import { BrowserInfo } from '@octra/web-media';
+import { BugreportModalComponent, BugReportService } from '@octra/ngx-components';
+import { removeEmptyProperties, SubscriptionManager } from '@octra/utilities';
 import { AppInfo } from '../app.info';
 import { openModal } from '../obj/functions';
 import { AppStoreService } from '../store';
-import { BugReportService } from './bug-report.service';
 
 @Injectable({
   providedIn: 'root',
@@ -36,35 +34,21 @@ export class OHModalService implements OnDestroy {
   }
 
   public async openFeedbackModal() {
-    const pkgText = JSON.stringify(
-      {
-        type: 'bug',
-        technicalInformation: {
-          os: {
-            name: BrowserInfo.os.family,
-            version: BrowserInfo.os.version,
-          },
-          browser: {
-            name: BrowserInfo.browser,
-            version: BrowserInfo.version,
-          },
-        },
-        protocol: {
-          tool: {
-            version: AppInfo.version,
-            language: 'en',
-            signed_in: true,
-            url: window.location.href,
-          },
-          entries: this.bugreportService.console,
-        },
+    const tool = {
+      version: AppInfo.BUILD.version,
+      url: window.location.href,
+      customAttributes: {
+        'Last Updated': AppInfo.BUILD.timestamp,
+        Language: 'en',
+        "rtzsafdzta": "asudiahd"
       },
-      null,
-      2,
-    );
+    };
+    let pkg = this.bugreportService.getPackage(tool);
+
+    pkg = removeEmptyProperties(JSON.parse(JSON.stringify(pkg)));
 
     const ref = openModal<BugreportModalComponent>(this.ngbModalService, BugreportModalComponent, BugreportModalComponent.options, {
-      pkgText,
+      pkg,
       showSenderFields: true,
       _profile: this.userProfile,
     } as any);
@@ -75,14 +59,14 @@ export class OHModalService implements OnDestroy {
       sending: 'Please wait while sending your feedback...',
     };
 
-    console.log(ref.componentInstance.i18n);
-
     this.subscrManager.add(
       ref.componentInstance.send.subscribe({
         next: ({ name, email, message, sendProtocol, screenshots }: any) => {
           this.appStoreService.changeUserProfile(name, email);
           ref.componentInstance.sendStatus = 'sending';
-          ref.componentInstance.waitForSendResponse(this.bugreportService.sendBugReport(name, email, message, sendProtocol, screenshots) as any);
+          ref.componentInstance.waitForSendResponse(
+            this.bugreportService.sendReport(name, email, message, sendProtocol, screenshots, tool),
+          );
         },
       }),
     );

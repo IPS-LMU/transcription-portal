@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { VersionCheckerService } from '@octra/ngx-components';
+import { BugReportService, ConsoleLoggingService, ConsoleLoggingServiceOptions, VersionCheckerService } from '@octra/ngx-components';
 import { OctraAPIService } from '@octra/ngx-octra-api';
 import { SubscriptionManager } from '@octra/utilities';
 import { MaintenanceWarningSnackbar } from 'maintenance-warning-snackbar';
@@ -13,7 +13,6 @@ import { IDBNotificationSettingsItem } from '../../indexedDB';
 import { FirstModalComponent } from '../../modals/first-modal/first-modal.component';
 import { OHConfiguration } from '../../obj/oh-config';
 import { AppSettings } from '../../shared/app.settings';
-import { BugReportService, ConsoleType } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { IDBActions } from '../idb/idb.actions';
@@ -26,7 +25,8 @@ export class AppEffects {
   private actions$ = inject(Actions);
   private store = inject(Store);
   versionChecker = inject(VersionCheckerService);
-  bugService = inject(BugReportService);
+  private bugService: BugReportService = inject(BugReportService);
+  private consoleService = inject(ConsoleLoggingService);
   private http = inject(HttpClient);
   private octraAPI = inject(OctraAPIService);
   protected ngbModalService = inject(NgbModal);
@@ -60,63 +60,11 @@ export class AppEffects {
         // overwrite console.log
         if (environment.debugging.enabled && environment.debugging.logging.console) {
           console.log('REDIRECT CONSOLE LOGGING ENABLED');
-          const oldLog = window.console.log;
-          // eslint-disable-next-line @typescript-eslint/no-this-alias
-          const serv = this.bugService;
-
-          // tslint:disable-next-line:only-arrow-functions
-          window.console.log = (...args) => {
-            serv.addEntry(ConsoleType.LOG, args[0]);
-            oldLog.apply(console, args);
-          };
-
-          // overwrite console.err
-          const oldError = window.console.error;
-          // tslint:disable-next-line:only-arrow-functions
-          window.console.error = (...args) => {
-            const error = args[0];
-            const context = args[1];
-
-            let debug = '';
-            let stack: string | undefined = '';
-
-            if (typeof error === 'string') {
-              debug = error;
-
-              if (error === 'ERROR' && context !== undefined && context.stack && context.message) {
-                debug = context.message;
-                stack = context.stack;
-              }
-            } else {
-              if (error instanceof Error) {
-                debug = error.message;
-                stack = error.stack;
-              } else {
-                if (typeof error === 'object') {
-                  // some other type of object
-                  debug = 'OBJECT';
-                  stack = JSON.stringify(error);
-                } else {
-                  debug = error;
-                }
-              }
-            }
-
-            if (debug !== '') {
-              serv.addEntry(ConsoleType.ERROR, `${debug}${stack !== '' ? ' ' + stack : ''}`);
-            }
-
-            oldError.apply(console, args);
-          };
-
-          // overwrite console.warn
-          const oldWarn = window.console.warn;
-
-          // tslint:disable-next-line:only-arrow-functions
-          console.warn = (...args) => {
-            serv.addEntry(ConsoleType.WARN, args[0]);
-            oldWarn.apply(console, args);
-          };
+          this.consoleService.init(
+            new ConsoleLoggingServiceOptions({
+              confidentialList: ['(ACCESSCODE=)[^\\s&]+', '(accesscode=)[^\\s&]+'],
+            }),
+          );
         }
 
         return AppActions.initConsoleLogger.success();
@@ -128,11 +76,7 @@ export class AppEffects {
     () =>
       this.actions$.pipe(
         tap((action) => {
-          if (
-            environment.debugging.enabled &&
-            environment.debugging.logging.actions &&
-            action.type.indexOf('Set Console Entries') < 0
-          ) {
+          if (environment.debugging.enabled && environment.debugging.logging.actions && action.type.indexOf('Set Console Entries') < 0) {
             console.groupCollapsed(`ACTION ${action.type} ---`);
             console.log(action);
             console.groupEnd();

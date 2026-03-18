@@ -14,7 +14,7 @@ import {
   NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
-import { ConsoleType } from '@octra/ngx-components';
+import { ConsoleEntry, ConsoleGroupEntry, ConsoleLoggingService, ConsoleType } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { hasProperty } from '@octra/utilities';
 import { environment } from '../../../environments/environment';
@@ -29,7 +29,6 @@ import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.comp
 import { openModal } from '../../obj/functions';
 import { TPortalDirectoryInfo, TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { RoutingService } from '../../routing.service';
-import { BugReportService } from '../../shared/bug-report.service';
 import { NotificationService } from '../../shared/notification.service';
 import { OHModalService } from '../../shared/ohmodal.service';
 import { TimePipe } from '../../shared/time.pipe';
@@ -76,7 +75,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   protected ngbModalService = inject(NgbModal);
   protected httpClient = inject(HttpClient);
   protected notification = inject(NotificationService);
-  protected bugService = inject(BugReportService);
+  protected consoleLoggingService = inject(ConsoleLoggingService);
   protected idbStoreService = inject(IDBStoreService);
   protected modalService = inject(OHModalService);
   protected appStoreService = inject(AppStoreService);
@@ -107,6 +106,34 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsTableComponent;
 
+  public get errorsFound(): boolean {
+    let beginCheck = false;
+    return (
+      this.consoleLoggingService.console.filter((a) => {
+        const hasError = (b: ConsoleEntry) => {
+          if (b.type === ConsoleType.ERROR && beginCheck) {
+            return true;
+          }
+          if (typeof b.message === 'string' && b.message.indexOf('AFTER RELOAD') > -1) {
+            beginCheck = true;
+          }
+          return false;
+        };
+
+        if (Object.keys(a).includes('label') || Object.keys(a).includes('entries')) {
+          for (const entry of (a as ConsoleGroupEntry).entries) {
+            if (hasError(entry)) {
+              return true;
+            }
+          }
+          return false;
+        } else {
+          return hasError(a as ConsoleEntry);
+        }
+      }).length > 0
+    );
+  }
+
   constructor() {
     super();
     this.subscribe(this.modeStoreService.openedToolOperation$, {
@@ -116,7 +143,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     });
     this.subscribe(this.route.url, {
       next: (url) => {
-        if(url.length > 0) {
+        if (url.length > 0) {
           if (url[0].path === 'annotation') {
             this.modeStoreService.changeMode('annotation');
           } else if (url[0].path.includes('summarization')) {
@@ -304,7 +331,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onFeedbackRequest(operation: StoreTaskOperation) {
-    this.bugService.addEntry(
+    this.consoleLoggingService.addEntry(
       ConsoleType.INFO,
       `user clicked on report issue:\n` +
         `operation: ${operation.name}, ${getLastOperationRound(operation)?.status}\n` +
