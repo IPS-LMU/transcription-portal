@@ -161,6 +161,9 @@
         "title": "Processing duration (minutes)"
       },
       "title": "Statistics for {{currentMode}}"
+    },
+    "hotkeys": {
+      "title": "Hotkeys"
     }
   },
   "modes": {
@@ -192,6 +195,9 @@
     },
     "user guide": {
       "name": "User Guide"
+    },
+    "hotkeys": {
+      "name": "Hotkeys"
     }
   },
   "operations": {
@@ -295,5 +301,14 @@
       "header": "New update available"
     },
     "reload now": "Reload now"
+  },
+  "hotkeys": {
+    "proceedings-table": {
+      "title": "Tabelle",
+      "rows": {
+        "remove": "Remove selected rows",
+        "select all": "Select all rows"
+      }
+    }
   }
 }

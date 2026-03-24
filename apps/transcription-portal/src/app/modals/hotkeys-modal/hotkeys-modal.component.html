@@ -1,0 +1,32 @@
+<div class="modal-header">
+  <div class="row g-1 w-100 align-items-center">
+    <div class="col">
+      <h4 class="modal-title d-block" id="modal-basic-title"><i class="bi bi-command"></i> {{ 'modals.hotkeys.title' | transloco }}</h4>
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.close('Cross click')" autofocus></button>
+    </div>
+  </div>
+</div>
+<div class="modal-body">
+  @for (group of shortcutService.groups; track group.name) {
+    <h5>{{ "hotkeys." + group.name + ".title" | transloco }}</h5>
+    <table class="table table-striped">
+      <tbody>
+        @for (item of group.items; track item.name) {
+          <tr class="align-middle">
+            <td>{{ 'hotkeys.'+ group.name + "." + item.label | transloco }}:</td>
+            <td>
+              @for (entry of item.keys[platform]!.split(' + '); track entry) {
+                <tportal-hotkey [key]="entry"></tportal-hotkey>
+                @if ($index === item.keys[platform]!.split(' + ').length - 2) {
+                  <span class="mx-2">+</span>
+                }
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

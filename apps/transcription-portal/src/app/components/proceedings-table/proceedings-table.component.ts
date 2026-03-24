@@ -79,7 +79,7 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     UpperCasePipe,
     ProceedingTableNameColComponent,
   ],
-  providers: [ShortcutService],
+  providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
@@ -191,18 +191,8 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   private initShortcuts() {
     this.shortcuts = [
       {
-        name: 'row-remove',
-        label: 'row.remove',
-        keys: {
-          mac: 'CMD + BACKSPACE',
-          pc: 'CTRL + BACKSPACE',
-        },
-        title: 'Remove row',
-        callback: this.onShortcutRowRemove,
-      },
-      {
         name: 'rows-select-all',
-        label: 'rows.select.all',
+        label: 'rows.select all',
         keys: {
           mac: 'CMD + A',
           pc: 'CTRL + A',
@@ -210,6 +200,16 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
         title: 'Select all',
         callback: this.onShortcutRowsSelectAll,
         focusonly: true,
+      },
+      {
+        name: 'rows-remove',
+        label: 'rows.remove',
+        keys: {
+          mac: 'CMD + BACKSPACE',
+          pc: 'CTRL + BACKSPACE',
+        },
+        title: 'Remove row',
+        callback: this.onShortcutRowRemove,
       },
     ];
 
@@ -233,6 +233,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   override ngOnDestroy() {
     super.ngOnDestroy();
+    this.shortcutService.destroy();
     this.cd.detach();
   }
 

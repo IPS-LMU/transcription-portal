@@ -44,6 +44,7 @@ import {
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
+import { HotkeysModalComponent } from '../../modals/hotkeys-modal/hotkeys-modal.component';
 
 @Component({
   selector: 'tportal-main',
@@ -378,6 +379,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   openAboutModal() {
     const ref = openModal<AboutModalComponent>(this.ngbModalService, AboutModalComponent, AboutModalComponent.options);
+    this.appStoreService.setShortcutsEnabled(false);
+    ref.result.then(() => {
+      this.appStoreService.setShortcutsEnabled(true);
+    });
+  }
+
+  openHotkeysModal(){
+    const ref = openModal<HotkeysModalComponent>(this.ngbModalService, HotkeysModalComponent, HotkeysModalComponent.options);
     this.appStoreService.setShortcutsEnabled(false);
     ref.result.then(() => {
       this.appStoreService.setShortcutsEnabled(true);

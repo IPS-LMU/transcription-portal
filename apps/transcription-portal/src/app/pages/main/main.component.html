@@ -105,6 +105,18 @@
         <ul class="nav navbar-nav flex-fill w-100 justify-content-end right-icons">
           <li class="nav-item active">
             <a
+              href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/contents/v2.0.0/introduction.html"
+              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer; text-decoration: none"
+              target="_blank"
+              ngbPopover="Help"
+              placement="bottom-right"
+              triggers="mouseenter:mouseleave"
+            ><i class="bi bi-book" style="color: cornflowerblue"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
+            >
+          </li>
+          <li class="nav-item active">
+            <a
               style="text-align: left; vertical-align: middle; cursor: pointer; text-decoration: none"
               (click)="openAboutModal()"
               ngbPopover="About"
@@ -116,14 +128,13 @@
           </li>
           <li class="nav-item active">
             <a
-              href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/contents/v2.0.0/introduction.html"
-              style="text-align: left; vertical-align: middle; margin-top: 20px; cursor: pointer; text-decoration: none"
-              target="_blank"
-              ngbPopover="Help"
+              style="text-align: left; vertical-align: middle; cursor: pointer; text-decoration: none"
+              (click)="openHotkeysModal()"
+              ngbPopover="Hotkeys"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-              ><i class="bi bi-book" style="color: cornflowerblue"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
+            ><i class="bi bi-command" style="color: gray"></i>
+              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.hotkeys.name' | transloco }}</span></a
             >
           </li>
           @if (appStoreService.feedbackEnabled$ | async) {
