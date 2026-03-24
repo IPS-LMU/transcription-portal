@@ -7,12 +7,13 @@ import { SubscriberComponent } from '@octra/ngx-utilities';
 import hljs from 'highlight.js';
 import { CodeJarContainer, NgxCodeJarComponent } from 'ngx-codejar';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
+import { HtmlAudioPlayerComponent } from '@octra/ngx-components';
 
 @Component({
   selector: 'tportal-file-preview-modal',
   templateUrl: './file-preview-modal.component.html',
   styleUrls: ['./file-preview-modal.component.scss'],
-  imports: [NgxCodeJarComponent, TranslocoPipe, UpperCasePipe],
+  imports: [NgxCodeJarComponent, TranslocoPipe, UpperCasePipe, HtmlAudioPlayerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilePreviewModalComponent extends SubscriberComponent implements OnInit {

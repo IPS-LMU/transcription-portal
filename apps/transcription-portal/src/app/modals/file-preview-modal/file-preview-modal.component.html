@@ -11,7 +11,7 @@
     </div>
   </div>
 </div>
-<div class="modal-body">
+<div class="modal-body p-3">
   @if (!selectedFile?.isMediaFile()) {
     @if (selectedFile?.extension === '.txt' || selectedFile?.extension === '.srt' || selectedFile?.extension === '.vtt') {
       <textarea readonly class="w-100 h-100" [innerHTML]="fileContent"></textarea>
@@ -19,9 +19,7 @@
       <ngx-codejar [code]="fileContent" [highlightMethod]="highlightMethod" [readonly]="true" [showLineNumbers]="true"></ngx-codejar>
     }
   } @else if (selectedFile) {
-    <audio controls>
-      <source [src]="selectedFile.url" />
-    </audio>
+    <octra-html-audio-player [url]="selectedFile.url"></octra-html-audio-player>
   }
 </div>
 <div class="modal-footer" (dragover)="cancelEvent($event)" (drop)="cancelEvent($event)">
