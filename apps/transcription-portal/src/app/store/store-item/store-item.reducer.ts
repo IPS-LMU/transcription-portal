@@ -266,6 +266,7 @@ export const getTaskReducers = (
     state = updateStatistics(state, state.currentMode!);
     return state;
   }),
+  on(StoreItemActions.processNextStoreItem.do, (state: ModeState, { mode }) => updateStatistics(state, mode)),
   on(StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, (state: ModeState, { options }): ModeState => {
     const currentMode = state.entities[state.currentMode]!;
     const defaultOperations = currentMode.defaultOperations;
@@ -275,7 +276,7 @@ export const getTaskReducers = (
         id: state.currentMode,
         changes: {
           items: applyFunctionOnStoreItemsWhereRecursive(
-            (item) => item.status === TaskStatus.QUEUED,
+            (item) => item.status === TaskStatus.QUEUED && item.files !== undefined && item.files.some((a) => a.blob !== undefined),
             state.entities[state.currentMode]!.items,
             taskAdapter,
             (item, itemsState) => {
@@ -766,8 +767,8 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) =>
-    item
+  on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) => {
+    state = item
       ? modeAdapter.updateOne(
           {
             id: mode,
@@ -793,8 +794,11 @@ export const getTaskReducers = (
           },
           state,
         )
-      : state,
-  ),
+      : state;
+
+    state = updateStatistics(state, mode);
+    return state;
+  }),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
     const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items);
 
@@ -810,9 +814,12 @@ export const getTaskReducers = (
     } else if (lastRound?.status === TaskStatus.READY) {
       taskStatus = TaskStatus.READY;
     } else {
-      if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.PENDING) {
+      if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.PENDING && taskItem.status !== TaskStatus.PROCESSING) {
         // reuploading needed for upload
         taskStatus = TaskStatus.PENDING;
+      } else if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.UPLOADING) {
+        // reuploading needed for upload
+        taskStatus = TaskStatus.PROCESSING;
       } else {
         const allOperationsFinished = !taskItem
           .operations!.filter((op) => op.enabled)
@@ -1186,7 +1193,8 @@ export const getTaskReducers = (
     for (let i = operationIndex + 1; i < task.operations.length; i++) {
       const operation = task.operations[i];
       if (
-        operation.enabled && getLastOperationRound(operation)?.status !== TaskStatus.SKIPPED &&
+        operation.enabled &&
+        getLastOperationRound(operation)?.status !== TaskStatus.SKIPPED &&
         [TaskStatus.ERROR, TaskStatus.FINISHED, TaskStatus.PROCESSING].includes(getLastOperationRound(operation)?.status as TaskStatus)
       ) {
         state = modeAdapter.updateOne(

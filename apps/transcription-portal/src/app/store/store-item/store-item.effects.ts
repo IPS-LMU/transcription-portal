@@ -295,17 +295,14 @@ export class StoreItemEffects {
             .join(',')}`,
         );
         if (state.modes.entities[mode]!.statistics.running < 3 && state.modes.entities[mode]!.overallState === 'processing') {
-          const nextTask = getOneTaskItemWhereRecursive(
-            (item) =>
-              item.status === TaskStatus.PENDING ||
-              (item.status !== TaskStatus.FINISHED &&
-                item.status !== TaskStatus.QUEUED &&
-                item.status !== TaskStatus.UPLOADING &&
-                !item.disabled &&
-                item.status !== TaskStatus.PROCESSING &&
-                item.files?.find((a) => a.blob !== undefined) !== undefined),
-            state.modes.entities[mode]!.items,
-          );
+          const nextTask = getOneTaskItemWhereRecursive((item) => {
+            const uploadOperation = getLastOperationRound(item.operations![0]);
+            const hasFilesToBeUploaded = item.files !== undefined && item.files.some((a) => a.blob !== undefined);
+            const needsToBeUploadedOrAlreadyUploaded =
+              uploadOperation?.status === TaskStatus.FINISHED || (uploadOperation?.status === TaskStatus.PENDING && hasFilesToBeUploaded);
+
+            return item.status !== undefined && needsToBeUploadedOrAlreadyUploaded && !item.disabled && item.status === TaskStatus.PENDING;
+          }, state.modes.entities[mode]!.items);
           if (!nextTask) {
             return of(
               StoreItemActions.processNextStoreItem.nothingToDo({

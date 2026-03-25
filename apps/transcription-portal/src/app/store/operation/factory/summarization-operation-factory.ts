@@ -209,7 +209,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
 
                     if (errorLogFileURL) {
                       const errorLog = await downloadFile<string>(errorLogFileURL, 'text');
-                      console.error('SUMMARIZATION ERROR:\n\n' + errorLog);
+                      console.error(`ERROR FROM LST SUMMARIZATION SERVICE: ${errorLog}`);
                     }
                   }
 

@@ -402,6 +402,19 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                         }
                       }
                     } else {
+                      const errorFile = result.body.outputs.find((o: any) => o.template === 'errorlog');
+                      if (errorFile?.url) {
+                        try {
+                          const content = await downloadFile<string>(errorFile.url, 'text');
+                          console.error(`ERROR FROM LST ASR SERVICE: ${content}`);
+                        } catch (error) {
+                          console.error(`Can't retrieve error log from LST.`);
+                        }
+                      }
+
+                      if (result.body.errorMessage === 'An error occurred within the system. Please inspect the error log for details') {
+                        result.body.errorMessage += '. This error could be temporary. Please retry this task later again.';
+                      }
                       reject(result.body.errorMessage);
                     }
                   }
