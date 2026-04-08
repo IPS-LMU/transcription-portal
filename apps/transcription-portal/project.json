@@ -120,14 +120,6 @@
     "lint": {
       "executor": "@nx/eslint:lint"
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "apps/transcription-portal/jest.config.ts",
-        "tsConfig": "apps/transcription-portal/tsconfig.spec.json"
-      }
-    },
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {
