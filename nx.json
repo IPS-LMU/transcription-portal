@@ -111,5 +111,6 @@
     }
   },
   "defaultProject": "transcription-portal",
-  "useInferencePlugins": false
+  "useInferencePlugins": false,
+  "analytics": false
 }
