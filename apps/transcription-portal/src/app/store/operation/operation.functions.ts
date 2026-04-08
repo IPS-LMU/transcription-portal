@@ -33,7 +33,7 @@ export function convertIDBOperationToStoreOperation(
       asr: {
         language: operation.name === 'ASR' ? operation.language : undefined,
         diarization: operation.diarization,
-        provider: operation.name === 'ASR' ? operation.serviceProvider: undefined,
+        provider: operation.name === 'ASR' ? operation.serviceProvider : undefined,
       },
       maus: {
         language: operation.name === 'MAUS' ? operation.language : undefined,
@@ -58,6 +58,7 @@ export function convertIDBOperationRoundToStoreRound(round: OperationProcessingR
     parsedProtocol: parseProtocol(round.protocol),
     results: round.results.map((a) => convertIDBFileToStoreFile(a)),
     status: round.status,
+    time: round.time,
   };
 }
 
@@ -134,7 +135,7 @@ export async function convertStoreOperationRoundToIDBOperationRound(
   round: StoreTaskOperationProcessingRound,
 ): Promise<OperationProcessingRoundSerialized> {
   const results: (FileInfoSerialized | AudioFileInfoSerialized)[] = round.results.map((a) => convertStoreFileToIDBFile(a));
-  return { protocol: round.protocol, results, status: round.status };
+  return { protocol: round.protocol, results, status: round.status, time: round.time };
 }
 
 export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
