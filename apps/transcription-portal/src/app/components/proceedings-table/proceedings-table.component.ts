@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, JsonPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -13,9 +13,20 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbAccordionBody,
+  NgbAccordionButton,
+  NgbAccordionCollapse,
+  NgbAccordionDirective,
+  NgbAccordionHeader,
+  NgbAccordionItem,
+  NgbAccordionToggle,
+  NgbModal,
+  NgbTooltip,
+} from '@ng-bootstrap/ng-bootstrap';
 import { openModal, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Shortcut } from '@octra/web-media';
@@ -78,6 +89,15 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     TranslocoPipe,
     UpperCasePipe,
     ProceedingTableNameColComponent,
+    ReactiveFormsModule,
+    JsonPipe,
+    NgbAccordionButton,
+    NgbAccordionDirective,
+    NgbAccordionItem,
+    NgbAccordionHeader,
+    NgbAccordionToggle,
+    NgbAccordionBody,
+    NgbAccordionCollapse,
   ],
   providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +125,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     lastOperationRound?: StoreTaskOperationProcessingRound;
     lastOperationRoundResult?: StoreFile;
     operation?: StoreTaskOperation;
+    operationRounds?: StoreTaskOperationProcessingRound[];
     task?: StoreItemTask;
     directory?: StoreItemTaskDirectory;
     pointer: 'left' | 'right' | 'bottom-left' | 'bottom-right';
@@ -473,7 +494,11 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
       if (parentNode && this.popoverRef && this.inner) {
         this.popover.operation = operation;
+        this.popover.operationRounds = operation.rounds;
+        this.popover.operationRounds.reverse();
         this.popover.lastOperationRound = getLastOperationRound(operation);
+        console.log('last op result');
+        console.log(this.popover.lastOperationRound);
         this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(operation);
 
         if (operation.protocol) {
@@ -521,11 +546,13 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.popover.mouseIn = true;
     this.popover.task = task;
     this.popover.operation = operation;
+    this.popover.operationRounds = operation.rounds;
+    this.popover.operationRounds.reverse();
     this.selectedOperation = this.operations![operationIndex].factory;
     this.operationhover.emit();
   }
 
-  onOperationRetry(operation: StoreTaskOperation){
+  onOperationRetry(operation: StoreTaskOperation) {
     this.modeStoreService.resetOperation(operation);
   }
 
@@ -544,6 +571,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.y = y + this.popoverRef.height > window.innerHeight ? y - this.popoverRef.height - 10 : y;
 
       this.popover.operation = undefined;
+      this.popover.operationRounds = undefined;
       this.popover.lastOperationRound = undefined;
       this.popover.lastOperationRound = undefined;
       this.popover.lastOperationRoundResult = undefined;
@@ -784,6 +812,10 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.task = undefined;
       this.popover.directory = entry as StoreItemTaskDirectory;
     }
+  }
+
+  disableClick($event: MouseEvent) {
+    $event.stopPropagation();
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;

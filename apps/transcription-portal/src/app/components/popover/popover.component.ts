@@ -1,3 +1,4 @@
+import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -8,29 +9,41 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
+  Renderer2,
   SimpleChanges,
+  TemplateRef,
   ViewChild,
 } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { hasProperty } from '@octra/utilities';
 import { interval } from 'rxjs';
+import ScrollEvent = JQuery.ScrollEvent;
 
 @Component({
   selector: 'tportal-popover',
   templateUrl: './popover.component.html',
   styleUrls: ['./popover.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgStyle, ReactiveFormsModule, FormsModule, NgTemplateOutlet],
 })
 export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy, OnInit {
   private cd = inject(ChangeDetectorRef);
-  @ViewChild('svg', { static: true }) svg?: ElementRef;
-  @ViewChild('inner', { static: true }) inner?: ElementRef;
+  private el = inject(ElementRef);
+  private renderer = inject(Renderer2);
 
-  @Input() borderColor = '#3a70dd';
   @Input() pointer: 'left' | 'right' | 'bottom-left' | 'bottom-right' = 'left';
-
   @Input() public width = 200;
   @Input() public height = 300;
+  @Input() type: 'info' | 'warning' | 'success' | 'danger' | 'neutral' = 'neutral';
+
+  @Input() title?: TemplateRef<any> | null;
+  @Input() content?: TemplateRef<any> | null;
+  @Input() position: {
+    x: number;
+    y: number;
+  } = { x: 0, y: 0 };
+
+  @ViewChild('inner') inner?: ElementRef;
 
   public margin: {
     left: number;
@@ -70,7 +83,8 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (hasProperty(changes, 'pointer')) {
+    const pointer = changes['pointer']?.currentValue;
+    if (pointer) {
       this.updatePolygons();
 
       if (changes['pointer'].currentValue === 'left') {
@@ -83,6 +97,13 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
         this.polygon = this.rightBottomPolygon;
       }
     }
+
+    const position = changes['position']?.currentValue;
+    if (position) {
+      this.renderer.setStyle(this.el.nativeElement, 'margin-left', `${position.x}px`);
+      this.renderer.setStyle(this.el.nativeElement, 'margin-top', `${position.y}px`);
+    }
+    this.cd.markForCheck();
   }
 
   updatePolygons() {
@@ -151,5 +172,20 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
     this.subscribe(interval(1000), {
       next: () => this.cd.markForCheck(),
     });
+  }
+
+  get primaryColor() {
+    switch (this.type) {
+      case 'info':
+        return '#3a70dd';
+      case 'warning':
+        return '#ffc107';
+      case 'success':
+        return '#4caf50';
+      case 'danger':
+        return '#f44336';
+      case 'neutral':
+        return '#aeadad';
+    }
   }
 }
