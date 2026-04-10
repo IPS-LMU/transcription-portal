@@ -7,36 +7,39 @@
 
 @keyframes fade-toggle-row-show {
   from {
-    display: none;
+    display: none !important;
     opacity: 0;
   }
   to {
-    display: table-row;
+    display: table-row !important;
     opacity: 1;
   }
 }
 
 .fade-toggle-row-hide {
-  display: none;
+  display: none !important;
   opacity: 0;
+  z-index: 0;
   animation: fade-toggle-row-hide 200ms;
   animation-timing-function: ease-out;
 }
 
 @keyframes fade-toggle-row-hide {
   from {
-    display: table-row;
+    display: table-row !important;
     opacity: 1;
   }
   to {
-    display: none;
+    display: none !important;
     opacity: 0;
+    z-index: 0;
   }
 }
 
 // fade toggle
 .fade-toggle-show {
   display: none;
+  z-index: 8000;
   animation: fade-toggle-show 200ms;
   animation-timing-function: ease-in;
 }
@@ -50,6 +53,7 @@
   to {
     display: inherit;
     opacity: 1;
+    z-index: 8000;
   }
 }
 .fade-toggle-hide {

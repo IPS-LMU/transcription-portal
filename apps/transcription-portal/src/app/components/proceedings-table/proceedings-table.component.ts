@@ -1,4 +1,4 @@
-import { AsyncPipe, JsonPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, NgClass, NgStyle, NgTemplateOutlet, UpperCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -9,9 +9,10 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  OnInit,
   Output,
   SimpleChanges,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -23,9 +24,9 @@ import {
   NgbAccordionDirective,
   NgbAccordionHeader,
   NgbAccordionItem,
-  NgbAccordionToggle,
   NgbModal,
-  NgbTooltip,
+  NgbPopover,
+  NgbTooltip
 } from '@ng-bootstrap/ng-bootstrap';
 import { openModal, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -51,19 +52,25 @@ import {
   StoreTaskOperation,
   StoreTaskOperationProcessingRound,
   TaskStatus,
-  TPortalModes,
+  TPortalModes
 } from '../../store';
-import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
+import {
+  getLastOperationResultFromLatestRound,
+  getLastOperationRound
+} from '../../store/operation/operation.functions';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
 import { ResultsTableComponent } from '../results-table/results-table.component';
+import { TextCarouselComponent } from '../text-carousel/text-carousel.component';
 import { ContextMenuComponent } from './context-menu/context-menu.component';
 import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingTableNameColComponent } from './proceeding-table-name-col/proceeding-table-name-col.component';
-import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import {
+  ProceedingsTableOperationSelectorComponent
+} from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -90,19 +97,19 @@ import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-
     UpperCasePipe,
     ProceedingTableNameColComponent,
     ReactiveFormsModule,
-    JsonPipe,
-    NgbAccordionButton,
     NgbAccordionDirective,
     NgbAccordionItem,
     NgbAccordionHeader,
-    NgbAccordionToggle,
-    NgbAccordionBody,
+    NgbAccordionButton,
     NgbAccordionCollapse,
+    NgbAccordionBody,
+    NgbPopover,
+    TextCarouselComponent,
   ],
-  providers: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [],
 })
-export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges {
+export class ProceedingsTableComponent extends SubscriberComponent implements OnDestroy, OnChanges, OnInit {
   sanitizer = inject(DomSanitizer);
   cd = inject(ChangeDetectorRef);
   private ngbModalService = inject(NgbModal);
@@ -122,6 +129,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     state: string;
     width: number;
     height: number;
+    selectedRoundIndex: number;
     lastOperationRound?: StoreTaskOperationProcessingRound;
     lastOperationRoundResult?: StoreFile;
     operation?: StoreTaskOperation;
@@ -138,6 +146,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     height: 320,
     pointer: 'left',
     mouseIn: false,
+    selectedRoundIndex: 0,
   };
 
   rightMouseButtonPressed = false;
@@ -203,11 +212,14 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.subscribe(this.modeStoreService.currentModeSelectedEntries$, {
       next: (selectedRows) => {
         this.selectedRows = selectedRows;
+        this.cd.markForCheck();
       },
     });
 
     this.initShortcuts();
   }
+
+  ngOnInit() {}
 
   private initShortcuts() {
     this.shortcuts = [
@@ -267,7 +279,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     this.isDragging = true;
 
     this.cd.markForCheck();
-    this.cd.detectChanges();
   }
 
   onTableScroll() {
@@ -327,7 +338,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
                 if (file.name.indexOf('.') > -1) {
                   files.push(TPortalFileInfo.fromFileObject(file) as TPortalFileInfo);
                   this.cd.markForCheck();
-                  this.cd.detectChanges();
                 }
               } else {
                 this.afterdrop.error(`could not read file from webKitFile`);
@@ -339,7 +349,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
           Promise.all(promises).then(() => {
             this.afterdrop.emit(files);
             this.cd.markForCheck();
-            this.cd.detectChanges();
           });
         } else {
           this.afterdrop.emit(files);
@@ -380,7 +389,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
     this.contextmenu.hidden = false;
     this.cd.markForCheck();
-    this.cd.detectChanges();
   }
 
   onRowSelected(event: MouseEvent, entry: StoreItem, operationIndex?: number, operation?: StoreTaskOperation) {
@@ -447,7 +455,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       }
 
       this.cd.markForCheck();
-      this.cd.detectChanges();
     }
   }
 
@@ -465,10 +472,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
     this.contextmenu.hidden = true;
     this.cd.markForCheck();
-    this.cd.detectChanges();
   }
-
-  // TODO implement retrying operation after failed and change icon on hover
 
   removeAppending() {
     this.modeStoreService.removeAppendingForSelectedItems();
@@ -482,31 +486,25 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     }
 
     this.cd.markForCheck();
-    this.cd.detectChanges();
   }
 
   onOperationMouseEnter($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, td: HTMLTableCellElement) {
     // show Popover for normal operations only
+    console.log(`OPERATION ENTER ${operation.id}`);
     const lastRound = getLastOperationRound(operation);
     if (!(lastRound?.status === TaskStatus.PENDING || lastRound?.status === TaskStatus.SKIPPED || lastRound?.status === TaskStatus.READY)) {
       const icon: HTMLElement = $event.target as HTMLElement;
       const parentNode = td;
 
       if (parentNode && this.popoverRef && this.inner) {
-        this.popover.operation = operation;
-        this.popover.operationRounds = operation.rounds;
-        this.popover.operationRounds.reverse();
-        this.popover.lastOperationRound = getLastOperationRound(operation);
-        console.log('last op result');
-        console.log(this.popover.lastOperationRound);
-        this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(operation);
+        this.watchPopoverOperation(operation);
 
         if (operation.protocol) {
           this.popover.width = 500;
         } else {
           this.popover.width = 400;
         }
-        this.popover.height = 230;
+        this.popover.height = 300;
         if (parentNode.offsetLeft + this.popover.width < window.innerWidth - 100) {
           this.popover.x = parentNode.offsetLeft + parentNode.offsetWidth / 2;
           this.popover.pointer = $event.clientY + this.popoverRef.height + 20 > window.innerHeight ? 'bottom-left' : 'left';
@@ -545,9 +543,11 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   onOperationMouseOver($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, operationIndex: number) {
     this.popover.mouseIn = true;
     this.popover.task = task;
+    /*
     this.popover.operation = operation;
     this.popover.operationRounds = operation.rounds;
     this.popover.operationRounds.reverse();
+     */
     this.selectedOperation = this.operations![operationIndex].factory;
     this.operationhover.emit();
   }
@@ -566,15 +566,11 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.task = task;
       this.popover.x = $event.clientX + 10;
       this.popover.width = 600;
-      this.popover.height = 320;
+      this.popover.height = 300;
       this.popover.pointer = y + this.popoverRef.height > window.innerHeight ? 'bottom-left' : 'left';
       this.popover.y = y + this.popoverRef.height > window.innerHeight ? y - this.popoverRef.height - 10 : y;
 
-      this.popover.operation = undefined;
-      this.popover.operationRounds = undefined;
-      this.popover.lastOperationRound = undefined;
-      this.popover.lastOperationRound = undefined;
-      this.popover.lastOperationRoundResult = undefined;
+      this.destroyPopover();
       this.togglePopover(true);
     }
   }
@@ -593,6 +589,41 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     if (!task) {
       return;
     }
+  }
+
+  private watchPopoverOperation(operation: StoreTaskOperation) {
+    if (operation) {
+      this.popover.operation = operation;
+      this.popover.operationRounds = [...operation.rounds];
+      this.popover.selectedRoundIndex = operation.rounds.length - 1;
+      this.popover.operationRounds.reverse();
+      this.popover.lastOperationRound = getLastOperationRound(operation);
+      this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(operation);
+      this.subscribe(
+        this.modeStoreService.operationChanges$(operation.taskID, operation.id),
+        {
+          next: (op) => {
+            if (op) {
+              this.popover.operation = op;
+              this.popover.operationRounds = [...op.rounds];
+              this.popover.operationRounds.reverse();
+              this.popover.lastOperationRound = getLastOperationRound(op);
+              this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(op);
+              this.cd.markForCheck();
+            }
+          },
+        },
+        'operation_popover_changes',
+      );
+    }
+  }
+
+  private destroyPopover() {
+    this.subscriptionManager.removeByTag('operation_popover_changes');
+    this.popover.operation = undefined;
+    this.popover.operationRounds = undefined;
+    this.popover.lastOperationRound = undefined;
+    this.popover.lastOperationRoundResult = undefined;
   }
 
   calculateDuration(time: { start: number; duration?: number } | undefined, operation: StoreTaskOperation) {
@@ -816,6 +847,17 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   disableClick($event: MouseEvent) {
     $event.stopPropagation();
+  }
+
+  onResultsTableItemShown($event: string) {}
+
+  protected selectedProcessingRoundChange($event: Event) {
+    const select = $event.target as HTMLSelectElement;
+    const index = Number(select.value);
+    this.popover.lastOperationRound =
+      this.popover.operation?.rounds && index < this.popover.operation.rounds.length ? this.popover.operation.rounds[index] : undefined;
+    this.popover.selectedRoundIndex = index;
+    this.cd.markForCheck();
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;

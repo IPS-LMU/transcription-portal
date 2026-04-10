@@ -260,7 +260,7 @@
       "result and conversions": "Result and Conversions",
       "service remarks": {
         "about the result": "As soon as the service has finished processing the result appears here.",
-        "processing time": "The processing time depends on the properties of the audio file and the service provider."
+        "processing time": "The processing time depends on the properties of the audio file and the service provider. We do not get any information about the progress."
       }
     }
   },

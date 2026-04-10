@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { SubscriptionManager } from '@octra/utilities';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { RootState } from '../app';
 import { ASROperation, StoreTaskOperation } from '../operation';
 import { OctraWindowMessageEventData, StoreAudioFile, StoreItem, StoreItemTask, StoreItemTaskOptions } from '../store-item';
@@ -45,6 +45,15 @@ export class ModeStoreService {
   currentModeProtocol$ = this.store.select(selectCurrentModeProtocol);
 
   private subscrManager = new SubscriptionManager();
+
+  operationChanges$(taskID: number, operationID: number) {
+    return this.store.select(selectAllTasks).pipe(
+      map((tasks) => {
+        const task = tasks?.find((a) => a.id === taskID);
+        return task?.operations.find((a) => a.id === operationID);
+      }),
+    );
+  }
 
   toggleSelectionForAllRows() {
     this.store.dispatch(StoreItemActions.toggleAllSelected.do());
@@ -178,9 +187,11 @@ export class ModeStoreService {
   }
 
   resetOperation(operation: StoreTaskOperation) {
-    this.store.dispatch(StoreItemActions.resetOperation.do({
-      operation
-    }));
+    this.store.dispatch(
+      StoreItemActions.resetOperation.do({
+        operation,
+      }),
+    );
   }
 
   constructor() {

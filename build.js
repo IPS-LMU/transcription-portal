@@ -37,7 +37,7 @@ if (process.argv[4].indexOf("url=") > -1) {
 console.log(`Building TranscriptionPortal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
 console.log(`Remove dist...`);
 execSync(`rm -rf "./${buildDir}"`);
-const command = ['node_modules/@nrwl/cli/bin/nx.js', 'build', 'transcription-portal', '--base-href', baseHref, "--deploy-url=assets/"];
+const command = ['/usr/local/bin/nx', 'build', 'transcription-portal', '--base-href', baseHref, '--deploy-url=assets/'];
 
 if (dev) {
   command.push('--configuration', 'development');

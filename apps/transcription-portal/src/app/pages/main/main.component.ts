@@ -45,6 +45,7 @@ import {
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
 import { HotkeysModalComponent } from '../../modals/hotkeys-modal/hotkeys-modal.component';
+import { TextCarouselComponent } from '../../components/text-carousel/text-carousel.component';
 
 @Component({
   selector: 'tportal-main',
@@ -69,7 +70,7 @@ import { HotkeysModalComponent } from '../../modals/hotkeys-modal/hotkeys-modal.
     UpperCasePipe,
     AsyncPipe,
     TimePipe,
-    ProceedingsTableComponent,
+    ProceedingsTableComponent
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
@@ -385,7 +386,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     });
   }
 
-  openHotkeysModal(){
+  openHotkeysModal() {
     const ref = openModal<HotkeysModalComponent>(this.ngbModalService, HotkeysModalComponent, HotkeysModalComponent.options);
     this.appStoreService.setShortcutsEnabled(false);
     ref.result.then(() => {

@@ -23,7 +23,6 @@ import ScrollEvent = JQuery.ScrollEvent;
   selector: 'tportal-popover',
   templateUrl: './popover.component.html',
   styleUrls: ['./popover.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgStyle, ReactiveFormsModule, FormsModule, NgTemplateOutlet],
 })
 export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy, OnInit {
@@ -37,7 +36,9 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
   @Input() type: 'info' | 'warning' | 'success' | 'danger' | 'neutral' = 'neutral';
 
   @Input() title?: TemplateRef<any> | null;
+  @Input() titleContext?: any;
   @Input() content?: TemplateRef<any> | null;
+  @Input() contentContext?: any;
   @Input() position: {
     x: number;
     y: number;
@@ -104,6 +105,7 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
       this.renderer.setStyle(this.el.nativeElement, 'margin-top', `${position.y}px`);
     }
     this.cd.markForCheck();
+    this.cd.detectChanges();
   }
 
   updatePolygons() {
@@ -170,7 +172,10 @@ export class PopoverComponent extends SubscriberComponent implements OnChanges, 
 
   ngOnInit() {
     this.subscribe(interval(1000), {
-      next: () => this.cd.markForCheck(),
+      next: () => {
+        this.cd.markForCheck();
+        this.cd.detectChanges();
+      },
     });
   }
 

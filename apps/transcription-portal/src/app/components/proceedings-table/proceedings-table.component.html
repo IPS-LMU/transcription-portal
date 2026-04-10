@@ -3,6 +3,9 @@
   <tportal-popover
     #popoverRef
     [title]="popoverTitle"
+    [titleContext]="{
+      popover: popover,
+    }"
     [type]="'info'"
     [content]="popoverContent"
     (mouseenter)="popover.mouseIn = true"
@@ -24,14 +27,20 @@
   ></tportal-popover>
   <ng-template #popoverTitle>
     <div class="row g-0 py-1 px-0 align-items-center d-flex">
-      <div class="col">Processing Round</div>
+      <div class="col">
+        Revision v{{ popover.selectedRoundIndex + 1 }}
+        @if (popover.lastOperationRound.status === 'PROCESSING') {
+          <i class="bi bi-gear-fill spin"></i>
+        }
+      </div>
       <div class="col-auto">
         <select
           class="form-select form-select-sm pointer"
           (mousedown)="disableClick($event)"
           (click)="disableClick($event)"
+          (change)="selectedProcessingRoundChange($event)"
         >
-          @if(popover.operationRounds) {
+          @if (popover.operationRounds) {
             @for (elem of popover.operationRounds; track elem) {
               <option [value]="popover.operationRounds.length - 1 - $index" (click)="disableClick($event)">
                 @if ($index > 0) {
@@ -47,130 +56,177 @@
     </div>
   </ng-template>
   <ng-template #popoverContent>
-    @if (
-      popover.lastOperationRound.time !== undefined &&
-      popover.lastOperationRound.time.start !== undefined &&
-      popover.lastOperationRound.time.start > 0
-    ) {
+    @if (popover.lastOperationRound.status === 'PROCESSING') {
+      @if (popover.operation.serviceProviderName !== undefined) {
+        <div class="service-preview px-3 py-2">
+          <div class="row g-0 align-items-center service-info">
+            <div class="col-auto">
+              <div class="provided-by">{{ 'p.service provided by' | transloco }}</div>
+            </div>
+            <div class="col text-end">
+              <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
+                ><div class="d-inline" [ngbPopover]="'p.service terms' | transloco" triggers="mouseenter:mouseleave">
+                  <svg width="20px" height="20px" viewBox="0 -8 72 72" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <style>
+                        .cls-1 {
+                          fill: cornflowerblue;
+                        }
+                      </style>
+                    </defs>
+                    <title>handshake</title>
+                    <path
+                      class="cls-1"
+                      d="M64,12.78v17s-3.63.71-4.38.81-3.08.85-4.78-.78C52.22,27.25,42.93,18,42.93,18a3.54,3.54,0,0,0-4.18-.21c-2.36,1.24-5.87,3.07-7.33,3.78a3.37,3.37,0,0,1-5.06-2.64,3.44,3.44,0,0,1,2.1-3c3.33-2,10.36-6,13.29-7.52,1.78-1,3.06-1,5.51,1C50.27,12,53,14.27,53,14.27a2.75,2.75,0,0,0,2.26.43C58.63,14,64,12.78,64,12.78ZM27,41.5a3,3,0,0,0-3.55-4.09,3.07,3.07,0,0,0-.64-3,3.13,3.13,0,0,0-3-.75,3.07,3.07,0,0,0-.65-3,3.38,3.38,0,0,0-4.72.13c-1.38,1.32-2.27,3.72-1,5.14s2.64.55,3.72.3c-.3,1.07-1.2,2.07-.09,3.47s2.64.55,3.72.3c-.3,1.07-1.16,2.16-.1,3.46s2.84.61,4,.25c-.45,1.15-1.41,2.39-.18,3.79s4.08.75,5.47-.58a3.32,3.32,0,0,0,.3-4.68A3.18,3.18,0,0,0,27,41.5Zm25.35-8.82L41.62,22a3.53,3.53,0,0,0-3.77-.68c-1.5.66-3.43,1.56-4.89,2.24a8.15,8.15,0,0,1-3.29,1.1,5.59,5.59,0,0,1-3-10.34C29,12.73,34.09,10,34.09,10a6.46,6.46,0,0,0-5-2C25.67,8,18.51,12.7,18.51,12.7a5.61,5.61,0,0,1-4.93.13L8,10.89v19.4s1.59.46,3,1a6.33,6.33,0,0,1,1.56-2.47,6.17,6.17,0,0,1,8.48-.06,5.4,5.4,0,0,1,1.34,2.37,5.49,5.49,0,0,1,2.29,1.4A5.4,5.4,0,0,1,26,34.94a5.47,5.47,0,0,1,3.71,4,5.38,5.38,0,0,1,2.39,1.43,5.65,5.65,0,0,1,1.48,4.89,0,0,0,0,1,0,0s.8.9,1.29,1.39a2.46,2.46,0,0,0,3.48-3.48s2,2.48,4.28,1c2-1.4,1.69-3.06.74-4a3.19,3.19,0,0,0,4.77.13,2.45,2.45,0,0,0,.13-3.3s1.33,1.81,4,.12c1.89-1.6,1-3.43,0-4.39Z"
+                    />
+                  </svg></div
+              ></a>
+              <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank" class="ms-2"
+                ><i class="bi bi-globe" [ngbPopover]="'g.homepage' | transloco" style="color: cornflowerblue" triggers="mouseenter:mouseleave"></i
+              ></a>
+            </div>
+          </div>
+          <a
+            [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL"
+            style="display: block; vertical-align: middle"
+            target="_blank"
+          >
+            <img
+              [src]="getServerProvider(popover.operation.serviceProviderName)?.logoURL"
+              alt="EML Logo"
+              class="service-logo"
+              style="border: 1px solid lightgray"
+            />
+          </a>
+        </div>
+        <div class="flex flex-column flex-auto">
+          <div class="px-3 pt-1 estimated-time">
+            ET: {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}
+          </div>
+          <div class="service-remarks px-3 py-0">
+            <tportal-text-carousel
+              class="d-flex flex-column flex-auto text-center"
+              [messages]="[
+              'popovers.results.service remarks.processing time' | transloco,
+              'popovers.results.service remarks.about the result' | transloco,
+              getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy ?? '',
+            ]"
+            ></tportal-text-carousel>
+          </div>
+        </div>
+      }
+    } @else if (popover.lastOperationRound !== undefined) {
       @if (
         popover.lastOperationRound.status === 'FINISHED' && !popover.lastOperationRoundResult?.content && !popover.lastOperationRoundResult?.online
       ) {
         <p style="color: red">{{ 'popovers.results.last result unavailable' | transloco }}</p>
       }
-      <div ngbAccordion>
-        <div ngbAccordionItem>
-          <h2 ngbAccordionHeader>
-            <button ngbAccordionButton>First</button>
-          </h2>
-          <div ngbAccordionCollapse>
-            <div ngbAccordionBody>
-              <ng-template>Content for the first item</ng-template>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row g-0 px-1 py-2">
-        <div class="col" style="font-size: 0.85rem">
-          <i class="bi bi-clock" style="color: cornflowerblue"></i
-          ><span> {{ popover.lastOperationRound.time.start | luxonFormat: 'DATETIME_SHORT' }}</span>
-        </div>
-        <div class="col text-end" style="font-size: 0.85rem">
-          <i class="bi bi-hourglass" style="color: cornflowerblue"></i
-          ><span> {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}</span>
-        </div>
-      </div>
-    }
-    @if (popover.lastOperationRound.status === 'PROCESSING' && popover.operation.serviceProviderName !== undefined) {
-      <div class="service-preview">
-        <div class="provided-by">{{ 'p.service provided by' | transloco }}</div>
-        <a
-          [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL"
-          style="display: block; vertical-align: middle"
-          target="_blank"
-        >
-          <img
-            [src]="getServerProvider(popover.operation.serviceProviderName)?.logoURL"
-            alt="EML Logo"
-            class="service-logo"
-            style="border: 1px solid lightgray"
-          />
-        </a>
-        <div class="service-terms">
-          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
-            ><i class="bi bi-journal-text"></i> {{ 'p.service terms' | transloco }}</a
-          ><br />
-          <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank"
-            ><i class="bi bi-globe"></i> {{ 'g.homepage' | transloco }}</a
-          ><br />
-        </div>
-        <i (click)="onReportIconClick(popover.operation)" class="bi bi-exclamation-circle report-issue"></i>
-      </div>
-      <div class="service-remarks">
-        <ul>
-          <li>{{ 'popovers.results.service remarks.processing time' | transloco }}</li>
-          <li>{{ 'popovers.results.service remarks.about the result' | transloco }}</li>
-          <li>{{ getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy }}</li>
-        </ul>
-      </div>
-      <div class="clearfix"></div>
-    } @else if (popover.operation.rounds.length > 0) {
-      <tportal-results-table
-        #resultsTableComponent
-        [visible]="popover.state === 'opened'"
-        (previewClick)="onPreviewClick($event)"
-        [operation]="popover.operation"
-        [defaultOperations]="operations"
-        [task]="popover.task"
-      ></tportal-results-table>
-    }
-    @if ((popover.lastOperationRound.parsedProtocol ?? []).length > 0) {
-      <div class="mt-3 border" id="output-area">
-        <div style="width: 100%; text-align: right; padding: 0; margin-bottom: 0">
-          <button
-            (click)="copyProtocolToClipboard(popover.lastOperationRound.protocol)"
-            class="btn btn-sm btn-outline-info"
-            style="font-size: 11px; cursor: pointer; margin-bottom: 0"
-          >
-            <i class="bi bi-clipboard"></i> Copy to clipboard
-          </button>
-        </div>
-        @if (getLastOperationRound(popover.operation!)?.parsedProtocol && getLastOperationRound(popover.operation)!.parsedProtocol!.length > 0) {
-          <div class="mt-3 border" id="output-area">
-            <div class="row g-0 py-1 px-2 justify-items-center align-items-center" style="background-color: #1b4685">
-              <div class="col-sm text-light" style="font-size: 0.9rem">{{ 'g.protocol' | transloco }}</div>
-              <div class="col-auto">
-                <button
-                  (click)="copyProtocolToClipboard(popover.operation.protocol)"
-                  class="btn btn-sm btn-outline-light"
-                  style="font-size: 11px; cursor: pointer; margin-bottom: 0"
-                >
-                  <i class="bi bi-clipboard"></i> {{ 'p.copy to clipboard' | transloco }}
-                </button>
+
+      <div ngbAccordion class="results-table-accordion" [closeOthers]="true" [destroyOnHide]="true" (shown)="onResultsTableItemShown($event)">
+        @if (popover.lastOperationRound.status !== 'ERROR') {
+          @if (
+            popover.lastOperationRound.time !== undefined &&
+            popover.lastOperationRound.time.start !== undefined &&
+            popover.lastOperationRound.time.start > 0
+          ) {
+            <div ngbAccordionItem>
+              <h2 ngbAccordionHeader>
+                <button ngbAccordionButton class="bg-secondary-subtle px-2 py-1">Time measurement</button>
+              </h2>
+              <div ngbAccordionCollapse>
+                <div ngbAccordionBody class="px-2 py-1">
+                  <ng-template>
+                    <div class="row g-0 py-1">
+                      <div class="col">
+                        <i class="bi bi-clock" style="color: cornflowerblue"></i
+                        ><span> {{ popover.lastOperationRound.time.start | luxonFormat: 'DATETIME_SHORT' }}</span>
+                      </div>
+                      <div class="col text-end">
+                        <i class="bi bi-hourglass" style="color: cornflowerblue"></i
+                        ><span> {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}</span>
+                      </div>
+                    </div>
+                  </ng-template>
+                </div>
               </div>
             </div>
-            <div class="list-group" id="op-protocol-list">
-              @for (item of getLastOperationRound(popover.operation)!.parsedProtocol!; track item) {
-                <div
-                  class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
-                  [ngClass]="{
-                    'list-group-item-warning': item.type === 'WARNING',
-                    'list-group-item-danger': item.type === 'ERROR',
-                  }"
-                >
-                  <div class="row g-1">
-                    <div class="col-auto">
-                      @if (item.type === 'ERROR') {
-                        <i class="bi bi-exclamation-circle" style="color: red"></i>
-                      } @else {
-                        <i class="bi bi-exclamation-triangle" style="color: orange"></i>
-                      }
+          }
+
+          <div ngbAccordionItem [collapsed]="false">
+            <h2 ngbAccordionHeader>
+              <button ngbAccordionButton class="bg-secondary-subtle px-2 py-1">{{ 'popovers.results.result and conversions' | transloco }}</button>
+            </h2>
+            <div ngbAccordionCollapse>
+              <div ngbAccordionBody class="px-2 py-1">
+                <ng-template>
+                  <tportal-results-table
+                    #resultsTableComponent
+                    [visible]="popover.state === 'opened'"
+                    (previewClick)="onPreviewClick($event)"
+                    [operation]="popover.operation"
+                    [defaultOperations]="operations"
+                    [task]="popover.task"
+                    [selectedVersion]="popover.selectedRoundIndex"
+                  ></tportal-results-table>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if ((popover.lastOperationRound.parsedProtocol ?? []).length > 0) {
+          <div ngbAccordionItem [collapsed]="popover.lastOperationRound.status !== 'ERROR'">
+            <h2 ngbAccordionHeader>
+              <button ngbAccordionButton class="bg-secondary-subtle px-2 py-1">
+                <span class="row g-0 w-100">
+                  <span class="col">
+                    {{ 'g.protocol' | transloco }}
+                  </span>
+                  <span class="col-auto">
+                    <div
+                      class="d-inline-block"
+                      (click)="
+                        $event.stopPropagation();
+                        $event.stopImmediatePropagation();
+                        $event.preventDefault();
+                        copyProtocolToClipboard(popover.lastOperationRound.protocol)
+                      "
+                    >
+                      <i class="bi bi-clipboard-fill me-2" ngbPopover="Copy to clipboard" triggers="mouseenter:mouseleave"></i>
                     </div>
-                    <div class="col text-break">
-                      {{ item.message }}
-                    </div>
+                  </span>
+                </span>
+              </button>
+            </h2>
+            <div ngbAccordionCollapse>
+              <div ngbAccordionBody class="px-2 py-1">
+                <ng-template>
+                  <div class="list-group" id="op-protocol-list">
+                    @for (item of getLastOperationRound(popover.operation)!.parsedProtocol!; track item) {
+                      <div
+                        class="list-group-item p-1 rounded-top-0 rounded-bottom-0"
+                        [ngClass]="{
+                          'list-group-item-warning': item.type === 'WARNING',
+                          'list-group-item-danger': item.type === 'ERROR',
+                        }"
+                      >
+                        <div class="row g-1">
+                          <div class="col-auto">
+                            @if (item.type === 'ERROR') {
+                              <i class="bi bi-exclamation-circle" style="color: red"></i>
+                            } @else {
+                              <i class="bi bi-exclamation-triangle" style="color: orange"></i>
+                            }
+                          </div>
+                          <div class="col text-break">
+                            {{ item.message }}
+                          </div>
+                        </div>
+                      </div>
+                    }
                   </div>
-                </div>
-              }
+                </ng-template>
+              </div>
             </div>
           </div>
         }

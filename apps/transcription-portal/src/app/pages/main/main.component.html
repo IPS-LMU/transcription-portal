@@ -4,8 +4,8 @@
     <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
-          <a class="nav-link" href="#" [ngbPopover]="versionPopover" popoverClass="version-popover"
-            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" /> TranscriptionPortal</span>
+          <a class="nav-link" href="#"
+            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" [ngbPopover]="versionPopover" popoverClass="version-popover" /> TranscriptionPortal</span>
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -112,7 +112,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
             ><i class="bi bi-book" style="color: cornflowerblue"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
+              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
             >
           </li>
           <li class="nav-item active">
@@ -123,7 +123,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-info-circle" style="color: purple"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.about.name' | transloco }}</span></a
+              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.about.name' | transloco }}</span></a
             >
           </li>
           <li class="nav-item active">
@@ -134,7 +134,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
             ><i class="bi bi-command" style="color: gray"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.hotkeys.name' | transloco }}</span></a
+              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.hotkeys.name' | transloco }}</span></a
             >
           </li>
           @if (appStoreService.feedbackEnabled$ | async) {
@@ -148,7 +148,7 @@
                   }"
                 ></i
                 ><span style="cursor: pointer">
-                  <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.feedback.name' | transloco }}</span></span
+                  <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.feedback.name' | transloco }}</span></span
                 >
               </a>
             </li>
@@ -161,7 +161,7 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-bar-chart-line" style="color: #ff6a00"></i>
-              <span class="d-lg-none d-xl-inline-block ms-1" style="color: black">{{ 'navigation.statistics.name' | transloco }}</span></span
+              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.statistics.name' | transloco }}</span></span
             >
           </li>
           <li class="nav-item active">
@@ -182,7 +182,7 @@
                 class="bi"
                 style="cursor: pointer"
               ></i
-              ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.notifications.name' | transloco }}</span>
+              ><span class="d-lg-none d-xl-none d-xxl-inline-block ms-1">{{ 'navigation.notifications.name' | transloco }}</span>
             </a>
           </li>
           <li class="nav-item active">
@@ -196,7 +196,7 @@
                 triggers="mouseenter:mouseleave"
               >
                 <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
-                ><span class="d-lg-none d-xl-inline-block ms-1">{{ 'navigation.settings.name' | transloco }}</span>
+                ><span class="d-lg-none d-xl-none d-xxl-inline-block ms-1">{{ 'navigation.settings.name' | transloco }}</span>
               </div>
               <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
                 <div class="list-group">

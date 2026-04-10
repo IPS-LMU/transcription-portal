@@ -119,6 +119,10 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
             results: [...currentRound.results, result],
             status: TaskStatus.FINISHED,
             protocol: warnings,
+            time: {
+              ...currentRound.time!,
+              duration: Date.now() - currentRound.time!.start
+            }
           };
           this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
         } else {

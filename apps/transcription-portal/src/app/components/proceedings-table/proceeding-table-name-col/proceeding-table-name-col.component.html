@@ -33,7 +33,7 @@
     >
       {{ cleanedUpFirstFileName }}{{cleanedUpFirstFileExtension}}
 
-      @if (appending !== undefined && !appending.type?.includes("audio")) {
+      @if (appending !== undefined && !appending.type.includes("audio")) {
         <span
           class="badge"
           [ngClass]="{

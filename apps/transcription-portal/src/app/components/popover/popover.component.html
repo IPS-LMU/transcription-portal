@@ -28,10 +28,12 @@
 
 <div class="inner" #inner>
   <div class="title">
-    <ng-template [ngTemplateOutlet]="title"></ng-template>
+    <ng-container
+      [ngTemplateOutlet]="title"
+    ></ng-container>
   </div>
   <div class="content">
-    <ng-template [ngTemplateOutlet]="content"></ng-template>
+    <ng-container [ngTemplateOutlet]="content" [ngTemplateOutletContext]="contentContext"></ng-container>
   </div>
 </div>
 <svg [attr.height]="height" [attr.width]="width">

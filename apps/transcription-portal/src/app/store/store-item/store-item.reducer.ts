@@ -1183,6 +1183,52 @@ export const getTaskReducers = (
       state,
     ),
   ),
+  on(StoreItemActions.receiveToolData.do, (state: ModeState, {}) => {
+    const mode = state.entities[state.currentMode]!;
+
+    return modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([mode.openedTool!.taskID!], mode.items, taskAdapter, (item, itemsState) => {
+            if (item.type === 'task') {
+              const task = item as StoreItemTask;
+
+              return taskAdapter.updateOne(
+                {
+                  id: task.id,
+                  changes: {
+                    operations: task.operations.map((op) => {
+                      if (op.id === mode.openedTool!.operationID) {
+                        return {
+                          ...op,
+                          rounds: [
+                            ...op.rounds.slice(0, -1),
+                            {
+                              ...op.rounds[op.rounds.length - 1],
+                              time: {
+                                ...op.rounds[op.rounds.length - 1].time!,
+                                duration: Date.now() - op.rounds[op.rounds.length - 1].time!.start,
+                              },
+                            },
+                          ],
+                        };
+                      }
+
+                      return op;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            }
+            return itemsState;
+          }),
+        },
+      },
+      state,
+    );
+  }),
   on(StoreItemActions.receiveToolData.success, (state: ModeState, { mode }) => {
     const currentMode = state.entities[mode]!;
     const openedTool = currentMode.openedTool!;

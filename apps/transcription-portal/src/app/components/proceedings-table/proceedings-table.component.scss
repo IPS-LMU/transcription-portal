@@ -195,27 +195,37 @@ table thead tr th:hover {
   color: red;
 }
 
-@media (max-width: 1250px) {
-}
-
-@media (max-width: 900px) {
-}
-
 .quickstart p {
   text-align: justify;
   padding: 5px 10px;
 }
 
 .service-preview {
-  text-align: center;
-  width: 150px;
-  float: left;
+  width: 100%;
+  display: block;
 }
 
+.service-preview .service-info {
+  font-size: 0.8rem;
+}
+
+.service-preview .service-info a {
+  text-decoration: none;
+}
+
+.estimated-time {
+  font-size: 1.3rem;
+  font-weight: 200;
+  text-align: center;
+  position: relative;
+  width: 100%;
+}
 .service-remarks {
-  margin-left: 160px;
-  font-size: 11px;
+  font-size: 0.8rem;
   color: gray;
+  display: flex;
+  text-align: center;
+  position: relative;
 }
 
 .service-remarks ul {
@@ -224,7 +234,6 @@ table thead tr th:hover {
 }
 
 .provided-by {
-  font-size: 12px;
 }
 
 .service-logo {
@@ -307,4 +316,14 @@ table tbody tr td .bi.bi-chevron-down {
 
 .tr-disabled {
   opacity: 0.5 !important;
+}
+
+.results-table-accordion .accordion-item .accordion-button::after {
+  width: 0.85rem;
+  height: 0.85rem;
+  background-size: 0.85rem;
+}
+.results-table-accordion .accordion-item .accordion-button,
+.results-table-accordion .accordion-item .accordion-body {
+  font-size: 0.85rem;
 }

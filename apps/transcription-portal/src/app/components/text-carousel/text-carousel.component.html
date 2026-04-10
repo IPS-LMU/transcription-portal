@@ -1,0 +1,11 @@
+@for (message of invertedMessages; track message) {
+  @if ($index === invertedMessages.length - 1 - index) {
+    <div
+      class="current-value animate__animated"
+      animate.enter="position-absolute animate__delay-1s animate__slow animate__fadeIn w-100"
+      animate.leave="animate__fast animate__fadeOut"
+    >
+      {{ messages[$index] }}
+    </div>
+  }
+}
