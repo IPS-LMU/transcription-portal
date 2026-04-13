@@ -51,6 +51,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   protected currentMode?: TPortalModes;
   protected translationProvider?: ServiceProvider;
   protected appSettings?: OHConfiguration;
+  private accessCode?: string;
 
   @ViewChild('okPopover', { static: true }) okPopover?: NgbPopover;
 
@@ -131,7 +132,12 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
       next: (availableLanguages) => {
         this.languages.asr = availableLanguages?.asr ?? [];
         this.languages.maus = availableLanguages?.maus ?? [];
-        console.log(this.languages);
+      },
+    });
+
+    this.subscribe(this.appStoreService.accessCode$, {
+      next: (accessCode) => {
+        this.accessCode = accessCode;
       },
     });
 
@@ -197,6 +203,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
           enabled: this.defaultUserSettings.isDiarizationEnabled,
           speakers: this.defaultUserSettings.diarizationSpeakers,
         },
+        accessCode: this.accessCode,
       },
       translation: {
         language: this.defaultUserSettings.selectedTranslationLanguage,

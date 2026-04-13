@@ -55,6 +55,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       options: {
         language: options.asr?.language === undefined ? operation.options?.language : options.asr?.language,
         diarization: options.asr?.diarization === undefined ? operation.options?.diarization : options.asr?.diarization,
+        accessCode: options?.asr?.accessCode,
       },
     };
   }

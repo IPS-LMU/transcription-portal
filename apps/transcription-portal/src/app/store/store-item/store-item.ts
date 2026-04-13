@@ -22,6 +22,7 @@ export interface StoreItemTaskOptions {
       enabled?: boolean;
       speakers?: number;
     };
+    accessCode?: string;
   };
   maus?: {
     language?: string;
