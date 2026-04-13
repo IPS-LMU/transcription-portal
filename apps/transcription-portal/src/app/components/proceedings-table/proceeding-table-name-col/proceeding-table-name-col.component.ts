@@ -1,6 +1,7 @@
 import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, Renderer2, SimpleChanges } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { FileInfo } from '@octra/web-media';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { StoreItem, TaskStatus } from '../../../store';
 import { getLastOperationRound } from '../../../store/operation/operation.functions';
@@ -59,16 +60,19 @@ export class ProceedingTableNameColComponent extends SubscriberComponent impleme
   };
 
   get cleanedUpFirstFileName() {
-    return this.entry?.files && this.entry.files.length > 0
-      ? this.entry.files[0].attributes.originalFileName.replace(/(?:_annot)?\.[^.]+$/g, '')
-      : '<NO NAME>';
+    if (this.entry?.files && this.entry.files.length > 0) {
+      const { name } = FileInfo.extractFileName(this.entry.files[0].attributes.originalFileName);
+      return name;
+    }
+    return '<NO NAME>';
   }
 
   get cleanedUpFirstFileExtension() {
-    if (this.entry?.files && this.entry.files.length > 0) {
-      const appending = this.entry.files.length > 1 ? this.entry.files[1] : this.entry.files[0];
-      const ext = /((?:_annot)?\.[^.]+)$/g.exec(appending.attributes.originalFileName);
-      return ext ? ext[1] : '';
+    const secondFile = this.entry?.files?.find((a) => !a.type.includes('audio'));
+
+    if (secondFile) {
+      const { extension } = FileInfo.extractFileName(secondFile.attributes.originalFileName);
+      return extension;
     }
     return '';
   }
