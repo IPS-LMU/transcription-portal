@@ -308,7 +308,12 @@ export const getTaskReducers = (
         id: state.currentMode,
         changes: {
           items: applyFunctionOnStoreItemsWhereRecursive(
-            (item) => item.status === TaskStatus.QUEUED && !item.invalid,
+            (item) =>
+              item.status === TaskStatus.QUEUED &&
+              !item.invalid &&
+              item.files !== undefined &&
+              item.files.length > 0 &&
+              !item.files.some((a) => a.blob === undefined),
             state.entities![state.currentMode]!.items,
             taskAdapter,
             (item, itemsState) => {
