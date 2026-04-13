@@ -273,13 +273,18 @@ export class StoreItemEffects {
         const currentMode = state.modes.entities![state.modes.currentMode]!;
         return currentMode.overallState === 'processing';
       }),
-      exhaustMap(([action, state]: [any, RootState]) =>
-        of(
-          StoreItemActions.processNextStoreItem.do({
-            mode: state.modes.currentMode,
-          }),
-        ),
-      ),
+      exhaustMap(([action, state]: [any, RootState]) => {
+        const currentMode = state.modes.entities![state.modes.currentMode]!;
+        if (currentMode.overallState !== 'stopped') {
+          return of(
+            StoreItemActions.processNextStoreItem.do({
+              mode: state.modes.currentMode,
+            }),
+          );
+        } else {
+          return of();
+        }
+      }),
     ),
   );
 
@@ -564,7 +569,7 @@ export class StoreItemEffects {
           if (runOperation) {
             if (!['OCTRA', 'Emu WebApp'].includes(defaultOperation.factory.name)) {
               // operation is not of type OCTRA or EMU webApp
-              const opTicket = `task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
+              const opTicket = `mode[${mode}];task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
               const opSubscrManager = new SubscriptionManager();
               const itemObservable = this.listenForItemChanges(taskID, mode);
               this.subscrManager.add(
@@ -580,7 +585,6 @@ export class StoreItemEffects {
                         this.subscrManager.add(
                           timer(0).subscribe({
                             next: () => {
-                              console.log(`task ${event.operation.taskID} op ${event.operation.name} FINISHED! op status ${lastRoundEvent?.status}`);
                               this.store.dispatch(
                                 StoreItemActions.processNextOperation.success({
                                   mode,
@@ -680,12 +684,23 @@ export class StoreItemEffects {
       ofType(StoreItemActions.processNextOperation.success),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
-        return of(
-          StoreItemActions.processNextOperation.do({
-            mode,
-            taskID,
-          }),
-        );
+        const modeState = state.modes.entities[state.modes.currentMode]!;
+
+        if (modeState.overallState !== 'stopped') {
+          return of(
+            StoreItemActions.processNextOperation.do({
+              mode,
+              taskID,
+            }),
+          );
+        } else {
+          return of(
+            StoreItemActions.processNextOperation.stop({
+              mode,
+              taskID,
+            }),
+          );
+        }
       }),
     ),
   );
@@ -910,6 +925,25 @@ export class StoreItemEffects {
           return of(StoreItemActions.startProcessing.do());
         }
         return of(StoreItemActions.stopProcessing.do());
+      }),
+    ),
+  );
+
+  stopProcessing$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.stopProcessing.do),
+      withLatestFrom(this.store),
+      exhaustMap(([, state]: [any, RootState]) => {
+        return of(StoreItemActions.stopProcessing.stopTasks());
+      }),
+    ),
+  );
+
+  taskStopped$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.stopProcessing.stopTasks),
+      exhaustMap(() => {
+        return of(StoreItemActions.stopProcessing.success());
       }),
     ),
   );
@@ -1364,7 +1398,7 @@ export class StoreItemEffects {
           const currentModeState = state.modes.entities[action.mode]!;
           const defaultOperations = currentModeState.defaultOperations;
           const operationIndex = defaultOperations.findIndex((a) => a.factory.name === action.operation.name);
-          this.subscrManager.removeByIncludedTag(`task[${action.operation.taskID}];op[${action.operation.id}]`);
+          this.subscrManager.removeByIncludedTag(`mode[${action.mode}];task[${action.operation.taskID}];op[${action.operation.id}]`);
 
           if (operationIndex > -1) {
             return of(

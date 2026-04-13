@@ -476,6 +476,53 @@ export const getTaskReducers = (
         state,
       ),
   ),
+  on(StoreItemActions.stopProcessing.stopTasks, (state: ModeState): ModeState => {
+    state = modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (a) => a.type === 'task' && a.status === 'PROCESSING',
+            state.entities[state.currentMode]!.items,
+            taskAdapter,
+            (item, itemsState, i) => {
+              const task = item as StoreItemTask;
+              return taskAdapter.updateOne(
+                {
+                  id: task.id,
+                  changes: {
+                    status: TaskStatus.PENDING,
+                    stopRequested: true,
+                    operations: task.operations.map((a) => {
+                      const lastRound = getLastOperationRound(a);
+                      if (lastRound?.status === 'PROCESSING' || lastRound?.status === 'UPLOADING') {
+                        return {
+                          ...a,
+                          rounds: [
+                            ...a.rounds.slice(0, -1),
+                            {
+                              ...lastRound,
+                              status: TaskStatus.PENDING,
+                            },
+                          ],
+                        };
+                      }
+                      return a;
+                    }),
+                  },
+                },
+                itemsState,
+              );
+            },
+          ),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
+  }),
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
   }),
@@ -703,6 +750,7 @@ export const getTaskReducers = (
                 id: item.id,
                 changes: {
                   status: TaskStatus.PROCESSING,
+                  stopRequested: false,
                 },
               },
               itemsState,
@@ -751,7 +799,7 @@ export const getTaskReducers = (
       {
         id: mode,
         changes: {
-          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![state.currentMode]!.items, taskAdapter, (item, itemsState) => {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![mode]!.items, taskAdapter, (item, itemsState) => {
             if (item.type === 'task') {
               itemsState = taskAdapter.updateOne(
                 {
@@ -772,29 +820,54 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
+  on(StoreItemActions.processNextOperation.stop, (state: ModeState, { taskID, mode }) => {
+    state = modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+            if (item.type === 'task') {
+              const task = item as StoreItemTask;
+
+              return taskAdapter.updateOne(
+                {
+                  id: task.id,
+                  changes: {
+                    status: TaskStatus.PENDING,
+                    stopRequested: true,
+                  },
+                },
+                itemsState,
+              );
+            }
+            return itemsState;
+          }),
+        },
+      },
+      state,
+    );
+
+    state = updateStatistics(state, state.currentMode);
+    return state;
+  }),
   on(StoreItemActions.processNextOperation.run, (state: ModeState, { taskID, mode, item }) => {
     state = item
       ? modeAdapter.updateOne(
           {
             id: mode,
             changes: {
-              items: applyFunctionOnStoreItemsWithIDsRecursive(
-                [taskID],
-                state.entities![state.currentMode]!.items,
-                taskAdapter,
-                (item, itemsState) => {
-                  if (item.type === 'task') {
-                    itemsState = taskAdapter.updateOne(
-                      {
-                        id: item.id,
-                        changes: item,
-                      },
-                      itemsState,
-                    );
-                  }
-                  return itemsState;
-                },
-              ),
+              items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities![mode]!.items, taskAdapter, (item, itemsState) => {
+                if (item.type === 'task') {
+                  itemsState = taskAdapter.updateOne(
+                    {
+                      id: item.id,
+                      changes: item,
+                    },
+                    itemsState,
+                  );
+                }
+                return itemsState;
+              }),
             },
           },
           state,
@@ -805,7 +878,7 @@ export const getTaskReducers = (
     return state;
   }),
   on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
-    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items);
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![mode]!.items);
 
     if (!taskItem) {
       return state;
@@ -946,7 +1019,7 @@ export const getTaskReducers = (
     );
   }),
   on(StoreItemActions.processNextOperation.fail, (state: ModeState, { taskID, mode, error, operation }) => {
-    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![state.currentMode]!.items)!;
+    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![mode]!.items)!;
     state = modeAdapter.updateOne(
       {
         id: mode,

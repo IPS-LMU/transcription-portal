@@ -283,6 +283,8 @@ export class StoreItemActions {
     source: 'tasks/stop processing',
     events: {
       do: emptyProps(),
+      stopTasks: emptyProps(),
+      success: emptyProps()
     },
   });
 
@@ -313,6 +315,10 @@ export class StoreItemActions {
         taskID: number;
         mode: TPortalModes;
         operation: StoreTaskOperation;
+      }>(),
+      stop: props<{
+        taskID: number;
+        mode: TPortalModes;
       }>(),
     },
   });

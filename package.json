@@ -47,7 +47,7 @@
     "@octra/ngx-components": "^1.8.1",
     "@octra/ngx-octra-api": "^0.4.1",
     "@octra/ngx-utilities": "^1.0.2",
-    "@octra/utilities": "^2.0.0",
+    "@octra/utilities": "^2.1.1",
     "@octra/web-media": "^2.0.0",
     "@popperjs/core": "^2.11.8",
     "animate.css": "^4.1.1",
