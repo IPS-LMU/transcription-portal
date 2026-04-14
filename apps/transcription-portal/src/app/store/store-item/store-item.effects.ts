@@ -1492,7 +1492,6 @@ export class StoreItemEffects {
           },
           RootState,
         ]) => {
-          console.log('RECCEIVE TOOL DATA SUCCESS');
           const currentModeState = state.modes.entities[mode]!;
           const openedTool = currentModeState.openedTool!;
           const task = getOneTaskItemWhereRecursive((item) => item.id === openedTool.taskID, currentModeState.items)!;
@@ -1515,6 +1514,7 @@ export class StoreItemEffects {
               mode,
               taskID,
               operation,
+              clearOpenedTool: true,
             }),
           );
         },

@@ -284,7 +284,7 @@ export class StoreItemActions {
     events: {
       do: emptyProps(),
       stopTasks: emptyProps(),
-      success: emptyProps()
+      success: emptyProps(),
     },
   });
 
@@ -309,6 +309,7 @@ export class StoreItemActions {
         taskID: number;
         mode: TPortalModes;
         operation: StoreTaskOperation;
+        clearOpenedTool?: boolean;
       }>(),
       fail: props<{
         error: string;
@@ -352,6 +353,7 @@ export class StoreItemActions {
         mode: TPortalModes;
         taskID: number;
         operation: StoreTaskOperation;
+        clearOpenedTool?: boolean; // ignored
       }>(),
     },
   });

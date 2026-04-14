@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { wait } from '@octra/utilities';
 import { StoreTaskOperation } from '../../store';
@@ -9,7 +9,7 @@ import { StoreTaskOperation } from '../../store';
   styleUrls: ['./tool-loader.component.scss'],
   standalone: true,
 })
-export class ToolLoaderComponent {
+export class ToolLoaderComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);
 
   @ViewChild('iframe', { static: true }) iframe?: ElementRef;
@@ -21,29 +21,10 @@ export class ToolLoaderComponent {
     name: '',
   };
 
-  @Input() set operation(
-    operation:
-      | {
-          operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
-          url?: string;
-        }
-      | undefined
-      | null,
-  ) {
-    if (operation) {
-      this.selectedtool = {
-        name: operation.operation?.name ?? '',
-        url: operation.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.url) : undefined,
-      };
-    } else {
-      wait(1).then(() => {
-        this.selectedtool = {
-          name: '',
-          url: undefined,
-        };
-      });
-    }
-  }
+  @Input() operation?: {
+    operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
+    url?: string;
+  } | null;
 
   @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
 
@@ -58,6 +39,27 @@ export class ToolLoaderComponent {
   public set name(name: string) {
     if (name) {
       this.selectedtool.name = name;
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    const operation = changes['operation'];
+    if (operation) {
+      if (operation.currentValue?.operation) {
+        if (operation.currentValue?.url !== operation.previousValue?.url) {
+          this.selectedtool = {
+            name: operation.currentValue.operation?.name ?? '',
+            url: operation.currentValue.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.currentValue.url) : undefined,
+          };
+        }
+      } else {
+        wait(1).then(() => {
+          this.selectedtool = {
+            name: '',
+            url: undefined,
+          };
+        });
+      }
     }
   }
 

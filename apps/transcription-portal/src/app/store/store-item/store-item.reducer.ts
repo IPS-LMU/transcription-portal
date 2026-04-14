@@ -877,7 +877,7 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode }) => {
+  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode, clearOpenedTool }) => {
     const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![mode]!.items);
 
     if (!taskItem) {
@@ -957,7 +957,7 @@ export const getTaskReducers = (
               itemsState,
             );
           }),
-          openedTool: undefined,
+          openedTool: clearOpenedTool ? undefined : state.entities[state.currentMode]!.openedTool,
         },
       },
       state,
