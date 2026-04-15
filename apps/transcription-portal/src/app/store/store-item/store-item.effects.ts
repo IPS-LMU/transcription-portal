@@ -1185,19 +1185,15 @@ export class StoreItemEffects {
               transcriptFile = task.files.find((a) => !a.type.includes('audio'));
             }
 
-            return from((factory as OctraOperationFactory).getToolURL(audioFile, transcriptFile, this.httpClient)).pipe(
-              exhaustMap((url) => {
-                return of(
-                  StoreItemActions.runOperationWithTool.success({
-                    taskID,
-                    operationID,
-                    mode,
-                    url,
-                    audioFile: task.files.find((a) => a.type.includes('audio')) as StoreAudioFile,
-                    language,
-                    operationName,
-                  }),
-                );
+            return of(
+              StoreItemActions.runOperationWithTool.success({
+                taskID,
+                operationID,
+                mode,
+                audioFile: task.files.find((a) => a.type.includes('audio')) as StoreAudioFile,
+                transcript: transcriptFile,
+                language,
+                operationName,
               }),
             );
           } else {
@@ -1307,7 +1303,7 @@ export class StoreItemEffects {
           if (action.data?.annotation) {
             const json = JSON.parse(action.data.annotation.content);
             json.name = fileName;
-            json.annotates = `${fileName}_annot.json`;
+            json.annotates = `${fileName}.wav`;
             jsonText = JSON.stringify(json, null, 2);
           }
 

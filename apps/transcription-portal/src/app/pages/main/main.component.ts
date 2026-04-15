@@ -36,7 +36,9 @@ import {
   AppStoreService,
   IDBStoreService,
   ModeStoreService,
+  OctraWindowMessageEventData,
   OperationFactory,
+  ParsedOpenedTool,
   PreprocessingStoreService,
   StoreAudioFile,
   StoreItemTask,
@@ -95,12 +97,7 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public settingsCollapsed = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
   protected toolSelectedOperation?:
-    | {
-        operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
-        language: string;
-        audioFile: StoreAudioFile;
-        url: string;
-      }
+    | ParsedOpenedTool
     | undefined;
 
   activeMode = 1;
@@ -223,29 +220,8 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
     return code.substring(code.length - 2);
   }
 
-  onToolDataReceived(data: any) {
-    const $event = data.event;
-    if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
-      (async () => {
-        if (data.name === 'OCTRA') {
-          if (hasProperty($event.data, 'status') && $event.data.status === 'success' && hasProperty($event.data.data, 'annotation')) {
-            this.modeStoreService.receiveToolData($event.data);
-          }
-        } else if (data.name === 'Emu WebApp') {
-          this.modeStoreService.receiveToolData({
-            status: 'success',
-            data: {
-              annotation: {
-                name: $event.data.data.annotation.name + '_annot.json',
-                content: JSON.stringify($event.data.data.annotation, null, 2),
-                type: 'application/json',
-                encoding: 'utf-8',
-              },
-            },
-          });
-        }
-      })();
-    }
+  onToolDataReceived(data: OctraWindowMessageEventData) {
+    this.modeStoreService.receiveToolData(data);
   }
 
   onBackButtonClicked() {

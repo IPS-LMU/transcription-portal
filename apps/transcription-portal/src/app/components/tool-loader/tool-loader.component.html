@@ -1,3 +1,7 @@
-@if (selectedtool.url !== undefined) {
-  <iframe #iframe [attr.src]="selectedtool.url"></iframe>
+@if (selectedTool.url !== undefined) {
+  <iframe #iframe [attr.src]="selectedTool.url" (load)="onIframeLoaded($event)"></iframe>
+} @else if (selectedTool.name !== '' && error !== undefined) {
+  <div class="text-danger d-flex flex-column flex-auto text-center justify-content-center align-items-center p-3 h-100">
+    {{ error }}
+  </div>
 }

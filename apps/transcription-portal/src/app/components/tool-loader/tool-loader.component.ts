@@ -1,7 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { wait } from '@octra/utilities';
-import { StoreTaskOperation } from '../../store';
+import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory } from '../../store';
 
 @Component({
   selector: 'tportal-tool-loader',
@@ -11,60 +12,81 @@ import { StoreTaskOperation } from '../../store';
 })
 export class ToolLoaderComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);
+  private httpClient = inject(HttpClient);
 
-  @ViewChild('iframe', { static: true }) iframe?: ElementRef;
+  @ViewChild('iframe', { static: false }) iframe?: ElementRef;
 
-  public selectedtool: {
+  public selectedTool: {
     url?: SafeUrl;
     name: string;
   } = {
     name: '',
   };
 
-  @Input() operation?: {
-    operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
-    url?: string;
-  } | null;
+  error?: string;
 
-  @Output() public datareceived: EventEmitter<any> = new EventEmitter<any>();
+  @Input() openedTool?: ParsedOpenedTool | null;
 
-  public set url(url: string | undefined) {
-    if (!(url === null || url === undefined) && url !== '') {
-      this.selectedtool.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-    } else {
-      this.selectedtool.url = undefined;
-    }
-  }
+  @Output() public dataReceived: EventEmitter<OctraWindowMessageEventData> = new EventEmitter<OctraWindowMessageEventData>();
 
   public set name(name: string) {
     if (name) {
-      this.selectedtool.name = name;
+      this.selectedTool.name = name;
     }
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    const operation = changes['operation'];
+  async ngOnChanges(changes: SimpleChanges) {
+    const operation = changes['openedTool'];
     if (operation) {
-      if (operation.currentValue?.operation) {
-        if (operation.currentValue?.url !== operation.previousValue?.url) {
-          this.selectedtool = {
-            name: operation.currentValue.operation?.name ?? '',
-            url: operation.currentValue.url ? this.sanitizer.bypassSecurityTrustResourceUrl(operation.currentValue.url) : undefined,
-          };
+      const openedTool = operation.currentValue as ParsedOpenedTool | undefined | null;
+      const previousOpenedTool = operation.previousValue as ParsedOpenedTool | undefined | null;
+      const changedToolOrOP =
+        openedTool?.audioFile.url !== previousOpenedTool?.audioFile.url ||
+        openedTool?.transcript?.url !== previousOpenedTool?.transcript?.url ||
+        openedTool?.operation?.id !== previousOpenedTool?.operation?.id;
+
+      try {
+        if (openedTool?.operation) {
+          if (changedToolOrOP) {
+            const factory = openedTool.factory as ToolOperationFactory;
+            this.selectedTool.name = operation.currentValue.operation?.name ?? '';
+            const url = await factory.getToolURL(openedTool.audioFile, openedTool.transcript, this.httpClient);
+
+            this.error = undefined;
+            this.selectedTool.url = url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : undefined;
+          }
+        } else {
+          this.error = undefined;
+          wait(1).then(() => {
+            this.selectedTool = {
+              name: '',
+              url: undefined,
+            };
+          });
         }
-      } else {
-        wait(1).then(() => {
-          this.selectedtool = {
-            name: '',
-            url: undefined,
-          };
-        });
+      } catch (e: any) {
+        console.error(e);
+        this.error = `Can't load tool "${openedTool?.operation?.name}:" ${e.message}`;
+        this.selectedTool.url = undefined;
       }
     }
   }
 
   @HostListener('window:message', ['$event'])
-  onMessage(e: Event) {
-    this.datareceived.emit({ event: e, name: this.selectedtool.name });
+  async onMessage(e: MessageEvent) {
+    console.log(e);
+    if (this.iframe && this.openedTool) {
+      const parsed = await this.openedTool.factory.parseMessageEvent(
+        e,
+        this.iframe.nativeElement,
+        this.openedTool.audioFile,
+        this.openedTool.transcript,
+      );
+      if (parsed) {
+        this.dataReceived.emit(parsed);
+      }
+    }
   }
+
+  async onIframeLoaded($event: Event) {}
 }

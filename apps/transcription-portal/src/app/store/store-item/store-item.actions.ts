@@ -389,7 +389,6 @@ export class StoreItemActions {
         language: string;
         audioFile: StoreAudioFile;
         transcript?: StoreFile;
-        url?: string;
       }>(),
       fail: props<{
         error: string;

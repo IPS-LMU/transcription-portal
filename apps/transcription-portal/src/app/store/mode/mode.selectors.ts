@@ -4,7 +4,7 @@ import { RootState } from '../app';
 import { StoreItem, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
 import { getOneTaskItemWhereRecursive } from '../store-item/store-item.functions';
 import { getAllTasks } from './mode.functions';
-import { Mode, ModeStatistics, TPortalModes } from './mode.state';
+import { Mode, ModeStatistics, ParsedOpenedTool } from './mode.state';
 
 export const selectCurrentModeState = (state: RootState): Mode<any> | undefined => {
   return state.modes.entities[state.modes.currentMode];
@@ -32,7 +32,7 @@ export const selectDefaultOperations = createSelector(selectCurrentModeState, (m
 export const selectCurrentModeEntries = createSelector(selectCurrentModeState, (mode): StoreItem[] =>
   Object.keys(mode?.items?.entities ?? []).map((a) => mode!.items!.entities[a]!),
 );
-export const selectCurrentModeSelectedEntries = createSelector(selectCurrentModeEntries, (items): StoreItem[] => items.filter(a => a.selected));
+export const selectCurrentModeSelectedEntries = createSelector(selectCurrentModeEntries, (items): StoreItem[] => items.filter((a) => a.selected));
 export const selectAllCurrentTasks = createSelector(selectCurrentModeState, (mode): StoreItemTask[] => (mode?.items ? getAllTasks(mode.items) : []));
 export const selectAllTasks = createSelector(selectCurrentModeState, (mode) => {
   const mapItems = (itemID: string | number, entities: Dictionary<StoreItem>): StoreItemTask[] => {
@@ -55,10 +55,11 @@ export const selectOpenedToolOperation = createSelector(selectCurrentModeState, 
     const task = getOneTaskItemWhereRecursive((item) => item.id === mode.openedTool!.taskID, mode.items);
     return {
       operation: task?.operations.find((a) => a.id === mode.openedTool?.operationID),
+      factory: mode.defaultOperations.find((a) => a.factory.name === mode.openedTool?.operationName)?.factory,
       language: mode.openedTool.language,
       audioFile: mode.openedTool.audioFile,
-      url: mode.openedTool.url,
-    };
+      transcript: mode.openedTool.transcript,
+    } as ParsedOpenedTool;
   }
   return undefined;
 });

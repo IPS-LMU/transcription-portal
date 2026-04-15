@@ -877,95 +877,99 @@ export const getTaskReducers = (
     state = updateStatistics(state, mode);
     return state;
   }),
-  on(StoreItemActions.changeOperation.do, StoreItemActions.processNextOperation.success, (state: ModeState, { taskID, operation, mode, clearOpenedTool }) => {
-    const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![mode]!.items);
+  on(
+    StoreItemActions.changeOperation.do,
+    StoreItemActions.processNextOperation.success,
+    (state: ModeState, { taskID, operation, mode, clearOpenedTool }) => {
+      const taskItem = getOneTaskItemWhereRecursive((item) => item.id === taskID, state.entities![mode]!.items);
 
-    if (!taskItem) {
-      return state;
-    }
+      if (!taskItem) {
+        return state;
+      }
 
-    let taskStatus = taskItem!.status;
-    const lastRound = getLastOperationRound(operation);
+      let taskStatus = taskItem!.status;
+      const lastRound = getLastOperationRound(operation);
 
-    if (lastRound?.status === TaskStatus.ERROR) {
-      taskStatus = TaskStatus.ERROR;
-    } else if (lastRound?.status === TaskStatus.READY) {
-      taskStatus = TaskStatus.READY;
-    } else {
-      if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.PENDING && taskItem.status !== TaskStatus.PROCESSING) {
-        // reuploading needed for upload
-        taskStatus = TaskStatus.PENDING;
-      } else if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.UPLOADING) {
-        // reuploading needed for upload
-        taskStatus = TaskStatus.PROCESSING;
+      if (lastRound?.status === TaskStatus.ERROR) {
+        taskStatus = TaskStatus.ERROR;
+      } else if (lastRound?.status === TaskStatus.READY) {
+        taskStatus = TaskStatus.READY;
       } else {
-        const allOperationsFinished = !taskItem
-          .operations!.filter((op) => op.enabled)
-          .map((op) => getLastOperationRound(op)?.status === TaskStatus.FINISHED)
-          .includes(false);
-        if (allOperationsFinished) {
-          taskStatus = TaskStatus.FINISHED;
+        if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.PENDING && taskItem.status !== TaskStatus.PROCESSING) {
+          // reuploading needed for upload
+          taskStatus = TaskStatus.PENDING;
+        } else if (getLastOperationRound(taskItem.operations![0])?.status === TaskStatus.UPLOADING) {
+          // reuploading needed for upload
+          taskStatus = TaskStatus.PROCESSING;
+        } else {
+          const allOperationsFinished = !taskItem
+            .operations!.filter((op) => op.enabled)
+            .map((op) => getLastOperationRound(op)?.status === TaskStatus.FINISHED)
+            .includes(false);
+          if (allOperationsFinished) {
+            taskStatus = TaskStatus.FINISHED;
+          }
         }
       }
-    }
 
-    console.log(`Change task ${taskItem!.id} from ${taskItem!.status} to ${taskStatus}`);
-    state = modeAdapter.updateOne(
-      {
-        id: mode,
-        changes: {
-          items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
-            const operations = taskItem.operations!.map((op) => {
-              if (op.id === operation.id) {
-                return {
-                  ...operation,
-                  parseProtocol: parseProtocol(operation.protocol),
-                };
-              }
-              return op;
-            });
-            let files = item.files;
-
-            if (operation.name === 'Upload') {
-              // replace URL after (re)upload in task files
-              // and remove blob file
-              files = files?.map((a) => {
-                const found = getLastOperationRound(operation)?.results?.find((b) => a.name === b.name);
-                if (found) {
+      console.log(`Change task ${taskItem!.id} from ${taskItem!.status} to ${taskStatus}`);
+      state = modeAdapter.updateOne(
+        {
+          id: mode,
+          changes: {
+            items: applyFunctionOnStoreItemsWithIDsRecursive([taskID], state.entities[mode]!.items, taskAdapter, (item, itemsState) => {
+              const operations = taskItem.operations!.map((op) => {
+                if (op.id === operation.id) {
                   return {
-                    ...a,
-                    url: found.url,
-                    online: true,
-                    blob: undefined,
-                    content: found?.content ?? a.content,
+                    ...operation,
+                    parseProtocol: parseProtocol(operation.protocol),
                   };
                 }
-                return a;
+                return op;
               });
-            }
+              let files = item.files;
 
-            console.log(`SET ${item.id} to ${taskStatus} SUCCESS`);
-            return taskAdapter.updateOne(
-              {
-                id: item.id,
-                changes: {
-                  status: taskStatus,
-                  operations,
-                  files,
+              if (operation.name === 'Upload') {
+                // replace URL after (re)upload in task files
+                // and remove blob file
+                files = files?.map((a) => {
+                  const found = getLastOperationRound(operation)?.results?.find((b) => a.name === b.name);
+                  if (found) {
+                    return {
+                      ...a,
+                      url: found.url,
+                      online: true,
+                      blob: undefined,
+                      content: found?.content ?? a.content,
+                    };
+                  }
+                  return a;
+                });
+              }
+
+              console.log(`SET ${item.id} to ${taskStatus} SUCCESS`);
+              return taskAdapter.updateOne(
+                {
+                  id: item.id,
+                  changes: {
+                    status: taskStatus,
+                    operations,
+                    files,
+                  },
                 },
-              },
-              itemsState,
-            );
-          }),
-          openedTool: clearOpenedTool ? undefined : state.entities[state.currentMode]!.openedTool,
+                itemsState,
+              );
+            }),
+            openedTool: clearOpenedTool ? undefined : state.entities[state.currentMode]!.openedTool,
+          },
         },
-      },
-      state,
-    );
+        state,
+      );
 
-    state = updateStatistics(state, mode);
-    return state;
-  }),
+      state = updateStatistics(state, mode);
+      return state;
+    },
+  ),
   on(StoreItemActions.resetOperation.success, (state: ModeState, { mode, taskID, operationIndex }) => {
     state = modeAdapter.updateOne(
       {
@@ -1155,80 +1159,74 @@ export const getTaskReducers = (
       },
       state,
     );
-
-    return state;
   }),
-  on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, url, audioFile, language, operationName }) => {
+  on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, audioFile, language, operationName, transcript }) => {
     const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items)[0];
     const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
     let operation = task.operations![operationIndex];
 
-    if (url !== '') {
-      if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
-        // start new round
-        operation = {
-          ...operation,
-          rounds: [
-            ...operation.rounds,
-            {
-              status: TaskStatus.PENDING,
-              results: [],
-            },
-          ],
-        };
-      }
+    if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
+      // start new round
       operation = {
         ...operation,
         rounds: [
-          ...operation.rounds.slice(0, operation.rounds.length - 1),
+          ...operation.rounds,
           {
-            ...operation.rounds[operation.rounds.length - 1],
-            status: TaskStatus.PROCESSING,
-            time: {
-              start: Date.now(),
-            },
+            status: TaskStatus.PENDING,
+            results: [],
           },
         ],
       };
-
-      state = modeAdapter.updateOne(
+    }
+    operation = {
+      ...operation,
+      rounds: [
+        ...operation.rounds.slice(0, operation.rounds.length - 1),
         {
-          id: mode,
-          changes: {
-            items: {
-              ...changeTaskOperation(
-                taskID,
-                operationID,
-                () => {
-                  return {
-                    ...operation,
-                  };
-                },
-                taskAdapter,
-                state.entities[mode]!.items,
-              ),
-            },
-            openedTool: {
-              url: url!,
-              operationID,
-              taskID,
-              operationName,
-              audioFile,
-              language,
-            },
-            gui: {
-              ...state.entities[mode]!.gui,
-              toolOpenStatus: 'opened',
-            },
+          ...operation.rounds[operation.rounds.length - 1],
+          status: TaskStatus.PROCESSING,
+          time: {
+            start: Date.now(),
           },
         },
-        {
-          ...state,
+      ],
+    };
+
+    state = modeAdapter.updateOne(
+      {
+        id: mode,
+        changes: {
+          items: {
+            ...changeTaskOperation(
+              taskID,
+              operationID,
+              () => {
+                return {
+                  ...operation,
+                };
+              },
+              taskAdapter,
+              state.entities[mode]!.items,
+            ),
+          },
+          openedTool: {
+            operationID,
+            taskID,
+            operationName,
+            audioFile,
+            transcript,
+            language,
+          },
+          gui: {
+            ...state.entities[mode]!.gui,
+            toolOpenStatus: 'opened',
+          },
         },
-      );
-    } else {
-      console.warn(`tool url is empty`);
-    }
+      },
+      {
+        ...state,
+      },
+    );
 
     return state;
   }),

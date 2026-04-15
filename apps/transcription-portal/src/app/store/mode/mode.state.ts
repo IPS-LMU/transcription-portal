@@ -1,8 +1,8 @@
 import { EntityState } from '@ngrx/entity';
 import { ServiceProvider } from '@octra/ngx-components';
-import { OperationFactory } from '../operation';
+import { OperationFactory, StoreTaskOperation, ToolOperationFactory } from '../operation';
 import { PreprocessingState } from '../preprocessing/preprocessing.state';
-import { StoreAudioFile, StoreItemsState, TaskStatus } from '../store-item';
+import { StoreAudioFile, StoreFile, StoreItemsState, TaskStatus } from '../store-item';
 
 export type TPortalModes = 'annotation' | 'summarization';
 
@@ -13,6 +13,14 @@ export interface ModeStatistics {
   running: number;
   finished: number;
   errors: number;
+}
+
+export interface ParsedOpenedTool {
+  operation: StoreTaskOperation<any, StoreTaskOperation<any, any>> | undefined;
+  factory: ToolOperationFactory;
+  language: string;
+  audioFile: StoreAudioFile;
+  transcript?: StoreFile;
 }
 
 export interface DefaultUserSettings {
@@ -40,8 +48,8 @@ export interface Mode<O extends object> {
     operationID: number;
     operationName: string;
     audioFile: StoreAudioFile;
+    transcript?: StoreFile;
     language: string;
-    url: string;
   };
   newFiles?: boolean;
   overallState: OverallState;

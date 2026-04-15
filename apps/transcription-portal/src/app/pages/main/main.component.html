@@ -467,8 +467,8 @@
     >
       <tportal-tool-loader
         #toolLoader
-        (datareceived)="onToolDataReceived($event)"
-        [operation]="modeStoreService.openedToolOperation$ | async"
+        (dataReceived)="onToolDataReceived($event)"
+        [openedTool]="modeStoreService.openedToolOperation$ | async"
         style="height: 100%"
       ></tportal-tool-loader>
     </div>

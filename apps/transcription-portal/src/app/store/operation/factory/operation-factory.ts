@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { SubscriptionManager } from '@octra/utilities';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { IDBOperation } from '../../../indexedDB';
+import { OctraWindowMessageEventData, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
+import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationName } from './factory.types';
 
 export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
@@ -76,4 +76,18 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
   }
 
   abstract convertOperationToIDBOperation(operation: T): Promise<IDBOperation>;
+}
+
+export abstract class ToolOperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> extends OperationFactory<
+  T,
+  R
+> {
+  public abstract getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, httpClient: HttpClient): Promise<string>;
+
+  public abstract parseMessageEvent(
+    $event: MessageEvent,
+    iframe: HTMLIFrameElement,
+    audioFile: StoreAudioFile,
+    transcriptFile: StoreFile | undefined,
+  ): Promise<OctraWindowMessageEventData | undefined>;
 }
