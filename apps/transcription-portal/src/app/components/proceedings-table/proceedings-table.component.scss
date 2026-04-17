@@ -13,15 +13,6 @@
   overflow-y: auto;
 }
 
-.datatable {
-  width: 100%;
-  font-size: 0.8em;
-}
-
-.datatable tr {
-  border-bottom: 1px solid gray;
-}
-
 :host {
   display: flex;
   position: relative;
@@ -38,7 +29,7 @@
 }
 
 .bi.bi-file-text {
-  font-size: 32px;
+  font-size: 2rem;
 }
 
 /*
@@ -65,7 +56,7 @@
 
 .table.table-striped th {
   vertical-align: top;
-  font-size: 0.9em;
+  font-size: 1rem;
 }
 
 .table.table-striped td {
@@ -108,7 +99,7 @@
 }
 
 .tportal-placeholder i {
-  font-size: 6em;
+  font-size: 6rem;
   color: #007bff;
   font-weight: 100;
   text-align: center;
@@ -268,15 +259,6 @@ table thead tr th:hover {
   width: 200px !important;
 }
 
-#output-table tr td {
-  vertical-align: top;
-  font-size: 0.7em;
-}
-
-#output-table .error {
-  color: red;
-}
-
 #output-area {
   margin-top: 10px;
   border: 1px solid aliceblue;
@@ -287,22 +269,13 @@ table thead tr th:hover {
   text-align: center;
 }
 
-.action-time td {
-  font-size: 0.9em;
-}
-
 .fixed-table-layout {
   table-layout: fixed;
 }
 
 .options-info-table tbody tr td {
-  font-size: 11px;
+  font-size: 0.9rem;
   padding: 3px;
-}
-
-.info-table-header {
-  font-weight: bold;
-  font-size: 13px;
 }
 
 tr.task-stopped {
@@ -326,4 +299,10 @@ table tbody tr td .bi.bi-chevron-down {
 .results-table-accordion .accordion-item .accordion-button,
 .results-table-accordion .accordion-item .accordion-body {
   font-size: 0.85rem;
+}
+.remark {
+  width: 100%;
+  text-align: center;
+  display: block;
+  color: red;
 }

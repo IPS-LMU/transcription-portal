@@ -3,49 +3,17 @@
   flex: auto;
   flex-direction: column;
   height: 100%;
-  font-size: 0.9em;
+  font-size: 1rem;
 }
 
 #queue td,
 #queue thead th,
 #queue thead th div {
   text-align: center;
-  font-size: 0.9em;
 }
 
 #queue thead th {
   vertical-align: top;
-}
-
-.languageTable thead th {
-  text-align: center;
-  font-size: 0.8em;
-  vertical-align: middle;
-}
-
-.languageTable .selected {
-  background-color: powderblue;
-}
-
-.languageTable tr td {
-  font-size: 0.8em;
-  cursor: pointer;
-  vertical-align: middle;
-  z-index: 10;
-}
-
-.languageTable .logo {
-  width: 120px;
-  border: 1px solid lightgray;
-  z-index: 30;
-}
-
-.languageTable a {
-  display: block;
-}
-
-.popover-header {
-  font-size: 0.9em;
 }
 
 .ngb-tooltip-window {
@@ -58,15 +26,6 @@
 
 .compatible-col {
   text-align: center;
-}
-
-#quota-tooltip {
-  font-size: 0.9em;
-  text-align: center;
-}
-
-label {
-  font-size: 0.9em;
 }
 
 form .ng-touched.ng-invalid {
@@ -92,10 +51,10 @@ form .ng-touched.ng-invalid {
   font-weight: bold;
 }
 
-.card-body {
-  font-size: 0.9rem;
+.cornflowerblue {
+  color: cornflowerblue;
 }
 
-.cornflowerblue{
-  color: cornflowerblue
+inoput {
+  font-size: 1rem;
 }

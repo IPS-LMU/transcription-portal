@@ -115,11 +115,11 @@
           </div>
         </div>
       }
-    } @else if (popover.lastOperationRound !== undefined) {
+    } @else {
       @if (
         popover.lastOperationRound.status === 'FINISHED' && !popover.lastOperationRoundResult?.content && !popover.lastOperationRoundResult?.online
       ) {
-        <p style="color: red">{{ 'popovers.results.last result unavailable' | transloco }}</p>
+        <p class="remark">{{ 'popovers.results.last result unavailable' | transloco }}</p>
       }
 
       <div ngbAccordion class="results-table-accordion" [closeOthers]="true" [destroyOnHide]="true" (shown)="onResultsTableItemShown($event)">

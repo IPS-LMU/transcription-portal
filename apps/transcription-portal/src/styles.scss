@@ -4,7 +4,7 @@
 @use 'highlight.js/styles/github.css';
 @use 'codejar-linenumbers/es/codejar-linenumbers.css';
 @use './animations.style';
-@use "animate.css";
+@use 'animate.css';
 
 :root {
   --proceedings-width: 30%;
@@ -160,6 +160,11 @@ octra-version-notification .bi.bi-x-lg {
   color: black !important;
 }
 
-.modal-full-height .modal-content{
+.modal-full-height .modal-content {
   height: 100% !important;
+}
+
+.queue-modal-option-dropdown {
+  width: 100% !important;
+  max-width: 100% !important;
 }

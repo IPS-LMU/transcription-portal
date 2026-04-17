@@ -1,18 +1,18 @@
 <div class="modal-header">
   <h4 class="modal-title pull-left">{{ 'modals.check options.title' | transloco }}</h4>
-  <button type="button" class="btn btn-outline-dark btn-sm ms-2" (click)="activeModal.close()">{{ 'p.back to table' | transloco }}</button>
-  <button (click)="onSubmit(form)" class="btn btn-outline-primary btn-sm ms-1" type="button">{{ 'g.OK' | transloco }}</button>
+  <button type="button" class="btn btn-outline-dark btn ms-2" (click)="activeModal.close()">{{ 'p.back to table' | transloco }}</button>
+  <button (click)="onSubmit(form)" class="btn btn-outline-primary btn ms-1" type="button">{{ 'g.OK' | transloco }}</button>
   <button type="button" class="btn-close pull-right" aria-label="Close" (click)="activeModal.close('Cross click')"></button>
 </div>
 <div class="modal-body d-flex flex-column h-100">
   <div>
     <p
-      style="font-size: 0.9em; text-align: justify; margin-bottom: 0"
+      style="text-align: justify; margin-bottom: 0"
       [innerHTML]="'modals.check options.introduction.paragraph1' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
     ></p>
     <p
       class="mt-2"
-      style="font-size: 0.9em; text-align: justify; margin-bottom: 0"
+      style="text-align: justify; margin-bottom: 0"
       [innerHTML]="'modals.check options.introduction.paragraph2' | transloco: { iIcon: '<i class=\'bi bi-info-circle-fill cornflowerblue\'></i>' }"
     ></p>
 
@@ -21,7 +21,7 @@
       <div class="card-body">
         <p [innerHTML]="'modals.check options.tasks.description' | transloco"></p>
         @if (isOneAudiofileInvalid()) {
-          <div class="alert alert-danger" style="font-size: 0.9em">
+          <div class="alert alert-danger">
             <p [innerHTML]="'modals.check options.tasks.asr provider requirement mismatch' | transloco"></p>
             @if (selectedASRInfo !== undefined) {
               <ul>
@@ -46,7 +46,7 @@
         @if (orangeCount > 0) {
           <p
             class="alert alert-warning"
-            style="text-align: center; font-size: 0.9em"
+            style="text-align: center;"
             [innerHTML]="'modals.check options.tasks.warning readding files' | transloco"
           ></p>
         }
@@ -117,7 +117,7 @@
                 <tr>
                   <td class="compatible-col">
                     <ng-template #validationResult>
-                      <table class="table table-sm table-striped">
+                      <table class="table table-dm table-striped">
                         <tbody>
                           @for (check of task.checks; track check.name) {
                             <tr>
@@ -209,7 +209,7 @@
         <div class="row g-0 align-items-center">
           <div class="col">{{ 'g.options' | transloco }}</div>
           <div class="col-auto">
-            <button class="btn btn-sm btn-outline-primary reset-button" (click)="resetOptions()">
+            <button class="btn btn btn-outline-primary reset-button" (click)="resetOptions()">
               <i class="bi bi-arrow-counterclockwise"></i> {{ 'p.reset options' | transloco }}
             </button>
           </div>
@@ -242,10 +242,13 @@
                         name="asrProvider"
                         id="asrProvider"
                         class="d-block"
+                        [container]="undefined"
+                        dropdownClass="queue-modal-option-dropdown"
+                        dropMenuClass="queue-modal-option-dropdown"
                       ></octra-asr-provider-select>
 
                       @if (selectedASRInfo !== undefined && isASRSelected() && selectedASRInfo.knownIssues !== undefined) {
-                        <div class="alert alert-info mt-3" style="font-size: 0.9em">
+                        <div class="alert alert-info mt-3">
                           <b>Known Issues for {{ selectedASRInfo.provider }} ASR:</b>
                           {{ selectedASRInfo.knownIssues }}
                         </div>
@@ -253,12 +256,12 @@
                     </td>
                   </tr>
                   <tr class="align-middle">
-                    <td class="fit">
+                    <td class="fit" style="border: none;">
                       <label class="me-1 pointer" [ngbTooltip]="'modals.check options.options.content language.description' | transloco"
                         >{{ 'modals.check options.options.content language.name' | transloco }}<span class="text-danger">*</span>:</label
                       >
                     </td>
-                    <td>
+                    <td style="border: none;">
                       <octra-asr-language-select
                         [(ngModel)]="defaultUserSettings.selectedASRLanguage"
                         (ngModelChange)="onOptionChange()"
@@ -276,10 +279,18 @@
                         placeholder="Content Language"
                         [title]="'Content Language'"
                         [required]="true"
+                        [container]="undefined"
+                        dropdownClass="queue-modal-option-dropdown"
+                        dropMenuClass="queue-modal-option-dropdown"
                       ></octra-asr-language-select>
-                      <span class="d-block small mute text-secondary ms-1" style="font-size: 0.75rem">{{
-                        'modals.check options.options.content language.help' | transloco
-                      }}</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="box-shadow: none;"></td>
+                    <td style="box-shadow: none;">
+                      <span class="d-block small mute text-secondary ms-1" style="font-size: 0.9rem; padding-top: 0;">{{
+                          'modals.check options.options.content language.help' | transloco
+                        }}</span>
                     </td>
                   </tr>
                   @if (modeStoreService.currentMode === 'annotation') {
@@ -320,7 +331,7 @@
                       <td>
                         <input
                           type="number"
-                          class="form-control form-control-sm"
+                          class="form-control form-control"
                           name="diarizationNumOfSpeakers"
                           [(ngModel)]="defaultUserSettings.diarizationSpeakers"
                           (ngModelChange)="onOptionChange()"
@@ -352,6 +363,9 @@
                           [i18n]="{
                             asrProvider: 'modals.check options.options.summarization service provider.name' | transloco,
                           }"
+                          [container]="undefined"
+                          dropdownClass="queue-modal-option-dropdown"
+                          dropMenuClass="queue-modal-option-dropdown"
                         ></octra-asr-provider-select>
                       </td>
                     </tr>
@@ -363,7 +377,7 @@
                       </td>
                       <td>
                         <select
-                          class="form-select form-select-sm"
+                          class="form-select form-select"
                           name="summarizationNumberOfWords"
                           [(ngModel)]="defaultUserSettings.selectedSummarizationNumberOfWords"
                           (ngModelChange)="onOptionChange()"
@@ -395,6 +409,9 @@
                           name="mausLanguage"
                           id="mausLanguage"
                           [placeholder]="'modals.check options.options.word alignment language.name' | transloco"
+                          [container]="undefined"
+                          dropdownClass="queue-modal-option-dropdown"
+                          dropMenuClass="queue-modal-option-dropdown"
                         ></octra-asr-language-select>
                       </td>
                     </tr>
@@ -409,7 +426,7 @@
                         <div class="row g-1 align-items-center">
                           <div class="col">
                             <select
-                              class="form-select form-select-sm"
+                              class="form-select form-select"
                               [(ngModel)]="defaultUserSettings.selectedTranslationLanguage"
                               (ngModelChange)="onOptionChange()"
                               name="translationLanguage"
