@@ -284,7 +284,7 @@
     id="mode-tabs"
     [ngClass]="{
       'with-feedback': (appStoreService.feedbackEnabled$ | async),
-      'no-feedback': (appStoreService.feedbackEnabled$ | async) === false,
+      'no-feedback': (appStoreService.feedbackEnabled$ | async) === false
     }"
   >
     <li [ngbNavItem]="'annotation'">
@@ -296,6 +296,7 @@
         #ngbToolTip="ngbTooltip"
         [placement]="'bottom-end'"
         [container]="'body'"
+        class="active-mode-annotation"
       >
         {{ 'modes.annotation.name' | transloco }}
       </button>
@@ -314,7 +315,9 @@
             [operations]="modeStoreService.defaultModeOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
-            style="height: 100%"
+            style="height: 100%;"
+            [backgroundColor]="'#fbfeff'"
+            class="active-mode-proceedings-annotation"
           >
           </tportal-proceedings>
         }
@@ -329,6 +332,7 @@
         [ngbTooltip]="'modes.summarization and translation.description' | transloco"
         [placement]="'bottom-end'"
         [container]="'body'"
+        class="active-mode-summarization"
       >
         {{ 'modes.summarization and translation.name' | transloco }}
       </button>
@@ -348,6 +352,8 @@
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
             style="height: 100%"
+            [backgroundColor]="'#f9fdf9'"
+            class="active-mode-proceedings-summarization"
           >
           </tportal-proceedings>
         }
@@ -360,7 +366,11 @@
   </div>
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
-    <div class="row proceedings-header d-flex" style="padding-top: 0">
+    <div class="row proceedings-header d-flex" style="padding-top: 0"
+    [ngClass]="{
+    'process-nav-annotation': modeStoreService.currentMode === 'annotation',
+    'process-nav-summarization': modeStoreService.currentMode === 'summarization'
+    }">
       <div class="col-auto" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
           <i class="bi bi-plus"></i> 1.<span class="d-none d-lg-inline d-xl-inline"> {{ 'buttons.add files' | transloco | uppercase }}</span>

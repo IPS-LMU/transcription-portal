@@ -154,6 +154,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
   @Input() queue?: PreprocessingQueueItem[] | null;
   @Input() entries?: StoreItem[] | null;
   @Input() currentMode?: TPortalModes;
+  @Input() backgroundColor?: string;
   @Input() operations?:
     | {
         factory: OperationFactory<any>;

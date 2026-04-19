@@ -306,3 +306,7 @@ table tbody tr td .bi.bi-chevron-down {
   display: block;
   color: red;
 }
+
+.table tbody tr {
+  background-color: var(--bs-table-bg) !important;
+}

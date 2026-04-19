@@ -235,7 +235,7 @@ nav li {
 #mode-tabs .active {
   box-shadow: 3px 3px 10px lightgray;
   opacity: 1;
-  font-weight: 400;
+  font-weight: bold;
 }
 
 #build-information {
@@ -257,4 +257,22 @@ nav li {
   flex-direction: column;
   flex: auto;
   height: 100%;
+}
+
+.active-mode-annotation.active,
+.active-mode-proceedings-annotation {
+  background-color: #fbfeff;
+}
+
+.process-nav-annotation{
+  background-color: #d6e5ec;
+}
+
+.active-mode-summarization.active,
+.active-mode-proceedings-summarization {
+  background-color: #f9fdf9;
+}
+
+.process-nav-summarization{
+  background-color: #daeada;
 }

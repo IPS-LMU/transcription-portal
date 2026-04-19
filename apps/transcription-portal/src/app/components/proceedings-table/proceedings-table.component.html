@@ -123,7 +123,7 @@
       }
 
       <div ngbAccordion class="results-table-accordion" [closeOthers]="true" [destroyOnHide]="true" (shown)="onResultsTableItemShown($event)">
-        @if (popover.lastOperationRound.status !== 'ERROR') {
+        @if (popover.lastOperationRound.status!== 'ERROR') {
           @if (
             popover.lastOperationRound.time !== undefined &&
             popover.lastOperationRound.time.start !== undefined &&
@@ -468,7 +468,9 @@
   }
   @if (operations !== undefined && operations !== null) {
     <!-- Big proceedings table -->
-    <table class="table table-striped fixed-table-layout">
+    <table class="table table-striped fixed-table-layout" [ngStyle]="{
+            '--bs-table-bg': backgroundColor !== undefined ? backgroundColor : 'initial'
+          }">
       <!-- TABLE HEADER -->
       <thead>
         <tr class="tableHeaderTop">
