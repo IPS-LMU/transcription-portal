@@ -50,7 +50,12 @@ export class ToolLoaderComponent implements OnChanges {
           if (changedToolOrOP) {
             const factory = openedTool.factory as ToolOperationFactory;
             this.selectedTool.name = operation.currentValue.operation?.name ?? '';
-            const url = await factory.getToolURL(openedTool.audioFile, openedTool.transcript, this.httpClient);
+            const url = await factory.getToolURL(
+              openedTool.audioFile,
+              openedTool.transcript,
+              openedTool.operation.rounds[0].status === 'PROCESSING',
+              this.httpClient,
+            );
 
             this.error = undefined;
             this.selectedTool.url = url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : undefined;

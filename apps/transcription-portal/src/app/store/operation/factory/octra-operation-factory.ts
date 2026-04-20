@@ -53,7 +53,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, httpClient: HttpClient): Promise<string> {
+  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, httpClient: HttpClient): Promise<string> {
     if (audioFile?.online && audioFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
       const audio_url = encodeURIComponent(audioFile.url);
@@ -77,7 +77,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
         }
 
         const { extension } = FileInfo.extractFileName(transcriptFile.name);
-        if (extension === '.par') {
+        if (extension === '.par' && firstRevision) {
           const oAudio = new OAudiofile();
           oAudio.name = audioFile.attributes.originalFileName;
           oAudio.url = audioFile.url;
@@ -127,7 +127,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
 
             const result = new PartiturConverter().export(importResult.annotjson, oAudio);
             if (result?.file) {
-              const newFile = new File([result.file.content], result.file.name, { type: result.file.type });
+              const newFile = new File([result.file.content], transcriptFile.name, { type: result.file.type });
               transcript = await this.upload(
                 {
                   name: newFile.name,
@@ -135,7 +135,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
                   size: newFile.size,
                   blob: newFile,
                   attributes: {
-                    originalFileName: newFile.name,
+                    originalFileName: result.file.name,
                   },
                   hash: await getHashString(newFile),
                 },

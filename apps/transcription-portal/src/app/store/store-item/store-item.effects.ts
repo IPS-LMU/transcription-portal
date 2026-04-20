@@ -1032,20 +1032,18 @@ export class StoreItemEffects {
                 },
               );
             } else {
+              (async () => {})();
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
               if (getLastOperationRound(operation)?.status === 'FINISHED') {
-                if (!getLastOperationResultFromLatestRound(operation)?.online || !getLastOperationResultFromLatestRound(operation)?.url) {
-                  // file for last result of current tool exists, but isn't available via URL
-                  // reupload result from tool operation
-                  file = getLastOperationResultFromLatestRound(operation);
-                }
+                // file for last result of current tool exists
+                // force reupload result from tool operation
+                file = getLastOperationResultFromLatestRound(operation);
               } else if (
                 previousOperation &&
-                getLastOperationRound(previousOperation) &&
-                !areAllResultsOnline(getLastOperationRound(previousOperation)!)
+                getLastOperationResultFromLatestRound(previousOperation)
               ) {
-                // reupload result from previous operation
+                // force reupload result from previous operation
                 // local available, reupload
                 file = getLastOperationResultFromLatestRound(previousOperation);
                 operation = previousOperation;

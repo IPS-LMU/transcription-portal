@@ -82,7 +82,7 @@ export abstract class ToolOperationFactory<T extends StoreTaskOperation<R> = Sto
   T,
   R
 > {
-  public abstract getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, httpClient: HttpClient): Promise<string>;
+  public abstract getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, httpClient: HttpClient): Promise<string>;
 
   public abstract parseMessageEvent(
     $event: MessageEvent,
