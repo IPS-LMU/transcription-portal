@@ -75,7 +75,6 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
           if (item?.disabled || item?.stopRequested) {
-            console.log(`GOT STOP ${item?.id}`);
             subscrManager.destroy();
           }
         },

@@ -265,7 +265,6 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
     subscrManager: SubscriptionManager<Subscription>,
   ) {
     return new Promise<void>((resolve, reject) => {
-      console.log(`Process project with options ${clonedOperation.options.language} and ${clonedOperation.options.maxNumberOfWords}`);
       if (serviceProvider) {
         subscrManager.add(
           httpclient

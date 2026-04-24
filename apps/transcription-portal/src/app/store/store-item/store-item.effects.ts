@@ -54,7 +54,6 @@ export class StoreItemEffects {
 
   constructor() {
     this.subscrManager = new SubscriptionManager();
-    console.log('init subscr manager');
   }
 
   listenForItemChanges(itemID: number, mode: TPortalModes): Observable<StoreItemTask | undefined> {
@@ -293,12 +292,14 @@ export class StoreItemEffects {
       ofType(StoreItemActions.processNextStoreItem.do),
       withLatestFrom(this.store),
       exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+        /*
         console.log(
           `Running: ${state.modes.entities[mode]!.statistics.running}, tasks ${getAllTasks(state.modes.entities[mode]!.items)
             .filter((a) => a.status === TaskStatus.PROCESSING)
             .map((a) => a.id)
             .join(',')}`,
         );
+ */
         if (state.modes.entities[mode]!.statistics.running < 3 && state.modes.entities[mode]!.overallState === 'processing') {
           const nextTask = getOneTaskItemWhereRecursive((item) => {
             const uploadOperation = getLastOperationRound(item.operations![0]);
@@ -315,7 +316,6 @@ export class StoreItemEffects {
               }),
             );
           }
-          console.log(`Next task is ${nextTask.id} with status ${nextTask.status}`);
           return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
         } else {
           console.warn('More than 3 processes running');
@@ -632,7 +632,6 @@ export class StoreItemEffects {
                 opTicket,
               );
             } else if (lastRound) {
-              console.log(`RUN TOOL FOR OP ${operation.name}, task ${operation.taskID}`);
               // is tool
               if (lastRound.status === TaskStatus.PENDING) {
                 this.store.dispatch(

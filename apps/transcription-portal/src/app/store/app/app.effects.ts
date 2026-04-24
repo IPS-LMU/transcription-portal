@@ -56,10 +56,8 @@ export class AppEffects {
     this.actions$.pipe(
       ofType(AppActions.initApplication.do),
       map(() => {
-        console.log('INIT CONSOLE LOGGING');
         // overwrite console.log
         if (environment.debugging.enabled && environment.debugging.logging.console) {
-          console.log('REDIRECT CONSOLE LOGGING ENABLED');
           this.consoleService.init(
             new ConsoleLoggingServiceOptions({
               confidentialList: ['(ACCESSCODE=)[^\\s&]+', '(accesscode=)[^\\s&]+'],
@@ -145,7 +143,6 @@ export class AppEffects {
       ofType(AppActions.initApplication.do),
       withLatestFrom(this.store),
       exhaustMap(([a, state]: [any, AppState]) => {
-        console.log('LOAD SETTINGS');
         return this.http
           .get<OHConfiguration>('config/config.json', {
             responseType: 'json',

@@ -237,10 +237,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   public dragBorder($event: any, part: string) {
-    console.log(
-      `drag ${this.dragborder} ${$event.type}, part: ${part}, ${this.dragborder}, pageX: ${$event.pageX}, pageY: ${$event.pageY}, clientWIdth: ${$event.target.clientWidth}`,
-    );
-
     if ($event.type === 'mouseleave') {
       this.dragborder = 'inactive';
       this.renderer.setStyle($event.target, 'width', '10px');
@@ -273,7 +269,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         break;
       case 'mouseup':
         this.dragborder = 'inactive';
-        console.log(`stop dragging ${$event.type}, part: ${part}`);
         break;
     }
   }

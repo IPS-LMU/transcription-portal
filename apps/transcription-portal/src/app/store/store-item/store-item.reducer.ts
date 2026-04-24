@@ -912,7 +912,6 @@ export const getTaskReducers = (
         }
       }
 
-      console.log(`Change task ${taskItem!.id} from ${taskItem!.status} to ${taskStatus}`);
       state = modeAdapter.updateOne(
         {
           id: mode,
@@ -947,7 +946,6 @@ export const getTaskReducers = (
                 });
               }
 
-              console.log(`SET ${item.id} to ${taskStatus} SUCCESS`);
               return taskAdapter.updateOne(
                 {
                   id: item.id,

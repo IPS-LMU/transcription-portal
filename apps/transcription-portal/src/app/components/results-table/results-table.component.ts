@@ -114,7 +114,6 @@ export class ResultsTableComponent implements OnChanges {
   }
 
   private async generateTable() {
-    console.log('generate table');
     this.clearConvertedArray();
     const opFactory = (this.defaultOperations ?? []).find((a) => a.factory.name === this.operation?.name)?.factory;
 

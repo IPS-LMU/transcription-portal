@@ -60,7 +60,6 @@ export class IDBEffects {
       ofType(IDBActions.initIDB.ready),
       withLatestFrom(this.store),
       exhaustMap(([, state]: [any, RootState]) => {
-        console.log('IDB ready.');
         return from(this.loadIDB()).pipe(
           exhaustMap(([intern, annotationTasks, summarizationTasks, userSettings]) => {
             return of(
@@ -275,7 +274,6 @@ export class IDBEffects {
       ),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number; type: any }, RootState]) => {
-        console.log(`SAVE after ${type}`);
         const table: Table<IDBTaskItem | IDBFolderItem, number, IDBTaskItem | IDBFolderItem> =
           mode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
         let entry = getStoreItemsWhereRecursive((item) => item.id === taskID, state.modes.entities[mode]!.items)[0];

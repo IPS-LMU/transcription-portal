@@ -450,7 +450,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
             opIndex: operationIndex!,
             factory: this.operations![operationIndex!].factory,
           });
-          console.log('row selected close');
           this.popover.state = 'closed';
         }
       }
@@ -491,7 +490,6 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
 
   onOperationMouseEnter($event: MouseEvent, task: StoreItemTask, operation: StoreTaskOperation, td: HTMLTableCellElement) {
     // show Popover for normal operations only
-    console.log(`OPERATION ENTER ${operation.id}`);
     const lastRound = getLastOperationRound(operation);
     if (!(lastRound?.status === TaskStatus.PENDING || lastRound?.status === TaskStatus.SKIPPED || lastRound?.status === TaskStatus.READY)) {
       const icon: HTMLElement = $event.target as HTMLElement;

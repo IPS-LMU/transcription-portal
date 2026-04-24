@@ -79,7 +79,6 @@ export class ToolLoaderComponent implements OnChanges {
 
   @HostListener('window:message', ['$event'])
   async onMessage(e: MessageEvent) {
-    console.log(e);
     if (this.iframe && this.openedTool) {
       const parsed = await this.openedTool.factory.parseMessageEvent(
         e,

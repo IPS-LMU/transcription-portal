@@ -177,12 +177,10 @@ export class DownloadService {
             resolve({ converter, result: undefined });
           }
         } else {
-          console.log(`import is null of ${from.obj.name}`);
           // ignore
           resolve({ converter, result: undefined });
         }
       } else {
-        console.error(`found no importConverter for ${opResult.name}`);
         resolve({ converter, result: undefined });
       }
     });
