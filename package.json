@@ -94,7 +94,6 @@
     "@eslint/js": "^9.8.0",
     "@jscutlery/semver": "^6.0.0",
     "@ngrx/eslint-plugin": "21.0.1",
-    "@nx/cypress": "22.7.0",
     "@nx/eslint": "22.7.0",
     "@nx/eslint-plugin": "22.7.0",
     "@nx/workspace": "22.7.0",
@@ -108,7 +107,6 @@
     "@typescript-eslint/parser": "^8.46.2",
     "@typescript-eslint/utils": "^8.40.0",
     "conventional-changelog": "^7.2.0",
-    "cypress": "15.9.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^1.6.2",
@@ -128,6 +126,13 @@
     "maintenance-warning-snackbar": {
       "http-server": {
         "ecstatic": "^4.1.4"
+      }
+    },
+    "@angular-devkit/build-angular": {
+      "webpack-dev-server": {
+        "sockjs": {
+          "uuid": "^14.0.0"
+        }
       }
     }
   }
