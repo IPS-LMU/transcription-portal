@@ -1,6 +1,5 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
@@ -17,7 +16,6 @@ import {
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
-import ScrollEvent = JQuery.ScrollEvent;
 
 @Component({
   selector: 'tportal-popover',

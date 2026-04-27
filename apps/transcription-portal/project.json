@@ -38,7 +38,6 @@
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
-          "node_modules/jquery/dist/jquery.min.js",
           "node_modules/jszip/dist/jszip.min.js"
         ],
         "serviceWorker": true,

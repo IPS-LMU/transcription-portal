@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { isNumber } from '@octra/utilities';
-import jQuery from 'jquery';
 import { catchError, exhaustMap, forkJoin, map, Observable, of, retry, tap, withLatestFrom } from 'rxjs';
 import X2JS from 'x2js';
 import { environment } from '../../../environments/environment';
@@ -59,57 +58,70 @@ export class ExternalInformationEffects {
           })
           .pipe(
             exhaustMap((result: string) => {
-              const html = jQuery(result);
-              const basTable = html.find('#bas-asr-service-table');
-              const basASRInfoContainers = basTable.find('.bas-asr-info-container');
+              const html = document.createElement('div');
+              html.innerHTML = result;
+              const basTable = html.querySelector('#bas-asr-service-table')!;
+              const basASRInfoContainers = basTable.querySelectorAll('.bas-asr-info-container');
 
               const asrInfos: ASRInfo[] = [];
 
-              jQuery.each(basASRInfoContainers, (key, elem) => {
-                const name = jQuery(elem).attr('data-bas-asr-info-provider-name');
-                const isStringNumber = (str: string) => !isNaN(Number(str));
-                const sanitizeNumberValue = (el: any, attr: string) => {
-                  if (el[attr] && isStringNumber(el[attr])) {
-                    el[attr] = Number(el[attr]);
-                  } else {
-                    el[attr] = undefined;
-                  }
-                };
-                const sanitizeStringValue = (el: any, attr: string) => {
-                  if (el[attr] && typeof el[attr] === 'string') {
-                    el[attr] = el[attr].replace(/[\n\t\r]+/g, '');
-                  } else {
-                    el[attr] = undefined;
-                  }
-                };
+              for (let i = 0; i < (basASRInfoContainers ?? []).length; i++) {
+                const elem = basASRInfoContainers!.item(i);
 
-                const newElem: {
-                  name?: string;
-                  maxSignalDuration?: number;
-                  maxSignalSize?: number;
-                  quotaPerMonth?: number;
-                  termsURL?: string;
-                  dataStoragePolicy?: string;
-                  knownIssues?: string;
-                } = {
-                  name,
-                  maxSignalDuration: Number(jQuery(elem).find('.bas-asr-info-max-signal-duration-seconds').attr('data-value')),
-                  maxSignalSize: Number(jQuery(elem).find('.bas-asr-info-max-signal-size-megabytes').attr('data-value')),
-                  quotaPerMonth: Number(jQuery(elem).find('.bas-asr-info-quota-per-month-seconds').attr('data-value')),
-                  termsURL: jQuery(elem).find('.bas-asr-info-eula-link').attr('href'),
-                  dataStoragePolicy: jQuery(elem).find('.bas-asr-info-data-storage-policy').text(),
-                  knownIssues: jQuery(elem).find('.bas-asr-info-known-issues').text(),
-                };
+                const name = elem.getAttribute('data-bas-asr-info-provider-name');
 
-                sanitizeNumberValue(newElem, 'maxSignalDuration');
-                sanitizeNumberValue(newElem, 'maxSignalSize');
-                sanitizeNumberValue(newElem, 'quotaPerMonth');
-                sanitizeStringValue(newElem, 'dataStoragePolicy');
-                sanitizeStringValue(newElem, 'knownIssues');
-                newElem.knownIssues = newElem.knownIssues?.trim() === 'none' ? undefined : newElem.knownIssues;
+                if(name) {
+                  const isStringNumber = (str: string) => !isNaN(Number(str));
+                  const sanitizeNumberValue = (el: any, attr: string) => {
+                    if (el[attr] && isStringNumber(el[attr])) {
+                      el[attr] = Number(el[attr]);
+                    } else {
+                      el[attr] = undefined;
+                    }
+                  };
+                  const sanitizeStringValue = (el: any, attr: string) => {
+                    if (el[attr] && typeof el[attr] === 'string') {
+                      el[attr] = el[attr].replace(/[\n\t\r]+/g, '');
+                    } else {
+                      el[attr] = undefined;
+                    }
+                  };
 
-                asrInfos.push(newElem);
-              });
+                  const maxSignalDuration = Number(elem.querySelector('.bas-asr-info-max-signal-duration-seconds')?.getAttribute('data-value'));
+                  const maxSignalSize = Number(elem.querySelector('.bas-asr-info-max-signal-size-megabytes')?.getAttribute('data-value'));
+                  const quotaPerMonth = Number(elem.querySelector('.bas-asr-info-quota-per-month-seconds')?.getAttribute('data-value'));
+                  const termsURL = elem.querySelector('.bas-asr-info-eula-link')?.getAttribute('href')!;
+                  const dataStoragePolicy = elem.querySelector('.bas-asr-info-data-storage-policy')?.textContent;
+                  const knownIssues = elem.querySelector('.bas-asr-info-known-issues')?.textContent;
+
+                  const newElem: {
+                    name?: string;
+                    maxSignalDuration?: number;
+                    maxSignalSize?: number;
+                    quotaPerMonth?: number;
+                    termsURL?: string;
+                    dataStoragePolicy?: string;
+                    knownIssues?: string;
+                  } = {
+                    name,
+                    maxSignalDuration,
+                    maxSignalSize,
+                    quotaPerMonth,
+                    termsURL,
+                    dataStoragePolicy,
+                    knownIssues,
+                  };
+
+                  sanitizeNumberValue(newElem, 'maxSignalDuration');
+                  sanitizeNumberValue(newElem, 'maxSignalSize');
+                  sanitizeNumberValue(newElem, 'quotaPerMonth');
+                  sanitizeStringValue(newElem, 'dataStoragePolicy');
+                  sanitizeStringValue(newElem, 'knownIssues');
+                  newElem.knownIssues = newElem.knownIssues?.trim() === 'none' ? undefined : newElem.knownIssues;
+
+                  asrInfos.push(newElem);
+                }
+              }
 
               return of(
                 ExternalInformationActions.updateASRInfo.success({

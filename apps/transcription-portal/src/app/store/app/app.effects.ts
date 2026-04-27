@@ -258,8 +258,6 @@ export class AppEffects {
         const matomoSettings = AppSettings.configuration.plugins.tracking.matomo;
 
         const trackingCode = `
-<!-- Matomo -->
-<script type="text/javascript">
   var _paq = window._paq || [];
   /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
   _paq.push(['trackPageView']);
@@ -270,11 +268,12 @@ export class AppEffects {
     _paq.push(['setSiteId', '${matomoSettings.siteID}']);
     var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
     g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-  })();
-</script>
-<!-- End Matomo Code -->`;
+  })();`;
 
-        jQuery(trackingCode).insertAfter(jQuery('body').children().last());
+        const script = document.createElement('script');
+        script.setAttribute('type', 'text/javascript');
+        script.innerHTML = trackingCode;
+        document.body.appendChild(script);
       } else {
         console.error(`attributes for matomo tracking in appconfig.json are invalid.`);
       }
