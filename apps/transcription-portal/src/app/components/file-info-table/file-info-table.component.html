@@ -1,5 +1,5 @@
 @if (fileinfo) {
-  <table class="table table-responsive-md table-striped p-3 m-0">
+  <table class="table table-responsive-md table-striped p-3 m-0 w-100">
     <tbody>
       <tr>
         <td class="ps-3">{{ 'popovers.file info.original filename' | transloco }}:</td>
@@ -11,7 +11,7 @@
       </tr>
       <tr>
         <td class="ps-3">Hash:</td>
-        <td>{{ fileinfo.hash }}</td>
+        <td [title]="fileinfo.hash"><span class="text-truncate d-inline-block" style="max-width: 300px;">{{ fileinfo.hash }}</span></td>
       </tr>
       <tr>
         <td class="ps-3">{{ 'popovers.file info.type' | transloco }}:</td>
