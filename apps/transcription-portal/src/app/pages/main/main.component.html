@@ -5,7 +5,15 @@
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
           <a class="nav-link" href="#"
-            ><span class="logo"><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" [ngbPopover]="versionPopover" popoverClass="version-popover" /> TranscriptionPortal</span>
+            ><span class="logo"
+              ><img
+                src="assets/TPortal-Logo_only.svg"
+                style="height: 40px; margin-top: -10px"
+                [ngbPopover]="versionPopover"
+                popoverClass="version-popover"
+              />
+              TranscriptionPortal</span
+            >
             @if (isdevelopment) {
               <span style="color: red"> Beta </span>
             }
@@ -111,7 +119,7 @@
               ngbPopover="Help"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-            ><i class="bi bi-book" style="color: cornflowerblue"></i>
+              ><i class="bi bi-book" style="color: cornflowerblue"></i>
               <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.user guide.name' | transloco }}</span></a
             >
           </li>
@@ -133,7 +141,7 @@
               ngbPopover="Hotkeys"
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
-            ><i class="bi bi-command" style="color: gray"></i>
+              ><i class="bi bi-command" style="color: gray"></i>
               <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.hotkeys.name' | transloco }}</span></a
             >
           </li>
@@ -148,7 +156,9 @@
                   }"
                 ></i
                 ><span style="cursor: pointer">
-                  <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.feedback.name' | transloco }}</span></span
+                  <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{
+                    'navigation.feedback.name' | transloco
+                  }}</span></span
                 >
               </a>
             </li>
@@ -161,7 +171,9 @@
               placement="bottom-right"
               triggers="mouseenter:mouseleave"
               ><i class="bi bi-bar-chart-line" style="color: #ff6a00"></i>
-              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{ 'navigation.statistics.name' | transloco }}</span></span
+              <span class="d-lg-none d-xl-none d-xxl-inline-block ms-1" style="color: black">{{
+                'navigation.statistics.name' | transloco
+              }}</span></span
             >
           </li>
           <li class="nav-item active">
@@ -250,7 +262,10 @@
                     <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> {{ 'settings.backup database' | transloco }}
                     @if ((appStoreService.idbBackup$ | async)?.safeURL) {
                       <p>
-                        <a class="btn btn-outline-info btn-sm w-100" [href]="(appStoreService.idbBackup$ | async)!.safeURL" [download]="(appStoreService.idbBackup$ | async)!.filename"
+                        <a
+                          class="btn btn-outline-info btn-sm w-100"
+                          [href]="(appStoreService.idbBackup$ | async)!.safeURL"
+                          [download]="(appStoreService.idbBackup$ | async)!.filename"
                           ><i class="bi bi-cloud-download-fill"></i> {{ 'g.download' | transloco }}</a
                         >
                       </p>
@@ -284,7 +299,7 @@
     id="mode-tabs"
     [ngClass]="{
       'with-feedback': (appStoreService.feedbackEnabled$ | async),
-      'no-feedback': (appStoreService.feedbackEnabled$ | async) === false
+      'no-feedback': (appStoreService.feedbackEnabled$ | async) === false,
     }"
   >
     <li [ngbNavItem]="'annotation'">
@@ -315,7 +330,7 @@
             [operations]="modeStoreService.defaultModeOperations$ | async"
             [queue]="preprocessingStoreService.preprocessingQueue$ | async"
             [shortstyle]="(modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened'"
-            style="height: 100%;"
+            style="height: 100%"
             [backgroundColor]="'#fbfeff'"
             class="active-mode-proceedings-annotation"
           >
@@ -360,17 +375,22 @@
       </ng-template>
     </li>
   </ul>
-  <div class="alert alert-warning m-0">
-    This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change
-    and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
-  </div>
+  @if (isdevelopment) {
+    <div class="alert alert-warning m-0">
+      This version of TranscriptionPortal is in constant development. Don't use it for production. Data made here could get lost, features may change
+      and bugs can exists. For production use the <a href="https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/">stable version</a>.
+    </div>
+  }
   <!-- SUB-HEADER OVERVIEW -->
   @if ((modeStoreService.openedToolOperation$ | async) === undefined || (modeStoreService.openedToolOperation$ | async) === null) {
-    <div class="row proceedings-header d-flex" style="padding-top: 0"
-    [ngClass]="{
-    'process-nav-annotation': modeStoreService.currentMode === 'annotation',
-    'process-nav-summarization': modeStoreService.currentMode === 'summarization'
-    }">
+    <div
+      class="row proceedings-header d-flex"
+      style="padding-top: 0"
+      [ngClass]="{
+        'process-nav-annotation': modeStoreService.currentMode === 'annotation',
+        'process-nav-summarization': modeStoreService.currentMode === 'summarization',
+      }"
+    >
       <div class="col-auto" style="text-align: left; padding-top: 5px">
         <button (click)="onFilesAddButtonClicked()" class="btn btn-primary">
           <i class="bi bi-plus"></i> 1.<span class="d-none d-lg-inline d-xl-inline"> {{ 'buttons.add files' | transloco | uppercase }}</span>
@@ -438,20 +458,23 @@
     </div>
   }
   <!-- WORKING AREA -->
-  <div id="main" class="d-flex flex-row flex-auto position-relative"
-       [ngStyle]="{
-        '--proceedings-width': newProceedingsWidth + '%',
-        '--tool-width': newToolWidth + '%'
-      }">
+  <div
+    id="main"
+    class="d-flex flex-row flex-auto position-relative"
+    [ngStyle]="{
+      '--proceedings-width': newProceedingsWidth + '%',
+      '--tool-width': newToolWidth + '%',
+    }"
+  >
     <div
       id="main-inner"
       (blur)="onBlur($event)"
       [ngClass]="{
-        'proceedings-expand-left-expanded': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed',
-        'proceedings-expand-left-collapsed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened'
+        'proceedings-expand-left-expanded': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'closed',
+        'proceedings-expand-left-collapsed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened',
       }"
       [ngStyle]="{
-        'border-right': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened' ? '2px solid lightgray' : 'none',
+        'border-right': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened' ? '2px solid lightgray' : 'none',
       }"
     >
       <div [ngbNavOutlet]="nav" class="d-flex flex-column flex-auto w-100 h-100 position-relative"></div>
@@ -464,15 +487,15 @@
       (mousemove)="dragBorder($event, 'right')"
       (mouseup)="dragBorder($event, 'right')"
       [ngClass]="{
-        'd-none': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  !== 'opened',
+        'd-none': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus !== 'opened',
       }"
-      style="position: absolute; height: 100%; z-index: 800;"
+      style="position: absolute; height: 100%; z-index: 800"
     ></div>
     <div
       id="tool-container"
       [ngClass]="{
-        'proceedings-tool-opened': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'opened',
-        'proceedings-tool-closed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus  === 'closed'
+        'proceedings-tool-opened': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'opened',
+        'proceedings-tool-closed': (modeStoreService.currentModeGuiState$ | async)?.toolOpenStatus === 'closed',
       }"
     >
       <tportal-tool-loader
