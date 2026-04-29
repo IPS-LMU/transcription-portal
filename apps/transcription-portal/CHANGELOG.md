@@ -2,6 +2,108 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.0.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-1.1.0...transcription-portal-2.0.0) (2026-04-29)
+
+
+### Bug Fixes
+
+* **tportal:** downloading columns not working ([92ee2fc](https://github.com/IPS-LMU/transcription-portal/commit/92ee2fcf5038386d02bc9d9b34283da578810ee6))
+* **tportal:** file preview shows text output in one line ([18d7607](https://github.com/IPS-LMU/transcription-portal/commit/18d7607b0740ca659b1ac40f008d06344e5488ad))
+* **tportal:** items on navbar not properly positioned on small displays ([56cf052](https://github.com/IPS-LMU/transcription-portal/commit/56cf052492ed5301801165d447a756e8c0678316))
+* **tportal:** on smaller displays column names overlaps ([46f5007](https://github.com/IPS-LMU/transcription-portal/commit/46f50079a1073c20f89021c3e2d1d12bafdc8848))
+* **transcription-portal:** access code for ASR not working ([1b527f4](https://github.com/IPS-LMU/transcription-portal/commit/1b527f4dac3b0dd8bff1ee7942ab384799f2f81a))
+* **transcription-portal:** add fix for operations with empty rounds ([4c2a171](https://github.com/IPS-LMU/transcription-portal/commit/4c2a17177530bfca7780f475d22b0f3414ccf895))
+* **transcription-portal:** adding a combination of audio file and transcript doesn't work as intended ([a36b8dd](https://github.com/IPS-LMU/transcription-portal/commit/a36b8ddb50fb29416e2524d004538577db4cac8c))
+* **transcription-portal:** asr LST doesn't work if diarization disabled ([f02c117](https://github.com/IPS-LMU/transcription-portal/commit/f02c1177835a2f04874fad42fe79ba3bce4480e1))
+* **transcription-portal:** asr provider set with summarization provider ([9a4bd39](https://github.com/IPS-LMU/transcription-portal/commit/9a4bd39693390eb64a77c53bb7f4704993e4a0a9))
+* **transcription-portal:** can't re-add same file via button ([2f793c4](https://github.com/IPS-LMU/transcription-portal/commit/2f793c4e89c78d6d93b7b62b2d8aed896d26bc6a)), closes [#90](https://github.com/IPS-LMU/transcription-portal/issues/90)
+* **transcription-portal:** clicking on the failed operation circled arrow works only on the second try ([734cee8](https://github.com/IPS-LMU/transcription-portal/commit/734cee8fb34a3fd0183353fa92502efca8e8b327))
+* **transcription-portal:** cmd + a not working properly ([d98d51a](https://github.com/IPS-LMU/transcription-portal/commit/d98d51aa2ac586ef2168710b12a42badf0dfba53))
+* **transcription-portal:** compatibility check not working on reloading test page ([91f5804](https://github.com/IPS-LMU/transcription-portal/commit/91f5804c99decf0b49fbbb9fd7f112440e1899a4))
+* **transcription-portal:** console not logged on dev mode ([4b6b352](https://github.com/IPS-LMU/transcription-portal/commit/4b6b352b12e547091a0e81e0316170ef054d3711))
+* **transcription-portal:** downloading results per line or column not workiing ([7990249](https://github.com/IPS-LMU/transcription-portal/commit/7990249d3c1ef5cc5f37e62ba4afa6bb3d2ab597))
+* **transcription-portal:** dragndrop overwrites status of queued tasks ([70dde9a](https://github.com/IPS-LMU/transcription-portal/commit/70dde9a30421323e4a130eb220be557a783b958c))
+* **transcription-portal:** duplicates on browser compatibility page ([21a961e](https://github.com/IPS-LMU/transcription-portal/commit/21a961e8395a72148011cee17b145ed56f5e3545))
+* **transcription-portal:** emu web app uses wrong transcript url on second edit ([c8bb631](https://github.com/IPS-LMU/transcription-portal/commit/c8bb6313ffbd97715ce870b7806d4b72770bdb51))
+* **transcription-portal:** file blob of a transcript file is undefined in upload operation ([46efab6](https://github.com/IPS-LMU/transcription-portal/commit/46efab69a97c54d4fe3a13e211fbf4daa2ce8f8b))
+* **transcription-portal:** going back from Octra to table view starts next task unintentionally ([9855fdf](https://github.com/IPS-LMU/transcription-portal/commit/9855fdfa094a4818fa01c51f78f409f9f5b03cf7))
+* **transcription-portal:** GoogleASR doesn't return valid result on diarization false ([3ad1c9b](https://github.com/IPS-LMU/transcription-portal/commit/3ad1c9b3a275bc3145d1818bee6166a57e3df881))
+* **transcription-portal:** invalid information retrieved for summarization service ([bfb6d6b](https://github.com/IPS-LMU/transcription-portal/commit/bfb6d6b080293ae952e556e6eaaacf3b49c18e4b))
+* **transcription-portal:** make "disabled" a separate attribute to prevent resetting status after enabling tasks ([5d73a2c](https://github.com/IPS-LMU/transcription-portal/commit/5d73a2c9cd3a904c45cb9a55d96561fc48fe7acf))
+* **transcription-portal:** migration to new indexed DB version fails if directories exist ([dd7e7fd](https://github.com/IPS-LMU/transcription-portal/commit/dd7e7fd660e1d96ee23cfc386b201230ee4110c5))
+* **transcription-portal:** octra closed on any change ([8818361](https://github.com/IPS-LMU/transcription-portal/commit/88183611eb0a7eb834c4ca8feefe9d9f452a4f74))
+* **transcription-portal:** opening tool with unavailable transcript url doesn't work ([9e8896f](https://github.com/IPS-LMU/transcription-portal/commit/9e8896f570e331c2a8d069d59b6a4abf157e7140))
+* **transcription-portal:** operation popover shows wrong revision number ([7dd2474](https://github.com/IPS-LMU/transcription-portal/commit/7dd2474ee9de71e7bfc11a82c021aa631b00fbb8))
+* **transcription-portal:** operations not started because lastRound is undefined ([c9a4253](https://github.com/IPS-LMU/transcription-portal/commit/c9a425348f976bd40646f2949cf50b02885d936d))
+* **transcription-portal:** orange file name in queue modal on dropped file ([0031b25](https://github.com/IPS-LMU/transcription-portal/commit/0031b2575d6f3cdf46aa778e23d7cf758df2b2ec))
+* **transcription-portal:** processing with ASR and Summarization fails on production ([b9e6e16](https://github.com/IPS-LMU/transcription-portal/commit/b9e6e16887e55971236ad71949f02f8ac174c9e3))
+* **transcription-portal:** pwa configuration doesn't work ([b1caac2](https://github.com/IPS-LMU/transcription-portal/commit/b1caac2eeec2ce441b1f39f3156c50b305c4d924))
+* **transcription-portal:** re-adding split files doesn't work ([1683220](https://github.com/IPS-LMU/transcription-portal/commit/168322062b39240f7ddfd14450f06e3fd2aef854)), closes [#92](https://github.com/IPS-LMU/transcription-portal/issues/92)
+* **transcription-portal:** reset operation not working ([5da9714](https://github.com/IPS-LMU/transcription-portal/commit/5da9714e563e8bbcc60b1ead084ac1ca376aa516))
+* **transcription-portal:** results popover doesn't show protocol for errors warnings ([64021c7](https://github.com/IPS-LMU/transcription-portal/commit/64021c78e6f26a6a4c416d0fa7debd0f6a1049a1))
+* **transcription-portal:** set ngsw-bypass header only on production ([8a2ef3f](https://github.com/IPS-LMU/transcription-portal/commit/8a2ef3f372a51b0ceb6da283f2f187956546aebe))
+* **transcription-portal:** statistics not loading ([32c5b9b](https://github.com/IPS-LMU/transcription-portal/commit/32c5b9bc2ffc182acdedb7c6e711f53f62e51f3a))
+* **transcription-portal:** stopping process doesn't work ([4b28328](https://github.com/IPS-LMU/transcription-portal/commit/4b28328d5a9418b6467946cbec14983efd448a16))
+* **transcription-portal:** task IDs are not calculated properly ([15fc616](https://github.com/IPS-LMU/transcription-portal/commit/15fc616f25a82cafdf428016d35db06693fa6a31))
+* **transcription-portal:** tasks not marked as finished on last op complete ([c88f761](https://github.com/IPS-LMU/transcription-portal/commit/c88f7614031579a292cd2e9782f73c0a83f7f130))
+* **transcription-portal:** tasks with status processing or uploading are not going to be reset on reload ([7b2a763](https://github.com/IPS-LMU/transcription-portal/commit/7b2a763ae5820ea3ddeb985e5a12b36e3787b92c))
+* **transcription-portal:** time recordings not saved to IDB ([773a833](https://github.com/IPS-LMU/transcription-portal/commit/773a833b1516ee26dbdc05e1f6056ef69915846b))
+* **transcription-portal:** Tool reloaded on other operation change ([a9505b3](https://github.com/IPS-LMU/transcription-portal/commit/a9505b3b71e2bf74950db240ae49681782c792b2))
+* **transcription-portal:** Tportal can't load i18n file on production ([eb3853f](https://github.com/IPS-LMU/transcription-portal/commit/eb3853fa53d2e5023b0db4999af4b1314f9016d6))
+* **transcription-portal:** TPortal does process more than 3 tasks at once ([a9f6321](https://github.com/IPS-LMU/transcription-portal/commit/a9f63210daf369d8276806bd239f0f8acc097239))
+* **transcription-portal:** tportal shows no ETA on upload ([8cd448e](https://github.com/IPS-LMU/transcription-portal/commit/8cd448e107cfe8d9b425a8560e2d81ca8c0e8497))
+* **transcription-portal:** tportal tries to upload non-existing files ([5e8ca88](https://github.com/IPS-LMU/transcription-portal/commit/5e8ca885168fa08b692206193bdd288c50698d7b))
+* **transcription-portal:** TranscriptionPortal-Dev uses wrong IndexedDB database ([ec331d8](https://github.com/IPS-LMU/transcription-portal/commit/ec331d83697f5487a71d2d0b9b162f124102ae76))
+* **transcription-portal:** translation operation doesn't use correct language ([10e9b57](https://github.com/IPS-LMU/transcription-portal/commit/10e9b5746ae9b9f7cba03fcf7a3c67f527a91a32))
+* **transcription-portal:** translation operation is not labeled as failed on error ([24f589c](https://github.com/IPS-LMU/transcription-portal/commit/24f589c9edc076589ea1690deee44aed56405c4d))
+* **transcription-portal:** translation operation not working if transcript needed from task inputs ([1a114ba](https://github.com/IPS-LMU/transcription-portal/commit/1a114ba60f02c762e9ee75434732384578b92e8c))
+* **transcription-portal:** translation operation uses "en" if summarization enabled ([3f7e2b5](https://github.com/IPS-LMU/transcription-portal/commit/3f7e2b50e12258c2d2e733837c56387830603deb))
+
+
+### Features
+
+* **tportal:** new mode: summarization and translation ([18b9695](https://github.com/IPS-LMU/transcription-portal/commit/18b96955ed2c14391ce9f4bb4d17ef9cf7a3a2b6))
+* **tportal:** support for installation as Chrome PWA app ([f82e541](https://github.com/IPS-LMU/transcription-portal/commit/f82e541bbc7a770830db3e2a296ecaaa7d670cd3))
+* **tportal:** use custom snackbar to prevent verbose outputs ([8fbfc88](https://github.com/IPS-LMU/transcription-portal/commit/8fbfc883fed6fe18cd8127215e384c27693cf5ed))
+* **transcription-portal:** access modes via url ([bf06fe4](https://github.com/IPS-LMU/transcription-portal/commit/bf06fe4c0fc56427f3752ef6ee45079f5440b075))
+* **transcription-portal:** add about modal ([ca15c31](https://github.com/IPS-LMU/transcription-portal/commit/ca15c312e3b9269ed316f0001adfc13103a3f046))
+* **transcription-portal:** add modal for hotkeys ([377f559](https://github.com/IPS-LMU/transcription-portal/commit/377f559b32d079900ba3c1098f1d7ff9b32b0e22))
+* **transcription-portal:** add translation to the list of services in config.json, add info to options ([a3f8cdd](https://github.com/IPS-LMU/transcription-portal/commit/a3f8cdd50d56c9c149fa9a7926c2ea8dffa4320a))
+* **transcription-portal:** ask for confirmation before clearing data ([ffa2866](https://github.com/IPS-LMU/transcription-portal/commit/ffa2866d06fd6f2e06139533ada7161218799caf))
+* **transcription-portal:** backup & restore indexedDB database ([e130b95](https://github.com/IPS-LMU/transcription-portal/commit/e130b953846a8cfd8d73e9169db47d5432dfd5d4))
+* **transcription-portal:** big refactoring to ngrx ([56921f0](https://github.com/IPS-LMU/transcription-portal/commit/56921f0593050b54fe0a17a29d82edc843d45bf7))
+* **transcription-portal:** check settings dialogue now with button for options reset ([c0ba281](https://github.com/IPS-LMU/transcription-portal/commit/c0ba281641374657194bc316ebf6b941facd8253))
+* **transcription-portal:** descriptive labels for each feature on navbar ([e04ad18](https://github.com/IPS-LMU/transcription-portal/commit/e04ad187d237d639d7be4f7c8c30b878e1f4056c))
+* **transcription-portal:** disable tasks using the context menu to prevent/stop processing ([485ed57](https://github.com/IPS-LMU/transcription-portal/commit/485ed573ae4cb763bfa89502dc81946dd94c97bd))
+* **transcription-portal:** hovering over red cross allows user to repeat failed operation ([b7365ce](https://github.com/IPS-LMU/transcription-portal/commit/b7365ce9efed7a2485f6107d8410c4e9a39f1443))
+* **transcription-portal:** improved audio player for file preview ([5d8c79c](https://github.com/IPS-LMU/transcription-portal/commit/5d8c79c729b47615ab7eb47a704e2165e1efbd2f))
+* **transcription-portal:** improved feedback modal ([d5a2814](https://github.com/IPS-LMU/transcription-portal/commit/d5a281439d9e5065b7b4d2f23920ba210ef9147c))
+* **transcription-portal:** improved options validation ([275905f](https://github.com/IPS-LMU/transcription-portal/commit/275905f342c1bdf27bd51b4aa642eb67b46750d5))
+* **transcription-portal:** improved popover with better UI ([8bc1bdb](https://github.com/IPS-LMU/transcription-portal/commit/8bc1bdbdd0c944c48f252aff26a908db790d1ac3))
+* **transcription-portal:** in-place update notification for users ([aba5482](https://github.com/IPS-LMU/transcription-portal/commit/aba5482e4377fc9c5080556d70d31f26a6f84f56))
+* **transcription-portal:** increase standard font size ([7bd9397](https://github.com/IPS-LMU/transcription-portal/commit/7bd939716fd9757f606d5803d37bbd4361c31908))
+* **transcription-portal:** list of supported languages are filtered by provider automatically ([9047f8e](https://github.com/IPS-LMU/transcription-portal/commit/9047f8e53e9ca707d421782abe7474338de9828b))
+* **transcription-portal:** on disabled desktop notifications show alerts instead ([c9bec6e](https://github.com/IPS-LMU/transcription-portal/commit/c9bec6edb03074b24edbab3782c6b04cb5fc7833))
+* **transcription-portal:** pastell colors for each mode ([f5e58fd](https://github.com/IPS-LMU/transcription-portal/commit/f5e58fd8365c479c7eb91366f204da4b29f35939))
+* **transcription-portal:** ProceedingRounds for better results management for each run ([#91](https://github.com/IPS-LMU/transcription-portal/issues/91)) ([038861c](https://github.com/IPS-LMU/transcription-portal/commit/038861c0d6dd9017f8f8cf0edbb2321353d111c3)), closes [#86](https://github.com/IPS-LMU/transcription-portal/issues/86)
+* **transcription-portal:** replace user guide for v1.0.0 with v2.0.0 ([dbe4f7f](https://github.com/IPS-LMU/transcription-portal/commit/dbe4f7f9a07a32474296e0d3aee0784a41f30d7f))
+* **transcription-portal:** show warning when files were ignored on add ([09455df](https://github.com/IPS-LMU/transcription-portal/commit/09455dfbaeb7dab1debcef50f4d1277da891ec69))
+* **transcription-portal:** support for diarization in annotation mode ([8768a9c](https://github.com/IPS-LMU/transcription-portal/commit/8768a9c253b6abc8999d2822a159884ed8f03f53))
+* **transcription-portal:** support for i18n GUI translations ([9ffc865](https://github.com/IPS-LMU/transcription-portal/commit/9ffc8656c8992d51a89e14f60a6d8ad29d384a4f))
+* **transcription-portal:** support for LST ASR Service (WhisperX) ([6f4c964](https://github.com/IPS-LMU/transcription-portal/commit/6f4c964ce706cac89ad3a2a4c16ffc10107d3a6a))
+* **transcription-portal:** support for more audio files: flac, ogg, mp3, m4a ([79068bb](https://github.com/IPS-LMU/transcription-portal/commit/79068bb1ed57a37d67697ed1f1d1ef7f8248dbc4))
+* **transcription-portal:** support for new emu-webapp application ([b3550bc](https://github.com/IPS-LMU/transcription-portal/commit/b3550bc9674decb14ee4009809c8308f09e6a61f))
+* **transcription-portal:** support for summarization word limit ([63a4cd3](https://github.com/IPS-LMU/transcription-portal/commit/63a4cd387d61c3390bfe07a3584860ac16981a75))
+* **transcription-portal:** switch order summarization <-> translation ([34280cc](https://github.com/IPS-LMU/transcription-portal/commit/34280cc88f8593284826611803abe90cfa7a0fee))
+* **transcription-portal:** use hotkeys-js for handling hotkeys ([8bc7a72](https://github.com/IPS-LMU/transcription-portal/commit/8bc7a722a13a14bc9a1d79115100681147bcb4be))
+
+
+### Performance Improvements
+
+* **transcription-portal:** remove jQuery ([f7fff9d](https://github.com/IPS-LMU/transcription-portal/commit/f7fff9d521421d64ddaeaccb5b8cce5688334c4d))
+
+
+
 # [1.1.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-1.0.9...transcription-portal-1.1.0) (2025-02-12)
 
 ### Bug Fixes
