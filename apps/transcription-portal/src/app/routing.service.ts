@@ -19,12 +19,6 @@ export class RoutingService {
 
   // Observable exposing the breadcrumb hierarchy
   constructor() {
-    this.subscrManager.add(
-      this.activatedRoute.queryParams.subscribe((params) => {
-        console.log('ROUTER SERVICE PARAMS');
-        console.log(params);
-      }),
-    );
   }
 
   public removeStaticParam(name: string) {

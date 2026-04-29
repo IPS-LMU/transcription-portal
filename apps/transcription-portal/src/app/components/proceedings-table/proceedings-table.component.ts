@@ -12,9 +12,9 @@ import {
   OnInit,
   Output,
   SimpleChanges,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
 import {
@@ -26,10 +26,11 @@ import {
   NgbAccordionItem,
   NgbModal,
   NgbPopover,
-  NgbTooltip
+  NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
 import { openModal, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
+import { last } from '@octra/utilities';
 import { Shortcut } from '@octra/web-media';
 import * as clipboard from 'clipboard-polyfill';
 import { DownloadModalComponent } from '../../modals/download-modal/download-modal.component';
@@ -52,12 +53,9 @@ import {
   StoreTaskOperation,
   StoreTaskOperationProcessingRound,
   TaskStatus,
-  TPortalModes
+  TPortalModes,
 } from '../../store';
-import {
-  getLastOperationResultFromLatestRound,
-  getLastOperationRound
-} from '../../store/operation/operation.functions';
+import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 import { FileInfoTableComponent } from '../file-info-table/file-info-table.component';
 import { OperationArrowComponent } from '../operation-arrow/operation-arrow.component';
 import { PopoverComponent } from '../popover/popover.component';
@@ -68,9 +66,7 @@ import { DirProgressDirective } from './directives/dir-progress.directive';
 import { ProceedingsRowDirective } from './directives/proceedings-row.directive';
 import { ProceedingsTableTDDirective } from './directives/proceedings-table-td.directive';
 import { ProceedingTableNameColComponent } from './proceeding-table-name-col/proceeding-table-name-col.component';
-import {
-  ProceedingsTableOperationSelectorComponent
-} from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
+import { ProceedingsTableOperationSelectorComponent } from './proceedings-table-operation-selector/proceedings-table-operation-selector.component';
 
 @Component({
   selector: 'tportal-proceedings',
@@ -105,6 +101,7 @@ import {
     NgbAccordionBody,
     NgbPopover,
     TextCarouselComponent,
+    FormsModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [],
@@ -598,6 +595,7 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
       this.popover.operationRounds.reverse();
       this.popover.lastOperationRound = getLastOperationRound(operation);
       this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(operation);
+      this.subscriptionManager.removeByTag('operation_popover_changes');
       this.subscribe(
         this.modeStoreService.operationChanges$(operation.taskID, operation.id),
         {
@@ -855,8 +853,32 @@ export class ProceedingsTableComponent extends SubscriberComponent implements On
     const index = Number(select.value);
     this.popover.lastOperationRound =
       this.popover.operation?.rounds && index < this.popover.operation.rounds.length ? this.popover.operation.rounds[index] : undefined;
+    this.popover.lastOperationRoundResult = last(this.popover.lastOperationRound?.results);
     this.popover.selectedRoundIndex = index;
     this.cd.markForCheck();
+
+    if (this.popover.operation) {
+      this.subscriptionManager.removeByTag('operation_popover_changes');
+
+      if (index === this.popover.operation.rounds.length - 1) {
+        this.subscribe(
+          this.modeStoreService.operationChanges$(this.popover.operation.taskID, this.popover.operation.id),
+          {
+            next: (op) => {
+              if (op) {
+                this.popover.operation = op;
+                this.popover.operationRounds = [...op.rounds];
+                this.popover.operationRounds.reverse();
+                this.popover.lastOperationRound = getLastOperationRound(op);
+                this.popover.lastOperationRoundResult = getLastOperationResultFromLatestRound(op);
+                this.cd.markForCheck();
+              }
+            },
+          },
+          'operation_popover_changes',
+        );
+      }
+    }
   }
 
   protected readonly getLastOperationRound = getLastOperationRound;

@@ -38,6 +38,8 @@
           class="form-select form-select-sm pointer"
           (mousedown)="disableClick($event)"
           (click)="disableClick($event)"
+          name="revision-selection"
+          [(ngModel)]="popover.selectedRoundIndex"
           (change)="selectedProcessingRoundChange($event)"
         >
           @if (popover.operationRounds) {
