@@ -1,6 +1,6 @@
 import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -11,18 +11,19 @@ import {
   NgbDropdownToggle,
   NgbModal,
   NgbNavModule,
+  NgbOffcanvas,
   NgbPopover,
   NgbTooltip,
 } from '@ng-bootstrap/ng-bootstrap';
 import { ConsoleEntry, ConsoleGroupEntry, ConsoleLoggingService, ConsoleType } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { hasProperty } from '@octra/utilities';
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { AlertComponent } from '../../components/alert/alert.component';
 import { ProceedingsTableComponent } from '../../components/proceedings-table/proceedings-table.component';
 import { ToolLoaderComponent } from '../../components/tool-loader/tool-loader.component';
 import { AboutModalComponent } from '../../modals/about-modal/about-modal.component';
+import { HotkeysModalComponent } from '../../modals/hotkeys-modal/hotkeys-modal.component';
 import { QueueModalComponent } from '../../modals/queue-modal/queue-modal.component';
 import { StatisticsModalComponent } from '../../modals/statistics-modal/statistics-modal.component';
 import { YesNoModalComponent } from '../../modals/yes-no-modal/yes-no-modal.component';
@@ -40,14 +41,11 @@ import {
   OperationFactory,
   ParsedOpenedTool,
   PreprocessingStoreService,
-  StoreAudioFile,
   StoreItemTask,
   StoreTaskOperation,
   TaskStatus,
 } from '../../store';
 import { getLastOperationRound } from '../../store/operation/operation.functions';
-import { HotkeysModalComponent } from '../../modals/hotkeys-modal/hotkeys-modal.component';
-import { TextCarouselComponent } from '../../components/text-carousel/text-carousel.component';
 
 @Component({
   selector: 'tportal-main',
@@ -72,7 +70,7 @@ import { TextCarouselComponent } from '../../components/text-carousel/text-carou
     UpperCasePipe,
     AsyncPipe,
     TimePipe,
-    ProceedingsTableComponent
+    ProceedingsTableComponent,
   ],
 })
 export class MainComponent extends SubscriberComponent implements OnDestroy {
@@ -94,16 +92,14 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   public dragborder = 'inactive';
   public newProceedingsWidth = 30;
   public newToolWidth = 70;
-  public settingsCollapsed = true;
   public accessCodeInputFieldType: 'password' | 'text' = 'password';
-  protected toolSelectedOperation?:
-    | ParsedOpenedTool
-    | undefined;
+  protected toolSelectedOperation?: ParsedOpenedTool | undefined;
 
   activeMode = 1;
 
   @ViewChild('fileinput') fileinput?: ElementRef;
   @ViewChild('proceedings') proceedings?: ProceedingsTableComponent;
+  private offcanvasService = inject(NgbOffcanvas);
 
   public get errorsFound(): boolean {
     let beginCheck = false;
@@ -151,6 +147,15 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         }
       },
     });
+  }
+
+  async openSettings(content: TemplateRef<any>) {
+    try {
+      await this.offcanvasService.open(content, { ariaLabelledBy: 'offcanvas-basic-title', position: 'end' }).result;
+    } catch (e) {
+    } finally {
+      this.idbStoreService.revokeDatabaseBackupURL();
+    }
   }
 
   public get isdevelopment(): boolean {
@@ -215,10 +220,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
   }
 
   onOperationHover(operation: StoreTaskOperation) {}
-
-  getShortCode(code: string) {
-    return code.substring(code.length - 2);
-  }
 
   onToolDataReceived(data: OctraWindowMessageEventData) {
     this.modeStoreService.receiveToolData(data);
@@ -367,12 +368,6 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
 
   async backupDatabase() {
     this.idbStoreService.backupDatabase();
-  }
-
-  onSettingsDropdownChange(opened: boolean) {
-    if (!opened) {
-      this.idbStoreService.revokeDatabaseBackupURL();
-    }
   }
 
   async onRestoreFileSelected(restoreInput: HTMLInputElement) {

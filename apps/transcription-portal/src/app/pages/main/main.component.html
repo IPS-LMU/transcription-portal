@@ -197,98 +197,95 @@
               ><span class="d-lg-none d-xl-none d-xxl-inline-block ms-1">{{ 'navigation.notifications.name' | transloco }}</span>
             </a>
           </li>
-          <li class="nav-item active">
-            <div ngbDropdown class="d-inline-block" [ngbCollapse]="settingsCollapsed" (openChange)="onSettingsDropdownChange($event)">
-              <div
-                class="pointer"
-                style="color: dimgray"
-                ngbDropdownToggle
-                ngbPopover="Settings"
-                placement="bottom-right"
-                triggers="mouseenter:mouseleave"
-              >
-                <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
-                ><span class="d-lg-none d-xl-none d-xxl-inline-block ms-1">{{ 'navigation.settings.name' | transloco }}</span>
-              </div>
-              <div ngbDropdownMenu aria-labelledby="dropdownBasic2" (mouseleave)="accessCodeInputFieldType = 'password'" id="settings-dropdown">
-                <div class="list-group">
-                  <div class="list-group-item border-0">
-                    <div class="divider-text">
-                      <span class="text-secondary">{{ 'g.asr' | transloco }}</span>
-                    </div>
-                  </div>
-                  <div class="list-group-item border-0 d-flex flex-column flex-auto">
-                    <i class="bi bi-key"></i> {{ 'settings.access code' | transloco }}:
-                    <div class="input-group" id="accessCodeGroup">
-                      <form class="d-flex flex-auto">
-                        <input
-                          class="form-control d-flex flex-auto"
-                          [ngModel]="appStoreService.accessCode$ | async"
-                          (ngModelChange)="changeAccessCode($event)"
-                          id="accessCode"
-                          name="accessCode"
-                          placeholder="Enter access code..."
-                          [type]="accessCodeInputFieldType"
-                        />
-                      </form>
-                      <div class="input-group-append">
-                        <span class="input-group-text" (click)="toggleAccessCodeInputType()">
-                          <i
-                            class="bi"
-                            [ngClass]="{
-                              'bi-eye-slash': accessCodeInputFieldType === 'text',
-                              'bi-eye': accessCodeInputFieldType === 'password',
-                            }"
-                          ></i>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="list-group-item border-0">
-                    <div class="divider-text">
-                      <span class="text-secondary">{{ 'g.user interface' | transloco }}</span>
-                    </div>
-                  </div>
-                  <div class="list-group-item border-0 pointer" (click)="resetSideBarWidth()">
-                    <i class="bi bi-layout-sidebar-inset me-1"></i>
-                    <span style="cursor: pointer">{{ 'settings.reset sidebar width' | transloco }}</span>
-                  </div>
-                  <div class="list-group-item border-0">
-                    <div class="divider-text my-2">
-                      <span class="text-secondary">{{ 'g.local database' | transloco }}</span>
-                    </div>
-                  </div>
-                  <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
-                    <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> {{ 'settings.backup database' | transloco }}
-                    @if ((appStoreService.idbBackup$ | async)?.safeURL) {
-                      <p>
-                        <a
-                          class="btn btn-outline-info btn-sm w-100"
-                          [href]="(appStoreService.idbBackup$ | async)!.safeURL"
-                          [download]="(appStoreService.idbBackup$ | async)!.filename"
-                          ><i class="bi bi-cloud-download-fill"></i> {{ 'g.download' | transloco }}</a
-                        >
-                      </p>
-                    }
-                  </div>
-                  <div class="list-group-item border-0 pointer">
-                    <input type="file" class="d-none" accept=".idb" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
-                    <div class="w-100" (click)="restoreInput.click()">
-                      <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> {{ 'settings.restore database' | transloco }}
-                    </div>
-                  </div>
-                  <div class="list-group-item border-0 pointer" (click)="onClearClick()">
-                    <i class="bi bi-eraser me-1" style="color: red"></i>
-                    <span style="cursor: pointer; color: red">{{ 'settings.clear all data' | transloco }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <li class="nav-item active pointer" (click)="openSettings(settings)">
+            <i class="bi bi-gear-wide-connected" id="dropdownBasic2" style="cursor: pointer"></i
+            ><span class="d-lg-none d-xl-none d-xxl-inline-block ms-1">{{ 'navigation.settings.name' | transloco }}</span>
           </li>
         </ul>
       </div>
     </div>
   </nav>
+  <ng-template #settings let-offcanvas>
+    <div class="offcanvas-header">
+      <h4 class="offcanvas-title" id="offcanvas-basic-title">Settings</h4>
+      <button type="button" class="btn-close" aria-label="Close" (click)="offcanvas.dismiss('Cross click')"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="list-group">
+        <div class="list-group-item border-0">
+          <div class="divider-text">
+            <span class="text-secondary">{{ 'g.asr' | transloco }}</span>
+          </div>
+        </div>
+        <div class="list-group-item border-0 d-flex flex-column flex-auto">
+          <div>
+            <i class="bi bi-key me-2"></i><span>{{ 'settings.access code' | transloco }}:</span>
+          </div>
+          <div class="input-group" id="accessCodeGroup">
+            <form class="d-flex flex-auto">
+              <input
+                class="form-control d-flex flex-auto"
+                [ngModel]="appStoreService.accessCode$ | async"
+                (ngModelChange)="changeAccessCode($event)"
+                id="accessCode"
+                name="accessCode"
+                placeholder="Enter access code..."
+                [type]="accessCodeInputFieldType"
+              />
+            </form>
+            <div class="input-group-append">
+              <span class="input-group-text" (click)="toggleAccessCodeInputType()">
+                <i
+                  class="bi"
+                  [ngClass]="{
+                    'bi-eye-slash': accessCodeInputFieldType === 'text',
+                    'bi-eye': accessCodeInputFieldType === 'password',
+                  }"
+                ></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="list-group-item border-0">
+          <div class="divider-text">
+            <span class="text-secondary">{{ 'g.user interface' | transloco }}</span>
+          </div>
+        </div>
+        <div class="list-group-item border-0 pointer" (click)="resetSideBarWidth()">
+          <i class="bi bi-layout-sidebar-inset me-1"></i>
+          <span style="cursor: pointer">{{ 'settings.reset sidebar width' | transloco }}</span>
+        </div>
+        <div class="list-group-item border-0">
+          <div class="divider-text my-2">
+            <span class="text-secondary">{{ 'g.local database' | transloco }}</span>
+          </div>
+        </div>
+        <div class="list-group-item border-0 pointer" (click)="backupDatabase()">
+          <i class="bi bi-database-down me-1" style="color: cornflowerblue"></i> {{ 'settings.backup database' | transloco }}
+          @if ((appStoreService.idbBackup$ | async)?.safeURL) {
+            <p>
+              <a
+                class="btn btn-outline-info btn-sm w-100"
+                [href]="(appStoreService.idbBackup$ | async)!.safeURL"
+                [download]="(appStoreService.idbBackup$ | async)!.filename"
+                ><i class="bi bi-cloud-download-fill"></i> {{ 'g.download' | transloco }}</a
+              >
+            </p>
+          }
+        </div>
+        <div class="list-group-item border-0 pointer">
+          <input type="file" class="d-none" accept=".idb" #restoreInput (change)="onRestoreFileSelected(restoreInput)" />
+          <div class="w-100" (click)="restoreInput.click()">
+            <i class="bi bi-database-fill-up me-1" style="color: cornflowerblue"></i> {{ 'settings.restore database' | transloco }}
+          </div>
+        </div>
+        <div class="list-group-item border-0 pointer" (click)="onClearClick()">
+          <i class="bi bi-eraser me-1" style="color: red"></i>
+          <span style="cursor: pointer; color: red">{{ 'settings.clear all data' | transloco }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
   <ul
     ngbNav
     #nav="ngbNav"
