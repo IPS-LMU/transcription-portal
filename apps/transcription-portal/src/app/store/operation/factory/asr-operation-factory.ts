@@ -255,7 +255,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
           url += `&numberSpeakDiar=${clonedOperation.options.diarization.speakers}`;
         }
 
-        if (clonedOperation.options.accessCode && clonedOperation.options.accessCode !== '') {
+        if (clonedOperation.options.accessCode && clonedOperation.options.accessCode !== '' && clonedOperation.serviceProviderName === 'Google') {
           url += `&ACCESSCODE=${clonedOperation.options.accessCode}`;
         }
 
