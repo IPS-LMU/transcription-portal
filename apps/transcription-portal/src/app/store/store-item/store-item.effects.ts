@@ -382,7 +382,7 @@ export class StoreItemEffects {
           let foundOperation: StoreTaskOperation | undefined = undefined;
 
           for (let i = 0; i < defaultOperations.length; i++) {
-            const operation: StoreTaskOperation = item!.operations.find(a => a.name === defaultOperations[i].factory.name)!;
+            const operation: StoreTaskOperation = item!.operations.find((a) => a.name === defaultOperations[i].factory.name)!;
             const lastRound = getLastOperationRound(operation);
 
             if (lastRound?.status !== 'SKIPPED') {
@@ -1038,10 +1038,7 @@ export class StoreItemEffects {
                 // file for last result of current tool exists
                 // force reupload result from tool operation
                 file = getLastOperationResultFromLatestRound(operation);
-              } else if (
-                previousOperation &&
-                getLastOperationResultFromLatestRound(previousOperation)
-              ) {
+              } else if (previousOperation && getLastOperationResultFromLatestRound(previousOperation)) {
                 // force reupload result from previous operation
                 // local available, reupload
                 file = getLastOperationResultFromLatestRound(previousOperation);
