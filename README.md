@@ -1,20 +1,17 @@
-<h1 align="center">TranscriptionPortal</h1>
+<h1 style="text-align: center">TranscriptionPortal v2.x</h1>
 <p>
-  A portal that offers a transcription chain for multi upload and processing of audio files using ASR and tools like OCTRA (orthographic transcription), MAUS (word alignment) and EMU-webApp (phonetic details). 
+  The TranscriptionPortal is a web-application for processing audio files using automatic and manual tools combined in one workflow ("transcription chain"). Users can select the desired mode: "Annotation" or "Translation & Summarization" for specific workflows. In Annotation mode they are able to process their audio files using ASR, Manual Transcription (Octra), Word Alignment and Phonetic Detail (Emu WebApp). If users prefer to automatically summarize and translate transcripts using AI they are able to use the "Summarization an Translation" mode.
 </p>
-<p align="center">
-  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal01.png">
-  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal02.png" alt="TranscriptionPortal OCTRA">
-  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/transcription-portal03.png" alt="TranscriptionPortal EMU-webApp">
-</p>
-<p align="center">
-Implementation of a transcription chain that supports ASR, OCTRA, MAUS and EMU-webApp.
+<p style="text-align: center;">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/tportal_01.png" alt="TranscriptionPortal Annotation Mode">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/tportal_02.png" alt="TranscriptionPortal OCTRA">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/tportal_03.png" alt="TranscriptionPortal EMU-webApp">
+  <img style="border:1px solid gray;" src="https://github.com/IPS-LMU/transcription-portal/raw/master/screenshots/tportal_04.png" alt="TranscriptionPortal Summarization & Translation Mode">
 </p>
 
 ### Website
 
-You can use TranscriptionPortal without installation here: https://clarin.phonetik.uni-muenchen.de/apps/TranscriptionPortal/
-(protected by shibboleth)
+You can use TranscriptionPortal without installation here: https://clarin.phonetik.uni-muenchen.de/TranscriptionPortal/
 
 ### Installation
 

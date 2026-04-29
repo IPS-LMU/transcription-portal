@@ -19,7 +19,8 @@
     "update": "nx migrate latest",
     "migrate": "npx nx migrate --run-migrations",
     "prepare": "husky",
-    "nx:add": "nx generate ng-add"
+    "nx:add": "nx generate ng-add",
+    "release:app:tportal": "npm run build && nx run transcription-portal:version --push"
   },
   "private": true,
   "dependencies": {
