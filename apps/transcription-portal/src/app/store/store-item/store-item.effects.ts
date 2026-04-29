@@ -382,7 +382,7 @@ export class StoreItemEffects {
           let foundOperation: StoreTaskOperation | undefined = undefined;
 
           for (let i = 0; i < defaultOperations.length; i++) {
-            const operation: StoreTaskOperation = item!.operations[i];
+            const operation: StoreTaskOperation = item!.operations.find(a => a.name === defaultOperations[i].factory.name)!;
             const lastRound = getLastOperationRound(operation);
 
             if (lastRound?.status !== 'SKIPPED') {

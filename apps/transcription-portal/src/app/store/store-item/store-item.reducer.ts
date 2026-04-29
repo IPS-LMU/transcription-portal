@@ -635,7 +635,7 @@ export const getTaskReducers = (
 
                 for (let i = 0; i < state.entities[state.currentMode]!.defaultOperations.length; i++) {
                   const defaultOperation = state.entities[state.currentMode]!.defaultOperations[i];
-                  const lastRoundIndex = itemsState.entities[item.id]!.operations![i].rounds.length - 1;
+                  const lastRoundIndex = itemsState.entities[item.id]!.operations!.find(a => a.name === defaultOperation.factory.name)!.rounds.length - 1;
 
                   if (lastRoundIndex > -1) {
                     let changedItem = {

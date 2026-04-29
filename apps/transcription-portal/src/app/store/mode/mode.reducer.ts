@@ -126,11 +126,11 @@ export const modeReducer = createReducer(
               enabled: true,
             },
             {
-              factory: new SummarizationOperationFactory(settings.api.commands.find((a) => a.name === 'Summarization')?.calls ?? []),
+              factory: new TranslationOperationFactory(settings.api.commands.find((a) => a.name === 'Translation')?.calls ?? []),
               enabled: true,
             },
             {
-              factory: new TranslationOperationFactory(settings.api.commands.find((a) => a.name === 'Translation')?.calls ?? []),
+              factory: new SummarizationOperationFactory(settings.api.commands.find((a) => a.name === 'Summarization')?.calls ?? []),
               enabled: true,
             },
           ],
@@ -170,11 +170,11 @@ export const modeReducer = createReducer(
       'Emu WebApp': {
         ...defaultOperations.find((a) => a.factory.name === 'Emu WebApp')!,
       },
-      Summarization: {
-        ...defaultOperations.find((a) => a.factory.name === 'Summarization')!,
-      },
       Translation: {
         ...defaultOperations.find((a) => a.factory.name === 'Translation')!,
+      },
+      Summarization: {
+        ...defaultOperations.find((a) => a.factory.name === 'Summarization')!,
       },
     };
 
@@ -200,7 +200,7 @@ export const modeReducer = createReducer(
           defaultOperations:
             state.currentMode === 'annotation'
               ? [operations.Upload, operations.ASR, operations.OCTRA, operations.MAUS, operations['Emu WebApp']]
-              : [operations.Upload, operations.ASR, operations.OCTRA, operations.Summarization, operations.Translation],
+              : [operations.Upload, operations.ASR, operations.OCTRA, operations.Translation, operations.Summarization],
         },
       },
       state,
@@ -215,7 +215,8 @@ export const modeReducer = createReducer(
           changes: {
             gui: {
               ...state.entities[state.currentMode]!.gui,
-              toolOpenStatus: state.entities[state.currentMode]!.gui.toolOpenStatus === 'closed' ? 'init' : state.entities[state.currentMode]!.gui.toolOpenStatus,
+              toolOpenStatus:
+                state.entities[state.currentMode]!.gui.toolOpenStatus === 'closed' ? 'init' : state.entities[state.currentMode]!.gui.toolOpenStatus,
             },
           },
         },

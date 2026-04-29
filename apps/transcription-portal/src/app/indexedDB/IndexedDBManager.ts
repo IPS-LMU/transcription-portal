@@ -1,8 +1,8 @@
 import Dexie, { Table, Transaction } from 'dexie';
 import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
-import { IASROperation, IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 import { OperationProcessingRoundSerialized, TaskStatus } from '../store';
+import { IASROperation, IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 
 export class IndexedDBManager extends Dexie {
   userSettings!: Table<IDBUserSettingsItem<any>, string>;
@@ -182,7 +182,7 @@ export class IndexedDBManager extends Dexie {
           });
       }
     });
-    // in 8 we are using "diabled" attribute instead of DISABLED status
+    // in 8 we are using "disabled" attribute instead of DISABLED status
     this.version(8).upgrade(async (transaction: Transaction) => {
       const affectedTableNames = ['annotation_tasks', 'summarization_tasks'];
       for (const affectedTableName of affectedTableNames) {
@@ -191,7 +191,7 @@ export class IndexedDBManager extends Dexie {
           .toCollection()
           .modify((entry: IDBTaskItem | IDBFolderItem) => {
             const changeTask = (task: any) => {
-              task.disabled = task.state === "DISABLED";
+              task.disabled = task.state === 'DISABLED';
               task.status = TaskStatus.PENDING;
             };
 
@@ -204,6 +204,26 @@ export class IndexedDBManager extends Dexie {
             }
           });
       }
+    });
+    // in 9 we changed the order for summarization mode and switched position of summarization with translation
+    this.version(9).upgrade(async (transaction: Transaction) => {
+      await transaction
+        .table<IDBTaskItem, number>('summarization_tasks')
+        .toCollection()
+        .modify((entry: IDBTaskItem | IDBFolderItem) => {
+          const changeTask = (task: IDBTaskItem) => {
+            const summarizationOperation = task.operations.splice(3, 1)[0];
+            task.operations.push(summarizationOperation);
+          };
+
+          if (entry.type === 'task') {
+            changeTask(entry);
+          } else {
+            for (const task of (entry as any).entries) {
+              changeTask(task);
+            }
+          }
+        });
     });
     this.on('populate', () => this.populate());
   }

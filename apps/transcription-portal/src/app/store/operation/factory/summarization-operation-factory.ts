@@ -41,11 +41,19 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
   }
 
   override applyTaskOptions(options: StoreItemTaskOptions, operation: SummarizationOperation): SummarizationOperation {
+    let language = operation.options?.language;
+
+    if (options.translation?.language) {
+      language = options.translation.language;
+    } else if (options.asr?.language) {
+      language = options.asr.language;
+    }
+
     return {
       ...operation,
       serviceProviderName: options.summarization?.provider === undefined ? operation.serviceProviderName : options.summarization?.provider,
       options: {
-        language: options.asr?.language === undefined ? operation.options?.language : options.asr?.language,
+        language,
         maxNumberOfWords:
           options.summarization?.numberOfWords === undefined ? operation.options?.maxNumberOfWords : options.summarization?.numberOfWords,
       },
