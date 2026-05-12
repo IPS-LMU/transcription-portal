@@ -136,15 +136,20 @@ export class MainComponent extends SubscriberComponent implements OnDestroy {
         this.toolSelectedOperation = toolOperation;
       },
     });
+
+    let firstChange = true;
     this.subscribe(this.route.url, {
       next: (url) => {
         if (url.length > 0) {
           if (url[0].path === 'annotation') {
-            this.modeStoreService.changeMode('annotation');
+            this.modeStoreService.changeMode('annotation', firstChange);
           } else if (url[0].path.includes('summarization')) {
-            this.modeStoreService.changeMode('summarization');
+            this.modeStoreService.changeMode('summarization', firstChange);
           }
+        } else {
+          this.modeStoreService.changeMode('annotation', firstChange);
         }
+        firstChange = false;
       },
     });
   }

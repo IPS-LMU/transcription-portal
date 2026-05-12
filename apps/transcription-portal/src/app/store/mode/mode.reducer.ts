@@ -257,6 +257,41 @@ export const modeReducer = createReducer(
         state,
       ),
   ),
+  on(ModeActions.readFilesFromURL.do, (state: ModeState, { audioLanguage }) => {
+    if (audioLanguage && /(^deu)|(^ita)|(^nld)|(^eng)/g.exec(audioLanguage)) {
+      const supportedAudioLanguages = AppSettings.languages.asr.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value));
+      const supportedMausLanguages = AppSettings.languages.maus.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value));
+
+      if (audioLanguage === 'deu') {
+        audioLanguage = 'deu-DE';
+      } else if (audioLanguage === 'eng') {
+        audioLanguage = 'eng-GB';
+      } else if (audioLanguage === 'nld') {
+        audioLanguage = 'nld-NL';
+      } else if (audioLanguage === 'ita') {
+        audioLanguage = 'ita-IT';
+      }
+
+      const selectedASRLanguage = supportedAudioLanguages.find((a) => a.value.includes(audioLanguage!))?.value;
+      const selectedMausLanguage = supportedMausLanguages.find((a) => a.value.includes(audioLanguage!))?.value;
+
+      const selectedASRProvider = state.defaultUserSettings.selectedASRProvider
+        ? state.defaultUserSettings.selectedASRProvider
+        : AppSettings.getServiceInformation('LSTWhisperX');
+
+      return {
+        ...state,
+        defaultUserSettings: {
+          ...state.defaultUserSettings,
+          selectedASRProvider,
+          selectedASRLanguage,
+          selectedMausLanguage,
+        },
+      };
+    }
+
+    return state;
+  }),
   on(
     ModeActions.setDefaultSettings.do,
     (state: ModeState, { defaultUserSettings }): ModeState => ({

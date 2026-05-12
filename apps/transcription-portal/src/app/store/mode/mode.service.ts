@@ -120,10 +120,11 @@ export class ModeStoreService {
     );
   }
 
-  changeMode(mode: TPortalModes) {
+  changeMode(mode: TPortalModes, firstChange?: boolean) {
     this.store.dispatch(
       ModeActions.changeMode.do({
         mode,
+        firstChange,
       }),
     );
   }

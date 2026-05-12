@@ -1,6 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
 import { SubscriptionManager, wait } from '@octra/utilities';
-import { FileInfo } from '@octra/web-media';
 import { Observable, Subject, Subscription, throwError } from 'rxjs';
 import X2JS from 'x2js';
 import { environment } from '../../../../environments/environment';
@@ -108,7 +107,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
                     const info = TPortalFileInfo.fromURL(file.url, type, file.name, Date.now());
                     let content: string | undefined;
 
-                    if (type === 'text/plain') {
+                    if (!type.includes('audio')) {
                       content = await info.updateContentFromURL(httpClient);
                     }
 
@@ -236,7 +235,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
             warnings = json.warnings.replace('¶', '');
           }
 
-          if (json.success) {
+          if (json.success === 'true' || json.success === true) {
             const urls = Array.isArray(json.fileList.entry) ? json.fileList.entry.map((a: any) => a.value) : [json.fileList.entry.value];
 
             subj.next({

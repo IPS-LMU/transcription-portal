@@ -17,7 +17,7 @@ import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
 import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
 import { getAllTasks } from '../mode/mode.functions';
-import { OctraOperationFactory, StoreTaskOperation, UploadOperationFactory } from '../operation';
+import { StoreTaskOperation, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
 import {
@@ -34,7 +34,6 @@ import { StoreItemActions } from './store-item.actions';
 import {
   addOrChangeItemsToState,
   applyFunctionOnStoreItemsWhereRecursive,
-  areAllResultsOnline,
   convertFileInfoToStoreFile,
   getOneTaskItemWhereRecursive,
   getPreviousEnabledOperation,
@@ -1046,6 +1045,20 @@ export class StoreItemEffects {
               }
 
               if (file && operation) {
+                if (audioFile.attributes.originalFileName.includes('from_url') && file?.content && file.type === 'application/json') {
+                  // fix invalid annotates field
+                  try {
+                    const json = JSON.parse(file.content);
+                    json.annotates = audioFile.attributes.originalFileName;
+                    file = {
+                      ...file,
+                      content: JSON.stringify(json),
+                    };
+                  } catch (e) {
+                    console.error(`Can't fix annotates field`);
+                  }
+                }
+
                 this.store.dispatch(
                   StoreItemActions.reuploadFilesForOperations.do({
                     mode: state.modes.currentMode,
@@ -1231,14 +1244,23 @@ export class StoreItemEffects {
             if (importResult.annotjson && !importResult.error) {
               const exportConverter = new PartiturConverter();
               const oAnnotJSON = OAnnotJSON.deserialize(importResult.annotjson);
-              const exportResult = exportConverter.export(oAnnotJSON!, audiofile, 0);
 
-              if (exportResult.file && !exportResult.error) {
-                annotation = exportResult.file;
+              if (oAnnotJSON) {
+                const exportResult = exportConverter.export(oAnnotJSON, audiofile, 0);
+
+                if (exportResult.file && !exportResult.error) {
+                  annotation = exportResult.file;
+                } else {
+                  return of(
+                    StoreItemActions.receiveToolData.fail({
+                      error: `Export: ${exportResult.error}`,
+                    }),
+                  );
+                }
               } else {
                 return of(
                   StoreItemActions.receiveToolData.fail({
-                    error: `Export: ${exportResult.error}`,
+                    error: 'Import: Deserialization failed',
                   }),
                 );
               }

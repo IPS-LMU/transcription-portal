@@ -2,8 +2,8 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SubscriberComponent } from '@octra/ngx-utilities';
-import { AppStoreService } from '../../store';
 import { RoutingService } from '../../routing.service';
+import { AppStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-loading',
@@ -25,11 +25,12 @@ export class LoadingComponent extends SubscriberComponent {
       next: (initialized) => {
         if (initialized) {
           const mode = this.route.snapshot.queryParams['mode'];
+          this.routingService.removeStaticParam('mode');
           this.routingService.navigate('navigate after settings loaded', mode ? [mode] : ['/'], {
             queryParams: {
-              mode: undefined,
+              mode: null,
             },
-            queryParamsHandling: 'merge',
+            queryParamsHandling: 'replace',
           });
         }
       },

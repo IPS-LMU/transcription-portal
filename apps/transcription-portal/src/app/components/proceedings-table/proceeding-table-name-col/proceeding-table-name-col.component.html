@@ -32,18 +32,18 @@
       [title]="entry.files![0].attributes.originalFileName"
     >
       {{ cleanedUpFirstFileName }}
+    </span>
 
-      @if (appending !== undefined && !appending.type.includes("audio")) {
-        <span
-          class="badge"
-          [ngClass]="{
+    @if (appending !== undefined && !appending.type.includes("audio")) {
+      <span
+        class="badge ms-1"
+        [ngClass]="{
             'bg-info': appending.online || appending.blob || appending.content,
             'bg-warning': !(appending.online || appending.blob || appending.content),
           }"
-          >{{ cleanedUpFirstFileExtension }}</span
-        >
-      }
-    </span>
+      >{{ cleanedUpFirstFileExtension }}</span
+      >
+    }
 
     <ng-container
       [ngTemplateOutlet]="actionIcons"

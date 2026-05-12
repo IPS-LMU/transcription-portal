@@ -53,6 +53,7 @@ export class ModeActions {
     events: {
       do: props<{
         mode: TPortalModes;
+        firstChange?: boolean;
       }>(),
     },
   });
@@ -70,6 +71,23 @@ export class ModeActions {
     source: 'mode/close tool loader',
     events: {
       do: emptyProps(),
+    },
+  });
+
+  static readFilesFromURL = createActionGroup({
+    source: 'mode/read files from URL',
+    events: {
+      do: props<{
+        audioURL: string | undefined;
+        audioType?: string;
+        audioLanguage?: string;
+        transcriptURL?: string;
+        transcriptType?: string;
+      }>(),
+      success: emptyProps(),
+      fail: props<{
+        error: string;
+      }>(),
     },
   });
 }

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { interval } from 'rxjs';
-import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'tportal-url-mode-modal',
@@ -17,6 +17,7 @@ export class UrlModeModalComponent extends SubscriberComponent implements OnInit
   private cd = inject(ChangeDetectorRef);
 
   leftTime = 0;
+  error?: string;
 
   get minutes(): string {
     const minutes = Math.floor(this.leftTime / 1000 / 60);
@@ -30,7 +31,7 @@ export class UrlModeModalComponent extends SubscriberComponent implements OnInit
   }
 
   public static options: NgbModalOptions = {
-    size: 'sm',
+    size: 'md',
     backdrop: 'static',
     keyboard: false,
   };
