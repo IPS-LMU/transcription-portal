@@ -4,14 +4,9 @@
     <div class="container justify-content-center" style="width: 100%; margin: 0; display: contents">
       <ul class="nav navbar-nav flex-fill w-100 flex-nowrap justify-items-center align-middle">
         <li class="nav-item active">
-          <a class="nav-link" href="#"
+          <div class="nav-link pointer d-inline-block" [ngbPopover]="versionPopover" [placement]="['bottom-right']" container="body" popoverClass="version-popover"
             ><span class="logo"
-              ><img
-                src="assets/TPortal-Logo_only.svg"
-                style="height: 40px; margin-top: -10px"
-                [ngbPopover]="versionPopover"
-                popoverClass="version-popover"
-              />
+              ><img src="assets/TPortal-Logo_only.svg" style="height: 40px; margin-top: -10px" />
               TranscriptionPortal</span
             >
             @if (isdevelopment) {
@@ -27,7 +22,7 @@
             >
               <span class="navbar-toggler-icon"></span>
             </button>
-          </a>
+          </div>
           <ng-template #versionPopover>
             <div id="build-information">
               <div>
