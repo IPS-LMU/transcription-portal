@@ -8,7 +8,7 @@ import {
   FileInfo,
   FileInfoSerialized,
   MusicMetadataFormat,
-  readFileContents
+  readFileContents,
 } from '@octra/web-media';
 import { IDBFolderItem, IDBOperation, IDBTaskItem } from '../../indexedDB';
 import { ModeState, ModeStatistics, TPortalModes } from '../mode';
@@ -188,13 +188,13 @@ export function addOrChangeItemsToState(
           if ([TaskStatus.QUEUED, TaskStatus.PENDING].includes(task.status) || !(lastUploadRoundResult?.online || lastUploadRoundResult?.blob)) {
             // first try to replace same file in a task
             let somethingFoundInFiles = false;
+
             for (let i = 0; i < task.files.length; i++) {
               const file = task.files[i];
 
               if (file.attributes.originalFileName === addedFile.attributes.originalFileName && file.hash === addedFile.hash) {
                 somethingFoundInFiles = true;
                 someThingFound = true;
-                addedFileFound = true;
                 // replace blob file
                 iState = adapter.updateOne(
                   {
@@ -216,8 +216,8 @@ export function addOrChangeItemsToState(
                           ...task.operations[0],
                           rounds: [
                             {
+                              results: task.operations[0].rounds[0].results,
                               status: TaskStatus.PENDING,
-                              results: [],
                             },
                           ],
                         },
@@ -231,7 +231,7 @@ export function addOrChangeItemsToState(
             }
 
             // check if there is an audio or file with a matching name
-            if (!somethingFoundInFiles && task.files.length === 1) {
+            if (task.status === TaskStatus.QUEUED && !somethingFoundInFiles && task.files.length === 1) {
               const firstFile = task.files[0];
               const firstFileName = FileInfo.extractFileName(firstFile.attributes.originalFileName);
               const storeFileName = FileInfo.extractFileName(addedFile.attributes.originalFileName);
@@ -241,6 +241,7 @@ export function addOrChangeItemsToState(
                   const { extension } = FileInfo.extractFileName(firstFile.attributes.originalFileName);
 
                   someThingFound = true;
+
                   const files = firstFile.type.includes('audio') ? [...task.files, addedFile] : [addedFile, ...task.files];
                   let operations = [
                     task.operations![0],
@@ -821,7 +822,7 @@ export function getPreviousEnabledOperation(task: StoreItemTask, operation: Stor
   if (index > 0) {
     for (let i = index - 1; i >= 0; i--) {
       const previousOperation = task.operations[i];
-      if (getLastOperationRound(previousOperation)?.status !== "SKIPPED") {
+      if (getLastOperationRound(previousOperation)?.status !== 'SKIPPED') {
         return previousOperation;
       }
     }

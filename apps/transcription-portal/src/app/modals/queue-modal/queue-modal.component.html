@@ -51,8 +51,9 @@
           ></p>
         }
 
-        <table class="table table-responsive-md table-striped" id="queue">
-          <thead>
+        <div class="table-responsive-lg">
+          <table class="table table-striped" id="queue">
+            <thead>
             <tr>
               <th>{{ 'g.valid' | transloco }}?</th>
               <th class="text-start">{{ 'g.file' | transloco }}</th>
@@ -84,7 +85,7 @@
                   operation.factory.name === 'ASR' ||
                   operation.factory.name === 'Summarization' ||
                   operation.factory.name === 'Translation'
-                ) {
+                  ) {
                   <th>
                     <input
                       (click)="deactivateOperation(operation.factory.name, operation.enabled)"
@@ -110,44 +111,44 @@
                 }
               }
             </tr>
-          </thead>
-          <tbody>
-            @for (task of queuedTasks; track task.id) {
-              @if (task.status === 'QUEUED') {
-                <tr>
-                  <td class="compatible-col">
-                    <ng-template #validationResult>
-                      <table class="table table-dm table-striped">
-                        <tbody>
-                          @for (check of task.checks; track check.name) {
-                            <tr>
-                              <td>
-                                <i
-                                  class="bi"
-                                  [ngClass]="{
+            </thead>
+            <tbody>
+              @for (task of queuedTasks; track task.id) {
+                @if (task.status === 'QUEUED') {
+                  <tr>
+                    <td class="compatible-col">
+                      <ng-template #validationResult>
+                        <table class="table table-dm table-striped">
+                          <tbody>
+                            @for (check of task.checks; track check.name) {
+                              <tr>
+                                <td>
+                                  <i
+                                    class="bi"
+                                    [ngClass]="{
                                     'bi-check-lg': check.isValid,
                                     'bi-x': !check.isValid,
                                   }"
-                                  [ngStyle]="{
+                                    [ngStyle]="{
                                     color: check.isValid ? 'green' : 'red',
                                   }"
-                                ></i>
-                              </td>
-                              <td style="text-align: left">{{ check.name }}:</td>
-                              <td style="text-align: left">{{ check.value }}</td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </ng-template>
-                    <span
-                      #popoverResult="ngbPopover"
-                      (mouseenter)="onValidationResultMouseEnter(popoverResult, task)"
-                      (mouseleave)="popoverResult.close()"
-                      triggers=""
-                      [ngbPopover]="validationResult"
-                      [placement]="'right'"
-                    >
+                                  ></i>
+                                </td>
+                                <td style="text-align: left">{{ check.name }}:</td>
+                                <td style="text-align: left">{{ check.value }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </ng-template>
+                      <span
+                        #popoverResult="ngbPopover"
+                        (mouseenter)="onValidationResultMouseEnter(popoverResult, task)"
+                        (mouseleave)="popoverResult.close()"
+                        triggers=""
+                        [ngbPopover]="validationResult"
+                        [placement]="'right'"
+                      >
                       <i
                         class="bi"
                         [ngClass]="{
@@ -159,8 +160,8 @@
                         }"
                       ></i>
                     </span>
-                  </td>
-                  <td class="text-start">
+                    </td>
+                    <td class="text-start">
                     <span
                       [ngClass]="{
                         green:
@@ -173,34 +174,35 @@
                     >
                       {{ task.files[0].attributes.originalFileName.replace('_annot.json', '') }}
                     </span>
-                    @if (task.files.length > 1 || !task.files[0].type.includes('audio')) {
-                      <span
-                        [ngClass]="{
+                      @if (task.files.length > 1 || !task.files[0].type.includes('audio')) {
+                        <span
+                          [ngClass]="{
                           'bg-info': getBadge(task).type === 'info',
                           'bg-warning': getBadge(task).type === 'warning',
                         }"
-                        class="badge"
-                      >
+                          class="badge"
+                        >
                         {{ getBadge(task).label }}
                       </span>
-                    }
-                  </td>
-                  <td>{{ task.operations[1].options.language }}</td>
-                  @for (operation of task.operations; track operation.id) {
-                    <td>
-                      @if (operation.enabled) {
-                        <span><i class="bi bi-check-lg" style="color: black"></i></span>
-                      }
-                      @if (!operation.enabled) {
-                        <span>{{ 'g.skip' | transloco }}</span>
                       }
                     </td>
-                  }
-                </tr>
+                    <td>{{ task.operations[1].options.language }}</td>
+                    @for (operation of task.operations; track operation.id) {
+                      <td>
+                        @if (operation.enabled) {
+                          <span><i class="bi bi-check-lg" style="color: black"></i></span>
+                        }
+                        @if (!operation.enabled) {
+                          <span>{{ 'g.skip' | transloco }}</span>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
               }
-            }
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

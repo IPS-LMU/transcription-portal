@@ -798,6 +798,7 @@ export class StoreItemEffects {
                       ...files[i],
                       url: lastOperationRound.results[foundIndex].url,
                       online: true,
+                      blob: undefined
                     };
                     foundFile = files[i];
                     somethingFound = true;

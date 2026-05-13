@@ -73,6 +73,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
           };
           currentRound.protocol = '';
           currentRound.status = TaskStatus.UPLOADING;
+          currentRound.results = [];
           this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
 
           currentRound = {

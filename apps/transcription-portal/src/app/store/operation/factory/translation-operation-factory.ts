@@ -21,7 +21,7 @@ export interface TranslationOperationOptions {
 export type TranslationOperation = StoreTaskOperation<TranslationOperationOptions, TranslationOperation>;
 
 export class TranslationOperationFactory extends OperationFactory<TranslationOperation, TranslationOperationOptions> {
-  protected readonly _description = 'Summarizes a given full text.';
+  protected readonly _description = 'Translates a given full text.';
   protected readonly _name = 'Translation';
   protected readonly _resultType = 'Text';
   protected readonly _shortTitle = 'TR';
