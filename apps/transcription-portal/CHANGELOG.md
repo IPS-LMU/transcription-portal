@@ -2,6 +2,24 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.1.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-2.0.0...transcription-portal-2.1.0) (2026-05-13)
+
+
+### Bug Fixes
+
+* **transcription-portal:** added files overwrite task files of processed tasks ([4636ae6](https://github.com/IPS-LMU/transcription-portal/commit/4636ae665405ab64365b8c56bcaf07a6f543a3c7))
+* **transcription-portal:** click on logo does not open version popover ([a6f75ce](https://github.com/IPS-LMU/transcription-portal/commit/a6f75ce533b51d392a84e9d36f40e95f320ccb09))
+* **transcription-portal:** confidential strings not censored in console log ([0f0870e](https://github.com/IPS-LMU/transcription-portal/commit/0f0870eec91cdda3532b963196c4e8c242c2ffbb))
+* **transcription-portal:** URL mode not working (e.g. for switchboard) ([fd2fac8](https://github.com/IPS-LMU/transcription-portal/commit/fd2fac81aa6febd447bbf107eb882d609a127890))
+* **transcription-portal:** use access code only on Google ASR ([085c628](https://github.com/IPS-LMU/transcription-portal/commit/085c62828db5c9e45a65580fa4d7df4986dc3b67))
+
+
+### Features
+
+* **transcription-portal:** use offcanvas for settings ([f4aabfc](https://github.com/IPS-LMU/transcription-portal/commit/f4aabfc04013a313a65716b45794b77798961fd4))
+
+
+
 # [2.0.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-1.1.0...transcription-portal-2.0.0) (2026-04-29)
 
 
