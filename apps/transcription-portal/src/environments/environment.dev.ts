@@ -1,5 +1,5 @@
 export const environment = {
-  production: true,
+  production: false,
   development: true,
   debugging: {
     enabled: true,

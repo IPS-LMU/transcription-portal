@@ -13,15 +13,7 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "maintenance-warning-snackbar": [
-        "node_modules/maintenance-warning-snackbar"
-      ],
-      "@octra/ngx-components": [
-        "node_modules/@octra/ngx-components"
-      ]
-    }
+    "paths": {}
   },
   "exclude": ["node_modules", "tmp"]
 }

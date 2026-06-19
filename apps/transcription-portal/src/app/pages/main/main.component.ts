@@ -4,17 +4,7 @@ import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, Temp
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import {
-  NgbCollapse,
-  NgbDropdown,
-  NgbDropdownMenu,
-  NgbDropdownToggle,
-  NgbModal,
-  NgbNavModule,
-  NgbOffcanvas,
-  NgbPopover,
-  NgbTooltip,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse, NgbModal, NgbNavModule, NgbOffcanvas, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { ConsoleEntry, ConsoleGroupEntry, ConsoleLoggingService, ConsoleType } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { environment } from '../../../environments/environment';
@@ -60,9 +50,6 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
     ToolLoaderComponent,
     NgbCollapse,
     NgbTooltip,
-    NgbDropdown,
-    NgbDropdownMenu,
-    NgbDropdownToggle,
     NgbNavModule,
     NgbPopover,
     DatePipe,

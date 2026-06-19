@@ -1,0 +1,94 @@
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { ApplicationConfig, importProvidersFrom, isDevMode, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BrowserModule } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
+import { provideTransloco } from '@jsverse/transloco';
+import { NgbActiveModal, NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
+import { provideEffects } from '@ngrx/effects';
+import { provideStore } from '@ngrx/store';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { BugReportService, VersionCheckerService } from '@octra/ngx-components';
+import { NgCircleProgressModule } from 'ng-circle-progress';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { TranslocoHttpLoader } from '../transloco-http-loader';
+import { AppRoutingModule } from './app-routing.module';
+import { appRoutes } from './app.routes';
+import { CompatibilityService } from './shared/compatibility.service';
+import { DownloadService } from './shared/download.service';
+import { NotificationService } from './shared/notification.service';
+import { OHModalService } from './shared/ohmodal.service';
+import { SettingsService } from './shared/settings.service';
+import {
+  AppEffects,
+  appReducer,
+  ExternalInformationEffects,
+  externalInformationReducer,
+  IDBEffects,
+  ModeEffects,
+  modeReducer,
+  PreprocessingEffects,
+  StoreItemEffects,
+} from './store';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(appRoutes),
+    importProvidersFrom(
+      BrowserModule,
+      AppRoutingModule,
+      NgCircleProgressModule.forRoot({
+        // set defaults here
+        radius: 40,
+        outerStrokeWidth: 16,
+        innerStrokeWidth: 8,
+        outerStrokeColor: '#78C000',
+        innerStrokeColor: '#C7E596',
+        animationDuration: 300,
+      }),
+      FormsModule,
+      ReactiveFormsModule,
+    ),
+    provideTransloco({
+      config: {
+        availableLangs: ['en'],
+        defaultLang: 'en',
+        reRenderOnLangChange: false,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
+    NotificationService,
+    BugReportService,
+    SettingsService,
+    CompatibilityService,
+    OHModalService,
+    DownloadService,
+    NgbActiveModal,
+    NgbTooltipConfig,
+    VersionCheckerService,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideCharts(withDefaultRegisterables()),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
+    provideStore({
+      app: appReducer,
+      modes: modeReducer,
+      externalInformation: externalInformationReducer,
+    }),
+    provideEffects(AppEffects, ModeEffects, ExternalInformationEffects, IDBEffects, StoreItemEffects, PreprocessingEffects),
+    provideStoreDevtools({
+      maxAge: 300,
+      logOnly: !isDevMode(), // Restrict extension to log-only mode
+      autoPause: true, // Pauses recording actions and state changes when the extension window is not open
+      trace: false, //  If set to true, will include stack trace for every dispatched action, so you can see it in trace tab jumping directly to that part of code
+      traceLimit: 75, // maximum stack trace frames to be stored (in case trace option was provided as true)
+      connectInZone: true, // If set to true, the connection is established within the Angular zone
+    }),
+  ],
+};

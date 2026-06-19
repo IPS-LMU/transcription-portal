@@ -352,7 +352,7 @@ if (!empty($data) && !is_null($headers["Authorization"]) && $headers["Authorizat
     $body = "--" . $separator . $eol;
     $body .= "Content-Type: text/html; charset=\"UTF-8\"" . $eol;
     $body .= "Content-Transfer-Encoding: 8bit" . $eol . $eol;
-    $body .= getHTMLText($data, $attachments) . $eol;
+    $body .= index . phpgetHTMLText($data, $attachments) . $eol;
 
     //attachments
     /*

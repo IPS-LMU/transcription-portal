@@ -1,49 +1,64 @@
-const fs = require("fs");
-const {execSync, spawn} = require('child_process');
+const fs = require('fs');
+const { execSync, spawn } = require('child_process');
 const { readFile, writeFile } = require('node:fs/promises');
 const crypto = require('crypto');
 
-const buildDir = "dist/apps/transcription-portal/";
-const targetFolder = "assets";
-let baseHref = "";
+const buildDir = 'dist/apps/transcription-portal/';
+const targetFolder = 'assets';
+let baseHref = '';
 let dev = false;
 
-const excludedList = ["config", "LICENSE.txt", "contents", ".htaccess", "3rdpartylicenses.txt", "manifest.json", "worker-basic.min.js", "3rdpartylicenses.txt", "ngsw.json", "ngsw-worker.js", "safety-worker.js"];
+const excludedList = [
+  'config',
+  'LICENSE.txt',
+  'contents',
+  '.htaccess',
+  '3rdpartylicenses.txt',
+  'manifest.json',
+  'worker-basic.min.js',
+  '3rdpartylicenses.txt',
+  'ngsw.json',
+  'ngsw-worker.js',
+  'safety-worker.js',
+];
 
 let isUpdate = false;
 
 let timeNow = getDateTimeString();
-let version = "";
+let version = '';
 
-const packageText = fs.readFileSync("./package.json", {
-  encoding: "utf8"
+const packageText = fs.readFileSync('./package.json', {
+  encoding: 'utf8',
 });
 const json = JSON.parse(packageText);
 version = json.version;
 
-if (process.argv[2] === "dev=true") {
-  console.log("dev is true!");
+if (process.argv[2] === 'dev=true') {
+  console.log('dev is true!');
   dev = true;
 }
 
-if (process.argv[3] === "isUpdate=true") {
+if (process.argv[3] === 'isUpdate=true') {
   isUpdate = true;
 }
 
-if (process.argv[4].indexOf("url=") > -1) {
-  baseHref = process.argv[4].replace("url=", "");
+if (process.argv[4].indexOf('url=') > -1) {
+  baseHref = process.argv[4].replace('url=', '');
 }
 
 console.log(`Building TranscriptionPortal with dev=${dev}, isUpdate=${isUpdate} for ${baseHref}`);
 console.log(`Remove dist...`);
 execSync(`rm -rf "./${buildDir}"`);
-const command = ['/usr/local/bin/nx', 'build', 'transcription-portal', '--base-href', baseHref, '--deploy-url=assets/'];
+const command = ['node_modules/.bin/nx', 'build', 'transcription-portal', '--base-href', baseHref, '--skip-nx-cache'];
 
 if (dev) {
   command.push('--configuration', 'development');
 } else {
   command.push('--configuration', 'production');
 }
+
+console.log('RUN!');
+console.log(command.join(' '));
 
 const node = spawn('node', command);
 node.stdout.on('data', function (data) {
@@ -63,6 +78,7 @@ node.on('exit', async function (code) {
     execSync(`rm -rf "./${buildDir}config" "./${buildDir}media" "./${buildDir}.htaccess"`);
   }
 
+  /*
   const items = fs.readdirSync(`./${buildDir}`, {
     encoding: "utf8"
   });
@@ -79,6 +95,7 @@ node.on('exit', async function (code) {
       execSync(`mv "./${buildDir}${item}" "./${buildDir}${targetFolder}/${item}"`);
     }
   }
+   */
 
   if (!isUpdate) {
     execSync(`mv "./${buildDir}assets/.htaccess" "./${buildDir}.htaccess"`);

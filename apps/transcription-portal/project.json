@@ -2,22 +2,28 @@
   "name": "transcription-portal",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "apps/transcription-portal/src",
   "prefix": "tportal",
+  "sourceRoot": "apps/transcription-portal/src",
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@angular-devkit/build-angular:browser",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
-        "outputPath": "dist/apps/transcription-portal",
-        "index": "apps/transcription-portal/src/index.html",
-        "main": "apps/transcription-portal/src/main.ts",
+        "outputPath": {
+          "base": "dist/apps/transcription-portal",
+          "browser": "",
+          "media": "assets"
+        },
+        "browser": "apps/transcription-portal/src/main.ts",
         "polyfills": [
-          "apps/transcription-portal/src/polyfills.ts",
-          "@angular/localize/init"
+          "@angular/localize/init",
+          "zone.js"
         ],
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
         "assets": [
           "apps/transcription-portal/src/assets",
           "apps/transcription-portal/src/contents",
@@ -40,8 +46,7 @@
           "node_modules/platform/platform.js",
           "node_modules/jszip/dist/jszip.min.js"
         ],
-        "serviceWorker": true,
-        "ngswConfigPath": "apps/transcription-portal/ngsw-config.json"
+        "serviceWorker": "apps/transcription-portal/ngsw-config.json"
       },
       "configurations": {
         "production": {
@@ -72,43 +77,27 @@
               "with": "apps/transcription-portal/src/environments/environment.dev.ts"
             }
           ],
-          "buildOptimizer": false,
           "optimization": false,
-          "vendorChunk": true,
-          "extractLicenses": false,
-          "sourceMap": true,
-          "namedChunks": true
-        },
-        "serving": {
-          "buildOptimizer": false,
-          "optimization": false,
-          "vendorChunk": false,
-          "extractLicenses": false,
-          "sourceMap": true,
-          "namedChunks": false
+          "sourceMap": true
         }
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "development"
     },
     "serve": {
-      "executor": "@angular-devkit/build-angular:dev-server",
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 3456
+      },
       "configurations": {
         "production": {
           "buildTarget": "transcription-portal:build:production"
         },
         "development": {
           "buildTarget": "transcription-portal:build:development"
-        },
-        "serving": {
-          "buildTarget": "transcription-portal:build:serving"
         }
-      },
-      "defaultConfiguration": "serving",
-      "options": {
-        "host": "127.0.0.1",
-        "port": 3456
-      },
-      "continuous": true
+      }
     },
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
@@ -118,6 +107,15 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "transcription-portal:build",
+        "staticFilePath": "dist/apps/transcription-portal",
+        "spa": true
+      }
     },
     "version": {
       "executor": "@jscutlery/semver:version",

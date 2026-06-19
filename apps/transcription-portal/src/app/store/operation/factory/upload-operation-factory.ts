@@ -203,6 +203,7 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
 
     const headers: any = {};
 
+    console.log(`Production ${environment.production}`);
     if (environment.production) {
       headers['ngsw-bypass'] = 'true';
     }

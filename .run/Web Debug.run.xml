@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Web Debug" type="JavascriptDebugType" activateToolWindowBeforeRun="false" uri="http://127.0.0.1:3456" useFirstLineBreakpoints="true">
+  <configuration default="false" name="Web Debug" type="JavascriptDebugType" activateToolWindowBeforeRun="false" engineId="30608a86-d0e4-4b4e-87bf-19ebe2a31e3e" uri="http://localhost:3456" useFirstLineBreakpoints="true">
     <method v="2" />
   </configuration>
 </component>

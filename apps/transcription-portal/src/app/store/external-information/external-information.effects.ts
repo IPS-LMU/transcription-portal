@@ -5,7 +5,6 @@ import { Store } from '@ngrx/store';
 import { isNumber } from '@octra/utilities';
 import { catchError, exhaustMap, forkJoin, map, Observable, of, retry, tap, withLatestFrom } from 'rxjs';
 import X2JS from 'x2js';
-import { environment } from '../../../environments/environment';
 import { AppSettings } from '../../shared/app.settings';
 import { AppActions, RootState } from '../app';
 import { ASRInfo, ExternalInformationActions } from './external-information.actions';
@@ -52,9 +51,6 @@ export class ExternalInformationEffects {
         return this.http
           .get(settings.api.asrInfoURL, {
             responseType: 'text',
-            headers: {
-              ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
-            },
           })
           .pipe(
             exhaustMap((result: string) => {
@@ -156,9 +152,6 @@ export class ExternalInformationEffects {
               }[]
             >(`${settings.api.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runASR/Input/LANGUAGE/Values`, {
               responseType: 'json',
-              headers: {
-                ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
-              },
             })
             .pipe(
               map((asrLanguages) => {
@@ -271,9 +264,6 @@ export class ExternalInformationEffects {
             }[]
           >(`${settings.api.basConfigURL}?path=CMD/Components/BASWebService/Service/Operations/runPipeline/Input/LANGUAGE/Values/`, {
             responseType: 'json',
-            headers: {
-              ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
-            },
           })
           .pipe(
             exhaustMap((mausLanguages) => {
@@ -351,11 +341,6 @@ export class ExternalInformationEffects {
     return this.http
       .get(`${url}?ASRType=call${asrName}ASR`, {
         responseType: 'text',
-        headers: {
-          ...(environment.production ? { 'ngsw-bypass': 'true' } : {}),
-        },
-        referrer: '',
-        credentials: 'include',
       })
       .pipe(
         map((result) => {
