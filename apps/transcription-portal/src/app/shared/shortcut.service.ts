@@ -43,6 +43,7 @@ export class ShortcutService {
   }
 
   initShortcuts() {
+    window.removeEventListener('blur', this.onWindowBlur);
     hotkeys.unbind();
     hotkeys.filter = () => true;
 
@@ -76,6 +77,7 @@ export class ShortcutService {
 
     hotkeys('*', { keydown: true, keyup: true }, (event, hotkeyEvent) => {
       const pressedKeys = new Set<string>();
+
       if (hotkeys.ctrl) {
         pressedKeys.add('ctrl');
       }
@@ -90,10 +92,24 @@ export class ShortcutService {
       }
       this._pressedKeys = pressedKeys;
     });
+
+    window.addEventListener('blur', this.onWindowBlur);
   }
+
+  private onWindowBlur = () => {
+    // reset pressed keys
+    hotkeys.ctrl = false;
+    hotkeys.cmd = false;
+    hotkeys.shift = false;
+    hotkeys.alt = false;
+
+    this._pressedKeys = new Set<string>();
+  };
 
   destroy() {
     hotkeys.unbind();
+    window.removeEventListener('blur', this.onWindowBlur);
+    this._pressedKeys = new Set<string>();
     this._groups = [];
   }
 
