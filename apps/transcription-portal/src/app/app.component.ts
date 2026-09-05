@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { VersionCheckerService, VersionNotificationComponent } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -10,6 +10,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'tportal-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterOutlet, VersionNotificationComponent, TranslocoPipe],
 })
 export class AppComponent extends SubscriberComponent implements OnDestroy {

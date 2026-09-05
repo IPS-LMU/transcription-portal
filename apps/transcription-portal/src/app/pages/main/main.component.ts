@@ -1,6 +1,6 @@
 import { AsyncPipe, DatePipe, NgClass, NgStyle, UpperCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, TemplateRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, inject, OnDestroy, Renderer2, TemplateRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -42,6 +42,7 @@ import { getLastOperationRound } from '../../store/operation/operation.functions
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.scss'],
   providers: [],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     AlertComponent,
     NgClass,

@@ -1,4 +1,4 @@
-import { Component, Output, inject } from '@angular/core';
+import { Component, Output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { Subject } from 'rxjs';
@@ -9,6 +9,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   templateUrl: './first-modal.component.html',
   styleUrls: ['./first-modal.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TranslocoPipe],
 })
 export class FirstModalComponent extends SubscriberComponent {

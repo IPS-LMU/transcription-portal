@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { StoreTaskOperation, TaskStatus } from '../../../../../store';
 import { getLastOperationRound } from '../../../../../store/operation/operation.functions';
@@ -6,6 +6,7 @@ import { getLastOperationRound } from '../../../../../store/operation/operation.
 @Component({
   selector: 'tportal-proceedings-table-op-icon',
   templateUrl: './proceedings-table-op-icon.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./proceedings-table-op-icon.component.scss'],
 })
 export class ProceedingsTableOpIconComponent extends SubscriberComponent implements OnChanges {

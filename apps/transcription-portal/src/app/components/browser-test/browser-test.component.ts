@@ -1,5 +1,5 @@
 import { NgClass, NgStyle } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { BrowserInfo } from '../../obj/BrowserInfo';
 import { RoutingService } from '../../routing.service';
 import { AppSettings } from '../../shared/app.settings';
@@ -10,6 +10,7 @@ import { OHModalService } from '../../shared/ohmodal.service';
   selector: 'tportal-browser-test',
   templateUrl: './browser-test.component.html',
   styleUrls: ['./browser-test.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, NgStyle],
 })
 export class BrowserTestComponent implements OnInit {

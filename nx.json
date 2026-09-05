@@ -43,5 +43,8 @@
       "style": "scss",
       "unitTestRunner": "none"
     }
+  },
+  "migrate": {
+    "agentic": false
   }
 }

@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -17,6 +17,7 @@ import { convertStoreFileToFileInfo } from '../../store/operation/operation.func
   selector: 'tportal-results-table',
   templateUrl: './results-table.component.html',
   styleUrls: ['./results-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgStyle, FormsModule, TranslocoPipe]
 })
 export class ResultsTableComponent implements OnChanges {

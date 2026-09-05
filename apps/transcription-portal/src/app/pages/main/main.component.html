@@ -56,7 +56,7 @@
               </div>
               <i class="bi bi-database-fill" style="color: gray"></i>
               <ng-template #queuedTipp>
-                <div [innerHTML]="'status bar.queued' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.queued }"></div>
+                <div [innerHTML]="'status bar.queued' | transloco: { number: $safeNavigationMigration((modeStoreService.overallStatistics$ | async)?.queued) }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="waitingTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -65,7 +65,7 @@
               </div>
               <i class="bi bi-clock-fill" style="color: dodgerblue"></i>
               <ng-template #waitingTipp>
-                <div [innerHTML]="'status bar.waiting' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.waiting }"></div>
+                <div [innerHTML]="'status bar.waiting' | transloco: { number: $safeNavigationMigration((modeStoreService.overallStatistics$ | async)?.waiting) }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="runningTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -80,7 +80,7 @@
                 style="color: orange"
               ></i>
               <ng-template #runningTipp>
-                <div [innerHTML]="'status bar.running' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.running }"></div>
+                <div [innerHTML]="'status bar.running' | transloco: { number: $safeNavigationMigration((modeStoreService.overallStatistics$ | async)?.running) }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="finishedTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -89,7 +89,7 @@
               </div>
               <i class="bi bi-check-lg" style="color: forestgreen; font-weight: bold"></i>
               <ng-template #finishedTipp>
-                <div [innerHTML]="'status bar.finished' | transloco: { number: (modeStoreService.overallStatistics$ | async)?.finished }"></div>
+                <div [innerHTML]="'status bar.finished' | transloco: { number: $safeNavigationMigration((modeStoreService.overallStatistics$ | async)?.finished) }"></div>
               </ng-template>
             </div>
             <div [ngbTooltip]="errorsTipp" class="totalState" tooltipClass="state-tooltip" placement="bottom">
@@ -98,7 +98,7 @@
               </div>
               <i class="bi bi-x-lg" style="color: red; font-weight: 600"></i>
               <ng-template #errorsTipp>
-                <div [innerHTML]="'status bar.errors' | transloco: { queued: (modeStoreService.overallStatistics$ | async)?.errors }"></div>
+                <div [innerHTML]="'status bar.errors' | transloco: { queued: $safeNavigationMigration((modeStoreService.overallStatistics$ | async)?.errors) }"></div>
               </ng-template>
             </div>
           </li>
@@ -439,7 +439,7 @@
       <div class="col-8" style="text-align: center">
         <p style="margin: 10px 0 0">
           {{ toolSelectedOperation?.operation?.name }}: {{ toolSelectedOperation?.audioFile?.attributes?.originalFileName }}, Language:
-          {{ toolSelectedOperation?.language }}, Audio duration: {{ toolSelectedOperation?.audioFile?.duration | time }}
+          {{ toolSelectedOperation?.language }}, Audio duration: {{ $safeNavigationMigration(toolSelectedOperation?.audioFile?.duration) | time }}
         </p>
       </div>
       <div class="col-2" style="text-align: right; padding-top: 5px">

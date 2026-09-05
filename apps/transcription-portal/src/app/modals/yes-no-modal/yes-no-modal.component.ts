@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { NgClass } from '@angular/common';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'tportal-yes-no-modal',
   templateUrl: './yes-no-modal.component.html',
   styleUrls: ['./yes-no-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, TranslocoPipe],
 })
 export class YesNoModalComponent {

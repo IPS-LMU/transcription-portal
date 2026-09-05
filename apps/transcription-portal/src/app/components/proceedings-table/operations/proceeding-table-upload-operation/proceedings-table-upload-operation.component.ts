@@ -1,4 +1,4 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Component, Input, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { TimePipe } from '../../../../shared/time.pipe';
 import { OperationFactory, StoreTaskOperationProcessingRound, TaskStatus, UploadOperation } from '../../../../store';
 import { getLastOperationRound } from '../../../../store/operation/operation.functions';
@@ -9,6 +9,7 @@ import { ProceedingsTableOperationComponent } from '../proceeding-table-operatio
   selector: 'tportal-proceedings-table-upload-operation',
   templateUrl: './proceedings-table-upload-operation.component.html',
   styleUrls: ['./proceedings-table-upload-operation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ProceedingsTableOpIconComponent, TimePipe],
 })
 export class ProceedingsTableUploadOperationComponent extends ProceedingsTableOperationComponent {

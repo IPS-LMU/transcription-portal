@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { wait } from '@octra/utilities';
 import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory } from '../../store';
@@ -8,6 +8,7 @@ import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory } f
   selector: 'tportal-tool-loader',
   templateUrl: './tool-loader.component.html',
   styleUrls: ['./tool-loader.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
 })
 export class ToolLoaderComponent implements OnChanges {

@@ -1,4 +1,4 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Component, Input, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { ProceedingsTableOperationComponent } from '../proceeding-table-operation/proceedings-table-operation.component';
 import {ProceedingsTableOpIconComponent} from '../proceeding-table-operation/proceeding-table-op-icon/proceedings-table-op-icon.component';
 import { OperationFactory, TaskStatus } from '../../../../store';
@@ -8,6 +8,7 @@ import { getLastOperationRound } from '../../../../store/operation/operation.fun
   selector: 'tportal-proceedings-table-tool-operation',
   templateUrl: './proceedings-table-tool-operation.component.html',
   styleUrls: ['./proceedings-table-tool-operation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ProceedingsTableOpIconComponent],
 })
 export class ProceedingsTableToolOperationComponent extends ProceedingsTableOperationComponent {

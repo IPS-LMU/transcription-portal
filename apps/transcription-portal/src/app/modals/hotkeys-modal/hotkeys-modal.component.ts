@@ -1,4 +1,4 @@
-import { Component, Output, inject } from '@angular/core';
+import { Component, Output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -12,6 +12,7 @@ import { HotkeyComponent } from './hotkey/hotkey.component';
   templateUrl: './hotkeys-modal.component.html',
   styleUrls: ['./hotkeys-modal.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TranslocoPipe, HotkeyComponent],
 })
 export class HotkeysModalComponent extends SubscriberComponent {

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { NgbActiveModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'tportal-split-modal',
   templateUrl: './split-modal.component.html',
   styleUrls: ['./split-modal.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TranslocoPipe],
 })
 export class SplitModalComponent extends SubscriberComponent {

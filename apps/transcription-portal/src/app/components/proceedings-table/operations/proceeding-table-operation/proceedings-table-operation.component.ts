@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, Renderer2, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, Renderer2, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { StoreTaskOperation } from '../../../../store';
 import { ProceedingsTableOpIconComponent } from './proceeding-table-op-icon/proceedings-table-op-icon.component';
@@ -7,6 +7,7 @@ import { ProceedingsTableOpIconComponent } from './proceeding-table-op-icon/proc
   selector: 'tportal-proceedings-table-operation',
   templateUrl: './proceedings-table-operation.component.html',
   styleUrls: ['./proceedings-table-operation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ProceedingsTableOpIconComponent],
 })
 export class ProceedingsTableOperationComponent extends SubscriberComponent implements OnChanges {

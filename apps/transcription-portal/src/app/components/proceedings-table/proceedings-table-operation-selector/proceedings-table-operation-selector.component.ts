@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, inject, Input, OnChanges, Output, Renderer2, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Input, OnChanges, Output, Renderer2, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { OperationFactory, StoreTaskOperation } from '../../../store';
 import { ProceedingsTableAsrOperationComponent,
@@ -18,6 +18,7 @@ import { ProceedingsTableAsrOperationComponent,
     ProceedingsTableWordAlignmentOperationComponent,
     ProceedingsTableSummarizationOperationComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./proceedings-table-operation-selector.component.scss'],
 })
 export class ProceedingsTableOperationSelectorComponent extends SubscriberComponent implements OnChanges {

@@ -66,7 +66,7 @@
               <div class="provided-by">{{ 'p.service provided by' | transloco }}</div>
             </div>
             <div class="col text-end">
-              <a [href]="getServerProvider(popover.operation.serviceProviderName)?.termsURL" target="_blank"
+              <a [href]="$safeNavigationMigration(getServerProvider(popover.operation.serviceProviderName)?.termsURL)" target="_blank"
                 ><div class="d-inline" [ngbPopover]="'p.service terms' | transloco" triggers="mouseenter:mouseleave">
                   <svg width="20px" height="20px" viewBox="0 -8 72 72" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -83,18 +83,18 @@
                     />
                   </svg></div
               ></a>
-              <a [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL" target="_blank" class="ms-2"
+              <a [href]="$safeNavigationMigration(getServerProvider(popover.operation.serviceProviderName)?.homepageURL)" target="_blank" class="ms-2"
                 ><i class="bi bi-globe" [ngbPopover]="'g.homepage' | transloco" style="color: cornflowerblue" triggers="mouseenter:mouseleave"></i
               ></a>
             </div>
           </div>
           <a
-            [href]="getServerProvider(popover.operation.serviceProviderName)?.homepageURL"
+            [href]="$safeNavigationMigration(getServerProvider(popover.operation.serviceProviderName)?.homepageURL)"
             style="display: block; vertical-align: middle"
             target="_blank"
           >
             <img
-              [src]="getServerProvider(popover.operation.serviceProviderName)?.logoURL"
+              [src]="$safeNavigationMigration(getServerProvider(popover.operation.serviceProviderName)?.logoURL)"
               alt="EML Logo"
               class="service-logo"
               style="border: 1px solid lightgray"

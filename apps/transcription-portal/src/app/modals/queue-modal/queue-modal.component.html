@@ -445,8 +445,8 @@
                                 <span class="d-block text-center"
                                   >{{ 'modals.check options.options.translation language.provided by' | transloco }}:</span
                                 >
-                                <a [href]="translationProvider?.homepageURL" target="_blank"
-                                  ><img [src]="translationProvider?.logoURL" class="img-fluid"
+                                <a [href]="$safeNavigationMigration(translationProvider?.homepageURL)" target="_blank"
+                                  ><img [src]="$safeNavigationMigration(translationProvider?.logoURL)" class="img-fluid"
                                 /></a>
                               </div>
                             </ng-template>

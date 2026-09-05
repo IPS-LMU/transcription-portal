@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FilesizePipe } from '../../shared/filesize.pipe';
 import { TimePipe } from '../../shared/time.pipe';
 import { StoreAudioFile, StoreFile } from '../../store';
@@ -9,6 +9,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'tportal-file-info-table',
   templateUrl: './file-info-table.component.html',
   styleUrls: ['./file-info-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, TimePipe, FilesizePipe, TranslocoPipe],
 })
 export class FileInfoTableComponent implements OnInit {

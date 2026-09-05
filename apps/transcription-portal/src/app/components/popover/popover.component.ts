@@ -12,6 +12,7 @@ import {
   SimpleChanges,
   TemplateRef,
   ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -21,6 +22,7 @@ import { interval } from 'rxjs';
   selector: 'tportal-popover',
   templateUrl: './popover.component.html',
   styleUrls: ['./popover.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgStyle, ReactiveFormsModule, FormsModule, NgTemplateOutlet],
 })
 export class PopoverComponent extends SubscriberComponent implements OnChanges, OnDestroy, OnInit {

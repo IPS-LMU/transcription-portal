@@ -1,5 +1,5 @@
 import { NgClass, NgTemplateOutlet } from '@angular/common';
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, Renderer2, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, Renderer2, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { FileInfo } from '@octra/web-media';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
@@ -10,6 +10,7 @@ import { getLastOperationRound } from '../../../store/operation/operation.functi
   selector: 'tportal-proceeding-table-name-col',
   templateUrl: './proceeding-table-name-col.component.html',
   styleUrls: ['./proceeding-table-name-col.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass, NgTemplateOutlet],
 })
 export class ProceedingTableNameColComponent extends SubscriberComponent implements OnChanges {

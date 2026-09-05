@@ -1,4 +1,4 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Component, Input, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { ProceedingsTableOperationComponent } from '../proceeding-table-operation/proceedings-table-operation.component';
 import {
     ProceedingsTableOpIconComponent
@@ -9,6 +9,7 @@ import { OperationFactory } from '../../../../store';
   selector: 'tportal-proceedings-table-translation-operation',
   templateUrl: './proceedings-table-translation-operation.component.html',
   styleUrls: ['./proceedings-table-translation-operation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [ProceedingsTableOpIconComponent],
 })
 export class ProceedingsTableTranslationOperationComponent extends ProceedingsTableOperationComponent {

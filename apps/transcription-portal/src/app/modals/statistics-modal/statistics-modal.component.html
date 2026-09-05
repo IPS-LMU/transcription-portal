@@ -5,7 +5,7 @@
 <div class="modal-body">
   <div style="text-align: right">
     @if ((modeStoreService.currentModeProtocol$ | async)?.url && (modeStoreService.currentModeProtocol$ | async)?.fileName) {
-      <a [download]="(modeStoreService.currentModeProtocol$ | async)?.fileName" [href]="(modeStoreService.currentModeProtocol$ | async)?.url"
+      <a [download]="$safeNavigationMigration((modeStoreService.currentModeProtocol$ | async)?.fileName)" [href]="$safeNavigationMigration((modeStoreService.currentModeProtocol$ | async)?.url)"
         >{{ 'g.download' | transloco }} JSON</a
       >
     }

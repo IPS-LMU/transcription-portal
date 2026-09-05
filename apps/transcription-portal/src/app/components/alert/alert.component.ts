@@ -1,5 +1,5 @@
 import { NgStyle } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -18,6 +18,7 @@ export interface AlertEntry {
   selector: 'tportal-alerts',
   templateUrl: './alert.component.html',
   styleUrls: ['./alert.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgStyle, NgbAlert, TranslocoPipe],
 })
 export class AlertComponent extends SubscriberComponent {

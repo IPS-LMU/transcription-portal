@@ -1,10 +1,11 @@
 import { NgClass } from '@angular/common';
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'tportal-operation-arrow',
   templateUrl: './operation-arrow.component.html',
   styleUrls: ['./operation-arrow.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [NgClass],
 })
 export class OperationArrowComponent implements OnInit {

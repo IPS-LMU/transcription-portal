@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -9,6 +9,7 @@ import { AppStoreService } from '../../store';
   selector: 'tportal-loading',
   imports: [TranslocoPipe],
   templateUrl: './loading.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './loading.component.scss',
 })
 export class LoadingComponent extends SubscriberComponent {

@@ -1,5 +1,5 @@
 import { AsyncPipe, LowerCasePipe, NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
@@ -26,6 +26,7 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
   templateUrl: './queue-modal.component.html',
   styleUrls: ['./queue-modal.component.scss'],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     NgClass,
     NgStyle,

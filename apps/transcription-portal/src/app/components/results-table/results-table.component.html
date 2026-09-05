@@ -63,8 +63,8 @@
               <div class="w-100" style="height: 30%">
                 <a
                   class="btn btn-secondary btn-sm p-0 pointer"
-                  [href]="conversion.result?.url"
-                  [download]="conversion.result?.fullname"
+                  [href]="$safeNavigationMigration(conversion.result?.url)"
+                  [download]="$safeNavigationMigration(conversion.result?.fullname)"
                   target="_blank"
                   style="margin: 0 5% 10% 5%; width: 90%; height: 85%"
                 >

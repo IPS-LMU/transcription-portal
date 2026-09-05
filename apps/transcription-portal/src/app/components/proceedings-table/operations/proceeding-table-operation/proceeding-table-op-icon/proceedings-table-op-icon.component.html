@@ -1,4 +1,4 @@
-@switch (lastOperationRound?.status) {
+@switch ($safeNavigationMigration(lastOperationRound?.status)) {
   @case (TaskStatus.FINISHED) {
     <i class="bi bi-check-lg" aria-hidden="true"></i>
   }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, inject, Input, Output, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, EventEmitter, inject, Input, Output, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { OperationFactory, StoreItem } from '../../../store';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -7,6 +7,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   templateUrl: './context-menu.component.html',
   styleUrls: ['./context-menu.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [TranslocoPipe],
 })
 export class ContextMenuComponent {

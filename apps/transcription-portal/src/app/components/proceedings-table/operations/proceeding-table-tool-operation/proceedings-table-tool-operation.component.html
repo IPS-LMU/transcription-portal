@@ -1,7 +1,7 @@
 @if (lastOperationRound?.status !== TaskStatus.READY) {
   <tportal-proceedings-table-op-icon
     [storeTaskOperation]="storeTaskOperation"
-    [title]="lastOperationRound?.status"
+    [title]="$safeNavigationMigration(lastOperationRound?.status)"
   ></tportal-proceedings-table-op-icon>
 } @else {
   <i class="bi bi-pencil-square link" aria-hidden="true"></i>
