@@ -79,7 +79,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
 
   process() {
     this.state = 'processing';
-    if (this.type === 'column' && !(this.column?.name === 'Upload' || this.column?.name === 'Emu WebApp')) {
+    if (this.type === 'column' && this.column?.name !== 'Upload') {
       this.doColumnZipping();
     } else if (this.type === 'line') {
       this.doLineZipping();
@@ -256,7 +256,7 @@ export class DownloadModalComponent extends SubscriberComponent implements OnIni
           console.error(error);
         });
     } else {
-      this.state = "error";
+      this.state = 'error';
       console.error('No tasks selected.');
     }
   }
