@@ -295,31 +295,29 @@
                         }}</span>
                     </td>
                   </tr>
-                  @if (modeStoreService.currentMode === 'annotation') {
-                    <tr class="align-middle">
-                      <td class="fit">
-                        <label
-                          class="me-1 pointer"
-                          for="diarizationSwitch"
-                          [ngbTooltip]="'modals.check options.options.diarization.description' | transloco"
-                          >{{ 'modals.check options.options.diarization.name' | transloco }}:</label
-                        >
-                      </td>
-                      <td>
-                        <div class="form-check form-switch">
-                          <input
-                            class="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id="diarizationSwitch"
-                            name="diarization"
-                            [(ngModel)]="defaultUserSettings.isDiarizationEnabled"
-                            (ngModelChange)="onOptionChange()"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  }
+                  <tr class="align-middle">
+                    <td class="fit">
+                      <label
+                        class="me-1 pointer"
+                        for="diarizationSwitch"
+                        [ngbTooltip]="'modals.check options.options.diarization.description' | transloco"
+                      >{{ 'modals.check options.options.diarization.name' | transloco }}:</label
+                      >
+                    </td>
+                    <td>
+                      <div class="form-check form-switch">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          role="switch"
+                          id="diarizationSwitch"
+                          name="diarization"
+                          [(ngModel)]="defaultUserSettings.isDiarizationEnabled"
+                          (ngModelChange)="onOptionChange()"
+                        />
+                      </div>
+                    </td>
+                  </tr>
                   @if ((modeStoreService.defaultUserSettings$ | async)?.isDiarizationEnabled) {
                     <tr class="align-middle">
                       <td class="fit">

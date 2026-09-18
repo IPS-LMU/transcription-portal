@@ -1,7 +1,7 @@
 import Dexie, { Table, Transaction } from 'dexie';
 import { exportDB, importDB } from 'dexie-export-import';
 import { AppInfo } from '../app.info';
-import { OperationProcessingRoundSerialized, TaskStatus } from '../store';
+import { OperationProcessingRoundSerialized, TaskStatus, StoreTaskOperationProcessingRound } from '../store';
 import { IASROperation, IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem } from './types';
 
 export class IndexedDBManager extends Dexie {
@@ -122,24 +122,28 @@ export class IndexedDBManager extends Dexie {
 
                 if (operation.name === 'Upload') {
                   // results to one round
-                  rounds.push({
-                    protocol: (operation as any).protocol,
-                    results: (operation as any).results,
-                    status: (operation as any).state,
-                    time: (operation as any).time,
-                  });
+                  rounds.push(
+                    new OperationProcessingRoundSerialized({
+                      protocol: (operation as any).protocol,
+                      results: (operation as any).results,
+                      status: (operation as any).state,
+                      time: (operation as any).time,
+                    }),
+                  );
                 } else {
                   // other operation: each results is equal to one round
                   for (let i = 0; i < (operation as any).results.length; i++) {
                     const result = (operation as any).results[i];
                     const time = i === (operation as any).results.length - 1 ? (operation as any).time : undefined;
 
-                    rounds.push({
-                      protocol: (operation as any).protocol,
-                      results: [result],
-                      status: (operation as any).state,
-                      time,
-                    });
+                    rounds.push(
+                      new OperationProcessingRoundSerialized({
+                        protocol: (operation as any).protocol,
+                        results: [result],
+                        status: (operation as any).state,
+                        time,
+                      }),
+                    );
                   }
                 }
 

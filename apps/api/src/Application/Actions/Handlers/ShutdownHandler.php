@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Handlers;
+namespace App\Application\Actions\Handlers;
 
 use App\Application\ResponseEmitter\ResponseEmitter;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -29,7 +29,9 @@ class ShutdownHandler
     public function __invoke()
     {
         $error = error_get_last();
-        if ($error) {
+        // only fatal errors abort the request. Warnings (even ones suppressed with @, e.g. by Guzzle) must not produce a 500.
+        $fatalErrorTypes = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;
+        if ($error && ($error['type'] & $fatalErrorTypes)) {
             $errorFile = $error['file'];
             $errorLine = $error['line'];
             $errorMessage = $error['message'];

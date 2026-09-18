@@ -23,6 +23,7 @@
           "zone.js"
         ],
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
+        "preserveSymlinks": true,
         "inlineStyleLanguage": "scss",
         "assets": [
           "apps/transcription-portal/src/assets",
@@ -88,7 +89,10 @@
       "executor": "@angular/build:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "port": 3456
+        "port": 3456,
+        "prebundle": {
+          "exclude": ["@octra/annotation", "@octra/utilities", "@octra/ngx-components"]
+        }
       },
       "configurations": {
         "production": {

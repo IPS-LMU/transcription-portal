@@ -53,13 +53,14 @@ export function convertIDBOperationToStoreOperation(
 }
 
 export function convertIDBOperationRoundToStoreRound(round: OperationProcessingRoundSerialized): StoreTaskOperationProcessingRound {
-  return {
+  return new StoreTaskOperationProcessingRound({
+    id: round.id,
     protocol: round.protocol,
     parsedProtocol: parseProtocol(round.protocol),
     results: round.results.map((a) => convertIDBFileToStoreFile(a)),
     status: round.status,
     time: round.time,
-  };
+  });
 }
 
 export async function convertStoreItemToIDBItem(
@@ -135,7 +136,7 @@ export async function convertStoreOperationRoundToIDBOperationRound(
   round: StoreTaskOperationProcessingRound,
 ): Promise<OperationProcessingRoundSerialized> {
   const results: (FileInfoSerialized | AudioFileInfoSerialized)[] = round.results.map((a) => convertStoreFileToIDBFile(a));
-  return { protocol: round.protocol, results, status: round.status, time: round.time };
+  return { id: round.id, protocol: round.protocol, results, status: round.status, time: round.time };
 }
 
 export function convertStoreFileToIDBFile(file: StoreFile | StoreAudioFile) {
@@ -189,12 +190,12 @@ export function addProcessingRound(operation: StoreTaskOperation, round?: StoreT
     ...operation,
     rounds: [
       ...operation.rounds,
-      {
+      new StoreTaskOperationProcessingRound({
         ...(round ?? {
           status: TaskStatus.PENDING,
           results: [],
         }),
-      },
+      }),
     ],
   };
 }

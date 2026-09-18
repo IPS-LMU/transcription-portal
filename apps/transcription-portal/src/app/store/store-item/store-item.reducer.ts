@@ -47,10 +47,10 @@ export const getTaskReducers = (
             task.operations[i] = {
               ...operation,
               rounds: [
-                {
+                new StoreTaskOperationProcessingRound({
                   status: TaskStatus.PENDING,
                   results: [],
-                },
+                }),
               ],
             };
             operation = task.operations[i];
@@ -67,12 +67,12 @@ export const getTaskReducers = (
                   ...operation,
                   rounds: [
                     ...operation.rounds.slice(0, -1),
-                    {
+                    new StoreTaskOperationProcessingRound({
                       results: [],
                       protocol: '',
                       progress: 0,
                       status: TaskStatus.PENDING,
-                    },
+                    }),
                   ],
                 },
                 ...task.operations.slice(i + 1),
@@ -110,7 +110,7 @@ export const getTaskReducers = (
 
         // replace task files with uploaded files
         task.files = task.files?.map((file) => {
-          const found = getLastOperationRound(task.operations![0])?.results.find((a) => a.name === file.name);
+          const found = getLastOperationRound(task.operations![0])?.results.find((a: StoreFile) => a.name === file.name);
           if (found) {
             return {
               ...file,
@@ -338,38 +338,36 @@ export const getTaskReducers = (
     state = updateStatistics(state, state.currentMode);
     return state;
   }),
-  on(
-    StoreItemActions.validateQueuedTasks.success,
-    (state: ModeState, { compatibleTable }): ModeState =>
-      modeAdapter.updateOne(
-        {
-          id: state.currentMode,
-          changes: {
-            items: applyFunctionOnStoreItemsWhereRecursive(
-              (item) => item.status === TaskStatus.QUEUED,
-              state.entities![state.currentMode]!.items,
-              taskAdapter,
-              (item: StoreItem, itemState: StoreItemsState) => {
-                if (item.type === 'task') {
-                  const checks = compatibleTable.find((a) => a.id === item.id)?.checks;
-                  return taskAdapter.updateOne(
-                    {
-                      id: item.id,
-                      changes: {
-                        invalid: (checks?.map((a) => a.isValid) ?? []).includes(false),
-                        checks,
-                      },
+  on(StoreItemActions.validateQueuedTasks.success, (state: ModeState, { compatibleTable }): ModeState =>
+    modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          items: applyFunctionOnStoreItemsWhereRecursive(
+            (item) => item.status === TaskStatus.QUEUED,
+            state.entities![state.currentMode]!.items,
+            taskAdapter,
+            (item: StoreItem, itemState: StoreItemsState) => {
+              if (item.type === 'task') {
+                const checks = compatibleTable.find((a) => a.id === item.id)?.checks;
+                return taskAdapter.updateOne(
+                  {
+                    id: item.id,
+                    changes: {
+                      invalid: (checks?.map((a) => a.isValid) ?? []).includes(false),
+                      checks,
                     },
-                    itemState,
-                  );
-                }
-                return itemState;
-              },
-            ),
-          },
+                  },
+                  itemState,
+                );
+              }
+              return itemState;
+            },
+          ),
         },
-        state,
-      ),
+      },
+      state,
+    ),
   ),
   on(StoreItemActions.toggleAllSelected.do, (state: ModeState): ModeState => {
     return modeAdapter.updateOne(
@@ -436,13 +434,13 @@ export const getTaskReducers = (
                           ...op,
                           rounds: [
                             ...op.rounds.slice(0, -1),
-                            {
+                            new StoreTaskOperationProcessingRound({
                               status: TaskStatus.PENDING,
                               progress: 0,
                               protocol: '',
                               parsedProtocol: [],
                               results: [],
-                            },
+                            }),
                           ],
                         };
                       }
@@ -463,18 +461,16 @@ export const getTaskReducers = (
     state = updateStatistics(state, state.currentMode);
     return state;
   }),
-  on(
-    StoreItemActions.stopProcessing.do,
-    (state: ModeState): ModeState =>
-      modeAdapter.updateOne(
-        {
-          id: state.currentMode,
-          changes: {
-            overallState: 'stopped',
-          },
+  on(StoreItemActions.stopProcessing.do, (state: ModeState): ModeState =>
+    modeAdapter.updateOne(
+      {
+        id: state.currentMode,
+        changes: {
+          overallState: 'stopped',
         },
-        state,
-      ),
+      },
+      state,
+    ),
   ),
   on(StoreItemActions.stopProcessing.stopTasks, (state: ModeState): ModeState => {
     state = modeAdapter.updateOne(
@@ -594,10 +590,10 @@ export const getTaskReducers = (
                     ...(operation.rounds.length > 1
                       ? []
                       : [
-                          {
+                          new StoreTaskOperationProcessingRound({
                             status: TaskStatus.READY,
                             results: [],
-                          } as StoreTaskOperationProcessingRound,
+                          }),
                         ]), // if rounds > 1 remove current round because not needed
                   ],
                 };
@@ -635,7 +631,8 @@ export const getTaskReducers = (
 
                 for (let i = 0; i < state.entities[state.currentMode]!.defaultOperations.length; i++) {
                   const defaultOperation = state.entities[state.currentMode]!.defaultOperations[i];
-                  const lastRoundIndex = itemsState.entities[item.id]!.operations!.find(a => a.name === defaultOperation.factory.name)!.rounds.length - 1;
+                  const lastRoundIndex =
+                    itemsState.entities[item.id]!.operations!.find((a) => a.name === defaultOperation.factory.name)!.rounds.length - 1;
 
                   if (lastRoundIndex > -1) {
                     let changedItem = {
@@ -654,10 +651,10 @@ export const getTaskReducers = (
                       // not wav
                       if (defaultOperation.factory.name === 'Emu WebApp') {
                         changedItem.rounds = [
-                          {
+                          new StoreTaskOperationProcessingRound({
                             status: TaskStatus.SKIPPED,
                             results: [],
-                          },
+                          }),
                         ];
                       }
                     }
@@ -687,10 +684,8 @@ export const getTaskReducers = (
     ),
   })),
   // update statistics if task changes
-  on(
-    StoreItemActions.importItemsFromProcessingQueue.success,
-    StoreItemActions.resetOperation.fail,
-    (state: ModeState, { mode }): ModeState => updateStatistics(state, mode),
+  on(StoreItemActions.importItemsFromProcessingQueue.success, StoreItemActions.resetOperation.fail, (state: ModeState, { mode }): ModeState =>
+    updateStatistics(state, mode),
   ),
   on(StoreItemActions.setDisableStateForSelectedTasks.do, (state: ModeState, { disabled, ids }) => {
     state = modeAdapter.updateOne(
@@ -716,10 +711,10 @@ export const getTaskReducers = (
                             operation.rounds.length > 1
                               ? operation.rounds.slice(0, -1)
                               : [
-                                  {
+                                  new StoreTaskOperationProcessingRound({
                                     status: TaskStatus.PENDING,
                                     results: [],
-                                  },
+                                  }),
                                 ],
                         };
                       }
@@ -932,7 +927,7 @@ export const getTaskReducers = (
                 // replace URL after (re)upload in task files
                 // and remove blob file
                 files = files?.map((a) => {
-                  const found = getLastOperationRound(operation)?.results?.find((b) => a.name === b.name);
+                  const found = getLastOperationRound(operation)?.results?.find((b: StoreFile) => a.name === b.name);
                   if (found) {
                     return {
                       ...a,
@@ -984,12 +979,12 @@ export const getTaskReducers = (
                       ...item.operations![operationIndex],
                       rounds: [
                         ...item.operations![operationIndex].rounds.slice(0, -1),
-                        {
+                        new StoreTaskOperationProcessingRound({
                           status: TaskStatus.PENDING,
                           results: [],
                           progress: 0,
                           parsedProtocol: [],
-                        },
+                        }),
                       ],
                     },
                     ...item.operations!.slice(operationIndex + 1),
@@ -1079,7 +1074,7 @@ export const getTaskReducers = (
                   {
                     id: item.id,
                     changes: {
-                      operations: itemsState.entities[item.id]!.operations!.map((op) => {
+                      operations: itemsState.entities[item.id]!.operations!.map((op: StoreTaskOperation) => {
                         if (op.id === operationID) {
                           return {
                             ...op,
@@ -1087,7 +1082,7 @@ export const getTaskReducers = (
                               ...op.rounds.slice(0, roundIndex),
                               {
                                 ...op.rounds[roundIndex],
-                                results: op.rounds[roundIndex].results.map((result) => {
+                                results: op.rounds[roundIndex].results.map((result: StoreFile) => {
                                   if (result.name === file.name) {
                                     return {
                                       ...result,
@@ -1158,76 +1153,79 @@ export const getTaskReducers = (
       state,
     );
   }),
-  on(StoreItemActions.runOperationWithTool.success, (state: ModeState, { mode, taskID, operationID, audioFile, language, operationName, transcript }) => {
-    const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items)[0];
-    const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
-    let operation = task.operations![operationIndex];
+  on(
+    StoreItemActions.runOperationWithTool.success,
+    (state: ModeState, { mode, taskID, operationID, audioFile, language, operationName, transcript }) => {
+      const task = getStoreItemsWhereRecursive((item) => item.id === taskID, state.entities[mode]!.items)[0];
+      const operationIndex = task.operations!.findIndex((a) => a.id === operationID);
+      let operation = task.operations![operationIndex];
 
-    if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
-      // start new round
+      if (getLastOperationRound(operation)?.status === TaskStatus.FINISHED) {
+        // start new round
+        operation = {
+          ...operation,
+          rounds: [
+            ...operation.rounds,
+            new StoreTaskOperationProcessingRound({
+              status: TaskStatus.PENDING,
+              results: [],
+            }),
+          ],
+        };
+      }
       operation = {
         ...operation,
         rounds: [
-          ...operation.rounds,
+          ...operation.rounds.slice(0, operation.rounds.length - 1),
           {
-            status: TaskStatus.PENDING,
-            results: [],
+            ...operation.rounds[operation.rounds.length - 1],
+            status: TaskStatus.PROCESSING,
+            time: {
+              start: Date.now(),
+            },
           },
         ],
       };
-    }
-    operation = {
-      ...operation,
-      rounds: [
-        ...operation.rounds.slice(0, operation.rounds.length - 1),
+
+      state = modeAdapter.updateOne(
         {
-          ...operation.rounds[operation.rounds.length - 1],
-          status: TaskStatus.PROCESSING,
-          time: {
-            start: Date.now(),
-          },
-        },
-      ],
-    };
-
-    state = modeAdapter.updateOne(
-      {
-        id: mode,
-        changes: {
-          items: {
-            ...changeTaskOperation(
-              taskID,
+          id: mode,
+          changes: {
+            items: {
+              ...changeTaskOperation(
+                taskID,
+                operationID,
+                () => {
+                  return {
+                    ...operation,
+                  };
+                },
+                taskAdapter,
+                state.entities[mode]!.items,
+              ),
+            },
+            openedTool: {
               operationID,
-              () => {
-                return {
-                  ...operation,
-                };
-              },
-              taskAdapter,
-              state.entities[mode]!.items,
-            ),
-          },
-          openedTool: {
-            operationID,
-            taskID,
-            operationName,
-            audioFile,
-            transcript,
-            language,
-          },
-          gui: {
-            ...state.entities[mode]!.gui,
-            toolOpenStatus: 'opened',
+              taskID,
+              operationName,
+              audioFile,
+              transcript,
+              language,
+            },
+            gui: {
+              ...state.entities[mode]!.gui,
+              toolOpenStatus: 'opened',
+            },
           },
         },
-      },
-      {
-        ...state,
-      },
-    );
+        {
+          ...state,
+        },
+      );
 
-    return state;
-  }),
+      return state;
+    },
+  ),
   on(StoreItemActions.updateTaskFiles.do, (state: ModeState, { taskID, mode, files }) =>
     modeAdapter.updateOne(
       {
