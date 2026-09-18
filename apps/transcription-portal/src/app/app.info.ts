@@ -11,6 +11,14 @@ import {
 } from '@octra/annotation';
 import { AudioFormat, MusicMetadataFormat, WavFormat } from '@octra/web-media';
 
+export const SUPPORTED_LANGUAGES: Record<string, string> = {
+  deu: 'de', // German
+  nld: 'nl', // Dutch
+  ita: 'it', // Italian
+  eng: 'en', // English
+  ell: 'el', // Greek
+};
+
 export class AppInfo {
   public static BUILD: {
     version: string;

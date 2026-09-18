@@ -16,6 +16,7 @@ import { getTaskReducers, TaskStatus } from '../store-item';
 import { ModeActions } from './mode.actions';
 import { modeAdapter, preprocessingAdapter, taskAdapter } from './mode.adapters';
 import { ModeState } from './mode.state';
+import {isSupportedLanguage} from "../../obj/functions";
 
 export const initialState: ModeState = modeAdapter.getInitialState({
   currentMode: 'annotation',
@@ -259,8 +260,8 @@ export const modeReducer = createReducer(
   ),
   on(ModeActions.readFilesFromURL.do, (state: ModeState, { audioLanguage }) => {
     if (audioLanguage && /(^deu)|(^ita)|(^nld)|(^eng)/g.exec(audioLanguage)) {
-      const supportedAudioLanguages = AppSettings.languages.asr.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value));
-      const supportedMausLanguages = AppSettings.languages.maus.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value));
+      const supportedAudioLanguages = AppSettings.languages.asr.filter((a) => isSupportedLanguage((a.value)));
+      const supportedMausLanguages = AppSettings.languages.maus.filter((a) => isSupportedLanguage((a.value)));
 
       if (audioLanguage === 'deu') {
         audioLanguage = 'deu-DE';

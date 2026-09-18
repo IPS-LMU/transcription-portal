@@ -6,6 +6,7 @@ import { downloadFile, FileInfo } from '@octra/web-media';
 import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
 import * as UUID from 'uuid';
 import X2JS from 'x2js';
+import { SUPPORTED_LANGUAGES } from '../../../app.info';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
@@ -633,17 +634,10 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
   };
 
   private mapLanguageForLST(isoLanguage: string) {
-    const mappings = {
-      deu: 'de',
-      nld: 'nl',
-      ita: 'it',
-      eng: 'en',
-    };
-
     const parsed = /(.{3})-.*/g.exec(isoLanguage);
     if (parsed && parsed.length === 2) {
-      if (Object.keys(mappings).includes(parsed[1])) {
-        return (mappings as any)[parsed[1]];
+      if (Object.keys(SUPPORTED_LANGUAGES).includes(parsed[1])) {
+        return (SUPPORTED_LANGUAGES as any)[parsed[1]];
       }
     }
   }

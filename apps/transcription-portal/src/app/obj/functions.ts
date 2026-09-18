@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { NgbModal, NgbModalOptions, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { AppInfo } from '../app.info';
+import { AppInfo, SUPPORTED_LANGUAGES } from '../app.info';
 
 export async function readFileAsArray(file: File) {
   return new Promise<ArrayBuffer>((resolve, reject) => {
@@ -34,19 +34,21 @@ export function openModal<T>(service: NgbModal, content: any, options?: NgbModal
 }
 
 export function convertISO639Language(lang: string) {
-  const mappings = {
-    eng: 'en',
-    deu: 'de',
-    ger: 'de',
-    ita: 'it',
-    nld: 'nl',
-  };
-
   if (lang.indexOf('-') > -1) {
     const key = lang.replace(/([a-z]+)-([A-Z]+).*/g, '$1').toLowerCase();
-    return (mappings as any)[key];
+    return (SUPPORTED_LANGUAGES as any)[key];
   }
   return lang;
+}
+
+export function isSupportedLanguage(language: string) {
+  const regex = new RegExp(
+    Object.keys(SUPPORTED_LANGUAGES)
+      .map((a) => `(^${a}-)`)
+      .join('|'),
+    'g',
+  );
+  return regex.exec(language) !== null;
 }
 
 export function validTranscript(extension: string): boolean {

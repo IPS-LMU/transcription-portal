@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { isNumber } from '@octra/utilities';
 import { catchError, exhaustMap, forkJoin, map, Observable, of, retry, tap, withLatestFrom } from 'rxjs';
 import X2JS from 'x2js';
+import { isSupportedLanguage } from '../../obj/functions';
 import { AppSettings } from '../../shared/app.settings';
 import { AppActions, RootState } from '../app';
 import { ASRInfo, ExternalInformationActions } from './external-information.actions';
@@ -66,7 +67,7 @@ export class ExternalInformationEffects {
 
                 const name = elem.getAttribute('data-bas-asr-info-provider-name');
 
-                if(name) {
+                if (name) {
                   const isStringNumber = (str: string) => !isNaN(Number(str));
                   const sanitizeNumberValue = (el: any, attr: string) => {
                     if (el[attr] && isStringNumber(el[attr])) {
@@ -223,7 +224,7 @@ export class ExternalInformationEffects {
 
                     // add provider only entries for LSTWhisperX because languages for that service
                     // are not retrieved from BASWebservices
-                    if (['deu-DE', 'nld-NL', 'ita-IT', 'eng-GB'].includes(a.ParameterValue.Value)) {
+                    if (isSupportedLanguage(a.ParameterValue.Value)) {
                       result.providersOnly = [...(result.providersOnly ?? []), 'LSTWhisperX'];
                     }
 

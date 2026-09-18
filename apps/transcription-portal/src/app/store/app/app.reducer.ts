@@ -7,6 +7,7 @@ import { IDBActions } from '../idb/idb.actions';
 import { ModeState } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { AppActions } from './app.actions';
+import { isSupportedLanguage } from '../../obj/functions';
 
 export interface AppState {
   versionCheckerStarted: boolean;
@@ -61,196 +62,148 @@ export interface RootState {
 
 export const appReducer = createReducer(
   InitialAppState,
-  on(
-    AppActions.initApplication.success,
-    (state: AppState): AppState => ({
-      ...state,
-      initialized: true,
-    }),
-  ),
-  on(
-    IDBActions.initIDB.loaded,
-    (state: AppState, { intern, userSettings }): AppState => ({
-      ...state,
-      firstModalShown: intern.find((a) => a.name === 'firstModalShown')?.value ?? false,
-      sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
-      accessCode: userSettings.find((a) => a.name === 'accessCode')?.value,
-      notificationEnabled: userSettings.find((a) => a.name === 'notification')?.value ?? false,
-      userProfile: userSettings.find((a) => {
-        return a.name === 'userProfile';
-      })?.value ?? {
-        name: '',
-        email: '',
+  on(AppActions.initApplication.success, (state: AppState): AppState => ({
+    ...state,
+    initialized: true,
+  })),
+  on(IDBActions.initIDB.loaded, (state: AppState, { intern, userSettings }): AppState => ({
+    ...state,
+    firstModalShown: intern.find((a) => a.name === 'firstModalShown')?.value ?? false,
+    sidebarWidth: intern.find((a) => a.name === 'sidebarWidth')?.value,
+    accessCode: userSettings.find((a) => a.name === 'accessCode')?.value,
+    notificationEnabled: userSettings.find((a) => a.name === 'notification')?.value ?? false,
+    userProfile: userSettings.find((a) => {
+      return a.name === 'userProfile';
+    })?.value ?? {
+      name: '',
+      email: '',
+    },
+  })),
+  on(IDBActions.saveInternValues.success, (state: AppState, { items }): AppState => ({
+    ...state,
+    firstModalShown: items.find((a) => a.name === 'firstModalShown')?.value ?? state.firstModalShown,
+    sidebarWidth: items.find((a) => a.name === 'sidebarWidth')?.value ?? state.sidebarWidth,
+  })),
+  on(IDBActions.initIDB.success, (state: AppState): AppState => ({
+    ...state,
+    idbInitialized: true,
+  })),
+  on(IDBActions.initIDB.success, (state: AppState): AppState => ({
+    ...state,
+    idbInitialized: true,
+  })),
+  on(AppActions.initVersionChecker.success, (state: AppState): AppState => ({
+    ...state,
+    versionCheckerStarted: true,
+  })),
+  on(ModeActions.initModes.success, (state: AppState): AppState => ({
+    ...state,
+    modesInitialized: true,
+  })),
+  on(AppActions.initConsoleLogger.success, (state: AppState): AppState => ({
+    ...state,
+    consoleLoggingInitialized: true,
+  })),
+  on(AppActions.loadSettings.success, (state: AppState, { configuration }): AppState => ({
+    ...state,
+    settings: configuration,
+  })),
+  on(ExternalInformationActions.getMAUSLanguages.success, (state: AppState, { mausLanguages }): AppState => ({
+    ...state,
+    availableLanguages: state.availableLanguages
+      ? {
+          ...state.availableLanguages,
+          maus: mausLanguages
+            .map((a) => ({
+              value: a.ParameterValue.Value,
+              description: a.ParameterValue.Description,
+              providersOnly: a.ParameterValue.ProvidersOnly,
+            }))
+            .filter((a) => isSupportedLanguage(a.value)),
+        }
+      : {
+          maus: mausLanguages
+            .map((a) => ({
+              value: a.ParameterValue.Value,
+              description: a.ParameterValue.Description,
+              providersOnly: a.ParameterValue.ProvidersOnly,
+            }))
+            .filter((a) => isSupportedLanguage(a.value)),
+        },
+  })),
+  on(ExternalInformationActions.getASRLanguages.success, (state: AppState, { asrLanguages }): AppState => ({
+    ...state,
+    availableLanguages: state.availableLanguages
+      ? {
+          ...state.availableLanguages,
+          asr: asrLanguages.filter((a) => isSupportedLanguage(a.value)),
+        }
+      : {
+          asr: asrLanguages.filter((a) => isSupportedLanguage(a.value)),
+        },
+  })),
+  on(ExternalInformationActions.updateASRQuotaInfo.success, (state: AppState, { asrQuotaInfo }): AppState => ({
+    ...state,
+    settings: {
+      ...state.settings!,
+      api: {
+        ...state.settings!.api,
+        services: state.settings!.api.services.map((service) => {
+          const found = asrQuotaInfo.find((a) => a.asrName === service.provider);
+          if (found) {
+            return {
+              ...service,
+              usedQuota: found.usedQuota,
+              quotaPerMonth: found.monthlyQuota,
+            };
+          }
+          return service;
+        }),
       },
-    }),
-  ),
-  on(
-    IDBActions.saveInternValues.success,
-    (state: AppState, { items }): AppState => ({
-      ...state,
-      firstModalShown: items.find((a) => a.name === 'firstModalShown')?.value ?? state.firstModalShown,
-      sidebarWidth: items.find((a) => a.name === 'sidebarWidth')?.value ?? state.sidebarWidth,
-    }),
-  ),
-  on(
-    IDBActions.initIDB.success,
-    (state: AppState): AppState => ({
-      ...state,
-      idbInitialized: true,
-    }),
-  ),
-  on(
-    IDBActions.initIDB.success,
-    (state: AppState): AppState => ({
-      ...state,
-      idbInitialized: true,
-    }),
-  ),
-  on(
-    AppActions.initVersionChecker.success,
-    (state: AppState): AppState => ({
-      ...state,
-      versionCheckerStarted: true,
-    }),
-  ),
-  on(
-    ModeActions.initModes.success,
-    (state: AppState): AppState => ({
-      ...state,
-      modesInitialized: true,
-    }),
-  ),
-  on(
-    AppActions.initConsoleLogger.success,
-    (state: AppState): AppState => ({
-      ...state,
-      consoleLoggingInitialized: true,
-    }),
-  ),
-  on(
-    AppActions.loadSettings.success,
-    (state: AppState, { configuration }): AppState => ({
-      ...state,
-      settings: configuration,
-    }),
-  ),
-  on(
-    ExternalInformationActions.getMAUSLanguages.success,
-    (state: AppState, { mausLanguages }): AppState => ({
-      ...state,
-      availableLanguages: state.availableLanguages
-        ? {
-            ...state.availableLanguages,
-            maus: mausLanguages
-              .map((a) => ({
-                value: a.ParameterValue.Value,
-                description: a.ParameterValue.Description,
-                providersOnly: a.ParameterValue.ProvidersOnly,
-              }))
-              .filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
-          }
-        : {
-            maus: mausLanguages
-              .map((a) => ({
-                value: a.ParameterValue.Value,
-                description: a.ParameterValue.Description,
-                providersOnly: a.ParameterValue.ProvidersOnly,
-              }))
-              .filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
-          },
-    }),
-  ),
-  on(
-    ExternalInformationActions.getASRLanguages.success,
-    (state: AppState, { asrLanguages }): AppState => ({
-      ...state,
-      availableLanguages: state.availableLanguages
-        ? {
-            ...state.availableLanguages,
-            asr: asrLanguages.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
-          }
-        : {
-            asr: asrLanguages.filter((a) => /(^deu-)|(^ita-)|(^nld-)|(^eng-)/g.exec(a.value)),
-          },
-    }),
-  ),
-  on(
-    ExternalInformationActions.updateASRQuotaInfo.success,
-    (state: AppState, { asrQuotaInfo }): AppState => ({
-      ...state,
-      settings: {
-        ...state.settings!,
-        api: {
-          ...state.settings!.api,
-          services: state.settings!.api.services.map((service) => {
-            const found = asrQuotaInfo.find((a) => a.asrName === service.provider);
-            if (found) {
-              return {
-                ...service,
-                usedQuota: found.usedQuota,
-                quotaPerMonth: found.monthlyQuota,
-              };
+    },
+  })),
+  on(ExternalInformationActions.updateASRInfo.success, (state: AppState, { asrInfos }): AppState => ({
+    ...state,
+    settings: {
+      ...state.settings!,
+      api: {
+        ...state.settings!.api,
+        services:
+          state.settings?.api.services.map((service) => {
+            if (service.basName && service.type !== 'Summarization') {
+              const basInfo = asrInfos.find((a) => a.name === service.basName);
+              if (basInfo !== undefined) {
+                return {
+                  ...service,
+                  dataStoragePolicy: basInfo.dataStoragePolicy ?? service.dataStoragePolicy,
+                  maxSignalDuration: basInfo.maxSignalDuration ?? service.maxSignalDuration,
+                  knownIssues: basInfo.knownIssues ?? service.knownIssues,
+                  quotaPerMonth: basInfo.quotaPerMonth ?? service.quotaPerMonth,
+                  termsURL: basInfo.termsURL ?? service.termsURL,
+                };
+              }
             }
             return service;
-          }),
-        },
+          }) ?? [],
       },
-    }),
-  ),
-  on(
-    ExternalInformationActions.updateASRInfo.success,
-    (state: AppState, { asrInfos }): AppState => ({
-      ...state,
-      settings: {
-        ...state.settings!,
-        api: {
-          ...state.settings!.api,
-          services:
-            state.settings?.api.services.map((service) => {
-              if (service.basName && service.type !== 'Summarization') {
-                const basInfo = asrInfos.find((a) => a.name === service.basName);
-                if (basInfo !== undefined) {
-                  return {
-                    ...service,
-                    dataStoragePolicy: basInfo.dataStoragePolicy ?? service.dataStoragePolicy,
-                    maxSignalDuration: basInfo.maxSignalDuration ?? service.maxSignalDuration,
-                    knownIssues: basInfo.knownIssues ?? service.knownIssues,
-                    quotaPerMonth: basInfo.quotaPerMonth ?? service.quotaPerMonth,
-                    termsURL: basInfo.termsURL ?? service.termsURL,
-                  };
-                }
-              }
-              return service;
-            }) ?? [],
-        },
-      },
-    }),
-  ),
-  on(
-    IDBActions.backupDatabase.do,
-    (state: AppState): AppState => ({
-      ...state,
-      idbBackup: undefined,
-    }),
-  ),
-  on(
-    AppActions.initOctraAPI.success,
-    (state: AppState, { serverProperties }): AppState => ({
-      ...state,
-      feedbackEnabled: serverProperties.send_feedback,
-    }),
-  ),
-  on(
-    IDBActions.backupDatabase.success,
-    (state: AppState, { url, safeURL, filename }): AppState => ({
-      ...state,
-      idbBackup: {
-        url,
-        safeURL,
-        filename,
-      },
-    }),
-  ),
+    },
+  })),
+  on(IDBActions.backupDatabase.do, (state: AppState): AppState => ({
+    ...state,
+    idbBackup: undefined,
+  })),
+  on(AppActions.initOctraAPI.success, (state: AppState, { serverProperties }): AppState => ({
+    ...state,
+    feedbackEnabled: serverProperties.send_feedback,
+  })),
+  on(IDBActions.backupDatabase.success, (state: AppState, { url, safeURL, filename }): AppState => ({
+    ...state,
+    idbBackup: {
+      url,
+      safeURL,
+      filename,
+    },
+  })),
   on(IDBActions.backupDatabase.revoke, (state: AppState): AppState => {
     if (state.idbBackup?.url) {
       URL.revokeObjectURL(state.idbBackup.url);
@@ -261,42 +214,27 @@ export const appReducer = createReducer(
       idbBackup: undefined,
     };
   }),
-  on(
-    AppActions.changeNotificationEnabled.do,
-    (state: AppState, { enabled }): AppState => ({
-      ...state,
-      notificationEnabled: enabled,
-    }),
-  ),
-  on(
-    AppActions.changeSidebarWidth.do,
-    (state: AppState, { sidebarWidth }): AppState => ({
-      ...state,
-      sidebarWidth,
-    }),
-  ),
-  on(
-    AppActions.changeAccessCode.do,
-    (state: AppState, { accessCode }): AppState => ({
-      ...state,
-      accessCode,
-    }),
-  ),
-  on(
-    AppActions.saveUserProfile.do,
-    (state: AppState, { name, email }): AppState => ({
-      ...state,
-      userProfile: {
-        name,
-        email,
-      },
-    }),
-  ),
-  on(
-    AppActions.setShortcutsEnabled.do,
-    (state: AppState, { shortcutsEnabled }): AppState => ({
-      ...state,
-      shortcutsEnabled,
-    }),
-  ),
+  on(AppActions.changeNotificationEnabled.do, (state: AppState, { enabled }): AppState => ({
+    ...state,
+    notificationEnabled: enabled,
+  })),
+  on(AppActions.changeSidebarWidth.do, (state: AppState, { sidebarWidth }): AppState => ({
+    ...state,
+    sidebarWidth,
+  })),
+  on(AppActions.changeAccessCode.do, (state: AppState, { accessCode }): AppState => ({
+    ...state,
+    accessCode,
+  })),
+  on(AppActions.saveUserProfile.do, (state: AppState, { name, email }): AppState => ({
+    ...state,
+    userProfile: {
+      name,
+      email,
+    },
+  })),
+  on(AppActions.setShortcutsEnabled.do, (state: AppState, { shortcutsEnabled }): AppState => ({
+    ...state,
+    shortcutsEnabled,
+  })),
 );
