@@ -2,6 +2,19 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.2.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-2.1.0...transcription-portal-2.2.0) (2026-10-15)
+
+### Bug Fixes
+
+* **transcription-portal:** can't open OCTRA because cmd key is intepreted as pressed even not pressed ([427eaf1](https://github.com/IPS-LMU/transcription-portal/commit/427eaf1c9c4b3ca28b00a8d71aca95e3cc149d29))
+* **transcription-portal:** download by column not working for phonetic detail step ([d367314](https://github.com/IPS-LMU/transcription-portal/commit/d36731429f34b17f8626cac3a1813c366d127ab8))
+
+### Features
+
+* **transcription-portal:** diarization for summmarization mode ([fcd1c25](https://github.com/IPS-LMU/transcription-portal/commit/fcd1c255a265fb94da2caf564ae69b87e30abc83))
+* **transcription-portal:** support for Greek ([54f3430](https://github.com/IPS-LMU/transcription-portal/commit/54f3430a53f9040aa3eaa82b56c8e33206f1c50a))
+* **transcription-portal:** support for Greek as translation language ([94c09b4](https://github.com/IPS-LMU/transcription-portal/commit/94c09b45f2a215c34d1f442112b3da5d9ce65e86))
+
 # [2.1.0](https://github.com/IPS-LMU/transcription-portal/compare/transcription-portal-2.0.0...transcription-portal-2.1.0) (2026-05-13)
 
 
