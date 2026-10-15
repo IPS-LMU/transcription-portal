@@ -158,9 +158,6 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   }
 
   afterDefaultSettingsUpdated() {
-    if (this.currentMode === 'summarization') {
-      this.defaultUserSettings.isDiarizationEnabled = false;
-    }
   }
 
   public get orangeCount(): number {

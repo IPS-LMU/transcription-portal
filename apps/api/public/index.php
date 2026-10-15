@@ -3,8 +3,8 @@
 declare(strict_types=1);
 include( __DIR__ . "/../config.php");
 
-use App\Application\Handlers\HttpErrorHandler;
-use App\Application\Handlers\ShutdownHandler;
+use App\Application\Actions\Handlers\HttpErrorHandler;
+use App\Application\Actions\Handlers\ShutdownHandler;
 use App\Application\ResponseEmitter\ResponseEmitter;
 use App\Application\Settings\SettingsInterface;
 use DI\ContainerBuilder;

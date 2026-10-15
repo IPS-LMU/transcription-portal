@@ -245,15 +245,22 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     }>((resolve, reject) => {
       if (clonedOperation.serviceProviderName) {
         const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
-        let url =
-          this.commands[0]
-            .replace('{{host}}', serviceProvider!.host)
-            .replace('{{audioURL}}', input?.url ?? '')
-            .replace('{{asrType}}', clonedOperation.serviceProviderName)
-            .replace('{{language}}', clonedOperation.options.language!) + `&diarization=${clonedOperation.options.diarization?.enabled ?? false}`;
+        let url = this.commands[0]
+          .replace('{{host}}', serviceProvider!.host)
+          .replace('{{audioURL}}', input?.url ?? '')
+          .replace('{{asrType}}', clonedOperation.serviceProviderName)
+          .replace('{{language}}', clonedOperation.options.language!);
 
-        if (clonedOperation.options.diarization?.enabled && clonedOperation.options.diarization?.speakers) {
-          url += `&numberSpeakDiar=${clonedOperation.options.diarization.speakers}`;
+        if (clonedOperation.options.diarization?.enabled) {
+          url += `&diarization=${clonedOperation.options.diarization?.enabled ?? false}`;
+
+          if (clonedOperation.options.diarization.speakers) {
+            url += `&numberSpeakDiar=${clonedOperation.options.diarization.speakers}`;
+          }
+
+          // set custom speaker labels
+          const speakMatch = Array.from({ length: 10 }, (_, i) => (i < 10 ? `SPEAKER_0${i}` : `SPEAKER_${i}`)).join(',');
+          url += `&speakMatch=${speakMatch}`;
         }
 
         if (clonedOperation.options.accessCode && clonedOperation.options.accessCode !== '' && clonedOperation.serviceProviderName === 'Google') {
@@ -375,21 +382,22 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
                               }
                             : undefined,
                         );
+
                         if (importResult.annotjson) {
                           const parConverter = new PartiturConverter();
-                          const partiturOutpt = parConverter.export(importResult.annotjson, audioFile);
+                          const partiturOutput = parConverter.export(importResult.annotjson, audioFile);
 
-                          if (partiturOutpt.file) {
-                            const file = new File([partiturOutpt.file.content], partiturOutpt.file.name, { type: partiturOutpt.file.type });
+                          if (partiturOutput.file) {
+                            const file = new File([partiturOutput.file.content], partiturOutput.file.name, { type: partiturOutput.file.type });
                             await this.deleteLSTASRProject(httpClient, projectName, serviceProvider!, subscrManager);
                             const hash = await getHashString(file);
 
                             resolve({
                               result: {
                                 name: `${hash}.par`,
-                                type: partiturOutpt.file.type,
+                                type: partiturOutput.file.type,
                                 size: file.size,
-                                content: partiturOutpt.file.content,
+                                content: partiturOutput.file.content,
                                 attributes: {
                                   originalFileName: file.name,
                                 },

@@ -215,10 +215,10 @@ export function addOrChangeItemsToState(
                         {
                           ...task.operations[0],
                           rounds: [
-                            {
+                            new StoreTaskOperationProcessingRound({
                               results: task.operations[0].rounds[0].results,
                               status: TaskStatus.PENDING,
-                            },
+                            }),
                           ],
                         },
                         ...task.operations.slice(1),
@@ -262,7 +262,7 @@ export function addOrChangeItemsToState(
                       if (a.name === 'Emu WebApp') {
                         return {
                           ...a,
-                          rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+                          rounds: [new StoreTaskOperationProcessingRound({ status: TaskStatus.SKIPPED, results: [] })],
                         };
                       }
                       return a;
@@ -307,7 +307,7 @@ export function addOrChangeItemsToState(
           if (a.name === 'Emu WebApp') {
             return {
               ...a,
-              rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+              rounds: [new StoreTaskOperationProcessingRound({ status: TaskStatus.SKIPPED, results: [] })],
             };
           }
           return a;
@@ -369,7 +369,7 @@ export function addOrChangeItemsToState(
                   if (a.name === 'Emu WebApp') {
                     return {
                       ...a,
-                      rounds: [{ status: TaskStatus.SKIPPED, results: [] }],
+                      rounds: [new StoreTaskOperationProcessingRound({ status: TaskStatus.SKIPPED, results: [] })],
                     };
                   }
                   return a;
@@ -520,10 +520,10 @@ export function createOperationsByDefaultOperations(
 ): StoreTaskOperation[] {
   return defaultOperations.map((defaultOperation) => {
     let operation = defaultOperation.factory.create(counters.operation, taskID, [
-      {
+      new StoreTaskOperationProcessingRound({
         status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
         results: [],
-      },
+      }),
     ]);
     operation.enabled = defaultOperation.enabled;
     operation = defaultOperation.factory.applyTaskOptions(
@@ -789,10 +789,10 @@ export function addRoundToOperation(
     (operation, itemsState) => {
       const newRound = create
         ? create(operation, itemsState)
-        : {
+        : new StoreTaskOperationProcessingRound({
             status: TaskStatus.PENDING,
             results: [],
-          };
+          });
 
       return {
         ...operation,

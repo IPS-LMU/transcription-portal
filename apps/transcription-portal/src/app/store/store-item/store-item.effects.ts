@@ -17,7 +17,7 @@ import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
 import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
 import { getAllTasks } from '../mode/mode.functions';
-import { StoreTaskOperation, UploadOperationFactory } from '../operation';
+import { StoreTaskOperation, StoreTaskOperationProcessingRound, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
 import {
@@ -407,21 +407,16 @@ export class StoreItemEffects {
               foundOperation = {
                 ...foundOperation,
                 rounds: [
-                  {
+                  new StoreTaskOperationProcessingRound({
                     status: TaskStatus.PENDING,
                     results: [],
-                  },
+                  }),
                 ],
               };
               item = {
                 ...item,
                 status: TaskStatus.UPLOADING,
-                operations: [
-                  {
-                    ...foundOperation,
-                  },
-                  ...item!.operations!.slice(1),
-                ],
+                operations: [foundOperation, ...item!.operations!.slice(1)],
               };
               this.store.dispatch(
                 StoreItemActions.processNextOperation.run({
@@ -798,7 +793,7 @@ export class StoreItemEffects {
                       ...files[i],
                       url: lastOperationRound.results[foundIndex].url,
                       online: true,
-                      blob: undefined
+                      blob: undefined,
                     };
                     foundFile = files[i];
                     somethingFound = true;
@@ -823,14 +818,14 @@ export class StoreItemEffects {
                         {
                           ...task.operations[0],
                           rounds: [
-                            {
+                            new StoreTaskOperationProcessingRound({
                               status: TaskStatus.FINISHED,
                               results: [
                                 ...otherItemUploadOperationRound!.results!.slice(0, foundIndex),
                                 foundFile,
                                 ...otherItemUploadOperationRound!.results!.slice(foundIndex + 1),
                               ],
-                            },
+                            }),
                           ],
                         },
                         ...task.operations.slice(1),
@@ -1000,10 +995,10 @@ export class StoreItemEffects {
                   operation: {
                     ...uploadOperation,
                     rounds: [
-                      {
+                      new StoreTaskOperationProcessingRound({
                         status: TaskStatus.PENDING,
                         results: [],
-                      },
+                      }),
                     ],
                   },
                 }),
@@ -1247,7 +1242,7 @@ export class StoreItemEffects {
               const oAnnotJSON = OAnnotJSON.deserialize(importResult.annotjson);
 
               if (oAnnotJSON) {
-                const exportResult = exportConverter.export(oAnnotJSON, audiofile, 0);
+                const exportResult = exportConverter.export(oAnnotJSON, audiofile);
 
                 if (exportResult.file && !exportResult.error) {
                   annotation = exportResult.file;

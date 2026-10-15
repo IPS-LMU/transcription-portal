@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { PartiturConverter, TextConverter } from '@octra/annotation';
+import { PartiturConverter, SRTConverter, SRTConverterExportOptions } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
@@ -13,6 +13,7 @@ import { StoreAudioFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from 
 import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
+import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
 
 export interface SummarizationOperationOptions {
@@ -120,9 +121,12 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
           audiofile.size = audioinfo.size;
           const { extension } = FileInfo.extractFileName(transcriptFile.name);
 
-          if (extension === '.txt') {
+          if (extension === '.srt') {
+            transcript = content;
+          } else if (extension === '.txt') {
             transcript = content;
           } else {
+            // partitur
             const converter = new PartiturConverter();
             const imported = converter.import(
               {
@@ -133,7 +137,15 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
               },
               audiofile,
             );
-            transcript = new TextConverter().export(imported.annotjson!, audiofile, 0).file!.content;
+            const asrOperation = storeItemTask.operations[1] as ASROperation;
+
+            if (asrOperation.options.diarization?.enabled) {
+              const needsOptions = new SRTConverter().needsOptionsForExport(imported.annotjson!, audiofile);
+              const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
+              transcript = new SRTConverter().export(imported.annotjson!, audiofile, srtOptions).file!.content;
+            } else {
+              transcript = new SRTConverter().export(imported.annotjson!, audiofile).file!.content;
+            }
           }
 
           const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
@@ -142,7 +154,7 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
             projectName = await this.createSummarizationProject(httpClient, serviceProvider!, subscrManager);
 
             await this.uploadFile(
-              new File([transcript], `${projectName}.txt`, {
+              new File([transcript], `${projectName}.srt`, {
                 type: 'text/plain',
               }),
               httpClient,

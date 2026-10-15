@@ -5,6 +5,7 @@ import { IDBOperation } from '../../../indexedDB';
 import { EmuWebAppOutMessageEventData, WindowMessageCommandLoad, WindowMessageCommandLoadParams } from '../../../obj/emu-webapp.types';
 import { OctraWindowMessageEventData, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { TPortalModes } from '../../mode';
 import { convertStoreOperationToIDBOperation } from '../operation.functions';
 import { ToolOperationFactory } from './operation-factory';
 import { FileInfo } from '@octra/web-media';
@@ -46,7 +47,7 @@ export class EmuOperationFactory extends ToolOperationFactory<EmuOperation> {
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, httpClient: HttpClient): Promise<string> {
+  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, mode: TPortalModes, httpClient: HttpClient): Promise<string> {
     const urlParams: {
       listenForMessages: boolean;
     } = {

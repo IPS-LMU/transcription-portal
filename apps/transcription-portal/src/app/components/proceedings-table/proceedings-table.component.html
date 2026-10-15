@@ -43,7 +43,7 @@
           (change)="selectedProcessingRoundChange($event)"
         >
           @if (popover.operationRounds) {
-            @for (elem of popover.operationRounds; track elem) {
+            @for (elem of popover.operationRounds; track elem.id) {
               <option [value]="popover.operationRounds.length - 1 - $index" (click)="disableClick($event)">
                 @if ($index > 0) {
                   v{{ popover.operationRounds.length - $index }}
@@ -102,17 +102,15 @@
           </a>
         </div>
         <div class="flex flex-column flex-auto">
-          <div class="px-3 pt-1 estimated-time">
-            ET: {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}
-          </div>
+          <div class="px-3 pt-1 estimated-time">ET: {{ calculateDuration(popover.lastOperationRound.time, popover.operation) | time: 'true' }}</div>
           <div class="service-remarks px-3 py-0">
             <tportal-text-carousel
               class="d-flex flex-column flex-auto text-center"
               [messages]="[
-              'popovers.results.service remarks.processing time' | transloco,
-              'popovers.results.service remarks.about the result' | transloco,
-              getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy ?? '',
-            ]"
+                'popovers.results.service remarks.processing time' | transloco,
+                'popovers.results.service remarks.about the result' | transloco,
+                getServerProvider(popover.operation.serviceProviderName)?.dataStoragePolicy ?? '',
+              ]"
             ></tportal-text-carousel>
           </div>
         </div>
@@ -125,7 +123,7 @@
       }
 
       <div ngbAccordion class="results-table-accordion" [closeOthers]="true" [destroyOnHide]="true" (shown)="onResultsTableItemShown($event)">
-        @if (popover.lastOperationRound.status!== 'ERROR') {
+        @if (popover.lastOperationRound.status !== 'ERROR') {
           @if (
             popover.lastOperationRound.time !== undefined &&
             popover.lastOperationRound.time.start !== undefined &&
@@ -278,18 +276,17 @@
                 <td class="ps-3">{{ 'g.asr provider' | transloco }}:</td>
                 <td>{{ popover.task.operations[1].serviceProviderName }}</td>
               </tr>
+              @if (popover.task.operations[1].options.diarization?.enabled) {
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.diarization.name' | transloco }}:</td>
+                  <td>Yes</td>
+                </tr>
+                <tr>
+                  <td class="ps-3">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</td>
+                  <td>{{ popover.task.operations[1].options.diarization?.speakers }}</td>
+                </tr>
+              }
               @if (modeStoreService.currentMode === 'annotation') {
-                @if (popover.task.operations[1].options.diarization?.enabled) {
-                  <tr>
-                    <td class="ps-3">{{ 'modals.check options.options.diarization.name' | transloco }}:</td>
-                    <td>Enabled</td>
-                  </tr>
-                  <tr>
-                    <td class="ps-3">{{ 'modals.check options.options.number of speakers.name' | transloco }}:</td>
-                    <td>{{ popover.task.operations[1].options.diarization?.speakers }}</td>
-                  </tr>
-                }
-
                 @if (popover.task.operations[3].enabled) {
                   <tr>
                     <td class="ps-3">{{ 'modals.check options.options.word alignment language.name' | transloco }}:</td>
@@ -299,14 +296,14 @@
               } @else if (modeStoreService.currentMode === 'summarization') {
                 @if (popover.task.operations[3].enabled) {
                   <tr>
-                    <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
-                    <td>{{ popover.task.operations[3].options.maxNumberOfWords }}</td>
+                    <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
+                    <td>{{ popover.task.operations[3].options.language }}</td>
                   </tr>
                 }
                 @if (popover.task.operations[4].enabled) {
                   <tr>
-                    <td class="ps-3">{{ 'modals.check options.options.translation language.name' | transloco }}:</td>
-                    <td>{{ popover.task.operations[4].options.language }}</td>
+                    <td class="ps-3">{{ 'modals.check options.options.number of words.name' | transloco }}:</td>
+                    <td>{{ popover.task.operations[4].options.maxNumberOfWords }}</td>
                   </tr>
                 }
               }
@@ -470,9 +467,12 @@
   }
   @if (operations !== undefined && operations !== null) {
     <!-- Big proceedings table -->
-    <table class="table table-striped fixed-table-layout" [ngStyle]="{
-            '--bs-table-bg': backgroundColor !== undefined ? backgroundColor : 'initial'
-          }">
+    <table
+      class="table table-striped fixed-table-layout"
+      [ngStyle]="{
+        '--bs-table-bg': backgroundColor !== undefined ? backgroundColor : 'initial',
+      }"
+    >
       <!-- TABLE HEADER -->
       <thead>
         <tr class="tableHeaderTop">

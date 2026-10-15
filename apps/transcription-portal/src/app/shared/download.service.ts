@@ -4,13 +4,7 @@ import { OAudiofile } from '@octra/media';
 import { FileInfo } from '@octra/web-media';
 import { AppInfo, ConverterData } from '../app.info';
 import { TPortalFileInfo } from '../obj/TPortalFileInfoAttributes';
-import {
-  StoreAudioFile,
-  StoreFile,
-  StoreItemTask,
-  StoreTaskOperation,
-  StoreTaskOperationProcessingRound,
-} from '../store';
+import { StoreAudioFile, StoreFile, StoreItemTask, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../store';
 import { convertStoreAudioFileToAudioInfo } from '../store/store-item/store-item.functions';
 
 @Injectable({
@@ -63,19 +57,21 @@ export class DownloadService {
       }
 
       Promise.all(promises)
-        .then((values: {
-          converter: ConverterData;
-          result: TPortalFileInfo | undefined;
-        }[]) => {
-          values = this.sortConvertedFiles(values);
-          resolve(values.filter((a: {
-            converter: ConverterData;
-            result: TPortalFileInfo | undefined;
-          }) => a.result !== undefined).map((a: {
-            converter: ConverterData;
-            result: TPortalFileInfo | undefined;
-          }) => a.result) as TPortalFileInfo[]);
-        })
+        .then(
+          (
+            values: {
+              converter: ConverterData;
+              result: TPortalFileInfo | undefined;
+            }[],
+          ) => {
+            values = this.sortConvertedFiles(values);
+            resolve(
+              values
+                .filter((a: { converter: ConverterData; result: TPortalFileInfo | undefined }) => a.result !== undefined)
+                .map((a: { converter: ConverterData; result: TPortalFileInfo | undefined }) => a.result) as TPortalFileInfo[],
+            );
+          },
+        )
         .catch((error) => {
           reject(error);
         });
@@ -157,8 +153,9 @@ export class DownloadService {
         }
 
         if (annotJSON) {
-          const levelnum = this.getLevelNumforConverter(converter, annotJSON);
-          const conversion = converter.obj.export(annotJSON, audiofile, levelnum);
+          const needsExportOptions = converter.obj.needsOptionsForExport(annotJSON, audiofile);
+          const exportOptions = converter.obj.getDefaultOptions(needsExportOptions);
+          const conversion = converter.obj.export(annotJSON, audiofile, exportOptions);
 
           if (conversion?.file) {
             const file: File = TPortalFileInfo.getFileFromContent(

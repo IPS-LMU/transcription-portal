@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { AnnotationLevelType, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
+import { AnnotationLevelType, ExportResult, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { hasProperty, stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
 import { downloadFile, FileInfo } from '@octra/web-media';
@@ -12,7 +12,6 @@ import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operat
 import { convertStoreOperationToIDBOperation } from '../operation.functions';
 import { ToolOperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
-import { transactions } from 'jodit/types/core/selection/style/transactions';
 
 export type OctraOperation = StoreTaskOperation<any, OctraOperation>;
 
@@ -53,7 +52,13 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, httpClient: HttpClient): Promise<string> {
+  public async getToolURL(
+    audioFile: StoreAudioFile,
+    transcriptFile: StoreFile | undefined,
+    firstRevision: boolean,
+    mode: 'annotation' | 'summarization',
+    httpClient: HttpClient,
+  ): Promise<string> {
     if (audioFile?.online && audioFile?.url) {
       const serviceProvider = AppSettings.getServiceInformation('BAS')!;
       const audio_url = encodeURIComponent(audioFile.url);
@@ -96,6 +101,8 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
             oAudio,
           );
 
+          let result: ExportResult | undefined = undefined;
+
           if (importResult && importResult.annotjson) {
             for (const level of importResult.annotjson.levels as OSegmentLevel<OSegment>[]) {
               if (level.type === AnnotationLevelType.SEGMENT) {
@@ -125,7 +132,8 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
               }
             }
 
-            const result = new PartiturConverter().export(importResult.annotjson, oAudio);
+            result = new PartiturConverter().export(importResult.annotjson, oAudio);
+
             if (result?.file) {
               const newFile = new File([result.file.content], transcriptFile.name, { type: result.file.type });
               transcript = await this.upload(
@@ -191,7 +199,6 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
     audioFile: StoreAudioFile,
     transcriptFile: StoreFile | undefined,
   ): Promise<OctraWindowMessageEventData | undefined> {
-
     if ($event.data.data !== undefined && hasProperty($event.data, 'data')) {
       if (hasProperty($event.data, 'status') && $event.data.status === 'success' && hasProperty($event.data.data, 'annotation')) {
         return $event.data;

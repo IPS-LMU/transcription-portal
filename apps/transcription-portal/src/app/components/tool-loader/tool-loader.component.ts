@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnChanges, Output, SimpleChanges, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { wait } from '@octra/utilities';
-import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory } from '../../store';
+import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory, ModeStoreService } from '../../store';
 
 @Component({
   selector: 'tportal-tool-loader',
@@ -14,6 +14,7 @@ import { OctraWindowMessageEventData, ParsedOpenedTool, ToolOperationFactory } f
 export class ToolLoaderComponent implements OnChanges {
   private sanitizer = inject(DomSanitizer);
   private httpClient = inject(HttpClient);
+  private modeService = inject(ModeStoreService);
 
   @ViewChild('iframe', { static: false }) iframe?: ElementRef;
 
@@ -55,7 +56,8 @@ export class ToolLoaderComponent implements OnChanges {
               openedTool.audioFile,
               openedTool.transcript,
               openedTool.operation.rounds[0].status === 'PROCESSING',
-              this.httpClient,
+              this.modeService.currentMode!,
+              this.httpClient
             );
 
             this.error = undefined;

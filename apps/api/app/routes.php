@@ -17,7 +17,7 @@ $lstClient = new Client([
   // Base URI is used with relative requests
   'base_uri' => SUMMARIZATION_HOST,
   // You can set any number of default request options.
-  'timeout' => 2.0,
+  'timeout' => 10.0,
   "auth" => [SUMMARIZATION_USER, SUMMARIZATION_PASSWORD]
 ]);
 
@@ -551,6 +551,66 @@ return function (App $app) {
 
   /***
    * ASR LST ---------------------- END --------------------------------
+   */
+
+
+
+  /***
+   * TRANSLATION LST ---------------------- START --------------------------------
+   */
+
+  /**
+   * redirects the translation request with a given API token.
+   * body: {
+   *    q: text,
+   *    source,
+   *    target: operation.options.language,
+   *    format: 'text',
+   *    alternatives: 1
+   * }
+   */
+  $app->post('/translation/lst/translate', function (Request $request, Response $response) {
+    // translations of long texts may exceed PHP's default max_execution_time of 30s
+    set_time_limit(150);
+    $lstClient = new Client([
+      // Base URI is used with relative requests
+      'base_uri' => TRANSLATION_HOST,
+      // You can set any number of default request options.
+      'timeout' => 120.0,
+      'http_errors' => false
+    ]);
+
+    $response = $response->withHeader('Content-Type', 'application/json');
+
+    try {
+      $parsedBody = $request->getParsedBody();
+      $parsedBody["api_key"] = TRANSLATION_API_KEY;
+      // send as JSON: form_params would encode an array "q" as q[0]=…&q[1]=…, which LibreTranslate rejects with 400
+      $result = $lstClient->post('translate',
+        [
+          'json' => $parsedBody
+        ]);
+
+      $response = $response->withStatus($result->getStatusCode());
+
+      if ($result->getStatusCode() === 200) {
+        $response->getBody()->write($result->getBody()->getContents());
+      } else {
+        $response->getBody()->write(json_encode(array("status" => "failed", "message" => $result->getBody()->getContents())));
+      }
+    } catch (GuzzleException $err) {
+      // Guzzle's stream handler hides the real cause behind "Connection refused", so append PHP's last error.
+      $lastError = error_get_last();
+      $message = $err->getMessage() . ($lastError !== null ? " (" . $lastError["message"] . ")" : "");
+      $response = $response->withStatus($err->getCode() >= 400 ? $err->getCode() : 502);
+      $response->getBody()->write(json_encode(array("status" => "failed", "message" => $message)));
+    }
+
+    return $response;
+  });
+
+  /***
+   * TRANSLATION LST ---------------------- END --------------------------------
    */
 };
 

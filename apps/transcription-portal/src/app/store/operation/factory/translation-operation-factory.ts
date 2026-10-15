@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { convertFromSupportedConverters, ImportResult, TextConverter } from '@octra/annotation';
+import { convertFromSupportedConverters, ImportResult, OAnnotJSON, OSegment, SRTConverter, SRTConverterExportOptions } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { SubscriptionManager, wait } from '@octra/utilities';
+import { joinURL, SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, retry, Subject, Subscription } from 'rxjs';
 import { AppInfo } from '../../../app.info';
 import { IDBOperation } from '../../../indexedDB';
 import { convertISO639Language } from '../../../obj/functions';
+import { AppSettings } from '../../../shared/app.settings';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
 import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
@@ -95,6 +96,11 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       try {
         if (lastResult?.content && audioinfo) {
           let content = lastResult.content;
+          let transcripts: {
+            level: number;
+            sampleStart: number;
+            value: string;
+          }[] = [];
           const audiofile = new OAudiofile();
           audiofile.duration = audioinfo.duration;
           audiofile.name = audioinfo.attributes?.originalFileName ?? audioinfo.name;
@@ -102,7 +108,9 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
           audiofile.size = audioinfo.size;
 
           const { extension } = FileInfo.extractFileName(lastResult.name);
-          if (extension !== '.txt') {
+          let newAnnotJSON: OAnnotJSON | undefined = undefined;
+
+          if (extension !== '.srt') {
             const importResult: ImportResult | undefined = convertFromSupportedConverters(
               AppInfo.converters.map((a) => a.obj),
               {
@@ -118,31 +126,89 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
               subj.error(new Error("Can't convert last result from a previous operation."));
               return;
             } else {
-              const textExport = new TextConverter().export(importResult.annotjson, audiofile, 0);
+              const needsOptions = new SRTConverter().needsOptionsForExport(importResult.annotjson, audiofile);
+              const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
+              const textExport = new SRTConverter().export(importResult.annotjson, audiofile, srtOptions);
 
               if (textExport?.file && !textExport.error) {
-                content = textExport.file.content;
+                newAnnotJSON = new SRTConverter().import(
+                  textExport.file,
+                  audiofile,
+                  importResult.annotjson.levels.length > 1
+                    ? {
+                        speakerIdentifierPattern: '\\[([^\\]]+)\\]\\s*:\\s*',
+                        sortSpeakerSegments: true,
+                        combineSegmentsWithSameSpeakerThreshold: 1000,
+                      }
+                    : {
+                        sortSpeakerSegments: false,
+                        combineSegmentsWithSameSpeakerThreshold: 1000,
+                      },
+                )?.annotjson;
+                transcripts = [];
+
+                for (let i = 0; i < (newAnnotJSON?.levels ?? []).length; i++) {
+                  const tempElem = newAnnotJSON!.levels[i];
+
+                  transcripts.push(
+                    ...tempElem.items
+                      .map((a: any) => ({
+                        level: i,
+                        sampleStart: (a as OSegment).sampleStart,
+                        value: a.getFirstLabelWithoutName('Speaker')!.value!,
+                      }))
+                      .filter((a: any) => a.value && a.value !== ''),
+                  );
+                }
+
+                transcripts.sort((a, b) => a.sampleStart - b.sampleStart);
               } else {
                 subj.error(new Error("Can't convert last result from a previous operation to a text file."));
                 return;
               }
             }
+          } else {
+            // TODO continue here
           }
 
-          this.getTranslation(httpClient, content, storeItemTask, clonedOperation, subscrManager)
+          this.getTranslation(httpClient, transcripts, storeItemTask, clonedOperation, subscrManager)
             .then((result) => {
+              const translations: any[] = result.translatedText;
               const { name } = FileInfo.extractFileName(lastResult.name);
+              const annotJSON = OAnnotJSON.deserialize(newAnnotJSON!.serialize())!;
+              const needsOptions = new SRTConverter().needsOptionsForExport(annotJSON, audiofile);
+              const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
+
+              // TODO combine using SRT same speaker on same level
+              console.log('TRANSLATIONS');
+              console.log(translations);
+
+              for (let i = 0; i < translations.length; i++) {
+                const translation = translations[i];
+                const original = transcripts[i];
+                const levelIndex = original.level;
+                const level = annotJSON.levels[levelIndex];
+                const index = level?.items?.findIndex((a: any) => a.sampleStart === original.sampleStart);
+
+                if (level && index > -1) {
+                  (level.items[index] as OSegment).replaceFirstLabelWithoutName('Speaker', (value) => translation);
+                } else {
+                  subj.error(new Error(`Translation mapping error. Can\`t find item with sample start ${translation.sampleStart}));`));
+                  return;
+                }
+              }
+
               currentRound = {
                 ...currentRound,
                 results: [
                   {
-                    name: name + '.txt',
+                    name: name + '.srt',
                     type: 'text/plain',
                     size: lastResult.size,
                     blob: undefined,
-                    content: result.translatedText,
+                    content: new SRTConverter().export(annotJSON, audiofile, srtOptions).file?.content,
                     attributes: {
-                      originalFileName: name + '.txt',
+                      originalFileName: name + '.srt',
                     },
                     hash: '',
                   },
@@ -156,14 +222,14 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
               this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
               subj.complete();
             })
-            .catch((err) => {
-              subj.error(err);
+            .catch((e) => {
+              subj.error(new Error(e?.error?.error?.description ?? e?.error?.message ?? e?.message));
             });
         } else {
-          subj.error(new Error('Can#t find transcript for translation'));
+          subj.error(new Error("Can't find transcript for translation"));
         }
       } catch (e: any) {
-        subj.error(new Error(e?.error?.message ?? e?.message));
+        subj.error(new Error(e?.error?.error?.description ?? e?.error?.message ?? e?.message));
       }
     });
 
@@ -172,7 +238,11 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
 
   private async getTranslation(
     httpClient: HttpClient,
-    text: string,
+    transcripts: {
+      level: number;
+      sampleStart: number;
+      value: string;
+    }[],
     storeItemTask: StoreItemTask,
     operation: StoreTaskOperation,
     subscrManager: SubscriptionManager<Subscription>,
@@ -187,18 +257,23 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
           source = 'en';
         }
       }
+      const serviceProvider = AppSettings.getServiceInformation(operation.serviceProviderName);
+
+      if (!serviceProvider) {
+        reject(new Error("Can't find service information."));
+        return;
+      }
 
       subscrManager.add(
         httpClient
           .post(
-            'https://translate.cls.ru.nl/translate',
+            joinURL(serviceProvider.host, '/translate'),
             {
-              q: text,
+              q: transcripts.map((a) => a.value),
               source,
               target: operation.options.language,
               format: 'text',
-              alternatives: 1,
-              api_key: '',
+              alternatives: 0,
             },
             {
               headers: {
@@ -206,6 +281,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
               },
             },
           )
+          .pipe(retry({ count: 3, delay: 2000 }))
           .subscribe({
             next: resolve,
             error: reject,
