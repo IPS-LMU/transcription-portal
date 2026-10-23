@@ -240,32 +240,6 @@ export const getTaskReducers = (
 
     return state;
   }),
-  on(StoreItemActions.removeTaskOrFolder.do, (state: ModeState, { item }) => {
-    const removedItemsState = taskAdapter.removeOne(item.id, state.entities[state.currentMode]!.items);
-
-    state = modeAdapter.updateOne(
-      {
-        id: state.currentMode,
-        changes: {
-          items: taskAdapter.updateMany(
-            removedItemsState.ids
-              .filter((a) => a !== undefined)
-              .map((id) => ({
-                id: id as number,
-                changes: {
-                  selected: false,
-                },
-              })),
-            removedItemsState,
-          ),
-        },
-      },
-      state,
-    );
-
-    state = updateStatistics(state, state.currentMode!);
-    return state;
-  }),
   on(StoreItemActions.processNextStoreItem.do, (state: ModeState, { mode }) => updateStatistics(state, mode)),
   on(StoreItemActions.changeProcessingOptionsForEachQueuedTask.do, (state: ModeState, { options }): ModeState => {
     const currentMode = state.entities[state.currentMode]!;
@@ -522,7 +496,7 @@ export const getTaskReducers = (
   on(StoreItemActions.setSelectedItems.do, (state: ModeState, { ids }): ModeState => {
     return setSelection(ids, true, state, modeAdapter, taskAdapter, true);
   }),
-  on(StoreItemActions.removeStoreItems.do, (state: ModeState, { ids }): ModeState => {
+  on(StoreItemActions.removeStoreItems.success, (state: ModeState, { ids }): ModeState => {
     state = modeAdapter.updateOne(
       {
         id: state.currentMode,

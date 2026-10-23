@@ -18,7 +18,7 @@ import { convertISO639Language } from '../../../obj/functions';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
@@ -61,13 +61,13 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     storeItemTask: StoreItemTask,
     operation: TranslationOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     const octraOperation = storeItemTask.operations.find((a) => a.name === 'OCTRA')!;
     const subj = new Subject<{ operation: TranslationOperation }>();
 
-    subscrManager.add(
+    subscrManager.addSubscription(
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
           if (item?.disabled || item?.stopRequested) {
@@ -296,7 +296,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     }[],
     storeItemTask: StoreItemTask,
     operation: StoreTaskOperation,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ) {
     return new Promise<any>((resolve, reject) => {
       let source: string | undefined = 'en';
@@ -315,7 +315,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
         return;
       }
 
-      subscrManager.add(
+      subscrManager.addSubscription(
         httpClient
           .post(
             joinURL(serviceProvider.host, '/translate'),

@@ -16,8 +16,8 @@ import { RootState } from '../app';
 import { IDBActions, IDBLoadedResults } from '../idb/idb.actions';
 import { TPortalModes } from '../mode';
 import { modeAdapter, taskAdapter } from '../mode/mode.adapters';
-import { getAllTasks } from '../mode/mode.functions';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound, UploadOperationFactory } from '../operation';
+import { doTaskGarbageCollection, getAllTasks } from '../mode/mode.functions';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound, UploadOperationFactory } from '../operation';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../operation/operation.functions';
 import { PreprocessingActions } from '../preprocessing/preprocessing.actions';
 import {
@@ -45,7 +45,7 @@ import { OctraWindowMessageEventData, StoreItemsState } from './store-items-stat
 @Injectable()
 export class StoreItemEffects {
   private actions$ = inject(Actions);
-  private store = inject(Store);
+  private store: Store<RootState> = inject(Store<RootState>);
   protected httpClient = inject(HttpClient);
   protected notificationService = inject(NotificationService);
 
@@ -265,6 +265,7 @@ export class StoreItemEffects {
         StoreItemActions.markValidQueuedTasksAsPending.success, // add from queue
         StoreItemActions.resetOperation.success,
         StoreItemActions.importItemsFromProcessingQueue.success,
+        StoreItemActions.removeStoreItems.success,
       ),
       withLatestFrom(this.store),
       filter(([action, state]: [any, RootState]) => {
@@ -519,6 +520,33 @@ export class StoreItemEffects {
     { dispatch: false },
   );
 
+  removeStoreItems$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(StoreItemActions.removeStoreItems.do),
+      withLatestFrom(this.store),
+      exhaustMap(([action, state]) => {
+        const currentMode = state.modes.entities[state.modes.currentMode]!;
+
+        doTaskGarbageCollection(
+          state.modes.currentMode,
+          currentMode.items,
+          currentMode.defaultOperations,
+          action.ids,
+          this.httpClient,
+          this.subscrManager,
+        ).catch((err) => {
+          console.error(err);
+        });
+
+        return of(
+          StoreItemActions.removeStoreItems.success({
+            ids: action.ids,
+          }),
+        );
+      }),
+    ),
+  );
+
   /**
    * this event is triggered after an operation was checked successfully.
    */
@@ -563,17 +591,27 @@ export class StoreItemEffects {
           if (runOperation) {
             if (!['OCTRA', 'Emu WebApp'].includes(defaultOperation.factory.name)) {
               // operation is not of type OCTRA or EMU webApp
-              const opTicket = `mode[${mode}];task[${taskID}];op[${operation.id}];date[${Date.now()}]`;
-              const opSubscrManager = new SubscriptionManager();
+              const opTicket = `mode[${mode}];task[${taskID}];op[${operation.id}]`;
               const itemObservable = this.listenForItemChanges(taskID, mode);
+              const opSubscriptionManager: OperationSubscriptionManager = {
+                addSubscription: (subscription: Subscription, tag?: string) => {
+                  this.subscrManager.add(subscription, tag ? `${opTicket};${tag}` : undefined);
+                },
+                removeByTag: (tag) => {
+                  this.subscrManager.removeByTag(`${opTicket};${tag}`);
+                },
+                destroy: () => {
+                  this.subscrManager.removeByIncludedTag(opTicket);
+                },
+              };
               this.subscrManager.add(
-                defaultOperation.factory.run(item, operation, this.httpClient, opSubscrManager, itemObservable).subscribe({
+                defaultOperation.factory.run(item, operation, this.httpClient, opSubscriptionManager, itemObservable).subscribe({
                   next: (event) => {
                     const lastRoundEvent = getLastOperationRound(event.operation);
 
                     if (lastRoundEvent) {
                       if ([TaskStatus.ERROR, TaskStatus.FINISHED].includes(lastRoundEvent.status)) {
-                        opSubscrManager.destroy();
+                        opSubscriptionManager.destroy();
                       }
                       if (lastRoundEvent.status === 'FINISHED') {
                         this.subscrManager.add(
@@ -607,7 +645,7 @@ export class StoreItemEffects {
                           error: 'Operation does return an empty list of rounds.',
                         }),
                       );
-                      opSubscrManager.destroy();
+                      opSubscriptionManager.destroy();
                     }
                   },
                   error: (err) => {
@@ -620,7 +658,7 @@ export class StoreItemEffects {
                         error: typeof err === 'string' ? err : err.message,
                       }),
                     );
-                    opSubscrManager.destroy();
+                    opSubscriptionManager.destroy();
                   },
                 }),
                 opTicket,
@@ -1026,7 +1064,6 @@ export class StoreItemEffects {
                 },
               );
             } else {
-              (async () => {})();
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
               if (getLastOperationRound(operation)?.status === 'FINISHED') {

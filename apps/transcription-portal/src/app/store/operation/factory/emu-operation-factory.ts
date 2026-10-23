@@ -4,7 +4,7 @@ import { Observable, Subscription, throwError } from 'rxjs';
 import { IDBOperation } from '../../../indexedDB';
 import { EmuWebAppOutMessageEventData, WindowMessageCommandLoad, WindowMessageCommandLoadParams } from '../../../obj/emu-webapp.types';
 import { OctraWindowMessageEventData, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { TPortalModes } from '../../mode';
 import { convertStoreOperationToIDBOperation } from '../operation.functions';
 import { ToolOperationFactory } from './operation-factory';
@@ -41,7 +41,7 @@ export class EmuOperationFactory extends ToolOperationFactory<EmuOperation> {
     storeItemTask: StoreItemTask,
     operation: EmuOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));

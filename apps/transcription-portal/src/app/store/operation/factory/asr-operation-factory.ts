@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { PartiturConverter, SRTConverter } from '@octra/annotation';
 import { ServiceProvider } from '@octra/ngx-components';
-import { extractFileNameFromURL, joinURL, stringifyQueryParams, SubscriptionManager, wait } from '@octra/utilities';
+import { extractFileNameFromURL, joinURL, stringifyQueryParams, wait } from '@octra/utilities';
 import { downloadFile, FileInfo } from '@octra/web-media';
-import { from, interval, Observable, retry, Subject, Subscription } from 'rxjs';
+import { from, interval, Observable, retry, Subject } from 'rxjs';
 import * as UUID from 'uuid';
 import X2JS from 'x2js';
 import { SUPPORTED_LANGUAGES } from '../../../app.info';
@@ -12,7 +12,7 @@ import { AppSettings } from '../../../shared/app.settings';
 import { getEscapedFileName, getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
 import { convertFileInfoToStoreFile } from '../../store-item/store-item.functions';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
@@ -26,9 +26,15 @@ export interface ASROperationOptions {
   accessCode?: string;
 }
 
-export type ASROperation = StoreTaskOperation<ASROperationOptions, ASROperation>;
+export interface ASROperationContext {
+  lst?: {
+    projectName?: string;
+  };
+}
 
-export class ASROperationFactory extends OperationFactory<ASROperation, ASROperationOptions> {
+export type ASROperation = StoreTaskOperation<ASROperationOptions, ASROperationContext>;
+
+export class ASROperationFactory extends OperationFactory<ASROperation, ASROperationOptions, ASROperationContext> {
   protected readonly _description =
     'Speech Recognition will attempt to extract the verbatim content of an audio recording.' +
     'The result of this process is a text file with a literal transcription of the audio file. \n' +
@@ -65,24 +71,25 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     task: StoreItemTask,
     operation: ASROperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> => {
     const subj = new Subject<{
       operation: ASROperation;
     }>();
 
-    subscrManager.add(
+    subscrManager.addSubscription(
       item$.subscribe({
-        next: (item: StoreItemTask | undefined) => {
+        next: async (item: StoreItemTask | undefined) => {
           if (item?.disabled || item?.stopRequested) {
+            await this.runGarbageCollection(item, operation, httpClient, subscrManager);
             subscrManager.destroy();
           }
         },
       }),
     );
 
-    subscrManager.add(
+    subscrManager.addSubscription(
       from(wait(1)).subscribe({
         next: () => {
           const audioFile: StoreAudioFile | undefined = (task.files?.find((a) => a.type.includes('audio')) ??
@@ -117,12 +124,12 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
               | undefined;
 
             if (clonedOperation.serviceProviderName === 'LSTWhisperX') {
-              callASRSubj = from(this.callASRFromRadboud(httpClient, audioFile, clonedOperation, subscrManager));
+              callASRSubj = from(this.callASRFromRadboud(httpClient, audioFile, clonedOperation, subscrManager, currentRound, subj));
             } else {
               callASRSubj = from(this.callASRFromBASWebservices(httpClient, audioFile, clonedOperation, subscrManager));
             }
 
-            subscrManager.add(
+            subscrManager.addSubscription(
               callASRSubj.subscribe({
                 next: async ({ result, warnings }) => {
                   let asrResult = result;
@@ -234,7 +241,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     httpClient: HttpClient,
     input: StoreAudioFile,
     clonedOperation: ASROperation,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ): Promise<{
     result: StoreFile;
     warnings?: string;
@@ -267,7 +274,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
           url += `&ACCESSCODE=${clonedOperation.options.accessCode}`;
         }
 
-        subscrManager.add(
+        subscrManager.addSubscription(
           httpClient
             .post(
               url,
@@ -337,7 +344,11 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     httpClient: HttpClient,
     audioFile: StoreAudioFile,
     clonedOperation: StoreTaskOperation,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
+    currentRound: StoreTaskOperationProcessingRound,
+    subj: Subject<{
+      operation: ASROperation;
+    }>,
   ): Promise<{
     result: StoreFile;
     warnings?: string;
@@ -347,6 +358,15 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       if (audioFile) {
         // 1. Create a new project with unique ID
         const projectName = await this.createLSTASRProject(httpClient, serviceProvider!, subscrManager);
+        clonedOperation = {
+          ...clonedOperation,
+          context: {
+            lst: {
+              projectName,
+            },
+          },
+        };
+        this.sendOperationWithUpdatedRound(subj, clonedOperation, currentRound);
         await wait(1);
         // 2. Upload files
         await this.uploadFileToLST(audioFile, httpClient, projectName, serviceProvider!, subscrManager);
@@ -356,7 +376,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
           result: StoreFile;
           warnings?: string;
         }>((resolve, reject) => {
-          subscrManager.add(
+          subscrManager.addSubscription(
             interval(5000).subscribe({
               next: async () => {
                 if (clonedOperation.serviceProviderName) {
@@ -447,7 +467,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     asrResult: StoreFile,
     audioFile: StoreAudioFile,
     clonedOperation: ASROperation,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ): Promise<{
     result: StoreFile;
     warnings?: string;
@@ -457,7 +477,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
       warnings?: string;
     }>((resolve, reject) => {
       new Promise<string>((resolve2, reject2) => {
-        subscrManager.add(
+        subscrManager.addSubscription(
           UploadOperationFactory.upload([asrResult], httpClient).subscribe({
             next: (event) => {
               if (event.type === 'loadend') {
@@ -482,7 +502,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
             .replace('{{asrType}}', `${asrService.provider}`)
             .replace('{{language}}', clonedOperation.options.language!);
 
-          subscrManager.add(
+          subscrManager.addSubscription(
             httpClient
               .post(
                 url,
@@ -552,11 +572,11 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     });
   }
 
-  private createLSTASRProject = async (httpClient: HttpClient, asrProvider: ServiceProvider, subscrManager: SubscriptionManager<Subscription>) => {
+  private createLSTASRProject = async (httpClient: HttpClient, asrProvider: ServiceProvider, subscrManager: OperationSubscriptionManager) => {
     return new Promise<string>((resolve, reject) => {
       const projectName = `tportal_session_${UUID.v7().replace(/-/g, '')}`;
 
-      subscrManager.add(
+      subscrManager.addSubscription(
         httpClient
           .post(
             joinURL(asrProvider.host, '/project/create'),
@@ -581,7 +601,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     httpClient: HttpClient,
     projectName: string,
     serviceProvider: ServiceProvider,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ) => {
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
@@ -598,7 +618,7 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
         return;
       }
       formData.append('projectName', projectName);
-      subscrManager.add(
+      subscrManager.addSubscription(
         httpClient.post(joinURL(serviceProvider.host, '/project/upload'), formData).subscribe({
           next: () => resolve(),
           error: reject,
@@ -612,11 +632,11 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     projectName: string,
     clonedOperation: ASROperation,
     serviceProvider: ServiceProvider,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ) => {
     return new Promise<void>((resolve, reject) => {
       if (clonedOperation.options.language) {
-        subscrManager.add(
+        subscrManager.addSubscription(
           httpclient
             .post(
               joinURL(serviceProvider.host, '/project/process'),
@@ -673,10 +693,10 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     httpclient: HttpClient,
     projectName: string,
     serviceProvider: ServiceProvider,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
   ) => {
     return new Promise<void>((resolve, reject) => {
-      subscrManager.add(
+      subscrManager.addSubscription(
         httpclient
           .delete(joinURL(serviceProvider.host, '/project'), {
             responseType: 'json',
@@ -698,5 +718,25 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
     result.language = operation.options.language;
 
     return result;
+  }
+
+  override async runGarbageCollection(
+    storeItemTask: StoreItemTask,
+    operation: ASROperation,
+    httpClient: HttpClient,
+    subscriptionManager: OperationSubscriptionManager,
+  ) {
+    if (operation.context?.lst?.projectName) {
+      try {
+        subscriptionManager.removeByTag(`status check (${operation.id})`);
+        const serviceProvider = AppSettings.getServiceInformation(operation.serviceProviderName);
+        if (serviceProvider) {
+          await this.deleteLSTASRProject(httpClient, operation.context.lst?.projectName, serviceProvider, subscriptionManager);
+        }
+      } catch (error) {
+        // ignore
+      }
+    }
+    return;
   }
 }

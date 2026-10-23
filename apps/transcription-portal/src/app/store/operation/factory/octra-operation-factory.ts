@@ -8,7 +8,7 @@ import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { OctraWindowMessageEventData, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { convertStoreOperationToIDBOperation } from '../operation.functions';
 import { ToolOperationFactory } from './operation-factory';
 import { UploadOperationFactory } from './upload-operation-factory';
@@ -46,7 +46,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
     storeItemTask: StoreItemTask,
     operation: OctraOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
     return throwError(() => new Error('Not implemented'));

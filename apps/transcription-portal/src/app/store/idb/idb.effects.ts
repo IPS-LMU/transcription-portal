@@ -324,36 +324,9 @@ export class IDBEffects {
     ),
   );
 
-  saveRemovedTask$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(StoreItemActions.removeTaskOrFolder.do),
-      withLatestFrom(this.store),
-      exhaustMap(
-        ([{ item }, state]: [
-          {
-            item: StoreItem;
-          },
-          RootState,
-        ]) => {
-          const table = state.modes.currentMode === 'annotation' ? this._idbm.annotation_tasks : this._idbm.summarization_tasks;
-          return from(table.delete(item.id)).pipe(
-            exhaustMap(() => of(IDBActions.saveRemovedTasksOrFolder.success())),
-            catchError((err) =>
-              of(
-                IDBActions.saveRemovedTasksOrFolder.fail({
-                  error: typeof err === 'string' ? err : err?.message,
-                }),
-              ),
-            ),
-          );
-        },
-      ),
-    ),
-  );
-
   saveRemovedStoreItems = createEffect(() =>
     this.actions$.pipe(
-      ofType(StoreItemActions.removeStoreItems.do),
+      ofType(StoreItemActions.removeStoreItems.success),
       withLatestFrom(this.store),
       exhaustMap(
         ([{ ids }, state]: [

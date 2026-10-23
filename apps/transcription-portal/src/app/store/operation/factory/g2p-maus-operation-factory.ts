@@ -7,7 +7,7 @@ import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import {
   addProcessingRound,
   convertStoreOperationToIDBOperation,
@@ -56,14 +56,14 @@ export class G2pMausOperationFactory extends OperationFactory<G2pMausOperation, 
     storeItemTask: StoreItemTask,
     operation: G2pMausOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: G2pMausOperation }> {
     const subj = new Subject<{
       operation: G2pMausOperation;
     }>();
 
-    subscrManager.add(
+    subscrManager.addSubscription(
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
           if (item?.disabled || item?.stopRequested) {

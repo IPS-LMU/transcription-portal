@@ -1,13 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { SubscriptionManager } from '@octra/utilities';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { TPortalModes } from '../../mode';
 import { IDBOperation } from '../../../indexedDB';
+import { TPortalModes } from '../../mode';
 import { OctraWindowMessageEventData, StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { OperationName } from './factory.types';
 
-export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTaskOperation<any>, R extends object = any> {
+export abstract class OperationFactory<T extends StoreTaskOperation<R, C> = StoreTaskOperation<any, any>, R extends object = any, C extends object = any> {
   protected abstract readonly _name: OperationName;
   protected abstract readonly _title: string;
   protected abstract readonly _description: string;
@@ -43,19 +42,31 @@ export abstract class OperationFactory<T extends StoreTaskOperation<R> = StoreTa
 
   abstract applyTaskOptions(options: StoreItemTaskOptions, operation: T): T;
 
+  async runGarbageCollection(
+    storeItemTask: StoreItemTask,
+    operation: T,
+    httpClient: HttpClient,
+    subscriptionManager: {
+      addSubscription: (subscription: Subscription) => void;
+      destroy: () => void;
+    },
+  ): Promise<void> {
+    // do nothing by default
+  }
+
   /**
    * runs a given operation using this method for a given factory.
    * @param storeItemTask The task of the given operation
    * @param operation The operation that should be run
    * @param httpClient The HttpClient
-   * @param subscrManager The manager that administrates all subscriptions
+   * @param subscriptionManager
    * @param item$ The item observable makes it possible to react on item changes.
    */
   abstract run(
     storeItemTask: StoreItemTask,
     operation: T,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscriptionManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{
     operation: StoreTaskOperation;

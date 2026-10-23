@@ -7,7 +7,7 @@ import { IDBOperation } from '../../../indexedDB';
 import { TPortalFileInfo } from '../../../obj/TPortalFileInfoAttributes';
 import { AppSettings } from '../../../shared/app.settings';
 import { StoreFile, StoreItemTask, StoreItemTaskOptions, TaskStatus } from '../../store-item';
-import { StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
+import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
 import { OperationFactory } from './operation-factory';
 
@@ -44,10 +44,10 @@ export class UploadOperationFactory extends OperationFactory<UploadOperation> {
     task: StoreItemTask,
     operation: UploadOperation,
     httpClient: HttpClient,
-    subscrManager: SubscriptionManager<Subscription>,
+    subscrManager: OperationSubscriptionManager,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
-    subscrManager.add(
+    subscrManager.addSubscription(
       item$.subscribe({
         next: (item: StoreItemTask | undefined) => {
           if (item?.disabled || item?.stopRequested) {

@@ -1,4 +1,9 @@
-import { StoreItem, StoreItemsState, StoreItemTask, StoreItemTaskDirectory } from '../store-item';
+import { HttpClient } from '@angular/common/http';
+import { last, SubscriptionManager } from '@octra/utilities';
+import { Subscription } from 'rxjs';
+import { OperationFactory, OperationSubscriptionManager } from '../operation';
+import { StoreItem, StoreItemsState, StoreItemTask, StoreItemTaskDirectory, TaskStatus } from '../store-item';
+import { TPortalModes } from './mode.state';
 
 export function getIndexByEntry(selectedEntry: StoreItem, entities: StoreItem[]): number {
   let result = -1;
@@ -46,4 +51,69 @@ export function getAllTasks(itemsState: StoreItemsState): StoreItemTask[] {
     }
   }
   return results;
+}
+
+export async function doTaskGarbageCollection(
+  mode: TPortalModes,
+  itemsState: StoreItemsState,
+  defaultOperations: {
+    factory: OperationFactory<any>;
+    enabled: boolean;
+  }[],
+  ids: number[],
+  httpClient: HttpClient,
+  subscrManager: SubscriptionManager<Subscription>,
+) {
+  for (const key of Object.keys(itemsState.entities)) {
+    const item = itemsState.entities[key]!;
+
+    if (ids.length > 0) {
+      if (item.type === 'task') {
+        const task = item as StoreItemTask;
+
+        if (ids.includes(task.id)) {
+          for (let i = 0; i < task.operations.length; i++) {
+            const operation = task.operations[i];
+            const factory = defaultOperations[i].factory;
+            if (operation.enabled && last(operation.rounds)?.status === TaskStatus.PROCESSING) {
+              const opTicket = `mode[${mode}];task[${task.id}];op[${operation.id}]`;
+              const opSubscriptionManager: OperationSubscriptionManager = {
+                addSubscription: (subscription: Subscription, tag?: string) => {
+                  subscrManager.add(subscription, tag ? `${opTicket};${tag}` : undefined);
+                },
+                removeByTag: (tag) => {
+                  subscrManager.removeByTag(`${opTicket};${tag}`);
+                },
+                destroy: () => {
+                  subscrManager.removeByIncludedTag(opTicket);
+                },
+              };
+
+              try {
+                await factory.runGarbageCollection(task, operation, httpClient, opSubscriptionManager);
+              } catch (e) {
+                console.error(`Couldn't run garbage collection on task with id ${task.id}`);
+              } finally {
+                opSubscriptionManager.destroy();
+              }
+            }
+          }
+          ids = ids.filter((id) => id !== task.id);
+        }
+      } else {
+        // folder
+        const folder = item as StoreItemTaskDirectory;
+        for (const folderKey of Object.keys(folder.entries.entities)) {
+          const folderItem: StoreItem = folder.entries.entities[folderKey]!;
+
+          try {
+            await doTaskGarbageCollection(mode, folderItem.entries!, defaultOperations, ids, httpClient, subscrManager);
+          } catch (e) {
+            // ignore
+            console.error(`Couldn't run garbage collection on folder with id ${folder.id}`);
+          }
+        }
+      }
+    }
+  }
 }

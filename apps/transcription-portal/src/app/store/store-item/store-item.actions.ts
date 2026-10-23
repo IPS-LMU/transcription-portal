@@ -36,15 +36,6 @@ export class StoreItemActions {
     },
   });
 
-  static removeTaskOrFolder = createActionGroup({
-    source: 'tasks/remove task or folder',
-    events: {
-      do: props<{
-        item: StoreItem;
-      }>(),
-    },
-  });
-
   static selectItems = createActionGroup({
     source: 'modes/current mode/select items',
     events: {
@@ -168,6 +159,9 @@ export class StoreItemActions {
     source: 'tasks/remove store items',
     events: {
       do: props<{
+        ids: number[];
+      }>(),
+      success: props<{
         ids: number[];
       }>(),
     },

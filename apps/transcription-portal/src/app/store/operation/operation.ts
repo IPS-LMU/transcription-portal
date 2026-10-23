@@ -1,8 +1,9 @@
 import { FileInfoSerialized } from '@octra/web-media';
+import { Subscription } from 'rxjs';
 import { StoreFile, TaskStatus } from '../store-item';
 import { OperationName } from './factory/factory.types';
 
-export interface StoreTaskOperation<T extends object = any, O extends StoreTaskOperation = any> {
+export interface StoreTaskOperation<T extends object = any, C extends object = any> {
   id: number;
   taskID: number;
   name: OperationName;
@@ -10,6 +11,7 @@ export interface StoreTaskOperation<T extends object = any, O extends StoreTaskO
   serviceProviderName?: string;
   rounds: StoreTaskOperationProcessingRound[];
   options: T;
+  context?: C;
   protocol?: string;
 }
 
@@ -29,7 +31,8 @@ export interface IOperationProcessingRoundWithResults<R> extends IOperationProce
   parsedProtocol?: StoreTaskOperationProtocolItem[];
 }
 
-export class StoreTaskOperationProcessingRound<R extends any = StoreFile,
+export class StoreTaskOperationProcessingRound<
+  R extends any = StoreFile,
   P extends IOperationProcessingRoundWithResults<R> = IOperationProcessingRoundWithResults<R>,
 > implements IOperationProcessingRoundWithResults<R> {
   private static idCounter = 1;
@@ -55,10 +58,15 @@ export class StoreTaskOperationProcessingRound<R extends any = StoreFile,
   }
 }
 
-export class OperationProcessingRoundSerialized extends StoreTaskOperationProcessingRound<FileInfoSerialized, OperationProcessingRoundSerialized> {
-}
+export class OperationProcessingRoundSerialized extends StoreTaskOperationProcessingRound<FileInfoSerialized, OperationProcessingRoundSerialized> {}
 
 export interface StoreTaskOperationProtocolItem {
   type: 'ERROR' | 'WARNING';
   message: string;
+}
+
+export interface OperationSubscriptionManager {
+  addSubscription: (subscription: Subscription, tag?: string) => void;
+  removeByTag: (tag?: string) => void;
+  destroy: () => void;
 }
