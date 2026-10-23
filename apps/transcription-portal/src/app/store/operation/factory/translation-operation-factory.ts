@@ -1,5 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { convertFromSupportedConverters, ImportResult, OAnnotJSON, OSegment, SRTConverter, SRTConverterExportOptions } from '@octra/annotation';
+import {
+  convertFromSupportedConverters,
+  ImportResult,
+  OAnnotJSON,
+  OSegment,
+  SRTConverter,
+  SRTConverterExportOptions,
+  SRTConverterImportOptions,
+} from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { joinURL, SubscriptionManager, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
@@ -56,6 +64,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     subscrManager: SubscriptionManager<Subscription>,
     item$: Observable<StoreItemTask | undefined>,
   ): Observable<{ operation: StoreTaskOperation }> {
+    const octraOperation = storeItemTask.operations.find((a) => a.name === 'OCTRA')!;
     const subj = new Subject<{ operation: TranslationOperation }>();
 
     subscrManager.add(
@@ -111,7 +120,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
           let newAnnotJSON: OAnnotJSON | undefined = undefined;
 
           if (extension !== '.srt') {
-            const importResult: ImportResult | undefined = convertFromSupportedConverters(
+            let importResult: ImportResult | undefined = convertFromSupportedConverters(
               AppInfo.converters.map((a) => a.obj),
               {
                 name: lastResult.name,
@@ -123,53 +132,99 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
             );
 
             if (!importResult || !importResult.annotjson) {
+              console.error(importResult?.error);
               subj.error(new Error("Can't convert last result from a previous operation."));
               return;
             } else {
               const needsOptions = new SRTConverter().needsOptionsForExport(importResult.annotjson, audiofile);
               const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
-              const textExport = new SRTConverter().export(importResult.annotjson, audiofile, srtOptions);
+              const anno = OAnnotJSON.deserialize(importResult.annotjson)!;
+              const textExport = new SRTConverter().export(anno, audiofile, srtOptions);
+              let combineSegmentsWithSameSpeakerThreshold: number | undefined = undefined;
+
+              if (
+                storeItemTask.files.length > 1 &&
+                storeItemTask.files.some((a) => !a.type.includes('audio') && !a.name.includes('.srt')) &&
+                !octraOperation?.enabled
+              ) {
+                // audio file + any transcript but SRT provided => ASR disabled
+                combineSegmentsWithSameSpeakerThreshold = 1000;
+              } else if (storeItemTask.files.length === 1 && !octraOperation?.enabled) {
+                // ASR enabled but OCTRA disabled
+                combineSegmentsWithSameSpeakerThreshold = 1000;
+              }
 
               if (textExport?.file && !textExport.error) {
-                newAnnotJSON = new SRTConverter().import(
+                importResult = new SRTConverter().import(
                   textExport.file,
                   audiofile,
-                  importResult.annotjson.levels.length > 1
-                    ? {
+                  importResult.annotjson.levels.length > 1 &&
+                    importResult.annotjson.levels.some(
+                      (a) =>
+                        a.name.includes('SPEAKER_') ||
+                        a.items.some((b) => b.labels.some((c) => new RegExp('\\[([^\\]]+)\\]\\s*:\\s*').exec(c.value) !== null)),
+                    )
+                    ? ({
                         speakerIdentifierPattern: '\\[([^\\]]+)\\]\\s*:\\s*',
                         sortSpeakerSegments: true,
-                        combineSegmentsWithSameSpeakerThreshold: 1000,
-                      }
+                        combineSegmentsWithSameSpeakerThreshold,
+                      } as SRTConverterImportOptions)
                     : {
                         sortSpeakerSegments: false,
-                        combineSegmentsWithSameSpeakerThreshold: 1000,
                       },
-                )?.annotjson;
-                transcripts = [];
-
-                for (let i = 0; i < (newAnnotJSON?.levels ?? []).length; i++) {
-                  const tempElem = newAnnotJSON!.levels[i];
-
-                  transcripts.push(
-                    ...tempElem.items
-                      .map((a: any) => ({
-                        level: i,
-                        sampleStart: (a as OSegment).sampleStart,
-                        value: a.getFirstLabelWithoutName('Speaker')!.value!,
-                      }))
-                      .filter((a: any) => a.value && a.value !== ''),
-                  );
+                );
+                if (importResult.annotjson) {
+                  newAnnotJSON = importResult.annotjson;
+                } else {
+                  console.error(importResult?.error);
+                  subj.error(new Error("Can't import converted last result from a previous operation to a SRT file."));
+                  return;
                 }
-
-                transcripts.sort((a, b) => a.sampleStart - b.sampleStart);
               } else {
-                subj.error(new Error("Can't convert last result from a previous operation to a text file."));
+                subj.error(new Error("Can't convert last result from a previous operation to a SRT file."));
                 return;
               }
             }
           } else {
-            // TODO continue here
+            const importResult = new SRTConverter().import(
+              {
+                name: lastResult.name,
+                content,
+                type: lastResult.type,
+                encoding: 'utf-8',
+              },
+              audiofile,
+              {
+                sortSpeakerSegments: false,
+              },
+            );
+
+            if (!importResult || !importResult.annotjson) {
+              console.error(importResult?.error);
+              subj.error(new Error("Can't convert last result from a previous operation."));
+              return;
+            }
+
+            newAnnotJSON = importResult?.annotjson;
           }
+
+          // prepare transcripts for translation
+          transcripts = [];
+          for (let i = 0; i < (newAnnotJSON?.levels ?? []).length; i++) {
+            const tempElem = newAnnotJSON!.levels[i];
+
+            transcripts.push(
+              ...tempElem.items
+                .map((a: any) => ({
+                  level: i,
+                  sampleStart: (a as OSegment).sampleStart,
+                  value: a.getFirstLabelWithoutName('Speaker')!.value!,
+                }))
+                .filter((a: any) => a.value && a.value !== ''),
+            );
+          }
+
+          transcripts.sort((a, b) => a.sampleStart - b.sampleStart);
 
           this.getTranslation(httpClient, transcripts, storeItemTask, clonedOperation, subscrManager)
             .then((result) => {
@@ -178,10 +233,6 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
               const annotJSON = OAnnotJSON.deserialize(newAnnotJSON!.serialize())!;
               const needsOptions = new SRTConverter().needsOptionsForExport(annotJSON, audiofile);
               const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
-
-              // TODO combine using SRT same speaker on same level
-              console.log('TRANSLATIONS');
-              console.log(translations);
 
               for (let i = 0; i < translations.length; i++) {
                 const translation = translations[i];
