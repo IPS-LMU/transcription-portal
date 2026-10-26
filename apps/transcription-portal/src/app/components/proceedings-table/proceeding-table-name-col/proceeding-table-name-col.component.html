@@ -23,9 +23,11 @@
       class="d-inline-block text-truncate"
       [ngClass]="{
         shorten: shortStyle,
-        green: entry.files && entry.files.length > 0 && entry.files[0].type.includes('audio') && entry.files[0].blob !== undefined,
+        green: entry.files && entry.files.length > 0 && entry.files[0].type.includes('audio') && (entry.files[0].blob !== undefined || entry.files[0].online),
         yellow:
-          ((entry.files![0].type.includes('audio') && entry.files && entry.files.length > 0 && entry.files[0].blob === undefined) ||
+          (
+          (entry.files![0].type.includes('audio') && entry.files && entry.files.length > 0 &&
+          (entry.files[0].blob === undefined && !entry.files[0].online)) ||
             !entry.files![0].type.includes('audio')) &&
           getLastOperationRound(entry.operations![0])!.status !== 'FINISHED',
       }"

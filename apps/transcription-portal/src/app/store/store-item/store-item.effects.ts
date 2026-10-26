@@ -8,7 +8,22 @@ import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { SubscriptionManager } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
-import { catchError, exhaustMap, filter, forkJoin, from, map, mergeMap, Observable, of, Subscription, tap, timer, withLatestFrom } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  exhaustMap,
+  filter,
+  forkJoin,
+  from,
+  map,
+  mergeMap,
+  Observable,
+  of,
+  Subscription,
+  tap,
+  timer,
+  withLatestFrom,
+} from 'rxjs';
 import { existsFile } from '../../obj/functions';
 import { TPortalFileInfo } from '../../obj/TPortalFileInfoAttributes';
 import { NotificationService } from '../../shared/notification.service';
@@ -291,7 +306,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processNextStoreItem.do),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
+      mergeMap(([{ mode }, state]: [{ mode: TPortalModes }, RootState]) => {
         /*
         console.log(
           `Running: ${state.modes.entities[mode]!.statistics.running}, tasks ${getAllTasks(state.modes.entities[mode]!.items)
@@ -309,7 +324,14 @@ export class StoreItemEffects {
 
             return item.status !== undefined && needsToBeUploadedOrAlreadyUploaded && !item.disabled && item.status === TaskStatus.PENDING;
           }, state.modes.entities[mode]!.items);
+
           if (!nextTask) {
+            console.log("Didn't find any free task");
+            console.log(
+              Object.keys(state.modes.entities[mode]!.items)
+                .map((a: string) => state.modes.entities[mode]!.items.entities[a])
+                .filter((a) => (a as StoreItemTask).status === 'PROCESSING'),
+            );
             return of(
               StoreItemActions.processNextStoreItem.nothingToDo({
                 mode,
@@ -319,6 +341,11 @@ export class StoreItemEffects {
           return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
         } else {
           console.warn('More than 3 processes running');
+          console.log(
+            Object.keys(state.modes.entities[mode]!.items.entities)
+              .map((a) => state.modes.entities[mode]!.items.entities[a])
+              .filter((a) => (a as StoreItemTask).status === 'PROCESSING'),
+          );
         }
 
         return of(
@@ -334,7 +361,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processStoreItem.do),
       withLatestFrom(this.store),
-      exhaustMap(([{ id, mode }, state]: [{ id: number; mode: TPortalModes }, RootState]) => {
+      mergeMap(([{ id, mode }, state]: [{ id: number; mode: TPortalModes }, RootState]) => {
         const currentMode = state.modes.entities[mode]!;
         const item = getOneTaskItemWhereRecursive((item) => item.id === id, currentMode.items);
 
@@ -524,7 +551,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.removeStoreItems.do),
       withLatestFrom(this.store),
-      exhaustMap(([action, state]) => {
+      mergeMap(([action, state]) => {
         const currentMode = state.modes.entities[state.modes.currentMode]!;
 
         doTaskGarbageCollection(
@@ -714,7 +741,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.success),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
+      mergeMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
         const modeState = state.modes.entities[state.modes.currentMode]!;
 
         if (modeState.overallState !== 'stopped') {
@@ -740,7 +767,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.fail),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID, error }, state]: [{ mode: TPortalModes; taskID: number; error: string }, RootState]) => {
+      mergeMap(([{ mode, taskID, error }, state]: [{ mode: TPortalModes; taskID: number; error: string }, RootState]) => {
         return of(
           StoreItemActions.processStoreItem.fail({
             mode,
@@ -756,7 +783,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.success),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
+      mergeMap(([{ mode, taskID, operation }, state]: [{ mode: TPortalModes; taskID: number; operation: StoreTaskOperation }, RootState]) => {
         if (operation.name === 'Upload') {
           return of(
             StoreItemActions.updateURLsForFilesAfterUpload.do({
@@ -839,19 +866,68 @@ export class StoreItemEffects {
                   }
 
                   const otherItemUploadOperationRound = getLastOperationRound(task.operations[0]);
-                  foundIndex = otherItemUploadOperationRound?.results.findIndex((a) => {
-                    if (a.hash === file.hash) {
-                      return true;
-                    } else {
-                      // fallback to name
-                      return a.attributes.originalFileName === file.attributes.originalFileName;
-                    }
-                  });
+                  if (otherItemUploadOperationRound) {
+                    if (otherItemUploadOperationRound.results.length > 0) {
+                      // task has already uploaded the file
+                      foundIndex = otherItemUploadOperationRound.results.findIndex((a) => {
+                        if (a.hash === file.hash) {
+                          return true;
+                        } else {
+                          // fallback to name
+                          return a.attributes.originalFileName === file.attributes.originalFileName;
+                        }
+                      });
 
-                  if (foundIndex !== undefined && foundIndex > -1 && foundFile) {
-                    // replace URL in Upload result
+                      if (foundIndex !== undefined && foundIndex > -1 && foundFile) {
+                        // replace URL in Upload result
+                        task = {
+                          ...task,
+                          operations: [
+                            {
+                              ...task.operations[0],
+                              rounds: [
+                                new StoreTaskOperationProcessingRound({
+                                  status: TaskStatus.FINISHED,
+                                  results: [
+                                    ...otherItemUploadOperationRound.results.slice(0, foundIndex),
+                                    foundFile,
+                                    ...otherItemUploadOperationRound.results.slice(foundIndex + 1),
+                                  ],
+                                }),
+                              ],
+                            },
+                            ...task.operations.slice(1),
+                          ],
+                        };
+                      }
+                    } else {
+                      // round exists, but nothing uploaded
+                      task = {
+                        ...task,
+                        status: TaskStatus.PENDING,
+                        operations: [
+                          {
+                            ...task.operations[0],
+                            rounds: [
+                              new StoreTaskOperationProcessingRound({
+                                status: TaskStatus.FINISHED,
+                                results: [
+                                  {
+                                    ...lastOperationRound.results[foundIndex],
+                                  },
+                                ],
+                              }),
+                            ],
+                          },
+                          ...task.operations.slice(1),
+                        ],
+                      };
+                    }
+                  } else {
+                    // nothing uploaded yet, add upload result
                     task = {
                       ...task,
+                      status: TaskStatus.PENDING,
                       operations: [
                         {
                           ...task.operations[0],
@@ -859,9 +935,9 @@ export class StoreItemEffects {
                             new StoreTaskOperationProcessingRound({
                               status: TaskStatus.FINISHED,
                               results: [
-                                ...otherItemUploadOperationRound!.results!.slice(0, foundIndex),
-                                foundFile,
-                                ...otherItemUploadOperationRound!.results!.slice(foundIndex + 1),
+                                {
+                                  ...lastOperationRound.results[foundIndex],
+                                },
                               ],
                             }),
                           ],
@@ -936,7 +1012,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processNextOperation.do),
       withLatestFrom(this.store),
-      exhaustMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
+      mergeMap(([{ mode, taskID }, state]: [{ mode: TPortalModes; taskID: number }, RootState]) => {
         return of(
           StoreItemActions.processNextOperation.check({
             mode,
@@ -974,7 +1050,7 @@ export class StoreItemEffects {
   taskStopped$ = createEffect(() =>
     this.actions$.pipe(
       ofType(StoreItemActions.stopProcessing.stopTasks),
-      exhaustMap(() => {
+      mergeMap(() => {
         return of(StoreItemActions.stopProcessing.success());
       }),
     ),
@@ -1136,7 +1212,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.reuploadFilesForOperations.do),
       withLatestFrom(this.store),
-      exhaustMap(
+      concatMap(
         ([{ mode, list, actionAfterSuccess }, state]: [
           {
             mode: TPortalModes;
@@ -1185,7 +1261,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.reuploadFilesForOperations.success),
       withLatestFrom(this.store),
-      exhaustMap(
+      mergeMap(
         ([{ actionAfterSuccess }]: [
           {
             actionAfterSuccess: Action;
@@ -1252,7 +1328,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.receiveToolData.do),
       withLatestFrom(this.store),
-      exhaustMap(([action, state]: [OctraWindowMessageEventData, RootState]) => {
+      mergeMap(([action, state]: [OctraWindowMessageEventData, RootState]) => {
         const currentMode = state.modes.entities[state.modes.currentMode];
         const openedTool = currentMode!.openedTool!;
         const toolName = openedTool?.operationName;
@@ -1470,7 +1546,7 @@ export class StoreItemEffects {
     this.actions$.pipe(
       ofType(StoreItemActions.processStoreItem.success, StoreItemActions.processStoreItem.fail),
       withLatestFrom(this.store),
-      exhaustMap(
+      mergeMap(
         ([action, state]: [
           {
             id: number;

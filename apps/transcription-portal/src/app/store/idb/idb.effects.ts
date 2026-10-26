@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { createEntityAdapter, EntityAdapter } from '@ngrx/entity';
 import { Store } from '@ngrx/store';
 import { Table } from 'dexie';
 import { DateTime } from 'luxon';
@@ -9,20 +8,15 @@ import { catchError, exhaustMap, from, map, of, tap, withLatestFrom } from 'rxjs
 import { environment } from '../../../environments/environment';
 import { AppInfo } from '../../app.info';
 import { IDBFolderItem, IDBInternItem, IDBTaskItem, IDBUserDefaultSettingsItemData, IDBUserSettingsItem, IndexedDBManager } from '../../indexedDB';
-import { RootState } from '../app';
-import { AppActions } from '../app/app.actions';
+import { AppActions, RootState } from '../app';
 import { ExternalInformationActions } from '../external-information/external-information.actions';
 import { TPortalModes } from '../mode';
 import { ModeActions } from '../mode/mode.actions';
 import { convertStoreItemToIDBItem } from '../operation/operation.functions';
-import { StoreItem, StoreItemEffects } from '../store-item';
+import { StoreItem } from '../store-item';
 import { StoreItemActions } from '../store-item/store-item.actions';
 import { getStoreItemsWhereRecursive } from '../store-item/store-item.functions';
 import { IDBActions } from './idb.actions';
-
-const taskAdapter: EntityAdapter<StoreItem> = createEntityAdapter<StoreItem>({
-  selectId: (task) => task.id,
-});
 
 @Injectable()
 export class IDBEffects {
@@ -270,7 +264,7 @@ export class IDBEffects {
         StoreItemActions.processNextOperation.success,
         StoreItemActions.processNextOperation.fail,
         StoreItemActions.runOperationWithTool.closeOtherTool,
-        StoreItemActions.resetOperation.success
+        StoreItemActions.resetOperation.success,
       ),
       withLatestFrom(this.store),
       exhaustMap(([{ mode, taskID, type }, state]: [{ mode: TPortalModes; taskID: number; type: any }, RootState]) => {
@@ -404,7 +398,7 @@ export class IDBEffects {
         IDBActions.saveStoreItems.do,
         StoreItemActions.updateURLsForFilesAfterUpload.success,
         StoreItemActions.checkAllUploadOperationsForOnlineFiles.success,
-        StoreItemActions.setDisableStateForSelectedTasks.success
+        StoreItemActions.setDisableStateForSelectedTasks.success,
       ),
       withLatestFrom(this.store),
       exhaustMap(
