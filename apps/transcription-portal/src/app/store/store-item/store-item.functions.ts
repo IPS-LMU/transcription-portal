@@ -738,7 +738,7 @@ export function getOneTaskItemWhereRecursive(where: (item: StoreItem) => boolean
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
 
-    if (where(item)) {
+    if (item.type === "task" && where(item)) {
       return item as StoreItemTask;
     } else if (item.type === 'folder') {
       const folderFiltered = getOneTaskItemWhereRecursive(where, item.entries!);
