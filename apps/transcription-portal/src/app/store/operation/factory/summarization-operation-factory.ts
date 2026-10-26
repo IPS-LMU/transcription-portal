@@ -196,10 +196,10 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
           subscriptionManager.addSubscription(
             interval(5000).subscribe({
               next: async () => {
-                const result: any = undefined;
+                let result: any = undefined;
 
                 try {
-                  await this.getProjectStatus(httpClient, projectName, serviceProvider!, subscriptionManager);
+                  result = await this.getProjectStatus(httpClient, projectName, serviceProvider!, subscriptionManager);
                 } catch (error) {
                   console.error(error);
                 }

@@ -326,12 +326,6 @@ export class StoreItemEffects {
           }, state.modes.entities[mode]!.items);
 
           if (!nextTask) {
-            console.log("Didn't find any free task");
-            console.log(
-              Object.keys(state.modes.entities[mode]!.items)
-                .map((a: string) => state.modes.entities[mode]!.items.entities[a])
-                .filter((a) => (a as StoreItemTask).status === 'PROCESSING'),
-            );
             return of(
               StoreItemActions.processNextStoreItem.nothingToDo({
                 mode,
@@ -341,11 +335,6 @@ export class StoreItemEffects {
           return of(StoreItemActions.processStoreItem.do({ id: nextTask.id, mode }));
         } else {
           console.warn('More than 3 processes running');
-          console.log(
-            Object.keys(state.modes.entities[mode]!.items.entities)
-              .map((a) => state.modes.entities[mode]!.items.entities[a])
-              .filter((a) => (a as StoreItemTask).status === 'PROCESSING'),
-          );
         }
 
         return of(
