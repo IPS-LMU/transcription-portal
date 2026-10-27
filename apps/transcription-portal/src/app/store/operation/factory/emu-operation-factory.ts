@@ -47,11 +47,17 @@ export class EmuOperationFactory extends ToolOperationFactory<EmuOperation> {
     return throwError(() => new Error('Not implemented'));
   }
 
-  public async getToolURL(audioFile: StoreAudioFile, transcriptFile: StoreFile | undefined, firstRevision: boolean, mode: TPortalModes, httpClient: HttpClient): Promise<string> {
+  public async getToolURL(
+    audioFile: StoreAudioFile,
+    transcriptFile: StoreFile | undefined,
+    firstRevision: boolean,
+    mode: TPortalModes,
+    httpClient: HttpClient,
+  ): Promise<string> {
     const urlParams: {
       listenForMessages: boolean;
     } = {
-      listenForMessages: true
+      listenForMessages: true,
     };
 
     return `${this.commands[0]}${stringifyQueryParams(urlParams)}`;

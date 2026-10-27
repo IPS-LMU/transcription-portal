@@ -1,8 +1,19 @@
 import { AsyncPipe, LowerCasePipe, NgClass, NgStyle } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, inject, OnInit, Renderer2, ViewChild, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  OnInit,
+  Renderer2,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { Actions, ofType } from '@ngrx/effects';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
 import { wait } from '@octra/utilities';
@@ -19,6 +30,7 @@ import {
   TaskStatus,
   TPortalModes,
 } from '../../store';
+import { ModeActions } from '../../store/mode/mode.actions';
 import { getLastOperationResultFromLatestRound, getLastOperationRound } from '../../store/operation/operation.functions';
 
 @Component({
@@ -47,6 +59,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
   private renderer = inject(Renderer2);
   private appStoreService = inject(AppStoreService);
   protected modeStoreService = inject(ModeStoreService);
+  protected actions$ = inject(Actions);
 
   protected defaultUserSettings: DefaultUserSettings = {};
   protected currentMode?: TPortalModes;
@@ -154,11 +167,16 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
       },
     });
 
+    this.subscribe(this.actions$.pipe(ofType(ModeActions.setDefaultOperationEnabled.success)), {
+      next: () => {
+        this.changeProcessingOptionsForEachQueuedTask();
+      },
+    });
+
     this.modeStoreService.validateQueuedTasks();
   }
 
-  afterDefaultSettingsUpdated() {
-  }
+  afterDefaultSettingsUpdated() {}
 
   public get orangeCount(): number {
     if (!(this.queuedTasks.filter === null || this.queuedTasks.filter === undefined)) {

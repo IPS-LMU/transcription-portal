@@ -259,7 +259,27 @@ export const getTaskReducers = (
                   {
                     id: item.id,
                     changes: {
-                      operations: defaultOperations.map((op, i) => op.factory.applyTaskOptions(options, item.operations![i])),
+                      operations: defaultOperations.map((op, i) => {
+                        if (item.operations !== undefined) {
+                          // filter options for enabled operations only
+                          const filteredOptions = { ...options };
+                          if (!item.operations[1].enabled) {
+                            delete filteredOptions['asr'];
+                          }
+                          if (item.operations[3].name === 'MAUS' && !item.operations[3].enabled) {
+                            delete filteredOptions['maus'];
+                          }
+                          if (item.operations[3].name === 'Translation' && !item.operations[3].enabled) {
+                            delete filteredOptions['translation'];
+                          }
+                          if (item.operations[4].name === 'Summarization' && !item.operations[3].enabled) {
+                            delete filteredOptions['summarization'];
+                          }
+
+                          return op.factory.applyTaskOptions(item.operations[i].enabled ? filteredOptions : {}, item.operations[i]);
+                        }
+                        return undefined;
+                      }),
                     },
                   },
                   itemsState,

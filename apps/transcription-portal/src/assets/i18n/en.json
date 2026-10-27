@@ -100,7 +100,7 @@
           }
         },
         "summarization service provider": {
-          "description": "The list of supported content languages depends on the selected ASR Provider.",
+          "description": "The selected Summarization Service Provider. For now, only LSTSummarization is supported.",
           "name": "Summarization Service Provider"
         },
         "translation language": {

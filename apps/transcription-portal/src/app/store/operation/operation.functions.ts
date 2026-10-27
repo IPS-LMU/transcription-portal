@@ -28,22 +28,28 @@ export function convertIDBOperationToStoreOperation(
   );
   result.serviceProviderName = operation.serviceProvider;
   result.enabled = operation.enabled === undefined && task.state === TaskStatus.QUEUED ? enabled : operation.enabled;
+
+  const asrOperation = task.operations.find((a) => a.name === 'ASR');
+  const mausOperation = task.operations.find((a) => a.name === 'MAUS');
+  const summarizationOperation = task.operations.find((a) => a.name === 'Summarization');
+  const translationOperation = task.operations.find((a) => a.name === 'Translation');
+
   result = factory.applyTaskOptions(
     {
       asr: {
-        language: operation.name === 'ASR' ? operation.language : undefined,
-        diarization: operation.diarization,
-        provider: operation.name === 'ASR' ? operation.serviceProvider : undefined,
+        language: asrOperation ? asrOperation.language : undefined,
+        diarization: asrOperation?.diarization,
+        provider: asrOperation ? asrOperation.serviceProvider : undefined,
       },
       maus: {
-        language: operation.name === 'MAUS' ? operation.language : undefined,
+        language: mausOperation ? mausOperation.language : undefined,
       },
       summarization: {
-        provider: operation.name === 'Summarization' ? operation.serviceProvider : undefined,
-        numberOfWords: operation.name === 'Summarization' ? operation.maxNumbersOfWords : undefined,
+        provider: summarizationOperation ? summarizationOperation.serviceProvider : undefined,
+        numberOfWords: summarizationOperation ? summarizationOperation.maxNumbersOfWords : undefined,
       },
       translation: {
-        language: operation.name === 'Translation' ? operation.language : undefined,
+        language: translationOperation ? translationOperation.language : undefined,
       },
     },
     result,
