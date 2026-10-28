@@ -1135,7 +1135,10 @@ export class StoreItemEffects {
                 // file for last result of current tool exists
                 // force reupload result from tool operation
                 file = getLastOperationResultFromLatestRound(operation);
-              } else if (previousOperation && getLastOperationResultFromLatestRound(previousOperation)) {
+              } else if (
+                previousOperation &&
+                !getLastOperationResultFromLatestRound(previousOperation)?.online
+              ) {
                 // force reupload result from previous operation
                 // local available, reupload
                 file = getLastOperationResultFromLatestRound(previousOperation);
