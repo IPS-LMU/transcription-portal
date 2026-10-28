@@ -15,6 +15,7 @@ export enum TaskStatus {
 }
 
 export interface StoreItemTaskOptions {
+  contentLanguage?: string;
   asr?: {
     language?: string;
     provider?: string;

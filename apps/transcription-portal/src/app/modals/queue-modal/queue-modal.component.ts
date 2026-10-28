@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { NgbActiveModal, NgbModalOptions, NgbPopover, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModalOptions, NgbPopover } from '@ng-bootstrap/ng-bootstrap';
 import { Actions, ofType } from '@ngrx/effects';
 import { OctraASRLanguageSelectComponent, OctraProviderSelectComponent, ServiceProvider } from '@octra/ngx-components';
 import { SubscriberComponent } from '@octra/ngx-utilities';
@@ -49,7 +49,6 @@ import { getLastOperationResultFromLatestRound, getLastOperationRound } from '..
     OctraProviderSelectComponent,
     TranslocoPipe,
     LowerCasePipe,
-    NgbTooltip,
     AsyncPipe,
   ],
 })
@@ -212,6 +211,7 @@ export class QueueModalComponent extends SubscriberComponent implements OnInit, 
     this.defaultUserSettings.selectedSummarizationNumberOfWords = this.selectedSummarizationNumberOfWords;
 
     this.modeStoreService.applyTaskOptionsOnQueuedTasks({
+      contentLanguage: this.defaultUserSettings.selectedASRLanguage,
       asr: {
         provider: this.defaultUserSettings.selectedASRProvider?.provider,
         language: this.defaultUserSettings.selectedASRLanguage,

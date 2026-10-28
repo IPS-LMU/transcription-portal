@@ -36,6 +36,7 @@ export function convertIDBOperationToStoreOperation(
 
   result = factory.applyTaskOptions(
     {
+      contentLanguage: asrOperation?.language ?? translationOperation?.contentLanguage,
       asr: {
         language: asrOperation ? asrOperation.language : undefined,
         diarization: asrOperation?.diarization,

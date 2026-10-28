@@ -9,9 +9,9 @@ import {
   SRTConverterImportOptions,
 } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { joinURL, SubscriptionManager, wait } from '@octra/utilities';
+import { joinURL, wait } from '@octra/utilities';
 import { FileInfo } from '@octra/web-media';
-import { Observable, retry, Subject, Subscription } from 'rxjs';
+import { Observable, retry, Subject } from 'rxjs';
 import { AppInfo } from '../../../app.info';
 import { IDBOperation } from '../../../indexedDB';
 import { convertISO639Language } from '../../../obj/functions';
@@ -20,12 +20,13 @@ import { StoreAudioFile, StoreFile, StoreItemTask, StoreItemTaskOptions, TaskSta
 import { getLatestResultFromPreviousEnabledOperation } from '../../store-item/store-item.functions';
 import { OperationSubscriptionManager, StoreTaskOperation, StoreTaskOperationProcessingRound } from '../operation';
 import { addProcessingRound, convertStoreOperationToIDBOperation, getLastOperationRound } from '../operation.functions';
-import { ASROperation } from './asr-operation-factory';
 import { OperationFactory } from './operation-factory';
 
 export interface TranslationOperationOptions {
+  contentLanguage?: string;
   language?: string;
 }
+export interface TranslationOperationContext {}
 
 export type TranslationOperation = StoreTaskOperation<TranslationOperationOptions, TranslationOperation>;
 
@@ -52,7 +53,8 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
     return {
       ...operation,
       options: {
-        language: options.translation?.language === undefined ? operation.options?.language : options.translation?.language,
+        contentLanguage: options.contentLanguage,
+        language: options.translation?.language,
       },
     };
   }
@@ -295,19 +297,18 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
       value: string;
     }[],
     storeItemTask: StoreItemTask,
-    operation: StoreTaskOperation,
+    operation: StoreTaskOperation<TranslationOperationOptions, TranslationOperationContext>,
     subscrManager: OperationSubscriptionManager,
   ) {
     return new Promise<any>((resolve, reject) => {
-      let source: string | undefined = 'en';
-      if (storeItemTask?.operations && operation.options.language) {
-        if ((storeItemTask.operations[1] as ASROperation).options.language) {
-          // ASR operation
-          source = convertISO639Language((storeItemTask.operations[1] as ASROperation).options.language!);
-        } else {
-          source = 'en';
-        }
+      let source: string | undefined = 'auto';
+      if (operation.options?.contentLanguage && operation.options?.language) {
+        source = convertISO639Language(operation.options.contentLanguage);
       }
+      if (!source) {
+        source = 'auto';
+      }
+
       const serviceProvider = AppSettings.getServiceInformation(operation.serviceProviderName);
 
       if (!serviceProvider) {
@@ -344,6 +345,7 @@ export class TranslationOperationFactory extends OperationFactory<TranslationOpe
   override async convertOperationToIDBOperation(operation: TranslationOperation): Promise<IDBOperation> {
     const result = await convertStoreOperationToIDBOperation(operation);
     result.language = operation.options.language;
+    result.contentLanguage = operation.options.contentLanguage;
 
     return result;
   }

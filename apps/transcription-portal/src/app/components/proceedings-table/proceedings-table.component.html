@@ -270,7 +270,13 @@
             <tbody class="">
               <tr>
                 <td class="ps-3">{{ 'g.language' | transloco }}:</td>
-                <td>{{ popover.task.operations[1].options.language }}</td>
+                <td>
+                  @if (popover.task.operations[1].options?.language !== undefined) {
+                    {{ popover.task.operations[1].options?.language }}
+                  } @else if (popover.task.operations[3].name === 'Translation') {
+                    {{ popover.task.operations[3].options?.contentLanguage }}
+                  }
+                </td>
               </tr>
               <tr>
                 <td class="ps-3">{{ 'g.asr provider' | transloco }}:</td>

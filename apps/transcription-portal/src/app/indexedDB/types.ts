@@ -64,6 +64,7 @@ export interface IDBOperation {
     speakers?: number;
   };
   language?: string;
+  contentLanguage?: string;
   maxNumbersOfWords?: number;
 }
 

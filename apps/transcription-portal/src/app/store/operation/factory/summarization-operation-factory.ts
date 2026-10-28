@@ -48,7 +48,9 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
   override applyTaskOptions(options: StoreItemTaskOptions, operation: SummarizationOperation): SummarizationOperation {
     let language = operation.options?.language;
 
-    if (options.translation?.language) {
+    if (options.contentLanguage) {
+      language = options.contentLanguage;
+    } else if (options.translation?.language) {
       language = options.translation.language;
     } else if (options.asr?.language) {
       language = options.asr.language;

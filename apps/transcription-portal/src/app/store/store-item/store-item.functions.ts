@@ -528,6 +528,7 @@ export function createOperationsByDefaultOperations(
     operation.enabled = defaultOperation.enabled;
     operation = defaultOperation.factory.applyTaskOptions(
       {
+        contentLanguage: currentModeOptions.selectedASRLanguage,
         asr: {
           provider: currentModeOptions.selectedASRProvider?.provider,
           language: currentModeOptions.selectedASRLanguage,

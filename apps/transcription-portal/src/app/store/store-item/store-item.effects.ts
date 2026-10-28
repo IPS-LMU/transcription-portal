@@ -53,7 +53,6 @@ import {
   getOneTaskItemWhereRecursive,
   getPreviousEnabledOperation,
   getStoreItemsWhereRecursive,
-  isStoreFileAvailable,
 } from './store-item.functions';
 import { OctraWindowMessageEventData, StoreItemsState } from './store-items-state';
 
@@ -1066,9 +1065,7 @@ export class StoreItemEffects {
             const previousOperation = getPreviousEnabledOperation(task, operation);
             const availableUploadedAudioFile = getLastOperationRound(uploadOperation)?.results.find((a) => a.type.includes('audio'));
             const droppedAudioFile = task.files!.find((a) => a.type.includes('audio'))?.blob;
-            const isPreviousTaskDefinedAndLastResultNotAvailable = previousOperation
-              ? !isStoreFileAvailable(getLastOperationResultFromLatestRound(previousOperation))
-              : false;
+
             // reset other opened tool
             if (currentState.openedTool?.taskID && currentState.openedTool?.taskID) {
               this.store.dispatch(
@@ -1128,17 +1125,18 @@ export class StoreItemEffects {
                   duration: 12,
                 },
               );
-            } else {
+            } else if (previousOperation) {
               // audio file exists and last result of previous operation exists
               let file: StoreFile | undefined = undefined;
-              if (getLastOperationRound(operation)?.status === 'FINISHED') {
+              const lastOperationRound = getLastOperationRound(operation);
+              const lastPreviousOperationRound = getLastOperationRound(previousOperation);
+              const lastPreviousOperationTranscriptResult = lastPreviousOperationRound?.results.find((a) => !a.type.includes('audio'));
+
+              if (lastOperationRound?.status === 'FINISHED') {
                 // file for last result of current tool exists
                 // force reupload result from tool operation
                 file = getLastOperationResultFromLatestRound(operation);
-              } else if (
-                previousOperation &&
-                !getLastOperationResultFromLatestRound(previousOperation)?.online
-              ) {
+              } else if (previousOperation.name !== 'Upload' || lastPreviousOperationTranscriptResult?.online) {
                 // force reupload result from previous operation
                 // local available, reupload
                 file = getLastOperationResultFromLatestRound(previousOperation);
