@@ -860,10 +860,11 @@ export class StoreItemEffects {
                       foundIndex = otherItemUploadOperationRound.results.findIndex((a) => {
                         if (a.hash === file.hash) {
                           return true;
-                        } else {
+                        } else if (a.attributes?.originalFileName && file.attributes?.originalFileName) {
                           // fallback to name
                           return a.attributes.originalFileName === file.attributes.originalFileName;
                         }
+                        return false;
                       });
 
                       if (foundIndex !== undefined && foundIndex > -1 && foundFile) {

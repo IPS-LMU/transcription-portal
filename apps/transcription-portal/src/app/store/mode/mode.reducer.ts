@@ -179,13 +179,13 @@ export const modeReducer = createReducer(
       },
     };
 
-    if (state.currentMode === 'annotation') {
-      if (name === 'ASR' && enabled === false) {
-        operations.OCTRA.enabled = true;
-      } else if (name === 'OCTRA' && enabled === false) {
-        operations.ASR.enabled = true;
-      }
+    if (name === 'ASR' && !enabled) {
+      operations.OCTRA.enabled = true;
+    } else if (name === 'OCTRA' && !enabled) {
+      operations.ASR.enabled = true;
+    }
 
+    if (state.currentMode === 'annotation') {
       if (['MAUS', 'Emu WebApp'].includes(name)) {
         operations.MAUS.enabled = enabled;
         operations['Emu WebApp'].enabled = enabled;

@@ -606,7 +606,7 @@ export const getTaskReducers = (
       state,
     );
   }),
-  on(ModeActions.setDefaultOperationEnabled.success, (state: ModeState, { defaultOptions }) => ({
+  on(ModeActions.setDefaultOperationEnabled.success, (state: ModeState) => ({
     ...modeAdapter.updateOne(
       {
         id: state.currentMode,
@@ -622,23 +622,32 @@ export const getTaskReducers = (
                 const { extension } = audioFile?.attributes.originalFileName
                   ? FileInfo.extractFileName(audioFile.attributes.originalFileName)
                   : { extension: undefined };
+                const defaultOperations = state.entities[state.currentMode]!.defaultOperations;
 
-                for (let i = 0; i < state.entities[state.currentMode]!.defaultOperations.length; i++) {
-                  const defaultOperation = state.entities[state.currentMode]!.defaultOperations[i];
-                  const lastRoundIndex =
-                    itemsState.entities[item.id]!.operations!.find((a) => a.name === defaultOperation.factory.name)!.rounds.length - 1;
+                for (let i = 0; i < defaultOperations.length; i++) {
+                  const defaultOperation = defaultOperations[i];
+                  const itemOperation = task.operations.find((a) => a.name === defaultOperation.factory.name);
+                  const lastRoundIndex = itemOperation!.rounds.length - 1;
+                  let overwriteEnabled = itemOperation!.enabled;
+
+                  if (itemOperation?.name === 'ASR' && task.files.length > 1) {
+                    // pair of audio and transcript => skip ASR
+                    overwriteEnabled = false;
+                  } else {
+                    overwriteEnabled = defaultOperation.enabled;
+                  }
 
                   if (lastRoundIndex > -1) {
-                    let changedItem = {
+                    const changedItem = {
                       ...(itemsState.entities[item.id]!.operations as StoreTaskOperation<any, any>[])[i],
                       rounds: [
                         ...itemsState.entities[item.id]!.operations![i].rounds.slice(0, lastRoundIndex),
                         {
                           ...itemsState.entities[item.id]!.operations![i].rounds![lastRoundIndex],
-                          status: defaultOperation.enabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
+                          status: overwriteEnabled ? TaskStatus.PENDING : TaskStatus.SKIPPED,
                         },
                       ],
-                      enabled: defaultOperation.enabled,
+                      enabled: overwriteEnabled,
                     };
 
                     if (extension && new MusicMetadataFormat().supportedFormats.map((a) => a.extension).includes(extension)) {
