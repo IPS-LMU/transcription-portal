@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { AnnotationLevelType, ExportResult, OSegment, OSegmentLevel, PartiturConverter } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
-import { hasProperty, stringifyQueryParams, SubscriptionManager } from '@octra/utilities';
+import { hasProperty, stringifyQueryParams, wait } from '@octra/utilities';
 import { downloadFile, FileInfo } from '@octra/web-media';
-import { Observable, Subscription, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import * as UUID from 'uuid';
 import { IDBOperation } from '../../../indexedDB';
 import { AppSettings } from '../../../shared/app.settings';
 import { getHashString } from '../../preprocessing/preprocessing.functions';
@@ -102,7 +103,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
           );
 
           let result: ExportResult | undefined = undefined;
-
+          let reducedUnits = 0;
           if (importResult && importResult.annotjson) {
             for (const level of importResult.annotjson.levels as OSegmentLevel<OSegment>[]) {
               if (level.type === AnnotationLevelType.SEGMENT) {
@@ -126,6 +127,7 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
                       item.sampleDur += gapSamples;
                       level.items.splice(i + 1, 1);
                       i--;
+                      reducedUnits++;
                     }
                   }
                 }
@@ -134,8 +136,9 @@ export class OctraOperationFactory extends ToolOperationFactory<OctraOperation> 
 
             result = new PartiturConverter().export(importResult.annotjson, oAudio);
 
-            if (result?.file) {
-              const newFile = new File([result.file.content], transcriptFile.name, { type: result.file.type });
+            if (result?.file && result?.file.content) {
+              console.log(reducedUnits + ' units reduced');
+              const newFile = new File([result.file.content], `${UUID.v4()}.par`, { type: result.file.type });
               transcript = await this.upload(
                 {
                   name: newFile.name,

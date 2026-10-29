@@ -1302,7 +1302,7 @@ export class StoreItemEffects {
                 language,
                 operationName,
               }),
-            );
+            )
           } else {
             return of(
               StoreItemActions.runOperationWithTool.fail({
