@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { PartiturConverter, SRTConverter, SRTConverterExportOptions } from '@octra/annotation';
+import { ExportResult, PartiturConverter, SRTConverter, SRTConverterExportOptions } from '@octra/annotation';
 import { OAudiofile } from '@octra/media';
 import { ServiceProvider } from '@octra/ngx-components';
 import { joinURL, stringifyQueryParams, wait } from '@octra/utilities';
@@ -145,14 +145,24 @@ export class SummarizationOperationFactory extends OperationFactory<Summarizatio
               audiofile,
             );
             const asrOperation = storeItemTask.operations[1] as ASROperation;
-
+            let srtConversion: ExportResult | undefined = undefined;
+            const needsOptions = new SRTConverter().needsOptionsForExport(imported.annotjson!, audiofile);
+            const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
             if (asrOperation.options.diarization?.enabled) {
-              const needsOptions = new SRTConverter().needsOptionsForExport(imported.annotjson!, audiofile);
-              const srtOptions = new SRTConverter().getDefaultOptions<SRTConverterExportOptions>(needsOptions);
-              transcript = new SRTConverter().export(imported.annotjson!, audiofile, srtOptions).file!.content;
+              srtConversion = new SRTConverter().export(imported.annotjson!, audiofile, srtOptions);
             } else {
-              transcript = new SRTConverter().export(imported.annotjson!, audiofile).file!.content;
+              srtConversion = new SRTConverter().export(imported.annotjson!, audiofile, {
+                ...srtOptions,
+              });
             }
+
+            if (srtConversion.error) {
+              throw new Error(`Can't convert to SRT: ${srtConversion.error}`);
+            } else if (!srtConversion.file || !srtConversion.file.content) {
+              throw new Error(`Can't convert to SRT: Empty file.`);
+            }
+
+            transcript = srtConversion.file.content;
           }
 
           const serviceProvider = AppSettings.getServiceInformation(clonedOperation.serviceProviderName);
