@@ -272,7 +272,7 @@ export const getTaskReducers = (
                           if (item.operations[3].name === 'Translation' && !item.operations[3].enabled) {
                             delete filteredOptions['translation'];
                           }
-                          if (item.operations[4].name === 'Summarization' && !item.operations[3].enabled) {
+                          if (item.operations[4].name === 'Summarization' && !item.operations[4].enabled) {
                             delete filteredOptions['summarization'];
                           }
 
