@@ -258,9 +258,9 @@ export class ASROperationFactory extends OperationFactory<ASROperation, ASROpera
           .replace('{{asrType}}', clonedOperation.serviceProviderName)
           .replace('{{language}}', clonedOperation.options.language!);
 
-        if (clonedOperation.options.diarization?.enabled) {
-          url += `&diarization=${clonedOperation.options.diarization?.enabled ?? false}`;
+        url += `&diarization=${clonedOperation.options.diarization?.enabled ?? false}`;
 
+        if (clonedOperation.options.diarization?.enabled) {
           if (clonedOperation.options.diarization.speakers) {
             url += `&numberSpeakDiar=${clonedOperation.options.diarization.speakers}`;
           }
