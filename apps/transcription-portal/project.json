@@ -8,9 +8,8 @@
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "development",
       "options": {
         "outputPath": {
           "base": "dist/apps/transcription-portal",
@@ -18,10 +17,7 @@
           "media": "assets"
         },
         "browser": "apps/transcription-portal/src/main.ts",
-        "polyfills": [
-          "@angular/localize/init",
-          "zone.js"
-        ],
+        "polyfills": ["@angular/localize/init", "zone.js"],
         "tsConfig": "apps/transcription-portal/tsconfig.app.json",
         "preserveSymlinks": true,
         "inlineStyleLanguage": "scss",
@@ -31,17 +27,8 @@
           "apps/transcription-portal/src/config",
           "apps/transcription-portal/src/manifest.json"
         ],
-        "styles": [
-          "node_modules/maintenance-warning-snackbar/dist/maintenance-warning-snackbar.css",
-          "apps/transcription-portal/src/styles.scss"
-        ],
-        "allowedCommonJsDependencies": [
-          "x2js",
-          "chart.js",
-          "jszip",
-          "notifyjs",
-          "konva"
-        ],
+        "styles": ["node_modules/maintenance-warning-snackbar/dist/maintenance-warning-snackbar.css", "apps/transcription-portal/src/styles.scss"],
+        "allowedCommonJsDependencies": ["x2js", "chart.js", "jszip", "notifyjs", "konva"],
         "scripts": [
           "apps/transcription-portal/src/assets/js/modernizr.js",
           "node_modules/platform/platform.js",
@@ -81,8 +68,7 @@
           "optimization": false,
           "sourceMap": true
         }
-      },
-      "defaultConfiguration": "development"
+      }
     },
     "serve": {
       "continuous": true,
@@ -101,6 +87,9 @@
         "development": {
           "buildTarget": "transcription-portal:build:development"
         }
+      },
+      "readyWhen": {
+        "signal": true
       }
     },
     "extract-i18n": {
@@ -110,11 +99,25 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs",
+        "{workspaceRoot}/tools/eslint-rules/**/*",
+        {
+          "externalDependencies": ["eslint"]
+        }
+      ]
     },
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
+      "readyWhen": {
+        "signal": true
+      },
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "transcription-portal:build",
         "staticFilePath": "dist/apps/transcription-portal",
